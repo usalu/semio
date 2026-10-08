@@ -1,0 +1,1 @@
+[["                eprintln!(\"[semio] failed to run {cmd}: {e}\");", "                let text = crate::terminal::labels::labels(crate::preferences::cli_locale(cwd, &crate::args::ParsedArgs::default()));\n                eprintln!(\"{}\", text.cli_run_failed.fill(&[(\"command\", cmd), (\"error\", &e.to_string())]).into_string());"]]

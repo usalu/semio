@@ -1,72 +1,79 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/js/compose"
+  - package-ecosystem: "bun"
+    directories:
+      - "/"
+      - "/♻️mit-bestand"
+      - "/✏️s"
+      - "/🌎️hub"
+      - "/🎓️teaching"
+      - "/🏢️semio-tech"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm"
-    directory: "/js/desktop"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "npm"
-    directory: "/js/docs"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "uv"
-    directory: "/py/compose"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "uv"
-    directory: "/py/engine"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "nuget"
-    directory: "/net/Compose"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "FluentValidation"
-      - dependency-name: "System.Collections.Immutable"
-      - dependency-name: "Microsoft.Data.Sqlite"
-  - package-ecosystem: "nuget"
-    directory: "/net/Compose.Grasshopper"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "Grasshopper"
-      - dependency-name: "System.Drawing.Common"
-        versions: [">= 8.0.0"]
-      - dependency-name: "System.Resources.Extensions"
-        versions: [">= 8.0.0"]
-  - package-ecosystem: "nuget"
-    directory: "/net/Compose.Tests"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "nuget"
-    directory: "/net/Compose.Grasshopper.Tests"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gomod"
-    directory: "/go/cli"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gomod"
-    directory: "/go/mcp"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gomod"
-    directory: "/repo/client"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gomod"
-    directory: "/go/compose"
-    schedule:
-      interval: "weekly"
+
   - package-ecosystem: "cargo"
-    directory: "/rs/compose"
+    directories:
+      - "/"
+      - "/✏️s"
+      - "/🌎️hub"
+      - "/🎓️teaching"
+      - "/✏️s/🔌️plugins/*/🏭️bridge"
+      - "/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge"
+      - "/🧰️framework/🛍️products/💻️os/🎚️config/🏭️bridge"
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "uv"
+    directories:
+      - "/"
+      - "/✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python"
+      - "/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
+    directories:
+      - "/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+

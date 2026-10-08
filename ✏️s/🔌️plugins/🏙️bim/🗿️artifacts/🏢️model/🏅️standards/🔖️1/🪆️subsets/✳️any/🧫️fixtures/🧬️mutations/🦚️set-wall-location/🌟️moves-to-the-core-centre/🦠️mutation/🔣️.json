@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallLocation",
+  "id": "w-east",
+  "location": "CoreCenter"
+}

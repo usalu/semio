@@ -1,0 +1,65 @@
+{
+  "description": "🤖️ One dashboard tool declaration and the four agent client files it derives. `servers` states the parsed meaning of every file independently of the rendering, so a second implementation can check text and meaning separately.",
+  "declaration": {
+    "tools": [
+      {
+        "id": "alpha-mcp",
+        "verb": "dev",
+        "command": ["bun", "./run.ts", "serve"],
+        "continuous": true,
+        "parameters": [{ "id": "profile", "kind": "text", "default": "base", "valuePositional": true }],
+        "mcp": {
+          "server": "alpha",
+          "clients": {
+            "claude-code": {},
+            "vscode": { "parameters": { "profile": "editor" } },
+            "cursor": { "parameters": { "profile": "cursor" } },
+            "codex": { "parameters": { "profile": "codex" } }
+          }
+        }
+      },
+      {
+        "id": "beta.mcp",
+        "verb": "dev",
+        "command": ["bun", "./run.ts", "gateway", "--scopes", "a.read,b.write"],
+        "parameters": [{ "id": "folder", "kind": "text", "required": true, "valueFlag": "--folder=" }],
+        "mcp": {
+          "server": "beta.gateway",
+          "clients": {
+            "claude-code": { "parameters": { "folder": "space" } },
+            "codex": { "parameters": { "folder": "space" } }
+          }
+        }
+      },
+      { "id": "not-mcp", "verb": "run", "command": ["echo", "hello"] }
+    ]
+  },
+  "servers": {
+    "claude-code": [
+      { "name": "alpha", "command": "bun", "args": ["./run.ts", "serve", "base"] },
+      { "name": "beta.gateway", "command": "bun", "args": ["./run.ts", "gateway", "--scopes", "a.read,b.write", "--folder=space"] }
+    ],
+    "vscode": [{ "name": "alpha", "command": "bun", "args": ["./run.ts", "serve", "editor"] }],
+    "cursor": [{ "name": "alpha", "command": "bun", "args": ["./run.ts", "serve", "cursor"] }],
+    "codex": [
+      { "name": "alpha", "command": "bun", "args": ["./run.ts", "serve", "codex"] },
+      { "name": "beta.gateway", "command": "bun", "args": ["./run.ts", "gateway", "--scopes", "a.read,b.write", "--folder=space"] }
+    ]
+  },
+  "files": {
+    ".mcp.json": "{\n  \"mcpServers\": {\n    \"alpha\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"serve\",\n        \"base\"\n      ]\n    },\n    \"beta.gateway\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"gateway\",\n        \"--scopes\",\n        \"a.read,b.write\",\n        \"--folder=space\"\n      ]\n    }\n  }\n}\n",
+    ".vscode/mcp.json": "{\n  \"inputs\": [],\n  \"servers\": {\n    \"alpha\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"serve\",\n        \"editor\"\n      ]\n    }\n  }\n}\n",
+    ".cursor/mcp.json": "{\n  \"mcpServers\": {\n    \"alpha\": {\n      \"type\": \"stdio\",\n      \"command\": \"bun\",\n      \"args\": [\n        \"./run.ts\",\n        \"serve\",\n        \"cursor\"\n      ]\n    }\n  }\n}\n",
+    ".codex/config.toml": "[mcp_servers.alpha]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"serve\", \"codex\"]\nenabled = true\ncwd = \".\"\n\n[mcp_servers.\"beta.gateway\"]\ncommand = \"bun\"\nargs = [\"./run.ts\", \"gateway\", \"--scopes\", \"a.read,b.write\", \"--folder=space\"]\nenabled = true\ncwd = \".\"\n"
+  },
+  "launchers": [
+    { "server": "alpha", "root": "/work", "runtime": "/opt/bun", "expected": { "command": "/opt/bun", "args": ["/work/run.ts", "serve", "base"] } },
+    { "server": "beta.gateway", "root": "/work", "runtime": "/opt/bun", "expected": { "command": "/opt/bun", "args": ["/work/run.ts", "gateway"] } }
+  ],
+  "refusals": [
+    { "id": "unknown-parameter", "tool": { "id": "t", "command": ["bun"], "mcp": { "server": "t", "clients": { "codex": { "parameters": { "nope": "x" } } } } }, "message": "no parameter nope" },
+    { "id": "missing-required", "tool": { "id": "t", "command": ["bun"], "parameters": [{ "id": "p", "kind": "text", "required": true, "valuePositional": true }], "mcp": { "server": "t", "clients": { "codex": {} } } }, "message": "needs a value" },
+    { "id": "unknown-client", "tool": { "id": "t", "command": ["bun"], "mcp": { "server": "t", "clients": { "windsurf": {} } } }, "message": "unknown client windsurf" },
+    { "id": "choice-parameter", "tool": { "id": "t", "command": ["bun"], "parameters": [{ "id": "p", "kind": "choice" }], "mcp": { "server": "t", "clients": { "codex": {} } } }, "message": "positional or a flag" }
+  ]
+}

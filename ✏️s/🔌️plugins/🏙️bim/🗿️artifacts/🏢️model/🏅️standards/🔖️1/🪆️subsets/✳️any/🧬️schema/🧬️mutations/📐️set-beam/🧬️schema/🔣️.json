@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-beam/schema.json",
+  "title": "SetBeam",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setBeam"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Beam",
+          "de": "Träger"
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "beam_type": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Beam type",
+          "de": "Trägertyp"
+        },
+        "ref": {
+          "kind": "beam-type"
+        },
+        "group": "type",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "start": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Start",
+          "de": "Anfang"
+        },
+        "group": "placement",
+        "order": 30,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "end": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "End",
+          "de": "Ende"
+        },
+        "group": "placement",
+        "order": 40,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "top_offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Top offset (m, + above / - below the storey top)",
+          "de": "Oberkantenversatz (m, + über / - unter der Geschossoberkante)"
+        },
+        "group": "placement",
+        "order": 50,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Signed distance of the beam top from the storey top: positive lifts it above, negative hangs it below, zero is flush. Leave empty to keep the current value.",
+          "de": "Vorzeichenbehafteter Abstand der Trägeroberkante zur Geschossoberkante: positiv darüber, negativ darunter, null bündig. Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 60,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

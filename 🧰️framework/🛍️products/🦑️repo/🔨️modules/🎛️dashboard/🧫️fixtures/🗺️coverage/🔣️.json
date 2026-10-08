@@ -1,0 +1,11 @@
+{
+  "_comment": "Ready ports that several commands declare on purpose: the commands are variants of one service that bind the same port, so only one runs at a time. Each entry names its reason; an undocumented shared port fails the coverage suite.",
+  "portSharing": {
+    "6010": "storybook: dev-storybook and its scoped variants serve one Storybook port",
+    "6029": "mit-bestand demonstrator: dev and serve are one server in two modes",
+    "6033": "semio-tech play: dev and serve are one server in two modes",
+    "6061": "architecture quiz: dev and dev-site are one Vite server on the quiz port",
+    "6274": "MCP inspector: the Nx targets and the tool start the same inspector client port",
+    "8787": "hub: every hub variant owns the single hub port"
+  }
+}

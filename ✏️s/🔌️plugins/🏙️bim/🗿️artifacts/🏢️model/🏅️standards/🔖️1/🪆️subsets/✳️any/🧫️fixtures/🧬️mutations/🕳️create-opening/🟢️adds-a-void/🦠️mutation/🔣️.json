@@ -1,0 +1,18 @@
+{
+  "mutation": "createOpening",
+  "id": "o-1",
+  "opening": {
+    "host": "w-east",
+    "kind": {
+      "Void": {
+        "width": 1,
+        "height": 2
+      }
+    },
+    "offset": 3,
+    "sill_override": 0.5,
+    "flip_hand": false,
+    "flip_facing": false,
+    "name": "Shaft"
+  }
+}

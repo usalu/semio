@@ -1,0 +1,14 @@
+{
+  "mutation": "createWallType",
+  "id": "wt-timber",
+  "wall_type": {
+    "name": "Ghost",
+    "layers": [
+      {
+        "material": "m-ghost",
+        "thickness": 0.2,
+        "function": "Structure"
+      }
+    ]
+  }
+}

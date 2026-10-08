@@ -1,0 +1,6 @@
+[["    let root = ipc::canonical_path(&root);\n    match subcommand {\n        \"start\" => {\n            let executable = std::env::current_exe().unwrap_or_else(|_| PathBuf::from(\"semio\"));\n            supervisor::start_detached(&root, &executable)",
+  "    let root = ipc::canonical_path(&root);\n    let text = labels(crate::preferences::cli_locale(&root, parsed));\n    match subcommand {\n        \"start\" => {\n            let executable = std::env::current_exe().unwrap_or_else(|_| PathBuf::from(\"semio\"));\n            supervisor::start_detached(&root, &executable, text)"],
+ ["eprintln!(\"daemon serve failed: {error}\");", "eprintln!(\"{}\", text.cli_daemon_serve_failed.fill(&[(\"error\", &error.to_string())]).into_string());"],
+ ["\"stop\" => supervisor::stop(&root),", "\"stop\" => supervisor::stop(&root, text),"],
+ ["print!(\"{}\", supervisor::status(&root));", "print!(\"{}\", supervisor::status(&root, text));"],
+ ["eprintln!(\"usage: semio daemon start|stop|status|attach|serve\");", "eprintln!(\"{}\", text.cli_daemon_usage.as_str());"]]

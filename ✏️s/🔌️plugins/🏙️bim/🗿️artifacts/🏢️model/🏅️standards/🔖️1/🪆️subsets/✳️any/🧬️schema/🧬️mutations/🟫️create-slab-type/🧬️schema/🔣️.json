@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-slab-type/schema.json",
+  "title": "CreateSlabType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "slab_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSlabType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Slab type id",
+          "de": "Deckentyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "slab_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SlabType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Slab type",
+          "de": "Deckentyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

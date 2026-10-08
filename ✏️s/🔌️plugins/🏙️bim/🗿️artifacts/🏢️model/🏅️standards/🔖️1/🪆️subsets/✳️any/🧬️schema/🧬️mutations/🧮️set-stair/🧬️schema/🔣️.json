@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-stair/schema.json",
+  "title": "SetStair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setStair"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Stair",
+          "de": "Treppe"
+        },
+        "ref": {
+          "kind": "stair"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "start": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Start",
+          "de": "Anfang"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "direction": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Direction (rad)",
+          "de": "Richtung (rad)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "width": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Width (m)",
+          "de": "Breite (m)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "flight": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StairFlight",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Flight",
+          "de": "Lauf"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "top": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Top",
+          "de": "Oberkante"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "max_riser": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Maximum riser (m)",
+          "de": "Maximale Steigung (m)"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "min_tread": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Minimum tread (m)",
+          "de": "Minimaler Auftritt (m)"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "stringer": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StairStringer",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Stringer",
+          "de": "Wangen"
+        },
+        "group": "value",
+        "order": 81
+      }
+    },
+    "nosing": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Nosing (m)",
+          "de": "Trittüberstand (m)"
+        },
+        "group": "value",
+        "order": 82
+      }
+    },
+    "tread_thickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Tread thickness (m)",
+          "de": "Trittstärke (m)"
+        },
+        "group": "value",
+        "order": 83
+      }
+    },
+    "riser": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RiserKind",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Risers",
+          "de": "Setzstufen"
+        },
+        "group": "value",
+        "order": 84
+      }
+    },
+    "landing_depth": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Landing depth (m)",
+          "de": "Podesttiefe (m)"
+        },
+        "group": "value",
+        "order": 85
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 90
+      }
+    }
+  }
+}

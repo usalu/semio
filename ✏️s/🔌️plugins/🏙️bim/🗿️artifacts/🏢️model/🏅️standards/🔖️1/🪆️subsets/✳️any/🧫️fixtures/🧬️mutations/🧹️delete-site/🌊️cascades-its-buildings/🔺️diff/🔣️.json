@@ -1,0 +1,28 @@
+{
+  "buildings": {
+    "bldg-1": {
+      "entry": "Deleted"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "entry": "Deleted"
+    }
+  },
+  "storeys": {
+    "st-first": {
+      "entry": "Deleted"
+    },
+    "st-ground": {
+      "entry": "Deleted"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "entry": "Deleted"
+    },
+    "w-south": {
+      "entry": "Deleted"
+    }
+  }
+}

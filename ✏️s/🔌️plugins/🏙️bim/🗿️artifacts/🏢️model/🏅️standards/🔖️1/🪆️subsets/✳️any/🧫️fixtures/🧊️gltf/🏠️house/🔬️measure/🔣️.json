@@ -1,0 +1,45 @@
+{
+  "nodes": 30,
+  "meshes": 24,
+  "primitives": 37,
+  "triangles": 11676,
+  "materials": 7,
+  "kinds": {
+    "beam": 2,
+    "column": 2,
+    "door": 2,
+    "window": 3,
+    "stair": 2,
+    "slab": 3,
+    "wall": 7,
+    "curtain-wall": 1,
+    "railing": 1,
+    "roof": 1
+  },
+  "storeys": {
+    "st-ground": {
+      "elements": 16,
+      "triangles": 10912
+    },
+    "st-first": {
+      "elements": 7,
+      "triangles": 724
+    },
+    "st-roof": {
+      "elements": 1,
+      "triangles": 40
+    }
+  },
+  "bounds": {
+    "min": [
+      1.0725481946384878,
+      408.25,
+      -10.097143808243933
+    ],
+    "max": [
+      12.561632726551666,
+      416.84279828071595,
+      -2.6715487123710626
+    ]
+  }
+}

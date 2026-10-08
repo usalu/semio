@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallTypeOf",
+  "id": "w-east",
+  "wall_type": "wt-150"
+}

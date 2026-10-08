@@ -1,0 +1,9 @@
+dialect grammar
+grammar bim.snapshot
+extension bim
+start document
+
+document = header body
+header = "schema" SP "bim.model.snapshot" NL
+body = payload NL?
+payload = OCTET+

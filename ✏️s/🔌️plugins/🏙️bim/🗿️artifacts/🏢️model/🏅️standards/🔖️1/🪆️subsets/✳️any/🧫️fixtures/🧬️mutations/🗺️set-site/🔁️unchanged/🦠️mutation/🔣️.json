@@ -1,0 +1,6 @@
+{
+  "mutation": "setSite",
+  "id": "site-1",
+  "name": "Plot",
+  "elevation": 100
+}

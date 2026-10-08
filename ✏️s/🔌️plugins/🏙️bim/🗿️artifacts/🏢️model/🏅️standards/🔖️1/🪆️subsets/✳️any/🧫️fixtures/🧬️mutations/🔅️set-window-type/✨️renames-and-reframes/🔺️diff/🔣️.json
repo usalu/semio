@@ -1,0 +1,11 @@
+{
+  "window_types": {
+    "win-1": {
+      "entry": "Patched",
+      "frame_depth": 0.12,
+      "frame_width": 0.08,
+      "material": "m-steel",
+      "name": "Steel window"
+    }
+  }
+}

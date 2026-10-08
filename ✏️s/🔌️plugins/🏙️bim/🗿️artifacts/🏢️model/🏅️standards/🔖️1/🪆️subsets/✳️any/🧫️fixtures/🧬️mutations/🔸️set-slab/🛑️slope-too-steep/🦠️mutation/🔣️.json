@@ -1,0 +1,10 @@
+{
+  "mutation": "setSlab",
+  "id": "sl-ground",
+  "slope": {
+    "value": {
+      "direction": 0,
+      "angle": 1.6
+    }
+  }
+}

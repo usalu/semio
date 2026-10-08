@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-storey/schema.json",
+  "title": "DeleteStorey",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 65536
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteStorey"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

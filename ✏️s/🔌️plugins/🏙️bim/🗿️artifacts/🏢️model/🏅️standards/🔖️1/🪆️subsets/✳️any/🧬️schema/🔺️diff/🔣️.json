@@ -1,0 +1,2328 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/diff.json",
+  "title": "ModelDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "$ref": "#/$defs/ProjectPatch"
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/MaterialEntry"
+      }
+    },
+    "wall_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WallTypeEntry"
+      }
+    },
+    "slab_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SlabTypeEntry"
+      }
+    },
+    "roof_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RoofTypeEntry"
+      }
+    },
+    "column_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ColumnTypeEntry"
+      }
+    },
+    "beam_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/BeamTypeEntry"
+      }
+    },
+    "window_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WindowTypeEntry"
+      }
+    },
+    "door_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/DoorTypeEntry"
+      }
+    },
+    "sites": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SiteEntry"
+      }
+    },
+    "buildings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/BuildingEntry"
+      }
+    },
+    "storeys": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/StoreyEntry"
+      }
+    },
+    "grids": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/GridLineEntry"
+      }
+    },
+    "walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WallEntry"
+      }
+    },
+    "curtain_walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/CurtainWallEntry"
+      }
+    },
+    "columns": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ColumnEntry"
+      }
+    },
+    "beams": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/BeamEntry"
+      }
+    },
+    "slabs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SlabEntry"
+      }
+    },
+    "roofs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RoofEntry"
+      }
+    },
+    "openings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/OpeningEntry"
+      }
+    },
+    "stairs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/StairEntry"
+      }
+    },
+    "railings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RailingEntry"
+      }
+    },
+    "spaces": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SpaceEntry"
+      }
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertySetEntry"
+      }
+    },
+    "classifications": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ClassificationEntry"
+      }
+    }
+  },
+  "$defs": {
+    "ProjectPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "organization": {
+          "type": "string"
+        },
+        "phase_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MaterialPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/MaterialCategory"
+        },
+        "color": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Rgb"
+        },
+        "density": {
+          "type": "number"
+        },
+        "conductivity": {
+          "type": "number"
+        },
+        "specific_heat": {
+          "type": "number"
+        }
+      }
+    },
+    "WallTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "SlabTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "RoofTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Layer"
+          }
+        }
+      }
+    },
+    "ColumnTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "BeamTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "WindowTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "sill": {
+          "type": "number"
+        },
+        "frame_width": {
+          "type": "number"
+        },
+        "frame_depth": {
+          "type": "number"
+        },
+        "panes": {
+          "type": "integer"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "DoorTypePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "frame_width": {
+          "type": "number"
+        },
+        "frame_depth": {
+          "type": "number"
+        },
+        "leaves": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DoorLeaves"
+        },
+        "swing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Swing"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "SitePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        },
+        "true_north": {
+          "type": "number"
+        },
+        "boundary": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+          }
+        }
+      }
+    },
+    "BuildingPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "elevation": {
+          "type": "number"
+        }
+      }
+    },
+    "StoreyPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "building": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "number"
+        },
+        "cut_height": {
+          "type": "number"
+        }
+      }
+    },
+    "GridLinePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "building": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "end": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        }
+      }
+    },
+    "WallPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "wall_type": {
+          "type": "string"
+        },
+        "axis": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis"
+        },
+        "location": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LocationLine"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint"
+        },
+        "phase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Phase"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "CurtainWallPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "axis": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint"
+        },
+        "u_spacing": {
+          "type": "number"
+        },
+        "v_spacing": {
+          "type": "number"
+        },
+        "mullion": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile"
+        },
+        "panel_material": {
+          "type": "string"
+        },
+        "mullion_material": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "ColumnPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "column_type": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "BeamPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "beam_type": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "end": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "top_offset": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "SlabPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "slab_type": {
+          "type": "string"
+        },
+        "boundary": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+            }
+          }
+        },
+        "offset": {
+          "type": "number"
+        },
+        "slope": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slope"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RoofPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "roof_type": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+          }
+        },
+        "shape": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofShape"
+        },
+        "overhang": {
+          "type": "number"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "OpeningPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/OpeningKind"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "sill_override": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "flip_hand": {
+          "type": "boolean"
+        },
+        "flip_facing": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "StairPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+        },
+        "direction": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "flight": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StairFlight"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint"
+        },
+        "max_riser": {
+          "type": "number"
+        },
+        "min_tread": {
+          "type": "number"
+        },
+        "stringer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/StairStringer"
+        },
+        "nosing": {
+          "type": "number"
+        },
+        "tread_thickness": {
+          "type": "number"
+        },
+        "riser": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RiserKind"
+        },
+        "landing_depth": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RailingPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+          }
+        },
+        "height": {
+          "type": "number"
+        },
+        "post_spacing": {
+          "type": "number"
+        },
+        "profile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile"
+        },
+        "post_profile": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile"
+        },
+        "baluster": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Baluster"
+        },
+        "infill": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Infill"
+        },
+        "material": {
+          "type": "string"
+        },
+        "base_offset": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "SpacePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "boundary": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SpaceBoundary"
+        },
+        "usage": {
+          "type": "string"
+        }
+      }
+    },
+    "ClassificationPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "PropertySetPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assigned": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertyValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "MaterialEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Material"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Material"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/MaterialPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "WallTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/WallTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "SlabTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SlabType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SlabType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/SlabTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "RoofTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/RoofTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "ColumnTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ColumnType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ColumnType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/ColumnTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "BeamTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/BeamType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/BeamType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/BeamTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "WindowTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WindowType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WindowType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/WindowTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "DoorTypeEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DoorType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DoorType"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/DoorTypePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "SiteEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Site"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Site"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/SitePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "BuildingEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Building"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Building"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/BuildingPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "StoreyEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Storey"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Storey"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/StoreyPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "GridLineEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/GridLine"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/GridLine"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/GridLinePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "WallEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Wall"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Wall"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/WallPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "CurtainWallEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWall"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWall"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/CurtainWallPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "ColumnEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Column"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Column"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/ColumnPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "BeamEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Beam"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Beam"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/BeamPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "SlabEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slab"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slab"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/SlabPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "RoofEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Roof"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Roof"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/RoofPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "OpeningEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Opening"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Opening"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/OpeningPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "StairEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Stair"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Stair"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/StairPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "RailingEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Railing"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Railing"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/RailingPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "SpaceEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Space"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Space"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/SpacePatch"
+            }
+          ]
+        }
+      ]
+    },
+    "PropertySetEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertySet"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertySet"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/PropertySetPatch"
+            }
+          ]
+        }
+      ]
+    },
+    "ClassificationEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Created"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Deleted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Replaced"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification"
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "entry"
+          ],
+          "properties": {
+            "entry": {
+              "const": "Patched"
+            }
+          },
+          "allOf": [
+            {
+              "$ref": "#/$defs/ClassificationPatch"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

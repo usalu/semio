@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json",
+  "title": "ModelSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "project": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Project",
+      "x-semio-state": "artifact"
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Material"
+      },
+      "x-semio-state": "artifact"
+    },
+    "wall_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "slab_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SlabType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "roof_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "column_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/ColumnType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "beam_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/BeamType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "window_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WindowType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "door_types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DoorType"
+      },
+      "x-semio-state": "artifact"
+    },
+    "sites": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Site"
+      },
+      "x-semio-state": "artifact"
+    },
+    "buildings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Building"
+      },
+      "x-semio-state": "artifact"
+    },
+    "storeys": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Storey"
+      },
+      "x-semio-state": "artifact"
+    },
+    "grids": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/GridLine"
+      },
+      "x-semio-state": "artifact"
+    },
+    "walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Wall"
+      },
+      "x-semio-state": "artifact"
+    },
+    "curtain_walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/CurtainWall"
+      },
+      "x-semio-state": "artifact"
+    },
+    "columns": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Column"
+      },
+      "x-semio-state": "artifact"
+    },
+    "beams": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Beam"
+      },
+      "x-semio-state": "artifact"
+    },
+    "slabs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slab"
+      },
+      "x-semio-state": "artifact"
+    },
+    "roofs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Roof"
+      },
+      "x-semio-state": "artifact"
+    },
+    "openings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Opening"
+      },
+      "x-semio-state": "artifact"
+    },
+    "stairs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Stair"
+      },
+      "x-semio-state": "artifact"
+    },
+    "railings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Railing"
+      },
+      "x-semio-state": "artifact"
+    },
+    "spaces": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Space"
+      },
+      "x-semio-state": "artifact"
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/PropertySet"
+      },
+      "x-semio-state": "artifact"
+    },
+    "classifications": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification"
+      },
+      "x-semio-state": "artifact"
+    }
+  }
+}

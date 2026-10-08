@@ -1,0 +1,16 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "path": [
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    }
+  ],
+  "height": 1.1,
+  "material": "m-brick"
+}

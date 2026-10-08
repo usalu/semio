@@ -1,0 +1,10 @@
+{
+  "mutation": "setRoofShape",
+  "id": "rf-main",
+  "shape": {
+    "Shed": {
+      "pitch": 0,
+      "direction": 0
+    }
+  }
+}

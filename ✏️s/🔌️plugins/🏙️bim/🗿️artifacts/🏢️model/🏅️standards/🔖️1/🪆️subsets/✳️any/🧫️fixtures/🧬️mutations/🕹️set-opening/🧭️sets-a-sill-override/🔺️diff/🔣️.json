@@ -1,0 +1,10 @@
+{
+  "openings": {
+    "o-1": {
+      "entry": "Patched",
+      "sill_override": {
+        "value": 1.2
+      }
+    }
+  }
+}

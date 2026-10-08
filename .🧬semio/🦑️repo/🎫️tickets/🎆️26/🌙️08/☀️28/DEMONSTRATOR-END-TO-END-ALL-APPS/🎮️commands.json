@@ -1,0 +1,14 @@
+{
+  "tools": [
+    {
+      "id": "demonstrator-supervised",
+      "verb": "dev",
+      "command": [
+        "bash",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/🔁️serve-supervisor.sh"
+      ],
+      "cwd": "",
+      "continuous": true
+    }
+  ]
+}

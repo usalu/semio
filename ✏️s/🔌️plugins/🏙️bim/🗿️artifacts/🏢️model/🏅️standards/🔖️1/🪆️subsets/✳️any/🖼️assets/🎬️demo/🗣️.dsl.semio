@@ -1,0 +1,131 @@
+semio bim.model.dsl v1
+schema="s.bim.model@1"
+project {
+  name="Demo House" description="" author="" organization="" phase-names=[ ]
+}
+materials={
+  m-brick={ name=Brick category=masonry density=1800 conductivity=0.8 specific-heat=900
+  color {
+    r=0.7 g=0.35 b=0.25
+  }
+  } m-wool={ name="Mineral Wool" category=insulation density=40 conductivity=0.035 specific-heat=1030
+  color {
+    r=0.7 g=0.35 b=0.25
+  }
+  }
+}
+wall-types={
+  wt-300={ name="Brick 300"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-brick 0.2 structure
+    m-wool 0.1 insulation
+  }
+  }
+}
+slab-types={
+}
+roof-types={
+}
+column-types={
+}
+beam-types={
+}
+window-types={
+}
+door-types={
+}
+sites={
+  site-1={ name=Plot latitude=47 longitude=8 elevation=100 true-north=0
+  boundary [x:NUM y:NUM] {
+  }
+  }
+}
+buildings={
+  bldg-1={ site=site-1 name=House rotation=0 elevation=0
+  origin {
+    x=0 y=0
+  }
+  }
+}
+storeys={
+  st-first={ building=bldg-1 name=First level=1 height=2.8 } st-ground={ building=bldg-1 name=Ground level=0 height=3 }
+}
+grids={
+}
+walls={
+  w-east={ storey=st-ground wall-type=wt-300 location=center base-offset=0 phase=new name=East
+  axis {
+    line
+    start {
+      x=8 y=0
+    }
+    end {
+      x=8 y=6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-north={ storey=st-ground wall-type=wt-300 location=center base-offset=0 phase=new name=North
+  axis {
+    line
+    start {
+      x=8 y=6
+    }
+    end {
+      x=0 y=6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-south={ storey=st-ground wall-type=wt-300 location=center base-offset=0 phase=new name=South
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=8 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-west={ storey=st-ground wall-type=wt-300 location=center base-offset=0 phase=new name=West
+  axis {
+    line
+    start {
+      x=0 y=6
+    }
+    end {
+      x=0 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  }
+}
+curtain-walls={
+}
+columns={
+}
+beams={
+}
+slabs={
+}
+roofs={
+}
+openings={
+}
+stairs={
+}
+railings={
+}
+spaces={
+}
+properties={
+}
+classifications={
+}

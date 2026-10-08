@@ -1,0 +1,34 @@
+{
+  "mutation": "setRoofFootprint",
+  "id": "rf-main",
+  "footprint": [
+    {
+      "point": {
+        "x": 0,
+        "y": 0
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 6,
+        "y": 4
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 6,
+        "y": 0
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 0,
+        "y": 4
+      },
+      "bulge": 0
+    }
+  ]
+}

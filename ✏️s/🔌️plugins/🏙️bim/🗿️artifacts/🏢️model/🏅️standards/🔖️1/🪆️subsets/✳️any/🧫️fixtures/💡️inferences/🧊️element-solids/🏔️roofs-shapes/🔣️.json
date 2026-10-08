@@ -1,0 +1,887 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Roofs",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47.0,
+        "longitude": 8.0,
+        "elevation": 100.0,
+        "true_north": 0.0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3.0
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "roof_types": {
+      "rt-tiles": {
+        "name": "Tiled",
+        "layers": [
+          {
+            "material": "m-clay",
+            "thickness": 0.04,
+            "function": "Finish"
+          },
+          {
+            "material": "m-wood",
+            "thickness": 0.06,
+            "function": "Structure"
+          }
+        ]
+      },
+      "rt-flat": {
+        "name": "Flat",
+        "layers": [
+          {
+            "material": "m-concrete",
+            "thickness": 0.2,
+            "function": "Structure"
+          }
+        ]
+      }
+    },
+    "roofs": {
+      "r-flat": {
+        "storey": "st-first",
+        "roof_type": "rt-flat",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": "Flat",
+        "overhang": 0.5,
+        "base_offset": 0.0,
+        "name": "Flat"
+      },
+      "r-shed": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Shed": {
+            "pitch": 0.2,
+            "direction": -1.5707963267948966
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.1,
+        "name": "Shed"
+      },
+      "r-gable": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Gable": {
+            "pitch": 0.5,
+            "ridge_direction": 0.0
+          }
+        },
+        "overhang": 0.5,
+        "base_offset": 0.0,
+        "name": "Gable"
+      },
+      "r-gable-rotated": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6.0,
+              "y": 1.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 7.0,
+              "y": 5.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Gable": {
+            "pitch": 0.4,
+            "ridge_direction": 0.3
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Gable on a skewed quad"
+      },
+      "r-hip": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.4
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Hip"
+      },
+      "r-hip-overhang": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.6
+          }
+        },
+        "overhang": 0.4,
+        "base_offset": 0.0,
+        "name": "Hip with overhang"
+      },
+      "r-mansard": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Mansard": {
+            "lower_pitch": 1.1,
+            "upper_pitch": 0.3,
+            "break_height": 1.0
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Mansard"
+      },
+      "r-l-hip": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 3.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 3.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 0.4
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Hip on an L footprint falls back"
+      },
+      "r-curved-gable": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 0.0
+            },
+            "bulge": 1.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Gable": {
+            "pitch": 0.4,
+            "ridge_direction": 0.0
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Gable on a curved footprint falls back"
+      },
+      "r-curved-shed": {
+        "storey": "st-first",
+        "roof_type": "rt-flat",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 0.0
+            },
+            "bulge": 1.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Shed": {
+            "pitch": 0.1,
+            "direction": 3.141592653589793
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Shed over a curved footprint"
+      },
+      "r-bad-pitch": {
+        "storey": "st-first",
+        "roof_type": "rt-tiles",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": {
+          "Hip": {
+            "pitch": 1.7
+          }
+        },
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Pitch beyond vertical falls back"
+      },
+      "r-unknown-type": {
+        "storey": "st-first",
+        "roof_type": "rt-none",
+        "footprint": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 8.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 6.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "shape": "Flat",
+        "overhang": 0.0,
+        "base_offset": 0.0,
+        "name": "Unknown type"
+      }
+    }
+  },
+  "expected": {
+    "r-flat": {
+      "family": "Roof",
+      "volume": 12.6,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.5,
+        -0.5,
+        5.8
+      ],
+      "max": [
+        8.5,
+        6.5,
+        6.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.2,
+      "rise": 0.0,
+      "fallback": null,
+      "eave_z": 5.8
+    },
+    "r-shed": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.9
+      ],
+      "max": [
+        8.0,
+        6.0,
+        7.216260213052
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.216260213052,
+      "fallback": null,
+      "eave_z": 5.9
+    },
+    "r-gable": {
+      "family": "Roof",
+      "volume": 6.3,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.5,
+        -0.5,
+        5.8
+      ],
+      "max": [
+        8.5,
+        6.5,
+        7.812058714453
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.912058714453,
+      "fallback": null,
+      "eave_z": 5.8,
+      "ridge_length": 9.0,
+      "ridge_length_tolerance": 1e-05
+    },
+    "r-gable-rotated": {
+      "family": "Roof",
+      "volume": 2.3,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        7.0,
+        5.0,
+        6.818224532264
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.918224532264,
+      "fallback": null,
+      "eave_z": 5.8,
+      "ridge_length": 6.523294578876,
+      "ridge_length_tolerance": 1e-05
+    },
+    "r-hip": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        7.168379656214
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.268379656214,
+      "fallback": null,
+      "eave_z": 5.8,
+      "ridge_length": 2.0,
+      "ridge_length_tolerance": 1e-05
+    },
+    "r-hip-overhang": {
+      "family": "Roof",
+      "volume": 5.984,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.4,
+        -0.4,
+        5.8
+      ],
+      "max": [
+        8.4,
+        6.4,
+        8.226065148362
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 2.326065148362,
+      "fallback": null,
+      "eave_z": 5.8,
+      "ridge_length": 2.0,
+      "ridge_length_tolerance": 1e-05
+    },
+    "r-mansard": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        7.670566463983
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 1.770566463983,
+      "fallback": null,
+      "eave_z": 5.8
+    },
+    "r-l-hip": {
+      "family": "Roof",
+      "volume": 3.6,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        5.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.0,
+      "fallback": "roof.fallback-flat.non-convex-footprint",
+      "eave_z": 5.8
+    },
+    "r-curved-gable": {
+      "family": "Roof",
+      "volume": 2.228318530718,
+      "volume_tolerance": 6.5973446e-05,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        6.0,
+        4.0,
+        5.9
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "thickness": 0.1,
+      "rise": 0.0,
+      "fallback": "roof.fallback-flat.curved-footprint",
+      "eave_z": 5.8
+    },
+    "r-curved-shed": {
+      "family": "Roof",
+      "volume": 4.456637061436,
+      "volume_tolerance": 0.000131946891,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        6.0,
+        4.0,
+        6.602008032513
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "thickness": 0.2,
+      "rise": 0.602008032513,
+      "fallback": null,
+      "eave_z": 5.8
+    },
+    "r-bad-pitch": {
+      "family": "Roof",
+      "volume": 4.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        5.8
+      ],
+      "max": [
+        8.0,
+        6.0,
+        5.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.1,
+      "rise": 0.0,
+      "fallback": "roof.fallback-flat.invalid-pitch",
+      "eave_z": 5.8
+    },
+    "r-unknown-type": null
+  },
+  "meshes": {}
+}

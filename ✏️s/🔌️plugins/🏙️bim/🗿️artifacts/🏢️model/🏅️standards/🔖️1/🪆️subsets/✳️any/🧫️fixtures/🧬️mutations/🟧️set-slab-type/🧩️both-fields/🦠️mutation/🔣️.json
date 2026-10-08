@@ -1,0 +1,17 @@
+{
+  "mutation": "setSlabType",
+  "id": "sl-200",
+  "name": "Concrete 200 (renamed)",
+  "layers": [
+    {
+      "material": "m-screed",
+      "thickness": 0.24,
+      "function": "Structure"
+    },
+    {
+      "material": "m-wool",
+      "thickness": 0.08,
+      "function": "Insulation"
+    }
+  ]
+}

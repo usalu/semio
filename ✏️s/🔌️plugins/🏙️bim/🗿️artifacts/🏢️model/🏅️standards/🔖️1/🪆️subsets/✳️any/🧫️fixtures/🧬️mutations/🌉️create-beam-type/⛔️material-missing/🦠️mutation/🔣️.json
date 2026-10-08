@@ -1,0 +1,14 @@
+{
+  "mutation": "createBeamType",
+  "id": "new-1",
+  "beam_type": {
+    "name": "Beam",
+    "profile": {
+      "Rectangle": {
+        "width": 0.3,
+        "depth": 0.3
+      }
+    },
+    "material": "m-glass"
+  }
+}

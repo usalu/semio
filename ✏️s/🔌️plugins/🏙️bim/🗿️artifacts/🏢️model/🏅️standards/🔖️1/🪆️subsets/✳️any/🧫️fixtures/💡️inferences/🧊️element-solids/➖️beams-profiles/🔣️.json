@@ -1,0 +1,298 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Beams",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47.0,
+        "longitude": 8.0,
+        "elevation": 100.0,
+        "true_north": 0.0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3.0
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "beam_types": {
+      "bt-rect": {
+        "name": "Rect 200x400",
+        "profile": {
+          "Rectangle": {
+            "width": 0.2,
+            "depth": 0.4
+          }
+        },
+        "material": "m-concrete"
+      },
+      "bt-i": {
+        "name": "I 150x300",
+        "profile": {
+          "IShape": {
+            "width": 0.15,
+            "depth": 0.3,
+            "web": 0.008,
+            "flange": 0.012
+          }
+        },
+        "material": "m-steel"
+      },
+      "bt-circle": {
+        "name": "Pipe 100",
+        "profile": {
+          "Circle": {
+            "diameter": 0.1
+          }
+        },
+        "material": "m-steel"
+      }
+    },
+    "beams": {
+      "b-along-x": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 6.0,
+          "y": 0.0
+        },
+        "top_offset": -0.1,
+        "name": "Along x"
+      },
+      "b-diagonal": {
+        "storey": "st-first",
+        "beam_type": "bt-rect",
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 3.0,
+          "y": 4.0
+        },
+        "top_offset": 0.0,
+        "name": "Diagonal"
+      },
+      "b-i": {
+        "storey": "st-ground",
+        "beam_type": "bt-i",
+        "start": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "end": {
+          "x": 1.0,
+          "y": 7.0
+        },
+        "top_offset": -0.2,
+        "name": "I beam"
+      },
+      "b-pipe": {
+        "storey": "st-ground",
+        "beam_type": "bt-circle",
+        "start": {
+          "x": 0.0,
+          "y": 2.0
+        },
+        "end": {
+          "x": 4.0,
+          "y": 2.0
+        },
+        "top_offset": 0.0,
+        "name": "Pipe"
+      },
+      "b-zero": {
+        "storey": "st-ground",
+        "beam_type": "bt-rect",
+        "start": {
+          "x": 2.0,
+          "y": 2.0
+        },
+        "end": {
+          "x": 2.0,
+          "y": 2.0
+        },
+        "top_offset": 0.0,
+        "name": "Zero length"
+      },
+      "b-unknown-type": {
+        "storey": "st-ground",
+        "beam_type": "bt-none",
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 1.0,
+          "y": 0.0
+        },
+        "top_offset": 0.0,
+        "name": "Unknown type"
+      }
+    }
+  },
+  "expected": {
+    "b-along-x": {
+      "family": "Beam",
+      "volume": 0.48,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        -0.1,
+        2.5
+      ],
+      "max": [
+        6.0,
+        0.1,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.9
+    },
+    "b-diagonal": {
+      "family": "Beam",
+      "volume": 0.4,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.08,
+        -0.06,
+        5.4
+      ],
+      "max": [
+        3.08,
+        4.06,
+        5.8
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 5.0,
+      "top_z": 5.8
+    },
+    "b-i": {
+      "family": "Beam",
+      "volume": 0.034848,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.925,
+        1.0,
+        2.5
+      ],
+      "max": [
+        1.075,
+        7.0,
+        2.8
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "length": 6.0,
+      "top_z": 2.8
+    },
+    "b-pipe": {
+      "family": "Beam",
+      "volume": 0.031415926536,
+      "volume_tolerance": 0.000131946891,
+      "min": [
+        0.0,
+        1.95,
+        2.9
+      ],
+      "max": [
+        4.0,
+        2.05,
+        3.0
+      ],
+      "bounds_tolerance": 0.00021,
+      "curved": true,
+      "length": 4.0,
+      "top_z": 3.0
+    },
+    "b-zero": null,
+    "b-unknown-type": null
+  },
+  "meshes": {}
+}

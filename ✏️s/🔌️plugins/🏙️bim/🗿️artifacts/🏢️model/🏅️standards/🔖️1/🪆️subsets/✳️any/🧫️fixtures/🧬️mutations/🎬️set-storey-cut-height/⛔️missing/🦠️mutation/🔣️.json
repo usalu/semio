@@ -1,0 +1,7 @@
+{
+  "mutation": "setStoreyCutHeight",
+  "id": "st-attic",
+  "cut_height": {
+    "value": 1.5
+  }
+}

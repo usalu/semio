@@ -1,0 +1,20 @@
+{
+  "slab_types": {
+    "sl-300": {
+      "entry": "Created",
+      "layers": [
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.1
+        },
+        {
+          "function": "Structure",
+          "material": "m-screed",
+          "thickness": 0.2
+        }
+      ],
+      "name": "Glass Wool 300"
+    }
+  }
+}

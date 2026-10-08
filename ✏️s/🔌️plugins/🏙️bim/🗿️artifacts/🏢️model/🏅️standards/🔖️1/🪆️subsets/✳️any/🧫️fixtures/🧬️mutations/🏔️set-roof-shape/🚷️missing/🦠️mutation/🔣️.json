@@ -1,0 +1,5 @@
+{
+  "mutation": "setRoofShape",
+  "id": "rf-attic",
+  "overhang": 0.5
+}

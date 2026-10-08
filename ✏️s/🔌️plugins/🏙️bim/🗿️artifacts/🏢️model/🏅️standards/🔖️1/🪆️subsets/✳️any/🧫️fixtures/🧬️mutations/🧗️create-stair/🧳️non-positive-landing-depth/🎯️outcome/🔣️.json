@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "stair",
+    "landing_depth"
+  ]
+}

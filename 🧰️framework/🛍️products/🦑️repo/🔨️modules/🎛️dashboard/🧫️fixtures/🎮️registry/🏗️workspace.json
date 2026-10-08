@@ -58,8 +58,6 @@
                   "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "ship" }, "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }]
                 },
                 { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" },
-                { "id": "hub", "kind": "text", "appliesTo": { "playground": true }, "valueEnv": "S_HUB_URL" },
-                { "id": "data", "kind": "text", "appliesTo": { "playground": true }, "valueEnv": "S_DATA_DIR" },
                 { "id": "trace", "kind": "flag", "env": { "SEMIO_TRACE": "1" } }
               ],
               "tools": [
@@ -81,8 +79,10 @@
                     { "id": "project", "kind": "text", "default": "workspace" },
                     { "id": "file", "kind": "text", "required": true, "valuePositional": true },
                     { "id": "bail", "kind": "flag", "args": ["--bail"], "env": { "BUN_TEST_BAIL": "{project}" } }
-                  ]
+                  ],
+                  "mcp": { "server": "bun-test", "clients": { "claude-code": {}, "codex": { "parameters": { "project": "workspace" } } } }
                 },
+                { "id": "printer", "command": ["bun", "x", "printer"], "continuous": true, "ready": { "port": 6280, "printed": true }, "requires": [{ "run": "hub:dev", "parameters": { "backend": "postgres" }, "env": { "HUB_NOTE": "{workspace}/note" } }] },
                 { "id": "format-notes", "command": ["prettier", "--write", "notes"] },
                 { "id": "viewer", "command": ["f3d"], "continuous": true }
               ],
@@ -92,7 +92,7 @@
                   "stop": "together",
                   "members": [
                     { "run": "hub:dev" },
-                    { "run": "playground:shell", "parameters": { "renderer": "react", "hub": "http://127.0.0.1:8787", "data": "{workspace}/.data/shell" } }
+                    { "run": "playground:shell", "parameters": { "renderer": "react", "hub": true }, "env": { "S_NOTE": "{workspace}/shell-note" } }
                   ]
                 },
                 {
@@ -100,7 +100,7 @@
                   "verb": "dev",
                   "members": [
                     { "run": "hub:dev", "parameters": { "backend": "postgres" } },
-                    { "run": "playground:shell", "parameters": { "user-slot": 1 } },
+                    { "run": "playground:shell", "parameters": { "user-slot": 1, "hub": true } },
                     { "run": "playground:shell", "parameters": { "user-slot": 2 } }
                   ]
                 },
@@ -108,8 +108,8 @@
                 { "id": "release-checks", "members": [{ "run": "hub:build:production" }, { "run": "@fixture/quiz:test-e2e" }] }
               ],
               "groups": [
-                { "id": "artifact-tests", "target": "test", "projects": ["@fixture/artifact-*", "!@fixture/artifact-contract"] },
-                { "id": "all-builds", "target": "build", "projects": ["hub", "@fixture/quiz"] }
+                { "id": "artifact-tests", "targets": ["test"], "projects": ["@fixture/artifact-*", "!@fixture/artifact-contract"] },
+                { "id": "all-builds", "targets": ["build", "test"], "projects": ["hub", "@fixture/quiz"] }
               ]
             }
           }
@@ -199,7 +199,7 @@
               "semio": {
                 "dashboard": {
                   "ready": { "portEnv": "listen" },
-                  "requires": ["hub:dev", "tool:workspace/inspector"],
+                  "requires": ["hub:dev", { "run": "tool:workspace/inspector" }],
                   "parameters": [
                     { "id": "listen", "kind": "text", "default": "6061", "valueEnv": "QUIZ_PORT" },
                     { "id": "proctor", "kind": "flag", "default": true, "env": { "PROCTOR_URL": "http://127.0.0.1:{port}/proctor" } }
@@ -240,6 +240,10 @@
     {
       "path": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust/Cargo.toml",
       "text": "[package]\nname = \"artifact-contract\"\n"
+    },
+    {
+      "path": "💻️os/🧑‍💻dev/README.txt",
+      "text": "the owner of the playground targets"
     },
     {
       "path": ".nx/workspace-data/project-graph.json",
@@ -301,6 +305,11 @@
             "type": "lib",
             "data": { "root": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" } } }
           },
+          "@semio-tech/framework-os-dev": {
+            "name": "@semio-tech/framework-os-dev",
+            "type": "lib",
+            "data": { "root": "💻️os/🧑‍💻dev", "targets": { "dev-shell-react-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-shell-wgpu-dev": { "executor": "nx:run-commands", "continuous": true }, "run-shell-native-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-cad-react-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-cad-wgpu-dev": { "executor": "nx:run-commands", "continuous": true }, "run-cad-native-dev": { "executor": "nx:run-commands", "continuous": true } } }
+          },
           "@fixture/vanished": {
             "name": "@fixture/vanished",
             "type": "lib",
@@ -321,11 +330,15 @@
           "aliases": [],
           "ports": { "react": 6070, "wgpu": 6066 },
           "userPorts": { "react": [6072, 6073], "wgpu": [6067, 6068] },
+          "hub": "http://127.0.0.1:8787",
+          "dataDir": ".data/shell-base",
+          "userDataDir": ".data/shell-user{N}",
+          "localOnly": true,
           "examples": ["demo", "tower"],
           "engines": [],
           "assets": []
         },
-        { "variant": "cad", "pluginId": "cad", "cratePath": "hub/cad", "aliases": [], "ports": { "react": 6020, "wgpu": 6120 }, "examples": [], "engines": [], "assets": [] }
+        { "variant": "cad", "pluginId": "cad", "cratePath": "hub/cad", "aliases": ["design 3d"], "ports": { "react": 6020, "wgpu": 6120 }, "viewerPath": "/?plugin=cad&role=viewer", "examples": [], "engines": [], "assets": [] }
       ]
     },
     {

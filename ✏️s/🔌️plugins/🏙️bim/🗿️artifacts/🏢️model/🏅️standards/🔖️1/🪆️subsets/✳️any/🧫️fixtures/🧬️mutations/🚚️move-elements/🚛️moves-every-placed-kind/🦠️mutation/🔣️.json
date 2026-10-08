@@ -1,0 +1,21 @@
+{
+  "mutation": "moveElements",
+  "ids": [
+    "w-south",
+    "w-east",
+    "cw-1",
+    "c-1",
+    "b-1",
+    "sl-1",
+    "rf-1",
+    "s-1",
+    "r-1",
+    "sp-1",
+    "g-a",
+    "o-1"
+  ],
+  "vector": {
+    "x": 0.25,
+    "y": 4
+  }
+}

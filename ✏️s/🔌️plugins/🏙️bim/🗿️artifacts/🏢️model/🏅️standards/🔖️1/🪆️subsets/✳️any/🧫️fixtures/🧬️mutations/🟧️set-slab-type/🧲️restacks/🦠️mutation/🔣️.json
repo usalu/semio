@@ -1,0 +1,16 @@
+{
+  "mutation": "setSlabType",
+  "id": "sl-200",
+  "layers": [
+    {
+      "material": "m-screed",
+      "thickness": 0.24,
+      "function": "Structure"
+    },
+    {
+      "material": "m-wool",
+      "thickness": 0.08,
+      "function": "Insulation"
+    }
+  ]
+}

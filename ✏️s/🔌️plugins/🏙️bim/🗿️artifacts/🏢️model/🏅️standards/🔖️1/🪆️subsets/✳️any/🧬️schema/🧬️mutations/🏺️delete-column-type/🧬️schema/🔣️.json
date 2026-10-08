@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-column-type/schema.json",
+  "title": "DeleteColumnType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteColumnType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column type",
+          "de": "Stützentyp"
+        },
+        "ref": {
+          "kind": "column-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

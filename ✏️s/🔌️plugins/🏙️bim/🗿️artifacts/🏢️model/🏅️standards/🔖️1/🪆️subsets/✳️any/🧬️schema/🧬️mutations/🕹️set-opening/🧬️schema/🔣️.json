@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-opening/schema.json",
+  "title": "SetOpening",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setOpening"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Opening",
+          "de": "Öffnung"
+        },
+        "ref": {
+          "kind": "opening"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "kind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/OpeningKind",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "sill_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Sill override (m)",
+          "de": "Brüstung überschreiben (m)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "width": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Width override (m)",
+          "de": "Breite überschreiben (m)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "height": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Height override (m)",
+          "de": "Höhe überschreiben (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "flip_hand": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Flip hand",
+          "de": "Anschlag spiegeln"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "flip_facing": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Flip facing",
+          "de": "Blickrichtung spiegeln"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 80
+      }
+    }
+  }
+}

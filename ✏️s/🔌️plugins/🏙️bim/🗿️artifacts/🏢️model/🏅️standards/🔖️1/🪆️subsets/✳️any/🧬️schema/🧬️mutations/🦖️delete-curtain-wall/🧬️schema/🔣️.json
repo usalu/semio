@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-curtain-wall/schema.json",
+  "title": "DeleteCurtainWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteCurtainWall"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Curtain wall",
+          "de": "Vorhangfassade"
+        },
+        "ref": {
+          "kind": "curtain-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

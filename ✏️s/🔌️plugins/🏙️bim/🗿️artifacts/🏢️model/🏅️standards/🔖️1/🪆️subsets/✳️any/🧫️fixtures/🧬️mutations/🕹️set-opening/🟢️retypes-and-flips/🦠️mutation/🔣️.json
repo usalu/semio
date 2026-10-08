@@ -1,0 +1,14 @@
+{
+  "mutation": "setOpening",
+  "id": "o-1",
+  "kind": {
+    "Door": {
+      "door_type": "door-1"
+    }
+  },
+  "sill_override": {
+    "value": null
+  },
+  "flip_hand": true,
+  "name": "Back door"
+}

@@ -1,0 +1,16 @@
+{
+  "mutation": "createBeamType",
+  "id": "new-1",
+  "beam_type": {
+    "name": "Beam",
+    "profile": {
+      "IShape": {
+        "width": 0.15,
+        "depth": 0.3,
+        "web": 0.007,
+        "flange": 0.16
+      }
+    },
+    "material": "m-steel"
+  }
+}

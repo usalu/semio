@@ -1,0 +1,2638 @@
+{
+  "w-l-a": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 0.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 3.85,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 0.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 4.15,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 3.85,
+    "right_length": 4.15,
+    "footprint": [
+      {
+        "point": {
+          "x": 0.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.15,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 3.85,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 0.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.2,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-l-b",
+        "other_end": "Start",
+        "point": {
+          "x": 4.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 11.55,
+    "right_area": 12.45,
+    "volume": 3.6
+  },
+  "w-l-b": {
+    "thickness": 0.3,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 3.85,
+        "y": 0.15
+      },
+      "end": {
+        "x": 3.85,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 4.15,
+        "y": -0.15
+      },
+      "end": {
+        "x": 4.15,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.85,
+    "right_length": 3.15,
+    "footprint": [
+      {
+        "point": {
+          "x": 4.15,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.15,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 3.85,
+          "y": 3.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 3.85,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.9,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-l-a",
+        "other_end": "End",
+        "point": {
+          "x": 4.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.55,
+    "right_area": 9.45,
+    "volume": 2.7
+  },
+  "w-ll-a": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 10.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 13.85,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 10.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 14.0,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 3.85,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 10.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 14.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 13.85,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 10.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.1775,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-ll-b",
+        "other_end": "Start",
+        "point": {
+          "x": 14.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 11.55,
+    "right_area": 12.0,
+    "volume": 3.5325
+  },
+  "w-ll-b": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.0,
+    "layer_offsets": [
+      0.15,
+      0.0
+    ],
+    "left_face": {
+      "start": {
+        "x": 13.85,
+        "y": 0.15
+      },
+      "end": {
+        "x": 13.85,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 14.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 14.0,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.85,
+    "right_length": 3.15,
+    "footprint": [
+      {
+        "point": {
+          "x": 14.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 14.0,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 13.85,
+          "y": 3.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 13.85,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.45,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-ll-a",
+        "other_end": "End",
+        "point": {
+          "x": 14.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.55,
+    "right_area": 9.45,
+    "volume": 1.35
+  },
+  "w-ac-a": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 20.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 23.740192378865,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 20.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 24.259807621135,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 3.740192378865,
+    "right_length": 4.259807621135,
+    "footprint": [
+      {
+        "point": {
+          "x": 20.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 24.259807621135,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 23.740192378865,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 20.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.2,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-ac-b",
+        "other_end": "Start",
+        "point": {
+          "x": 24.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 11.220577136594,
+    "right_area": 12.779422863406,
+    "volume": 3.6
+  },
+  "w-ac-b": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 23.740192378865,
+        "y": 0.15
+      },
+      "end": {
+        "x": 21.870096189432,
+        "y": 3.389101615138
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 24.259807621135,
+        "y": -0.15
+      },
+      "end": {
+        "x": 22.129903810568,
+        "y": 3.539101615138
+      },
+      "bulge": 0.0
+    },
+    "left_length": 3.740192378865,
+    "right_length": 4.259807621135,
+    "footprint": [
+      {
+        "point": {
+          "x": 24.259807621135,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 22.129903810568,
+          "y": 3.539101615138
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 21.870096189432,
+          "y": 3.389101615138
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 23.740192378865,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.2,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-ac-a",
+        "other_end": "End",
+        "point": {
+          "x": 24.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 11.220577136594,
+    "right_area": 12.779422863406,
+    "volume": 3.6
+  },
+  "w-t1-through": {
+    "thickness": 0.3,
+    "length": 6.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 30.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 36.0,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 30.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 36.0,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 6.0,
+    "right_length": 6.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 30.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 36.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 36.0,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 30.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.8,
+    "joins": [
+      {
+        "kind": "Through",
+        "end": "Along",
+        "other": "w-t1-stem",
+        "other_end": "End",
+        "point": {
+          "x": 33.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 18.0,
+    "left_area": 18.0,
+    "right_area": 18.0,
+    "volume": 5.4
+  },
+  "w-t1-stem": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 33.075,
+        "y": 3.0
+      },
+      "end": {
+        "x": 33.075,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 32.925,
+        "y": 3.0
+      },
+      "end": {
+        "x": 32.925,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.85,
+    "right_length": 2.85,
+    "footprint": [
+      {
+        "point": {
+          "x": 32.925,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 32.925,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 33.075,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 33.075,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.4275,
+    "joins": [
+      {
+        "kind": "Butt",
+        "end": "End",
+        "other": "w-t1-through",
+        "other_end": "Along",
+        "point": {
+          "x": 33.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.55,
+    "right_area": 8.55,
+    "volume": 1.2825
+  },
+  "w-t2-through": {
+    "thickness": 0.3,
+    "length": 6.0,
+    "offset_left": 0.0,
+    "offset_right": 0.3,
+    "layer_offsets": [
+      0.0,
+      -0.2,
+      -0.3
+    ],
+    "left_face": {
+      "start": {
+        "x": 40.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 46.0,
+        "y": 0.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 40.0,
+        "y": -0.3
+      },
+      "end": {
+        "x": 46.0,
+        "y": -0.3
+      },
+      "bulge": 0.0
+    },
+    "left_length": 6.0,
+    "right_length": 6.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 40.0,
+          "y": -0.3
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 46.0,
+          "y": -0.3
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 46.0,
+          "y": 0.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 40.0,
+          "y": 0.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.8,
+    "joins": [
+      {
+        "kind": "Through",
+        "end": "Along",
+        "other": "w-t2-stem",
+        "other_end": "End",
+        "point": {
+          "x": 43.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 18.0,
+    "left_area": 18.0,
+    "right_area": 18.0,
+    "volume": 5.4
+  },
+  "w-t2-stem": {
+    "thickness": 0.3,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 42.85,
+        "y": -3.0
+      },
+      "end": {
+        "x": 42.85,
+        "y": -0.3
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 43.15,
+        "y": -3.0
+      },
+      "end": {
+        "x": 43.15,
+        "y": -0.3
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.7,
+    "right_length": 2.7,
+    "footprint": [
+      {
+        "point": {
+          "x": 43.15,
+          "y": -3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 43.15,
+          "y": -0.3
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 42.85,
+          "y": -0.3
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 42.85,
+          "y": -3.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.81,
+    "joins": [
+      {
+        "kind": "Butt",
+        "end": "End",
+        "other": "w-t2-through",
+        "other_end": "Along",
+        "point": {
+          "x": 43.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.1,
+    "right_area": 8.1,
+    "volume": 2.43
+  },
+  "w-x-a": {
+    "thickness": 0.3,
+    "length": 6.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 50.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 56.0,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 50.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 56.0,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 6.0,
+    "right_length": 6.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 50.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 56.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 56.0,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 50.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.8,
+    "joins": [
+      {
+        "kind": "Cross",
+        "end": "Along",
+        "other": "w-x-b",
+        "other_end": "Along",
+        "point": {
+          "x": 53.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.045
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 18.0,
+    "left_area": 18.0,
+    "right_area": 18.0,
+    "volume": 5.4
+  },
+  "w-x-b": {
+    "thickness": 0.15,
+    "length": 6.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 52.925,
+        "y": -3.0
+      },
+      "end": {
+        "x": 52.925,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 53.075,
+        "y": -3.0
+      },
+      "end": {
+        "x": 53.075,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 6.0,
+    "right_length": 6.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 53.075,
+          "y": -3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 53.075,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 52.925,
+          "y": 3.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 52.925,
+          "y": -3.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.9,
+    "joins": [
+      {
+        "kind": "Cross",
+        "end": "Along",
+        "other": "w-x-a",
+        "other_end": "Along",
+        "point": {
+          "x": 53.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.045
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 18.0,
+    "left_area": 18.0,
+    "right_area": 18.0,
+    "volume": 2.7
+  },
+  "w-n3-a": {
+    "thickness": 0.3,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 60.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 62.925,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 60.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 63.0,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.925,
+    "right_length": 3.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 60.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 63.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 62.925,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 60.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.88875,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n3-b",
+        "other_end": "Start",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n3-c",
+        "other_end": "Start",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.775,
+    "right_area": 9.0,
+    "volume": 2.66625
+  },
+  "w-n3-b": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 63.075,
+        "y": 0.075
+      },
+      "end": {
+        "x": 66.0,
+        "y": 0.075
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 63.0,
+        "y": -0.075
+      },
+      "end": {
+        "x": 66.0,
+        "y": -0.075
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.925,
+    "right_length": 3.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 63.0,
+          "y": -0.075
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 66.0,
+          "y": -0.075
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 66.0,
+          "y": 0.075
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 63.075,
+          "y": 0.075
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.444375,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n3-a",
+        "other_end": "End",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n3-c",
+        "other_end": "Start",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.775,
+    "right_area": 9.0,
+    "volume": 1.333125
+  },
+  "w-n3-c": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 62.925,
+        "y": 0.15
+      },
+      "end": {
+        "x": 62.925,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 63.075,
+        "y": 0.075
+      },
+      "end": {
+        "x": 63.075,
+        "y": 3.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.85,
+    "right_length": 2.925,
+    "footprint": [
+      {
+        "point": {
+          "x": 63.075,
+          "y": 0.075
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 63.075,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 62.925,
+          "y": 3.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 62.925,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.433125,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n3-a",
+        "other_end": "End",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n3-b",
+        "other_end": "Start",
+        "point": {
+          "x": 63.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.55,
+    "right_area": 8.775,
+    "volume": 1.299375
+  },
+  "w-n4-a": {
+    "thickness": 0.3,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 70.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 72.85,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 70.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 72.925,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.85,
+    "right_length": 2.925,
+    "footprint": [
+      {
+        "point": {
+          "x": 70.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 72.925,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 72.85,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 70.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.86625,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-b",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-c",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-d",
+        "other_end": "Start",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.55,
+    "right_area": 8.775,
+    "volume": 2.59875
+  },
+  "w-n4-b": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 76.0,
+        "y": -0.075
+      },
+      "end": {
+        "x": 73.075,
+        "y": -0.075
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 76.0,
+        "y": 0.075
+      },
+      "end": {
+        "x": 73.15,
+        "y": 0.075
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.925,
+    "right_length": 2.85,
+    "footprint": [
+      {
+        "point": {
+          "x": 76.0,
+          "y": 0.075
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 73.15,
+          "y": 0.075
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 73.075,
+          "y": -0.075
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 76.0,
+          "y": -0.075
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.433125,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-a",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-c",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-d",
+        "other_end": "Start",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.775,
+    "right_area": 8.55,
+    "volume": 1.299375
+  },
+  "w-n4-c": {
+    "thickness": 0.3,
+    "length": 3.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 73.15,
+        "y": 3.0
+      },
+      "end": {
+        "x": 73.15,
+        "y": 0.075
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 72.85,
+        "y": 3.0
+      },
+      "end": {
+        "x": 72.85,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.925,
+    "right_length": 2.85,
+    "footprint": [
+      {
+        "point": {
+          "x": 72.85,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 72.85,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 73.15,
+          "y": 0.075
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 73.15,
+          "y": 3.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.86625,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-a",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-b",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-n4-d",
+        "other_end": "Start",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.775,
+    "right_area": 8.55,
+    "volume": 2.59875
+  },
+  "w-n4-d": {
+    "thickness": 0.15,
+    "length": 3.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 73.075,
+        "y": -0.075
+      },
+      "end": {
+        "x": 73.075,
+        "y": -3.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 72.925,
+        "y": -0.15
+      },
+      "end": {
+        "x": 72.925,
+        "y": -3.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 2.925,
+    "right_length": 2.85,
+    "footprint": [
+      {
+        "point": {
+          "x": 72.925,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 72.925,
+          "y": -3.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 73.075,
+          "y": -3.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 73.075,
+          "y": -0.075
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.433125,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n4-a",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n4-b",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      },
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-n4-c",
+        "other_end": "End",
+        "point": {
+          "x": 73.0,
+          "y": 0.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 9.0,
+    "left_area": 8.775,
+    "right_area": 8.55,
+    "volume": 1.299375
+  },
+  "w-ta-arc": {
+    "thickness": 0.3,
+    "length": 7.853981633974,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 84.85,
+        "y": 0.0
+      },
+      "end": {
+        "x": 80.0,
+        "y": 4.85
+      },
+      "bulge": 0.414213562373
+    },
+    "right_face": {
+      "start": {
+        "x": 85.15,
+        "y": 0.0
+      },
+      "end": {
+        "x": 80.0,
+        "y": 5.15
+      },
+      "bulge": 0.414213562373
+    },
+    "left_length": 7.618362184955,
+    "right_length": 8.089601082994,
+    "footprint": [
+      {
+        "point": {
+          "x": 85.15,
+          "y": 0.0
+        },
+        "bulge": 0.414213562373
+      },
+      {
+        "point": {
+          "x": 80.0,
+          "y": 5.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 80.0,
+          "y": 4.85
+        },
+        "bulge": -0.414213562373
+      },
+      {
+        "point": {
+          "x": 84.85,
+          "y": 0.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 2.356194490192,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-ta-line",
+        "other_end": "Start",
+        "point": {
+          "x": 80.0,
+          "y": 5.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 23.561944901923,
+    "left_area": 22.855086554866,
+    "right_area": 24.268803248981,
+    "volume": 7.068583470577
+  },
+  "w-ta-line": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 80.0,
+        "y": 4.85
+      },
+      "end": {
+        "x": 76.0,
+        "y": 4.85
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 80.0,
+        "y": 5.15
+      },
+      "end": {
+        "x": 76.0,
+        "y": 5.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 80.0,
+          "y": 5.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 76.0,
+          "y": 5.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 76.0,
+          "y": 4.85
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 80.0,
+          "y": 4.85
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.2,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-ta-arc",
+        "other_end": "End",
+        "point": {
+          "x": 80.0,
+          "y": 5.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 3.6
+  },
+  "w-ra-arc": {
+    "thickness": 0.3,
+    "length": 7.853981633974,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 94.85,
+        "y": 0.0
+      },
+      "end": {
+        "x": 89.925,
+        "y": 4.849420068421
+      },
+      "bulge": 0.418750307258
+    },
+    "right_face": {
+      "start": {
+        "x": 95.15,
+        "y": 0.0
+      },
+      "end": {
+        "x": 90.075,
+        "y": 5.149453854536
+      },
+      "bulge": 0.409954380866
+    },
+    "left_length": 7.693365174436,
+    "right_length": 8.01459843169,
+    "footprint": [
+      {
+        "point": {
+          "x": 95.15,
+          "y": 0.0
+        },
+        "bulge": 0.409954380866
+      },
+      {
+        "point": {
+          "x": 90.075,
+          "y": 5.149453854536
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 89.925,
+          "y": 4.849420068421
+        },
+        "bulge": -0.418750307258
+      },
+      {
+        "point": {
+          "x": 94.85,
+          "y": 0.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 2.356138185704,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "End",
+        "other": "w-ra-line",
+        "other_end": "Start",
+        "point": {
+          "x": 90.0,
+          "y": 5.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 23.561944901923,
+    "left_area": 23.080095523309,
+    "right_area": 24.043795295069,
+    "volume": 7.068414557112
+  },
+  "w-ra-line": {
+    "thickness": 0.15,
+    "length": 4.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 89.925,
+        "y": 4.849420068421
+      },
+      "end": {
+        "x": 89.925,
+        "y": 9.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 90.075,
+        "y": 5.149453854536
+      },
+      "end": {
+        "x": 90.075,
+        "y": 9.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.150579931579,
+    "right_length": 3.850546145464,
+    "footprint": [
+      {
+        "point": {
+          "x": 90.075,
+          "y": 5.149453854536
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 90.075,
+          "y": 9.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 89.925,
+          "y": 9.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 89.925,
+          "y": 4.849420068421
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.600084455778,
+    "joins": [
+      {
+        "kind": "Miter",
+        "end": "Start",
+        "other": "w-ra-arc",
+        "other_end": "End",
+        "point": {
+          "x": 90.0,
+          "y": 5.0
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.451739794738,
+    "right_area": 11.551638436391,
+    "volume": 1.800253367335
+  },
+  "w-ct-arc": {
+    "thickness": 0.3,
+    "length": 7.853981633974,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 104.85,
+        "y": 0.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 4.85
+      },
+      "bulge": 0.414213562373
+    },
+    "right_face": {
+      "start": {
+        "x": 105.15,
+        "y": 0.0
+      },
+      "end": {
+        "x": 100.0,
+        "y": 5.15
+      },
+      "bulge": 0.414213562373
+    },
+    "left_length": 7.618362184955,
+    "right_length": 8.089601082994,
+    "footprint": [
+      {
+        "point": {
+          "x": 105.15,
+          "y": 0.0
+        },
+        "bulge": 0.414213562373
+      },
+      {
+        "point": {
+          "x": 100.0,
+          "y": 5.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 100.0,
+          "y": 4.85
+        },
+        "bulge": -0.414213562373
+      },
+      {
+        "point": {
+          "x": 104.85,
+          "y": 0.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 2.356194490192,
+    "joins": [
+      {
+        "kind": "Through",
+        "end": "Along",
+        "other": "w-ct-stem",
+        "other_end": "End",
+        "point": {
+          "x": 103.535533905933,
+          "y": 3.535533905933
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 23.561944901923,
+    "left_area": 22.855086554866,
+    "right_area": 24.268803248981,
+    "volume": 7.068583470577
+  },
+  "w-ct-stem": {
+    "thickness": 0.15,
+    "length": 5.0,
+    "offset_left": 0.075,
+    "offset_right": 0.075,
+    "layer_offsets": [
+      0.075,
+      -0.075
+    ],
+    "left_face": {
+      "start": {
+        "x": 99.946966991411,
+        "y": 0.053033008589
+      },
+      "end": {
+        "x": 103.376024806613,
+        "y": 3.482090823791
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 100.053033008589,
+        "y": -0.053033008589
+      },
+      "end": {
+        "x": 103.482090823791,
+        "y": 3.376024806613
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.849420068421,
+    "right_length": 4.849420068421,
+    "footprint": [
+      {
+        "point": {
+          "x": 100.053033008589,
+          "y": -0.053033008589
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 103.482090823791,
+          "y": 3.376024806613
+        },
+        "bulge": 0.007732421059
+      },
+      {
+        "point": {
+          "x": 103.376024806613,
+          "y": 3.482090823791
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 99.946966991411,
+          "y": 0.053033008589
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 0.727471004115,
+    "joins": [
+      {
+        "kind": "Butt",
+        "end": "End",
+        "other": "w-ct-arc",
+        "other_end": "Along",
+        "point": {
+          "x": 103.535533905933,
+          "y": 3.535533905933
+        },
+        "overlap_area": 0.0
+      }
+    ],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 15.0,
+    "left_area": 14.548260205262,
+    "right_area": 14.548260205262,
+    "volume": 2.182413012344
+  },
+  "w-loc-center": {
+    "thickness": 0.4,
+    "length": 4.0,
+    "offset_left": 0.2,
+    "offset_right": 0.2,
+    "layer_offsets": [
+      0.2,
+      0.15,
+      0.05,
+      -0.2
+    ],
+    "left_face": {
+      "start": {
+        "x": 0.0,
+        "y": 20.2
+      },
+      "end": {
+        "x": 4.0,
+        "y": 20.2
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 0.0,
+        "y": 19.8
+      },
+      "end": {
+        "x": 4.0,
+        "y": 19.8
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 0.0,
+          "y": 19.8
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 19.8
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 20.2
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 0.0,
+          "y": 20.2
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.6,
+    "joins": [],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 4.8
+  },
+  "w-loc-interior": {
+    "thickness": 0.4,
+    "length": 4.0,
+    "offset_left": 0.0,
+    "offset_right": 0.4,
+    "layer_offsets": [
+      0.0,
+      -0.05,
+      -0.15,
+      -0.4
+    ],
+    "left_face": {
+      "start": {
+        "x": 0.0,
+        "y": 24.0
+      },
+      "end": {
+        "x": 4.0,
+        "y": 24.0
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 0.0,
+        "y": 23.6
+      },
+      "end": {
+        "x": 4.0,
+        "y": 23.6
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 0.0,
+          "y": 23.6
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 23.6
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 24.0
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 0.0,
+          "y": 24.0
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.6,
+    "joins": [],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 4.8
+  },
+  "w-loc-exterior": {
+    "thickness": 0.4,
+    "length": 4.0,
+    "offset_left": 0.4,
+    "offset_right": 0.0,
+    "layer_offsets": [
+      0.4,
+      0.35,
+      0.25,
+      0.0
+    ],
+    "left_face": {
+      "start": {
+        "x": 0.0,
+        "y": 28.4
+      },
+      "end": {
+        "x": 4.0,
+        "y": 28.4
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 0.0,
+        "y": 28.0
+      },
+      "end": {
+        "x": 4.0,
+        "y": 28.0
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 0.0,
+          "y": 28.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 28.0
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 28.4
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 0.0,
+          "y": 28.4
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.6,
+    "joins": [],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 4.8
+  },
+  "w-loc-core": {
+    "thickness": 0.4,
+    "length": 4.0,
+    "offset_left": 0.275,
+    "offset_right": 0.125,
+    "layer_offsets": [
+      0.275,
+      0.225,
+      0.125,
+      -0.125
+    ],
+    "left_face": {
+      "start": {
+        "x": 0.0,
+        "y": 32.275
+      },
+      "end": {
+        "x": 4.0,
+        "y": 32.275
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 0.0,
+        "y": 31.875
+      },
+      "end": {
+        "x": 4.0,
+        "y": 31.875
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 0.0,
+          "y": 31.875
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 31.875
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 32.275
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 0.0,
+          "y": 32.275
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.6,
+    "joins": [],
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 4.8
+  },
+  "w-up-a": {
+    "thickness": 0.3,
+    "length": 4.0,
+    "offset_left": 0.15,
+    "offset_right": 0.15,
+    "layer_offsets": [
+      0.15,
+      -0.05,
+      -0.15
+    ],
+    "left_face": {
+      "start": {
+        "x": 4.0,
+        "y": 0.15
+      },
+      "end": {
+        "x": 8.0,
+        "y": 0.15
+      },
+      "bulge": 0.0
+    },
+    "right_face": {
+      "start": {
+        "x": 4.0,
+        "y": -0.15
+      },
+      "end": {
+        "x": 8.0,
+        "y": -0.15
+      },
+      "bulge": 0.0
+    },
+    "left_length": 4.0,
+    "right_length": 4.0,
+    "footprint": [
+      {
+        "point": {
+          "x": 4.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 8.0,
+          "y": -0.15
+        },
+        "bulge": 0.0
+      },
+      {
+        "point": {
+          "x": 8.0,
+          "y": 0.15
+        },
+        "bulge": -0.0
+      },
+      {
+        "point": {
+          "x": 4.0,
+          "y": 0.15
+        },
+        "bulge": 0.0
+      }
+    ],
+    "footprint_area": 1.2,
+    "joins": [],
+    "base_z": 3.0,
+    "top_z": 6.0,
+    "height": 3.0,
+    "side_area": 12.0,
+    "left_area": 12.0,
+    "right_area": 12.0,
+    "volume": 3.6
+  }
+}

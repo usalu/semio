@@ -1,0 +1,3 @@
+(* ebnf bim.model.inference *)
+document = header, body ;
+header = 'schema', space, 'bim.model.inference', newline ;

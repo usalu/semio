@@ -1,0 +1,152 @@
+{
+ "placements": [
+  {
+   "name": "rotate quarter turn",
+   "ops": [
+    {
+     "rotation_z": 1.5707963267948966
+    }
+   ],
+   "point": [
+    1,
+    0,
+    0
+   ],
+   "expected": [
+    0,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "translate then rotate",
+   "ops": [
+    {
+     "translation": [
+      1,
+      0,
+      0
+     ]
+    },
+    {
+     "rotation_z": 1.5707963267948966
+    }
+   ],
+   "point": [
+    0,
+    0,
+    0
+   ],
+   "expected": [
+    0,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "rotate then translate",
+   "ops": [
+    {
+     "rotation_z": 1.5707963267948966
+    },
+    {
+     "translation": [
+      1,
+      0,
+      0
+     ]
+    }
+   ],
+   "point": [
+    1,
+    0,
+    0
+   ],
+   "expected": [
+    1,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "axis rotation about x",
+   "ops": [
+    {
+     "rotation_axis": [
+      1,
+      0,
+      0
+     ],
+     "angle": 1.5707963267948966
+    }
+   ],
+   "point": [
+    0,
+    1,
+    0
+   ],
+   "expected": [
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mirror x",
+   "ops": [
+    {
+     "scaling": [
+      -1,
+      1,
+      1
+     ]
+    }
+   ],
+   "point": [
+    2,
+    3,
+    4
+   ],
+   "expected": [
+    -2,
+    3,
+    4
+   ]
+  }
+ ],
+ "z_planes": [
+  {
+   "name": "sloped plane",
+   "anchor": [
+    1,
+    1
+   ],
+   "z": 3,
+   "direction": 0,
+   "slope": 0.5,
+   "queries": [
+    {
+     "point": [
+      1,
+      1
+     ],
+     "z": 3
+    },
+    {
+     "point": [
+      3,
+      1
+     ],
+     "z": 4
+    },
+    {
+     "point": [
+      1,
+      5
+     ],
+     "z": 3
+    }
+   ]
+  }
+ ]
+}

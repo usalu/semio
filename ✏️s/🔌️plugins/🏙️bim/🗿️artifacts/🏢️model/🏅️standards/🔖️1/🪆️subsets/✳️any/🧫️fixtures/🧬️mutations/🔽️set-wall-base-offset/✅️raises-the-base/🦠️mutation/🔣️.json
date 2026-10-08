@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallBaseOffset",
+  "id": "w-south",
+  "base_offset": 0.15
+}

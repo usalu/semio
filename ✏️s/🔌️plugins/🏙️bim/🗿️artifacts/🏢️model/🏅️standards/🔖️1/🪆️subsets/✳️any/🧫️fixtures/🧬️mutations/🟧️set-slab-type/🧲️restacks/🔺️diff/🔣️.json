@@ -1,0 +1,19 @@
+{
+  "slab_types": {
+    "sl-200": {
+      "entry": "Patched",
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-screed",
+          "thickness": 0.24
+        },
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.08
+        }
+      ]
+    }
+  }
+}

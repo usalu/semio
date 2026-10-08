@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-building/schema.json",
+  "title": "SetBuilding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setBuilding"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "origin": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Origin",
+          "de": "Ursprung"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "rotation": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Rotation (rad)",
+          "de": "Drehung (rad)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "elevation": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Elevation (m)",
+          "de": "Höhe (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    }
+  }
+}

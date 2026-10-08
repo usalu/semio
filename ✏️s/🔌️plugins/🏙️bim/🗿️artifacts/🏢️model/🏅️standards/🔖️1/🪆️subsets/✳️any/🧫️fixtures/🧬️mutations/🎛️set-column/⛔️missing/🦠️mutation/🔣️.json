@@ -1,0 +1,5 @@
+{
+  "mutation": "setColumn",
+  "id": "c-gone",
+  "name": "Gone"
+}

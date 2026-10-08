@@ -1,0 +1,370 @@
+{
+  "description": "Language-agnostic expectations of the BIM authoring tools, written by the third-party oracle (../../🧪️tests/🛠️gestures-bim-1/🐍️.py write) and replayed by the Rust subject. Metres and radians; a bulge is tan(sweep / 4).",
+  "arcs": [
+    {
+      "start": [
+        0,
+        0
+      ],
+      "through": [
+        2,
+        -1
+      ],
+      "end": [
+        4,
+        0
+      ],
+      "bulge": 0.5
+    },
+    {
+      "start": [
+        0,
+        0
+      ],
+      "through": [
+        2,
+        1
+      ],
+      "end": [
+        4,
+        0
+      ],
+      "bulge": -0.5
+    },
+    {
+      "start": [
+        0,
+        0
+      ],
+      "through": [
+        4,
+        -4
+      ],
+      "end": [
+        8,
+        0
+      ],
+      "bulge": 0.9999999999999999
+    },
+    {
+      "start": [
+        1,
+        1
+      ],
+      "through": [
+        2.5,
+        3
+      ],
+      "end": [
+        5,
+        1
+      ],
+      "bulge": -1.0317381620988824
+    }
+  ],
+  "projections": [
+    {
+      "axis": {
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          8,
+          0
+        ]
+      },
+      "point": [
+        3,
+        0.5
+      ],
+      "offset": 3.0,
+      "distance": 0.5,
+      "side": 1
+    },
+    {
+      "axis": {
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          8,
+          0
+        ]
+      },
+      "point": [
+        3,
+        -0.25
+      ],
+      "offset": 3.0,
+      "distance": 0.25,
+      "side": -1
+    },
+    {
+      "axis": {
+        "start": [
+          8,
+          6
+        ],
+        "end": [
+          0,
+          6
+        ]
+      },
+      "point": [
+        3,
+        6.1
+      ],
+      "offset": 5.0,
+      "distance": 0.09999999999999964,
+      "side": -1
+    },
+    {
+      "axis": {
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          3,
+          4
+        ]
+      },
+      "point": [
+        10,
+        10
+      ],
+      "offset": 5.0,
+      "distance": 9.219544457292887,
+      "side": -1
+    }
+  ],
+  "rectangles": [
+    {
+      "a": [
+        5,
+        4
+      ],
+      "b": [
+        0,
+        0
+      ],
+      "ring": [
+        [
+          5.0,
+          0.0
+        ],
+        [
+          5.0,
+          4.0
+        ],
+        [
+          0.0,
+          4.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "area": 20.0
+    },
+    {
+      "a": [
+        -1,
+        2
+      ],
+      "b": [
+        3,
+        -2
+      ],
+      "ring": [
+        [
+          3.0,
+          -2.0
+        ],
+        [
+          3.0,
+          2.0
+        ],
+        [
+          -1.0,
+          2.0
+        ],
+        [
+          -1.0,
+          -2.0
+        ]
+      ],
+      "area": 16.0
+    }
+  ],
+  "counter_clockwise": [
+    {
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          5.0,
+          0.0
+        ],
+        [
+          5.0,
+          4.0
+        ],
+        [
+          0.0,
+          4.0
+        ]
+      ],
+      "area": 20.0
+    },
+    {
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          3
+        ]
+      ],
+      "expected": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          4.0,
+          0.0
+        ],
+        [
+          4.0,
+          3.0
+        ]
+      ],
+      "area": 6.0
+    }
+  ],
+  "windows": [
+    {
+      "length": 8,
+      "width": 1.2,
+      "foot": 2.0,
+      "offset": 2.0
+    },
+    {
+      "length": 8,
+      "width": 1.2,
+      "foot": 0.2,
+      "offset": 0.6
+    },
+    {
+      "length": 8,
+      "width": 1.2,
+      "foot": 7.9,
+      "offset": 7.4
+    },
+    {
+      "length": 1,
+      "width": 1.2,
+      "foot": 0.5,
+      "offset": null
+    }
+  ],
+  "heights": [
+    {
+      "elevation": 0,
+      "pointer": 3.62,
+      "height": 3.6
+    },
+    {
+      "elevation": 0,
+      "pointer": 0.1,
+      "height": 0.5
+    },
+    {
+      "elevation": 3.0,
+      "pointer": 5.74,
+      "height": 2.75
+    },
+    {
+      "elevation": 3.0,
+      "pointer": 6.0,
+      "height": 3.0
+    }
+  ],
+  "rotations": [
+    {
+      "pivot": [
+        0,
+        0
+      ],
+      "reference": [
+        1,
+        0
+      ],
+      "target": [
+        0,
+        1
+      ],
+      "angle": 1.5707963267948966
+    },
+    {
+      "pivot": [
+        1,
+        1
+      ],
+      "reference": [
+        3,
+        1
+      ],
+      "target": [
+        1,
+        -1
+      ],
+      "angle": -1.5707963267948966
+    },
+    {
+      "pivot": [
+        0,
+        0
+      ],
+      "reference": [
+        1,
+        0
+      ],
+      "target": [
+        -1,
+        -0.0001
+      ],
+      "angle": -3.1414926535901264
+    }
+  ]
+}

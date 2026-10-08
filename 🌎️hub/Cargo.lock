@@ -5809,6 +5809,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-hub-bim"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-os-run",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-bim-model",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-hub-block"
 version = "0.1.0"
 dependencies = [
@@ -6918,6 +6939,36 @@ dependencies = [
  "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xlsx",
  "semio-s-artifact-stdio-zip",
+]
+
+[[package]]
+name = "semio-s-artifact-bim-model"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-geometry",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-ifc",
+ "semio-s-artifact-stdio-svg",
+ "semio-s-artifact-stdio-xml",
 ]
 
 [[package]]

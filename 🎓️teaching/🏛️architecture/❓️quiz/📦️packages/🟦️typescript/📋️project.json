@@ -56,7 +56,30 @@
             "ready": {
               "port": 6061,
               "portEnv": "TEACHING_ARCHITECTURE_QUIZ_PORT"
-            }
+            },
+            "parameters": [
+              {
+                "id": "steady",
+                "kind": "flag",
+                "env": {
+                  "TEACHING_ARCHITECTURE_QUIZ_WATCH": "off"
+                }
+              },
+              {
+                "id": "stack",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "beside",
+                    "env": {
+                      "TEACHING_ARCHITECTURE_QUIZ_PORT": "6063",
+                      "PROCTOR_PORT": "8793",
+                      "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside"
+                    }
+                  }
+                ]
+              }
+            ]
           }
         }
       },
@@ -66,7 +89,6 @@
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
         "env": {
-          "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
           "NODE_OPTIONS": "",
           "NX_NATIVE_COMMAND_RUNNER": "false",
           "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
@@ -95,7 +117,6 @@
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev-site",
         "env": {
-          "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
           "NODE_OPTIONS": "",
           "NX_NATIVE_COMMAND_RUNNER": "false",
           "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",

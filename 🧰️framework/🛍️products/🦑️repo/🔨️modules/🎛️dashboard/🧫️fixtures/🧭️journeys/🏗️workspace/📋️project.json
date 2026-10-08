@@ -1,0 +1,30 @@
+{
+  "name": "journey-fixture",
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "metadata": {
+    "semio": {
+      "dashboard": {
+        "parameters": [],
+        "tools": [
+          { "id": "words", "verb": "dev", "command": ["bun", "{workspace}/📜️script.ts", "words"], "continuous": true },
+          { "id": "serve", "verb": "serve", "command": ["bun", "{workspace}/📜️script.ts", "serve"], "continuous": true, "ready": { "portEnv": "JOURNEY_PORT", "path": "/health" },
+            "parameters": [{ "id": "listen", "kind": "text", "required": true, "valueEnv": "JOURNEY_PORT" }] },
+          { "id": "serve-a", "verb": "serve", "command": ["bun", "{workspace}/📜️script.ts", "serve"], "continuous": true, "env": { "JOURNEY_PORT": "47101" }, "ready": { "port": 47101, "portEnv": "JOURNEY_PORT", "path": "/health" } },
+          { "id": "serve-b", "verb": "serve", "command": ["bun", "{workspace}/📜️script.ts", "serve"], "continuous": true, "env": { "JOURNEY_PORT": "47102" }, "ready": { "port": 47102, "portEnv": "JOURNEY_PORT", "path": "/health" } },
+          { "id": "idle", "verb": "watch", "command": ["bun", "-e", "setInterval(() => {}, 3600000)", "{slot}"], "continuous": true, "parameters": [{ "id": "slot", "kind": "text", "default": "0" }] },
+          { "id": "ticker", "verb": "watch", "command": ["bun", "{workspace}/📜️script.ts", "ticker"], "continuous": true },
+          { "id": "burst", "verb": "build", "command": ["bun", "{workspace}/📜️script.ts", "burst"], "parameters": [{ "id": "bytes", "kind": "text", "default": "1048576", "valuePositional": true }] },
+          { "id": "fail", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "exit"], "parameters": [{ "id": "code", "kind": "text", "default": "3", "valuePositional": true }] },
+          { "id": "env", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "env"] },
+          { "id": "title", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "title"] },
+          { "id": "resize", "verb": "watch", "command": ["bun", "{workspace}/📜️script.ts", "resize"], "continuous": true },
+          { "id": "probe", "verb": "check", "command": ["bun", "{workspace}/📜️script.ts", "probe", "http://127.0.0.1:47101/health"], "requires": ["tool:journey-fixture/serve-a"] }
+        ],
+        "compounds": [
+          { "id": "pair", "verb": "dev", "stop": "together", "members": [{ "run": "tool:journey-fixture/serve-a" }, { "run": "tool:journey-fixture/serve-b" }] },
+          { "id": "stack", "verb": "dev", "stop": "together", "members": [{ "run": "tool:journey-fixture/serve-a" }, { "run": "tool:journey-fixture/ticker", "env": { "JOURNEY_MARK": "stacked" } }] }
+        ]
+      }
+    }
+  }
+}

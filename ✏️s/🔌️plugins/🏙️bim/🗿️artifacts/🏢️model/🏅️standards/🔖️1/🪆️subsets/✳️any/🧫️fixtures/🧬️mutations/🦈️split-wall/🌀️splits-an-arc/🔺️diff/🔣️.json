@@ -1,0 +1,47 @@
+{
+  "walls": {
+    "w-arc": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.414213562373,
+          "end": {
+            "x": 4.0,
+            "y": 2.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "entry": "Patched"
+    },
+    "w-arc-2": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.414213562373,
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "start": {
+            "x": 4.0,
+            "y": 2.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "Arc",
+      "phase": "New",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

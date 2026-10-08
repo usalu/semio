@@ -1,0 +1,6 @@
+{
+  "mutation": "deleteElements",
+  "ids": [
+    "st-ground"
+  ]
+}

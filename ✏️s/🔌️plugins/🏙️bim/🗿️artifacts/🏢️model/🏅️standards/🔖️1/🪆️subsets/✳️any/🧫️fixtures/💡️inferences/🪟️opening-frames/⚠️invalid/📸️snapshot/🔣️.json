@@ -1,0 +1,257 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Opening Frames Invalid",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800.0,
+      "conductivity": 0.8,
+      "specific_heat": 900.0
+    },
+    "m-frame": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.25
+      },
+      "density": 700.0,
+      "conductivity": 0.15,
+      "specific_heat": 1600.0
+    }
+  },
+  "wall_types": {
+    "wt-150": {
+      "name": "Brick 150",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.15,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "window_types": {
+    "wnd-120": {
+      "name": "Window 120",
+      "width": 1.2,
+      "height": 1.4,
+      "sill": 0.9,
+      "frame_width": 0.06,
+      "frame_depth": 0.07,
+      "panes": 2,
+      "material": "m-frame"
+    }
+  },
+  "door_types": {
+    "dr-single": {
+      "name": "Door 90",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.07,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-frame"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "elevation": 0.0,
+      "true_north": 0.0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "elevation": 0.0
+    }
+  },
+  "storeys": {
+    "st-1": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 2.5
+    }
+  },
+  "walls": {
+    "w-a": {
+      "storey": "st-1",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 4.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "A"
+    },
+    "w-b": {
+      "storey": "st-1",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 3.0
+          },
+          "end": {
+            "x": 4.0,
+            "y": 3.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "B"
+    }
+  },
+  "openings": {
+    "o-above": {
+      "host": "w-a",
+      "kind": {
+        "Door": {
+          "door_type": "dr-single"
+        }
+      },
+      "offset": 3.5,
+      "height": 2.7,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Too Tall Door"
+    },
+    "o-below": {
+      "host": "w-b",
+      "kind": {
+        "Void": {
+          "width": 0.5,
+          "height": 0.5
+        }
+      },
+      "offset": 2.0,
+      "sill_override": -0.1,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Sunken Void"
+    },
+    "o-no-type": {
+      "host": "w-b",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-none"
+        }
+      },
+      "offset": 3.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Untyped Window"
+    },
+    "o-orphan": {
+      "host": "w-ghost",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 1.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Orphan Window"
+    },
+    "o-outside": {
+      "host": "w-a",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 0.3,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Outside Window"
+    },
+    "o-overlap-a": {
+      "host": "w-a",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 1.8,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Overlap A"
+    },
+    "o-overlap-b": {
+      "host": "w-a",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 2.4,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Overlap B"
+    },
+    "o-zero": {
+      "host": "w-b",
+      "kind": {
+        "Void": {
+          "width": 1.0,
+          "height": 1.0
+        }
+      },
+      "offset": 1.0,
+      "width": 0.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Zero Width"
+    }
+  }
+}

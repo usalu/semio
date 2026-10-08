@@ -328,8 +328,6 @@
   "route": {
     "target": "test-command-composition-source",
     "command": "bun ./📜️script.ts test command-composition-source",
-    "namedInput": "commandCompositionSources",
-    "launchName": "⚖️test-command-composition-source🦑️repo🔨️modules🧪️test",
-    "launchCommand": "bun nx run @semio-tech/repo-test-domain:test-command-composition-source"
+    "namedInput": "commandCompositionSources"
   }
 }

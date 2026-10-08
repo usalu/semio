@@ -1,0 +1,8 @@
+{
+  "wall_types": {
+    "wt-300": {
+      "entry": "Patched",
+      "name": "Brick 300 (renamed)"
+    }
+  }
+}

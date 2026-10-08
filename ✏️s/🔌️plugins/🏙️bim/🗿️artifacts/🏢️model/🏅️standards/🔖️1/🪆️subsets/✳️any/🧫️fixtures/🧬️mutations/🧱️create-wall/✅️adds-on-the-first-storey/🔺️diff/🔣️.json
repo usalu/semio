@@ -1,0 +1,30 @@
+{
+  "walls": {
+    "w-first": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "location": "Center",
+      "name": "First",
+      "phase": "New",
+      "storey": "st-first",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "wall_type": "wt-300"
+    }
+  }
+}

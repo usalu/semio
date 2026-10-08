@@ -16,6 +16,10 @@ pub mod compute;
 #[path = "../../🔀️booleans/🦀️.rs"]
 pub mod booleans;
 
+#[cfg(feature = "booleans")]
+#[path = "../../🧱️regions/🦀️.rs"]
+pub mod regions;
+
 #[cfg(feature = "trace")]
 #[path = "../../🔍️trace/🦀️.rs"]
 pub mod trace;

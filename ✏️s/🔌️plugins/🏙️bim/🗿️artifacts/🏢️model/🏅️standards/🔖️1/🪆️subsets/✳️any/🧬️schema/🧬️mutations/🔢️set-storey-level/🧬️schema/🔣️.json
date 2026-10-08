@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-storey-level/schema.json",
+  "title": "SetStoreyLevel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "level"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setStoreyLevel"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "level": {
+      "type": "integer",
+      "x-semio-ui": {
+        "widget": "integer",
+        "role": "value",
+        "label": {
+          "en": "Level",
+          "de": "Ebene"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

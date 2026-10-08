@@ -1,0 +1,71 @@
+use super::*;
+use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, testkit::house};
+
+const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🏗️ifc/🏠️house");
+
+fn read(name: &str) -> Vec<u8> {
+    std::fs::read(format!("{HOUSE_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))
+}
+
+#[test]
+fn the_report_counts_the_classes_of_the_house_and_lists_each_storey_containment() {
+    let report = projection(&house());
+    assert_eq!(report.schema, "IFC2X3");
+    let count = |class: &str| report.counts[class];
+    assert_eq!((count("IfcWallStandardCase"), count("IfcWall"), count("IfcOpeningElement"), count("IfcWindow"), count("IfcDoor")), (2, 5, 6, 3, 2));
+    assert_eq!((count("IfcColumn"), count("IfcBeam"), count("IfcStair"), count("IfcStairFlight"), count("IfcSpace"), count("IfcGrid")), (2, 2, 2, 3, 2, 1));
+    assert_eq!((count("IfcRoof"), count("IfcCurtainWall"), count("IfcMember"), count("IfcPlate"), count("IfcRailing")), (1, 1, 1, 1, 1));
+    assert_eq!(report.containment["st-ground"], ["b-1", "b-2", "c-1", "c-2", "o-door-1", "o-win-1", "o-win-2", "o-win-arc", "s-1", "sl-ground", "w-arc", "w-east", "w-free", "w-north", "w-south", "w-west"]);
+    assert_eq!(report.containment["st-roof"], ["r-1"]);
+    assert!(report.containment["st-base"].is_empty());
+}
+
+#[test]
+fn only_exactly_measurable_elements_carry_a_volume() {
+    let report = projection(&house());
+    assert!(report.volumes.contains_key("w-south") && report.volumes.contains_key("w-free") && report.volumes.contains_key("c-1") && report.volumes.contains_key("b-1") && report.volumes.contains_key("sl-ground"));
+    assert!(!report.volumes.contains_key("w-arc"), "the curved wall is tessellated by the kernel");
+    assert!(!report.volumes.contains_key("sl-balcony"), "the sloped slab is a brep");
+    assert!(!report.volumes.contains_key("c-2"), "the round column is tessellated by the kernel");
+    assert!((report.volumes["w-free"] - 3.0 * 0.15 * 2.4).abs() < 1e-9);
+    assert!((report.volumes["c-1"] - 0.27).abs() < 1e-9);
+    assert!((report.volumes["sl-ground"] - (8.0 * 6.0 - 1.0) * 0.25).abs() < 1e-9);
+}
+
+#[test]
+fn the_json_form_parses_and_keeps_the_numbers() {
+    let report = projection(&house());
+    let parsed: serde_json::Value = serde_json::from_str(&report.to_json()).expect("valid JSON");
+    assert_eq!(parsed["schema"], "IFC2X3");
+    assert_eq!(parsed["counts"]["IfcWall"], 5);
+    assert!((parsed["volumes"]["c-1"].as_f64().expect("a number") - 0.27).abs() < 1e-9);
+}
+
+#[test]
+fn the_committed_house_file_is_the_current_export() {
+    let (bytes, notes) = export_ifc2x3(&house()).expect("the house exports");
+    assert!(notes.is_empty());
+    if std::env::var("BIM_BLESS").is_ok() {
+        std::fs::write(format!("{HOUSE_DIR}/🏠️house.ifc"), &bytes).expect("the file is written");
+    }
+    assert_eq!(read("🏠️house.ifc"), bytes, "the committed export drifted: rewrite it with BIM_BLESS=1");
+}
+
+#[test]
+fn the_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
+    let oracle: serde_json::Value = serde_json::from_slice(&read("🔬️measure/🔣️.json")).expect("the oracle table");
+    let report = projection(&house());
+    assert_eq!(oracle["schema"], "IFC2X3");
+    for (class, count) in &report.counts {
+        assert_eq!(oracle["counts"][class].as_u64(), Some(*count as u64), "{class}");
+    }
+    for (storey, tags) in &report.containment {
+        let measured: Vec<String> = oracle["containment"][storey].as_array().expect("tags").iter().map(|tag| tag.as_str().expect("a tag").to_string()).collect();
+        assert_eq!(&measured, tags, "{storey}");
+    }
+    assert_eq!(oracle["volumes"].as_object().expect("volumes").len(), report.volumes.len());
+    for (tag, volume) in &report.volumes {
+        let measured = oracle["volumes"][tag].as_f64().expect("a kernel volume");
+        assert!((measured - volume).abs() < 1e-9 * volume.abs().max(1.0), "{tag}: kernel {measured}, written {volume}");
+    }
+}

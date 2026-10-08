@@ -612,3 +612,50 @@ async fn a_diff_outside_the_reads_serves_the_stored_result_without_walking_the_p
     assert_eq!(snapshot.computes.load(Ordering::SeqCst), computed * 2, "a diff inside the reads walks the plan again (the cache is disabled)");
 }
 //#endregion 🧪️SessionGate
+
+//#region 🧪️HashingOnlyWithACache
+#[derive(Clone, Debug, Default)]
+struct CountedSnapshot {
+    inputs: Arc<AtomicUsize>,
+}
+
+struct CountedSum;
+impl InferredField<CountedSnapshot> for CountedSum {
+    type Dependency = Vec<u8>;
+    type Key = String;
+    type Value = i64;
+    const FIELD_ID: &'static str = "test.dag.counted-sum";
+    const SCHEMA_VERSION: u32 = 1;
+    fn reads() -> &'static [&'static str] {
+        &["weights"]
+    }
+    fn plan(_snapshot: &CountedSnapshot) -> Vec<InferenceStep<Self::Key>> {
+        vec![InferenceStep { key: "root".to_string(), parents: vec![] }, InferenceStep { key: "leaf".to_string(), parents: vec!["root".to_string()] }]
+    }
+    fn dep_input(snapshot: &CountedSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+        snapshot.inputs.fetch_add(1, Ordering::SeqCst);
+        vec![1]
+    }
+    fn compute(_snapshot: &CountedSnapshot, _key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+        1 + parents.iter().sum::<i64>()
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dependencies_are_hashed_only_when_a_cache_can_use_them() {
+    let snapshot = CountedSnapshot::default();
+    let pure = infer_field::<CountedSnapshot, CountedSum>(&snapshot, None);
+    assert_eq!(snapshot.inputs.load(Ordering::SeqCst), 0, "no cache: dep_input is never evaluated");
+    let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
+    assert_eq!(infer_field::<CountedSnapshot, CountedSum>(&snapshot, Some(&mut disabled)), pure);
+    assert_eq!(snapshot.inputs.load(Ordering::SeqCst), 0, "a disabled cache cannot use dependency hashes either");
+    let mut enabled = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
+    assert_eq!(infer_field::<CountedSnapshot, CountedSum>(&snapshot, Some(&mut enabled)), pure);
+    assert_eq!(snapshot.inputs.load(Ordering::SeqCst), 2, "an enabled cache hashes every entity once");
+    let mut session = InferenceSession::new().await;
+    let mut idle = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
+    let gated = infer_field_after_diff::<CountedSnapshot, CountedSum, _>(&snapshot, &Touching(&["weights"]), &mut session, &mut idle).await;
+    assert_eq!(gated, pure);
+    assert!(session.root(CountedSum::FIELD_ID).is_some(), "the session root is a fold of dependency hashes, so the gated driver always hashes");
+}
+//#endregion 🧪️HashingOnlyWithACache

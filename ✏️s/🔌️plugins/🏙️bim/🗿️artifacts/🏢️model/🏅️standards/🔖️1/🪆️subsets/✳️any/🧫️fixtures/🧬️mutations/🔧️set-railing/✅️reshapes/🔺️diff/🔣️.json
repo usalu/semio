@@ -1,0 +1,19 @@
+{
+  "railings": {
+    "rl-1": {
+      "entry": "Patched",
+      "height": 1.1,
+      "material": "m-brick",
+      "path": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        }
+      ]
+    }
+  }
+}

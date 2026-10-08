@@ -1,0 +1,191 @@
+{
+  "schema": "s.bim.model@1",
+  "project": { "name": "Oracle Wall Joins", "description": "One ground storey that exercises every wall join: miter, butt, cross, nodes of three and four walls, arcs, location lines.", "author": "", "organization": "", "phase_names": [] },
+  "materials": {
+    "m-brick": { "name": "Brick", "category": "Masonry", "color": { "r": 0.7, "g": 0.35, "b": 0.25 }, "density": 1800.0, "conductivity": 0.8, "specific_heat": 900.0 },
+    "m-insulation": { "name": "Mineral Wool", "category": "Insulation", "color": { "r": 0.9, "g": 0.85, "b": 0.3 }, "density": 40.0, "conductivity": 0.035, "specific_heat": 1030.0 }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        { "material": "m-brick", "thickness": 0.2, "function": "Structure" },
+        { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }
+      ]
+    },
+    "wt-150": {
+      "name": "Brick 150",
+      "layers": [{ "material": "m-brick", "thickness": 0.15, "function": "Structure" }]
+    },
+    "wt-core": {
+      "name": "Core 400",
+      "layers": [
+        { "material": "m-brick", "thickness": 0.05, "function": "Finish" },
+        { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" },
+        { "material": "m-brick", "thickness": 0.25, "function": "Core" }
+      ]
+    }
+  },
+  "sites": {
+    "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 100.0, "true_north": 0.0, "boundary": [] }
+  },
+  "buildings": {
+    "bldg-1": { "site": "site-1", "name": "Joins", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 0.0 }
+  },
+  "storeys": {
+    "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 },
+    "st-first": { "building": "bldg-1", "name": "First", "level": 1, "height": 3.0 }
+  },
+  "walls": {
+    "w-l-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 4.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "L A"
+    },
+    "w-l-b": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 4.0, "y": 0.0 }, "end": { "x": 4.0, "y": 3.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "L B"
+    },
+    "w-ll-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 10.0, "y": 0.0 }, "end": { "x": 14.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Unequal A"
+    },
+    "w-ll-b": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 14.0, "y": 0.0 }, "end": { "x": 14.0, "y": 3.0 } } },
+      "location": "Exterior", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Unequal B"
+    },
+    "w-ac-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 20.0, "y": 0.0 }, "end": { "x": 24.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Acute A"
+    },
+    "w-ac-b": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 24.0, "y": 0.0 }, "end": { "x": 22.0, "y": 3.4641016151377544 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Acute B"
+    },
+    "w-t1-through": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 30.0, "y": 0.0 }, "end": { "x": 36.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "T through"
+    },
+    "w-t1-stem": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 33.0, "y": 3.0 }, "end": { "x": 33.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "T stem"
+    },
+    "w-t2-through": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 40.0, "y": 0.0 }, "end": { "x": 46.0, "y": 0.0 } } },
+      "location": "Interior", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "T through interior"
+    },
+    "w-t2-stem": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 43.0, "y": -3.0 }, "end": { "x": 43.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "T stem from the right"
+    },
+    "w-x-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 50.0, "y": 0.0 }, "end": { "x": 56.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Cross A"
+    },
+    "w-x-b": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 53.0, "y": -3.0 }, "end": { "x": 53.0, "y": 3.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Cross B"
+    },
+    "w-n3-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 60.0, "y": 0.0 }, "end": { "x": 63.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 3 west"
+    },
+    "w-n3-b": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 63.0, "y": 0.0 }, "end": { "x": 66.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 3 east"
+    },
+    "w-n3-c": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 63.0, "y": 0.0 }, "end": { "x": 63.0, "y": 3.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 3 branch"
+    },
+    "w-n4-a": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 70.0, "y": 0.0 }, "end": { "x": 73.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 4 west"
+    },
+    "w-n4-b": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 76.0, "y": 0.0 }, "end": { "x": 73.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 4 east"
+    },
+    "w-n4-c": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 73.0, "y": 3.0 }, "end": { "x": 73.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 4 north"
+    },
+    "w-n4-d": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 73.0, "y": 0.0 }, "end": { "x": 73.0, "y": -3.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Node 4 south"
+    },
+    "w-ta-arc": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Arc": { "start": { "x": 85.0, "y": 0.0 }, "end": { "x": 80.0, "y": 5.0 }, "bulge": 0.41421356237309503 } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Tangent arc"
+    },
+    "w-ta-line": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 80.0, "y": 5.0 }, "end": { "x": 76.0, "y": 5.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Tangent line"
+    },
+    "w-ra-arc": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Arc": { "start": { "x": 95.0, "y": 0.0 }, "end": { "x": 90.0, "y": 5.0 }, "bulge": 0.41421356237309503 } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Right-angle arc"
+    },
+    "w-ra-line": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 90.0, "y": 5.0 }, "end": { "x": 90.0, "y": 9.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Right-angle line"
+    },
+    "w-ct-arc": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Arc": { "start": { "x": 105.0, "y": 0.0 }, "end": { "x": 100.0, "y": 5.0 }, "bulge": 0.41421356237309503 } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Arc with a stem"
+    },
+    "w-ct-stem": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 100.0, "y": 0.0 }, "end": { "x": 103.5355339059327, "y": 3.5355339059327 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Stem onto an arc"
+    },
+    "w-loc-center": {
+      "storey": "st-ground", "wall_type": "wt-core",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 20.0 }, "end": { "x": 4.0, "y": 20.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Location center"
+    },
+    "w-loc-interior": {
+      "storey": "st-ground", "wall_type": "wt-core",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 24.0 }, "end": { "x": 4.0, "y": 24.0 } } },
+      "location": "Interior", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Location interior"
+    },
+    "w-loc-exterior": {
+      "storey": "st-ground", "wall_type": "wt-core",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 28.0 }, "end": { "x": 4.0, "y": 28.0 } } },
+      "location": "Exterior", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Location exterior"
+    },
+    "w-loc-core": {
+      "storey": "st-ground", "wall_type": "wt-core",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 32.0 }, "end": { "x": 4.0, "y": 32.0 } } },
+      "location": "CoreCenter", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Location core"
+    },
+    "w-up-a": {
+      "storey": "st-first", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 4.0, "y": 0.0 }, "end": { "x": 8.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Other storey, same node as L A and L B"
+    }
+  }
+}

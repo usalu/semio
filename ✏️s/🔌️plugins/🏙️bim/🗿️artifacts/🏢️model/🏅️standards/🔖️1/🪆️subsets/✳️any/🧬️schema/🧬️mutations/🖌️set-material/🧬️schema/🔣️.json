@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-material/schema.json",
+  "title": "SetMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setMaterial"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "category": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/MaterialCategory",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Category",
+          "de": "Kategorie"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "color": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Rgb",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Colour",
+          "de": "Farbe"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "density": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Density (kg/m3)",
+          "de": "Dichte (kg/m3)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "conductivity": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Conductivity (W/mK)",
+          "de": "Wärmeleitfähigkeit (W/mK)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "specific_heat": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Specific heat (J/kgK)",
+          "de": "Spezifische Wärme (J/kgK)"
+        },
+        "group": "value",
+        "order": 70
+      }
+    }
+  }
+}

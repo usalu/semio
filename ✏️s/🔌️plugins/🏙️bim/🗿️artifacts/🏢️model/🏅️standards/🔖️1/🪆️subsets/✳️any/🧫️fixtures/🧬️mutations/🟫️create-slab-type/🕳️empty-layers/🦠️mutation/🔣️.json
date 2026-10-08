@@ -1,0 +1,8 @@
+{
+  "mutation": "createSlabType",
+  "id": "sl-300",
+  "slab_type": {
+    "name": "Hollow",
+    "layers": []
+  }
+}

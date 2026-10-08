@@ -9,7 +9,7 @@ kind: user
 
 Procedural 3D builds shapes as editable graphs. Use the catalogue to add operations, connect their typed ports, and adjust values in the inspector or through input sliders. The Flow document records graph changes through the existing history system.
 
-**Mesh Workbench** starts with a box, insets a face, extrudes the inset, measures the result, and previews the mesh directly. A connected conversion widget also provides a faceted B-Rep. Open it from the examples menu or the `🛠️dev🔧️procedural🏙️3d🥽️mesh-workbench⚛️react` launch configuration. The inset and extrusion sliders control the live graph.
+**Mesh Workbench** starts with a box, insets a face, extrudes the inset, measures the result, and previews the mesh directly. A connected conversion widget also provides a faceted B-Rep. Open it from the examples menu or the dashboard command `playground:generation3d` with the parameters `renderer=react` and `example=🥽️mesh-workbench`. The inset and extrusion sliders control the live graph.
 
 The B-Rep catalogue contains primitives, curves, surfaces, sweeps, booleans, edge features, transformations, topology queries, measurements, and interchange operations. Each operation's quality tag describes the kernel's fidelity.
 

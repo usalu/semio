@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-roof-type/schema.json",
+  "title": "SetRoofType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRoofType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof type",
+          "de": "Dachtyp"
+        },
+        "ref": {
+          "kind": "roof-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Layer"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Layers",
+          "de": "Schichten"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

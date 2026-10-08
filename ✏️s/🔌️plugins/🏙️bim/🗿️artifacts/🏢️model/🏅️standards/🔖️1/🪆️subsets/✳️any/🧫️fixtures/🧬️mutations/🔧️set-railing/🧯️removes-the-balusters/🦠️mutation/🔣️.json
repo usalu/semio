@@ -1,0 +1,7 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "baluster": {
+    "value": null
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-roof/schema.json",
+  "title": "CreateRoof",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "roof"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createRoof"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Roof id",
+          "de": "Dach-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "roof": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Roof",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mutation": "createRoofType",
+  "id": "rf-metal",
+  "roof_type": {
+    "name": "Ghost",
+    "layers": [
+      {
+        "material": "m-ghost",
+        "thickness": 0.2,
+        "function": "Structure"
+      }
+    ]
+  }
+}

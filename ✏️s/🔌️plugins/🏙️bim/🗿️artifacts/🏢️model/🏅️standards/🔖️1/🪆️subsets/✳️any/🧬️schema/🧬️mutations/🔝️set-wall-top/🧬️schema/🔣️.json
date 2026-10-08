@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-top/schema.json",
+  "title": "SetWallTop",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "top"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWallTop"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "top": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Top",
+          "de": "Oberkante"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

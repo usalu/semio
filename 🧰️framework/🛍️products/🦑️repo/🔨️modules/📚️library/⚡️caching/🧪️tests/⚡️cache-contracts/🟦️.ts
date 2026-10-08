@@ -29,6 +29,7 @@ import { testNativeDependencies } from "../📦️native-dependencies/🟦️.ts
 import { testCargoCleanupBoundary } from "../🦀️cleanup-boundary/🟦️.ts";
 import { testGraphRevision } from "../🔁️graph-revision/🟦️.ts";
 import { testDevcontainerLifecycle } from "../../📦️artifacts/🐳️containers/🧪️tests/🔁️lifecycle/🟦️.ts";
+import { testDerivedConfig } from "../../📦️artifacts/📝️derived-config/🧪️tests/📝️derived-config/🟦️.ts";
 import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
 import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts";
 
@@ -63,6 +64,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   testDevcontainerContext(workspace);
   testContainerRuntimeBootstrap(workspace);
   await testDevcontainerLifecycle(workspace, output);
+  await testDerivedConfig(workspace);
   const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts");
   await testExtensionHostBuild(output);
   const { testExtensionPackage } = await import("../../../../💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts");
@@ -657,7 +659,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       if (target?.parallelism !== undefined) assert.equal(target.parallelism, false, name);
     }
     for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
-    for (const name of ["format", "setup", "publish", "dev"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
+    for (const name of ["format", "setup", "publish"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
     assert.equal(Object.keys(JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {}).length, 0, "Native Nx defaults override custom project metadata; apply defaults inside the repository plugin");
     assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, undefined);
@@ -718,34 +720,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(disabled.cache, row.disabledCache, `${row.target}: owner cache refusal precedes automatic cache families`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
-    const selectionApi = await import("../../../🎮️playground/🧭️selection/🟦️.ts");
-    assert.equal(typeof selectionApi.loadFrameworkOsPlaygroundSelections, "function", "Development selection must read authored metadata before generation");
-    const selectionFixture = mkdtempSync(join(ticketOutput(root, []), "playground-selection-"));
-    try {
-      const vector = vectors.playgroundSelections, manifest = join(selectionFixture, vector.manifest);
-      mkdirSync(dirname(manifest), { recursive: true });
-      writeFileSync(manifest, vector.text);
-      const originalTime = lstatSync(manifest).mtime;
-      for (const port of vector.ports) {
-        const text = vector.text.replace(String(vector.ports[0]), String(port));
-        writeFileSync(manifest, text);
-        utimesSync(manifest, originalTime, originalTime);
-        const authored = createRequire(testSource.url)("@iarna/toml").parse(text).package.metadata;
-        const rows = selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest]);
-        assert.deepEqual(rows, [{ ...authored.semio.playground[0], pluginId: authored.component.package.slice(6), cratePath: slash(dirname(vector.manifest)) }]);
-        assert.equal(rows[0].variant, vector.variant);
-        assert.deepEqual(rows[0].aliases, [vector.alias]);
-        assert.equal(rows[0].ports.react, port);
-      }
-      const stale = join(selectionFixture, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json");
-      mkdirSync(dirname(stale), { recursive: true });
-      writeFileSync(stale, "invalid generated catalog");
-      assert.equal(selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest])[0].variant, vector.variant);
-      assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest, vector.manifest]), /duplicate/i);
-      writeFileSync(manifest, vector.text.replace(String(vector.ports[0]), "65536"));
-      assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest]), /port/i);
-      assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, ["../Cargo.toml"]), /outside/i);
-    } finally { rmSync(selectionFixture, { recursive: true }); }
     await testCommandInputs(root, ticketOutput(root, []));
     await (await import("../🚀️bootstrap/🟦️.ts")).testNxBootstrap(root, ticketOutput(root, []));
     await (await import("../📦️publication/🟦️.ts")).testArtifactPublication(ticketOutput(root, []));
@@ -974,8 +948,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
     for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
-    assert.equal(workspace.targets.dev.cache, false);
-    assert.equal(workspace.targets.dev.continuous, true);
+    assert.equal(workspace.targets.dev, undefined, "the playground variant switch is dissolved: playgrounds are dashboard commands");
     assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
@@ -1045,8 +1018,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(invocation.env.SEMIO_BUILD_MODE, "dev");
       assert.equal(resolveInvocation(["run", selected, "--graph=stdout"]).watch, undefined);
     }
-    assert.deepEqual(resolveInvocation(["run", "workspace:dev", "--", "mcp", "stdio", "os", "--folder", "chosen"]).args, ["run", "@semio-tech/framework-os-mcp-rs:dev", "--", "stdio", "--folder", "chosen"]);
-    assert.deepEqual(resolveInvocation(["run", "workspace:dev", "--", "mcp", "http", "os"]).args, ["run", "@semio-tech/framework-os-mcp-rs:dev", "--", "http", "--port", "6300"]);
     for (const renderer of vectors.benchmarkRenderers) {
       const target = `bench-plugins-${renderer}`;
       const args = resolveInvocation(["run", "workspace:bench", "--", "plugins", `--renderer=${renderer}`, "--count", "3"]).args;
@@ -1054,7 +1025,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-os-scale-fixture:build-wasm"), renderer === "native");
       assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-renderer-wgpu:native-build"), renderer === "native");
     }
-    assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", "s", "--release"]).args, ["run", "@semio-tech/framework-os-dev:run-s-native-release"]);
     const hostSource = ts.createSourceFile("host.ts", readFileSync(join(root, vectors.platformEnvironment.source), "utf8"), ts.ScriptTarget.Latest, true);
     const apple = hostSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "ensureAppleDeveloperDir");
     assert.ok(apple, `Missing Apple tooling selector in ${vectors.platformEnvironment.source}`);
@@ -1211,7 +1181,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.throws(() => testApi.markReferencedBlobs(fixture, { contributions: [] } as any), /Cannot determine/);
     const { resolveNxInvocation } = await import("../../🚀️bootstrap/📜️script.ts");
     assert.deepEqual(resolveNxInvocation(["run", "workspace:build", "--graph=stdout", "--", "assets"]).args, ["run", "@semio-tech/assets:build", "--graph=stdout"]);
-    assert.deepEqual(resolveNxInvocation(["run", "workspace:dev", "--", "storybook", "ui"]).args, ["run", "workspace:dev-storybook", "--", "ui"]);
     assert.deepEqual(resolveNxInvocation(["show", "projects"]).args, ["show", "projects"]);
     assert.deepEqual(resolveNxInvocation(["run", "workspace:cpp", "--", "build", "macos-release"]).args, ["run", "workspace:cpp-build", "--", "macos-release"]);
     const cpp = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "CppScript");
@@ -1224,29 +1193,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const rootTest = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "TestScript").getText(source);
     assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
     for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
-    assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev-s-wgpu-dev");
-    for (const [renderer, plugin, expected] of [
-      ["react", "s", "@semio-tech/framework-os-dev:dev-s-react-dev"],
-      ["wgpu", "s", "@semio-tech/framework-os-dev:dev-s-wgpu-dev"],
-      ["react", "draw", "@semio-tech/framework-os-dev:dev-draw-react-dev"],
-      ["wgpu", "draw", "@semio-tech/framework-os-dev:dev-draw-wgpu-dev"],
-    ] as const) {
-      const restore = { renderer: process.env.SEMIO_RENDERER, plugin: process.env.SEMIO_PLUGIN };
-      process.env.SEMIO_RENDERER = renderer;
-      process.env.SEMIO_PLUGIN = plugin;
-      try {
-        assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", plugin]).args[1], expected, `${plugin}/${renderer} must select its own renderer target`);
-        assert.equal(resolveNxInvocation(["run", "@semio-tech/framework-os-dev:dev"]).args[1], expected, `the bare dev alias must honour SEMIO_PLUGIN=${plugin} instead of defaulting to s`);
-      } finally {
-        if (restore.renderer === undefined) delete process.env.SEMIO_RENDERER; else process.env.SEMIO_RENDERER = restore.renderer;
-        if (restore.plugin === undefined) delete process.env.SEMIO_PLUGIN; else process.env.SEMIO_PLUGIN = restore.plugin;
-      }
-    }
+    for (const retired of [["run", "workspace:dev", "--", "s"], ["run", "workspace:dev", "--", "mcp", "http", "os"], ["run", "@semio-tech/framework-os-dev:dev"]]) assert.deepEqual(resolveNxInvocation(retired).args, retired, `${retired.join(" ")}: the bootstrap is no playground or MCP resolver; the dashboard registry resolves playgrounds`);
     const osDevProject = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { dependsOn?: readonly string[]; options?: { command?: string } }> };
-    assert.ok(!(osDevProject.targets.dev?.options?.command ?? "").includes("🧊️wgpu"), "the framework-os-dev dev alias may not hard-code the wgpu browser server");
-    assert.deepEqual(osDevProject.targets.dev?.dependsOn, undefined, "the framework-os-dev dev alias may not pin one renderer's activation");
-    assert.ok(invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundSelections()"));
-    assert.ok(!invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundCatalog()"));
+    assert.equal(osDevProject.targets.dev, undefined, "the framework-os-dev dev alias is dissolved: playgrounds are the generated dev-<variant>-<renderer>-<profile> targets");
+    assert.ok(!invocation.getText(nxSource).includes("PlaygroundSelections") && !invocation.getText(nxSource).includes("PlaygroundCatalog"), "the bootstrap resolves no playground variant");
     assert.equal(root.length > 0, true);
     rmSync(fixture, { recursive: true });
     console.log("[cache-contract] schema, graph ownership, source-byte discovery, native dependency oracles and materializer cancellation passed");

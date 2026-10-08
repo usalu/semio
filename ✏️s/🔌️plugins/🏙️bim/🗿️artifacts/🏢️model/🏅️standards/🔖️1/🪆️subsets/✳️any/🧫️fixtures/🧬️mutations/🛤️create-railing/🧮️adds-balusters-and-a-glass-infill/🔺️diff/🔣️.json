@@ -1,0 +1,52 @@
+{
+  "railings": {
+    "rl-1": {
+      "baluster": {
+        "profile": {
+          "Rectangle": {
+            "depth": 0.02,
+            "width": 0.02
+          }
+        },
+        "spacing": 0.12
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "height": 1.0,
+      "infill": {
+        "Glass": {
+          "thickness": 0.012
+        }
+      },
+      "material": "m-steel",
+      "name": "Balustrade",
+      "path": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 3.0
+        }
+      ],
+      "post_profile": {
+        "Rectangle": {
+          "depth": 0.06,
+          "width": 0.06
+        }
+      },
+      "post_spacing": 1.2,
+      "profile": {
+        "Circle": {
+          "diameter": 0.05
+        }
+      },
+      "storey": "st-first"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "mutation": "createRoof",
+  "id": "rf-mansard",
+  "roof": {
+    "storey": "st-first",
+    "roof_type": "rt-tiles",
+    "footprint": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 6
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 6
+        },
+        "bulge": 0
+      }
+    ],
+    "shape": {
+      "Mansard": {
+        "lower_pitch": 1.2,
+        "upper_pitch": 0.4,
+        "break_height": 1.5
+      }
+    },
+    "overhang": 0.3,
+    "base_offset": 0,
+    "name": "Mansard roof"
+  }
+}

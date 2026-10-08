@@ -1,0 +1,431 @@
+# 🔺️ BIM model diff schema — a sparse per-collection keyed delta.
+
+type ModelDiff {
+  project: ProjectPatch
+  materials: [MaterialEntry!]
+  wall_types: [WallTypeEntry!]
+  slab_types: [SlabTypeEntry!]
+  roof_types: [RoofTypeEntry!]
+  column_types: [ColumnTypeEntry!]
+  beam_types: [BeamTypeEntry!]
+  window_types: [WindowTypeEntry!]
+  door_types: [DoorTypeEntry!]
+  sites: [SiteEntry!]
+  buildings: [BuildingEntry!]
+  storeys: [StoreyEntry!]
+  grids: [GridLineEntry!]
+  walls: [WallEntry!]
+  curtain_walls: [CurtainWallEntry!]
+  columns: [ColumnEntry!]
+  beams: [BeamEntry!]
+  slabs: [SlabEntry!]
+  roofs: [RoofEntry!]
+  openings: [OpeningEntry!]
+  stairs: [StairEntry!]
+  railings: [RailingEntry!]
+  spaces: [SpaceEntry!]
+  properties: [PropertySetEntry!]
+  classifications: [ClassificationEntry!]
+}
+
+type AssignedValue {
+  present: Boolean!
+}
+
+type ProjectPatch {
+  name: String
+  description: String
+  author: String
+  organization: String
+  phase_names: [String!]
+}
+
+type MaterialPatch {
+  name: String
+  category: MaterialCategory
+  color: Rgb
+  density: Float
+  conductivity: Float
+  specific_heat: Float
+}
+
+type WallTypePatch {
+  name: String
+  layers: [Layer!]
+}
+
+type SlabTypePatch {
+  name: String
+  layers: [Layer!]
+}
+
+type RoofTypePatch {
+  name: String
+  layers: [Layer!]
+}
+
+type ColumnTypePatch {
+  name: String
+  profile: Profile
+  material: String
+}
+
+type BeamTypePatch {
+  name: String
+  profile: Profile
+  material: String
+}
+
+type WindowTypePatch {
+  name: String
+  width: Float
+  height: Float
+  sill: Float
+  frame_width: Float
+  frame_depth: Float
+  panes: Int
+  material: String
+}
+
+type DoorTypePatch {
+  name: String
+  width: Float
+  height: Float
+  frame_width: Float
+  frame_depth: Float
+  leaves: DoorLeaves
+  swing: Swing
+  material: String
+}
+
+type SitePatch {
+  name: String
+  latitude: Float
+  longitude: Float
+  elevation: Float
+  true_north: Float
+  boundary: [Point2!]
+}
+
+type BuildingPatch {
+  site: String
+  name: String
+  origin: Point2
+  rotation: Float
+  elevation: Float
+}
+
+type StoreyPatch {
+  building: String
+  name: String
+  level: Int
+  height: Float
+  cut_height: Float
+}
+
+type GridLinePatch {
+  building: String
+  label: String
+  start: Point2
+  end: Point2
+}
+
+type WallPatch {
+  storey: String
+  wall_type: String
+  axis: Axis
+  location: LocationLine
+  base_offset: Float
+  top: TopConstraint
+  phase: Phase
+  name: String
+}
+
+type CurtainWallPatch {
+  storey: String
+  axis: Axis
+  base_offset: Float
+  top: TopConstraint
+  u_spacing: Float
+  v_spacing: Float
+  mullion: Profile
+  panel_material: String
+  mullion_material: String
+  name: String
+}
+
+type ColumnPatch {
+  storey: String
+  column_type: String
+  position: Point2
+  rotation: Float
+  base_offset: Float
+  top: TopConstraint
+  name: String
+}
+
+type BeamPatch {
+  storey: String
+  beam_type: String
+  start: Point2
+  end: Point2
+  top_offset: Float
+  name: String
+}
+
+type SlabPatch {
+  storey: String
+  slab_type: String
+  boundary: [Vertex!]
+  holes: [[Vertex!]!]
+  offset: Float
+  slope: Slope
+  name: String
+}
+
+type RoofPatch {
+  storey: String
+  roof_type: String
+  footprint: [Vertex!]
+  shape: RoofShape
+  overhang: Float
+  base_offset: Float
+  name: String
+}
+
+type OpeningPatch {
+  host: String
+  kind: OpeningKind
+  offset: Float
+  sill_override: Float
+  width: Float
+  height: Float
+  flip_hand: Boolean
+  flip_facing: Boolean
+  name: String
+}
+
+type StairPatch {
+  storey: String
+  start: Point2
+  direction: Float
+  width: Float
+  flight: StairFlight
+  top: TopConstraint
+  max_riser: Float
+  min_tread: Float
+  stringer: StairStringer
+  nosing: Float
+  tread_thickness: Float
+  riser: RiserKind
+  landing_depth: Float
+  name: String
+}
+
+type RailingPatch {
+  storey: String
+  path: [Point2!]
+  height: Float
+  post_spacing: Float
+  profile: Profile
+  post_profile: Profile
+  baluster: Baluster
+  infill: Infill
+  material: String
+  base_offset: Float
+  name: String
+}
+
+type SpacePatch {
+  storey: String
+  number: String
+  name: String
+  boundary: SpaceBoundary
+  usage: String
+}
+
+type ClassificationPatch {
+  system: String
+  code: String
+  title: String
+}
+
+type PropertySetPatch {
+  assigned: [PropertyRow!]
+}
+
+enum EntryKind {
+  Created
+  Deleted
+  Replaced
+  Patched
+}
+
+type MaterialEntry {
+  id: String!
+  entry: EntryKind!
+  created: Material
+  patch: MaterialPatch
+}
+
+type WallTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: WallType
+  patch: WallTypePatch
+}
+
+type SlabTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: SlabType
+  patch: SlabTypePatch
+}
+
+type RoofTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: RoofType
+  patch: RoofTypePatch
+}
+
+type ColumnTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: ColumnType
+  patch: ColumnTypePatch
+}
+
+type BeamTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: BeamType
+  patch: BeamTypePatch
+}
+
+type WindowTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: WindowType
+  patch: WindowTypePatch
+}
+
+type DoorTypeEntry {
+  id: String!
+  entry: EntryKind!
+  created: DoorType
+  patch: DoorTypePatch
+}
+
+type SiteEntry {
+  id: String!
+  entry: EntryKind!
+  created: Site
+  patch: SitePatch
+}
+
+type BuildingEntry {
+  id: String!
+  entry: EntryKind!
+  created: Building
+  patch: BuildingPatch
+}
+
+type StoreyEntry {
+  id: String!
+  entry: EntryKind!
+  created: Storey
+  patch: StoreyPatch
+}
+
+type GridLineEntry {
+  id: String!
+  entry: EntryKind!
+  created: GridLine
+  patch: GridLinePatch
+}
+
+type WallEntry {
+  id: String!
+  entry: EntryKind!
+  created: Wall
+  patch: WallPatch
+}
+
+type CurtainWallEntry {
+  id: String!
+  entry: EntryKind!
+  created: CurtainWall
+  patch: CurtainWallPatch
+}
+
+type ColumnEntry {
+  id: String!
+  entry: EntryKind!
+  created: Column
+  patch: ColumnPatch
+}
+
+type BeamEntry {
+  id: String!
+  entry: EntryKind!
+  created: Beam
+  patch: BeamPatch
+}
+
+type SlabEntry {
+  id: String!
+  entry: EntryKind!
+  created: Slab
+  patch: SlabPatch
+}
+
+type RoofEntry {
+  id: String!
+  entry: EntryKind!
+  created: Roof
+  patch: RoofPatch
+}
+
+type OpeningEntry {
+  id: String!
+  entry: EntryKind!
+  created: Opening
+  patch: OpeningPatch
+}
+
+type StairEntry {
+  id: String!
+  entry: EntryKind!
+  created: Stair
+  patch: StairPatch
+}
+
+type RailingEntry {
+  id: String!
+  entry: EntryKind!
+  created: Railing
+  patch: RailingPatch
+}
+
+type SpaceEntry {
+  id: String!
+  entry: EntryKind!
+  created: Space
+  patch: SpacePatch
+}
+
+type PropertySetEntry {
+  id: String!
+  entry: EntryKind!
+  created: PropertySetRows
+  patch: PropertySetPatch
+}
+
+type ClassificationEntry {
+  id: String!
+  entry: EntryKind!
+  created: Classification
+  patch: ClassificationPatch
+}
+

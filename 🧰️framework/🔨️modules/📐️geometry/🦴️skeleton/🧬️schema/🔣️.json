@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/geometry/skeleton",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "name",
+      "outer",
+      "holes",
+      "speeds",
+      "peak",
+      "faces",
+      "levels",
+      "oracles"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "outer": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "holes": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "speeds": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "peak": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "faces": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "levels": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "oracles": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "py-straight-skeleton",
+            "shapely-mitre-buffer",
+            "shapely-half-plane-intersection"
+          ]
+        }
+      }
+    }
+  }
+}

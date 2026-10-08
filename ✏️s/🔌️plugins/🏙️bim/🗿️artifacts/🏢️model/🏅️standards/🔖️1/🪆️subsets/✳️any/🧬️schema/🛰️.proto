@@ -1,0 +1,610 @@
+syntax = "proto3";
+package semio.s.bim.model.artifact;
+
+// 🧬️ BIM model artifact schema — every field with its state class.
+
+message ModelArtifact {
+  string schema = 1;
+  Project project = 2;
+  map<string, Material> materials = 3;
+  map<string, WallType> wall_types = 4;
+  map<string, SlabType> slab_types = 5;
+  map<string, RoofType> roof_types = 6;
+  map<string, ColumnType> column_types = 7;
+  map<string, BeamType> beam_types = 8;
+  map<string, WindowType> window_types = 9;
+  map<string, DoorType> door_types = 10;
+  map<string, Site> sites = 11;
+  map<string, Building> buildings = 12;
+  map<string, Storey> storeys = 13;
+  map<string, GridLine> grids = 14;
+  map<string, Wall> walls = 15;
+  map<string, CurtainWall> curtain_walls = 16;
+  map<string, Column> columns = 17;
+  map<string, Beam> beams = 18;
+  map<string, Slab> slabs = 19;
+  map<string, Roof> roofs = 20;
+  map<string, Opening> openings = 21;
+  map<string, Stair> stairs = 22;
+  map<string, Railing> railings = 23;
+  map<string, Space> spaces = 24;
+  map<string, PropertySetRows> properties = 25;
+  map<string, Classification> classifications = 26;
+}
+
+enum MaterialCategory {
+  MATERIALCATEGORY_UNSPECIFIED = 0;
+  MATERIALCATEGORY_CONCRETE = 1;
+  MATERIALCATEGORY_MASONRY = 2;
+  MATERIALCATEGORY_WOOD = 3;
+  MATERIALCATEGORY_METAL = 4;
+  MATERIALCATEGORY_GLASS = 5;
+  MATERIALCATEGORY_INSULATION = 6;
+  MATERIALCATEGORY_FINISH = 7;
+  MATERIALCATEGORY_MEMBRANE = 8;
+  MATERIALCATEGORY_OTHER = 9;
+}
+
+enum LayerFunction {
+  LAYERFUNCTION_UNSPECIFIED = 0;
+  LAYERFUNCTION_STRUCTURE = 1;
+  LAYERFUNCTION_SUBSTRATE = 2;
+  LAYERFUNCTION_INSULATION = 3;
+  LAYERFUNCTION_FINISH = 4;
+  LAYERFUNCTION_MEMBRANE = 5;
+  LAYERFUNCTION_CORE = 6;
+}
+
+enum LocationLine {
+  LOCATIONLINE_UNSPECIFIED = 0;
+  LOCATIONLINE_CENTER = 1;
+  LOCATIONLINE_INTERIOR = 2;
+  LOCATIONLINE_EXTERIOR = 3;
+  LOCATIONLINE_CORECENTER = 4;
+}
+
+enum Phase {
+  PHASE_UNSPECIFIED = 0;
+  PHASE_EXISTING = 1;
+  PHASE_NEW = 2;
+  PHASE_DEMOLISHED = 3;
+  PHASE_TEMPORARY = 4;
+}
+
+enum DoorLeaves {
+  DOORLEAVES_UNSPECIFIED = 0;
+  DOORLEAVES_SINGLE = 1;
+  DOORLEAVES_DOUBLE = 2;
+}
+
+enum Swing {
+  SWING_UNSPECIFIED = 0;
+  SWING_LEFT = 1;
+  SWING_RIGHT = 2;
+}
+
+enum Turn {
+  TURN_UNSPECIFIED = 0;
+  TURN_LEFT = 1;
+  TURN_RIGHT = 2;
+}
+
+enum StringerKind {
+  STRINGERKIND_UNSPECIFIED = 0;
+  STRINGERKIND_NONE = 1;
+  STRINGERKIND_CLOSED = 2;
+  STRINGERKIND_OPEN = 3;
+  STRINGERKIND_MONO = 4;
+}
+
+enum RiserKind {
+  RISERKIND_UNSPECIFIED = 0;
+  RISERKIND_OPEN = 1;
+  RISERKIND_CLOSED = 2;
+}
+
+message AxisLine {
+  Point2 start = 1;
+  Point2 end = 2;
+}
+
+message AxisArc {
+  Point2 start = 1;
+  Point2 end = 2;
+  double bulge = 3;
+}
+
+message Axis {
+  oneof variant {
+    AxisLine line = 1;
+    AxisArc arc = 2;
+  }
+}
+
+message TopConstraintUnconnected {
+  double height = 1;
+}
+
+message TopConstraintStoreyTop {
+  double offset = 1;
+}
+
+message TopConstraintStorey {
+  string storey = 1;
+  double offset = 2;
+}
+
+message TopConstraint {
+  oneof variant {
+    TopConstraintUnconnected unconnected = 1;
+    TopConstraintStoreyTop storeytop = 2;
+    TopConstraintStorey storey = 3;
+  }
+}
+
+message ProfileRectangle {
+  double width = 1;
+  double depth = 2;
+}
+
+message ProfileCircle {
+  double diameter = 1;
+}
+
+message ProfileIShape {
+  double width = 1;
+  double depth = 2;
+  double web = 3;
+  double flange = 4;
+}
+
+message ProfileCustom {
+  repeated Vertex outline = 1;
+}
+
+message Profile {
+  oneof variant {
+    ProfileRectangle rectangle = 1;
+    ProfileCircle circle = 2;
+    ProfileIShape ishape = 3;
+    ProfileCustom custom = 4;
+  }
+}
+
+message RoofShapeShed {
+  double pitch = 1;
+  double direction = 2;
+}
+
+message RoofShapeGable {
+  double pitch = 1;
+  double ridge_direction = 2;
+}
+
+message RoofShapeHip {
+  double pitch = 1;
+}
+
+message RoofShapeMansard {
+  double lower_pitch = 1;
+  double upper_pitch = 2;
+  double break_height = 3;
+}
+
+message RoofShape {
+  oneof variant {
+    bool flat = 1;
+    RoofShapeShed shed = 2;
+    RoofShapeGable gable = 3;
+    RoofShapeHip hip = 4;
+    RoofShapeMansard mansard = 5;
+  }
+}
+
+message OpeningKindWindow {
+  string window_type = 1;
+}
+
+message OpeningKindDoor {
+  string door_type = 1;
+}
+
+message OpeningKindVoid {
+  double width = 1;
+  double height = 2;
+}
+
+message OpeningKind {
+  oneof variant {
+    OpeningKindWindow window = 1;
+    OpeningKindDoor door = 2;
+    OpeningKindVoid void = 3;
+  }
+}
+
+message StairFlightLTurn {
+  double split = 1;
+  Turn turn = 2;
+}
+
+message StairFlightUTurn {
+  double gap = 1;
+}
+
+message StairFlightSpiral {
+  double radius = 1;
+  double sweep = 2;
+}
+
+message StairFlight {
+  oneof variant {
+    bool straight = 1;
+    StairFlightLTurn lturn = 2;
+    StairFlightUTurn uturn = 3;
+    StairFlightSpiral spiral = 4;
+  }
+}
+
+message PropertyValueText {
+  string value = 1;
+}
+
+message PropertyValueReal {
+  double value = 1;
+}
+
+message PropertyValueInteger {
+  int32 value = 1;
+}
+
+message PropertyValueBoolean {
+  bool value = 1;
+}
+
+message PropertyValueLength {
+  double value = 1;
+}
+
+message PropertyValueArea {
+  double value = 1;
+}
+
+message PropertyValueVolume {
+  double value = 1;
+}
+
+message PropertyValueAngle {
+  double value = 1;
+}
+
+message PropertyValue {
+  oneof variant {
+    PropertyValueText text = 1;
+    PropertyValueReal real = 2;
+    PropertyValueInteger integer = 3;
+    PropertyValueBoolean boolean = 4;
+    PropertyValueLength length = 5;
+    PropertyValueArea area = 6;
+    PropertyValueVolume volume = 7;
+    PropertyValueAngle angle = 8;
+  }
+}
+
+message InfillGlass {
+  double thickness = 1;
+}
+
+message InfillPanel {
+  double thickness = 1;
+}
+
+message Infill {
+  oneof variant {
+    bool none = 1;
+    InfillGlass glass = 2;
+    InfillPanel panel = 3;
+  }
+}
+
+message SpaceBoundaryBounded {
+  Point2 seed = 1;
+}
+
+message SpaceBoundaryExplicit {
+  repeated Vertex outline = 1;
+}
+
+message SpaceBoundary {
+  oneof variant {
+    SpaceBoundaryBounded bounded = 1;
+    SpaceBoundaryExplicit explicit = 2;
+  }
+}
+
+message Point2 {
+  double x = 1;
+  double y = 2;
+}
+
+message Rgb {
+  double r = 1;
+  double g = 2;
+  double b = 3;
+}
+
+message Vertex {
+  Point2 point = 1;
+  double bulge = 2;
+}
+
+message Slope {
+  double direction = 1;
+  double angle = 2;
+}
+
+message StairStringer {
+  StringerKind kind = 1;
+  double width = 2;
+  double depth = 3;
+}
+
+message Baluster {
+  Profile profile = 1;
+  double spacing = 2;
+}
+
+message Layer {
+  string material = 1;
+  double thickness = 2;
+  LayerFunction function = 3;
+}
+
+message Project {
+  string name = 1;
+  string description = 2;
+  string author = 3;
+  string organization = 4;
+  repeated string phase_names = 5;
+}
+
+message Material {
+  string name = 1;
+  MaterialCategory category = 2;
+  Rgb color = 3;
+  double density = 4;
+  double conductivity = 5;
+  double specific_heat = 6;
+}
+
+message WallType {
+  string name = 1;
+  repeated Layer layers = 2;
+}
+
+message SlabType {
+  string name = 1;
+  repeated Layer layers = 2;
+}
+
+message RoofType {
+  string name = 1;
+  repeated Layer layers = 2;
+}
+
+message ColumnType {
+  string name = 1;
+  Profile profile = 2;
+  string material = 3;
+}
+
+message BeamType {
+  string name = 1;
+  Profile profile = 2;
+  string material = 3;
+}
+
+message WindowType {
+  string name = 1;
+  double width = 2;
+  double height = 3;
+  double sill = 4;
+  double frame_width = 5;
+  double frame_depth = 6;
+  uint32 panes = 7;
+  string material = 8;
+}
+
+message DoorType {
+  string name = 1;
+  double width = 2;
+  double height = 3;
+  double frame_width = 4;
+  double frame_depth = 5;
+  DoorLeaves leaves = 6;
+  Swing swing = 7;
+  string material = 8;
+}
+
+message Site {
+  string name = 1;
+  double latitude = 2;
+  double longitude = 3;
+  double elevation = 4;
+  double true_north = 5;
+  repeated Point2 boundary = 6;
+}
+
+message Building {
+  string site = 1;
+  string name = 2;
+  Point2 origin = 3;
+  double rotation = 4;
+  double elevation = 5;
+}
+
+message Storey {
+  string building = 1;
+  string name = 2;
+  int32 level = 3;
+  double height = 4;
+  optional double cut_height = 5;
+}
+
+message GridLine {
+  string building = 1;
+  string label = 2;
+  Point2 start = 3;
+  Point2 end = 4;
+}
+
+message Wall {
+  string storey = 1;
+  string wall_type = 2;
+  Axis axis = 3;
+  LocationLine location = 4;
+  double base_offset = 5;
+  TopConstraint top = 6;
+  Phase phase = 7;
+  string name = 8;
+}
+
+message CurtainWall {
+  string storey = 1;
+  Axis axis = 2;
+  double base_offset = 3;
+  TopConstraint top = 4;
+  double u_spacing = 5;
+  double v_spacing = 6;
+  Profile mullion = 7;
+  string panel_material = 8;
+  string mullion_material = 9;
+  string name = 10;
+}
+
+message Column {
+  string storey = 1;
+  string column_type = 2;
+  Point2 position = 3;
+  double rotation = 4;
+  double base_offset = 5;
+  TopConstraint top = 6;
+  string name = 7;
+}
+
+message Beam {
+  string storey = 1;
+  string beam_type = 2;
+  Point2 start = 3;
+  Point2 end = 4;
+  double top_offset = 5;
+  string name = 6;
+}
+
+message Slab {
+  string storey = 1;
+  string slab_type = 2;
+  repeated Vertex boundary = 3;
+  repeated VertexList holes = 4;
+  double offset = 5;
+  optional Slope slope = 6;
+  string name = 7;
+}
+
+message Roof {
+  string storey = 1;
+  string roof_type = 2;
+  repeated Vertex footprint = 3;
+  RoofShape shape = 4;
+  double overhang = 5;
+  double base_offset = 6;
+  string name = 7;
+}
+
+message Opening {
+  string host = 1;
+  OpeningKind kind = 2;
+  double offset = 3;
+  optional double sill_override = 4;
+  optional double width = 5;
+  optional double height = 6;
+  bool flip_hand = 7;
+  bool flip_facing = 8;
+  string name = 9;
+}
+
+message Stair {
+  string storey = 1;
+  Point2 start = 2;
+  double direction = 3;
+  double width = 4;
+  StairFlight flight = 5;
+  TopConstraint top = 6;
+  double max_riser = 7;
+  double min_tread = 8;
+  StairStringer stringer = 9;
+  double nosing = 10;
+  double tread_thickness = 11;
+  RiserKind riser = 12;
+  double landing_depth = 13;
+  string name = 14;
+}
+
+message Railing {
+  string storey = 1;
+  repeated Point2 path = 2;
+  double height = 3;
+  double post_spacing = 4;
+  Profile profile = 5;
+  Profile post_profile = 6;
+  optional Baluster baluster = 7;
+  Infill infill = 8;
+  string material = 9;
+  double base_offset = 10;
+  string name = 11;
+}
+
+message Space {
+  string storey = 1;
+  string number = 2;
+  string name = 3;
+  SpaceBoundary boundary = 4;
+  string usage = 5;
+}
+
+message Classification {
+  string system = 1;
+  string code = 2;
+  string title = 3;
+}
+
+message VertexRow {
+  repeated Vertex items = 1;
+}
+
+message PropertySetRows {
+  map<string, PropertyGroup> sets = 1;
+}
+
+message PropertyGroup {
+  map<string, PropertyValue> properties = 1;
+}
+
+message VertexList {
+  repeated Vertex items = 1;
+}
+
+message StringList {
+  repeated string items = 1;
+}
+
+message LayerList {
+  repeated Layer items = 1;
+}
+
+message Point2List {
+  repeated Point2 items = 1;
+}
+
+message VertexListList {
+  repeated VertexList items = 1;
+}

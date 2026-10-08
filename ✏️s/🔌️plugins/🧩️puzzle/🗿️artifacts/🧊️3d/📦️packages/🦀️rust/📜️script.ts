@@ -30,7 +30,7 @@ class OwnedVerifyScript extends BundleScript {
  * unoptimized state machine plus the retained tool-job poll chain under it outgrows libtest's default
  * 2 MiB per-test thread stack and aborts the binary with `fatal runtime error: stack overflow` before
  * any suite summary is reachable. Raised here — the one permanent script this package owns — so `nx
- * test`, `bun ./📜️script.ts test` and the launch.json entries that call them all inherit it on every
+ * test`, `bun ./📜️script.ts test` and the dashboard commands that call them all inherit it on every
  * platform without a per-developer environment step. A value already present in the environment wins.
  */
 process.env.RUST_MIN_STACK ??= "134217728";
@@ -40,6 +40,6 @@ process.env.RUST_MIN_STACK ??= "134217728";
  * so a default-feature `cargo test` compiles 286 of this crate's 577 tests and runs not one of the
  * `editor::puzzle3d` app tests — which is how a harness that could not construct its own app survived
  * a whole wave (📓️2026-09-09-wave-X-test-suite.md §6). Declared here so `nx test`, `bun ./📜️script.ts
- * test` and the launch.json entries that call them all measure the same suite.
+ * test` and the dashboard commands that call them all measure the same suite.
  */
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-3d", { testFeatures: ["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:["component-app-assembly"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

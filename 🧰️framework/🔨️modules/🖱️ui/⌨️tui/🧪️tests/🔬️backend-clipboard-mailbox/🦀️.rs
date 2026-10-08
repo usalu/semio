@@ -19,6 +19,6 @@ mod clipboard_mailbox_tests {
         samples.sort_unstable();
         let p99 = samples[samples.len() * 99 / 100];
         assert!(p99 < Duration::from_millis(2), "clipboard poll callback p99 was {p99:?}");
-        pool.shutdown();
+        let _ = pool.shutdown();
     }
 }

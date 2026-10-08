@@ -1,0 +1,12 @@
+{
+  "st-ground": {
+    "WallCut.area": 2.421885654005,
+    "ColumnCut.area": 0.196349540849,
+    "CurtainMullion.area": 0.0,
+    "SlabEdge.length": 0.0,
+    "BeamOutline.length": 0.0,
+    "RailingPath.length": 0.0,
+    "GridLine.length": 0.0,
+    "SpaceOutline.length": 0.0
+  }
+}

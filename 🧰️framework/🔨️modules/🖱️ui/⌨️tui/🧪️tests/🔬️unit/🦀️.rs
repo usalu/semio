@@ -56,13 +56,13 @@ fn layout_padding_and_gap() {
 }
 
 #[test]
-fn window_layout_row_of_stacks_tiles_without_gaps() {
+fn window_layout_row_of_stacks_tiles_with_one_gutter_cell() {
     let layout = create_default_layout(&["a".to_string(), "b".to_string()], "row", Some(&[1.0, 1.0]), None);
     let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
     assert_eq!(measures.len(), 2);
-    assert_eq!(measures[0].rect.width + measures[1].rect.width, 100);
+    assert_eq!(measures[0].rect.width + 1 + measures[1].rect.width, 100);
     assert_eq!(measures[0].rect.x, 0);
-    assert_eq!(measures[1].rect.x, measures[0].rect.width);
+    assert_eq!(measures[1].rect.x, measures[0].rect.width + 1, "the gutter is the splitter between the two stacks");
 }
 
 #[test]
@@ -81,6 +81,7 @@ fn window_layout_stack_exposes_tabs() {
     assert_eq!(measures[0].stack_tabs, vec!["a", "b"]);
 }
 
+/// 🧱 A single top-left corner tab with its close glyph; the focused stack uses the heavy line set and the right edge stays flat at the body hairline.
 #[test]
 fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
     let theme = Theme::new(AppearanceName::Dark);
@@ -88,24 +89,25 @@ fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
     let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     let mut w = WindowState::new("Puzzle 3D");
     w.focused = true;
-    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
 
-    // single top-left corner tab with inline actions; right edge stays flat at the body hairline
     let row0 = row_text(&buf, 0);
     let row1 = row_text(&buf, 1);
     let row2 = row_text(&buf, 2);
-    assert!(row0.starts_with('\u{250c}'), "tab top-left corner: {row0:?}");
+    assert!(row0.starts_with('\u{250f}'), "tab top-left corner: {row0:?}");
     assert!(row1.contains("Puzzle 3D"), "title in tab: {row1:?}");
-    assert!(row1.contains('\u{2922}'), "maximize glyph: {row1:?}");
-    assert!(row1.contains('\u{29C9}'), "new-window glyph: {row1:?}");
+    assert!(!row1.contains('\u{2922}'), "a lone window has nothing to maximize against: {row1:?}");
+    assert!(!row1.contains('\u{29C9}'), "the per-tab new-window glyph is gone: {row1:?}");
     assert!(row1.contains('\u{2715}'), "close glyph: {row1:?}");
-    assert!(row2.contains('\u{2514}'), "tab bends into body: {row2:?}");
-    assert_eq!(row2.chars().last(), Some('\u{2510}'), "flat top-right at body: {row2:?}");
-    assert_eq!(row_text(&buf, 4).chars().next(), Some('\u{2514}'));
-    assert_eq!(row_text(&buf, 4).chars().last(), Some('\u{2518}'));
+    assert!(row2.contains('\u{2517}'), "tab bends into body: {row2:?}");
+    assert_eq!(row2.chars().last(), Some('\u{2513}'), "flat top-right at body: {row2:?}");
+    assert_eq!(row_text(&buf, 4).chars().next(), Some('\u{2517}'));
+    assert_eq!(row_text(&buf, 4).chars().last(), Some('\u{251b}'));
 
     let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
-    assert_eq!(buf.get(title_x, 1).unwrap().fg, theme.role(Role::Accent));
+    let title = buf.get(title_x, 1).unwrap();
+    assert_eq!(title.fg, theme.role(Role::ActiveForeground));
+    assert_eq!(title.bg, theme.role(Role::ActiveBase), "the active tab is a solid fill");
 }
 
 #[test]
@@ -116,7 +118,7 @@ fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
     let mut w = WindowState::new("Log");
     w.closable = false;
     w.maximizable = false;
-    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
 
     let row0 = row_text(&buf, 0);
     let row1 = row_text(&buf, 1);
@@ -129,16 +131,16 @@ fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
     assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
 }
 
+/// 📦 A plain flat box replaces the raised corner chrome when it cannot fit.
 #[test]
 fn window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title() {
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 4, 5);
     let mut buf = CellBuffer::new(Size { width: 4, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     let w = WindowState::new("X");
-    assert!(!window_chip_layout(&w, rect).has_tabs);
-    let window = ChromeState::Window(w);
+    assert_eq!(window_chip_layout(&w, rect).mode, crate::tui::chrome::ChromeMode::Flat);
+    let window = ChromeState::Window(Box::new(w));
     window.paint(&theme, rect, &mut buf);
-    // plain flat box when the raised corner chrome cannot fit
     assert_eq!(row_text(&buf, 0), "┌──┐");
     assert_eq!(window.window_control_at(rect, Pos { x: 2, y: 0 }), None);
     assert_eq!(window.window_control_at(rect, Pos { x: 2, y: 1 }), None);
@@ -149,11 +151,13 @@ fn window_control_clicks_resolve_to_close_and_maximize_signals() {
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 40, 5);
     let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-    let window = ChromeState::Window(WindowState::new("Plugins"));
+    let mut state = WindowState::new("Plugins");
+    state.peers = 2;
+    let window = ChromeState::Window(Box::new(state));
     window.paint(&theme, rect, &mut buf);
     let maximize_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2922}').expect("maximize glyph rendered");
     let close_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
-    assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize));
+    assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize(0)));
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose(0)));
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
@@ -162,16 +166,22 @@ fn window_control_clicks_resolve_to_close_and_maximize_signals() {
 #[test]
 fn window_hit_resolves_tab_activation_and_new_tab_signals() {
     let rect = Rect::new(0, 0, 60, 8);
-    let w = WindowState::new("Main").with_stack_tabs(vec!["tab1".into(), "tab2".into()], 0);
+    let mut w = WindowState::new("Main").with_stack_tabs(vec!["tab1".into(), "tab2".into()], 1);
+    w.new_tab = true;
     let layout = window_chip_layout(&w, rect);
-    let window = ChromeState::Window(w);
+    let window = ChromeState::Window(Box::new(w));
     let group = layout.groups.iter().find(|g| g.corner == crate::tui::layout::WindowStackCorner::TopLeft).expect("top-left group");
     let tab0 = group.tabs.first().expect("first tab geometry");
     let tab1 = group.tabs.get(1).expect("second tab geometry");
     assert_eq!(window.window_hit(rect, Pos { x: tab0.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(0)));
     assert_eq!(window.window_hit(rect, Pos { x: tab1.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(1)));
-    let new_x = tab0.new_x.expect("new-window glyph geometry");
-    assert_eq!(window.window_hit(rect, Pos { x: new_x, y: rect.y + 1 }), Some(WidgetSignal::WindowNewTab));
+    let close0 = tab0.close_x.expect("first tab close geometry");
+    let close1 = tab1.close_x.expect("second tab close geometry");
+    assert_eq!(window.window_hit(rect, Pos { x: close0, y: rect.y + 1 }), Some(WidgetSignal::WindowClose(0)), "an inactive chip closes itself");
+    assert_eq!(window.window_hit(rect, Pos { x: close1, y: rect.y + 1 }), Some(WidgetSignal::WindowClose(1)));
+    let controls = layout.groups.iter().flat_map(|g| g.tabs.iter()).find(|tab| tab.kind == crate::tui::chrome::TabKind::Controls).expect("controls chip");
+    let new_x = controls.new_x.expect("new-tab glyph geometry");
+    assert_eq!(window.window_hit(rect, Pos { x: new_x, y: rect.y + 1 }), Some(WidgetSignal::WindowNewTab(1)));
 }
 
 #[test]
@@ -194,8 +204,8 @@ fn shell_window_wizard_body_paints_options_after_remount() {
         NodeContent::Widget(w) => w.paint(&Theme::new(AppearanceName::Dark), rect, &mut buf, true),
         _ => panic!("expected wizard widget"),
     }
-    let body: String = (0..60).filter_map(|x| buf.get(x, rect.y).map(|c| c.ch)).collect();
-    assert!(body.contains("dev") || body.contains("›"), "wizard options missing from paint: {body:?}");
+    let body: String = (0..4).map(|row| buf.row_text(rect.y + row)).collect::<Vec<_>>().join("\n");
+    assert!(body.contains("dev") && body.contains("build"), "wizard options missing from paint: {body:?}");
 }
 
 #[test]
@@ -203,7 +213,7 @@ fn mount_window_layout_reparents_windows_and_preserves_widget_state() {
     let mut scene = Scene::new();
     let root = scene.root();
     let canvas = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
-    let w1_chrome = scene.add(canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("w1")))));
+    let w1_chrome = scene.add(canvas, Node::new(NodeContent::Chrome(ChromeState::Window(Box::new(WindowState::new("w1"))))));
     let term = scene.add(w1_chrome, Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(Size { width: 10, height: 5 }, 100)))));
     if let Some(WidgetState::Terminal(t)) = scene.node_mut(term).widget() {
         t.feed(b"hello");
@@ -226,20 +236,22 @@ fn wizard_keys_filter_navigate_back_and_activate() {
     assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(1)));
     let e = KeyEvent { key: Key::Char('e'), mods: 0 };
     let v = KeyEvent { key: Key::Char('v'), mods: 0 };
-    assert_eq!(widget.on_key(&e), None);
-    assert_eq!(widget.on_key(&v), None);
+    assert_eq!(widget.on_key(&e), Some(WidgetSignal::ValueChanged("e".to_string())));
+    assert_eq!(widget.on_key(&v), Some(WidgetSignal::ValueChanged("ev".to_string())));
     let WidgetState::Wizard(w) = &widget else { unreachable!() };
-    assert_eq!(w.filter, "ev");
+    assert_eq!(w.filter(), "ev");
     let enter = KeyEvent { key: Key::Enter, mods: 0 };
     assert_eq!(widget.on_key(&enter), Some(WidgetSignal::Activated(1)));
     let mut empty = WidgetState::Wizard(WizardState::new(vec!["only".into()]));
     let backspace = KeyEvent { key: Key::Backspace, mods: 0 };
-    assert_eq!(empty.on_key(&backspace), Some(WidgetSignal::NavigateBack));
+    assert_eq!(empty.on_key(&backspace), None, "Backspace on an empty filter never leaves the wizard, so a held key cannot walk out");
+    let alt_backspace = KeyEvent { key: Key::Backspace, mods: crate::tui::event::mods::ALT };
+    assert_eq!(empty.on_key(&alt_backspace), Some(WidgetSignal::NavigateBack));
 }
 
 #[test]
 fn tui_dispatch_emits_window_close_signal_on_click() {
-    let mut tui = crate::tui::engine::Tui::new(Size { width: 40, height: 12 }, Theme::new(AppearanceName::Dark));
+    let mut tui = crate::tui::engine::Tui::new(Size { width: 40, height: 40 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
     let layout = even_window_layout(&["plugins".to_string()]);
@@ -248,7 +260,7 @@ fn tui_dispatch_emits_window_close_signal_on_click() {
     let (_, window_id) = built.windows[0].clone();
     let rect = tui.scene.rect(window_id);
     let mut buf = CellBuffer::new(Size { width: rect.width, height: rect.height }, Cell::blank([0, 0, 0], [0, 0, 0]));
-    ChromeState::Window(WindowState::new("plugins")).paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, rect.width, rect.height), &mut buf);
+    ChromeState::Window(Box::new(WindowState::new("plugins"))).paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, rect.width, rect.height), &mut buf);
     let close_x = (0..rect.width).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
     let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0, clicks: 1 }));
     assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose(0))]);
@@ -266,6 +278,7 @@ fn sample_table() -> TableState {
     TableState::new(columns, rows)
 }
 
+/// 🧮 No vertical rules appear anywhere in the header and underline rows.
 #[test]
 fn table_header_is_bold_muted_with_a_hairline_underline_and_row_separators() {
     let theme = Theme::new(AppearanceName::Dark);
@@ -278,7 +291,6 @@ fn table_header_is_bold_muted_with_a_hairline_underline_and_row_separators() {
     assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::MutedForeground));
     assert_eq!(buf.get(0, 0).unwrap().attrs & attr::BOLD, attr::BOLD, "header must be bold");
     assert_eq!(row_text(&buf, 1), "\u{2500}".repeat(40), "hairline underline missing below the header");
-    // no vertical rules anywhere in the header/underline rows
     assert!(!row_text(&buf, 0).contains('\u{2502}'));
 
     assert_eq!(row_text(&buf, 2).trim_end(), "\u{25be} puzzle");
@@ -294,13 +306,13 @@ fn table_visible_indices_skips_children_of_a_collapsed_parent() {
     assert_eq!(table.visible_indices(), vec![0, 3, 4], "puzzle's children must be hidden while collapsed");
 }
 
+/// 🧭 Down skips the hidden puzzle2d and puzzle3d children and lands on "draw".
 #[test]
 fn table_on_key_navigates_visible_rows_toggles_and_activates_leaves() {
     let mut table = sample_table();
     table.rows[0].expanded = false;
     table.selected = 0;
     let mut widget = WidgetState::Table(table);
-    // Down should skip the hidden puzzle2d/puzzle3d children and land on "draw"
     let down = KeyEvent { key: Key::Down, mods: 0 };
     assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(3)));
     let WidgetState::Table(table) = &mut widget else { unreachable!() };
@@ -460,7 +472,7 @@ fn wasm_host_feed_and_render_smoke() {
     assert!(!patch.is_empty());
 }
 
-//#region ???Geometry
+//#region 🔖️Geometry
 #[test]
 fn rect_contains_checks_boundaries() {
     let r = Rect::new(2, 2, 3, 3);
@@ -501,9 +513,9 @@ fn rect_split_top_and_split_bottom_partition_rect() {
     assert_eq!(top2.height, 10, "rows beyond the rect's height clamp to the full height");
     assert_eq!(rest3.height, 0);
 }
-//#endregion ???Geometry
+//#endregion 🔖️Geometry
 
-//#region ???Text
+//#region 🔖️Text
 #[test]
 fn text_char_cells_zero_and_wide() {
     assert_eq!(crate::tui::text::char_cells('a'), 1);
@@ -519,7 +531,7 @@ fn text_cell_width_unicode_goldens() {
     assert_eq!(display_width("界面"), 4, "CJK wide scalars occupy two cells");
     assert_eq!(display_width("🙂"), 2, "emoji presentation scalars occupy two cells");
     assert_eq!(crate::tui::text::char_cells('\u{200d}'), 0, "the zero-width joiner adds no cell");
-    assert_eq!(display_width("👩\u{200d}💻"), 4, "the cell renderer retains one glyph per emoji scalar and skips the joiner");
+    assert_eq!(display_width("👩\u{200d}💻"), 2, "a ZWJ sequence is one two-cell glyph");
 }
 
 #[test]
@@ -531,9 +543,9 @@ fn truncate_to_stops_before_splitting_a_wide_char() {
     assert_eq!(s2, "世");
     assert_eq!(w2, 2);
 }
-//#endregion ???Text
+//#endregion 🔖️Text
 
-//#region ???Cell
+//#region 🔖️Cell
 #[test]
 fn cell_buffer_get_returns_none_out_of_bounds() {
     let buf = CellBuffer::new(Size { width: 3, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -554,7 +566,7 @@ fn cell_buffer_put_pairs_and_orphans_wide_char_continuations() {
     assert_eq!(buf.get(2, 0).unwrap().width, 0, "a width-0 write next to a wide lead stays paired");
 
     buf.put(0, 0, Cell { ch: '\0', width: 0, ..blank });
-    assert_eq!(buf.get(0, 0).unwrap().width, 0, "column 0 has no left neighbor to check, so width is left untouched");
+    assert_eq!(buf.get(0, 0).unwrap().width, 1, "column 0 has no lead to the left, so an orphaned continuation becomes a blank");
 }
 
 #[test]
@@ -612,11 +624,11 @@ fn diff_full_redraw_when_sizes_differ() {
     let a = CellBuffer::new(Size { width: 5, height: 5 }, blank);
     let b = CellBuffer::new(Size { width: 6, height: 5 }, blank);
     let runs = diff(&a, &b);
-    assert_eq!(runs, vec![DiffRun { y: 0, x: 0, len: 30 }]);
+    assert_eq!(runs, (0..5).map(|y| DiffRun { y, x: 0, len: 6 }).collect::<Vec<_>>(), "a resized buffer repaints every row in full");
 }
-//#endregion ???Cell
+//#endregion 🔖️Cell
 
-//#region ???Ansi
+//#region 🔖️Ansi
 #[test]
 fn emit_runs_writes_cursor_move_and_truecolor_sgr() {
     let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
@@ -704,16 +716,16 @@ fn parser_control_keys_enter_tab_backspace() {
         events,
         vec![
             Event::Key(KeyEvent { key: Key::Enter, mods: 0 }),
-            Event::Key(KeyEvent { key: Key::Enter, mods: 0 }),
+            Event::Key(KeyEvent { key: Key::Char('j'), mods: crate::tui::event::mods::CTRL }),
             Event::Key(KeyEvent { key: Key::Tab, mods: 0 }),
             Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),
             Event::Key(KeyEvent { key: Key::Backspace, mods: 0 }),
         ]
     );
 }
-//#endregion ???Ansi
+//#endregion 🔖️Ansi
 
-//#region ???Vt
+//#region 🔖️Vt
 fn vt_screen(w: u16, h: u16) -> crate::tui::vt::VtScreen {
     crate::tui::vt::VtScreen::new(Size { width: w, height: h }, 100)
 }
@@ -791,9 +803,9 @@ fn vt_resize_clamps_cursor() {
     assert_eq!(s.size, Size { width: 4, height: 3 });
     assert_eq!(s.cursor, Pos { x: 3, y: 2 });
 }
-//#endregion ???Vt
+//#endregion 🔖️Vt
 
-//#region ???Scene
+//#region 🔖️Scene
 #[test]
 fn scene_node_mut_setters_update_content_and_visibility() {
     let mut scene = Scene::new();
@@ -850,9 +862,9 @@ fn scene_node_panics_after_its_id_is_removed() {
     scene.remove(a);
     scene.node(a);
 }
-//#endregion ???Scene
+//#endregion 🔖️Scene
 
-//#region ???Layout
+//#region 🔖️Layout
 #[test]
 fn layout_column_direction_stacks_children_vertically() {
     let mut scene = Scene::new();
@@ -907,9 +919,9 @@ fn window_layout_split_resize_move_zoom_and_tabs() {
     zoom_window(&mut layout, None);
 }
 
-//#endregion ???Layout
+//#endregion 🔖️Layout
 
-//#region ???Widget
+//#region 🔖️Widget
 #[test]
 fn list_on_key_boundaries_toggle_and_activate() {
     let mut widget = WidgetState::List(ListState::new(vec!["a".to_string(), "b".to_string()]));
@@ -942,13 +954,13 @@ fn select_on_key_wraps_and_ignores_empty_options() {
 
 #[test]
 fn tabs_on_key_wraps_and_ignores_empty_tabs() {
-    let mut widget = WidgetState::Tabs(TabsState { tabs: vec!["one".to_string(), "two".to_string()], active: 0 });
+    let mut widget = WidgetState::Tabs(TabsState::new(vec!["one".to_string(), "two".to_string()], 0));
     let left = KeyEvent { key: Key::Left, mods: 0 };
     assert_eq!(widget.on_key(&left), Some(WidgetSignal::TabChanged(1)), "Left from index 0 wraps to the last tab");
     let right = KeyEvent { key: Key::Right, mods: 0 };
     assert_eq!(widget.on_key(&right), Some(WidgetSignal::TabChanged(0)));
 
-    let mut empty_widget = WidgetState::Tabs(TabsState { tabs: vec![], active: 0 });
+    let mut empty_widget = WidgetState::Tabs(TabsState::new(vec![], 0));
     assert_eq!(empty_widget.on_key(&right), None);
 }
 
@@ -969,7 +981,7 @@ fn input_on_key_inserts_utf8_and_respects_cursor_bounds() {
         WidgetState::Input(i) => i.cursor,
         _ => unreachable!(),
     };
-    assert_eq!(cursor_after_left, 1, "Left steps by one byte, not a full UTF-8 char boundary");
+    assert_eq!(cursor_after_left, 0, "Left steps over the whole multi-byte character");
     assert_eq!(widget.on_key(&left), None);
     let cursor_after_second_left = match &widget {
         WidgetState::Input(i) => i.cursor,
@@ -982,7 +994,6 @@ fn input_on_key_inserts_utf8_and_respects_cursor_bounds() {
     assert_eq!(widget.on_key(&backspace), None, "nothing before the cursor to delete");
 
     let right = KeyEvent { key: Key::Right, mods: 0 };
-    assert_eq!(widget.on_key(&right), None);
     assert_eq!(widget.on_key(&right), None);
     assert_eq!(widget.on_key(&right), None, "already at the end");
 
@@ -1010,6 +1021,9 @@ fn log_on_key_page_and_home_end_scroll_states() {
         log.push(&format!("l{i}"));
     }
     let mut widget = WidgetState::Log(log);
+    let theme = Theme::new(AppearanceName::Dark);
+    let mut buf = CellBuffer::new(Size { width: 10, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+    widget.paint(&theme, Rect::new(0, 0, 10, 5), &mut buf, false);
 
     let page_down = KeyEvent { key: Key::PageDown, mods: 0 };
     widget.on_key(&page_down);
@@ -1017,20 +1031,21 @@ fn log_on_key_page_and_home_end_scroll_states() {
 
     let home = KeyEvent { key: Key::Home, mods: 0 };
     widget.on_key(&home);
-    assert_eq!(log_scroll(&widget), LogScroll::At(0));
+    assert_eq!(log_scroll(&widget), LogScroll::At(0), "Home shows the first page, not a single line");
 
     widget.on_key(&page_down);
-    assert_eq!(log_scroll(&widget), LogScroll::At(10), "PageDown short of the end scrolls forward by 10");
+    assert_eq!(log_scroll(&widget), LogScroll::At(5), "PageDown scrolls forward by the painted page");
 
     widget.on_key(&page_down);
-    assert_eq!(log_scroll(&widget), LogScroll::Follow, "PageDown past the end resumes following");
+    widget.on_key(&page_down);
+    assert_eq!(log_scroll(&widget), LogScroll::Follow, "PageDown onto the last page resumes following");
 
     let page_up = KeyEvent { key: Key::PageUp, mods: 0 };
     widget.on_key(&page_up);
-    assert_eq!(log_scroll(&widget), LogScroll::At(19), "PageUp from Follow jumps to the last line");
+    assert_eq!(log_scroll(&widget), LogScroll::At(10), "the first PageUp from Follow moves a whole page up from the tail view");
 
     widget.on_key(&page_up);
-    assert_eq!(log_scroll(&widget), LogScroll::At(9), "a second PageUp scrolls back 10 more lines");
+    assert_eq!(log_scroll(&widget), LogScroll::At(5), "a second PageUp scrolls back one more page");
 
     let end = KeyEvent { key: Key::End, mods: 0 };
     widget.on_key(&end);
@@ -1091,7 +1106,9 @@ fn widget_preferred_size_for_label_select_chip_and_divider() {
 #[test]
 fn paint_list_highlights_selected_row_only_when_focused() {
     let theme = Theme::new(AppearanceName::Dark);
-    let list = ListState { items: vec!["a".to_string(), "b".to_string()], selected: 1, offset: 0, marks: vec![false, true] };
+    let mut list = ListState::new(vec!["a".to_string(), "b".to_string()]);
+    list.selected = 1;
+    list.marks = vec![false, true];
     let rect = Rect::new(0, 0, 10, 2);
     let mut buf = CellBuffer::new(Size { width: 10, height: 2 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     WidgetState::List(list).paint(&theme, rect, &mut buf, true);
@@ -1115,7 +1132,7 @@ fn paint_select_renders_label_and_current_option() {
 #[test]
 fn paint_tabs_bolds_the_active_tab() {
     let theme = Theme::new(AppearanceName::Dark);
-    let tabs = TabsState { tabs: vec!["One".to_string(), "Two".to_string()], active: 1 };
+    let tabs = TabsState::new(vec!["One".to_string(), "Two".to_string()], 1);
     let rect = Rect::new(0, 0, 20, 1);
     let mut buf = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     WidgetState::Tabs(tabs).paint(&theme, rect, &mut buf, false);
@@ -1126,18 +1143,21 @@ fn paint_tabs_bolds_the_active_tab() {
 }
 
 #[test]
-fn terminal_widget_scroll_search_and_passthrough() {
+fn terminal_widget_passes_keys_through_and_opens_search_only_by_command() {
     let mut term = TerminalState::new(Size { width: 8, height: 3 }, 50);
     term.feed(b"line1\nline2\nline3\nline4\n");
     let mut widget = WidgetState::Terminal(term);
     let page = KeyEvent { key: Key::PageUp, mods: 0 };
-    assert_eq!(widget.on_key(&page), None);
+    assert_eq!(widget.on_key(&page), Some(WidgetSignal::TerminalInput(b"\x1b[5~".to_vec())));
     let slash = KeyEvent { key: Key::Char('/'), mods: 0 };
-    assert_eq!(widget.on_key(&slash), None);
+    assert_eq!(widget.on_key(&slash), Some(WidgetSignal::TerminalInput(b"/".to_vec())));
+    if let WidgetState::Terminal(t) = &mut widget {
+        t.begin_search();
+    }
     let a = KeyEvent { key: Key::Char('a'), mods: 0 };
     assert_eq!(widget.on_key(&a), Some(WidgetSignal::ValueChanged("a".into())));
     let esc = KeyEvent { key: Key::Esc, mods: 0 };
-    assert_eq!(widget.on_key(&esc), None);
+    assert_eq!(widget.on_key(&esc), Some(WidgetSignal::ValueChanged(String::new())));
     let x = KeyEvent { key: Key::Char('x'), mods: 0 };
     assert_eq!(widget.on_key(&x), Some(WidgetSignal::TerminalInput(b"x".to_vec())));
     let mut buf = CellBuffer::new(Size { width: 8, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -1150,10 +1170,10 @@ fn window_stack_tabs_paint_on_body_top() {
     let rect = Rect::new(0, 0, 50, 6);
     let mut buf = CellBuffer::new(Size { width: 50, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     let w = WindowState::new("Main").with_stack_tabs(vec!["a".into(), "b".into()], 1);
-    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
     let row: String = (0..50).filter_map(|x| buf.get(x, 1).map(|c| c.ch)).collect();
     assert!(row.contains('a') && row.contains('b'), "corner stack tabs missing: {row:?}");
-    assert!(row.contains('\u{2922}') && row.contains('\u{2715}'), "inline action glyphs missing: {row:?}");
+    assert!(row.contains('\u{2715}') && !row.contains('\u{2922}'), "close glyph present, no maximize for a lone window: {row:?}");
 }
 
 #[test]
@@ -1164,7 +1184,7 @@ fn window_stack_tabs_respect_bottom_corners() {
     let rect = Rect::new(0, 0, 50, 8);
     let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     let w = WindowState::new("Main").with_stack_tab_states(vec![WindowStackTabState::new("top", WindowStackCorner::TopLeft), WindowStackTabState::new("bot", WindowStackCorner::BottomRight)], 1);
-    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
     let top = row_text(&buf, 1);
     let bottom = row_text(&buf, 6);
     assert!(top.contains("top"), "top tab missing: {top:?}");
@@ -1177,7 +1197,7 @@ fn window_silhouette_keeps_one_continuous_outline_around_the_notch() {
     let rect = Rect::new(0, 0, 40, 8);
     let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
     let mut buf = CellBuffer::new(Size { width: 40, height: 8 }, sentinel);
-    ChromeState::Window(WindowState::new("Commands")).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(WindowState::new("Commands"))).paint(&theme, rect, &mut buf);
     assert_eq!(buf.get(38, 0).copied(), Some(sentinel), "the notch beside the title chip stays outside the window");
     assert_eq!(buf.get(2, 4).unwrap().bg, theme.surface(Surface::Window));
     let hair = row_text(&buf, 2);
@@ -1197,14 +1217,14 @@ fn window_bottom_notch_is_outside_the_continuous_outline() {
     let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
     let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, sentinel);
     let window = WindowState::new("Main").with_stack_tab_states(vec![WindowStackTabState::new("top", WindowStackCorner::TopLeft), WindowStackTabState::new("bot", WindowStackCorner::BottomRight)], 0);
-    ChromeState::Window(window).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(window)).paint(&theme, rect, &mut buf);
     assert_eq!(buf.get(0, 7).copied(), Some(sentinel), "no dangling corner in the bottom-left notch");
     assert_eq!(buf.get(0, 5).unwrap().ch, '\u{2514}');
 }
 
 #[test]
 fn composed_window_keeps_the_silhouette_when_the_body_paints() {
-    let mut tui = crate::tui::engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
+    let mut tui = crate::tui::engine::Tui::new(Size { width: 60, height: 40 }, Theme::new(AppearanceName::Dark));
     let navbar = NavbarState { left: vec![], center: vec![NavItem { id: "d".into(), label: "dashboard".into(), active: false }], right: vec![] };
     let footer = FooterState { hints: vec![], status: String::new() };
     let layout = create_default_layout(&["w1".into()], "row", None, Some(&["Commands".into()]));
@@ -1218,7 +1238,7 @@ fn composed_window_keeps_the_silhouette_when_the_body_paints() {
     let win = tui.scene.rect(chrome);
     let frame = tui.frame();
     let hair = row_text(frame, win.y + 2);
-    let bend = hair.rfind('\u{2514}').unwrap_or_else(|| panic!("missing bend {hair:?}"));
+    let bend = hair.rfind('\u{2517}').unwrap_or_else(|| panic!("missing bend {hair:?}"));
     assert!(hair[bend..].chars().all(|ch| ch != ' '), "body overwrote the silhouette: {hair:?}");
     let body = row_text(frame, win.y + 3);
     assert!(body.contains('/'), "wizard should start under the outline, got {body:?}");
@@ -1234,7 +1254,7 @@ fn window_hairline_opens_only_under_the_active_tab() {
         w.focused = true;
         let layout = window_chip_layout(&w, rect);
         let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+        ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
         let group = layout.groups.iter().find(|g| g.corner == crate::tui::layout::WindowStackCorner::TopLeft).expect("top-left tabs");
         for tab in &group.tabs {
             let open = tab.index == active;
@@ -1243,20 +1263,20 @@ fn window_hairline_opens_only_under_the_active_tab() {
                 if open {
                     assert_eq!(ch, ' ', "active tab {active} must stay open at {x}: {}", row_text(&buf, layout.top_body_y));
                 } else {
-                    assert_eq!(ch, '\u{2500}', "inactive tab must stay closed at {x}: {}", row_text(&buf, layout.top_body_y));
+                    assert_eq!(ch, '\u{2501}', "inactive tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, layout.top_body_y));
                 }
             }
         }
         let hair = row_text(&buf, layout.top_body_y);
-        let bend = hair.rfind('\u{2514}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
+        let bend = hair.rfind('\u{2517}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
         assert!(hair[bend..].chars().all(|ch| ch != ' '), "silhouette breaks after the active tab: {hair:?}");
-        assert!(hair.ends_with('\u{2510}'), "body cap does not close: {hair:?}");
+        assert!(hair.ends_with('\u{2513}'), "body cap does not close: {hair:?}");
         assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::ActiveBase), "focused silhouette uses the active color");
         assert_eq!(buf.get(rect.width - 1, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase));
     }
     let plain = WindowState::new("Main").with_stack_tabs(vec!["alpha".into(), "beta".into()], 0);
     let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-    ChromeState::Window(plain).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(plain)).paint(&theme, rect, &mut buf);
     assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::BorderNormal), "an unfocused silhouette uses the normal border");
 }
 
@@ -1273,7 +1293,7 @@ fn window_bottom_hairline_opens_only_under_the_active_tab() {
     w.focused = true;
     let layout = window_chip_layout(&w, rect);
     let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-    ChromeState::Window(w).paint(&theme, rect, &mut buf);
+    ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
     let y = layout.bottom_body_y.expect("bottom hairline");
     let group = layout.groups.iter().find(|g| g.corner == WindowStackCorner::BottomLeft).expect("bottom tabs");
     assert!(group.tabs.len() >= 2, "two bottom tabs");
@@ -1284,7 +1304,7 @@ fn window_bottom_hairline_opens_only_under_the_active_tab() {
             if open {
                 assert_eq!(ch, ' ', "active bottom tab must stay open at {x}: {}", row_text(&buf, y));
             } else {
-                assert_eq!(ch, '\u{2500}', "inactive bottom tab must stay closed at {x}: {}", row_text(&buf, y));
+                assert_eq!(ch, '\u{2501}', "inactive bottom tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, y));
             }
         }
     }
@@ -1301,9 +1321,10 @@ fn paint_log_shows_the_tail_when_following() {
     let rect = Rect::new(0, 0, 10, 3);
     let mut buf = CellBuffer::new(Size { width: 10, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     WidgetState::Log(log).paint(&theme, rect, &mut buf, false);
-    assert_eq!(row_text(&buf, 0).trim_end(), "line2");
-    assert_eq!(row_text(&buf, 1).trim_end(), "line3");
-    assert_eq!(row_text(&buf, 2).trim_end(), "line4");
+    assert!(row_text(&buf, 0).starts_with("line2"), "{:?}", row_text(&buf, 0));
+    assert!(row_text(&buf, 1).starts_with("line3"));
+    assert!(row_text(&buf, 2).starts_with("line4"));
+    assert_eq!(buf.get(9, 2).unwrap().ch, '\u{2503}', "five lines in three rows draw a scroll bar whose thumb sits at the bottom while following");
 }
 
 #[test]
@@ -1319,7 +1340,10 @@ fn paint_input_shows_placeholder_and_draws_cursor_when_focused() {
     let filled = InputState { value: "hi".to_string(), cursor: 2, placeholder: "ph".to_string() };
     let mut buf2 = CellBuffer::new(Size { width: 20, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     WidgetState::Input(filled).paint(&theme, rect, &mut buf2, true);
-    assert_eq!(buf2.get(2, 0).unwrap().ch, '\u{2588}', "a focused input draws a cursor block at the caret position");
+    assert_eq!(buf2.get(2, 0).unwrap().ch, ' ', "the painter draws no caret glyph; the terminal cursor marks the caret");
+    assert_eq!(buf2.get(0, 0).unwrap().ch, 'h', "the caret never hides a glyph");
+    let spec = WidgetState::Input(InputState { value: "hi".to_string(), cursor: 2, placeholder: "ph".to_string() }).cursor(rect).expect("a focused input places the terminal cursor");
+    assert_eq!(spec.pos, Pos { x: 2, y: 0 });
 }
 
 #[test]
@@ -1348,9 +1372,9 @@ fn paint_chip_reflects_on_and_off_colors() {
     WidgetState::Chip(off).paint(&theme, rect, &mut buf_off, false);
     assert_eq!(buf_off.get(0, 0).unwrap().bg, theme.surface(Surface::Panel));
 }
-//#endregion ???Widget
+//#endregion 🔖️Widget
 
-//#region ???Chrome
+//#region 🔖️Chrome
 #[test]
 fn paint_navbar_places_left_center_and_right_items() {
     let theme = Theme::new(AppearanceName::Dark);
@@ -1384,17 +1408,17 @@ fn paint_footer_renders_hints_then_status() {
     assert!(row1.contains("quit"));
     assert!(row1.trim_end().ends_with("OK"));
 }
-//#endregion ???Chrome
+//#endregion 🔖️Chrome
 
-//#region ???Engine
+//#region 🔖️Engine
 
 #[test]
 fn engine_mouse_move_does_not_steal_focus() {
     use crate::tui::engine::Tui;
     let mut tui = Tui::new(Size { width: 20, height: 10 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
-    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".into(), align: Align::Left, role: Role::Foreground }))));
-    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".into(), align: Align::Left, role: Role::Foreground }))));
+    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
+    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["b".to_string()])))));
     tui.scene.node_mut(root).set_constraint(Constraint { direction: Direction::Row, ..Default::default() });
     tui.scene.node_mut(a).set_constraint(Constraint { width: Dimension::Cells(10), ..Default::default() });
     tui.scene.node_mut(b).set_constraint(Constraint { width: Dimension::Cells(10), ..Default::default() });
@@ -1410,8 +1434,8 @@ fn engine_mouse_move_does_not_steal_focus() {
 fn tui_focus_next_and_prev_cycle_through_focusables() {
     let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
-    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
-    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
+    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
+    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["b".to_string()])))));
     assert_eq!(tui.focus(), None);
     tui.focus_next();
     assert_eq!(tui.focus(), Some(a));
@@ -1427,8 +1451,8 @@ fn tui_focus_next_and_prev_cycle_through_focusables() {
 fn tui_dispatch_tab_and_backtab_move_focus() {
     let mut tui = crate::tui::engine::Tui::new(Size { width: 20, height: 5 }, Theme::new(AppearanceName::Dark));
     let root = tui.scene.root();
-    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "a".to_string(), align: Align::Left, role: Role::Foreground }))));
-    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::Label(LabelState { text: "b".to_string(), align: Align::Left, role: Role::Foreground }))));
+    let a = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["a".to_string()])))));
+    let b = tui.scene.add(root, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(vec!["b".to_string()])))));
     let tab_ev = Event::Key(KeyEvent { key: Key::Tab, mods: 0 });
     assert_eq!(tui.dispatch(&tab_ev), vec![]);
     assert_eq!(tui.focus(), Some(a));
@@ -1458,9 +1482,9 @@ fn tui_set_appearance_and_resize_force_full_redraw() {
     let patch2 = tui.render();
     assert!(!patch2.0.is_empty(), "resize forces a full repaint too");
 }
-//#endregion ???Engine
+//#endregion 🔖️Engine
 
-//#region ???WasmHost
+//#region 🔖️WasmHost
 #[test]
 fn wasm_host_setup_and_teardown_match_ansi_sequences() {
     let host = crate::tui::host::WasmHost::new(10, 5, true);
@@ -1476,9 +1500,9 @@ fn wasm_host_resize_updates_engine_size() {
     let patch = host.render();
     assert!(!patch.is_empty(), "resizing triggers a full repaint on the next render");
 }
-//#endregion ???WasmHost
+//#endregion 🔖️WasmHost
 
-//#region ???Clipboard
+//#region 🔖️Clipboard
 #[test]
 fn osc52_copy_sequence_is_base64_payload() {
     let seq = crate::tui::backend::osc52_copy_sequence("hi");
@@ -1494,9 +1518,9 @@ fn osc52_copy_sequence_is_base64_payload() {
         Some(crate::tui::backend::ClipboardResult::Pasted(text)) if text == "abc"
     ));
 }
-//#endregion ???Clipboard
+//#endregion 🔖️Clipboard
 
-//#region ???Pty
+//#region 🔖️Pty
 #[cfg(all(unix, feature = "tui-terminal"))]
 #[test]
 fn pty_spawn_echo_hello() {
@@ -1566,4 +1590,4 @@ fn pty_resize_ok() {
     pty.resize(PtySize { cols: 100, rows: 40 }).expect("resize");
     pty.kill().expect("kill");
 }
-//#endregion ???Pty
+//#endregion 🔖️Pty

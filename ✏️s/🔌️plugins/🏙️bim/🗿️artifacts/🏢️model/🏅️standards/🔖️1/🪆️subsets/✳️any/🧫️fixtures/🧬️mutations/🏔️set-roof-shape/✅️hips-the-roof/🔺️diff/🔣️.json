@@ -1,0 +1,12 @@
+{
+  "roofs": {
+    "rf-main": {
+      "entry": "Patched",
+      "shape": {
+        "Hip": {
+          "pitch": 0.5
+        }
+      }
+    }
+  }
+}

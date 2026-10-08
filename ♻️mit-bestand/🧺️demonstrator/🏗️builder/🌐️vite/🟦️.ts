@@ -75,7 +75,7 @@ export default defineConfig(({ command }) => {
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir] },
     watch: {
       // Generated registry/session rewrites must not bounce Vite.
-      ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"],
+      ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**"],
     },
   },
   plugins: [

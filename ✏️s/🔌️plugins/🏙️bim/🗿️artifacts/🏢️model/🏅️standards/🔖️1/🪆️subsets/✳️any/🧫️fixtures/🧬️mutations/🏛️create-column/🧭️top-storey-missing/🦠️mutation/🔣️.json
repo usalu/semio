@@ -1,0 +1,21 @@
+{
+  "mutation": "createColumn",
+  "id": "c-b1",
+  "column": {
+    "storey": "st-ground",
+    "column_type": "ct-400",
+    "position": {
+      "x": 6,
+      "y": 0
+    },
+    "rotation": 0,
+    "base_offset": 0,
+    "top": {
+      "Storey": {
+        "storey": "st-attic",
+        "offset": 0
+      }
+    },
+    "name": "B1"
+  }
+}

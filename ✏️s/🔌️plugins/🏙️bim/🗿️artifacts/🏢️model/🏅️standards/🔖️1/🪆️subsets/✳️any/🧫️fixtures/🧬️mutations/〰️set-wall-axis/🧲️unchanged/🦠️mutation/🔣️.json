@@ -1,0 +1,16 @@
+{
+  "mutation": "setWallAxis",
+  "id": "w-south",
+  "axis": {
+    "Line": {
+      "start": {
+        "x": 0,
+        "y": 0
+      },
+      "end": {
+        "x": 8,
+        "y": 0
+      }
+    }
+  }
+}

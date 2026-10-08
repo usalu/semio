@@ -263,7 +263,7 @@ fn envelope(case: &str) -> Option<(f64, f64, f64, f64)> {
 /// envelope. A case with no committed reference is reported as such and never silently passes.
 ///
 /// Deliberately `#[ignore]`: a full year × ten cases is minutes of work, which does not belong in
-/// the default `cargo test`. Run it through the `🏛️bestest🔋️energy🔮️compare` launch entry.
+/// the default `cargo test`. Run it explicitly with `--ignored` (extra arguments of the crate's `test` dashboard command).
 #[test]
 #[ignore = "full-year comparison against the committed EnergyPlus references; run explicitly"]
 fn bestest_cases_compared_with_energyplus() {

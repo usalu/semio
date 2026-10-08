@@ -27,6 +27,22 @@ pub mod table;
 pub mod tabs;
 #[path = "../../🧱️elements/🪟️Window/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod window;
+#[path = "../../🧱️elements/💬️Dialog/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod dialog;
+#[path = "../../🧱️elements/🖱️ContextMenu/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod menu;
+#[path = "../../🧱️elements/⌨️Command/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod palette;
+#[path = "../../🧱️elements/💡️ChromeControlHint/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod tooltip;
+#[path = "../../🧱️elements/🌳️Tree/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod tree;
+#[path = "../../🧱️elements/📜️Scrollable/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod scrollable;
+#[path = "../../🧱️elements/📶️Progress/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod progress;
+#[path = "../../🧱️elements/🔀️Toggle/🎯️targets/⌨️tui/🦀️.rs"]
+pub mod toggle;
 #[path = "../../🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod wizard;
 

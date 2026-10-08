@@ -1,0 +1,394 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Columns",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47.0,
+        "longitude": 8.0,
+        "elevation": 100.0,
+        "true_north": 0.0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3.0
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "column_types": {
+      "ct-rect": {
+        "name": "Rect 400x300",
+        "profile": {
+          "Rectangle": {
+            "width": 0.4,
+            "depth": 0.3
+          }
+        },
+        "material": "m-concrete"
+      },
+      "ct-circle": {
+        "name": "Round 500",
+        "profile": {
+          "Circle": {
+            "diameter": 0.5
+          }
+        },
+        "material": "m-concrete"
+      },
+      "ct-i": {
+        "name": "I 200x300",
+        "profile": {
+          "IShape": {
+            "width": 0.2,
+            "depth": 0.3,
+            "web": 0.01,
+            "flange": 0.015
+          }
+        },
+        "material": "m-steel"
+      },
+      "ct-custom": {
+        "name": "L angle",
+        "profile": {
+          "Custom": {
+            "outline": [
+              {
+                "point": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "bulge": 0.0
+              },
+              {
+                "point": {
+                  "x": 0.4,
+                  "y": 0.0
+                },
+                "bulge": 0.0
+              },
+              {
+                "point": {
+                  "x": 0.4,
+                  "y": 0.1
+                },
+                "bulge": 0.0
+              },
+              {
+                "point": {
+                  "x": 0.1,
+                  "y": 0.1
+                },
+                "bulge": 0.0
+              },
+              {
+                "point": {
+                  "x": 0.1,
+                  "y": 0.4
+                },
+                "bulge": 0.0
+              },
+              {
+                "point": {
+                  "x": 0.0,
+                  "y": 0.4
+                },
+                "bulge": 0.0
+              }
+            ]
+          }
+        },
+        "material": "m-steel"
+      },
+      "ct-bad": {
+        "name": "Zero",
+        "profile": {
+          "Rectangle": {
+            "width": 0.0,
+            "depth": 0.3
+          }
+        },
+        "material": "m-concrete"
+      }
+    },
+    "columns": {
+      "c-rect": {
+        "storey": "st-ground",
+        "column_type": "ct-rect",
+        "position": {
+          "x": 1.0,
+          "y": 2.0
+        },
+        "rotation": 0.5,
+        "base_offset": 0.0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "name": "Rect"
+      },
+      "c-circle": {
+        "storey": "st-ground",
+        "column_type": "ct-circle",
+        "position": {
+          "x": 4.0,
+          "y": 2.0
+        },
+        "rotation": 0.0,
+        "base_offset": 0.1,
+        "top": {
+          "Storey": {
+            "storey": "st-first",
+            "offset": -0.2
+          }
+        },
+        "name": "Circle"
+      },
+      "c-i": {
+        "storey": "st-first",
+        "column_type": "ct-i",
+        "position": {
+          "x": 2.0,
+          "y": 5.0
+        },
+        "rotation": 1.0,
+        "base_offset": 0.2,
+        "top": {
+          "Unconnected": {
+            "height": 2.0
+          }
+        },
+        "name": "I"
+      },
+      "c-custom": {
+        "storey": "st-ground",
+        "column_type": "ct-custom",
+        "position": {
+          "x": 6.0,
+          "y": 1.0
+        },
+        "rotation": -0.3,
+        "base_offset": 0.0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0.5
+          }
+        },
+        "name": "Custom"
+      },
+      "c-bad-type": {
+        "storey": "st-ground",
+        "column_type": "ct-bad",
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "base_offset": 0.0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "name": "Bad type"
+      },
+      "c-flat": {
+        "storey": "st-ground",
+        "column_type": "ct-rect",
+        "position": {
+          "x": 0.0,
+          "y": 4.0
+        },
+        "rotation": 0.0,
+        "base_offset": 0.0,
+        "top": {
+          "Unconnected": {
+            "height": 0.0
+          }
+        },
+        "name": "No height"
+      },
+      "c-unknown-type": {
+        "storey": "st-ground",
+        "column_type": "ct-none",
+        "position": {
+          "x": 0.0,
+          "y": 6.0
+        },
+        "rotation": 0.0,
+        "base_offset": 0.0,
+        "top": {
+          "StoreyTop": {
+            "offset": 0.0
+          }
+        },
+        "name": "Unknown type"
+      }
+    }
+  },
+  "expected": {
+    "c-rect": {
+      "family": "Column",
+      "volume": 0.36,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.752569656831,
+        1.772477507996,
+        0.0
+      ],
+      "max": [
+        1.247430343169,
+        2.227522492004,
+        3.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.0,
+      "base_z": 0.0,
+      "top_z": 3.0
+    },
+    "c-circle": {
+      "family": "Column",
+      "volume": 0.530143760293,
+      "volume_tolerance": 0.000445320759,
+      "min": [
+        3.75,
+        1.75,
+        0.1
+      ],
+      "max": [
+        4.25,
+        2.25,
+        2.8
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "height": 2.7,
+      "base_z": 0.1,
+      "top_z": 2.8
+    },
+    "c-i": {
+      "family": "Column",
+      "volume": 0.0174,
+      "volume_tolerance": 1e-09,
+      "min": [
+        1.819749121692,
+        4.834807555639,
+        3.2
+      ],
+      "max": [
+        2.180250878308,
+        5.165192444361,
+        5.2
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 2.0,
+      "base_z": 3.2,
+      "top_z": 5.2
+    },
+    "c-custom": {
+      "family": "Column",
+      "volume": 0.245,
+      "volume_tolerance": 1e-09,
+      "min": [
+        6.0,
+        0.881791917335,
+        0.0
+      ],
+      "max": [
+        6.411686616316,
+        1.38213459565,
+        3.5
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "height": 3.5,
+      "base_z": 0.0,
+      "top_z": 3.5
+    },
+    "c-bad-type": null,
+    "c-flat": null,
+    "c-unknown-type": null
+  },
+  "meshes": {}
+}

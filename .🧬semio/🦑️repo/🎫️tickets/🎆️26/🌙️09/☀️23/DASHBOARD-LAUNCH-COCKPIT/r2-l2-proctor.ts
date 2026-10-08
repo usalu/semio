@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const file = "C:/git/semio/🎓️teaching/🛂️proctor/README.md";
+let s = readFileSync(file, "utf8");
+const rep = (from: string, to: string) => { if (!s.includes(from)) throw new Error("missing: " + from); s = s.replace(from, to); };
+rep("## Run\n\n| Command | What it does |", "## Run\n\nEach `bun nx run <project>:<target>` below is the dashboard command `<project>:<target>`: pick it in the dashboard (`bun run dashboard`, `Ctrl+B n`) or run it with `semio run <project>:<target> [-- extra arguments]`.\n\n| Command | What it does |");
+rep("(launch row `🛠️dev🎓️teaching🏛️architecture❓️quiz`)", "(dashboard command `@teaching/architecture-quiz:dev`)");
+rep("(launch row `🩺️health🎓️teaching🛂️proctor`)", "(dashboard command `@teaching/proctor:health`)");
+rep("(launch row `💾️backup🎓️teaching🛂️proctor`)", "(dashboard command `@teaching/proctor:backup`)");
+rep("(launch row `♻️restore🎓️teaching🛂️proctor`)", "(dashboard command `@teaching/proctor:restore`)");
+rep("(launch rows `🧨️erase🎓️teaching🛂️proctor🔍️dry-run` and `🧨️erase🎓️teaching🛂️proctor`)", "(dashboard command `@teaching/proctor:erase`, which asks for the handle)");
+rep("(launch rows `🧹️prune🎓️teaching🛂️proctor🔍️dry-run` and `🧹️prune🎓️teaching🛂️proctor`, which ask for the age, `7d` unless stated)", "(dashboard command `@teaching/proctor:prune`, which asks for the age)");
+rep("(launch row `⚖️gate🎓️teaching🛂️proctor🏋️capacity`)", "(dashboard command `@teaching/proctor:capacity`)");
+writeFileSync(file, s);

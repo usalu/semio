@@ -1,0 +1,8 @@
+{
+  "walls": {
+    "w-east": {
+      "entry": "Patched",
+      "location": "CoreCenter"
+    }
+  }
+}

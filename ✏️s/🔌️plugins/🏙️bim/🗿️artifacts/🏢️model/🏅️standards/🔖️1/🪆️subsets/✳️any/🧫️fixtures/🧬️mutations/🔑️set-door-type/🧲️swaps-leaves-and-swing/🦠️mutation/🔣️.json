@@ -1,0 +1,6 @@
+{
+  "mutation": "setDoorType",
+  "id": "door-1",
+  "leaves": "Double",
+  "swing": "Right"
+}

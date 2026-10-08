@@ -1,0 +1,11 @@
+{
+  "mutation": "createStorey",
+  "id": "st-ground",
+  "storey": {
+    "building": "bldg-1",
+    "name": "Ground",
+    "level": 0,
+    "height": 3,
+    "cut_height": 0
+  }
+}

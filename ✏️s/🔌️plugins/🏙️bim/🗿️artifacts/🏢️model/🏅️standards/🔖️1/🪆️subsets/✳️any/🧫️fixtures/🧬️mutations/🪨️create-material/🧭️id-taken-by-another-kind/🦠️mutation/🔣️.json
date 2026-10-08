@@ -1,0 +1,16 @@
+{
+  "mutation": "createMaterial",
+  "id": "st-ground",
+  "material": {
+    "name": "Pine",
+    "category": "Wood",
+    "color": {
+      "r": 0.8,
+      "g": 0.6,
+      "b": 0.35
+    },
+    "density": 500,
+    "conductivity": 0.13,
+    "specific_heat": 1600
+  }
+}

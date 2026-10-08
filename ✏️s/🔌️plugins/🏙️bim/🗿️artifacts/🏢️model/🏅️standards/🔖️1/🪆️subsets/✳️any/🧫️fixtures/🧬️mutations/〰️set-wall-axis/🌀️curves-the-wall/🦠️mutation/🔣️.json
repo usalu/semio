@@ -1,0 +1,17 @@
+{
+  "mutation": "setWallAxis",
+  "id": "w-east",
+  "axis": {
+    "Arc": {
+      "start": {
+        "x": 8,
+        "y": 0
+      },
+      "end": {
+        "x": 8,
+        "y": 6
+      },
+      "bulge": 0.4
+    }
+  }
+}

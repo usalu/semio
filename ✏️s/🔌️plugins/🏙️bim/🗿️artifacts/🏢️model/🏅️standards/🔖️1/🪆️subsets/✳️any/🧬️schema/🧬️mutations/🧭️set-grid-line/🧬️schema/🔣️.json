@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-grid-line/schema.json",
+  "title": "SetGridLine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setGridLine"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Grid line",
+          "de": "Rasterlinie"
+        },
+        "ref": {
+          "kind": "grid-line"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "label": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Bezeichnung"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "start": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Start",
+          "de": "Start"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "end": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "End",
+          "de": "Ende"
+        },
+        "group": "value",
+        "order": 40
+      }
+    }
+  }
+}

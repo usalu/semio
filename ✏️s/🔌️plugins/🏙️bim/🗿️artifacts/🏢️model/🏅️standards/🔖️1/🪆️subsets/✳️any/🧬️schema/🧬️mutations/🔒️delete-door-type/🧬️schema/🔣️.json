@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-door-type/schema.json",
+  "title": "DeleteDoorType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteDoorType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Door type",
+          "de": "Türtyp"
+        },
+        "ref": {
+          "kind": "door-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

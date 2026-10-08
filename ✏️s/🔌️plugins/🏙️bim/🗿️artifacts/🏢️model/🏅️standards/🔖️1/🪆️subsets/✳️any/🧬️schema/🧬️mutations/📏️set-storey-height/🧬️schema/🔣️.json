@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-storey-height/schema.json",
+  "title": "SetStoreyHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "height"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setStoreyHeight"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "height": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Height (m)",
+          "de": "Höhe (m)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

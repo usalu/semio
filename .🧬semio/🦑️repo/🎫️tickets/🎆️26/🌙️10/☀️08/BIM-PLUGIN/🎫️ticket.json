@@ -1,0 +1,8 @@
+{
+  "title": "Introduce the Bim Plugin",
+  "emoji": "🏢",
+  "status": "open",
+  "description": "Introduce a new plugin bim for building information modelling. A model artifact: model has sites, site has buildings, building has storeys, storey has walls, columns, slabs, roofs, etc., wall has windows, doors, etc. Everything adjustable (storey height, wall curve, ...) and parametric (changing a storey height changes wall heights, ...). Full-blown, feature-complete BIM software. Mutations exclusively use declarative diffs and concrete inverse mutations; derived information comes from inferences; no separate bim module for holding or deriving state. Manual bookkeeping: repo MCP failed to connect (CONNECTION_CLOSED).",
+  "goal": "🎯architect",
+  "sessions": []
+}

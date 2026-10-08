@@ -1,0 +1,8 @@
+{
+  "mutation": "createRoofType",
+  "id": "rf-metal",
+  "roof_type": {
+    "name": "Hollow",
+    "layers": []
+  }
+}

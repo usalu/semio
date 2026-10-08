@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-roof-footprint/schema.json",
+  "title": "SetRoofFootprint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "footprint"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRoofFootprint"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "ref": {
+          "kind": "roof"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "footprint": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Footprint",
+          "de": "Grundriss"
+        },
+        "group": "outline",
+        "order": 20
+      }
+    }
+  }
+}

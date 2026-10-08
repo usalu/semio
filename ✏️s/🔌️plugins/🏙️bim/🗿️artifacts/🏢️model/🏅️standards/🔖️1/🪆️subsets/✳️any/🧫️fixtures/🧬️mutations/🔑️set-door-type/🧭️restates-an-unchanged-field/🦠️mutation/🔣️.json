@@ -1,0 +1,6 @@
+{
+  "mutation": "setDoorType",
+  "id": "door-1",
+  "width": 1.1,
+  "name": "Door 0.90"
+}

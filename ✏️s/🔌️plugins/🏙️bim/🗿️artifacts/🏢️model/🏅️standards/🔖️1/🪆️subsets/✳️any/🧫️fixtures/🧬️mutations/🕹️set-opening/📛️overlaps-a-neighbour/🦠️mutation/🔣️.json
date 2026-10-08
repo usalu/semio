@@ -1,0 +1,7 @@
+{
+  "mutation": "setOpening",
+  "id": "o-2",
+  "width": {
+    "value": 5
+  }
+}

@@ -1,0 +1,688 @@
+# 🧬️ BIM model artifact schema — every field with its state class.
+
+type ModelArtifact {
+  schema: String! @state(class: ARTIFACT)
+  project: Project! @state(class: ARTIFACT)
+  materials: [MaterialRow!]! @state(class: ARTIFACT)
+  wall_types: [WallTypeRow!]! @state(class: ARTIFACT)
+  slab_types: [SlabTypeRow!]! @state(class: ARTIFACT)
+  roof_types: [RoofTypeRow!]! @state(class: ARTIFACT)
+  column_types: [ColumnTypeRow!]! @state(class: ARTIFACT)
+  beam_types: [BeamTypeRow!]! @state(class: ARTIFACT)
+  window_types: [WindowTypeRow!]! @state(class: ARTIFACT)
+  door_types: [DoorTypeRow!]! @state(class: ARTIFACT)
+  sites: [SiteRow!]! @state(class: ARTIFACT)
+  buildings: [BuildingRow!]! @state(class: ARTIFACT)
+  storeys: [StoreyRow!]! @state(class: ARTIFACT)
+  grids: [GridLineRow!]! @state(class: ARTIFACT)
+  walls: [WallRow!]! @state(class: ARTIFACT)
+  curtain_walls: [CurtainWallRow!]! @state(class: ARTIFACT)
+  columns: [ColumnRow!]! @state(class: ARTIFACT)
+  beams: [BeamRow!]! @state(class: ARTIFACT)
+  slabs: [SlabRow!]! @state(class: ARTIFACT)
+  roofs: [RoofRow!]! @state(class: ARTIFACT)
+  openings: [OpeningRow!]! @state(class: ARTIFACT)
+  stairs: [StairRow!]! @state(class: ARTIFACT)
+  railings: [RailingRow!]! @state(class: ARTIFACT)
+  spaces: [SpaceRow!]! @state(class: ARTIFACT)
+  properties: [PropertySetRow!]! @state(class: ARTIFACT)
+  classifications: [ClassificationRow!]! @state(class: ARTIFACT)
+}
+
+enum MaterialCategory {
+  Concrete
+  Masonry
+  Wood
+  Metal
+  Glass
+  Insulation
+  Finish
+  Membrane
+  Other
+}
+
+enum LayerFunction {
+  Structure
+  Substrate
+  Insulation
+  Finish
+  Membrane
+  Core
+}
+
+enum LocationLine {
+  Center
+  Interior
+  Exterior
+  CoreCenter
+}
+
+enum Phase {
+  Existing
+  New
+  Demolished
+  Temporary
+}
+
+enum DoorLeaves {
+  Single
+  Double
+}
+
+enum Swing {
+  Left
+  Right
+}
+
+enum Turn {
+  Left
+  Right
+}
+
+enum StringerKind {
+  None
+  Closed
+  Open
+  Mono
+}
+
+enum RiserKind {
+  Open
+  Closed
+}
+
+# externally tagged: exactly one member is present
+type Axis {
+  [object Object]: AxisLine
+  [object Object]: AxisArc
+}
+
+type AxisLine {
+  start: Point2!
+  end: Point2!
+}
+
+type AxisArc {
+  start: Point2!
+  end: Point2!
+  bulge: Float!
+}
+
+# externally tagged: exactly one member is present
+type TopConstraint {
+  [object Object]: TopConstraintUnconnected
+  [object Object]: TopConstraintStoreyTop
+  [object Object]: TopConstraintStorey
+}
+
+type TopConstraintUnconnected {
+  height: Float!
+}
+
+type TopConstraintStoreyTop {
+  offset: Float!
+}
+
+type TopConstraintStorey {
+  storey: String!
+  offset: Float!
+}
+
+# externally tagged: exactly one member is present
+type Profile {
+  [object Object]: ProfileRectangle
+  [object Object]: ProfileCircle
+  [object Object]: ProfileIShape
+  [object Object]: ProfileCustom
+}
+
+type ProfileRectangle {
+  width: Float!
+  depth: Float!
+}
+
+type ProfileCircle {
+  diameter: Float!
+}
+
+type ProfileIShape {
+  width: Float!
+  depth: Float!
+  web: Float!
+  flange: Float!
+}
+
+type ProfileCustom {
+  outline: [Vertex!]!
+}
+
+# externally tagged: exactly one member is present
+type RoofShape {
+  [object Object]: Boolean
+  [object Object]: RoofShapeShed
+  [object Object]: RoofShapeGable
+  [object Object]: RoofShapeHip
+  [object Object]: RoofShapeMansard
+}
+
+type RoofShapeShed {
+  pitch: Float!
+  direction: Float!
+}
+
+type RoofShapeGable {
+  pitch: Float!
+  ridge_direction: Float!
+}
+
+type RoofShapeHip {
+  pitch: Float!
+}
+
+type RoofShapeMansard {
+  lower_pitch: Float!
+  upper_pitch: Float!
+  break_height: Float!
+}
+
+# externally tagged: exactly one member is present
+type OpeningKind {
+  [object Object]: OpeningKindWindow
+  [object Object]: OpeningKindDoor
+  [object Object]: OpeningKindVoid
+}
+
+type OpeningKindWindow {
+  window_type: String!
+}
+
+type OpeningKindDoor {
+  door_type: String!
+}
+
+type OpeningKindVoid {
+  width: Float!
+  height: Float!
+}
+
+# externally tagged: exactly one member is present
+type StairFlight {
+  [object Object]: Boolean
+  [object Object]: StairFlightLTurn
+  [object Object]: StairFlightUTurn
+  [object Object]: StairFlightSpiral
+}
+
+type StairFlightLTurn {
+  split: Float!
+  turn: Turn!
+}
+
+type StairFlightUTurn {
+  gap: Float!
+}
+
+type StairFlightSpiral {
+  radius: Float!
+  sweep: Float!
+}
+
+# externally tagged: exactly one member is present
+type PropertyValue {
+  [object Object]: PropertyValueText
+  [object Object]: PropertyValueReal
+  [object Object]: PropertyValueInteger
+  [object Object]: PropertyValueBoolean
+  [object Object]: PropertyValueLength
+  [object Object]: PropertyValueArea
+  [object Object]: PropertyValueVolume
+  [object Object]: PropertyValueAngle
+}
+
+type PropertyValueText {
+  value: String!
+}
+
+type PropertyValueReal {
+  value: Float!
+}
+
+type PropertyValueInteger {
+  value: Int!
+}
+
+type PropertyValueBoolean {
+  value: Boolean!
+}
+
+type PropertyValueLength {
+  value: Float!
+}
+
+type PropertyValueArea {
+  value: Float!
+}
+
+type PropertyValueVolume {
+  value: Float!
+}
+
+type PropertyValueAngle {
+  value: Float!
+}
+
+# externally tagged: exactly one member is present
+type Infill {
+  [object Object]: Boolean
+  [object Object]: InfillGlass
+  [object Object]: InfillPanel
+}
+
+type InfillGlass {
+  thickness: Float!
+}
+
+type InfillPanel {
+  thickness: Float!
+}
+
+# externally tagged: exactly one member is present
+type SpaceBoundary {
+  [object Object]: SpaceBoundaryBounded
+  [object Object]: SpaceBoundaryExplicit
+}
+
+type SpaceBoundaryBounded {
+  seed: Point2!
+}
+
+type SpaceBoundaryExplicit {
+  outline: [Vertex!]!
+}
+
+type Point2 {
+  x: Float!
+  y: Float!
+}
+
+type Rgb {
+  r: Float!
+  g: Float!
+  b: Float!
+}
+
+type Vertex {
+  point: Point2!
+  bulge: Float!
+}
+
+type Slope {
+  direction: Float!
+  angle: Float!
+}
+
+type StairStringer {
+  kind: StringerKind!
+  width: Float!
+  depth: Float!
+}
+
+type Baluster {
+  profile: Profile!
+  spacing: Float!
+}
+
+type Layer {
+  material: String!
+  thickness: Float!
+  function: LayerFunction!
+}
+
+type Project {
+  name: String!
+  description: String!
+  author: String!
+  organization: String!
+  phase_names: [String!]!
+}
+
+type Material {
+  name: String!
+  category: MaterialCategory!
+  color: Rgb!
+  density: Float!
+  conductivity: Float!
+  specific_heat: Float!
+}
+
+type WallType {
+  name: String!
+  layers: [Layer!]!
+}
+
+type SlabType {
+  name: String!
+  layers: [Layer!]!
+}
+
+type RoofType {
+  name: String!
+  layers: [Layer!]!
+}
+
+type ColumnType {
+  name: String!
+  profile: Profile!
+  material: String!
+}
+
+type BeamType {
+  name: String!
+  profile: Profile!
+  material: String!
+}
+
+type WindowType {
+  name: String!
+  width: Float!
+  height: Float!
+  sill: Float!
+  frame_width: Float!
+  frame_depth: Float!
+  panes: Int!
+  material: String!
+}
+
+type DoorType {
+  name: String!
+  width: Float!
+  height: Float!
+  frame_width: Float!
+  frame_depth: Float!
+  leaves: DoorLeaves!
+  swing: Swing!
+  material: String!
+}
+
+type Site {
+  name: String!
+  latitude: Float!
+  longitude: Float!
+  elevation: Float!
+  true_north: Float!
+  boundary: [Point2!]!
+}
+
+type Building {
+  site: String!
+  name: String!
+  origin: Point2!
+  rotation: Float!
+  elevation: Float!
+}
+
+type Storey {
+  building: String!
+  name: String!
+  level: Int!
+  height: Float!
+  cut_height: Float
+}
+
+type GridLine {
+  building: String!
+  label: String!
+  start: Point2!
+  end: Point2!
+}
+
+type Wall {
+  storey: String!
+  wall_type: String!
+  axis: Axis!
+  location: LocationLine!
+  base_offset: Float!
+  top: TopConstraint!
+  phase: Phase!
+  name: String!
+}
+
+type CurtainWall {
+  storey: String!
+  axis: Axis!
+  base_offset: Float!
+  top: TopConstraint!
+  u_spacing: Float!
+  v_spacing: Float!
+  mullion: Profile!
+  panel_material: String!
+  mullion_material: String!
+  name: String!
+}
+
+type Column {
+  storey: String!
+  column_type: String!
+  position: Point2!
+  rotation: Float!
+  base_offset: Float!
+  top: TopConstraint!
+  name: String!
+}
+
+type Beam {
+  storey: String!
+  beam_type: String!
+  start: Point2!
+  end: Point2!
+  top_offset: Float!
+  name: String!
+}
+
+type Slab {
+  storey: String!
+  slab_type: String!
+  boundary: [Vertex!]!
+  holes: [[Vertex!]!]!
+  offset: Float!
+  slope: Slope
+  name: String!
+}
+
+type Roof {
+  storey: String!
+  roof_type: String!
+  footprint: [Vertex!]!
+  shape: RoofShape!
+  overhang: Float!
+  base_offset: Float!
+  name: String!
+}
+
+type Opening {
+  host: String!
+  kind: OpeningKind!
+  offset: Float!
+  sill_override: Float
+  width: Float
+  height: Float
+  flip_hand: Boolean!
+  flip_facing: Boolean!
+  name: String!
+}
+
+type Stair {
+  storey: String!
+  start: Point2!
+  direction: Float!
+  width: Float!
+  flight: StairFlight!
+  top: TopConstraint!
+  max_riser: Float!
+  min_tread: Float!
+  stringer: StairStringer!
+  nosing: Float!
+  tread_thickness: Float!
+  riser: RiserKind!
+  landing_depth: Float!
+  name: String!
+}
+
+type Railing {
+  storey: String!
+  path: [Point2!]!
+  height: Float!
+  post_spacing: Float!
+  profile: Profile!
+  post_profile: Profile!
+  baluster: Baluster
+  infill: Infill!
+  material: String!
+  base_offset: Float!
+  name: String!
+}
+
+type Space {
+  storey: String!
+  number: String!
+  name: String!
+  boundary: SpaceBoundary!
+  usage: String!
+}
+
+type Classification {
+  system: String!
+  code: String!
+  title: String!
+}
+
+type MaterialRow {
+  id: String!
+  value: Material!
+}
+
+type WallTypeRow {
+  id: String!
+  value: WallType!
+}
+
+type SlabTypeRow {
+  id: String!
+  value: SlabType!
+}
+
+type RoofTypeRow {
+  id: String!
+  value: RoofType!
+}
+
+type ColumnTypeRow {
+  id: String!
+  value: ColumnType!
+}
+
+type BeamTypeRow {
+  id: String!
+  value: BeamType!
+}
+
+type WindowTypeRow {
+  id: String!
+  value: WindowType!
+}
+
+type DoorTypeRow {
+  id: String!
+  value: DoorType!
+}
+
+type SiteRow {
+  id: String!
+  value: Site!
+}
+
+type BuildingRow {
+  id: String!
+  value: Building!
+}
+
+type StoreyRow {
+  id: String!
+  value: Storey!
+}
+
+type GridLineRow {
+  id: String!
+  value: GridLine!
+}
+
+type WallRow {
+  id: String!
+  value: Wall!
+}
+
+type CurtainWallRow {
+  id: String!
+  value: CurtainWall!
+}
+
+type ColumnRow {
+  id: String!
+  value: Column!
+}
+
+type BeamRow {
+  id: String!
+  value: Beam!
+}
+
+type SlabRow {
+  id: String!
+  value: Slab!
+}
+
+type RoofRow {
+  id: String!
+  value: Roof!
+}
+
+type OpeningRow {
+  id: String!
+  value: Opening!
+}
+
+type StairRow {
+  id: String!
+  value: Stair!
+}
+
+type RailingRow {
+  id: String!
+  value: Railing!
+}
+
+type SpaceRow {
+  id: String!
+  value: Space!
+}
+
+type PropertySetRow {
+  id: String!
+  value: PropertySetRows!
+}
+
+type ClassificationRow {
+  id: String!
+  value: Classification!
+}
+
+type PropertySetRows {
+  rows: [PropertyRow!]!
+}
+
+type PropertyRow {
+  set: String!
+  name: String!
+  value: PropertyValue!
+}
+

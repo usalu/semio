@@ -1,0 +1,42 @@
+{
+  "mutation": "createRoof",
+  "id": "rf-flat",
+  "roof": {
+    "storey": "st-first",
+    "roof_type": "rt-tiles",
+    "footprint": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 8,
+          "y": 6
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 6
+        },
+        "bulge": 0
+      }
+    ],
+    "shape": "Flat",
+    "overhang": 0,
+    "base_offset": 0.1,
+    "name": "Flat roof"
+  }
+}

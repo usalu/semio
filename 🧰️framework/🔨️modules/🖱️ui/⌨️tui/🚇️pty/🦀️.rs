@@ -248,7 +248,7 @@ mod unix_impl {
             self.master.as_raw_fd()
         }
 
-        /// 📥 Reads what the child has written so far without waiting for more.
+        /// 📖️ Reads what the child has written so far without waiting for more.
         pub fn read(&mut self, buf: &mut [u8]) -> PtyRead {
             loop {
                 let n = unsafe { libc::read(self.master.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) };
@@ -325,7 +325,15 @@ mod unix_impl {
             self.child.id()
         }
 
-        /// 🪜 Applies one stop stage: `Interrupt` signals the terminal's foreground job the way Ctrl+C
+        /// 🛬 Tells the terminal that its child has ended; nothing to do on Unix, where the master reports the end itself.
+        pub fn finish(&mut self) {}
+
+        /// 🦇 Whether the child is a batch job; never on Unix.
+        pub fn batch(&self) -> bool {
+            false
+        }
+
+        /// 🧗️ Applies one stop stage: `Interrupt` signals the terminal's foreground job the way Ctrl+C
         /// does, `Terminate` asks every process of the tree to end, `Kill` ends them. Answers whether the
         /// stage reached a process.
         pub fn signal(&mut self, stage: StopStage) -> Result<bool, PtyError> {
@@ -489,12 +497,54 @@ mod windows_impl {
     const PIPE_BACKLOG_BYTES: usize = 256 * 1024;
     const CONTROL_C_EXIT: u32 = 0xC000_013A;
     const WAIT_FOREVER: u32 = u32::MAX;
+    const JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: u32 = 0x0000_2000;
+    const CTRL_BREAK_EVENT: u32 = 1;
+    const ATTACH_PARENT_PROCESS: u32 = u32::MAX;
 
     extern "system" {
         fn SetConsoleCtrlHandler(handler: Option<unsafe extern "system" fn(u32) -> i32>, add: i32) -> i32;
+        fn AttachConsole(process: u32) -> i32;
+        fn FreeConsole() -> i32;
+        fn GenerateConsoleCtrlEvent(event: u32, group: u32) -> i32;
+        fn GetConsoleCP() -> u32;
     }
 
-    /// 🛎️ Counts console control events instead of ending the process on the first one, so a command can
+    /// 🚫 Takes every console control event, so the process that sends one to a console it shares with its
+    /// target does not receive the default action itself.
+    unsafe extern "system" fn swallow(_event: u32) -> i32 {
+        SWALLOWED.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        1
+    }
+
+    static SWALLOWED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+    /// 🧨️ Sends Ctrl+Break to every process attached to the console of `pid`. A process has one console at
+    /// a time, so this attaches to the target's pseudo-console for the moment of the event, shielded
+    /// from the event itself, and returns to the console it had.
+    ///
+    /// @see https://learn.microsoft.com/windows/console/generateconsolectrlevent
+    fn console_event(pid: u32, event: u32) -> bool {
+        static CONSOLE: Mutex<()> = Mutex::new(());
+        let Ok(_exclusive) = CONSOLE.lock() else { return false };
+        unsafe {
+            let attached = GetConsoleCP() != 0;
+            FreeConsole();
+            let sent = AttachConsole(pid) != 0 && {
+                SetConsoleCtrlHandler(Some(swallow), 1);
+                let before = SWALLOWED.load(std::sync::atomic::Ordering::SeqCst);
+                let sent = GenerateConsoleCtrlEvent(event, 0) != 0;
+                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+                while sent && SWALLOWED.load(std::sync::atomic::Ordering::SeqCst) == before && std::time::Instant::now() < deadline { std::thread::sleep(std::time::Duration::from_millis(5)); }
+                SetConsoleCtrlHandler(Some(swallow), 0);
+                sent
+            };
+            FreeConsole();
+            if attached { AttachConsole(ATTACH_PARENT_PROCESS); }
+            sent
+        }
+    }
+
+    /// 🧮️ Counts console control events instead of ending the process on the first one, so a command can
     /// turn them into its documented cancellation steps.
     pub fn interrupts() -> &'static std::sync::atomic::AtomicUsize {
         static COUNT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -516,8 +566,17 @@ mod windows_impl {
         let directory = to_wide(&cwd.to_string_lossy()); let environment = build_env_block(&[], remove_env).unwrap();
         let mut startup = STARTUPINFOW::default(); startup.cb = size_of::<STARTUPINFOW>() as u32;
         let mut process = PROCESS_INFORMATION::default();
-        if unsafe { CreateProcessW(application.as_ptr(), command.as_mut_ptr(), std::ptr::null(), std::ptr::null(), 0, CREATE_UNICODE_ENVIRONMENT | 0x0000_0008 | 0x0100_0000, environment.as_ptr().cast(), directory.as_ptr(), &startup, &mut process) } == 0 {
-            return Err(err(format!("CreateProcessW detached failed: {}", std::io::Error::last_os_error())));
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
+        const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
+        const ERROR_ACCESS_DENIED: i32 = 5;
+        let create = |flags: u32, process: &mut PROCESS_INFORMATION, command: &mut Vec<u16>| unsafe { CreateProcessW(application.as_ptr(), command.as_mut_ptr(), std::ptr::null(), std::ptr::null(), 0, CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | flags, environment.as_ptr().cast(), directory.as_ptr(), &startup, process) };
+        let spare = command.clone();
+        if create(CREATE_BREAKAWAY_FROM_JOB, &mut process, &mut command) == 0 {
+            let refused = std::io::Error::last_os_error();
+            command = spare;
+            if refused.raw_os_error() != Some(ERROR_ACCESS_DENIED) || create(0, &mut process, &mut command) == 0 {
+                return Err(err(format!("CreateProcessW detached failed: {}", std::io::Error::last_os_error())));
+            }
         }
         let _process = unsafe { OwnedHandle::from_raw(process.hProcess) };
         let _thread = unsafe { OwnedHandle::from_raw(process.hThread) };
@@ -531,6 +590,9 @@ mod windows_impl {
     struct Shared(OwnedHandle);
     unsafe impl Send for Shared {}
     unsafe impl Sync for Shared {}
+    impl Shared {
+        fn raw(&self) -> crate::tui::component::windows_abi::HANDLE { self.0.as_raw() }
+    }
 
     /// 🚰 A bounded byte queue between the owner of a pseudo-terminal and the thread blocked on its pipe.
     #[derive(Default)]
@@ -545,7 +607,7 @@ mod windows_impl {
         closed: bool,
     }
 
-    /// 🧵 Windows ConPTY master pipes plus child process.
+    /// 🪞️ Windows ConPTY master pipes plus child process.
     ///
     /// The console's pipes have no readiness to wait for, so one thread blocks on the output pipe, one
     /// on the input pipe and one on the process; each fills or drains a bounded queue and calls the
@@ -554,33 +616,76 @@ mod windows_impl {
     pub struct Pty {
         input: Arc<Pipe>,
         output: Arc<Pipe>,
-        hpcon: OwnedPseudoConsole,
+        hpcon: Option<OwnedPseudoConsole>,
         process: Arc<Shared>,
         _thread: OwnedHandle,
         job: OwnedHandle,
         notifier: Arc<Mutex<Option<Notifier>>>,
+        batch: bool,
     }
 
     fn to_wide(s: &str) -> Vec<u16> {
         OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
     }
 
+    fn is_command_interpreter(program: &str) -> bool {
+        Path::new(program).file_stem().is_some_and(|stem| stem.eq_ignore_ascii_case("cmd"))
+    }
+
+    fn is_batch_file(program: &str) -> bool {
+        Path::new(program).extension().is_some_and(|extension| extension.eq_ignore_ascii_case("cmd") || extension.eq_ignore_ascii_case("bat"))
+    }
+
+    /// 🔧 Whether the program is a batch file or a command interpreter asked to run a string, which is what asks
+    /// "Terminate batch job (Y/N)?" when it is interrupted.
+    fn runs_batch(cmd: &str, args: &[&str]) -> bool {
+        is_batch_file(cmd) || is_command_interpreter(cmd) && args.iter().any(|arg| arg.eq_ignore_ascii_case("/c") || arg.eq_ignore_ascii_case("/k"))
+    }
+
+    /// 📜 The command line of a program. `cmd.exe` is the one program that does not read its line with the C runtime's
+    /// rules: asked to run a string (`/c` or `/k`) it gets `/s` and the string, joined by spaces, inside one pair of
+    /// quotes that it removes and nothing else, so the string reaches the shell exactly as written. Everything else
+    /// is quoted for the C runtime.
+    ///
+    /// @see https://learn.microsoft.com/windows-server/administration/windows-commands/cmd
     fn build_cmdline(cmd: &str, args: &[&str]) -> Vec<u16> {
+        if is_command_interpreter(cmd) {
+            if let Some(at) = args.iter().position(|arg| arg.eq_ignore_ascii_case("/c") || arg.eq_ignore_ascii_case("/k")) {
+                let mut line = quote_argument(cmd);
+                for flag in &args[..at] {
+                    line.push(' ');
+                    if flag.contains([' ', '\t', '"']) { line.push_str(&quote_argument(flag)); } else { line.push_str(flag); }
+                }
+                if !args[..at].iter().any(|flag| flag.eq_ignore_ascii_case("/s")) { line.push_str(" /s"); }
+                line.push(' ');
+                line.push_str(args[at]);
+                line.push_str(" \"");
+                line.push_str(&args[at + 1..].join(" "));
+                line.push('"');
+                return to_wide(&line);
+            }
+        }
         let mut line = String::new();
         for arg in std::iter::once(cmd).chain(args.iter().copied()) {
             if !line.is_empty() { line.push(' '); }
-            line.push('"');
-            let mut slashes = 0;
-            for ch in arg.chars() {
-                if ch == '\\' { slashes += 1; continue; }
-                line.extend(std::iter::repeat_n('\\', if ch == '"' { slashes * 2 + 1 } else { slashes }));
-                line.push(ch);
-                slashes = 0;
-            }
-            line.extend(std::iter::repeat_n('\\', slashes * 2));
-            line.push('"');
+            line.push_str(&quote_argument(arg));
         }
         to_wide(&line)
+    }
+
+    fn quote_argument(arg: &str) -> String {
+        let mut line = String::new();
+        line.push('"');
+        let mut slashes = 0;
+        for ch in arg.chars() {
+            if ch == '\\' { slashes += 1; continue; }
+            line.extend(std::iter::repeat_n('\\', if ch == '"' { slashes * 2 + 1 } else { slashes }));
+            line.push(ch);
+            slashes = 0;
+        }
+        line.extend(std::iter::repeat_n('\\', slashes * 2));
+        line.push('"');
+        line
     }
 
     fn encode_env_block(mut merged: std::collections::BTreeMap<String, (std::ffi::OsString, std::ffi::OsString)>) -> Vec<u16> {
@@ -608,19 +713,43 @@ mod windows_impl {
         Some(encode_env_block(merged))
     }
 
+    /// 🔍 The file `cmd` names in `env`: a path as given, a bare name on the `PATH` of `env` with the
+    /// extensions of its `PATHEXT`, relative paths from `cwd`.
+    ///
+    /// @see https://learn.microsoft.com/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+    pub fn resolve_program(cmd: &str, env: &[(String, String)], cwd: Option<&Path>) -> Option<std::path::PathBuf> {
+        let value = |name: &str| env.iter().find(|(key, _)| key.eq_ignore_ascii_case(name)).map(|(_, value)| value.as_str());
+        let extensions: Vec<&str> = value("PATHEXT").unwrap_or(".COM;.EXE;.BAT;.CMD").split(';').filter(|extension| !extension.is_empty()).collect();
+        let is_script = |extension: &str| extension.eq_ignore_ascii_case(".bat") || extension.eq_ignore_ascii_case(".cmd");
+        let (scripts, executables): (Vec<&str>, Vec<&str>) = extensions.iter().copied().partition(|extension| is_script(extension));
+        let candidate = |base: std::path::PathBuf, extensions: &[&str]| -> Option<std::path::PathBuf> {
+            if base.extension().is_some() && base.is_file() { return Some(base); }
+            extensions.iter().map(|extension| std::path::PathBuf::from(format!("{}{extension}", base.display()))).find(|path| path.is_file())
+        };
+        if cmd.contains(['\\', '/']) || Path::new(cmd).is_absolute() {
+            let path = Path::new(cmd);
+            let base = if path.is_absolute() { path.to_path_buf() } else { cwd.map_or_else(|| path.to_path_buf(), |cwd| cwd.join(path)) };
+            return candidate(base.clone(), &executables).or_else(|| candidate(base, &scripts));
+        }
+        let directories: Vec<std::path::PathBuf> = std::env::split_paths(value("PATH")?).collect();
+        directories.iter().find_map(|directory| candidate(directory.join(cmd), &executables)).or_else(|| directories.iter().find_map(|directory| candidate(directory.join(cmd), &scripts)))
+    }
+
     fn build_exact_env_block(env: &[(String, String)]) -> Vec<u16> {
         encode_env_block(env.iter().map(|(key, value)| (key.to_uppercase(), (key.into(), value.into()))).collect())
     }
 
     impl Pty {
-        /// 🌱 Starts `cmd` on a new pseudo-console with this process's environment, `env` added and `remove_env` dropped.
+        /// 🚼️ Starts `cmd` on a new pseudo-console with this process's environment, `env` added and `remove_env` dropped.
         pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], remove_env: &[&str], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
             Self::start(cmd, args, build_env_block(env, remove_env), cwd, size)
         }
 
-        /// 🧾 Starts `cmd` on a new pseudo-console with exactly `env` as its environment.
+        /// 🗝️ Starts `cmd` on a new pseudo-console with exactly `env` as its environment; the program is
+        /// looked up on the `PATH` and `PATHEXT` of that environment, as the process itself would.
         pub fn spawn_exact(cmd: &str, args: &[&str], env: &[(String, String)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
-            Self::start(cmd, args, Some(build_exact_env_block(env)), cwd, size)
+            let program = resolve_program(cmd, env, cwd).ok_or_else(|| err(format!("program {cmd:?} is not on the PATH of the requesting environment")))?;
+            Self::start(&program.to_string_lossy(), args, Some(build_exact_env_block(env)), cwd, size)
         }
 
         fn start(cmd: &str, args: &[&str], env_block: Option<Vec<u16>>, cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
@@ -677,7 +806,7 @@ mod windows_impl {
                 let mut pi: PROCESS_INFORMATION = std::mem::zeroed();
                 let job = OwnedHandle::from_raw(CreateJobObjectW(std::ptr::null(), std::ptr::null())).ok_or_else(|| err("CreateJobObjectW failed"))?;
                 let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
-                limits.BasicLimitInformation.LimitFlags = 0x2000 | 0x0800;
+                limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
                 if SetInformationJobObject(job.as_raw(), 9, (&limits as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION).cast(), size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32) == 0 {
                     return Err(err(format!("SetInformationJobObject failed: {}", std::io::Error::last_os_error())));
                 }
@@ -713,7 +842,7 @@ mod windows_impl {
                     TerminateJobObject(job.as_raw(), 1);
                     return Err(err(format!("ResumeThread failed: {}", std::io::Error::last_os_error())));
                 }
-                let pty = Self { hpcon, input: Arc::default(), output: Arc::default(), process: Arc::new(Shared(process)), _thread: thread, job, notifier: Arc::default() };
+                let pty = Self { hpcon: Some(hpcon), input: Arc::default(), output: Arc::default(), process: Arc::new(Shared(process)), _thread: thread, job, notifier: Arc::default(), batch: runs_batch(cmd, args) };
                 pty.serve(Shared(input_write), Shared(output_read));
                 Ok(pty)
             }
@@ -729,7 +858,7 @@ mod windows_impl {
                 let mut page = vec![0u8; 64 * 1024];
                 loop {
                     let mut read = 0u32;
-                    let ok = unsafe { ReadFile(output_read.0.as_raw(), page.as_mut_ptr(), page.len() as u32, &mut read, std::ptr::null_mut()) };
+                    let ok = unsafe { ReadFile(output_read.raw(), page.as_mut_ptr(), page.len() as u32, &mut read, std::ptr::null_mut()) };
                     let Ok(mut state) = output.state.lock() else { break };
                     if ok == 0 || read == 0 || state.closed {
                         state.closed = true;
@@ -761,7 +890,7 @@ mod windows_impl {
                 let mut rest = &chunk[..];
                 while !rest.is_empty() {
                     let mut written = 0u32;
-                    if unsafe { WriteFile(input_write.0.as_raw(), rest.as_ptr(), rest.len() as u32, &mut written, std::ptr::null_mut()) } == 0 || written == 0 {
+                    if unsafe { WriteFile(input_write.raw(), rest.as_ptr(), rest.len() as u32, &mut written, std::ptr::null_mut()) } == 0 || written == 0 {
                         if let Ok(mut state) = input.state.lock() { state.closed = true; }
                         return;
                     }
@@ -771,19 +900,20 @@ mod windows_impl {
             });
             let (process, notifier) = (self.process.clone(), self.notifier.clone());
             let _ = std::thread::Builder::new().name("ConPTY exit".into()).stack_size(64 * 1024).spawn(move || {
-                unsafe { WaitForSingleObject(process.0.as_raw(), WAIT_FOREVER) };
+                unsafe { WaitForSingleObject(process.raw(), WAIT_FOREVER) };
                 notify(&notifier);
             });
         }
 
-        /// 📣 Names what to call when output arrived, input room freed up or the child ended.
+        /// 🗣️ Names what to call when output arrived, input room freed up or the child ended.
         pub fn set_notifier(&self, notifier: Notifier) {
             if let Ok(mut slot) = self.notifier.lock() { *slot = Some(notifier); }
         }
 
         pub fn resize(&mut self, size: PtySize) -> Result<(), PtyError> {
             let coord = COORD { X: size.cols as i16, Y: size.rows as i16 };
-            let hr = unsafe { ResizePseudoConsole(self.hpcon.as_raw(), coord) };
+            let Some(hpcon) = self.hpcon.as_ref() else { return Ok(()) };
+            let hr = unsafe { ResizePseudoConsole(hpcon.as_raw(), coord) };
             if hr < 0 {
                 return Err(err(format!("ResizePseudoConsole failed: HRESULT {hr}")));
             }
@@ -794,7 +924,7 @@ mod windows_impl {
             self
         }
 
-        /// 📥 Reads what the child has written so far without waiting for more.
+        /// 📑️ Reads what the child has written so far without waiting for more.
         pub fn read(&mut self, buf: &mut [u8]) -> PtyRead {
             let Ok(mut state) = self.output.state.lock() else { return PtyRead::Closed };
             if state.bytes.is_empty() {
@@ -810,7 +940,7 @@ mod windows_impl {
             Ok(match self.read(buf) { PtyRead::Data(count) => count, PtyRead::Empty | PtyRead::Closed => 0 })
         }
 
-        /// 📤 Hands the child as much input as its console queue accepts right now and answers how much that was.
+        /// 💧️ Hands the child as much input as its console queue accepts right now and answers how much that was.
         pub fn try_write(&mut self, data: &[u8]) -> Result<usize, PtyError> {
             let mut state = self.input.state.lock().map_err(|_| err("pseudo-console input queue poisoned"))?;
             if state.closed {
@@ -822,7 +952,7 @@ mod windows_impl {
             Ok(count)
         }
 
-        /// ✍️ Writes all of `data`, waiting while the console queue is full; a child that accepts nothing for ten seconds fails the write.
+        /// 🖋️ Writes all of `data`, waiting while the console queue is full; a child that accepts nothing for ten seconds fails the write.
         pub fn write_all(&mut self, data: &[u8]) -> Result<(), PtyError> {
             let mut rest = data;
             let mut stalled = std::time::Instant::now();
@@ -841,10 +971,10 @@ mod windows_impl {
             Ok(())
         }
 
-        /// 🏁 The exit code once the child has ended; an interrupted child reports `130` as it does elsewhere.
+        /// 🎌️ The exit code once the child has ended; an interrupted child reports `130` as it does elsewhere.
         pub fn try_wait(&mut self) -> Result<Option<i32>, PtyError> {
             unsafe {
-                let wait = WaitForSingleObject(self.process.0.as_raw(), 0);
+                let wait = WaitForSingleObject(self.process.raw(), 0);
                 if wait == WAIT_TIMEOUT {
                     return Ok(None);
                 }
@@ -852,7 +982,7 @@ mod windows_impl {
                     return Err(err("WaitForSingleObject failed"));
                 }
                 let mut code = 0u32;
-                if GetExitCodeProcess(self.process.0.as_raw(), &mut code) == 0 {
+                if GetExitCodeProcess(self.process.raw(), &mut code) == 0 {
                     return Err(err("GetExitCodeProcess failed"));
                 }
                 if code == STILL_ACTIVE as u32 {
@@ -863,26 +993,57 @@ mod windows_impl {
         }
 
         pub fn pid(&self) -> u32 {
-            unsafe { GetProcessId(self.process.0.as_raw()) }
+            unsafe { GetProcessId(self.process.raw()) }
         }
 
-        /// 🪜 Applies one stop stage: `Interrupt` types Ctrl+C ahead of any queued input, `Kill` ends the
-        /// job; a console has no polite request between the two, so `Terminate` reaches nothing.
+        /// 🧯 Closes the pseudo-console of a child that has ended. The console writes what it still holds to the
+        /// output pipe and then ends it, so reading until [`PtyRead::Closed`] returns the last output exactly.
+        pub fn finish(&mut self) {
+            self.hpcon.take();
+        }
+
+        /// 🧰 Whether the child is a batch job or a command interpreter running a string: a console job that does not
+        /// end on an interrupt by itself, because the interpreter inherits the shell's way of ignoring it and then
+        /// asks "Terminate batch job (Y/N)?".
+        pub fn batch(&self) -> bool {
+            self.batch
+        }
+
+        /// 🪝️ Applies one stop stage: `Interrupt` types Ctrl+C ahead of any queued input, `Terminate` sends
+        /// Ctrl+Break to every process on the console, which ends a process that handles neither, `Kill`
+        /// ends the job.
         pub fn signal(&mut self, stage: StopStage) -> Result<bool, PtyError> {
             match stage {
                 StopStage::Interrupt => {
                     let mut state = self.input.state.lock().map_err(|_| err("pseudo-console input queue poisoned"))?;
                     state.bytes.push_front(3);
                     self.input.changed.notify_all();
-                    Ok(!state.closed)
+                    let reached = !state.closed;
+                    drop(state);
+                    if self.batch { self.answer_batch_prompt(); }
+                    Ok(reached)
                 }
-                StopStage::Terminate => Ok(false),
+                StopStage::Terminate => Ok(self.try_wait()?.is_none() && console_event(self.pid(), CTRL_BREAK_EVENT)),
                 StopStage::Kill => self.terminate().map(|()| true),
             }
         }
 
-        /// 🔁 A pseudo-console repaints on its own when its size changes; nothing to ask for.
+        /// ♻️ A pseudo-console repaints on its own when its size changes; nothing to ask for.
         pub fn refresh(&mut self) {}
+
+        /// ⚠️ A batch job asks "Terminate batch job (Y/N)?" when it is interrupted and waits for the answer; this
+        /// answers yes shortly after the interrupt if the process is still there, so that a stop does not stall at the prompt.
+        fn answer_batch_prompt(&self) {
+            let (input, process) = (self.input.clone(), self.process.clone());
+            let _ = std::thread::Builder::new().name("ConPTY batch answer".into()).stack_size(64 * 1024).spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(400));
+                if unsafe { WaitForSingleObject(process.raw(), 0) } != WAIT_TIMEOUT { return; }
+                if let Ok(mut state) = input.state.lock() {
+                    if !state.closed { state.bytes.extend(b"Y\r"); input.changed.notify_all(); }
+                }
+            });
+        }
+
 
         /// 🌳 Terminates every descendant in the session's kernel-owned job.
         pub fn terminate(&mut self) -> Result<(), PtyError> {
@@ -895,7 +1056,7 @@ mod windows_impl {
         pub fn kill(&mut self) -> Result<(), PtyError> {
             self.terminate()?;
             unsafe {
-                WaitForSingleObject(self.process.0.as_raw(), 1500);
+                WaitForSingleObject(self.process.raw(), 1500);
             }
             Ok(())
         }
@@ -927,4 +1088,4 @@ mod windows_impl {
 }
 
 #[cfg(windows)]
-pub use windows_impl::{interrupts, spawn_detached, Notifier, Pty};
+pub use windows_impl::{interrupts, resolve_program, spawn_detached, Notifier, Pty};

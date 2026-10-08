@@ -1,0 +1,670 @@
+{
+  "o-above": {
+    "width": 0.9,
+    "height": 2.7,
+    "sill": 0.0,
+    "offset": 3.5,
+    "cut": {
+      "s_min": 3.05,
+      "s_max": 3.95,
+      "z_min": 0.0,
+      "z_max": 2.7
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 3.5,
+      "y": 0.0
+    },
+    "local": {
+      "origin": {
+        "x": 3.5,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 3.5,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [
+      {
+        "role": "Leaf",
+        "shape": {
+          "Line": {
+            "from": {
+              "x": 3.95,
+              "y": 0.075
+            },
+            "to": {
+              "x": 3.95,
+              "y": 0.975
+            }
+          }
+        }
+      },
+      {
+        "role": "Swing",
+        "shape": {
+          "Arc": {
+            "centre": {
+              "x": 3.95,
+              "y": 0.075
+            },
+            "radius": 0.9,
+            "start_angle": 3.14159265359,
+            "sweep": -1.570796326795
+          }
+        }
+      }
+    ],
+    "overlaps": [],
+    "issues": [
+      "AboveHostTop"
+    ],
+    "valid": false,
+    "hand": "Left"
+  },
+  "o-below": {
+    "width": 0.5,
+    "height": 0.5,
+    "sill": -0.1,
+    "offset": 2.0,
+    "cut": {
+      "s_min": 1.75,
+      "s_max": 2.25,
+      "z_min": -0.1,
+      "z_max": 0.4
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 2.0,
+      "y": 3.0
+    },
+    "local": {
+      "origin": {
+        "x": 2.0,
+        "y": 3.0,
+        "z": -0.1
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 2.0,
+        "y": 3.0,
+        "z": -0.1
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [],
+    "overlaps": [],
+    "issues": [
+      "BelowHostBase"
+    ],
+    "valid": false
+  },
+  "o-no-type": {
+    "width": 0.0,
+    "height": 0.0,
+    "sill": 0.0,
+    "offset": 3.5,
+    "cut": {
+      "s_min": 3.5,
+      "s_max": 3.5,
+      "z_min": 0.0,
+      "z_max": 0.0
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 3.5,
+      "y": 3.0
+    },
+    "local": {
+      "origin": {
+        "x": 3.5,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 3.5,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [
+      {
+        "role": "Glazing",
+        "shape": {
+          "Line": {
+            "from": {
+              "x": 3.5,
+              "y": 3.0
+            },
+            "to": {
+              "x": 3.5,
+              "y": 3.0
+            }
+          }
+        }
+      }
+    ],
+    "overlaps": [],
+    "issues": [
+      "TypeMissing",
+      "NonPositiveSize"
+    ],
+    "valid": false
+  },
+  "o-orphan": {
+    "width": 1.2,
+    "height": 1.4,
+    "sill": 0.9,
+    "offset": 1.0,
+    "cut": {
+      "s_min": 0.4,
+      "s_max": 1.6,
+      "z_min": 0.9,
+      "z_max": 2.3
+    },
+    "reveal_depth": 0.0,
+    "face_front": 0.0,
+    "face_back": 0.0,
+    "host_length": 0.0,
+    "host_height": 0.0,
+    "point": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "local": {
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "plan": [],
+    "overlaps": [],
+    "issues": [
+      "HostMissing"
+    ],
+    "valid": false
+  },
+  "o-outside": {
+    "width": 1.2,
+    "height": 1.4,
+    "sill": 0.9,
+    "offset": 0.3,
+    "cut": {
+      "s_min": -0.3,
+      "s_max": 0.9,
+      "z_min": 0.9,
+      "z_max": 2.3
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 0.3,
+      "y": 0.0
+    },
+    "local": {
+      "origin": {
+        "x": 0.3,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 0.3,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [
+      {
+        "role": "Glazing",
+        "shape": {
+          "Line": {
+            "from": {
+              "x": -0.3,
+              "y": 0.0
+            },
+            "to": {
+              "x": 0.9,
+              "y": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "overlaps": [],
+    "issues": [
+      "OutsideHostExtent"
+    ],
+    "valid": false
+  },
+  "o-overlap-a": {
+    "width": 1.2,
+    "height": 1.4,
+    "sill": 0.9,
+    "offset": 1.8,
+    "cut": {
+      "s_min": 1.2,
+      "s_max": 2.4,
+      "z_min": 0.9,
+      "z_max": 2.3
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 1.8,
+      "y": 0.0
+    },
+    "local": {
+      "origin": {
+        "x": 1.8,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 1.8,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [
+      {
+        "role": "Glazing",
+        "shape": {
+          "Line": {
+            "from": {
+              "x": 1.2,
+              "y": 0.0
+            },
+            "to": {
+              "x": 2.4,
+              "y": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "overlaps": [
+      "o-overlap-b"
+    ],
+    "issues": [
+      "OverlapsSibling"
+    ],
+    "valid": false
+  },
+  "o-overlap-b": {
+    "width": 1.2,
+    "height": 1.4,
+    "sill": 0.9,
+    "offset": 2.4,
+    "cut": {
+      "s_min": 1.8,
+      "s_max": 3.0,
+      "z_min": 0.9,
+      "z_max": 2.3
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 2.4,
+      "y": 0.0
+    },
+    "local": {
+      "origin": {
+        "x": 2.4,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 2.4,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [
+      {
+        "role": "Glazing",
+        "shape": {
+          "Line": {
+            "from": {
+              "x": 1.8,
+              "y": 0.0
+            },
+            "to": {
+              "x": 3.0,
+              "y": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "overlaps": [
+      "o-overlap-a"
+    ],
+    "issues": [
+      "OverlapsSibling"
+    ],
+    "valid": false
+  },
+  "o-zero": {
+    "width": 0.0,
+    "height": 1.0,
+    "sill": 0.0,
+    "offset": 1.0,
+    "cut": {
+      "s_min": 1.0,
+      "s_max": 1.0,
+      "z_min": 0.0,
+      "z_max": 1.0
+    },
+    "reveal_depth": 0.15,
+    "face_front": 0.075,
+    "face_back": 0.075,
+    "host_length": 4.0,
+    "host_height": 2.5,
+    "point": {
+      "x": 1.0,
+      "y": 3.0
+    },
+    "local": {
+      "origin": {
+        "x": 1.0,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "world": {
+      "origin": {
+        "x": 1.0,
+        "y": 3.0,
+        "z": 0.0
+      },
+      "x_axis": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "y_axis": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "z_axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      }
+    },
+    "plan": [],
+    "overlaps": [],
+    "issues": [
+      "NonPositiveSize"
+    ],
+    "valid": false
+  }
+}

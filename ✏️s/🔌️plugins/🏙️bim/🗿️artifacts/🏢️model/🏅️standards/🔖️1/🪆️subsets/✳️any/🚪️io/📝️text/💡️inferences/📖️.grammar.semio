@@ -1,0 +1,9 @@
+dialect grammar
+grammar bim.model.inference
+extension bim.inference
+start document
+
+document = header body
+header = "schema" SP "bim.model.inference" NL
+body = payload NL?
+payload = OCTET+

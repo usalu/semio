@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "wall_type",
+    "layers",
+    "thickness"
+  ]
+}

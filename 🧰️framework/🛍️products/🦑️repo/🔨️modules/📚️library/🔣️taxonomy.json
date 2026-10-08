@@ -8773,6 +8773,7 @@
       "memberNames": [
         "🎞️animate",
         "🏛️architect",
+        "🏬️bim",
         "🧱️block",
         "📐️cad",
         "🏢️cad-extension-aec-building",
@@ -9621,6 +9622,7 @@
         "📸️remodeling",
         "📼️avi",
         "🔊️wav",
+        "🏢️model",
         "🔋️model",
         "🔌️jack",
         "🔌️wires",
@@ -9745,7 +9747,10 @@
         "🚪️rooms-16",
         "🚪️two-room-corridor",
         "🧱️wall-roof-facade-strip",
-        "🪠️pipes-3d"
+        "🪠️pipes-3d",
+        "🎬️demo",
+        "🏡️house",
+        "🏢️office"
       ],
       "source": "registry"
     },
@@ -10608,7 +10613,14 @@
         "🗿️artifact",
         "💡️inference",
         "🗃️apply-local-catalog-document",
-        "✂️text-splice"
+        "✂️text-splice",
+        "🌐️world-pointer-move",
+        "🏗️create-entity",
+        "🏷️rename-entity",
+        "👆️canvas-double-click",
+        "🛠️arm-utility",
+        "🩹️set-field",
+        "🪟️set-view"
       ],
       "source": "registry"
     },
@@ -10676,7 +10688,8 @@
         "🔀️boolean",
         "🔺️euler",
         "🧱️primitives",
-        "🧵️sew"
+        "🧵️sew",
+        "🩹️patches"
       ],
       "source": "registry"
     },
@@ -10699,7 +10712,13 @@
         "🧭️view",
         "🧵️session",
         "🧵️simulation-session",
-        "🧵️reconstruction-session"
+        "🧵️reconstruction-session",
+        "🎛️chrome",
+        "🔮️inference",
+        "🕹️interaction",
+        "🧩️entities",
+        "🧰️kit",
+        "🧵️gestures"
       ],
       "source": "registry"
     },
@@ -11011,7 +11030,10 @@
         "🚪️two-room-corridor",
         "🚰️pipes",
         "🧱️wall-roof-facade-strip",
-        "🪠️pipes-3d"
+        "🪠️pipes-3d",
+        "🏡️house",
+        "🏢️office",
+        "🧰️checks"
       ],
       "source": "registry"
     },
@@ -11274,7 +11296,9 @@
         "🎭️identity-step",
         "🚦️throttle",
         "🎯️point-publication",
-        "🎯️selection"
+        "🎯️selection",
+        "🚪️svg",
+        "🛠️gestures"
       ],
       "source": "registry"
     },
@@ -11357,7 +11381,22 @@
         "🧱️area-volume",
         "🧾️outline",
         "🪞️symmetry",
-        "🪟️window"
+        "🪟️window",
+        "⚠️diagnostics",
+        "🏠️house",
+        "🔗️wall-joins",
+        "🗺️plan-linework",
+        "🛋️spaces",
+        "🧊️element-solids",
+        "🧮️quantities",
+        "🧱️wall-layout",
+        "🪜️stair-runs",
+        "🪟️opening-frames",
+        "🏠️spaces",
+        "🏢️storey-levels",
+        "📦️bodies",
+        "🕸️model-graph",
+        "🪞️curtain-layout"
       ],
       "source": "registry"
     },
@@ -11392,7 +11431,31 @@
       ],
       "memberNames": [
         "🎬️interaction-spec",
-        "📦️opc"
+        "📦️opc",
+        "🏠️house",
+        "✒️path",
+        "🎚️style",
+        "📏️projection",
+        "📐️sheet",
+        "🧱️codec",
+        "⬜️horizontal",
+        "🏗️frame",
+        "🏠️spaces",
+        "🏰️walls",
+        "📏️grids",
+        "🔬️projection",
+        "🧊️brep",
+        "🧬️data",
+        "🧭️frames",
+        "🧰️writer",
+        "🪜️circulation",
+        "🪟️curtain",
+        "🌳️scene",
+        "🎨️materials",
+        "🧬️document",
+        "🧱️container",
+        "🏗️elements",
+        "🧱️walls"
       ],
       "source": "registry"
     },
@@ -11628,7 +11691,16 @@
         "🧪️fixtures",
         "🧲️snap",
         "🧽️paint-params-eraser",
-        "🪣️fill"
+        "🪣️fill",
+        "🎯️select",
+        "📍️point",
+        "📐️plane",
+        "🚚️transform",
+        "🧩️area",
+        "🧭️session",
+        "🧱️chain",
+        "🪟️opening",
+        "🫧️overlay"
       ],
       "source": "registry"
     },
@@ -11767,7 +11839,53 @@
         "🩺️diag",
         "🪜️hierarchy",
         "🪞️symmetry",
-        "🪶️soft"
+        "🪶️soft",
+        "🏡️clean",
+        "💥️defects",
+        "💡️inference",
+        "🌀️curved",
+        "🏡️house",
+        "🏡️rooms",
+        "➖️beams-profiles",
+        "⬜️slabs-holes-slope",
+        "🌀️arc-window",
+        "🏔️roofs-shapes",
+        "🏛️columns-profiles",
+        "🏬️curtain-grid",
+        "🚪️straight-openings",
+        "🛤️railings-posts",
+        "🧩️room-joins",
+        "🪜️stairs-flights",
+        "🏗️building",
+        "❌️x-cross",
+        "🌀️arc-tangent",
+        "📏️location-lines",
+        "📐️l-miter-equal",
+        "🔱️t-butt",
+        "🪜️flights",
+        "⚠️invalid",
+        "🏡️placed",
+        "💥️clashes",
+        "💬️messages",
+        "📐️validity",
+        "🔗️references",
+        "🪜️levels",
+        "📡️session",
+        "🧭️plan",
+        "🧮️compute",
+        "🪞️projection",
+        "🏛️members",
+        "📍️annotations",
+        "🪜️stairs",
+        "➖️beams",
+        "⬜️slabs",
+        "🏛️columns",
+        "🏠️roofs",
+        "📐️plan-kit",
+        "🚪️fillers",
+        "🛤️railings",
+        "🪟️curtain-walls",
+        "🔗️joins"
       ],
       "source": "registry"
     },
@@ -12212,7 +12330,8 @@
         "🛂️manifest",
         "🪪️manifest",
         "🪨️tests",
-        "📜️manifest"
+        "📜️manifest",
+        "🏭️bridge"
       ],
       "source": "registry"
     },
@@ -12620,7 +12739,9 @@
         "🚦️preflight",
         "🛍️catalogue",
         "🛠️workshop",
-        "🧵️results"
+        "🧵️results",
+        "🌳️outliner",
+        "🛍️library"
       ],
       "source": "registry"
     },
@@ -12681,6 +12802,7 @@
         "🎬️sequence",
         "🏗️fem",
         "🏛️architect",
+        "🏙️bim",
         "🏭️process",
         "💠️lowpoly",
         "💡️reasoning",
@@ -12813,7 +12935,10 @@
         "🏟️arena",
         "📏️tolerance",
         "🕸️topology",
-        "🚨️error"
+        "🚨️error",
+        "✅️validity",
+        "💠️values",
+        "🧱️entities"
       ],
       "source": "registry"
     },
@@ -12881,7 +13006,8 @@
         "subset"
       ],
       "memberNames": [
-        "🧵️simulation-session"
+        "🧵️simulation-session",
+        "🖌️render"
       ],
       "source": "registry"
     },
@@ -14266,7 +14392,25 @@
         "🔏️privacy-notice",
         "📰️host-document",
         "🏋️capacity",
-        "🖼️task-icons"
+        "🖼️task-icons",
+        "🎨️export-bim-1-svg",
+        "🎲️infer-bim-1-solids-three",
+        "🏗️export-bim-1-ifc",
+        "🏙️mutate-model-1-any",
+        "🏠️infer-bim-1-spaces",
+        "📦️infer-bim-1-solids-rest",
+        "🔳️infer-bim-1-wall-solids",
+        "🗺️infer-bim-1-plan-and-diagnostics",
+        "🛠️gestures-bim-1",
+        "🛤️infer-bim-1-stair-runs",
+        "🧊️export-bim-1-gltf",
+        "🧮️infer-bim-1-quantities",
+        "🧱️infer-bim-1-wall-joins",
+        "🪜️infer-bim-1-levels-and-wall-heights",
+        "🪟️infer-bim-1-opening-frames",
+        "🧷️app",
+        "🧩️example",
+        "🧰️testkit"
       ],
       "source": "registry"
     },
@@ -14482,7 +14626,11 @@
         "🖼️input",
         "🧊️preview",
         "🧩️output",
-        "🧱️grid"
+        "🧱️grid",
+        "📐️section",
+        "🗺️plan",
+        "🧊️world",
+        "🧮️schedule"
       ],
       "source": "registry"
     },
@@ -15955,6 +16103,36 @@
         "🕯️flamy",
         "🌡️thermy",
         "🖥️servy"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-subset": {
+      "ownerKindIds": [
+        "members-of-subset"
+      ],
+      "memberNames": [
+        "🗺️plan",
+        "🧊️world",
+        "🪟️window-config"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-members-of-artifacts": {
+      "ownerKindIds": [
+        "members-of-members-of-artifacts"
+      ],
+      "memberNames": [
+        "🔬️measure"
+      ],
+      "source": "registry"
+    },
+    "members-of-members-of-members-of-inferences": {
+      "ownerKindIds": [
+        "members-of-members-of-inferences"
+      ],
+      "memberNames": [
+        "🪜️storey-levels",
+        "🗺️plan-metrics"
       ],
       "source": "registry"
     }

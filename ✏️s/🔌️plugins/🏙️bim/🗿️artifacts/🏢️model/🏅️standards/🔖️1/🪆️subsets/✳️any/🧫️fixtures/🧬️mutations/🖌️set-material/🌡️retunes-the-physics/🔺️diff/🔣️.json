@@ -1,0 +1,10 @@
+{
+  "materials": {
+    "m-brick": {
+      "conductivity": 0.9,
+      "density": 1900.0,
+      "entry": "Patched",
+      "specific_heat": 880.0
+    }
+  }
+}

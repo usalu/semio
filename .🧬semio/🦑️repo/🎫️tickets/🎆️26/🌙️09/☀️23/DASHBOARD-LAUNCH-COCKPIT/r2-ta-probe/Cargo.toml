@@ -1,0 +1,21 @@
+# Ticket-local probe of the T-A terminal backend (26/09/23/DASHBOARD-LAUNCH-COCKPIT, round 2, slice T-A).
+# Standalone workspace: never a member of the repository workspace.
+[package]
+name = "r2-ta-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "r2-ta-probe"
+path = "main.rs"
+
+[dependencies]
+ui_tui = { path = "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["tui-terminal"] }
+
+[profile.dev]
+debug = false
+incremental = false
+panic = "abort"

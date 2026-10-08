@@ -21,7 +21,7 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 
 /** 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧪️tests/🧪️multi-shell-harness/🟦️.tsx`), free in the 60xx range
- * used by every other os-dev variant/launch.json entry. */
+ * used by every other os-dev variant dashboard command. */
 const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
 //#region 🔖️PollHelpers

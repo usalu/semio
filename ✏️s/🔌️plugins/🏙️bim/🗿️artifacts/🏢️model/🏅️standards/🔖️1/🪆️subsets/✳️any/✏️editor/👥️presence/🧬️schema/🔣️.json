@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/bim/model/presence/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["engagementInput", "storey", "camera"],
+  "properties": {
+    "engagementInput": { "type": "string" },
+    "storey": { "type": "string" },
+    "camera": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d"
+    }
+  }
+}

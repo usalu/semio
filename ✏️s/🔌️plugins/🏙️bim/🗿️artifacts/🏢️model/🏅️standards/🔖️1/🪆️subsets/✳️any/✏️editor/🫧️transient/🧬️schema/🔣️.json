@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/bim/model/window-transient/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "engagementInput",
+    "pointerGeneration"
+  ],
+  "properties": {
+    "engagementInput": {
+      "type": "string"
+    },
+    "pointerGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  }
+}

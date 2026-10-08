@@ -1,0 +1,16 @@
+{
+  "mutation": "createGridLine",
+  "id": "g-a",
+  "grid_line": {
+    "building": "bldg-1",
+    "label": "A",
+    "start": {
+      "x": 2,
+      "y": 2
+    },
+    "end": {
+      "x": 2,
+      "y": 2
+    }
+  }
+}

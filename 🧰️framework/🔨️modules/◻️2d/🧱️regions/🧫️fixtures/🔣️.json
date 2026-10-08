@@ -1,0 +1,865 @@
+{
+ "offsets": [
+  {
+   "name": "square grows with miter",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": 1,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 36,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "square shrinks with miter",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": -1,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 4,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "square grows with bevel",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": 1,
+   "join": {
+    "kind": "bevel"
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 34,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "square grows with round corners",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": 1,
+   "join": {
+    "kind": "round",
+    "tolerance": 0.0001
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 35.1415926535898,
+    "tolerance": 0.002
+   }
+  },
+  {
+   "name": "square collapses",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": -2,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 0,
+    "holes": 0,
+    "area": 0,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "square vanishes",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     0.0,
+     4.0
+    ]
+   ],
+   "holes": [],
+   "distance": -3,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 0,
+    "holes": 0,
+    "area": 0,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "hole shrinks when the region grows",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     0.0
+    ],
+    [
+     6.0,
+     6.0
+    ],
+    [
+     0.0,
+     6.0
+    ]
+   ],
+   "holes": [
+    [
+     [
+      2.0,
+      2.0
+     ],
+     [
+      4.0,
+      2.0
+     ],
+     [
+      4.0,
+      4.0
+     ],
+     [
+      2.0,
+      4.0
+     ]
+    ]
+   ],
+   "distance": 0.5,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 1,
+    "area": 48,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "hole grows when the region shrinks",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     0.0
+    ],
+    [
+     6.0,
+     6.0
+    ],
+    [
+     0.0,
+     6.0
+    ]
+   ],
+   "holes": [
+    [
+     [
+      2.0,
+      2.0
+     ],
+     [
+      4.0,
+      2.0
+     ],
+     [
+      4.0,
+      4.0
+     ],
+     [
+      2.0,
+      4.0
+     ]
+    ]
+   ],
+   "distance": -0.5,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 1,
+    "area": 16,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "hole closes when the region grows enough",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     0.0
+    ],
+    [
+     6.0,
+     6.0
+    ],
+    [
+     0.0,
+     6.0
+    ]
+   ],
+   "holes": [
+    [
+     [
+      2.0,
+      2.0
+     ],
+     [
+      4.0,
+      2.0
+     ],
+     [
+      4.0,
+      4.0
+     ],
+     [
+      2.0,
+      4.0
+     ]
+    ]
+   ],
+   "distance": 1,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 64,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "L shape grows",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     2.0,
+     0.0
+    ],
+    [
+     2.0,
+     1.0
+    ],
+    [
+     1.0,
+     1.0
+    ],
+    [
+     1.0,
+     2.0
+    ],
+    [
+     0.0,
+     2.0
+    ]
+   ],
+   "holes": [],
+   "distance": 0.25,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 5.25,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "L shape shrinks",
+   "outer": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     2.0,
+     0.0
+    ],
+    [
+     2.0,
+     1.0
+    ],
+    [
+     1.0,
+     1.0
+    ],
+    [
+     1.0,
+     2.0
+    ],
+    [
+     0.0,
+     2.0
+    ]
+   ],
+   "holes": [],
+   "distance": -0.25,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 1.25,
+    "tolerance": 1e-09
+   }
+  },
+  {
+   "name": "clockwise input is normalised",
+   "outer": [
+    [
+     0.0,
+     4.0
+    ],
+    [
+     4.0,
+     4.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "holes": [],
+   "distance": 1,
+   "join": {
+    "kind": "miter",
+    "limit": 4
+   },
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 36,
+    "tolerance": 1e-09
+   }
+  }
+ ],
+ "booleans": [
+  {
+   "name": "overlapping squares union",
+   "operation": "union",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      2.0,
+      0.0
+     ],
+     [
+      2.0,
+      2.0
+     ],
+     [
+      0.0,
+      2.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      1.0,
+      1.0
+     ],
+     [
+      3.0,
+      1.0
+     ],
+     [
+      3.0,
+      3.0
+     ],
+     [
+      1.0,
+      3.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 7
+   }
+  },
+  {
+   "name": "overlapping squares intersection",
+   "operation": "intersection",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      2.0,
+      0.0
+     ],
+     [
+      2.0,
+      2.0
+     ],
+     [
+      0.0,
+      2.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      1.0,
+      1.0
+     ],
+     [
+      3.0,
+      1.0
+     ],
+     [
+      3.0,
+      3.0
+     ],
+     [
+      1.0,
+      3.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 1
+   }
+  },
+  {
+   "name": "overlapping squares difference",
+   "operation": "difference",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      2.0,
+      0.0
+     ],
+     [
+      2.0,
+      2.0
+     ],
+     [
+      0.0,
+      2.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      1.0,
+      1.0
+     ],
+     [
+      3.0,
+      1.0
+     ],
+     [
+      3.0,
+      3.0
+     ],
+     [
+      1.0,
+      3.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 3
+   }
+  },
+  {
+   "name": "overlapping squares xor",
+   "operation": "xor",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      2.0,
+      0.0
+     ],
+     [
+      2.0,
+      2.0
+     ],
+     [
+      0.0,
+      2.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      1.0,
+      1.0
+     ],
+     [
+      3.0,
+      1.0
+     ],
+     [
+      3.0,
+      3.0
+     ],
+     [
+      1.0,
+      3.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 2,
+    "holes": 0,
+    "area": 6
+   }
+  },
+  {
+   "name": "contained clip punches a hole",
+   "operation": "difference",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      4.0,
+      0.0
+     ],
+     [
+      4.0,
+      4.0
+     ],
+     [
+      0.0,
+      4.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      1.0,
+      1.0
+     ],
+     [
+      3.0,
+      1.0
+     ],
+     [
+      3.0,
+      3.0
+     ],
+     [
+      1.0,
+      3.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 1,
+    "holes": 1,
+    "area": 12
+   }
+  },
+  {
+   "name": "disjoint union keeps both",
+   "operation": "union",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      1.0,
+      0.0
+     ],
+     [
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      5.0,
+      5.0
+     ],
+     [
+      6.0,
+      5.0
+     ],
+     [
+      6.0,
+      6.0
+     ],
+     [
+      5.0,
+      6.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 2,
+    "holes": 0,
+    "area": 2
+   }
+  },
+  {
+   "name": "disjoint intersection is empty",
+   "operation": "intersection",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      1.0,
+      0.0
+     ],
+     [
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ]
+   ],
+   "clip": [
+    [
+     [
+      5.0,
+      5.0
+     ],
+     [
+      6.0,
+      5.0
+     ],
+     [
+      6.0,
+      6.0
+     ],
+     [
+      5.0,
+      6.0
+     ]
+    ]
+   ],
+   "expected": {
+    "regions": 0,
+    "holes": 0,
+    "area": 0
+   }
+  },
+  {
+   "name": "wall footprints merge at a T",
+   "operation": "union",
+   "subject": [
+    [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      5.0,
+      0.0
+     ],
+     [
+      5.0,
+      0.2
+     ],
+     [
+      0.0,
+      0.2
+     ]
+    ],
+    [
+     [
+      2.4,
+      0.2
+     ],
+     [
+      2.6,
+      0.2
+     ],
+     [
+      2.6,
+      3.0
+     ],
+     [
+      2.4,
+      3.0
+     ]
+    ]
+   ],
+   "clip": [],
+   "expected": {
+    "regions": 1,
+    "holes": 0,
+    "area": 1.56
+   }
+  }
+ ]
+}

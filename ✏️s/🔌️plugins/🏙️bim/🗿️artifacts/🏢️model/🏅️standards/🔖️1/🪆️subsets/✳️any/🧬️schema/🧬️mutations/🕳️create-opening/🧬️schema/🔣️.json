@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-opening/schema.json",
+  "title": "CreateOpening",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "opening"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createOpening"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Opening id",
+          "de": "Öffnungs-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "opening": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Opening",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Opening",
+          "de": "Öffnung"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

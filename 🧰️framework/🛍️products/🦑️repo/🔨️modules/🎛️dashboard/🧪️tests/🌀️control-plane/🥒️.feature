@@ -95,3 +95,45 @@ Feature: One workspace dashboard controls developer processes
     And it can be cancelled without launching a process
     When the connection becomes ready for an uncancelled request
     Then the selected Nx command runs once and its actual output appears in the correctly sized pane
+
+  Scenario: Start a task in the environment of the view that asks for it
+    Given two views with different environments attached to one daemon started from a third environment
+    When the second view starts a task
+    Then the task sees the second view's variables and none that only the daemon has
+    And its terminal is `xterm-256color` with `COLORTERM=truecolor`
+    When a view starts a task without having said hello
+    Then it receives an error with the code `hello_required`
+
+  Scenario: Report a protocol or build mismatch instead of continuing silently
+    Given a daemon of one build and protocol revision and a view of another
+    When the view connects
+    Then the view can read both revisions and both builds from the greeting
+    And a differing protocol revision is refused with an error with the code `protocol`
+    And a differing build is reported to the developer while the daemon keeps serving
+
+  Scenario: Report how every task ended
+    Given tasks that exit with a code, are interrupted, are terminated and are killed
+    Then each session shows the exit code, `128 + signal` for a signal death and the start and end instants
+    And a session whose daemon vanished while it ran is shown as interrupted after the next start
+
+  Scenario: Take terminal input without freezing or dropping it
+    Given a task that reads its input slowly
+    When a view sends a large paste as input frames
+    Then the daemon queues the bytes and retries until the task has taken all of them
+    And a task that never takes its input yields an error with the code `input_backlog` instead of blocking the daemon
+
+  Scenario: Escalate the stop of a task that ignores interrupts
+    Given a task that ignores interrupts but ends on termination
+    When the developer stops it
+    Then it receives an interrupt, then a termination request after a bounded wait, then the end of its whole process tree
+
+  Scenario: Reach the daemon only as the same user
+    Given a daemon on Windows
+    Then its named pipe grants access to the user it runs as, refuses remote clients and fails to create a second first instance
+    And its endpoint name derives from the workspace path through a hash that does not change between toolchains
+
+  Scenario: Control tasks without a terminal
+    Given a daemon with running and ended tasks
+    When a command line lists the tasks, follows the output of one, stops, restarts and kills others
+    Then it uses the same sessions as the dashboard view and chooses a task by identifier, position or command identifier
+    And it can start a launch and wait until the daemon reports it ready, returning the ready address

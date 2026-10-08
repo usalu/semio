@@ -1,0 +1,14 @@
+{
+  "mutation": "setColumnType",
+  "id": "ct-400",
+  "name": "Everything",
+  "profile": {
+    "IShape": {
+      "width": 0.2,
+      "depth": 0.4,
+      "web": 0.008,
+      "flange": 0.013
+    }
+  },
+  "material": "m-steel"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This plugin's contribution to the repository test platform, discovered by convention (`testContributionDirName` in 🔣️taxonomy.json). It carries NO oracle and NO catalog: every mutation vocabulary and inference this plugin owns belongs to ONE subset of ONE standard of ONE artifact (`🏢️model`), so that subset registers its own oracle decisions and catalogs in its own 🔣️oracle.json. What lives here is the single thing a subset manifest cannot express — the host packages this plugin's test adapters link — because `oracleHostPackagesFor` resolves host packages from the nearest contributor AT OR ABOVE the case owner, and a case owner is an artifact root, never a subset.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [],
+  "oracleHostPackages": [
+    { "implementation": "python", "package": "shapely", "version": "2.1.2", "module": "shapely" },
+    { "implementation": "python", "package": "ifcopenshell", "version": "0.8.4.post1", "module": "ifcopenshell" },
+    { "implementation": "python", "package": "lxml", "version": "6.1.3", "module": "lxml" },
+    { "implementation": "typescript", "package": "three", "version": "0.182.0" }
+  ]
+}

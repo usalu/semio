@@ -1,0 +1,8 @@
+{
+  "roof_types": {
+    "rf-tile": {
+      "entry": "Patched",
+      "name": "Tiled (renamed)"
+    }
+  }
+}

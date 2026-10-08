@@ -1,0 +1,598 @@
+# 💡️ BIM model inference schema: derived elevations and wall layouts, keyed by element id.
+
+type ModelInference {
+  element_solids: [ElementSolidRow!]! @derived
+  stair_runs: [StairRunRow!]! @derived
+  spaces: [SpaceRoomRow!]! @derived
+  quantities: ModelQuantities! @derived
+  opening_frames: [OpeningFrameRow!]! @derived
+  storey_levels: [StoreyLevelRow!]! @derived
+  wall_layout: [WallLayoutRow!]! @derived
+  curtain_layout: [CurtainLayoutRow!]! @derived
+  plan_linework: [PlanLineworkRow!]! @derived
+  diagnostics: [Diagnostic!]! @derived
+}
+
+type CurtainLayoutRow {
+  id: String!
+  value: CurtainLayout!
+}
+
+type StoreyLevelRow {
+  id: String!
+  value: StoreyLevel!
+}
+
+type WallLayoutRow {
+  id: String!
+  value: WallLayout!
+}
+
+type StoreyLevel {
+  elevation: Float!
+  top_elevation: Float!
+  absolute_elevation: Float!
+  absolute_top_elevation: Float!
+}
+
+enum JoinEnd {
+  Start
+  End
+  Along
+}
+
+enum JoinKind {
+  Miter
+  Butt
+  Through
+  Cross
+}
+
+type Point2 {
+  x: Float!
+  y: Float!
+}
+
+type Vertex {
+  point: Point2!
+  bulge: Float!
+}
+
+type FaceCurve {
+  start: Point2!
+  end: Point2!
+  bulge: Float!
+}
+
+type WallJoin {
+  kind: JoinKind!
+  end: JoinEnd!
+  other: String!
+  other_end: JoinEnd!
+  point: Point2!
+  overlap_area: Float!
+}
+
+type WallLayout {
+  base_z: Float!
+  top_z: Float!
+  height: Float!
+  thickness: Float!
+  length: Float!
+  offset_left: Float!
+  offset_right: Float!
+  layer_offsets: [Float!]!
+  left_face: FaceCurve!
+  right_face: FaceCurve!
+  left_length: Float!
+  right_length: Float!
+  left_area: Float!
+  right_area: Float!
+  side_area: Float!
+  footprint: [Vertex!]!
+  footprint_area: Float!
+  volume: Float!
+  joins: [WallJoin!]!
+}
+
+type CurtainLayout {
+  base_z: Float!
+  top_z: Float!
+  height: Float!
+  length: Float!
+  area: Float!
+  u_panels: Int!
+  v_panels: Int!
+  panel_width: Float!
+  panel_height: Float!
+}
+
+type OpeningFrameRow {
+  id: String!
+  value: OpeningFrame!
+}
+
+enum Swing {
+  Left
+  Right
+}
+
+enum OpeningIssue {
+  HostMissing
+  TypeMissing
+  NonPositiveSize
+  OutsideHostExtent
+  BelowHostBase
+  AboveHostTop
+  OverlapsSibling
+}
+
+enum PlanRole {
+  Leaf
+  Swing
+  Glazing
+}
+
+type Vec3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Frame {
+  origin: Vec3!
+  x_axis: Vec3!
+  y_axis: Vec3!
+  z_axis: Vec3!
+}
+
+type OpeningCut {
+  s_min: Float!
+  s_max: Float!
+  z_min: Float!
+  z_max: Float!
+}
+
+type PlanLine {
+  from: Point2!
+  to: Point2!
+}
+
+type PlanArc {
+  centre: Point2!
+  radius: Float!
+  start_angle: Float!
+  sweep: Float!
+}
+
+type PlanShape {
+  Line: PlanLine
+  Arc: PlanArc
+}
+
+type PlanStroke {
+  role: PlanRole!
+  shape: PlanShape!
+}
+
+type OpeningFrame {
+  width: Float!
+  height: Float!
+  sill: Float!
+  offset: Float!
+  cut: OpeningCut!
+  reveal_depth: Float!
+  face_front: Float!
+  face_back: Float!
+  host_length: Float!
+  host_height: Float!
+  point: Point2!
+  local: Frame!
+  world: Frame!
+  hand: Swing
+  plan: [PlanStroke!]!
+  issues: [OpeningIssue!]!
+  overlaps: [String!]!
+  valid: Boolean!
+}
+
+type StairRunRow {
+  id: String!
+  value: StairRun!
+}
+
+type SpaceRoomRow {
+  id: String!
+  value: SpaceRoom!
+}
+
+type ElementQuantityRow {
+  id: String!
+  value: ElementQuantity!
+}
+
+type QuantityTotalsRow {
+  id: String!
+  value: QuantityTotals!
+}
+
+type TotalsRow {
+  id: String!
+  value: Totals!
+}
+
+type StairRun {
+  base_z: Float!
+  top_z: Float!
+  rise: Float!
+  riser_count: Int!
+  riser_height: Float!
+  tread_count: Int!
+  tread: Float!
+  stride: Float!
+  width: Float!
+  run_length: Float!
+  flights: [StairFlightRun!]!
+  landings: [StairLanding!]!
+  compliance: StairCompliance!
+}
+
+type StairFlightRun {
+  first_riser: Int!
+  risers: Int!
+  treads: Int!
+  start: Point2!
+  direction: Float!
+  tread: Float!
+  base_z: Float!
+  length: Float!
+  winder: StairWinder
+}
+
+type StairWinder {
+  centre: Point2!
+  inner_radius: Float!
+  outer_radius: Float!
+  start_angle: Float!
+  sweep: Float!
+}
+
+type StairLanding {
+  after_flight: Int!
+  z: Float!
+  centre: Point2!
+  direction: Float!
+  width: Float!
+  depth: Float!
+}
+
+type StairCompliance {
+  rise_positive: Boolean!
+  riser_ok: Boolean!
+  tread_ok: Boolean!
+  blondel_ok: Boolean!
+  compliant: Boolean!
+}
+
+type SpaceRoom {
+  status: SpaceStatus!
+  outline: [Vertex!]!
+  holes: [VertexLoop!]!
+  point: Point2!
+  area: Float!
+  perimeter: Float!
+  net_floor_area: Float!
+  floor_z: Float!
+  clear_height: Float!
+  volume: Float!
+  ceiling_slab: String!
+  bounding_walls: [String!]!
+}
+
+enum SpaceStatus {
+  Inferred
+  Explicit
+  NotEnclosed
+  SeedInsideWall
+  InvalidOutline
+}
+
+type ModelQuantities {
+  elements: [ElementQuantityRow!]!
+  storeys: [QuantityTotalsRow!]!
+  buildings: [QuantityTotalsRow!]!
+  project: QuantityTotals!
+}
+
+type ElementQuantity {
+  kind: QuantityKind!
+  storey: String!
+  type_id: String!
+  count: Int!
+  length: Float!
+  width: Float!
+  height: Float!
+  perimeter: Float!
+  gross_side_area: Float!
+  opening_area: Float!
+  net_side_area: Float!
+  gross_area: Float!
+  net_area: Float!
+  surface_area: Float!
+  gross_volume: Float!
+  net_volume: Float!
+  mass: Float!
+  risers: Int!
+  layers: [LayerQuantity!]!
+}
+
+enum QuantityKind {
+  Wall
+  CurtainWall
+  Slab
+  Roof
+  Column
+  Beam
+  Window
+  Door
+  Void
+  Stair
+  Railing
+  Space
+}
+
+type LayerQuantity {
+  material: String!
+  thickness: Float!
+  area: Float!
+  volume: Float!
+  mass: Float!
+}
+
+type QuantityTotals {
+  kinds: [TotalsRow!]!
+  types: [TotalsRow!]!
+  materials: [TotalsRow!]!
+}
+
+type Totals {
+  count: Int!
+  length: Float!
+  area: Float!
+  volume: Float!
+  mass: Float!
+}
+
+type VertexLoop {
+  vertices: [Vertex!]!
+}
+
+type ElementSolidRow {
+  id: String!
+  value: ElementSolid!
+}
+
+enum SolidFamily {
+  Wall
+  CurtainWall
+  Window
+  Door
+  Column
+  Beam
+  Slab
+  Roof
+  Stair
+  Railing
+}
+
+type SolidPoint {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type SolidBounds {
+  min: SolidPoint!
+  max: SolidPoint!
+}
+
+type SolidPlacement {
+  x: Float!
+  y: Float!
+  z: Float!
+  rotation: Float!
+}
+
+type SolidGroup {
+  part: String!
+  material: String!
+  layer: Int!
+}
+
+type ElementSolid {
+  family: SolidFamily!
+  storey: String!
+  placement: SolidPlacement!
+  groups: [SolidGroup!]!
+  positions: [Float!]!
+  normals: [Float!]!
+  indices: [Int!]!
+  face_groups: [Int!]!
+  bounds: SolidBounds!
+  volume: Float!
+  area: Float!
+}
+
+type PlanLineworkRow {
+  id: String!
+  value: PlanLinework!
+}
+
+type DiagnosticValue {
+  name: String!
+  value: Float!
+}
+
+enum PlanStyle {
+  Cut
+  Projection
+  Hidden
+  Annotation
+}
+
+enum PlanKind {
+  WallCut
+  WallLayer
+  WallOutline
+  CurtainAxis
+  CurtainMullion
+  WindowFrame
+  WindowGlazing
+  WindowSill
+  DoorLeaf
+  DoorSwing
+  ColumnCut
+  ColumnOutline
+  BeamOutline
+  SlabEdge
+  SlabHole
+  RoofOutline
+  StairOutline
+  StairRiser
+  StairCutLine
+  StairArrow
+  StairLanding
+  RailingPath
+  SpaceOutline
+  SpaceTag
+  GridLine
+  GridBubble
+  GridLabel
+}
+
+type PlanVertex {
+  x: Float!
+  y: Float!
+  bulge: Float!
+}
+
+type PlanRegion {
+  id: String!
+  element: String!
+  kind: PlanKind!
+  style: PlanStyle!
+  outer: [PlanVertex!]!
+  holes: [[PlanVertex!]!]!
+}
+
+type PlanPolyline {
+  id: String!
+  element: String!
+  kind: PlanKind!
+  style: PlanStyle!
+  closed: Boolean!
+  vertices: [PlanVertex!]!
+}
+
+type PlanText {
+  id: String!
+  element: String!
+  kind: PlanKind!
+  style: PlanStyle!
+  x: Float!
+  y: Float!
+  rotation: Float!
+  label: String!
+  detail: String!
+  measure: Float
+}
+
+type PlanBounds {
+  min_x: Float!
+  min_y: Float!
+  max_x: Float!
+  max_y: Float!
+}
+
+type PlanLinework {
+  storey: String!
+  cut_height: Float!
+  cut_elevation: Float!
+  regions: [PlanRegion!]!
+  polylines: [PlanPolyline!]!
+  texts: [PlanText!]!
+  bounds: PlanBounds!
+}
+
+enum Severity {
+  Info
+  Warning
+  Error
+}
+
+enum DiagnosticCode {
+  ClashWallWall
+  ClashWallColumn
+  ClashColumnColumn
+  ClashWallBeam
+  ClashBeamColumn
+  ClashBeamBeam
+  ClashBeamSlab
+  ClashStairWall
+  ClashStairColumn
+  ClashStairBeam
+  ClashStairStair
+  ClashSlabSlab
+  RefWallType
+  RefColumnType
+  RefBeamType
+  RefSlabType
+  RefRoofType
+  RefWindowType
+  RefDoorType
+  RefTopStorey
+  RefOpeningHost
+  RefElementStorey
+  RefStoreyBuilding
+  RefBuildingSite
+  RefGridBuilding
+  RefLayerMaterial
+  RefTypeMaterial
+  RefPropertyElement
+  DuplicateId
+  OpeningOutsideHost
+  OpeningBelowBase
+  OpeningAboveTop
+  OpeningOverlap
+  OpeningSize
+  DegenerateAxis
+  DegenerateThickness
+  DegenerateHeight
+  DegenerateProfile
+  DegenerateLoop
+  SelfIntersectingLoop
+  DegeneratePath
+  NonFinite
+  DegenerateSpacing
+  DegenerateStorey
+  StoreyLevelGap
+  StoreyLevelDuplicate
+  StoreyNoDatum
+  StairNoRise
+  StairRiserHeight
+  StairTreadDepth
+  StairComfort
+  SpaceNotEnclosed
+  SpaceSeedInWall
+  SpaceDuplicateNumber
+}
+
+type Diagnostic {
+  code: DiagnosticCode!
+  severity: Severity!
+  message_key: String!
+  elements: [String!]!
+  missing: [String!]!
+  storey: String
+  values: [DiagnosticValue!]!
+}

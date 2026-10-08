@@ -116,7 +116,7 @@
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
-    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "compose",
+    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
@@ -135,6 +135,7 @@
         "VSCODE_AGENT_FOLDER": "/home/vscode/.antigravity-server"
       },
       "extensions": [
+        "vscode-icons-team.vscode-icons",
         "nrwl.angular-console",
         "github.vscode-pull-request-github",
         "github.vscode-github-actions",
@@ -164,18 +165,49 @@
         "rust-lang.rust-analyzer",
         "golang.go",
         "github.copilot-chat",
-        "anthropic.claude-code",
         "openai.chatgpt",
         "mermaidchart.vscode-mermaid-chart",
         "gruntfuggly.todo-tree",
-        "jock.svg"
+        "jock.svg",
+        "James-Yu.latex-workshop",
+        "anthropic.claude-code"
       ],
       "settings": {
-        "editor.formatOnSave": true,
+        "extensions.showRecommendationsOnlyOnDemand": false,
+        "playwright.reuseBrowser": false,
+        "playwright.showTrace": true,
+        "playwright.useTestServer": false,
+        "playwright.runOptions": {
+          "headless": true
+        },
+        "playwright.env": {
+          "PWDEBUG": "console"
+        },
+        "eslint.useFlatConfig": true,
+        "eslint.packageManager": "bun",
+        "eslint.options": {
+          "overrideConfigFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
+        },
+        "terminal.integrated.env.linux": {
+          "NX_VERBOSE_LOGGING": "false",
+          "NX_PERF_LOGGING": "false",
+          "NX_NATIVE_LOGGING": "nx=warn",
+          "NX_WORKSPACE_DATA_DIRECTORY": "${containerWorkspaceFolder}/.nx/workspace-data"
+        },
+        "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+        "eslint.workingDirectories": [
+          {
+            "directory": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️vscode/📦️packages/🟦️typescript",
+            "changeProcessCWD": true
+          }
+        ],
         "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
           "source.organizeImports": "always"
         },
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "workbench.externalBrowser": "chrome",
+        "workbench.trustedDomains": ["*"],
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "[typescriptreact]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -188,21 +220,17 @@
         "[csharp]": {
           "editor.defaultFormatter": "ms-dotnettools.csharp"
         },
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer",
+          "editor.formatOnSave": true
+        },
         "python.analysis.typeCheckingMode": "off",
         "python.testing.pytestEnabled": true,
         "python.testing.unittestEnabled": false,
-        "python.testing.pytestArgs": ["."],
+        "python.testing.pytestArgs": ["--rootdir=${containerWorkspaceFolder}"],
         "python.testing.cwd": "${containerWorkspaceFolder}",
+        "python.testing.autoTestDiscoverOnSaveEnabled": true,
         "python.analysis.languageServerMode": "full",
-        "sqltools.useNodeRuntime": true,
-        "sqltools.connections": [
-          {
-            "name": "metabolism",
-            "database": "./example/metabolism/.compose/kit.db",
-            "driver": "SQLite",
-            "previewLimit": 50
-          }
-        ],
         "dotnet.defaultSolution": "Monorepo.sln",
         "cmake.useCMakePresets": "always",
         "cmake.configureOnOpen": false,
@@ -214,12 +242,56 @@
           "editor.defaultFormatter": "jock.svg"
         },
         "rust-analyzer.linkedProjects": ["Cargo.toml"],
+        "rust-analyzer.testExplorer": true,
+        "vitest.enable": true,
+        "vitest.configSearchPatternInclude": "**/🧪️tests/🎚️config/🟦️.ts",
+        "tailwindCSS.experimental.configFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
         "terminal.integrated.defaultProfile.linux": "bash",
         "github.copilot.chat.commitMessageGeneration.instructions": [
           {
-            "file": ".agents/skills/committing.SKILL.md"
+            "file": ".agents/skills/commit/SKILL.md"
           }
-        ]
+        ],
+        "chat.subagents.allowInvocationsFromSubagents": false,
+        "python.terminal.activateEnvironment": false,
+        "kiroAgent.configureMCP": "Disabled",
+        "diffEditor.renderIndicators": false,
+        "diffEditor.renderGutterMenu": false,
+        "diffEditor.experimental.showEmptyDecorations": false,
+        "diffEditor.renderMarginRevertIcon": false,
+        "diffEditor.renderSideBySide": false,
+        "chat.editing.autoAcceptDelay": 0,
+        "chat.editing.confirmEditRequestRetry": false,
+        "chat.editing.confirmEditRequestRemoval": false,
+        "inlineChat.showDiff": false,
+        "inlineChat.accessibleDiffView": "off",
+        "cursor.composer.shouldAutoAcceptDiffs": true,
+        "cursor.diffs.useCharacterLevelDiffs": false,
+        "latex-workshop.latex.recipe.default": "semio-dashboard",
+        "latex-workshop.latex.autoBuild.run": "never",
+        "latex-workshop.latex.search.rootFiles.include": ["♻️mit-bestand/📋️bericht/**/*.tex", "🧰️framework/🛍️products/📓️print/🧾️template/**/*.tex"],
+        "latex-workshop.latex.tools": [
+          {
+            "name": "semio-dashboard",
+            "command": "bun",
+            "args": ["run", "--cwd", "%WORKSPACE_FOLDER%", "dashboard", "run", "@semio-tech/mit-bestand-bericht:build"]
+          }
+        ],
+        "latex-workshop.latex.recipes": [
+          {
+            "name": "semio-dashboard",
+            "tools": ["semio-dashboard"]
+          }
+        ],
+        "latex-workshop.intellisense.package.env": {
+          "TEXINPUTS": "${containerWorkspaceFolder}/🧰️framework/🛍️products/📓️print/🖋️latex//:"
+        },
+        "latex-workshop.view.pdf.viewer": "tab",
+        "latex-workshop.synctex.afterBuild.enabled": true,
+        "[latex]": {
+          "editor.defaultFormatter": "James-Yu.latex-workshop"
+        },
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
       }
     }
   }

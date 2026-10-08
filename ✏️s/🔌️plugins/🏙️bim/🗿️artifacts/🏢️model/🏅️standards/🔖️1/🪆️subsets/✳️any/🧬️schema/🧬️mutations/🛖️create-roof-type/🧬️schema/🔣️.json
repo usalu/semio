@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-roof-type/schema.json",
+  "title": "CreateRoofType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "roof_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createRoofType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Roof type id",
+          "de": "Dachtyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "roof_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Roof type",
+          "de": "Dachtyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

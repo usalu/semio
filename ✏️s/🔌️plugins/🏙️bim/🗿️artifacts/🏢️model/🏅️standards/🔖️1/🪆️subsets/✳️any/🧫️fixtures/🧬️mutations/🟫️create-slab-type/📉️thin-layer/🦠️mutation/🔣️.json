@@ -1,0 +1,14 @@
+{
+  "mutation": "createSlabType",
+  "id": "sl-300",
+  "slab_type": {
+    "name": "Flat",
+    "layers": [
+      {
+        "material": "m-brick",
+        "thickness": 0,
+        "function": "Structure"
+      }
+    ]
+  }
+}

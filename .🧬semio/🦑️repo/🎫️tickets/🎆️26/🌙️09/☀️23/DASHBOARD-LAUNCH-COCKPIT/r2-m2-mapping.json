@@ -1,0 +1,869 @@
+{
+ "claude": [
+  {
+   "number": 1,
+   "original": "⚖️gate🎒️pack🫳️borrowed-preflight🦀️native",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-pack-rs:test-borrowed-preflight-native --param cache=skip-local --param test-level=quick",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 2,
+   "original": "⚖️gate🎒️pack🫳️borrowed-preflight🟦️source",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-pack-rs:test-borrowed-preflight-source --param cache=skip-local --param test-level=quick",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 3,
+   "original": "cad-react",
+   "kind": "playground",
+   "command": "semio run playground:cad --param renderer=react",
+   "status": "exact",
+   "note": "renderer now explicit (`react`); the old command had no `SEMIO_RENDERER` and bound the wgpu port"
+  },
+  {
+   "number": 4,
+   "original": "s-react",
+   "kind": "playground",
+   "command": "semio run playground:s --param renderer=react",
+   "status": "exact",
+   "note": "renderer now explicit (`react`); the old command had no `SEMIO_RENDERER` and bound the wgpu port"
+  },
+  {
+   "number": 5,
+   "original": "s-react-served",
+   "kind": "playground",
+   "command": "semio run playground:s --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 6,
+   "original": "procedural3d-react",
+   "kind": "playground",
+   "command": "semio run playground:generation3d --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 7,
+   "original": "procedural3d-wgpu",
+   "kind": "playground",
+   "command": "semio run playground:generation3d --param renderer=wgpu-wasm",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 8,
+   "original": "puzzle3d-react",
+   "kind": "playground",
+   "command": "semio run playground:puzzle3d --param renderer=react",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 9,
+   "original": "puzzle3d-wgpu",
+   "kind": "playground",
+   "command": "semio run playground:puzzle3d --param renderer=wgpu-wasm",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 10,
+   "original": "puzzle5d-react",
+   "kind": "playground",
+   "command": "semio run playground:puzzle5d --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 11,
+   "original": "puzzle5d-wgpu",
+   "kind": "playground",
+   "command": "semio run playground:puzzle5d --param renderer=wgpu-wasm",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 12,
+   "original": "puzzle5d-native",
+   "kind": "playground",
+   "command": "semio run playground:puzzle5d --param renderer=wgpu-native",
+   "status": "exact",
+   "note": "resolves to `framework-os-dev:run-puzzle5d-native-dev`, the target `renderer-wgpu:native -- puzzle5d` reduces to; no URL, so no ready"
+  },
+  {
+   "number": 13,
+   "original": "dag-react",
+   "kind": "playground",
+   "command": "semio run playground:dag --param renderer=react",
+   "status": "exact",
+   "note": "renderer now explicit (`react`); the old command had no `SEMIO_RENDERER` and bound the wgpu port"
+  },
+  {
+   "number": 14,
+   "original": "terra-jco-spike-static",
+   "kind": "script",
+   "command": "-",
+   "status": "intentionally dropped",
+   "note": "the script `🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/🌐️harness/📜️script.ts` no longer exists (the testkit folder is gone)"
+  },
+  {
+   "number": 15,
+   "original": "mit-bestand-demonstrator",
+   "kind": "target",
+   "command": "semio run @semio-tech/mit-bestand-demonstrator:dev",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 16,
+   "original": "mit-bestand-demonstrator-supervised",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS/demonstrator-supervised",
+   "status": "declared now",
+   "note": "ticket `DEMONSTRATOR-END-TO-END-ALL-APPS` is open: `🎮️commands.json` created, tool `demonstrator-supervised`"
+  },
+  {
+   "number": 17,
+   "original": "map-harness",
+   "kind": "ticket-script",
+   "command": "-",
+   "status": "intentionally dropped",
+   "note": "ticket `GIS-MAP-END-TO-END` is closed and the entry's `📜️harnessscript.ts` does not exist"
+  },
+  {
+   "number": 18,
+   "original": "storybook-framework-hosts",
+   "kind": "target",
+   "command": "semio run workspace:dev-storybook-framework-hosts",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 19,
+   "original": "gis2d-wgpu",
+   "kind": "playground",
+   "command": "semio run playground:gis2d --param renderer=wgpu-wasm",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 20,
+   "original": "verify-gis2d-envelope-gates",
+   "kind": "ticket-script",
+   "command": "-",
+   "status": "intentionally dropped",
+   "note": "folder `26/09/16/GIS-2D-END-TO-END-BUILD` has no `🎫️ticket.json`, so it is no open ticket; the registry cannot index a `🎮️commands.json` there"
+  },
+  {
+   "number": 21,
+   "original": "puzzle2d-react",
+   "kind": "playground",
+   "command": "semio run playground:puzzle2d --param renderer=react",
+   "status": "exact",
+   "note": "renderer now explicit (`react`); the old command had no `SEMIO_RENDERER` and bound the wgpu port"
+  },
+  {
+   "number": 22,
+   "original": "storybook-static",
+   "kind": "target",
+   "command": "semio run tool:workspace/storybook-static",
+   "status": "declared now",
+   "note": "was `workspace:dev -- storybook-static` without a ready declaration (`--wait-ready` would hang); tool with ready 6010 / `STORYBOOK_PORT`"
+  },
+  {
+   "number": 23,
+   "original": "storybook-framework-os",
+   "kind": "target",
+   "command": "semio run workspace:dev-storybook-framework-os",
+   "status": "exact",
+   "note": "the entry's port 6011 never matched: the command binds 6010 (`STORYBOOK_PORT`), which is the declared ready port"
+  },
+  {
+   "number": 24,
+   "original": "puzzle3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:puzzle3d` (start with `semio run playground:puzzle3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6013 = ready port 6013 of `playground:puzzle3d` (react)"
+  },
+  {
+   "number": 25,
+   "original": "puzzle3d-react-release-e2e-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:puzzle5d` (start with `semio run playground:puzzle5d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6014 = ready port 6014 of `playground:puzzle5d` (react)"
+  },
+  {
+   "number": 26,
+   "original": "puzzle5d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:puzzle5d` (start with `semio run playground:puzzle5d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6014 = ready port 6014 of `playground:puzzle5d` (react)"
+  },
+  {
+   "number": 27,
+   "original": "puzzle5d-react-supervised",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/serve-supervised --param variant=puzzle5d",
+   "status": "declared now",
+   "note": "ticket is open: tool `serve-supervised` (choice `variant` puzzle5d/puzzle3d/puzzle2d carries variant and port)"
+  },
+  {
+   "number": 28,
+   "original": "puzzle3d-react-supervised",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/serve-supervised --param variant=puzzle3d",
+   "status": "declared now",
+   "note": "same tool"
+  },
+  {
+   "number": 29,
+   "original": "puzzle5d-battery",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/puzzle5d-battery",
+   "status": "declared now",
+   "note": "ticket is open: tool `puzzle5d-battery`"
+  },
+  {
+   "number": 30,
+   "original": "puzzle5d-battery-explore",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/puzzle5d-battery-explore",
+   "status": "declared now",
+   "note": "ticket is open: tool `puzzle5d-battery-explore`"
+  },
+  {
+   "number": 31,
+   "original": "puzzle2d-react-supervised",
+   "kind": "ticket-script",
+   "command": "semio run ticket:26/09/17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/serve-supervised --param variant=puzzle2d",
+   "status": "declared now",
+   "note": "same tool"
+  },
+  {
+   "number": 32,
+   "original": "procedural3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:generation3d` (start with `semio run playground:generation3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6018 = ready port 6018 of `playground:generation3d` (react)"
+  },
+  {
+   "number": 33,
+   "original": "process3d-react",
+   "kind": "playground",
+   "command": "semio run playground:process3d --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 34,
+   "original": "process3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:process3d` (start with `semio run playground:process3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6022 = ready port 6022 of `playground:process3d` (react)"
+  },
+  {
+   "number": 35,
+   "original": "process3d-react-lane-attach",
+   "kind": "attach-only",
+   "command": "-",
+   "status": "intentionally dropped",
+   "note": "port 6222 belongs to no catalog playground (a ticket lane)"
+  },
+  {
+   "number": 36,
+   "original": "fem2d-react",
+   "kind": "playground",
+   "command": "semio run playground:fem2d --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 37,
+   "original": "fem2d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:fem2d` (start with `semio run playground:fem2d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6086 = ready port 6086 of `playground:fem2d` (react)"
+  },
+  {
+   "number": 38,
+   "original": "fem3d-react",
+   "kind": "playground",
+   "command": "semio run playground:fem3d --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 39,
+   "original": "fem3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:fem3d` (start with `semio run playground:fem3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6087 = ready port 6087 of `playground:fem3d` (react)"
+  },
+  {
+   "number": 40,
+   "original": "energy-react",
+   "kind": "playground",
+   "command": "semio run playground:energy --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 41,
+   "original": "energy-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:energy` (start with `semio run playground:energy --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6106 = ready port 6106 of `playground:energy` (react)"
+  },
+  {
+   "number": 42,
+   "original": "forms-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:forms` (start with `semio run playground:forms --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6058 = ready port 6058 of `playground:forms` (react)"
+  },
+  {
+   "number": 43,
+   "original": "raster-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:raster` (start with `semio run playground:raster --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6060 = ready port 6060 of `playground:raster` (react)"
+  },
+  {
+   "number": 44,
+   "original": "shooting-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:shooting` (start with `semio run playground:shooting --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6019 = ready port 6019 of `playground:shooting` (react)"
+  },
+  {
+   "number": 45,
+   "original": "remodel-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:remodel` (start with `semio run playground:remodel --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6063 = ready port 6063 of `playground:remodel` (react)"
+  },
+  {
+   "number": 46,
+   "original": "layout-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:layout` (start with `semio run playground:layout --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6079 = ready port 6079 of `playground:layout` (react)"
+  },
+  {
+   "number": 47,
+   "original": "note-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:note` (start with `semio run playground:note --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6080 = ready port 6080 of `playground:note` (react)"
+  },
+  {
+   "number": 48,
+   "original": "wfc-bitmap-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:bitmap` (start with `semio run playground:bitmap --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6041 = ready port 6041 of `playground:bitmap` (react)"
+  },
+  {
+   "number": 49,
+   "original": "wfc-grid2d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:grid2d` (start with `semio run playground:grid2d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6042 = ready port 6042 of `playground:grid2d` (react)"
+  },
+  {
+   "number": 50,
+   "original": "wfc-wfc2d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:wfc2d` (start with `semio run playground:wfc2d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6043 = ready port 6043 of `playground:wfc2d` (react)"
+  },
+  {
+   "number": 51,
+   "original": "wfc-grid3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:grid3d` (start with `semio run playground:grid3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6044 = ready port 6044 of `playground:grid3d` (react)"
+  },
+  {
+   "number": 52,
+   "original": "wfc-wfc3d-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:wfc3d` (start with `semio run playground:wfc3d --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6045 = ready port 6045 of `playground:wfc3d` (react)"
+  },
+  {
+   "number": 53,
+   "original": "reasoning-react",
+   "kind": "playground",
+   "command": "semio run playground:reasoning-wires --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 54,
+   "original": "reasoning-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:reasoning-wires` (start with `semio run playground:reasoning-wires --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6015 = ready port 6015 of `playground:reasoning-wires` (react)"
+  },
+  {
+   "number": 55,
+   "original": "imperative-react",
+   "kind": "playground",
+   "command": "semio run playground:imperative --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 56,
+   "original": "imperative-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:imperative` (start with `semio run playground:imperative --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6076 = ready port 6076 of `playground:imperative` (react)"
+  },
+  {
+   "number": 57,
+   "original": "playbook-react",
+   "kind": "playground",
+   "command": "semio run playground:playbook --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 58,
+   "original": "playbook-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:playbook` (start with `semio run playground:playbook --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6085 = ready port 6085 of `playground:playbook` (react)"
+  },
+  {
+   "number": 59,
+   "original": "norm-react",
+   "kind": "playground",
+   "command": "semio run playground:din4108 --param renderer=react -- served",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 60,
+   "original": "norm-react-attach",
+   "kind": "attach-only",
+   "command": "no command: `semio tasks`, then `semio open playground:din4108` (start with `semio run playground:din4108 --param renderer=react --detach --wait-ready`)",
+   "status": "exact",
+   "note": "port 6091 = ready port 6091 of `playground:din4108` (react)"
+  },
+  {
+   "number": 61,
+   "original": "teaching-proctor",
+   "kind": "target",
+   "command": "semio run @teaching/proctor:dev",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 62,
+   "original": "architecture-quiz",
+   "kind": "target",
+   "command": "semio run @teaching/architecture-quiz:dev",
+   "status": "exact",
+   "note": "`PROCTOR_PORT=8791` is the owner default"
+  },
+  {
+   "number": 63,
+   "original": "host-count-component-sqlite",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-plugin-host:count-component-check [--env SEMIO_TEST_ARTIFACT_DIR=<dir>]",
+   "status": "exact",
+   "note": "the artifact directory is an output location, passed with `--env` when wanted"
+  },
+  {
+   "number": 64,
+   "original": "architecture-quiz-site",
+   "kind": "target",
+   "command": "semio run @teaching/architecture-quiz:dev-site",
+   "status": "exact",
+   "note": "`PROCTOR_PORT=8791` is the owner default"
+  },
+  {
+   "number": 65,
+   "original": "architektur-und-technologie-quizze",
+   "kind": "target",
+   "command": "semio run @teaching/architecture-quiz:dev",
+   "status": "exact",
+   "note": "`PROCTOR_PORT=8791` is the owner default"
+  },
+  {
+   "number": 66,
+   "original": "architektur-und-technologie-quizze-steady",
+   "kind": "target",
+   "command": "semio run @teaching/architecture-quiz:dev --param steady",
+   "status": "declared now",
+   "note": "new flag `steady` = `TEACHING_ARCHITECTURE_QUIZ_WATCH=off`"
+  },
+  {
+   "number": 67,
+   "original": "architektur-und-technologie-quizze-beside",
+   "kind": "script",
+   "command": "semio run @teaching/architecture-quiz:dev --param stack=beside",
+   "status": "declared now",
+   "note": "new choice `stack=beside` = ports 6063 / 8793 and `PROCTOR_DATA={workspace}/.🧬semio/🎓️teaching/proctor-beside`; the Nx `options.env` pin of 6061 was removed so the choice can take effect"
+  },
+  {
+   "number": 68,
+   "original": "framework-snapshot-sqlite",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-rs:test-snapshot-sqlite",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 69,
+   "original": "framework-deflate-encoding",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-rs:test-deflate-encoding",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 70,
+   "original": "framework-snapshot-sqlite-native",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-rs:test-snapshot-sqlite-native",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 71,
+   "original": "framework-snapshot-sqlite-source",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-rs:test-snapshot-sqlite-source",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 72,
+   "original": "framework-snapshot-sqlite-io",
+   "kind": "target",
+   "command": "-",
+   "status": "intentionally dropped",
+   "note": "target `@semio-tech/framework-rs:test-snapshot-sqlite-io` no longer exists"
+  },
+  {
+   "number": 73,
+   "original": "value-borrowed-key-index-native",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-os-kernel:test-borrowed-key-index-native --param cache=skip-local --param test-level=quick",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 74,
+   "original": "value-intrinsic-retirement-native",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-os-kernel:test-intrinsic-retirement-native --param cache=skip-local --param test-level=quick",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 75,
+   "original": "value-controlled-construction",
+   "kind": "target",
+   "command": "semio run @semio-tech/value-rs:test-controlled-construction",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 76,
+   "original": "value-controlled-construction-source",
+   "kind": "target",
+   "command": "semio run @semio-tech/framework-value:test-controlled-construction-source",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 77,
+   "original": "pptx-outline-ownership-source",
+   "kind": "target",
+   "command": "semio run @semio-tech/stdio-pptx-rs:test-outline-ownership --param cache=skip-local [--env SEMIO_TEST_ARTIFACT_DIR=<dir>]",
+   "status": "exact",
+   "note": "the artifact directory is an output location, passed with `--env` when wanted"
+  },
+  {
+   "number": 78,
+   "original": "pets-stories",
+   "kind": "target",
+   "command": "semio run @semio-tech/pets-react:dev --param stories-port=6069",
+   "status": "exact",
+   "note": ""
+  },
+  {
+   "number": 79,
+   "original": "architecture-pets-stories",
+   "kind": "target",
+   "command": "semio run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts",
+   "status": "exact",
+   "note": "second gallery: own port and menagerie"
+  }
+ ],
+ "compounds": [
+  {
+   "original": "🧭️compound🖥️s⚛️react🗄️os-hub",
+   "command": "semio run compound:workspace/s-with-hub",
+   "status": "exact",
+   "note": "hub (ready 8787 /admin) then shell 6070 with S_HUB_URL; stopAll true = stop together"
+  },
+  {
+   "original": "🧭️compound🖥️s⚛️react🌉️os-mcp",
+   "command": "semio run compound:workspace/s-with-os-mcp",
+   "status": "exact",
+   "note": "os-mcp http (no ready, as in VS Code) then shell 6070; stopAll true = stop together"
+  },
+  {
+   "original": "🧭️compound🖥️s👥️users🗄️os-hub",
+   "command": "semio run compound:workspace/s-users-with-hub",
+   "status": "exact",
+   "note": "hub, slot 1 (6072, s-user1), slot 2 (6073, s-user2), each with S_HUB_URL; stopAll true = stop together"
+  },
+  {
+   "original": "🧭️compound🎓️teaching🏛️architecture❓️quiz🛂️proctor",
+   "command": "semio run compound:@teaching/architecture-quiz/quiz-with-proctor",
+   "status": "exact",
+   "note": "proctor 8791 then quiz 6061; stopAll true = stop together"
+  }
+ ],
+ "deviations": [
+  {
+   "family": "launch-only facts (12 rows)",
+   "items": [
+    {
+     "original": "user-slot rows 131-134 (S_HUB_URL, S_DATA_DIR)",
+     "command": "semio run playground:s --param renderer=react|wgpu-wasm --param user-slot=1|2 --param hub",
+     "status": "exact",
+     "note": "ports 6072/6073/6067/6068, S_DATA_DIR .🧬semio/🔗space/s-user<N>; resolved"
+    },
+    {
+     "original": "S_LOCAL_ONLY row 700",
+     "command": "semio run playground:s --param renderer=react --param local-only",
+     "status": "exact",
+     "note": "S_LOCAL_ONLY=1, port 6070; resolved"
+    },
+    {
+     "original": "PLAYGROUND_LOCKED_EXAMPLE_ID rows 665-666",
+     "command": "semio run playground:puzzle5d --param renderer=react|wgpu-wasm --param example=capsule-dream",
+     "status": "exact",
+     "note": "exports the catalog slug, ports 6014/6114; resolved"
+    },
+    {
+     "original": "viewer ready suffix rows 467-468",
+     "command": "semio run playground:generation3d --param renderer=react|wgpu-wasm --param app-role=viewer",
+     "status": "exact",
+     "note": "ready path /?plugin=generation3d&role=viewer, ports 6018/6118; resolved"
+    },
+    {
+     "original": "SEMIO_DEBUG_CLOSE_PHASE=1 (row 336)",
+     "command": "semio run @semio-tech/process-process3d-rs:test --param build-mode=ship --param test-level=long --env SEMIO_DEBUG_CLOSE_PHASE=1 -- <args>",
+     "status": "exact",
+     "note": "free --env; resolved"
+    },
+    {
+     "original": "SEMIO_CARGO_PREPARATION_TIMING=1 (row 2284)",
+     "command": "semio run @semio-tech/framework-os-kernel:test --param cache=skip-local --param test-level=long --param dependencies --param nextest-output=immediate --param cargo-jobs=1 --env SEMIO_CARGO_PREPARATION_TIMING=1 -- <args>",
+     "status": "exact",
+     "note": "free --env; resolved"
+    }
+   ]
+  },
+  {
+   "family": "dead knobs (10 rows)",
+   "items": [
+    {
+     "original": "CAD_JS_RENDERER_PLAY_PORT / PUZZLE_3D_PLAY_PORT / PUZZLE_5D_PLAY_PORT / SHOOTING_PLAY_PORT, `fixture concrete|base-icon`",
+     "command": "semio run playground:cad|puzzle3d|puzzle5d|shooting --param renderer=react|wgpu-wasm",
+     "status": "intentionally dropped",
+     "note": "no file reads the variables or interprets a `fixture` segment; the server binds the catalog port (6020/6120, 6013/6113, 6014/6114, 6019/6119); resolved"
+    }
+   ]
+  },
+  {
+   "family": "axes not offered (5 rows)",
+   "items": [
+    {
+     "original": "--skip-nx-cache on playground rows 461, 704",
+     "command": "semio run playground:generation3d|draw --param renderer=react -- served",
+     "status": "intentionally dropped",
+     "note": "a dev server is never cached; --env SEMIO_BUILD_BUDGET_MS=<ms> still works (resolved)"
+    },
+    {
+     "original": "NEXTEST_SUCCESS_OUTPUT on bun test rows 2324, 2455, 2457",
+     "command": "semio run tool:workspace/bun-test --param file=<file> --param nextest-output=immediate",
+     "status": "exact",
+     "note": "A-1 amendment 4 offers axes with appliesTo.verbs on tools; resolved"
+    }
+   ]
+  },
+  {
+   "family": "merged groups (3 rows)",
+   "items": [
+    {
+     "original": "initial-record row 2527 (jpg, tiff, pdf only)",
+     "command": "semio run group:workspace/stdio-initial-record-tests --param cache=skip-local -- --lib --features component-app-assembly ordinary_and_controlled_initial_record_pack_body_diagnostic --no-fail-fast",
+     "status": "declared now",
+     "note": "new group of the three projects; resolved"
+    },
+    {
+     "original": "snapshot sqlite native / source rows 2528-2529 (48 projects)",
+     "command": "semio run group:workspace/snapshot-sqlite-native | group:workspace/snapshot-sqlite-source",
+     "status": "intentionally merged",
+     "note": "runs every project that declares the target (superset, no drift); the 48-name list was a snapshot of that set"
+    }
+   ]
+  },
+  {
+   "family": "port conflicts (2 rows)",
+   "items": [
+    {
+     "original": "capsule-dream rows 665-666 waited on dead PUZZLE_5D_PLAY_PORT 6015/6115",
+     "command": "semio run playground:puzzle5d --param renderer=react|wgpu-wasm --param example=capsule-dream",
+     "status": "exact",
+     "note": "ready port is the catalog port 6014/6114 (the old ready action never fired)"
+    }
+   ]
+  },
+  {
+   "family": "stale variant (1 row)",
+   "items": [
+    {
+     "original": "native -- trinity (row 692)",
+     "command": "semio run playground:trinity-jack --param renderer=wgpu-native",
+     "status": "exact",
+     "note": "resolves to framework-os-dev:run-trinity-jack-native-dev"
+    }
+   ]
+  },
+  {
+   "family": "literal token (1 row)",
+   "items": [
+    {
+     "original": "workspace:dev -- mcp repo with MCP_PROXY_AUTH_TOKEN=repo-mcp-token (row 671)",
+     "command": "semio run workspace:dev-mcp-repo",
+     "status": "declared now",
+     "note": "inspector generates its own token; ready.printed:true gives the tokenised URL"
+    }
+   ]
+  },
+  {
+   "family": "dropped dead rows",
+   "items": [
+    {
+     "original": "nx run-many -t describe (rows 201-203 and the later parallel=1 row)",
+     "command": "-",
+     "status": "intentionally dropped",
+     "note": "target describe removed from the seven extension projects in commit 653; the three groups were removed from the root manifest (check: 14 problems -> 0)"
+    },
+    {
+     "original": "framework-snapshot-sqlite-io (.claude 72)",
+     "command": "-",
+     "status": "intentionally dropped",
+     "note": "target test-snapshot-sqlite-io no longer exists"
+    }
+   ]
+  },
+  {
+   "family": "prompted inputs without default (4 rows)",
+   "items": [
+    {
+     "original": "proctor restore",
+     "command": "semio run @teaching/proctor:restore --param file=<backup>",
+     "status": "exact",
+     "note": "file is required"
+    },
+    {
+     "original": "proctor erase / erase dry-run",
+     "command": "semio run @teaching/proctor:erase --param handle=<h> [--param dry-run]",
+     "status": "exact",
+     "note": "tag and learner are the router's alternatives; one of the three is needed"
+    },
+    {
+     "original": "hub admin capability",
+     "command": "semio run @semio-tech/s-services-native:security-check --param admin-capability=<file>",
+     "status": "exact",
+     "note": "required; requires os-hub:dev"
+    }
+   ]
+  },
+  {
+   "family": "M-1a conflicts",
+   "items": [
+    {
+     "original": "7 rows on @semio-tech/repo-cli-rs:daemon|run|preferences",
+     "command": "semio run @semio-tech/repo-dashboard-rs:daemon|run|preferences",
+     "status": "exact",
+     "note": "retargeted by M-1a"
+    },
+    {
+     "original": "s-host-foreign-kind-s / s-host-pinch-diagram-contrast-s (ticket scripts as Nx targets)",
+     "command": "semio run @semio-tech/framework-os-dev:s-host-foreign-kind-s",
+     "status": "exact",
+     "note": "requires playground:s; resolved. Owning ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END is open: moving them to its commands.json would remove Nx targets outside this slice"
+    },
+    {
+     "original": "per-backend hub data roots",
+     "command": "semio run os-hub:dev-postgres|dev-neo4j",
+     "status": "exact",
+     "note": "OS_HUB_DATA .🧬semio/🌐hub/hub-dev-postgres|neo4j; resolved"
+    },
+    {
+     "original": "stdio-docx-rs has no test-snapshot-sqlite-source",
+     "command": "semio run @semio-tech/stdio-docx-rs:test-snapshot-sqlite -- source",
+     "status": "exact",
+     "note": "resolved"
+    }
+   ]
+  },
+  {
+   "family": "second quiz stack / steady (.claude entry-only overrides)",
+   "items": [
+    {
+     "original": "TEACHING_ARCHITECTURE_QUIZ_WATCH=off",
+     "command": "semio run @teaching/architecture-quiz:dev --param steady",
+     "status": "declared now",
+     "note": "resolved"
+    },
+    {
+     "original": "ports 6063/8793 and PROCTOR_DATA",
+     "command": "semio run @teaching/architecture-quiz:dev --param stack=beside",
+     "status": "declared now",
+     "note": "ready 6063; Nx options.env pin removed; resolved"
+    }
+   ]
+  }
+ ]
+}

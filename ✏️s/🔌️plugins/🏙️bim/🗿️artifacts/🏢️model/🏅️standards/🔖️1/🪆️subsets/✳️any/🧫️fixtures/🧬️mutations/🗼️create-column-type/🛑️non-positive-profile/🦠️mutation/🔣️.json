@@ -1,0 +1,14 @@
+{
+  "mutation": "createColumnType",
+  "id": "new-1",
+  "column_type": {
+    "name": "Column",
+    "profile": {
+      "Rectangle": {
+        "width": 0,
+        "depth": 0.4
+      }
+    },
+    "material": "m-concrete"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "setBuilding",
+  "id": "bldg-1",
+  "name": "House",
+  "rotation": 0
+}

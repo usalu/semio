@@ -1,0 +1,19 @@
+{
+  "mutation": "createRoofType",
+  "id": "rf-tile",
+  "roof_type": {
+    "name": "Glass Wool 300",
+    "layers": [
+      {
+        "material": "m-wool",
+        "thickness": 0.24,
+        "function": "Insulation"
+      },
+      {
+        "material": "m-screed",
+        "thickness": 0.01,
+        "function": "Finish"
+      }
+    ]
+  }
+}

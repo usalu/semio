@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "roof_type",
+    "layers",
+    "material"
+  ]
+}

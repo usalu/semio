@@ -20,7 +20,7 @@ import { parseArgs } from "node:util";
 import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
@@ -2158,47 +2158,6 @@ describe("playground static sites", () => {
     expect(playgroundDevPort("cad")).toBe(6020);
     expect(playgroundDevPort("dag")).toBe(6017);
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
-  });
-
-  test("resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS plugin ids", () => {
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["dag"])).toEqual({ plugin: "dag", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["procedural", "3d", "fixture", "hexagonal-column"])).toEqual({
-      plugin: "generation3d",
-      rest: ["fixture", "hexagonal-column"],
-    });
-    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["trinity", "jack"])).toEqual({ plugin: "trinity-jack", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["unknown"])).toBeNull();
-    const resolvableSegments = catalog.reduce((sum, row) => sum + 1 + row.aliases.length, 0);
-    expect(resolvableSegments).toBeGreaterThan(20);
-  });
-
-  test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port", () => {
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    const dagEnv = frameworkOsPlaygroundDevEnv(catalog, "dag", {}, {});
-    expect(dagEnv.SEMIO_RENDERER).toBe("wgpu");
-    expect(dagEnv.SEMIO_PLUGIN).toBe("dag");
-    expect(dagEnv.S_OS_PORT).toBe("6117");
-
-    const cadEnv = frameworkOsPlaygroundDevEnv(catalog, "cad", {}, { S_OS_PORT: "6020" });
-    expect(cadEnv.SEMIO_RENDERER).toBe("wgpu");
-    expect(cadEnv.SEMIO_PLUGIN).toBe("cad");
-    expect(cadEnv.S_OS_PORT).toBe("6020");
-  });
-
-  test("frameworkOsPlaygroundDevEnv derives the port from an explicit renderer override", () => {
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    const row = catalog.find((entry) => entry.variant === "s")!;
-    const servedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", SKIP_ENGINE_BUILD: "1" }, {});
-    expect(servedEnv.SEMIO_RENDERER).toBe("react");
-    expect(servedEnv.SKIP_ENGINE_BUILD).toBe("1");
-    expect(servedEnv.S_OS_PORT).toBe(String(row.ports.react));
-    expect(servedEnv.S_OS_PORT).not.toBe(String(row.ports.wgpu));
-    const pinnedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", S_OS_PORT: "6074" }, { S_OS_PORT: "6099" });
-    expect(pinnedEnv.S_OS_PORT).toBe("6074");
-    const inheritedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react" }, { S_OS_PORT: "6099" });
-    expect(inheritedEnv.S_OS_PORT).toBe("6099");
   });
 
   test("assigns a unique port per dev and test slot", () => {

@@ -1,0 +1,15 @@
+{
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "entry": "Created",
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  }
+}

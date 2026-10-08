@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-storey-cut-height/schema.json",
+  "title": "SetStoreyCutHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "cut_height"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setStoreyCutHeight"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "cut_height": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Plan cut height (m, empty = default 1.2 m)",
+          "de": "Schnitthöhe im Grundriss (m, leer = Standard 1,2 m)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

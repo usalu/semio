@@ -1,0 +1,19 @@
+//! 👁️ BIM viewer: the `view` mode, a world | plan split. The read-only counterpart of the editor `edit` mode.
+
+use crate::viewer::bim::modes::view::windows::{plan, world};
+use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout};
+use semio_framework_ui_locale::LocalizedLabel;
+
+pub const BIM_VIEW_MODE_VIEW: &str = "view";
+
+//#region 🔖️Definition
+/// 🧱️ Stitched into the viewer manifest by `crate::viewer::bim::create_bim_viewer`.
+pub fn definition() -> ModeDefinition {
+    ModeDefinition { id: BIM_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
+}
+
+/// 🪟️ The default layout: the world window on the left and the plan window on the right.
+pub fn layout() -> WindowLayout {
+    create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), Some(&["World".into(), "Plan".into()]))
+}
+//#endregion 🔖️Definition

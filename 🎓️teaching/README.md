@@ -60,7 +60,7 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
    runs differ.
 4. Give every item an `explanation` with the value, the reasoning and the source: it is what the results screen teaches.
 5. Add the path, relative to the catalog, to the catalog's `quizzes` and, if wanted, a `perfect-quiz` badge.
-6. Validate with the launch rows of the site: `bun nx run @teaching/architecture-quiz:check` runs `proctor check` on the
+6. Validate with the dashboard commands of the site: `bun nx run @teaching/architecture-quiz:check` runs `proctor check` on the
    catalog (Rust core), and `bun nx run @teaching/architecture-quiz:test` runs the TypeScript core validation and the
    draft-07 contract through ajv on the catalog and every quiz.
 7. Every edit of a quiz file changes its revision, and open runs of the old revision are voided at their next start or

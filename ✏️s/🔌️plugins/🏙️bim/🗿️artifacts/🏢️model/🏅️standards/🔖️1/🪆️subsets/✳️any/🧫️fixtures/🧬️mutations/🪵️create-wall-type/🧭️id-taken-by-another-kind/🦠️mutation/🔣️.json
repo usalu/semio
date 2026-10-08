@@ -1,0 +1,19 @@
+{
+  "mutation": "createWallType",
+  "id": "st-ground",
+  "wall_type": {
+    "name": "Glass Wool 300",
+    "layers": [
+      {
+        "material": "m-wool",
+        "thickness": 0.16,
+        "function": "Insulation"
+      },
+      {
+        "material": "m-brick",
+        "thickness": 0.12,
+        "function": "Structure"
+      }
+    ]
+  }
+}

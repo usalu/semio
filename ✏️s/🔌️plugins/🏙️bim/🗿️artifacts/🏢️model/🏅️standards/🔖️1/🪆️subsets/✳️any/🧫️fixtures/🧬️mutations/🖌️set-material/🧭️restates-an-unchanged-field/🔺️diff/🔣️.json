@@ -1,0 +1,13 @@
+{
+  "materials": {
+    "m-brick": {
+      "color": {
+        "b": 0.15,
+        "g": 0.2,
+        "r": 0.8
+      },
+      "entry": "Patched",
+      "name": "Red Brick"
+    }
+  }
+}

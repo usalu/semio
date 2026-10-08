@@ -1,0 +1,8 @@
+{
+  "mutation": "setProjectInfo",
+  "description": "",
+  "phase_names": [
+    "Existing",
+    "New"
+  ]
+}

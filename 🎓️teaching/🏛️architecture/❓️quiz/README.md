@@ -41,18 +41,27 @@ leaderboard sums those. Every badge of this catalog but `completionist` asks for
 
 ## Develop
 
-Run everything from `.vscode/launch.json` (groups `3_dev` and `4_gate`):
+Run everything from the dashboard (`bun run dashboard`, then `Ctrl+B n` and the words of the command id) or, without
+the TUI, with `bun run dashboard run <command id> [--detach --wait-ready]` (`semio …` is shorthand for `bun run dashboard …`),
+which prints the ready URL of a server:
 
-| Launch row | Command | Port |
+| Dashboard command id | What it does | Port |
 |---|---|---|
-| `🛠️dev🎓️teaching🏛️architecture❓️quiz` | `bun nx run @teaching/architecture-quiz:dev` — backend and frontend together | `8791` and `6061` |
-| `🛠️dev🎓️teaching🏛️architecture❓️quiz🌐️site` | `bun nx run @teaching/architecture-quiz:dev-site` — the site alone | `6061` (`TEACHING_ARCHITECTURE_QUIZ_PORT`) |
-| `🛠️dev🎓️teaching🛂️proctor` | `bun nx run @teaching/proctor:dev` — the proctor alone | `8791` (`PROCTOR_PORT`) |
-| `🧪️test🎓️teaching🏛️architecture❓️quiz` | `bun nx run @teaching/architecture-quiz:test` | |
-| `🛠️dev🎓️teaching🏛️architecture❓️quiz🪁️typecheck` | `bun nx run @teaching/architecture-quiz:typecheck` — the entry, the Vite configuration, the stack, the deploy verbs, the end-to-end gate and every test and spec against the compiler; it first regenerates the git-ignored bindings its sources read | |
-| `⚖️gate🎓️teaching🏛️architecture❓️quiz🎭️e2e` | `bun nx run @teaching/architecture-quiz:test-e2e` — the end-to-end gate | `6161`/`8891`, `6162`/`8892` |
-| `✅️check🎓️teaching🏛️architecture❓️quiz📚️catalog` | `bun nx run @teaching/architecture-quiz:check` (`proctor check` on the catalog) | |
-| `🔁️rebuild🎓️teaching🛂️proctor` | `bun nx run @teaching/proctor:rebuild` (refold the dev proctor's read models) | |
+| `@teaching/architecture-quiz:dev` | backend and frontend together; parameters `steady=true` (a flag: sets `TEACHING_ARCHITECTURE_QUIZ_WATCH=off`, so neither the site nor the proctor follows source edits) and `stack=beside` (a second, independent stack beside the first) | `8791` and `6061`; `beside`: `8793` and `6063` |
+| `@teaching/architecture-quiz:dev-site` | the site alone | `6061` (`TEACHING_ARCHITECTURE_QUIZ_PORT`) |
+| `@teaching/proctor:dev` | the proctor alone | `8791` (`PROCTOR_PORT`) |
+| `@teaching/architecture-quiz:test` | the tests | |
+| `@teaching/architecture-quiz:typecheck` | the entry, the Vite configuration, the stack, the deploy verbs, the end-to-end gate and every test and spec against the compiler; it first regenerates the git-ignored bindings its sources read | |
+| `@teaching/architecture-quiz:test-e2e` | the end-to-end gate | `6161`/`8891`, `6162`/`8892` |
+| `@teaching/architecture-quiz:check` | `proctor check` on the catalog | |
+| `@teaching/proctor:rebuild` | refold the dev proctor's read models | |
+
+```bash
+bun run dashboard run @teaching/architecture-quiz:dev --detach --wait-ready                      # the stack on 6061
+bun run dashboard run @teaching/architecture-quiz:dev --param steady=true --param stack=beside --detach --wait-ready  # a steady second stack on 6063
+```
+
+The beside stack keeps its proctor data in `.🧬semio/🎓️teaching/proctor-beside`, so the two stacks never share a store.
 
 ### One command for backend and frontend
 
@@ -156,7 +165,7 @@ the preferences or with the switch on every screen holds whatever the device ask
 | species, ensemble (bonds, casts), roster and how to add a pet | `../🐾️pets/` and its README |
 | the quiz's glue (preference, scene, lazy loading, mounting) | `🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🐾️pets` |
 | the model and the layer | `🧰️framework/🛍️products/🐾️pets` (`@semio-tech/pets`, `@semio-tech/pets-react`) |
-| judging rigs and casts by eye | launch row `🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories` (Claude preview `architecture-pets-stories`), http://127.0.0.1:6074/ |
+| judging rigs and casts by eye | dashboard command `@semio-tech/pets-react:dev` (`bun run dashboard run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready`), http://127.0.0.1:6074/ |
 
 In a release build the pets are four lazy script chunks and one lazy stylesheet beside the entry (the menagerie, the
 render target with the model, their shared constants, the half of the quiz's glue that comes with the pets — the layer
@@ -198,8 +207,8 @@ bun nx run @teaching/architecture-quiz:docker-image-build     # 2. the proctor i
 bun nx run @teaching/architecture-quiz:docker-stack-bundle    #    the stack with it  → dist/proctor
 ```
 
-Launch rows: `🚚️publish🎓️teaching🏛️architecture❓️quiz`, `📦️build🎓️teaching🏛️architecture❓️quiz🐳️docker-image`,
-`📦️bundle🎓️teaching🏛️architecture❓️quiz🐳️docker-stack`.
+Dashboard command ids: `@teaching/architecture-quiz:publish`, `@teaching/architecture-quiz:docker-image-build`,
+`@teaching/architecture-quiz:docker-stack-bundle`.
 
 **1. The site.** Upload the content of `📦️packages/🟦️typescript/dist/pages/quizzes` to the static host or CDN that serves
 `https://quizze.architektur-und-technologie.de` ⚠️. Any static host works: the app addresses its pages by hash, so no

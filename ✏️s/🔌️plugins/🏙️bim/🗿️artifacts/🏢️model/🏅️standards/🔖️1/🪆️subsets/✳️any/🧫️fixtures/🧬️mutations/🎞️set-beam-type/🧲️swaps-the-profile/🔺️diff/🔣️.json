@@ -1,0 +1,13 @@
+{
+  "beam_types": {
+    "bt-i300": {
+      "entry": "Patched",
+      "profile": {
+        "Rectangle": {
+          "depth": 0.4,
+          "width": 0.2
+        }
+      }
+    }
+  }
+}

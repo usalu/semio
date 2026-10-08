@@ -1,0 +1,47 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "x-taken": {
+      "name": "Donor",
+      "category": "Other",
+      "color": {
+        "r": 0.5,
+        "g": 0.5,
+        "b": 0.5
+      },
+      "density": 1000.0,
+      "conductivity": 1.0,
+      "specific_heat": 1000.0
+    }
+  },
+  "wall_types": {},
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {},
+  "buildings": {},
+  "storeys": {},
+  "grids": {},
+  "walls": {},
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {}
+}

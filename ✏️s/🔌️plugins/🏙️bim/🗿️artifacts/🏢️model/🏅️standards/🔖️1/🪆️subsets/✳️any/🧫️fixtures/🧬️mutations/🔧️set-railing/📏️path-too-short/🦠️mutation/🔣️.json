@@ -1,0 +1,10 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "path": [
+    {
+      "x": 2,
+      "y": 2
+    }
+  ]
+}

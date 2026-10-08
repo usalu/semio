@@ -1,0 +1,435 @@
+syntax = "proto3";
+package semio.s.bim.model.diff;
+
+// 🔺️ BIM model diff schema — a sparse per-collection keyed delta.
+
+message ModelDiff {
+  optional ProjectPatch project = 1;
+  map<string, MaterialEntry> materials = 2;
+  map<string, WallTypeEntry> wall_types = 3;
+  map<string, SlabTypeEntry> slab_types = 4;
+  map<string, RoofTypeEntry> roof_types = 5;
+  map<string, ColumnTypeEntry> column_types = 6;
+  map<string, BeamTypeEntry> beam_types = 7;
+  map<string, WindowTypeEntry> window_types = 8;
+  map<string, DoorTypeEntry> door_types = 9;
+  map<string, SiteEntry> sites = 10;
+  map<string, BuildingEntry> buildings = 11;
+  map<string, StoreyEntry> storeys = 12;
+  map<string, GridLineEntry> grids = 13;
+  map<string, WallEntry> walls = 14;
+  map<string, CurtainWallEntry> curtain_walls = 15;
+  map<string, ColumnEntry> columns = 16;
+  map<string, BeamEntry> beams = 17;
+  map<string, SlabEntry> slabs = 18;
+  map<string, RoofEntry> roofs = 19;
+  map<string, OpeningEntry> openings = 20;
+  map<string, StairEntry> stairs = 21;
+  map<string, RailingEntry> railings = 22;
+  map<string, SpaceEntry> spaces = 23;
+  map<string, PropertySetEntry> properties = 24;
+  map<string, ClassificationEntry> classifications = 25;
+}
+
+message Assigned {
+  bool present = 1;
+}
+
+message ProjectPatch {
+  optional string name = 1;
+  optional string description = 2;
+  optional string author = 3;
+  optional string organization = 4;
+  optional StringList phase_names = 5;
+}
+
+message MaterialPatch {
+  optional string name = 1;
+  optional MaterialCategory category = 2;
+  optional Rgb color = 3;
+  optional double density = 4;
+  optional double conductivity = 5;
+  optional double specific_heat = 6;
+}
+
+message WallTypePatch {
+  optional string name = 1;
+  optional LayerList layers = 2;
+}
+
+message SlabTypePatch {
+  optional string name = 1;
+  optional LayerList layers = 2;
+}
+
+message RoofTypePatch {
+  optional string name = 1;
+  optional LayerList layers = 2;
+}
+
+message ColumnTypePatch {
+  optional string name = 1;
+  optional Profile profile = 2;
+  optional string material = 3;
+}
+
+message BeamTypePatch {
+  optional string name = 1;
+  optional Profile profile = 2;
+  optional string material = 3;
+}
+
+message WindowTypePatch {
+  optional string name = 1;
+  optional double width = 2;
+  optional double height = 3;
+  optional double sill = 4;
+  optional double frame_width = 5;
+  optional double frame_depth = 6;
+  optional uint32 panes = 7;
+  optional string material = 8;
+}
+
+message DoorTypePatch {
+  optional string name = 1;
+  optional double width = 2;
+  optional double height = 3;
+  optional double frame_width = 4;
+  optional double frame_depth = 5;
+  optional DoorLeaves leaves = 6;
+  optional Swing swing = 7;
+  optional string material = 8;
+}
+
+message SitePatch {
+  optional string name = 1;
+  optional double latitude = 2;
+  optional double longitude = 3;
+  optional double elevation = 4;
+  optional double true_north = 5;
+  optional Point2List boundary = 6;
+}
+
+message BuildingPatch {
+  optional string site = 1;
+  optional string name = 2;
+  optional Point2 origin = 3;
+  optional double rotation = 4;
+  optional double elevation = 5;
+}
+
+message StoreyPatch {
+  optional string building = 1;
+  optional string name = 2;
+  optional int32 level = 3;
+  optional double height = 4;
+  optional double cut_height = 5;
+}
+
+message GridLinePatch {
+  optional string building = 1;
+  optional string label = 2;
+  optional Point2 start = 3;
+  optional Point2 end = 4;
+}
+
+message WallPatch {
+  optional string storey = 1;
+  optional string wall_type = 2;
+  optional Axis axis = 3;
+  optional LocationLine location = 4;
+  optional double base_offset = 5;
+  optional TopConstraint top = 6;
+  optional Phase phase = 7;
+  optional string name = 8;
+}
+
+message CurtainWallPatch {
+  optional string storey = 1;
+  optional Axis axis = 2;
+  optional double base_offset = 3;
+  optional TopConstraint top = 4;
+  optional double u_spacing = 5;
+  optional double v_spacing = 6;
+  optional Profile mullion = 7;
+  optional string panel_material = 8;
+  optional string mullion_material = 9;
+  optional string name = 10;
+}
+
+message ColumnPatch {
+  optional string storey = 1;
+  optional string column_type = 2;
+  optional Point2 position = 3;
+  optional double rotation = 4;
+  optional double base_offset = 5;
+  optional TopConstraint top = 6;
+  optional string name = 7;
+}
+
+message BeamPatch {
+  optional string storey = 1;
+  optional string beam_type = 2;
+  optional Point2 start = 3;
+  optional Point2 end = 4;
+  optional double top_offset = 5;
+  optional string name = 6;
+}
+
+message SlabPatch {
+  optional string storey = 1;
+  optional string slab_type = 2;
+  optional VertexList boundary = 3;
+  optional VertexListList holes = 4;
+  optional double offset = 5;
+  optional Slope slope = 6;
+  optional string name = 7;
+}
+
+message RoofPatch {
+  optional string storey = 1;
+  optional string roof_type = 2;
+  optional VertexList footprint = 3;
+  optional RoofShape shape = 4;
+  optional double overhang = 5;
+  optional double base_offset = 6;
+  optional string name = 7;
+}
+
+message OpeningPatch {
+  optional string host = 1;
+  optional OpeningKind kind = 2;
+  optional double offset = 3;
+  optional double sill_override = 4;
+  optional double width = 5;
+  optional double height = 6;
+  optional bool flip_hand = 7;
+  optional bool flip_facing = 8;
+  optional string name = 9;
+}
+
+message StairPatch {
+  optional string storey = 1;
+  optional Point2 start = 2;
+  optional double direction = 3;
+  optional double width = 4;
+  optional StairFlight flight = 5;
+  optional TopConstraint top = 6;
+  optional double max_riser = 7;
+  optional double min_tread = 8;
+  optional StairStringer stringer = 9;
+  optional double nosing = 10;
+  optional double tread_thickness = 11;
+  optional RiserKind riser = 12;
+  optional double landing_depth = 13;
+  optional string name = 14;
+}
+
+message RailingPatch {
+  optional string storey = 1;
+  optional Point2List path = 2;
+  optional double height = 3;
+  optional double post_spacing = 4;
+  optional Profile profile = 5;
+  optional Profile post_profile = 6;
+  optional Baluster baluster = 7;
+  optional Infill infill = 8;
+  optional string material = 9;
+  optional double base_offset = 10;
+  optional string name = 11;
+}
+
+message SpacePatch {
+  optional string storey = 1;
+  optional string number = 2;
+  optional string name = 3;
+  optional SpaceBoundary boundary = 4;
+  optional string usage = 5;
+}
+
+message ClassificationPatch {
+  optional string system = 1;
+  optional string code = 2;
+  optional string title = 3;
+}
+
+message PropertySetPatch {
+  map<string, PropertyGroupPatch> assigned = 1;
+}
+
+message PropertyGroupPatch {
+  map<string, PropertyValue> set = 1;
+  repeated string removed = 2;
+}
+
+enum EntryKind {
+  ENTRY_UNSPECIFIED = 0;
+  ENTRY_CREATED = 1;
+  ENTRY_DELETED = 2;
+  ENTRY_REPLACED = 3;
+  ENTRY_PATCHED = 4;
+}
+
+message MaterialEntry {
+  EntryKind entry = 1;
+  optional Material record = 2;
+  optional MaterialPatch patch = 3;
+}
+
+message WallTypeEntry {
+  EntryKind entry = 1;
+  optional WallType record = 2;
+  optional WallTypePatch patch = 3;
+}
+
+message SlabTypeEntry {
+  EntryKind entry = 1;
+  optional SlabType record = 2;
+  optional SlabTypePatch patch = 3;
+}
+
+message RoofTypeEntry {
+  EntryKind entry = 1;
+  optional RoofType record = 2;
+  optional RoofTypePatch patch = 3;
+}
+
+message ColumnTypeEntry {
+  EntryKind entry = 1;
+  optional ColumnType record = 2;
+  optional ColumnTypePatch patch = 3;
+}
+
+message BeamTypeEntry {
+  EntryKind entry = 1;
+  optional BeamType record = 2;
+  optional BeamTypePatch patch = 3;
+}
+
+message WindowTypeEntry {
+  EntryKind entry = 1;
+  optional WindowType record = 2;
+  optional WindowTypePatch patch = 3;
+}
+
+message DoorTypeEntry {
+  EntryKind entry = 1;
+  optional DoorType record = 2;
+  optional DoorTypePatch patch = 3;
+}
+
+message SiteEntry {
+  EntryKind entry = 1;
+  optional Site record = 2;
+  optional SitePatch patch = 3;
+}
+
+message BuildingEntry {
+  EntryKind entry = 1;
+  optional Building record = 2;
+  optional BuildingPatch patch = 3;
+}
+
+message StoreyEntry {
+  EntryKind entry = 1;
+  optional Storey record = 2;
+  optional StoreyPatch patch = 3;
+}
+
+message GridLineEntry {
+  EntryKind entry = 1;
+  optional GridLine record = 2;
+  optional GridLinePatch patch = 3;
+}
+
+message WallEntry {
+  EntryKind entry = 1;
+  optional Wall record = 2;
+  optional WallPatch patch = 3;
+}
+
+message CurtainWallEntry {
+  EntryKind entry = 1;
+  optional CurtainWall record = 2;
+  optional CurtainWallPatch patch = 3;
+}
+
+message ColumnEntry {
+  EntryKind entry = 1;
+  optional Column record = 2;
+  optional ColumnPatch patch = 3;
+}
+
+message BeamEntry {
+  EntryKind entry = 1;
+  optional Beam record = 2;
+  optional BeamPatch patch = 3;
+}
+
+message SlabEntry {
+  EntryKind entry = 1;
+  optional Slab record = 2;
+  optional SlabPatch patch = 3;
+}
+
+message RoofEntry {
+  EntryKind entry = 1;
+  optional Roof record = 2;
+  optional RoofPatch patch = 3;
+}
+
+message OpeningEntry {
+  EntryKind entry = 1;
+  optional Opening record = 2;
+  optional OpeningPatch patch = 3;
+}
+
+message StairEntry {
+  EntryKind entry = 1;
+  optional Stair record = 2;
+  optional StairPatch patch = 3;
+}
+
+message RailingEntry {
+  EntryKind entry = 1;
+  optional Railing record = 2;
+  optional RailingPatch patch = 3;
+}
+
+message SpaceEntry {
+  EntryKind entry = 1;
+  optional Space record = 2;
+  optional SpacePatch patch = 3;
+}
+
+message PropertySetEntry {
+  EntryKind entry = 1;
+  optional PropertySetRows record = 2;
+  optional PropertySetPatch patch = 3;
+}
+
+message ClassificationEntry {
+  EntryKind entry = 1;
+  optional Classification record = 2;
+  optional ClassificationPatch patch = 3;
+}
+
+message VertexList {
+  repeated Vertex items = 1;
+}
+
+message StringList {
+  repeated string items = 1;
+}
+
+message LayerList {
+  repeated Layer items = 1;
+}
+
+message Point2List {
+  repeated Point2 items = 1;
+}
+
+message VertexListList {
+  repeated VertexList items = 1;
+}

@@ -1,0 +1,14 @@
+{
+  "mutation": "createDoorType",
+  "id": "door-2",
+  "door_type": {
+    "name": "Door 1.80",
+    "width": 1.8,
+    "height": 2.1,
+    "frame_width": 0.06,
+    "frame_depth": 0.1,
+    "leaves": "Double",
+    "swing": "Right",
+    "material": "m-timber"
+  }
+}

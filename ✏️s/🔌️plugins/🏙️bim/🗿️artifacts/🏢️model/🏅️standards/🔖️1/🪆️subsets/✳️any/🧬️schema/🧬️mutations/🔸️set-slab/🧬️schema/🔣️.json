@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-slab/schema.json",
+  "title": "SetSlab",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSlab"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slab",
+          "de": "Decke"
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "slab_type": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Slab type",
+          "de": "Deckentyp"
+        },
+        "ref": {
+          "kind": "slab-type"
+        },
+        "group": "type",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Offset (m)",
+          "de": "Versatz (m)"
+        },
+        "group": "placement",
+        "order": 30,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "slope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slope"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Slope",
+          "de": "Neigung"
+        },
+        "group": "value",
+        "order": 40,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 50,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

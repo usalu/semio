@@ -1,0 +1,9 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "post_profile": {
+    "Circle": {
+      "diameter": 0
+    }
+  }
+}

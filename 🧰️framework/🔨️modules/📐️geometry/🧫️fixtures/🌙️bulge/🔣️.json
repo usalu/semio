@@ -1,0 +1,1099 @@
+{
+ "arcs": [
+  {
+   "name": "semicircle below chord",
+   "start": [
+    0,
+    0
+   ],
+   "end": [
+    2,
+    0
+   ],
+   "bulge": 0.9999999999999999,
+   "expected": {
+    "sweep": 3.141592653589793,
+    "radius": 1,
+    "center": [
+     1,
+     0
+    ],
+    "length": 3.141592653589793,
+    "mid": [
+     0.9999999999999998,
+     -1.0
+    ],
+    "segment_area": 1.5707963267948966,
+    "bounds": [
+     0,
+     -1,
+     2,
+     0
+    ]
+   }
+  },
+  {
+   "name": "quarter circle ccw",
+   "start": [
+    1,
+    0
+   ],
+   "end": [
+    0,
+    1
+   ],
+   "bulge": 0.41421356237309503,
+   "expected": {
+    "sweep": 1.5707963267948966,
+    "radius": 1,
+    "center": [
+     0,
+     0
+    ],
+    "length": 1.5707963267948966,
+    "mid": [
+     0.7071067811865476,
+     0.7071067811865476
+    ],
+    "segment_area": 0.2853981633974483,
+    "bounds": [
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "quarter circle cw",
+   "start": [
+    0,
+    1
+   ],
+   "end": [
+    1,
+    0
+   ],
+   "bulge": -0.41421356237309503,
+   "expected": {
+    "sweep": -1.5707963267948966,
+    "radius": 1,
+    "center": [
+     0,
+     0
+    ],
+    "length": 1.5707963267948966,
+    "mid": [
+     0.7071067811865476,
+     0.7071067811865476
+    ],
+    "segment_area": -0.2853981633974483,
+    "bounds": [
+     0,
+     0,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "major arc 270 degrees",
+   "start": [
+    1,
+    0
+   ],
+   "end": [
+    0,
+    -1
+   ],
+   "bulge": 2.414213562373095,
+   "expected": {
+    "sweep": 4.71238898038469,
+    "radius": 1,
+    "center": [
+     0,
+     0
+    ],
+    "length": 4.71238898038469,
+    "mid": [
+     -0.7071067811865475,
+     0.7071067811865476
+    ],
+    "segment_area": 2.856194490192345,
+    "bounds": [
+     -1,
+     -1,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "offset centre radius 5",
+   "start": [
+    6.330127018922194,
+    5.5
+   ],
+   "end": [
+    2.2359001510058545,
+    7.994432011626088
+   ],
+   "bulge": 0.25534192122103627,
+   "expected": {
+    "sweep": 1.0,
+    "radius": 5,
+    "center": [
+     2,
+     3
+    ],
+    "length": 5.0,
+    "mid": [
+     4.601480116065954,
+     7.269929882997316
+    ],
+    "segment_area": 1.9816126899012936
+   }
+  },
+  {
+   "name": "straight line 3-4-5",
+   "start": [
+    0,
+    0
+   ],
+   "end": [
+    3,
+    4
+   ],
+   "bulge": 0,
+   "expected": {
+    "sweep": 0,
+    "radius": null,
+    "center": null,
+    "length": 5,
+    "mid": [
+     1.5,
+     2
+    ],
+    "segment_area": 0,
+    "bounds": [
+     0,
+     0,
+     3,
+     4
+    ]
+   }
+  }
+ ],
+ "offsets": [
+  {
+   "name": "line left",
+   "seg": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "distance": 1,
+   "expected": {
+    "start": [
+     0,
+     1
+    ],
+    "end": [
+     4,
+     1
+    ],
+    "bulge": 0.0
+   }
+  },
+  {
+   "name": "line right",
+   "seg": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "distance": -1,
+   "expected": {
+    "start": [
+     0,
+     -1
+    ],
+    "end": [
+     4,
+     -1
+    ],
+    "bulge": 0.0
+   }
+  },
+  {
+   "name": "ccw arc left shrinks",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "distance": 0.25,
+   "expected": {
+    "start": [
+     0.75,
+     0
+    ],
+    "end": [
+     0,
+     0.75
+    ],
+    "bulge": 0.41421356237309503
+   }
+  },
+  {
+   "name": "ccw arc right grows",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "distance": -0.25,
+   "expected": {
+    "start": [
+     1.25,
+     0
+    ],
+    "end": [
+     0,
+     1.25
+    ],
+    "bulge": 0.41421356237309503
+   }
+  },
+  {
+   "name": "cw arc left grows",
+   "seg": {
+    "start": [
+     0,
+     1
+    ],
+    "end": [
+     1,
+     0
+    ],
+    "bulge": -0.41421356237309503
+   },
+   "distance": 0.25,
+   "expected": {
+    "start": [
+     0,
+     1.25
+    ],
+    "end": [
+     1.25,
+     0
+    ],
+    "bulge": -0.41421356237309503
+   }
+  },
+  {
+   "name": "arc collapses",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "distance": 1,
+   "expected": null
+  },
+  {
+   "name": "zero length line",
+   "seg": {
+    "start": [
+     1,
+     1
+    ],
+    "end": [
+     1,
+     1
+    ],
+    "bulge": 0.0
+   },
+   "distance": 1,
+   "expected": null
+  }
+ ],
+ "intersections": [
+  {
+   "name": "crossing lines",
+   "a": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     4
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     0,
+     4
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "extent": "bounded",
+   "expected": [
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "name": "lines miss bounded",
+   "a": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     1,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     2,
+     -1
+    ],
+    "end": [
+     2,
+     1
+    ],
+    "bulge": 0.0
+   },
+   "extent": "bounded",
+   "expected": []
+  },
+  {
+   "name": "lines meet unbounded",
+   "a": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     1,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     2,
+     -1
+    ],
+    "end": [
+     2,
+     1
+    ],
+    "bulge": 0.0
+   },
+   "extent": "unbounded",
+   "expected": [
+    [
+     2,
+     0
+    ]
+   ]
+  },
+  {
+   "name": "parallel lines",
+   "a": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     0,
+     1
+    ],
+    "end": [
+     4,
+     1
+    ],
+    "bulge": 0.0
+   },
+   "extent": "unbounded",
+   "expected": []
+  },
+  {
+   "name": "line through quarter arc",
+   "a": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     2,
+     2
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "bounded",
+   "expected": [
+    [
+     0.7071067811865476,
+     0.7071067811865476
+    ]
+   ]
+  },
+  {
+   "name": "chord hits arc once bounded",
+   "a": {
+    "start": [
+     -2,
+     0.5
+    ],
+    "end": [
+     2,
+     0.5
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "bounded",
+   "expected": [
+    [
+     0.8660254037844386,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "chord hits circle twice unbounded",
+   "a": {
+    "start": [
+     -2,
+     0.5
+    ],
+    "end": [
+     2,
+     0.5
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "unbounded",
+   "expected": [
+    [
+     -0.8660254037844386,
+     0.5
+    ],
+    [
+     0.8660254037844386,
+     0.5
+    ]
+   ]
+  },
+  {
+   "name": "tangent at arc end",
+   "a": {
+    "start": [
+     -1,
+     1
+    ],
+    "end": [
+     1,
+     1
+    ],
+    "bulge": 0.0
+   },
+   "b": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "bounded",
+   "expected": [
+    [
+     0,
+     1
+    ]
+   ]
+  },
+  {
+   "name": "arc arc bounded",
+   "a": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "b": {
+    "start": [
+     1,
+     1
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "bounded",
+   "expected": [
+    [
+     0.5,
+     0.8660254037844386
+    ]
+   ]
+  },
+  {
+   "name": "circle circle unbounded",
+   "a": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "b": {
+    "start": [
+     1,
+     1
+    ],
+    "end": [
+     0,
+     0
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "unbounded",
+   "expected": [
+    [
+     0.5,
+     -0.8660254037844386
+    ],
+    [
+     0.5,
+     0.8660254037844386
+    ]
+   ]
+  },
+  {
+   "name": "disjoint circles",
+   "a": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "b": {
+    "start": [
+     11,
+     0
+    ],
+    "end": [
+     10,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "extent": "unbounded",
+   "expected": []
+  }
+ ],
+ "closest": [
+  {
+   "name": "line projects inside",
+   "seg": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "point": [
+    2,
+    3
+   ],
+   "expected": {
+    "t": 0.5,
+    "point": [
+     2,
+     0
+    ],
+    "distance": 3
+   }
+  },
+  {
+   "name": "line clamps to start",
+   "seg": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "point": [
+    -1,
+    1
+   ],
+   "expected": {
+    "t": 0,
+    "point": [
+     0,
+     0
+    ],
+    "distance": 1.4142135623730951
+   }
+  },
+  {
+   "name": "arc radial projection",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "point": [
+    2,
+    2
+   ],
+   "expected": {
+    "t": 0.5,
+    "point": [
+     0.7071067811865476,
+     0.7071067811865476
+    ],
+    "distance": 1.8284271247461903
+   }
+  },
+  {
+   "name": "arc clamps to end",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "point": [
+    -1,
+    -0.5
+   ],
+   "expected": {
+    "t": 1,
+    "point": [
+     0,
+     1
+    ],
+    "distance": 1.8027756377319946
+   }
+  },
+  {
+   "name": "arc inside circle",
+   "seg": {
+    "start": [
+     1,
+     0
+    ],
+    "end": [
+     0,
+     1
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "point": [
+    0.2,
+    0.2
+   ],
+   "expected": {
+    "t": 0.5,
+    "point": [
+     0.7071067811865476,
+     0.7071067811865476
+    ],
+    "distance": 0.717157287525381
+   }
+  }
+ ],
+ "three_points": [
+  {
+   "name": "semicircle through top",
+   "a": [
+    1,
+    0
+   ],
+   "through": [
+    0,
+    1
+   ],
+   "b": [
+    -1,
+    0
+   ],
+   "expected": {
+    "center": [
+     0,
+     0
+    ],
+    "radius": 1,
+    "sweep": 3.141592653589793
+   }
+  },
+  {
+   "name": "clockwise quarter",
+   "a": [
+    0,
+    1
+   ],
+   "through": [
+    0.7071067811865476,
+    0.7071067811865476
+   ],
+   "b": [
+    1,
+    0
+   ],
+   "expected": {
+    "center": [
+     0,
+     0
+    ],
+    "radius": 1,
+    "sweep": -1.5707963267948966
+   }
+  },
+  {
+   "name": "collinear",
+   "a": [
+    0,
+    0
+   ],
+   "through": [
+    1,
+    0
+   ],
+   "b": [
+    2,
+    0
+   ],
+   "expected": null
+  }
+ ],
+ "bands": [
+  {
+   "name": "straight band",
+   "axis": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "left": 0.1,
+   "right": 0.2,
+   "expected": [
+    [
+     0,
+     -0.2,
+     0
+    ],
+    [
+     4,
+     -0.2,
+     0
+    ],
+    [
+     4,
+     0.1,
+     0
+    ],
+    [
+     0,
+     0.1,
+     0
+    ]
+   ],
+   "area": 1.2
+  },
+  {
+   "name": "ccw arc band",
+   "axis": {
+    "start": [
+     2,
+     0
+    ],
+    "end": [
+     0,
+     2
+    ],
+    "bulge": 0.41421356237309503
+   },
+   "left": 0.1,
+   "right": 0.1,
+   "expected": [
+    [
+     2.1,
+     0,
+     0.41421356237309503
+    ],
+    [
+     0,
+     2.1,
+     0
+    ],
+    [
+     0,
+     1.9,
+     -0.41421356237309503
+    ],
+    [
+     1.9,
+     0,
+     0
+    ]
+   ],
+   "area": 0.6283185307179588
+  }
+ ],
+ "corners": [
+  {
+   "name": "L corner equal widths",
+   "prev": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "prev_widths": [
+    0.1,
+    0.1
+   ],
+   "next": {
+    "start": [
+     4,
+     0
+    ],
+    "end": [
+     4,
+     4
+    ],
+    "bulge": 0.0
+   },
+   "next_widths": [
+    0.1,
+    0.1
+   ],
+   "expected": {
+    "left": [
+     3.9,
+     0.1
+    ],
+    "right": [
+     4.1,
+     -0.1
+    ]
+   }
+  },
+  {
+   "name": "L corner different widths",
+   "prev": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "prev_widths": [
+    0.1,
+    0.2
+   ],
+   "next": {
+    "start": [
+     4,
+     0
+    ],
+    "end": [
+     4,
+     4
+    ],
+    "bulge": 0.0
+   },
+   "next_widths": [
+    0.3,
+    0.1
+   ],
+   "expected": {
+    "left": [
+     3.7,
+     0.1
+    ],
+    "right": [
+     4.1,
+     -0.2
+    ]
+   }
+  },
+  {
+   "name": "collinear continuation",
+   "prev": {
+    "start": [
+     0,
+     0
+    ],
+    "end": [
+     4,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "prev_widths": [
+    0.1,
+    0.1
+   ],
+   "next": {
+    "start": [
+     4,
+     0
+    ],
+    "end": [
+     8,
+     0
+    ],
+    "bulge": 0.0
+   },
+   "next_widths": [
+    0.1,
+    0.1
+   ],
+   "expected": {
+    "left": null,
+    "right": null
+   }
+  }
+ ]
+}

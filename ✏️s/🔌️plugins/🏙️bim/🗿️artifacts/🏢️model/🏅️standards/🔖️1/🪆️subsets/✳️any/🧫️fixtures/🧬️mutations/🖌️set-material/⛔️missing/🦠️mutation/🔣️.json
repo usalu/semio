@@ -1,0 +1,5 @@
+{
+  "mutation": "setMaterial",
+  "id": "m-gone",
+  "name": "Ghost"
+}

@@ -7,10 +7,20 @@ VCS → backbone path, so a live shell sees an agent's edit exactly as it sees a
 
 ## Run it
 
+MCP clients start the stdio gateway, developers do not: `bun ./📜️script.ts agents write` writes the client
+configurations (`.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`) from the declaration
+of the tool `tool:workspace/os-mcp-stdio`, and every client launches the command it names:
+
 ```bash
-bun ./📜️script.ts dev mcp stdio os          # what .mcp.json launches
-bun ./📜️script.ts dev mcp http os           # Streamable HTTP, port 6300
+bun ./📜️script.ts dev mcp stdio os          # what the client files launch (never run by hand)
 bun ./📜️script.ts dev mcp stdio os -- --folder <space> --scopes artifact.read,artifact.write
+```
+
+A developer who wants the Streamable HTTP server starts it as a daemon task, on port 8792 (Nx target
+`@semio-tech/framework-os-mcp-rs:dev`):
+
+```bash
+semio run tool:workspace/os-mcp-http --detach --wait-ready   # prints http://127.0.0.1:8792
 ```
 
 `.mcp.json` exposes exactly two servers: `repo` (this codebase's own tooling) and `semio` (this).
@@ -92,8 +102,9 @@ both. Pick one; they are mutually exclusive.
 
 **`--folder <dir>` — a local folder as the workspace.** This is the mode that works today. The
 directory you name becomes the space the assistant reads and writes. Every client config this repo
-ships passes `--folder .`, which binds the workspace to the repo checkout itself — that is a
-self-test binding for developing this crate, not what you want. Point it at your own work instead.
+ships passes `--folder .🧬semio/🔗space/os-mcp`, a git-ignored folder the gateway creates on first
+start; the repo root itself is refused. The client configs are written by `bun ./📜️script.ts agents
+write` from the `os-mcp-stdio` tool in the root `📋️project.json`. Point it at your own work instead.
 
 **`--hub <url> --space <id>` — a space on a running hub.** The remote path: your assistant works in
 that shared space alongside the people already in it, instead of in a folder on your disk. It needs a
@@ -125,11 +136,11 @@ principal of its own — `agent:<delegation id>` — so everything your assistan
 screen: the hub kills the delegation and every session minted from it in one transaction, and the
 agent's next frame is closed.
 
-**Or let the shell write the client config for you.** On a development host (`dev s`), the same pane
+**Or let the shell write the client config for you.** On a development host (`playground:s`), the same pane
 offers **Set up MCP client** right after the delegation is created: the dev server installs the
 credential `0600` in a `0700` directory (`~/.semio/agent/credentials/semio-agent-<delegation id>.json`,
 overridable with `S_AGENT_CREDENTIALS_DIR`) and the pane shows a complete `mcpServers` entry — this
-checkout's launcher (`bun <repo>/📜️script.ts dev mcp stdio os`, which stages the binary itself), the
+checkout's launcher (`bun <repo>/📜️script.ts dev mcp stdio os`, which stages the binary itself and which the MCP client starts, not a developer), the
 delegation's `--hub`/`--space`, the installed `--credential-file`, and the scopes its audience admits —
 with a **Copy MCP configuration** control. The entry names the file, never the token. Withdrawing
 the delegation removes the installed file as well. Contract: `📇️directory/🧬️schema`
@@ -477,8 +488,8 @@ A gateway launched with neither `--folder <dir>` nor `--hub <url> --space <id>` 
 `UnboundArtifactChannel`: every mutation-protocol call answers a typed, retryable `PLUGIN_UNAVAILABLE`
 naming both flags. The scripted `MockArtifactChannel` is `#[cfg(test)]` and reachable from no
 production path, so a call can never run against a stand-in that looks like a real commit. Every client
-config this repo ships (`.mcp.json`, `.cursor/`, `.vscode/`, `.windsurf/`, `.kiro/`, `.codex/`) binds
-`--folder .`.
+config this repo ships (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.codex/config.toml`) binds
+`--folder .🧬semio/🔗space/os-mcp`.
 
 ### Attaching a live shell from stdio
 

@@ -432,7 +432,14 @@ fn key_text<K: ToValue>(key: &K) -> String {
 /// `cache` (if `Some`) before computing, and spends at most `fuel` units (a cache hit is free, a compute costs what
 /// [`InferredField::compute_step`] reports). `cache: None` ⇒ pure recompute — identical output to a warm-cache run
 /// (cache-transparency law, proven in tests below). The snapshot must not change between calls of one cursor.
-pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
+/// Dependency hashes exist to address the cache, so they are computed (and [`InferenceCursor::hash`] answers) only when `cache` is enabled;
+/// without one `dep_input` is never evaluated.
+pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
+    let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
+    step_driver::<P, F>(snapshot, cache, cursor, values, fuel, hashing)
+}
+
+fn step_driver<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize, hashing: bool) -> Result<InferenceStepReport, InferenceError> {
     if cursor.cancelled {
         return Err(InferenceError::Cancelled);
     }
@@ -445,19 +452,23 @@ pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<
 
     while cursor.next < total {
         let step = cursor.plan.as_ref().map(|plan| plan[cursor.next].clone()).expect("the plan is set above");
-        let mut parent_hashes: Vec<DepHash> = Vec::with_capacity(step.parents.len());
+        let mut parent_hashes: Vec<DepHash> = Vec::with_capacity(if hashing { step.parents.len() } else { 0 });
         let mut parent_values: Vec<F::Value> = Vec::with_capacity(step.parents.len());
         for parent in &step.parents {
             let missing = || InferenceError::MissingParent { key: key_text(&step.key), parent: key_text(parent) };
-            parent_hashes.push(cursor.hashes.get(parent).copied().ok_or_else(missing)?);
+            if hashing {
+                parent_hashes.push(cursor.hashes.get(parent).copied().ok_or_else(missing)?);
+            }
             parent_values.push(values.get(parent).cloned().ok_or_else(missing)?);
         }
-        let input = encode(&F::dep_input(snapshot, &step.key, &step.parents));
-        let dep_hash = if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input) } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes) };
+        let dep_hash = hashing.then(|| {
+            let input = encode(&F::dep_input(snapshot, &step.key, &step.parents));
+            if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input) } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes) }
+        });
 
         if cursor.pending.is_none() {
-            if let Some(value) = cache.as_deref_mut().and_then(|cache| cache.get::<F::Value>(dep_hash)) {
-                cursor.hashes.insert(step.key.clone(), dep_hash);
+            if let Some((hash, value)) = dep_hash.zip(cache.as_deref_mut()).and_then(|(hash, cache)| cache.get::<F::Value>(hash).map(|value| (hash, value))) {
+                cursor.hashes.insert(step.key.clone(), hash);
                 values.insert(step.key, value);
                 cursor.next += 1;
                 report.hits += 1;
@@ -480,10 +491,12 @@ pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<
             Ok(ComputeStep::Done { value, fuel_used }) => {
                 cursor.pending = None;
                 cursor.progress = 0.0;
-                if let Some(cache) = cache.as_deref_mut().filter(|cache| cache.enabled()) {
-                    cache.insert(dep_hash, value.clone(), F::value_bytes(&value));
+                if let Some(hash) = dep_hash {
+                    if let Some(cache) = cache.as_deref_mut().filter(|cache| cache.enabled()) {
+                        cache.insert(hash, value.clone(), F::value_bytes(&value));
+                    }
+                    cursor.hashes.insert(step.key.clone(), hash);
                 }
-                cursor.hashes.insert(step.key.clone(), dep_hash);
                 values.insert(step.key, value);
                 cursor.next += 1;
                 report.computed += 1;
@@ -506,13 +519,14 @@ pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<
 pub fn try_infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>) -> Result<BTreeMap<F::Key, F::Value>, InferenceError> {
     let mut cursor = InferenceCursor::new();
     let mut values = BTreeMap::new();
-    run_to_end::<P, F>(snapshot, cache.as_deref_mut(), &mut cursor, &mut values)?;
+    let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
+    run_to_end::<P, F>(snapshot, cache.as_deref_mut(), &mut cursor, &mut values, hashing)?;
     Ok(values)
 }
 
-fn run_to_end<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>) -> Result<(), InferenceError> {
+fn run_to_end<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, hashing: bool) -> Result<(), InferenceError> {
     loop {
-        if infer_field_step::<P, F>(snapshot, cache.as_deref_mut(), cursor, values, usize::MAX)?.done {
+        if step_driver::<P, F>(snapshot, cache.as_deref_mut(), cursor, values, usize::MAX, hashing)?.done {
             return Ok(());
         }
     }
@@ -538,7 +552,7 @@ where
     }
     let mut cursor = InferenceCursor::new();
     let mut values = BTreeMap::new();
-    run_to_end::<P, F>(snapshot, Some(cache), &mut cursor, &mut values).unwrap_or_else(|error| panic!("{error}"));
+    run_to_end::<P, F>(snapshot, Some(cache), &mut cursor, &mut values, true).unwrap_or_else(|error| panic!("{error}"));
     let root = result_root::<F::Key, F::Value>(&values, &cursor);
     if session.root(F::FIELD_ID) != Some(root) {
         session.roots.insert(F::FIELD_ID, SessionEntry { root, result: Box::new(values.clone()) });

@@ -1,0 +1,4 @@
+🌀️daemon/✉️ipc/🦀️.rs:474 🔓
+🌀️daemon/✉️ipc/🦀️.rs:531 🎁
+🎮️registry/🦀️.rs:615 🧬
+🎮️registry/🦀️.rs:1420 🏅

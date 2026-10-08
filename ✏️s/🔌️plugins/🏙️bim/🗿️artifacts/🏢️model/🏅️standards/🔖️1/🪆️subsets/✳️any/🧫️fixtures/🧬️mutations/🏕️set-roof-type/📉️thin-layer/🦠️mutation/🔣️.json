@@ -1,0 +1,11 @@
+{
+  "mutation": "setRoofType",
+  "id": "rf-tile",
+  "layers": [
+    {
+      "material": "m-brick",
+      "thickness": -0.1,
+      "function": "Structure"
+    }
+  ]
+}

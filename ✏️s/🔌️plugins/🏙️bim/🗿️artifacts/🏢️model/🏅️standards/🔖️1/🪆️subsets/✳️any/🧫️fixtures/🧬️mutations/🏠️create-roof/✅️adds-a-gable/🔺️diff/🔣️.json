@@ -1,0 +1,48 @@
+{
+  "roofs": {
+    "rf-main": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "footprint": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "name": "Main roof",
+      "overhang": 0.4,
+      "roof_type": "rt-tiles",
+      "shape": {
+        "Gable": {
+          "pitch": 0.6,
+          "ridge_direction": 0.0
+        }
+      },
+      "storey": "st-first"
+    }
+  }
+}

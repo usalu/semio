@@ -1,0 +1,48 @@
+{
+  "description": "Two walls of one type meet end to end at a right angle: both are mitered. Every number is derived by hand from the geometry: faces at +-0.15 from the axes, miter corners at (3.85, 0.15) and (4.15, -0.15).",
+  "before": {
+    "schema": "s.bim.model@1",
+    "project": { "name": "L miter", "description": "", "author": "", "organization": "", "phase_names": [] },
+    "wall_types": {
+      "wt-300": { "name": "Brick 300", "layers": [{ "material": "m-brick", "thickness": 0.2, "function": "Structure" }, { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }] }
+    },
+    "sites": { "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 0.0, "true_north": 0.0, "boundary": [] } },
+    "buildings": { "bldg-1": { "site": "site-1", "name": "House", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 0.0 } },
+    "storeys": { "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 } },
+    "walls": {
+      "a": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 4.0, "y": 0.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "A" },
+      "b": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Line": { "start": { "x": 4.0, "y": 0.0 }, "end": { "x": 4.0, "y": 3.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "B" }
+    }
+  },
+  "expected": {
+    "a": {
+      "base_z": 0.0, "top_z": 3.0, "height": 3.0, "thickness": 0.3, "length": 4.0, "offset_left": 0.15, "offset_right": 0.15,
+      "layer_offsets": [0.15, -0.05, -0.15],
+      "left_face": { "start": { "x": 0.0, "y": 0.15 }, "end": { "x": 3.85, "y": 0.15 }, "bulge": 0.0 },
+      "right_face": { "start": { "x": 0.0, "y": -0.15 }, "end": { "x": 4.15, "y": -0.15 }, "bulge": 0.0 },
+      "left_length": 3.85, "right_length": 4.15, "left_area": 11.55, "right_area": 12.45, "side_area": 12.0,
+      "footprint": [
+        { "point": { "x": 0.0, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 4.15, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 3.85, "y": 0.15 }, "bulge": 0.0 },
+        { "point": { "x": 0.0, "y": 0.15 }, "bulge": 0.0 }
+      ],
+      "footprint_area": 1.2, "volume": 3.6,
+      "joins": [{ "kind": "Miter", "end": "End", "other": "b", "other_end": "Start", "point": { "x": 4.0, "y": 0.0 }, "overlap_area": 0.0 }]
+    },
+    "b": {
+      "thickness": 0.3, "length": 3.0, "offset_left": 0.15, "offset_right": 0.15,
+      "left_face": { "start": { "x": 3.85, "y": 0.15 }, "end": { "x": 3.85, "y": 3.0 }, "bulge": 0.0 },
+      "right_face": { "start": { "x": 4.15, "y": -0.15 }, "end": { "x": 4.15, "y": 3.0 }, "bulge": 0.0 },
+      "left_length": 2.85, "right_length": 3.15,
+      "footprint": [
+        { "point": { "x": 4.15, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 4.15, "y": 3.0 }, "bulge": 0.0 },
+        { "point": { "x": 3.85, "y": 3.0 }, "bulge": 0.0 },
+        { "point": { "x": 3.85, "y": 0.15 }, "bulge": 0.0 }
+      ],
+      "footprint_area": 0.9, "volume": 2.7,
+      "joins": [{ "kind": "Miter", "end": "Start", "other": "a", "other_end": "End", "point": { "x": 4.0, "y": 0.0 }, "overlap_area": 0.0 }]
+    }
+  }
+}

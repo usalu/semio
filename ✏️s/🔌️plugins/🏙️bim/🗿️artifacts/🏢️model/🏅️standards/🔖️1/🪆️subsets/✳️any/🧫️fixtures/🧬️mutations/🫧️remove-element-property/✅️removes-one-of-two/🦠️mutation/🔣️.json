@@ -1,0 +1,6 @@
+{
+  "mutation": "removeElementProperty",
+  "id": "w-south",
+  "pset": "Pset_WallCommon",
+  "property": "IsExternal"
+}

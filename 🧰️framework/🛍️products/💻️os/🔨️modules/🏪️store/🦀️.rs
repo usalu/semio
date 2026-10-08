@@ -2612,6 +2612,7 @@ where
         }
         if self.active.is_none() {
             let step = self.take_next_owner(store, maximum_bytes)?;
+            { use std::sync::atomic::{AtomicU64, Ordering}; static N: AtomicU64 = AtomicU64::new(0); static LAST: std::sync::Mutex<String> = std::sync::Mutex::new(String::new()); if std::any::type_name::<P>().contains("WindowConfig") { let line = format!("{:?} step={:?} active={}", self.phase, step, self.active.is_some()); let mut last = LAST.lock().unwrap(); if *last != line && N.fetch_add(1, Ordering::Relaxed) < 400 { eprintln!("[DEBUG] take_next_owner result {line}"); *last = line; } } }
             if self.active.is_none() {
                 return Ok(step);
             }
@@ -2619,11 +2620,15 @@ where
         let mut needs_funding = false;
         let (step, released) = spend_close_byte_grant(maximum_bytes, |remaining| {
             if self.active.as_ref().is_some_and(|active| artifact_retirement_box_byte_demand(active) > remaining) {
+                { use std::sync::atomic::{AtomicUsize, Ordering}; static N: AtomicUsize = AtomicUsize::new(0); if N.fetch_add(1, Ordering::Relaxed) < 3 { eprintln!("[DEBUG] store cursor needs funding: demand={} remaining={remaining} phase={:?} type={}", self.active.as_ref().map_or(0, |active| artifact_retirement_box_byte_demand(active)), self.phase, std::any::type_name::<P>()); } }
                 needs_funding = true;
                 return Ok(SnapshotRetirementStep::Blocked);
             }
-            artifact_retirement_box_close_step(&mut self.active, maximum_items.min(1), remaining)
+            let r = artifact_retirement_box_close_step(&mut self.active, maximum_items.min(1), remaining);
+            { use std::sync::atomic::{AtomicU64, Ordering}; static N: AtomicU64 = AtomicU64::new(0); static LAST: std::sync::Mutex<String> = std::sync::Mutex::new(String::new()); if std::any::type_name::<P>().contains("WindowConfig") && self.phase == ArtifactStoreCursorDisposerPhase::Envelope { let line = format!("{:?} active={}", r.as_ref().ok(), self.active.is_some()); let mut last = LAST.lock().unwrap(); if *last != line && N.fetch_add(1, Ordering::Relaxed) < 80 { eprintln!("[DEBUG] envelope child step remaining={remaining} -> {line}"); *last = line; } } }
+            r
         })?;
+        { use std::sync::atomic::{AtomicU64, Ordering}; static N: AtomicU64 = AtomicU64::new(0); static LAST: std::sync::Mutex<String> = std::sync::Mutex::new(String::new()); if std::any::type_name::<P>().contains("WindowConfig") { let line = format!("{:?} step={:?} released={released} active={} needs_funding={needs_funding}", self.phase, step, self.active.is_some()); let mut last = LAST.lock().unwrap(); if *last != line && N.fetch_add(1, Ordering::Relaxed) < 400 { eprintln!("[DEBUG] cursor tail {line}"); *last = line; } } }
         match step {
             SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes.saturating_add(released) <= maximum_bytes => {
                 Ok(SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes + released })
@@ -2674,6 +2679,7 @@ where
     /// own: the caller's turn goes straight on to draining it, because a turn spent only moving an
     /// owner into the cursor bought a 200-mutation gesture 600 idle turns of its close budget.
     fn take_next_owner(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
+        { use std::sync::atomic::{AtomicU64, Ordering}; static LAST: AtomicU64 = AtomicU64::new(0); static N: AtomicU64 = AtomicU64::new(0); let key = format!("{:?}{}", self.phase, std::any::type_name::<P>()).len() as u64 * 1000 + format!("{:?}", self.phase).bytes().map(u64::from).sum::<u64>(); if std::any::type_name::<P>().contains("WindowConfig") && LAST.swap(key, Ordering::Relaxed) != key && N.fetch_add(1, Ordering::Relaxed) < 60 { eprintln!("[DEBUG] store cursor phase={:?} P={} leases_empty={}", self.phase, std::any::type_name::<P>(), store.snapshot_read_leases_terminal_is_empty()); } }
         match &mut self.phase {
             ArtifactStoreCursorDisposerPhase::ReturnedReads => {
                 match store.take_returned_snapshot_read_retirement().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))? {
@@ -20124,6 +20130,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store has no owner-supplied bounded disposer"));
         };
         if disposer.terminal_is_empty(self) {
+            { use std::sync::atomic::{AtomicU64, Ordering}; static N: AtomicU64 = AtomicU64::new(0); static LAST: std::sync::Mutex<String> = std::sync::Mutex::new(String::new()); if std::any::type_name::<P>().contains("WindowConfig") { let line = format!("resident_empty={} leases_some={} aliases={} tickets_empty={} items={maximum_items} bytes={maximum_bytes} extent={}", self.resident_backings_terminal_is_empty(), self.snapshot_read_leases.0.is_some(), self.factory_aliases_present(), self.factory_retirement_tickets.terminal_is_empty(), std::mem::size_of_val(disposer.as_ref())); let mut last = LAST.lock().unwrap(); if *last != line && N.fetch_add(1, Ordering::Relaxed) < 100 { eprintln!("[DEBUG] store tail {line}"); *last = line; } } }
             if !self.resident_backings_terminal_is_empty() {
                 let step = self.close_resident_backing_step(maximum_items, maximum_bytes);
                 *self.owned_disposer = Some(disposer);

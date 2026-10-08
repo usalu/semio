@@ -1,0 +1,9 @@
+{
+  "slabs": {
+    "sl-ground": {
+      "entry": "Patched",
+      "offset": -0.3,
+      "slab_type": "stt-30"
+    }
+  }
+}

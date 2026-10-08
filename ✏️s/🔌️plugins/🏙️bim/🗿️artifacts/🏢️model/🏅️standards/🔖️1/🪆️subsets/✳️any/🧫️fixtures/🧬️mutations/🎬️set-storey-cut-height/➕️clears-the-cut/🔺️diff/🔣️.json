@@ -1,0 +1,10 @@
+{
+  "storeys": {
+    "st-ground": {
+      "cut_height": {
+        "value": null
+      },
+      "entry": "Patched"
+    }
+  }
+}

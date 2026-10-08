@@ -1,0 +1,9 @@
+{
+  "mutation": "setRoofShape",
+  "id": "rf-main",
+  "shape": {
+    "Hip": {
+      "pitch": 0.5
+    }
+  }
+}

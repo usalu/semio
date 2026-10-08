@@ -1,0 +1,393 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Railings",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47.0,
+        "longitude": 8.0,
+        "elevation": 100.0,
+        "true_north": 0.0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3.0
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "railings": {
+      "r-straight": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 0.0
+          }
+        ],
+        "height": 1.0,
+        "post_spacing": 1.0,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.0,
+        "name": "Straight"
+      },
+      "r-l": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 2.0,
+            "y": 0.0
+          },
+          {
+            "x": 2.0,
+            "y": 2.0
+          }
+        ],
+        "height": 0.9,
+        "post_spacing": 0.8,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.1,
+        "name": "L shaped"
+      },
+      "r-u": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 3.0,
+            "y": 0.0
+          },
+          {
+            "x": 3.0,
+            "y": 1.0
+          },
+          {
+            "x": 0.0,
+            "y": 1.0
+          }
+        ],
+        "height": 1.1,
+        "post_spacing": 1.5,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.0,
+        "name": "U shaped"
+      },
+      "r-no-spacing": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 2.5,
+            "y": 5.0
+          }
+        ],
+        "height": 1.0,
+        "post_spacing": 0.0,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.0,
+        "name": "Vertex posts only"
+      },
+      "r-point": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 1.0,
+            "y": 1.0
+          }
+        ],
+        "height": 1.0,
+        "post_spacing": 1.0,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.0,
+        "name": "One point"
+      },
+      "r-low": {
+        "storey": "st-ground",
+        "path": [
+          {
+            "x": 0.0,
+            "y": 6.0
+          },
+          {
+            "x": 1.0,
+            "y": 6.0
+          }
+        ],
+        "height": 0.03,
+        "post_spacing": 1.0,
+        "profile": {
+          "Rectangle": {
+            "width": 0.06,
+            "depth": 0.04
+          }
+        },
+        "post_profile": {
+          "Rectangle": {
+            "width": 0.05,
+            "depth": 0.05
+          }
+        },
+        "infill": "None",
+        "material": "m-steel",
+        "base_offset": 0.0,
+        "name": "Lower than the rail"
+      }
+    }
+  },
+  "expected": {
+    "r-straight": {
+      "family": "Railing",
+      "volume": 0.0216,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.025,
+        -0.03,
+        0.0
+      ],
+      "max": [
+        4.025,
+        0.03,
+        1.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "posts": 5,
+      "length": 4.0
+    },
+    "r-l": {
+      "family": "Railing",
+      "volume": 0.02465,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.025,
+        -0.03,
+        0.1
+      ],
+      "max": [
+        2.03,
+        2.025,
+        1.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "posts": 7,
+      "length": 4.0
+    },
+    "r-u": {
+      "family": "Railing",
+      "volume": 0.0327,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.025,
+        -0.03,
+        0.0
+      ],
+      "max": [
+        3.03,
+        1.03,
+        1.1
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "posts": 6,
+      "length": 7.0
+    },
+    "r-no-spacing": {
+      "family": "Railing",
+      "volume": 0.0108,
+      "volume_tolerance": 1e-09,
+      "min": [
+        -0.025,
+        4.97,
+        0.0
+      ],
+      "max": [
+        2.525,
+        5.03,
+        1.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "posts": 2,
+      "length": 2.5
+    },
+    "r-point": null,
+    "r-low": {
+      "family": "Railing",
+      "volume": 0.0024,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        5.97,
+        -0.01
+      ],
+      "max": [
+        1.0,
+        6.03,
+        0.03
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "posts": 0,
+      "length": 1.0
+    }
+  },
+  "meshes": {}
+}

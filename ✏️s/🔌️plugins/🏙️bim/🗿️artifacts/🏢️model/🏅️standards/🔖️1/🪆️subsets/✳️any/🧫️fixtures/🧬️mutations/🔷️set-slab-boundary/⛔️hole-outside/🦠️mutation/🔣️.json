@@ -1,0 +1,66 @@
+{
+  "mutation": "setSlabBoundary",
+  "id": "sl-ground",
+  "boundary": [
+    {
+      "point": {
+        "x": 0,
+        "y": 0
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 8,
+        "y": 0
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 8,
+        "y": 6
+      },
+      "bulge": 0
+    },
+    {
+      "point": {
+        "x": 0,
+        "y": 6
+      },
+      "bulge": 0
+    }
+  ],
+  "holes": [
+    [
+      {
+        "point": {
+          "x": 7,
+          "y": 2
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 9,
+          "y": 2
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 9,
+          "y": 3
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 7,
+          "y": 3
+        },
+        "bulge": 0
+      }
+    ]
+  ]
+}

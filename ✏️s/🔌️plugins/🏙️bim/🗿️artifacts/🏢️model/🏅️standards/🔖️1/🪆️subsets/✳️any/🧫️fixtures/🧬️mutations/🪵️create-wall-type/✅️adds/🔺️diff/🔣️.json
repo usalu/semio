@@ -1,0 +1,20 @@
+{
+  "wall_types": {
+    "wt-timber": {
+      "entry": "Created",
+      "layers": [
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.16
+        },
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.12
+        }
+      ],
+      "name": "Glass Wool 300"
+    }
+  }
+}

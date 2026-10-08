@@ -78,6 +78,13 @@
       "componentKind": "plugin"
     },
     {
+      "package": "semio-hub-bim",
+      "owner": "🌎️hub/🧩️compositions/🏙️bim",
+      "component": "semio:bim",
+      "role": "hub",
+      "componentKind": "plugin"
+    },
+    {
       "package": "semio-hub-process",
       "owner": "🌎️hub/🧩️compositions/🏭️process",
       "component": "semio:process",

@@ -1,0 +1,17 @@
+{
+  "materials": {
+    "m-pine": {
+      "category": "Wood",
+      "color": {
+        "b": 0.35,
+        "g": 0.6,
+        "r": 0.8
+      },
+      "conductivity": 0.13,
+      "density": 500.0,
+      "entry": "Created",
+      "name": "Pine",
+      "specific_heat": 1600.0
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mutation": "setWindowType",
+  "id": "win-1",
+  "name": "Steel window",
+  "frame_width": 0.08,
+  "frame_depth": 0.12,
+  "material": "m-steel"
+}

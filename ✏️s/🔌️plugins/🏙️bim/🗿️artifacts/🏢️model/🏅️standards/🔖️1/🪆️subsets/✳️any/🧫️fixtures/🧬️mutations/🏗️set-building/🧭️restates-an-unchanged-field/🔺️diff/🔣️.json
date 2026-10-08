@@ -1,0 +1,8 @@
+{
+  "buildings": {
+    "bldg-1": {
+      "elevation": 1.5,
+      "entry": "Patched"
+    }
+  }
+}

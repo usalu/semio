@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-space/schema.json",
+  "title": "SetSpace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSpace"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "ref": {
+          "kind": "space"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "number": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Number",
+          "de": "Nummer"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 30
+      }
+    },
+    "boundary": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SpaceBoundary",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Boundary",
+          "de": "Begrenzung"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "usage": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Usage",
+          "de": "Nutzung"
+        },
+        "group": "value",
+        "order": 50
+      }
+    }
+  }
+}

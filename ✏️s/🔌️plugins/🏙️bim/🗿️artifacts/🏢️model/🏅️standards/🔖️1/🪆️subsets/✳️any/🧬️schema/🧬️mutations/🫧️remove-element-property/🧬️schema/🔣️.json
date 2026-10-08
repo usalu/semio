@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-element-property/schema.json",
+  "title": "RemoveElementProperty",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "pset",
+    "property"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeElementProperty"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "pset": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Property set",
+          "de": "Eigenschaftsgruppe"
+        },
+        "group": "property",
+        "order": 20
+      }
+    },
+    "property": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Property",
+          "de": "Eigenschaft"
+        },
+        "group": "property",
+        "order": 30
+      }
+    }
+  }
+}

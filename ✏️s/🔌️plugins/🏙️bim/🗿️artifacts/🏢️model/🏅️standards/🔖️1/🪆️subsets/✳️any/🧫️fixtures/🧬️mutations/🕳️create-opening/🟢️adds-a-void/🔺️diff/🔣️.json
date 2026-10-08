@@ -1,0 +1,19 @@
+{
+  "openings": {
+    "o-1": {
+      "entry": "Created",
+      "flip_facing": false,
+      "flip_hand": false,
+      "host": "w-east",
+      "kind": {
+        "Void": {
+          "height": 2.0,
+          "width": 1.0
+        }
+      },
+      "name": "Shaft",
+      "offset": 3.0,
+      "sill_override": 0.5
+    }
+  }
+}

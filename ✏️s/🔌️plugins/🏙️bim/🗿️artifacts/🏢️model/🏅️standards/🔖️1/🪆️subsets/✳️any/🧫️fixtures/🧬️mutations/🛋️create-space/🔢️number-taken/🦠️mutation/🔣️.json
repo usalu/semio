@@ -1,0 +1,18 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-4",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.01",
+    "name": "Pantry",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    "usage": "Living"
+  }
+}

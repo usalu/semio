@@ -1,0 +1,11 @@
+{
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "entry": "Created",
+      "height": 3.0,
+      "level": 0,
+      "name": "Ground"
+    }
+  }
+}

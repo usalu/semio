@@ -23,7 +23,6 @@ path = "../../🚪️entrypoint/🦀️.rs"
 ui_locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
 ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-dispatch_macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }

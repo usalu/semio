@@ -3,6 +3,7 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌀️daemon/🔣️.json
 
+use crate::registry::{Launch, LaunchProcess, Stop};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -40,7 +41,7 @@ pub enum ClientMsg {
     Subscribe { session_id: String },
     Unsubscribe { session_id: String },
     Detach {},
-    Spawn { session_id: String, command: SessionCommand },
+    Spawn { session_id: String, command: Box<SessionCommand> },
     SpawnGroup { group_id: String, stop: GroupStop, members: Vec<GroupMember>, #[serde(default)] requires: Vec<GroupMember> },
     Input { session_id: String, data: Vec<u8> },
     Resize { session_id: String, cols: u16, rows: u16 },
@@ -59,13 +60,13 @@ pub enum ClientMsg {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ServerMsg {
-    Attached { daemon_pid: u32, #[serde(default)] protocol: u32, #[serde(default)] build_id: String },
-    SessionChanged { session: SessionInfo },
+    Attached { daemon_pid: u32, protocol: u32, build_id: String },
+    SessionChanged { session: Box<SessionInfo> },
     SessionRemoved { session_id: String },
     Sessions { sessions: Vec<SessionInfo>, #[serde(default)] more: bool },
     ReplayStart { session_id: String, #[serde(default)] truncated: bool },
     ReplayComplete { #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
-    Error { message: String, #[serde(default, skip_serializing_if = "String::is_empty")] code: String, #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
+    Error { message: String, #[serde(default, skip_serializing_if = "Option::is_none")] code: Option<ErrorCode>, #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
     Pong {},
     Shutdown {},
 }
@@ -82,12 +83,55 @@ pub struct TaskLabel {
     pub members: u16,
 }
 
-/// 🟢 Ready when the output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.
+/// 🟢 Ready when the output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match
+/// plus `path`, or with `printed` the whole printed address.
+///
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🟢️ready/🦀️.rs
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct Ready {
     pub port: u16,
     pub path: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub printed: bool,
+}
+
+/// 🚨 The kinds of failure an error message names; the schema lists the same words.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ErrorCode { Protocol, Decode, Invalid, HelloRequired, UnknownSession, UnknownGroup, AlreadyRunning, Limit, ViewLimit, Spawn, NotRunning, InputBacklog }
+
+impl ErrorCode {
+    pub const ALL: [Self; 12] = [Self::Protocol, Self::Decode, Self::Invalid, Self::HelloRequired, Self::UnknownSession, Self::UnknownGroup, Self::AlreadyRunning, Self::Limit, Self::ViewLimit, Self::Spawn, Self::NotRunning, Self::InputBacklog];
+
+    /// 🔤 The word the wire and the schema use for the kind.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Protocol => "protocol", Self::Decode => "decode", Self::Invalid => "invalid", Self::HelloRequired => "hello_required", Self::UnknownSession => "unknown_session", Self::UnknownGroup => "unknown_group",
+            Self::AlreadyRunning => "already_running", Self::Limit => "limit", Self::ViewLimit => "view_limit", Self::Spawn => "spawn", Self::NotRunning => "not_running", Self::InputBacklog => "input_backlog",
+        }
+    }
+}
+
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str(self.as_str()) }
+}
+
+/// 🔡️ The error kinds by their short names.
+pub mod code {
+    use super::ErrorCode;
+    pub const PROTOCOL: ErrorCode = ErrorCode::Protocol;
+    pub const DECODE: ErrorCode = ErrorCode::Decode;
+    pub const INVALID: ErrorCode = ErrorCode::Invalid;
+    pub const HELLO_REQUIRED: ErrorCode = ErrorCode::HelloRequired;
+    pub const UNKNOWN_SESSION: ErrorCode = ErrorCode::UnknownSession;
+    pub const UNKNOWN_GROUP: ErrorCode = ErrorCode::UnknownGroup;
+    pub const ALREADY_RUNNING: ErrorCode = ErrorCode::AlreadyRunning;
+    pub const LIMIT: ErrorCode = ErrorCode::Limit;
+    pub const VIEW_LIMIT: ErrorCode = ErrorCode::ViewLimit;
+    pub const SPAWN: ErrorCode = ErrorCode::Spawn;
+    pub const NOT_RUNNING: ErrorCode = ErrorCode::NotRunning;
+    pub const INPUT_BACKLOG: ErrorCode = ErrorCode::InputBacklog;
 }
 
 /// 🛑 Whether the members of a group stop when one of them stops.
@@ -101,6 +145,50 @@ pub enum GroupStop { Together, #[default] Independent }
 pub struct GroupMember {
     pub session_id: String,
     pub command: SessionCommand,
+}
+
+/// 🧬️ A launch as the daemon starts it: the services that must be ready first, then the processes of
+/// the launch in order, all under one group identifier.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpawnGroup {
+    pub group_id: String,
+    pub stop: GroupStop,
+    pub members: Vec<GroupMember>,
+    pub requires: Vec<GroupMember>,
+}
+
+/// 🆔 A session or group identifier no other start of this machine will choose.
+pub fn fresh_id(prefix: &str) -> String {
+    static SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_nanos());
+    format!("{prefix}-{:x}-{nanos:x}-{:x}", std::process::id(), SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed))
+}
+
+impl SpawnGroup {
+    /// 🚀 Turns a resolved launch into the message that starts it: one session per process, services
+    /// first, `stop: together` for a compound. `client_env` is extra environment of this launch that
+    /// wins over the launch's own; the environment of the requesting client is the base of every
+    /// process and travels in the connection's hello.
+    pub fn from_launch(launch: &Launch, client_env: &[(String, String)]) -> Self {
+        let group_id = fresh_id("group");
+        let mut services: Vec<(&LaunchProcess, usize)> = Vec::new();
+        fn collect<'a>(launch: &'a Launch, services: &mut Vec<(&'a LaunchProcess, usize)>) {
+            for need in &launch.requires { collect(need, services); }
+            for process in &launch.processes {
+                if !services.iter().any(|(known, _)| known.command_id == process.command_id) { services.push((process, services.len())); }
+            }
+        }
+        for need in &launch.requires { collect(need, &mut services); }
+        let grouped = launch.group.is_some().then(|| group_id.clone());
+        let requires = services.iter().map(|(process, index)| GroupMember { session_id: format!("{group_id}.r{index}"), command: SessionCommand::from_process(process, client_env, None) }).collect();
+        let members = launch.processes.iter().enumerate().map(|(index, process)| GroupMember { session_id: format!("{group_id}.{index}"), command: SessionCommand::from_process(process, client_env, grouped.clone()) }).collect();
+        Self { group_id, stop: if launch.stop == Stop::Together { GroupStop::Together } else { GroupStop::Independent }, members, requires }
+    }
+
+    /// 🎬️ The control message that asks the daemon to start the group.
+    pub fn message(self) -> ClientMsg {
+        ClientMsg::SpawnGroup { group_id: self.group_id, stop: self.stop, members: self.members, requires: self.requires }
+    }
 }
 
 /// ▶️ The exact task invocation retained for restart and restored views.
@@ -170,6 +258,15 @@ fn validate_environment(env: &[(String, String)]) -> bool {
 }
 
 impl SessionCommand {
+    /// 🏃️ The invocation of one process of a resolved launch at the default terminal size.
+    pub fn from_process(process: &LaunchProcess, extra_env: &[(String, String)], group: Option<String>) -> Self {
+        let mut env = process.env.clone();
+        for (key, value) in extra_env {
+            match env.iter_mut().find(|(name, _)| name == key) { Some(pair) => pair.1 = value.clone(), None => env.push((key.clone(), value.clone())) }
+        }
+        Self { cmd: process.cmd.clone(), args: process.args.clone(), cwd: process.cwd.display().to_string(), env, cols: 80, rows: 24, command_id: process.command_id.clone(), label: process.label.clone(), group, ready: process.ready.clone() }
+    }
+
     pub fn validate(&self) -> std::io::Result<()> {
         if self.cmd.is_empty() || self.cmd.contains('\0') || self.cols == 0 || self.rows == 0 || self.cols > 32767 || self.rows > 32767
             || self.cwd.contains('\0') || self.args.iter().any(|arg| arg.contains('\0')) || !validate_environment(&self.env) || self.command_id.len() > 512
@@ -236,9 +333,9 @@ impl ServerMsg {
         }
     }
 
-    /// 🚨 An error a client can act on: `code` names the kind, `session_id` the session it concerns.
-    pub fn error(code: &str, message: impl Into<String>, session_id: Option<&str>) -> Self {
-        Self::Error { message: message.into(), code: code.into(), session_id: session_id.map(str::to_string) }
+    /// 🚧️ An error a client can act on: `code` names the kind, `session_id` the session it concerns.
+    pub fn error(code: ErrorCode, message: impl Into<String>, session_id: Option<&str>) -> Self {
+        Self::Error { message: message.into(), code: Some(code), session_id: session_id.map(str::to_string) }
     }
 }
 
@@ -255,32 +352,67 @@ pub fn dashboard_cache_dir(root: &Path) -> PathBuf {
     repo_meta_dir(root).join("⚡️cache").join("🎛️dashboard")
 }
 
+/// 🌐 The name of the daemon instance the environment selects, if any. `SEMIO_DASHBOARD_INSTANCE=<name>` gives a
+/// workspace a second, isolated daemon with its own endpoint, lock, journal and logs, so a smoke test can run on the
+/// real workspace without touching the developer's daemon. Characters other than letters, digits, `.`, `_` and `-`
+/// become `_`; the name is cut to 32 characters; an empty value selects the default instance.
+pub fn instance() -> Option<String> {
+    instance_named(std::env::var("SEMIO_DASHBOARD_INSTANCE").ok().as_deref())
+}
+
+/// 🪧 The instance a raw name selects.
+pub fn instance_named(raw: Option<&str>) -> Option<String> {
+    let name: String = raw?.trim().chars().take(32).map(|character| if character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-') { character } else { '_' }).collect();
+    (!name.is_empty() && name != "." && name != "..").then_some(name)
+}
+
+/// 🗂️ The directory of one daemon instance's endpoint record, pid, lock, journal and logs: the dashboard cache
+/// itself for the default instance, a folder of its own for a named one.
+pub fn daemon_dir_of(root: &Path, instance: Option<&str>) -> PathBuf {
+    match instance {
+        Some(name) => dashboard_cache_dir(root).join("instances").join(name),
+        None => dashboard_cache_dir(root),
+    }
+}
+
+/// 🪬 The directory of the daemon instance this process selects.
+pub fn daemon_dir(root: &Path) -> PathBuf { daemon_dir_of(root, instance().as_deref()) }
+
 pub fn pid_path(root: &Path) -> PathBuf {
-    dashboard_cache_dir(root).join("daemon.pid")
+    daemon_dir(root).join("daemon.pid")
 }
 
 pub fn event_log_path(root: &Path) -> PathBuf {
-    dashboard_cache_dir(root).join("events.jsonl")
+    daemon_dir(root).join("events.jsonl")
 }
 
-pub fn lock_path(root: &Path) -> PathBuf { dashboard_cache_dir(root).join("daemon.lock") }
+pub fn lock_path(root: &Path) -> PathBuf { daemon_dir(root).join("daemon.lock") }
 
 /// 📍 The file in which a running daemon records where it listens.
-pub fn endpoint_path(root: &Path) -> PathBuf { dashboard_cache_dir(root).join("daemon.endpoint") }
+pub fn endpoint_path(root: &Path) -> PathBuf { daemon_dir(root).join("daemon.endpoint") }
 
 /// 🗃️ The directory of the per-session output logs.
-pub fn log_dir(root: &Path) -> PathBuf { dashboard_cache_dir(root).join("logs") }
+pub fn log_dir(root: &Path) -> PathBuf { daemon_dir(root).join("logs") }
 
-/// #️⃣ FNV-1a over bytes: the same value on every platform, toolchain and run.
+/// #️⃣ The hash every persistent name of the dashboard derives from: XXH3 with the default secret, which is the
+/// same value on every platform, toolchain and run, unlike the standard library's randomised hasher.
 ///
-/// @see http://www.isthe.com/chongo/tech/comp/fnv/index.html
-pub fn fnv1a64(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(0xcbf2_9ce4_8422_2325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3))
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
+pub fn stable_hash(bytes: &[u8]) -> u64 {
+    crate::registry::xxh3_64(bytes)
 }
 
-/// 🔑 The stable name of a workspace in endpoint names: sixteen hexadecimal digits of its canonical path.
+/// 🔑 The stable name of a workspace in endpoint names: sixteen hexadecimal digits of its canonical path, and of the
+/// instance name when the environment selects one.
 pub fn workspace_key(root: &Path) -> String {
-    format!("{:016x}", fnv1a64(canonical_path(root).to_string_lossy().as_bytes()))
+    workspace_key_of(root, instance().as_deref())
+}
+
+/// 🪪 The stable name of one daemon instance of a workspace.
+pub fn workspace_key_of(root: &Path, instance: Option<&str>) -> String {
+    let path = canonical_path(root).to_string_lossy().into_owned();
+    let named = instance.map_or(path.clone(), |name| format!("{path}\0{name}"));
+    format!("{:016x}", stable_hash(named.as_bytes()))
 }
 
 /// 🗄️ The per-user directory of daemon sockets. It never depends on `TMPDIR`, which differs between
@@ -312,10 +444,10 @@ pub fn endpoint(root: &Path) -> String {
     #[cfg(windows)]
     { pipe_name(root) }
     #[cfg(not(any(unix, windows)))]
-    { dashboard_cache_dir(root).join("daemon.sock").display().to_string() }
+    { daemon_dir(root).join("daemon.sock").display().to_string() }
 }
 
-/// 🧬 The identity of this executable's build. An installed dashboard lives in a directory named
+/// 🏗️ The identity of this executable's build. An installed dashboard lives in a directory named
 /// after the hash of its bytes; any other build is identified by its size and modification instant.
 pub fn build_id() -> &'static str {
     static BUILD: std::sync::OnceLock<String> = std::sync::OnceLock::new();
@@ -325,7 +457,7 @@ pub fn build_id() -> &'static str {
         if let Some(hash) = pinned { return hash[..16].to_string(); }
         let Ok(metadata) = std::fs::metadata(&executable) else { return "unknown".into() };
         let modified = metadata.modified().ok().and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |elapsed| elapsed.as_nanos());
-        format!("dev-{:016x}", fnv1a64(format!("{}:{modified}", metadata.len()).as_bytes()))
+        format!("dev-{:016x}", stable_hash(format!("{}:{modified}", metadata.len()).as_bytes()))
     })
 }
 
@@ -344,17 +476,17 @@ pub fn frame(kind: u8, payload: &[u8]) -> std::io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// 🧱 One control frame as bytes.
+/// 🧾️ One control frame as bytes.
 pub fn control_frame(msg: &impl Serialize) -> std::io::Result<Vec<u8>> {
     frame(KIND_CONTROL, &serde_json::to_vec(msg).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?)
 }
 
-/// 🧱 One output or input frame as bytes.
+/// 🧵️ One output or input frame as bytes.
 pub fn chunk_frame(kind: u8, session_id: &str, data: &[u8]) -> std::io::Result<Vec<u8>> {
     frame(kind, &encode_output(session_id, data))
 }
 
-/// ✉️ Writes one length-prefixed frame: `u32 le len | u8 kind | payload`.
+/// 📤️ Writes one length-prefixed frame: `u32 le len | u8 kind | payload`.
 pub fn write_frame(out: &mut impl Write, kind: u8, payload: &[u8]) -> std::io::Result<()> {
     out.write_all(&frame(kind, payload)?)?;
     out.flush()
@@ -374,7 +506,7 @@ pub fn read_frame(input: &mut impl Read) -> std::io::Result<(u8, Vec<u8>)> {
     Ok((kind, body[1..].to_vec()))
 }
 
-/// 🧩 Decodes one complete frame from a persistent nonblocking receive buffer.
+/// 🔓️ Decodes one complete frame from a persistent nonblocking receive buffer.
 pub fn try_decode_frame(buffer: &mut Vec<u8>) -> std::io::Result<Option<(u8, Vec<u8>)>> {
     if buffer.len() < 4 {
         return Ok(None);
@@ -410,7 +542,7 @@ impl FrameBuffer {
     /// 📏 How many received bytes still wait for the rest of their frame or for their turn.
     pub fn pending(&self) -> usize { self.bytes.len() - self.start }
 
-    pub fn next(&mut self) -> std::io::Result<Option<(u8, &[u8])>> {
+    pub fn next_frame(&mut self) -> std::io::Result<Option<(u8, &[u8])>> {
         let rest = &self.bytes[self.start..];
         if rest.len() < 4 { return Ok(None); }
         let len = u32::from_le_bytes(rest[..4].try_into().expect("frame prefix is four bytes")) as usize;
@@ -431,7 +563,7 @@ pub fn decode_control<T: for<'de> Deserialize<'de>>(payload: &[u8]) -> std::io::
     serde_json::from_slice(payload).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
 
-/// 📤 Session output or input frame payload: `u16 le id_len | id_bytes | data`.
+/// 🎁️ Session output or input frame payload: `u16 le id_len | id_bytes | data`.
 pub fn encode_output(session_id: &str, data: &[u8]) -> Vec<u8> {
     let id = session_id.as_bytes();
     let mut out = Vec::with_capacity(2 + id.len() + data.len());

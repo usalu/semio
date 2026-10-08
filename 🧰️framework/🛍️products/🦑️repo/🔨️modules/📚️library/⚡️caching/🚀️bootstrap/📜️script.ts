@@ -24,11 +24,6 @@ export function pinnedNxRuntimeEnvironment(source:NodeJS.ProcessEnv,bun:string,p
   return environment;
 }
 
-/** 🧭️ Loads domain selection helpers only for commands that request them. */
-function nxRoutingServices(): typeof import("../../📦️packages/🟦️typescript/🟦️.ts") {
-  return createRequire(import.meta.url)("../../📦️packages/🟦️typescript/🟦️.ts");
-}
-
 /** 🛠️ Loads the owner of the current immutable Nx recipe and patch identity. */
 function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts") {
   return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
@@ -281,22 +276,10 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const release = demonstrator[1] === "build" || demonstrator[2] === "release";
     return { args: segments, env: { SEMIO_BUILD_MODE: release ? "ship" : "dev", SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
   }
-  if (["@semio-tech/framework-renderer-wgpu:dev", "@semio-tech/framework-renderer-wgpu:serve"].includes(target)) {
-    const command = target.endsWith(":dev") ? "dev" : "serve", variant = process.env.SEMIO_PLUGIN ?? "s", profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
-    return { args: ["run", `@semio-tech/framework-os-dev:${command}-${variant}-wgpu-${profile}`, ...options, ...(selected.length ? ["--", ...selected] : [])], env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(command === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${variant}-wgpu-${profile}` } : {}) };
-  }
   const nativeRuntime = target?.match(/^@semio-tech\/framework-os-dev:(prepare|run|smoke)-(.+)-native-(dev|release)$/);
   if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2], SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "ship" : "dev" } };
   const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-(react|wgpu)-(dev|release)$/);
   if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
-  if (["@semio-tech/framework-renderer-wgpu:native", "@semio-tech/framework-renderer-wgpu:native-release"].includes(target)) {
-    const release = target.endsWith("-release") || selected.some(argument => ["--release", "--dist"].includes(argument));
-    const args = selected.filter(argument => !["--release", "--dist"].includes(argument)), profile = release ? "release" : "dev";
-    if (args.includes("--scale")) return { args: ["run", `@semio-tech/framework-renderer-wgpu:native-scale${release ? "-release" : ""}`, ...options, "--", ...args], env: {} };
-    const variant = args[0] && !args[0].startsWith("-") ? args.shift()! : process.env.SEMIO_PLUGIN ?? "s";
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || args.some(argument => argument !== "--smoke") || args.length > 1) throw new Error("Select one native variant and optional --smoke");
-    return { args: ["run", `@semio-tech/framework-os-dev:${args.includes("--smoke") ? "smoke" : "run"}-${variant}-native-${profile}`, ...options], env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: release ? "ship" : "dev" } };
-  }
   if (["@semio-tech/framework-renderer-wgpu:native-build"].includes(target) && selected.some((argument) => argument === "--release" || argument === "--dist")) {
     const args = selected.filter((argument) => argument !== "--release" && argument !== "--dist");
     return { args: ["run", `${target}-release`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
@@ -334,27 +317,6 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
   }
   if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
-  if (target === "workspace:dev" || target === "@semio-tech/framework-os-dev:dev") {
-    if (selected[0] === "mcp" && ["stdio", "http"].includes(selected[1]) && selected[2] === "os") {
-      const args = selected.slice(3);
-      if (selected[1] === "http" && !args.includes("--port")) args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
-      return { args: ["run", "@semio-tech/framework-os-mcp-rs:dev", ...options, "--", selected[1], ...args], env: {} };
-    }
-    if (selected[0] === "mcp" || selected[0] === "storybook-static") return { args: segments, env: {} };
-    if (selected[0] === "storybook") return { args: ["run", "workspace:dev-storybook", ...options, "--", ...selected.slice(1)], env: {} };
-    if (selected[0] === "multi") return { args: ["run", "@semio-tech/framework-os-dev:dev-s-react-dev", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: { S_OS_PORT: process.env.S_OS_PORT ?? "6071", SEMIO_RENDERER: "react", SEMIO_PLUGIN: "s", SEMIO_BUILD_MODE: "dev" }, ...(!options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/framework-os-dev:activate-s-react-dev" } : {}) };
-    const { loadFrameworkOsPlaygroundSelections, resolveFrameworkOsPlaygroundPlugin, frameworkOsPlaygroundDevEnv } = nxRoutingServices();
-    const catalog = loadFrameworkOsPlaygroundSelections();
-    const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : process.env.SEMIO_PLUGIN ? [process.env.SEMIO_PLUGIN] : ["s"]);
-    if (!app) throw new Error(`Unknown development selection: ${selected.join(" ")}`);
-    const served = app.rest.includes("served"), env = frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react" } : {});
-    if (["react", "wgpu"].includes(env.SEMIO_RENDERER!)) {
-      const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev", command = served ? "serve" : "dev";
-      const remaining = app.rest.filter((segment) => segment !== "served");
-      return { args: ["run", `@semio-tech/framework-os-dev:${command}-${app.plugin}-${env.SEMIO_RENDERER}-${profile}`, ...options, ...(remaining.length ? ["--", ...remaining] : [])], env: { ...env, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(!served && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${app.plugin}-${env.SEMIO_RENDERER}-${profile}` } : {}) };
-    }
-    throw new Error(`Unknown development renderer: ${env.SEMIO_RENDERER}`);
-  }
   if (target === "workspace:build" && selected.length) {
     const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
     const resolved = targets[selected[0]];

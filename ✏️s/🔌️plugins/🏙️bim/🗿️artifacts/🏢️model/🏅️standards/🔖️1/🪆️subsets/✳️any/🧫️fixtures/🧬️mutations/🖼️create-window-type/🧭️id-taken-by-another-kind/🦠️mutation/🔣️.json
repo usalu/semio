@@ -1,0 +1,14 @@
+{
+  "mutation": "createWindowType",
+  "id": "st-ground",
+  "window_type": {
+    "name": "Window 0.60",
+    "width": 0.6,
+    "height": 1,
+    "sill": 1.1,
+    "frame_width": 0.05,
+    "frame_depth": 0.1,
+    "panes": 1,
+    "material": "m-timber"
+  }
+}

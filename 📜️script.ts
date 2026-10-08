@@ -44,10 +44,11 @@ import { runNestedCargoPackageAdapter } from "./🧰️framework/🛍️products
 import { ensureMcpBinary, requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
- * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`).
+ * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
  */
-import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, loadFrameworkOsPlaygroundSelections, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, resolveFrameworkOsPlaygroundPlugin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { checkDerivedConfig, writeDerivedConfig } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -66,6 +67,8 @@ import { mutationTaxonomySourceAdmission, policyFindAllMutationsDirs } from "./�
 import { policyKebabToPascal, policyMutationDirectOwnerBreachesView, policyMutationEnumVariantNames, policyMutationSemanticIdentity, policyMutationStructuralBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
 import { policyListMutationDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts";
 import { CleanScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts";
+import { AgentsScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts";
+import { AGENT_CLIENT_DECLARATION_MANIFEST, checkAgentClients, mcpServersOf, readDeclaredTools, type McpServer } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts";
 import { CleanMechanismNewScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🟦️.ts";
 import { policySnakeToCamel, type PolicySchemaLeafExtract } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
 import { policyExtractRustSchemaFields } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
@@ -110,52 +113,6 @@ function requireRepoMcpBinary(root: string): string {
 }
 
 export { Script };
-
-function ensureFrameworkOsPlaygroundCatalog() {
-  const catalog = loadFrameworkOsPlaygroundSelections();
-  if (catalog.length === 0) throw new Error("No authored playground declarations were discovered");
-  return catalog;
-}
-
-function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  const resolved = resolveFrameworkOsPlaygroundPlugin(ensureFrameworkOsPlaygroundCatalog(), segments);
-  if (!resolved) return null;
-  return { app: resolved.plugin, rest: [...resolved.rest] };
-}
-
-/** 🍽️ A bare `dev <variant>` under `SEMIO_RENDERER=react` runs the variant's whole Nx activation
- * chain — every selected plugin's `component-<profile>`/`materialize-<profile>`, the browser support
- * bundle, the guest fonts, the engine `wasm` producers, the generated playground session, then
- * `prepare` and `activate` — before Vite serves the receipt (os-dev `DevScript`).
- *
- * `served` opts out of that chain and serves whatever `dist/<profile>/🔌️plugin-modules/` and
- * `dist/runtime/<profile>/<variant>/activation/` already hold, for a boot that must not wait on (or
- * contend for) the shared Cargo lock. It also forces react, because
- * `frameworkOsPlaygroundDevEnv` defaults `SEMIO_RENDERER` to `wgpu` — a bare `dev s` otherwise builds
- * the whole catalog and hands off to `trunk serve`, never to Vite on `S_OS_PORT`.
- *
- * It is a command segment rather than an env var so it stays reachable from `launch.json`, which is
- * how every dev here starts things and which carries no `env` field.
- *
- * The renderer is selected by the *target*, never forced by a server script: `@semio-tech/framework-
- * os-dev:dev` is an alias that `resolveNxInvocation` (root `package.json`'s `nx` wrapper) rewrites to
- * `<dev|serve>-<variant>-<react|wgpu>-<dev|release>` from `SEMIO_PLUGIN`/`SEMIO_RENDERER`/
- * `SEMIO_BUILD_MODE`. Only the resolved wgpu target reaches the wgpu browser server, so its
- * `SEMIO_RENDERER = "wgpu"` assignment can never overrule a react launch row.
- *
- * `dev s` IS the all-plugins hub: `space` declares `[package.metadata.semio].host`, and every layer
- * keys off that one declaration — `runtimeComponentClosure` fans the Nx closure out to every
- * registered component, `buildPlaygroundSession`/`expandPluginRegistry` return the whole registry
- * unfiltered, and both renderers boot from that list. There is no separate multi-plugin variant to
- * select; a `dev multi` segment existed once and never resolved past this file. */
-function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
-  const served = rest.includes("served");
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
-    cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react" } : {}),
-    ...daemonBudgetOpts(),
-  });
-}
 
 //#region 🔖️NativeOsScript
 /** 🖥️Runs the native bootstrap under `repo/native/bootstrap`. */
@@ -287,37 +244,6 @@ export class SetupScript extends Script {
 }
 //#endregion 🔖️SetupScript
 
-//#region 🔖️StartScript
-export class StartScript extends Script {
-  run(_segments: string[]): void {
-    process.chdir(this.root);
-    if (!existsSync(join(this.root, "node_modules", "nx", "package.json"))) {
-      console.log("[start] node_modules incomplete — run `bun install` and `bun ./📜️script.ts setup`.");
-      return;
-    }
-
-    if (process.env.DEVCONTAINER === "true") {
-      console.log("[start] Devcontainer session ready.");
-      return;
-    }
-
-    if (process.env.S_LOCAL_ONLY !== "1" && process.env.S_LOCAL_ONLY !== "true") {
-      process.env.S_HUB_URL = process.env.S_HUB_URL || "http://127.0.0.1:8787";
-      process.env.OS_HUB_DATA = process.env.OS_HUB_DATA || join(this.root, ".🧬semio", "🌐hub", "hub-dev");
-      spawnDaemon("bun", ["nx", "run", "@semio-tech/framework-os-dev:local-hub"], {
-        cwd: this.root,
-        env: process.env,
-        stdio: "ignore",
-      });
-      console.log(`[start] local development hub owner launching at ${process.env.S_HUB_URL} (data ${process.env.OS_HUB_DATA}, log local-hub.log there); every \`dev s\` row signs in through its session broker`);
-    }
-    if (process.platform !== "win32" && process.platform !== "darwin" && process.platform !== "linux") {
-      console.log(`[start] Unsupported platform ${process.platform}.`);
-    }
-  }
-}
-//#endregion 🔖️StartScript
-
 //#region 🔖️DevScript
 export class DevScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -329,24 +255,12 @@ export class DevScript extends Script {
       await this.runStorybookStatic();
       return;
     }
-    if (segments[0] === "s") {
-      runFrameworkOsPlaygroundDev("s", segments.slice(1));
-      return;
-    }
     if (segments[0] === "mcp") {
       this.runMcp(segments.slice(1));
       return;
     }
-    const playgroundApp = resolvePlaygroundDevApp(segments);
-    if (playgroundApp) {
-      runFrameworkOsPlaygroundDev(playgroundApp.app, playgroundApp.rest);
-      return;
-    }
-    if (segments.length > 0) {
-      console.error(`[dev] unknown playground app ${JSON.stringify(segments.join(" "))} — regenerate the catalog with bun nx run @semio-tech/plugin-registry:generate if the variant should exist.`);
-      process.exit(1);
-    }
-    runFrameworkOsPlaygroundDev("s");
+    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static or mcp. Playgrounds are dashboard commands: \`bun run dashboard run playground:<variant> --param renderer=react\` (list them with \`bun run dashboard commands playground\`).`);
+    process.exit(1);
   }
 
   private async parseStorybookSegments(segments: string[]): Promise<{ scope: string; args: string[] }> {
@@ -447,24 +361,18 @@ export class DevScript extends Script {
     if (a === "stdio") {
       const rest = segments.slice(1);
       if ((rest[0] ?? "").trim().toLowerCase() === "os") {
-        this.runMcpOs("stdio", rest.slice(1));
+        this.runMcpOs(rest.slice(1));
         return;
       }
       this.runMcpStdioRepo(rest);
       return;
     }
-    if (a === "http") {
-      const rest = segments.slice(1);
-      if ((rest[0] ?? "").trim().toLowerCase() === "os") {
-        this.runMcpOs("http", rest.slice(1));
-        return;
-      }
-      console.error("[dev] `dev mcp http` currently serves only the os gateway — use `dev mcp http os`.");
+    if (a !== undefined && a !== "repo") {
+      console.error(`[dev] unknown mcp route ${JSON.stringify(segments.join(" "))}: expected stdio, repo or nothing (the inspector).`);
       process.exit(1);
     }
-    const mode = a === "repo" ? "repo" : "default";
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    if (mode === "repo") {
+    if (a === "repo") {
       runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], {
         cwd: this.root,
         env: { ...process.env, HOST: host },
@@ -475,16 +383,11 @@ export class DevScript extends Script {
     runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
-  /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio or Streamable HTTP.
-   * `stdio` is what `.mcp.json` launches; `http` defaults to port 6300 (outside the 6012–6205
-   * catalog range and the 7300+ bench pool). Extra argv passes straight through to the binary
-   * (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
-  private runMcpOs(transport: "stdio" | "http", extra: string[]): void {
-    const args = [transport, ...extra];
-    if (transport === "http" && !extra.includes("--port")) {
-      args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
-    }
-    runCmd(ensureMcpBinary(this.root), args, { cwd: this.root, ...daemonBudgetOpts() });
+  /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio, which is what `.mcp.json` launches.
+   * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (Nx target `@semio-tech/framework-os-mcp-rs:dev`).
+   * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
+  private runMcpOs(extra: string[]): void {
+    runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private runMcpStdioRepo(slugs: string[]): void {
@@ -531,7 +434,11 @@ function taxonomyEcosystemEntryFilenames(taxonomy: ReturnType<typeof loadTaxonom
 
 
 export class GenerateScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] === "config") {
+      await this.generateConfig(segments.slice(1));
+      return;
+    }
     if (segments[0] === "taxonomy") {
       this.generateTaxonomy(segments.slice(1));
       return;
@@ -544,8 +451,20 @@ export class GenerateScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
-    console.error("[generate] usage: bun ./📜️script.ts generate <taxonomy|plugin-glue|scale-fixture>");
+    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
     process.exit(1);
+  }
+
+  /** 📝️ Writes (or with `--check` only verifies) every checked-in file that derives from one canonical source: the devcontainer
+   * editor block, the nextest scopes and the dependabot manifests.
+   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts */
+  private async generateConfig(args: string[]): Promise<void> {
+    const changed = args.includes("--check") ? [] : await writeDerivedConfig(this.root);
+    for (const path of changed) console.log(`[generate config] wrote ${path}`);
+    const problems = checkDerivedConfig(this.root);
+    for (const problem of problems) console.error(`[generate config] ${problem}`);
+    if (problems.length) process.exit(1);
+    console.log("[generate config] derived configuration is current");
   }
 
   /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
@@ -6704,7 +6623,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
 
 /**
  * ⚖️The 12 single-rule stdio-artifact policy gates, previously only reachable via an inline `bun -e`
- * eval (see `.vscode/launch.json`'s `⚖️gate…` entries) that bypassed Nx entirely. `verify policy-breach
+ * eval that bypassed Nx entirely. `verify policy-breach
  * <rule>` gives each one a real CLI surface routable through a cached `nx:run-commands` target.
  */
 const POLICY_BREACH_GATES: Record<string, (repoRoot: string) => BreachRecord[]> = {
@@ -8078,7 +7997,7 @@ export class VerifyScript extends Script {
     await dispatchOwnedScriptRoute(this.root, ["verify", "puzzle-fill-policy-self-tests"]);
     const apps = interactivityAllAppDiscovery(this.root);
     const appSelfTests = await interactivityAllAppDiscoverySelfTests();
-    console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.launchOnlyProducts.length} launch-only product surface(s), ${apps.surfaceCount} total surface(s), ${apps.actionCount} action row(s), ${apps.launchCoveredAppCount} launch-covered app context(s), ${apps.launchMissingAppCount} missing launch context(s), ${apps.launches.length} dev launch surface(s), ${appSelfTests} hostile/oracle self-test(s).`);
+    console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.playgrounds} dashboard playground command(s), ${apps.surfaceCount} dev surface(s) over ${apps.renderers.join("/")}, ${apps.actionCount} action row(s), ${apps.surfaceCoveredAppCount} surface-covered app context(s), ${apps.surfaceMissingAppCount} missing surface context(s), ${apps.gates} dashboard-startable gate(s), ${appSelfTests} hostile/oracle self-test(s).`);
     for (const failure of apps.failures.slice(0, 25)) console.log(`  ${failure}`);
     if (apps.failures.length > 25) console.log(`  ${apps.failures.length - 25} additional all-app discovery failure(s) omitted.`);
     const report = interactivityAuditRun(this.root);
@@ -8113,7 +8032,7 @@ export class VerifyScript extends Script {
       return;
     }
     const failures = apps.failures.length + report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
-    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (all-app discovery/launch registration, unlisted blocking bridges, stale allowlist entries, or sync-fs/net/clipboard/process/db/thread-pool findings).`);
+    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (all-app discovery/dashboard surface coverage, unlisted blocking bridges, stale allowlist entries, or sync-fs/net/clipboard/process/db/thread-pool findings).`);
     console.log("[verify interactivity] DENY mode — clean.");
   }
 
@@ -8122,10 +8041,10 @@ export class VerifyScript extends Script {
     const report = interactivityAllAppDiscovery(this.root);
     const selfTests = await interactivityAllAppDiscoverySelfTests();
     if (args.includes("--json")) console.log(JSON.stringify({ ...report, selfTests }, null, 2));
-    else console.log(`[verify interactivity apps] descriptors=${report.descriptors.length} extensions=${report.descriptors.filter((descriptor) => descriptor.kind === "extension").length} apps=${report.appCount} launchOnlyProducts=${report.launchOnlyProducts.length} surfaces=${report.surfaceCount} actions=${report.actionCount} migratedActions=${report.migratedActionCount} missingActions=${report.missingActionCount} launchCoveredApps=${report.launchCoveredAppCount} launchMissingApps=${report.launchMissingAppCount} launches=${report.launches.length} failures=${report.failures.length} selfTests=${selfTests}`);
+    else console.log(`[verify interactivity apps] descriptors=${report.descriptors.length} extensions=${report.descriptors.filter((descriptor) => descriptor.kind === "extension").length} apps=${report.appCount} playgrounds=${report.playgrounds} renderers=${report.renderers.join("/")} surfaces=${report.surfaceCount} actions=${report.actionCount} migratedActions=${report.migratedActionCount} missingActions=${report.missingActionCount} surfaceCoveredApps=${report.surfaceCoveredAppCount} surfaceMissingApps=${report.surfaceMissingAppCount} gates=${report.gates} failures=${report.failures.length} selfTests=${selfTests}`);
     for (const failure of report.failures.slice(0, 25)) console.error(`[verify interactivity apps] ${failure}`);
-    if (report.failures.length > 25) console.error(`[verify interactivity apps] ${report.failures.length - 25} additional discovery or launch-registration failure(s) omitted.`);
-    if (report.failures.length > 0) throw new Error(`[verify interactivity apps] ${report.failures.length} discovery or launch-registration failure(s).`);
+    if (report.failures.length > 25) console.error(`[verify interactivity apps] ${report.failures.length - 25} additional discovery or dashboard-surface failure(s) omitted.`);
+    if (report.failures.length > 0) throw new Error(`[verify interactivity apps] ${report.failures.length} discovery or dashboard-surface failure(s).`);
     if (args.includes("--actions")) {
       const toolJobs = await toolJobCoverageRun(this.root);
       const dispositionFailures = interactivityAllAppActionDispositionFailures(report.descriptors);
@@ -8698,7 +8617,6 @@ const INTERACTIVITY_AUDIT_UI_ROOTS = ["🧰️framework/🔨️modules/🖱️ui
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY = 256;
 const INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY = 64;
 const INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY = 512;
-const INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY = 512;
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️.json";
 /** 🧩️ The one child dir under a plugin root whose own `🔣️.json` is also a descriptor. */
 const INTERACTIVITY_ALL_APP_EXTENSIONS_DIR = "🧩️extensions";
@@ -8706,44 +8624,34 @@ const INTERACTIVITY_ALL_APP_EXTENSIONS_DIR = "🧩️extensions";
  * therefore never themselves an extension — `🌊️flow/🧩️extensions/🧫️fixtures/🔣️.json` is the flow
  * extensions' shared fixture table, not a fourteenth extension. */
 const INTERACTIVITY_ALL_APP_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(["🧫️fixtures", "🧪️tests"]);
-/** 🚀️ The browser dev command every generated playground launcher carries. The plugin registry is its
- * author — `📇️registry/🚀️launch/🟦️.ts` `playgroundDevCommand()` — and this gate reads `launch.json` as
- * text, so the shape is restated here rather than imported; `🧪️tests/🚀️launch/🟦️.ts` in the registry
- * asserts the generated rows against the registry's own function, which keeps the two honest. */
-const INTERACTIVITY_ALL_APP_BROWSER_DEV_COMMAND = (variant: string): string => `bun nx run workspace:dev -- ${variant}`;
-/** 🖥️ The wgpu native dev command. Authored in the seed skeleton, not generated, so the seed is its
- * authority; all 46 `…🧊️wgpu🖥️native` rows in `.vscode/launch.json` carry exactly this shape. */
-const INTERACTIVITY_ALL_APP_NATIVE_DEV_COMMAND = (variant: string): string => `bun nx run @semio-tech/framework-renderer-wgpu:native -- ${variant}`;
-const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
-const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
-const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-/** ⚖️ Launch rows every `.vscode/launch.json` must register exactly once, in the `4_gate` group.
+/** 🎮️ The generated playground catalog the dashboard registry lists as `playground:<variant>` commands. */
+const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json";
+/** 🎛️ The dashboard registry source that owns the renderer axis of every playground command. */
+const INTERACTIVITY_ALL_APP_REGISTRY_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs";
+/** 🧬️ The schema every `metadata.semio.dashboard` declaration is written against. */
+const INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json";
+/** 🏠️ The workspace root project whose Nx targets and dashboard declarations the gates are checked against. */
+const INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE = "📋️project.json";
+/** 🔌️ Every tree whose depth-4 and extension `🔣️.json` files are plugin descriptors. */
+const INTERACTIVITY_ALL_APP_DESCRIPTOR_ROOTS: readonly string[] = ["✏️s/🔌️plugins", "🌎️hub/🧩️compositions"];
+/** ⚖️ Verification gates the dashboard must be able to start: each one is `workspace:verify` with these free arguments.
  *
- * AGENTS.md: "All devs are using `launch.json` and never use the cli" — a verification verb that no
- * launch row runs is a verb no dev can run. These six are the interactivity and dependency gates
- * themselves, so the law is self-referential on purpose: the gate that checks launch registration is
- * itself one of the rows it requires.
- *
- * The commands are the `bun nx run workspace:verify -- …` form — what the seed's six rows carried
- * before `6f33e313da` emptied this list, and what every neighbouring `4_gate` row uses. The list this
- * replaces named the same six gates in the `bun ./📜️script.ts verify …` form, so the law and the data
- * could never agree, which is the likeliest reason it was emptied rather than repaired. AGENTS.md
- * makes `📜️script.ts` the implementation and `nx` the entry point, so the nx form is the one a dev's
- * launch row may carry. */
-const INTERACTIVITY_ALL_APP_REQUIRED_GATES: readonly { readonly name: string; readonly command: string }[] = [
-  { name: "⚖️gate⚡️interactivity", command: "bun nx run workspace:verify -- interactivity" },
-  { name: "⚖️gate⚡️interactivity🎯️tool-jobs", command: "bun nx run workspace:verify -- interactivity tool-jobs" },
-  { name: "⚖️gate⚡️interactivity🧭️apps", command: "bun nx run workspace:verify -- interactivity apps" },
-  { name: "⚖️gate⚡️interactivity🧭️apps🎛️actions", command: "bun nx run workspace:verify -- interactivity apps --actions" },
-  { name: "⚖️gate📦️dependencies", command: "bun nx run workspace:verify -- dependencies" },
-  { name: "⚖️gate📦️dependencies0️⃣", command: "bun nx run workspace:verify -- dependencies literal-external" },
-  { name: "⚖️gate🪆️composed-child-refs", command: "bun nx run workspace:verify -- composed-child-refs" },
+ * The dashboard is the only control plane, so a verification verb that no declared command reaches is a
+ * verb no dev can run. The workspace `verify` target forwards free arguments to `📜️script.ts verify`; the law
+ * is that this target stays declared and launchable with a positional text parameter. */
+const INTERACTIVITY_ALL_APP_REQUIRED_GATES: readonly { readonly id: string; readonly check: readonly string[] }[] = [
+  { id: "interactivity", check: ["interactivity"] },
+  { id: "interactivity-tool-jobs", check: ["interactivity", "tool-jobs"] },
+  { id: "interactivity-apps", check: ["interactivity", "apps"] },
+  { id: "interactivity-apps-actions", check: ["interactivity", "apps", "--actions"] },
+  { id: "dependencies", check: ["dependencies"] },
+  { id: "dependencies-literal-external", check: ["dependencies", "literal-external"] },
+  { id: "composed-child-refs", check: ["composed-child-refs"] },
 ];
 
 type InteractivityAllAppAction = { appId: string; windowId: string; actionId: string; disposition?: string };
 type InteractivityAllAppDescriptor = { file: string; kind: "app" | "extension"; pluginId: string; parentPluginId?: string; appIds: string[]; actions: InteractivityAllAppAction[] };
-type InteractivityAllAppLaunch = { name: string; command: string; cwd: string; env: Readonly<Record<string, string>> };
-type InteractivityAllAppPlayground = { variant: string; pluginId: string; appId?: string };
+type InteractivityAllAppPlayground = { variant: string; pluginId: string; react: number; wgpu: number; appId?: string };
 type InteractivityAllAppDiscovery = {
   descriptors: InteractivityAllAppDescriptor[];
   appCount: number;
@@ -8751,11 +8659,12 @@ type InteractivityAllAppDiscovery = {
   actionCount: number;
   migratedActionCount: number;
   missingActionCount: number;
-  launchCoveredAppCount: number;
-  launchMissingAppCount: number;
+  surfaceCoveredAppCount: number;
+  surfaceMissingAppCount: number;
   duplicateAppIds: { id: string; files: string[] }[];
-  launches: InteractivityAllAppLaunch[];
-  launchOnlyProducts: InteractivityAllAppLaunch[];
+  playgrounds: number;
+  renderers: string[];
+  gates: number;
   failures: string[];
 };
 
@@ -8874,120 +8783,100 @@ function interactivityAllAppActionProductionFailures(descriptors: InteractivityA
   });
 }
 
-/** 🎮️Reads the generated one-line playground catalog without executing generated source. */
+/** 🎮️Reads the generated playground catalog the dashboard registry lists as `playground:<variant>` commands. */
 function interactivityAllAppPlaygroundsFromSource(source: string): { rows: InteractivityAllAppPlayground[]; failures: string[] } {
-  const rows: InteractivityAllAppPlayground[] = [];
   const failures: string[] = [];
-  for (const line of source.split("\n")) {
-    if (!line.includes("{ variant:")) continue;
-    const variant = line.match(/\bvariant:\s*"([^"]+)"/)?.[1] ?? "";
-    const pluginId = line.match(/\bpluginId:\s*"([^"]+)"/)?.[1] ?? "";
-    const appId = line.match(/\bapp:\s*"([^"]+)"/)?.[1];
-    if (variant === "" || pluginId === "") failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: malformed generated playground row`);
-    else rows.push({ variant, pluginId, ...(appId ? { appId } : {}) });
+  let catalog: unknown;
+  try {
+    catalog = JSON.parse(source);
+  } catch {
+    return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: invalid JSON`] };
   }
-  if (rows.length === 0) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: no generated playground rows discovered`);
+  if (!Array.isArray(catalog)) return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: catalog is not a list`] };
+  const rows: InteractivityAllAppPlayground[] = [];
   const identities = new Set<string>();
-  for (const row of rows) {
-    if (identities.has(row.variant)) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: duplicate variant ${JSON.stringify(row.variant)}`);
-    identities.add(row.variant);
+  for (const value of catalog) {
+    const row = value && typeof value === "object" ? value as Record<string, unknown> : {};
+    const ports = row.ports && typeof row.ports === "object" ? row.ports as Record<string, unknown> : {};
+    const variant = typeof row.variant === "string" ? row.variant : "";
+    const pluginId = typeof row.pluginId === "string" ? row.pluginId : "";
+    const react = typeof ports.react === "number" ? ports.react : 0;
+    const wgpu = typeof ports.wgpu === "number" ? ports.wgpu : 0;
+    if (variant === "" || pluginId === "") {
+      failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: malformed playground row`);
+      continue;
+    }
+    if (identities.has(variant)) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: duplicate variant ${JSON.stringify(variant)}`);
+    identities.add(variant);
+    rows.push({ variant, pluginId, react, wgpu, ...(typeof row.app === "string" && row.app !== "" ? { appId: row.app } : {}) });
   }
+  if (rows.length === 0) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: no playground rows discovered`);
   return { rows, failures };
 }
 
-/** 🧭️Derives generated playground launch identities from the schema-owned launch seed. */
-function interactivityAllAppPlaygroundLaunchNames(playgrounds: readonly InteractivityAllAppPlayground[], seedSource: string): Set<string> {
-  let seed: Record<string, unknown> = {};
-  try {
-    seed = Bun.JSONC.parse(seedSource) as Record<string, unknown>;
-  } catch {
-    return new Set();
-  }
-  const launchers = seed.devLaunchers && typeof seed.devLaunchers === "object" ? seed.devLaunchers as Record<string, unknown> : {};
-  const names = new Set<string>();
-  for (const playground of playgrounds) {
-    const value = launchers[playground.variant];
-    const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
-    const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
-    names.add(`🛠️dev${prefix}⚛️react`);
-    names.add(`🛠️dev${prefix}🧊️wgpu🌐️wasm`);
-    names.add(`🛠️dev${prefix}🧊️wgpu🖥️native`);
-  }
-  return names;
+/** 🎛️Reads the renderer axis every dashboard playground command offers from the registry source that owns it. */
+function interactivityAllAppRenderersFromSource(source: string): { renderers: string[]; failures: string[] } {
+  const list = source.match(/\bconst\s+RENDERERS\s*:\s*&\[&str\]\s*=\s*&\[([^\]]*)\]/u)?.[1];
+  const renderers = list === undefined ? [] : [...list.matchAll(/"([^"]+)"/gu)].map((match) => match[1]!);
+  if (renderers.length === 0) return { renderers, failures: [`${INTERACTIVITY_ALL_APP_REGISTRY_FILE}: the RENDERERS axis of the playground commands is not readable`] };
+  const react = renderers.filter((renderer) => renderer === "react").length;
+  const native = renderers.filter((renderer) => renderer.endsWith("native")).length;
+  const wasm = renderers.filter((renderer) => renderer.endsWith("wasm")).length;
+  return { renderers, failures: react === 1 && native === 1 && wasm === 1 && renderers.length === 3 ? [] : [`${INTERACTIVITY_ALL_APP_REGISTRY_FILE}: RENDERERS must offer exactly one React, one Wasm and one native surface, found ${renderers.join(", ")}`] };
 }
 
-/** 🚀️Proves every owner-qualified app context has React, Wasm, and native launch surfaces. */
-function interactivityAllAppLaunchCoverageFailures(descriptors: readonly InteractivityAllAppDescriptor[], playgrounds: readonly InteractivityAllAppPlayground[], seedSource: string, launches: readonly InteractivityAllAppLaunch[]): string[] {
-  let seed: Record<string, unknown>;
-  try {
-    seed = Bun.JSONC.parse(seedSource) as Record<string, unknown>;
-  } catch {
-    return [`${INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE}: invalid JSONC prevents app launch coverage`];
-  }
-  const launchers = seed.devLaunchers && typeof seed.devLaunchers === "object" ? seed.devLaunchers as Record<string, unknown> : {};
-  const byName = new Map(launches.map((launch) => [launch.name, launch]));
-  const completeVariants = new Set<string>();
-  for (const playground of playgrounds) {
-    const value = launchers[playground.variant];
-    const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
-    const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
-    const browserCommand = INTERACTIVITY_ALL_APP_BROWSER_DEV_COMMAND(playground.variant);
-    const nativeCommand = INTERACTIVITY_ALL_APP_NATIVE_DEV_COMMAND(playground.variant);
-    const expected = [
-      { name: `🛠️dev${prefix}⚛️react`, command: browserCommand, renderer: "react" },
-      { name: `🛠️dev${prefix}🧊️wgpu🌐️wasm`, command: browserCommand, renderer: "wgpu" },
-      { name: `🛠️dev${prefix}🧊️wgpu🖥️native`, command: nativeCommand },
-    ];
-    if (expected.every(({ name, command, renderer }) => {
-      const row = byName.get(name);
-      return row?.command === command && row.cwd === "${workspaceFolder}" && (!renderer || row.env.SEMIO_RENDERER === renderer);
-    })) completeVariants.add(playground.variant);
-  }
+/** 🚀️Returns the renderers a playground variant can be started with: React needs its React port, every other renderer the WGPU port. */
+function interactivityAllAppPlaygroundSurfaces(playground: InteractivityAllAppPlayground, renderers: readonly string[]): string[] {
+  return renderers.filter((renderer) => (renderer === "react" ? playground.react : playground.wgpu) > 0);
+}
+
+/** 🚀️Proves every owner-qualified app context has a playground command that starts on every renderer (React, Wasm, native). */
+function interactivityAllAppSurfaceCoverageFailures(descriptors: readonly InteractivityAllAppDescriptor[], playgrounds: readonly InteractivityAllAppPlayground[], renderers: readonly string[]): string[] {
+  const completeVariants = new Set(playgrounds.filter((playground) => interactivityAllAppPlaygroundSurfaces(playground, renderers).length === renderers.length).map((playground) => playground.variant));
   const roleNeutral = (id: string) => id.replace(/#(?:editor|viewer)$/u, "#surface");
   const failures: string[] = [];
   for (const descriptor of descriptors.filter((row) => row.kind === "app")) for (const appId of descriptor.appIds) {
     const candidates = playgrounds.filter((playground) => playground.pluginId === descriptor.pluginId && (!playground.appId || roleNeutral(playground.appId) === roleNeutral(appId)));
-    if (!candidates.some((playground) => completeVariants.has(playground.variant))) failures.push(`${descriptor.file}: ${appId} has no owner-qualified React + WGPU Wasm + WGPU native launch variant`);
+    if (!candidates.some((playground) => completeVariants.has(playground.variant))) failures.push(`${descriptor.file}: ${appId} has no owner-qualified playground command with React + WGPU Wasm + WGPU native surfaces`);
   }
   return failures;
 }
 
-/** 🚀️Parses bounded launch metadata and proves every interactivity gate remains registered. */
-function interactivityAllAppLaunchesFromSource(source: string): { rows: InteractivityAllAppLaunch[]; failures: string[] } {
+/** ⚖️Proves every required verification gate is startable from the dashboard: the workspace `verify` Nx target forwards free arguments to `📜️script.ts verify` and declares one positional text parameter. */
+function interactivityAllAppGateFailures(manifestSource: string, schemaSource: string, gates: readonly { readonly id: string; readonly check: readonly string[] }[] = INTERACTIVITY_ALL_APP_REQUIRED_GATES): string[] {
   const failures: string[] = [];
-  let root: Record<string, unknown>;
+  const record = (value: unknown): Record<string, unknown> => (value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {});
+  let manifest: Record<string, unknown>;
+  let schema: Record<string, unknown>;
   try {
-    root = Bun.JSONC.parse(source) as Record<string, unknown>;
+    manifest = record(JSON.parse(manifestSource));
   } catch {
-    return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: invalid JSONC`] };
+    return [`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: invalid JSON`];
   }
-  const configurations = Array.isArray(root.configurations) ? root.configurations : undefined;
-  if (!configurations) return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: configurations is missing`] };
-  if (configurations.length > INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: ${configurations.length} configurations exceed fixed capacity ${INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY}`);
-  const records = configurations.slice(0, INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY).filter((value): value is Record<string, unknown> => Boolean(value) && typeof value === "object");
-  const names = new Map<string, number>();
-  for (const configuration of records) {
-    const name = typeof configuration.name === "string" ? configuration.name : "";
-    names.set(name, (names.get(name) ?? 0) + 1);
+  try {
+    schema = record(JSON.parse(schemaSource));
+  } catch {
+    return [`${INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE}: invalid JSON`];
   }
-  for (const [name, count] of names) if (name !== "" && count > 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: duplicate configuration name ${JSON.stringify(name)}`);
-  for (const gate of INTERACTIVITY_ALL_APP_REQUIRED_GATES) {
-    const matches = records.filter((configuration) => configuration.name === gate.name && configuration.command === gate.command && configuration.cwd === "${workspaceFolder}" && (configuration.presentation as Record<string, unknown> | undefined)?.group === "4_gate");
-    if (matches.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: expected one exact ${gate.name} registration, found ${matches.length}`);
+  const kinds = record(record(record(record(schema.$defs).Parameter).properties).kind).enum;
+  if (!Array.isArray(kinds) || !kinds.includes("text")) failures.push(`${INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE}: the Parameter schema declares no text kind`);
+  if (!Object.hasOwn(record(record(record(schema.$defs).Parameter).properties), "valuePositional")) failures.push(`${INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE}: the Parameter schema declares no valuePositional`);
+  if (manifest.name !== "workspace") failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: the root project must be named workspace`);
+  const verify = record(record(manifest.targets).verify);
+  if (Object.keys(verify).length === 0) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: target workspace:verify is missing, so no verification gate is a dashboard command`);
+  const options = record(verify.options);
+  if (typeof options.command !== "string" || !options.command.endsWith("📜️script.ts verify") || options.forwardAllArgs !== true) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: workspace:verify must forward free arguments to 📜️script.ts verify`);
+  const parameters = record(record(record(verify.metadata).semio).dashboard).parameters;
+  const positional = (Array.isArray(parameters) ? parameters : []).map(record).filter((parameter) => parameter.kind === "text" && parameter.valuePositional === true);
+  if (positional.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found ${positional.length}`);
+  const seen = new Set<string>();
+  for (const gate of gates) {
+    const key = gate.check.join(" ");
+    if (gate.check.length === 0 || gate.check.some((word) => word === "" || /\s/u.test(word))) failures.push(`gate ${gate.id}: check must be a list of non-empty words`);
+    if (seen.has(key)) failures.push(`gate ${gate.id}: duplicate check ${JSON.stringify(key)}`);
+    seen.add(key);
   }
-  const rows: InteractivityAllAppLaunch[] = [];
-  for (const configuration of records) {
-    const name = typeof configuration.name === "string" ? configuration.name : "";
-    if (!name.includes("🛠️dev")) continue;
-    const command = typeof configuration.command === "string" ? configuration.command.trim() : "";
-    const cwd = typeof configuration.cwd === "string" ? configuration.cwd.trim() : "";
-    const envValue = configuration.env && typeof configuration.env === "object" ? configuration.env as Record<string, unknown> : {};
-    const env = Object.fromEntries(Object.entries(envValue).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
-    if (command === "" || cwd === "") failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: ${name || "unnamed dev surface"} lacks command or cwd`);
-    rows.push({ name, command, cwd, env });
-  }
-  if (rows.length === 0) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: no production dev launch surfaces discovered`);
-  return { rows: rows.sort((left, right) => left.name.localeCompare(right.name)), failures };
+  return failures;
 }
 
 /** 🪪️ Whether a repo-relative path is a plugin-descriptor COORDINATE rather than merely a file that
@@ -9005,10 +8894,10 @@ function interactivityAllAppIsDescriptorCoordinate(relPath: string): boolean {
   return parts.length === 6 && parts[3] === INTERACTIVITY_ALL_APP_EXTENSIONS_DIR && !INTERACTIVITY_ALL_APP_OWNERSHIP_DIRS.has(parts[4]!);
 }
 
-/** 🧭️Discovers every plugin descriptor and every launch-derived product without a maintained product allowlist. */
+/** 🧭️Discovers every plugin descriptor and the dashboard dev surfaces of every playground without a maintained product allowlist. */
 function interactivityAllAppDiscovery(repoRoot: string): InteractivityAllAppDiscovery {
   const failures: string[] = [];
-  const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (path, name) => name === INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME && interactivityAllAppIsDescriptorCoordinate(path));
+  const files = policyWalkRelFiles(repoRoot, [...INTERACTIVITY_ALL_APP_DESCRIPTOR_ROOTS], (path, name) => name === INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME && interactivityAllAppIsDescriptorCoordinate(path));
   if (files.length === 0) failures.push("no plugin descriptors discovered");
   if (files.length > INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY) failures.push(`${files.length} descriptors exceed fixed capacity ${INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY}`);
   const descriptors: InteractivityAllAppDescriptor[] = [];
@@ -9030,30 +8919,28 @@ function interactivityAllAppDiscovery(repoRoot: string): InteractivityAllAppDisc
     .filter(([, owners]) => owners.length > 1)
     .map(([id, owners]) => ({ id, files: owners }))
     .sort((left, right) => left.id.localeCompare(right.id));
-  const launch = interactivityAllAppLaunchesFromSource(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_LAUNCH_FILE));
-  failures.push(...launch.failures);
-  const seedSource = policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE);
-  const seed = interactivityAllAppLaunchesFromSource(seedSource);
-  failures.push(...seed.failures.map((failure) => failure.replaceAll(INTERACTIVITY_ALL_APP_LAUNCH_FILE, INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE)));
+  const gateFailures = interactivityAllAppGateFailures(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE), policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE));
+  failures.push(...gateFailures);
+  const axis = interactivityAllAppRenderersFromSource(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_REGISTRY_FILE));
+  failures.push(...axis.failures);
   const playgrounds = interactivityAllAppPlaygroundsFromSource(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_PLAYGROUND_FILE));
   failures.push(...playgrounds.failures);
-  const launchCoverageFailures = interactivityAllAppLaunchCoverageFailures(descriptors, playgrounds.rows, seedSource, launch.rows);
-  failures.push(...launchCoverageFailures);
-  const generatedLaunchNames = interactivityAllAppPlaygroundLaunchNames(playgrounds.rows, seedSource);
-  const launchOnlyProducts = launch.rows.filter((row) => !generatedLaunchNames.has(row.name));
+  const surfaceFailures = interactivityAllAppSurfaceCoverageFailures(descriptors, playgrounds.rows, axis.renderers);
+  failures.push(...surfaceFailures);
   const descriptorAppCount = descriptors.reduce((count, descriptor) => count + descriptor.appIds.length, 0);
   return {
     descriptors: descriptors.sort((left, right) => left.file.localeCompare(right.file)),
     appCount: descriptorAppCount,
-    surfaceCount: descriptorAppCount + launchOnlyProducts.length,
+    surfaceCount: playgrounds.rows.reduce((count, playground) => count + interactivityAllAppPlaygroundSurfaces(playground, axis.renderers).length, 0),
     actionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.length, 0),
     migratedActionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.filter((action) => action.disposition === "migrated").length, 0),
     missingActionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.filter((action) => action.disposition !== "migrated").length, 0),
-    launchCoveredAppCount: descriptors.reduce((count, descriptor) => count + descriptor.appIds.length, 0) - launchCoverageFailures.length,
-    launchMissingAppCount: launchCoverageFailures.length,
+    surfaceCoveredAppCount: descriptorAppCount - surfaceFailures.length,
+    surfaceMissingAppCount: surfaceFailures.length,
     duplicateAppIds,
-    launches: launch.rows,
-    launchOnlyProducts,
+    playgrounds: playgrounds.rows.length,
+    renderers: axis.renderers,
+    gates: gateFailures.length === 0 ? INTERACTIVITY_ALL_APP_REQUIRED_GATES.length : 0,
     failures: [...new Set(failures)].sort(),
   };
 }
@@ -15341,7 +15228,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("semio", SemioScript)
   .register("examples", ExamplesScript)
   .register("setup", SetupScript)
-  .register("start", StartScript)
+  .register("agents", AgentsScript)
   .register("dev", DevScript)
   .register("generate", GenerateScript)
   .register(
@@ -17433,60 +17320,40 @@ function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoBudgetNull
 
 //#region 🔧️PolicyRuleMcpConfig
-const POLICY_MCP_CONFIG_PATHS = [".cursor/mcp.json", ".mcp.json", ".vscode/mcp.json", ".windsurf/mcp.json", ".kiro/settings/mcp.json", ".codex/config.toml"] as const;
-
-type PolicyMcpServerEntry = { type?: string; command?: string; args?: string[] };
-
-/** 🔎️True when a repo MCP server uses the cross-platform bootstrap that builds the native CLI on demand. */
-function policyMcpRepoServerUsesBootstrap(entry: PolicyMcpServerEntry): boolean {
-  if ((entry.type ?? "stdio") !== "stdio") return false;
-  const cmd = (entry.command ?? "").trim();
-  const args = entry.args ?? [];
-  return cmd === "bun" && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
-}
-
-function policyMcpRepoServerFromJson(doc: unknown): PolicyMcpServerEntry | undefined {
-  if (!doc || typeof doc !== "object") return undefined;
-  const root = doc as Record<string, unknown>;
-  const servers = (root.mcpServers ?? root.servers) as Record<string, PolicyMcpServerEntry> | undefined;
-  return servers?.repo;
-}
-
-function policyMcpRepoServerFromToml(content: string): PolicyMcpServerEntry | undefined {
-  const section = /\[mcp_servers\.repo\]([\s\S]*?)(?:\n\[|$)/.exec(content);
-  if (!section) return undefined;
-  const block = section[1] ?? "";
-  const command = /^\s*command\s*=\s*"([^"]*)"/m.exec(block)?.[1];
-  const argsMatch = /^\s*args\s*=\s*\[([^\]]*)\]/m.exec(block);
-  const args = argsMatch?.[1]
-    ?.split(",")
-    .map((s) => s.trim().replace(/^"|"$/g, ""))
-    .filter(Boolean);
-  const type = /^\s*type\s*=\s*"([^"]*)"/m.exec(block)?.[1];
-  return { type, command, args };
+/** 🔎️True when an MCP server starts through the cross-platform Bun bootstrap that builds the native binary on demand. */
+function policyMcpServerUsesBootstrap(server: McpServer): boolean {
+  const args = server.args;
+  return server.command === "bun" && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
 }
 
 /**
- * 📏️MCP-config rule: every client launches through the Bun bootstrap so missing platform-specific binaries
- * are built before stdio is handed to the native repo MCP server.
+ * 📏️MCP-config rule: every client file is derived from the root dashboard declaration (`bun ./📜️script.ts agents write`),
+ * and every declared server launches through the Bun bootstrap so missing platform-specific binaries
+ * are built before stdio is handed to the native MCP server.
+ * @see ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts
  */
 function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  for (const relPath of POLICY_MCP_CONFIG_PATHS) {
-    const abs = join(repoRoot, relPath);
-    if (!existsSync(abs)) continue;
-    const content = readFileSync(abs, "utf8");
-    const entry = relPath.endsWith(".toml") ? policyMcpRepoServerFromToml(content) : policyMcpRepoServerFromJson(JSON.parse(content) as unknown);
-    if (entry && policyMcpRepoServerUsesBootstrap(entry)) continue;
-    breaches.push({
-      id: `mcp-config-${relPath}`,
-      summary: `"${relPath}" does not use the portable repo MCP bootstrap`,
-      kind: "runtime/mcp-config-repo-bootstrap",
-      scope: relPath,
-      priority: "high",
-      reason: "A checked-in native executable is platform-specific and may be absent in a fresh checkout; the Bun router resolves or builds the correct binary without writing protocol noise to stdout.",
-      solution: `In ${relPath}, set command to "bun" and args to ["./📜️script.ts", "dev", "mcp", "stdio", "<kind>"].`,
-    });
+  const breaches: BreachRecord[] = checkAgentClients(repoRoot).map((drift) => ({
+    id: `mcp-config-drift-${drift.path}`,
+    summary: `"${drift.path}" ${drift.reason === "missing" ? "is missing" : "differs from the root dashboard declaration"}`,
+    kind: "runtime/mcp-config-derived",
+    scope: drift.path,
+    priority: "high",
+    reason: "Every agent and editor client file is derived from `metadata.semio.dashboard.tools[].mcp` of the root 📋️project.json; a hand edit or a stale copy makes the clients disagree.",
+    solution: "Run `bun ./📜️script.ts agents write`.",
+  }));
+  for (const [client, servers] of Object.entries(mcpServersOf(readDeclaredTools(repoRoot)))) {
+    for (const server of servers.filter((entry) => !policyMcpServerUsesBootstrap(entry))) {
+      breaches.push({
+        id: `mcp-config-${client}-${server.name}`,
+        summary: `MCP server "${server.name}" of client ${client} does not use the portable repo MCP bootstrap`,
+        kind: "runtime/mcp-config-repo-bootstrap",
+        scope: AGENT_CLIENT_DECLARATION_MANIFEST,
+        priority: "high",
+        reason: "A checked-in native executable is platform-specific and may be absent in a fresh checkout; the Bun router resolves or builds the correct binary without writing protocol noise to stdout.",
+        solution: `In ${AGENT_CLIENT_DECLARATION_MANIFEST}, set the tool command to ["bun", "./📜️script.ts", "dev", "mcp", "stdio", "<kind>"].`,
+      });
+    }
   }
   return breaches;
 }
@@ -26014,6 +25881,22 @@ export function policyPackageLanguagePurityBreaches(repoRoot: string): BreachRec
     });
 }
 
+//#region 🔧️PolicyRuleDerivedConfig
+/** 📝️ Derived-config rule: the devcontainer editor block, the nextest scopes and the dependabot directories equal their derivation.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts */
+function policyDerivedConfigBreaches(repoRoot: string): BreachRecord[] {
+  return checkDerivedConfig(repoRoot).map((problem) => ({
+    id: `derived-config-${problem}`,
+    summary: problem,
+    kind: "config/derived-drift",
+    scope: /^[^:\s]+/.exec(problem)?.[0] ?? problem,
+    priority: "high" as const,
+    reason: "A checked-in file that derives from one canonical source must equal its derivation, otherwise two copies drift and the editor, container and test runners disagree.",
+    solution: "Run `bun nx run workspace:generate-config` to rewrite the derived files; edit the canonical source (.vscode/settings.json, .vscode/extensions.json, .devcontainer/editor-overlay.json, .config/nextest.toml) instead of the copy.",
+  }));
+}
+//#endregion 🔧️PolicyRuleDerivedConfig
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -26092,6 +25975,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyRawSpawnBreaches(repoRoot));
   breaches.push(...policyBudgetNullBreaches(repoRoot));
   breaches.push(...policyMcpConfigBreaches(repoRoot));
+  breaches.push(...policyDerivedConfigBreaches(repoRoot));
   breaches.push(...policySniffRealityBreaches(repoRoot));
   breaches.push(...policySubsetConformanceBreaches(repoRoot));
   breaches.push(...policySubsetSurfaceCompletenessBreaches(repoRoot));
@@ -26206,17 +26090,17 @@ export {
   toolJobArtifactRetainedCommandExact,
   toolJobArtifactRetainedCommandRuntimeLawExact,
   INTERACTIVITY_ALL_APP_REQUIRED_GATES,
-  type InteractivityAllAppLaunch,
   interactivityAllAppDescriptorFromSource,
   interactivityAllAppOracleJson,
   INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY,
   interactivityAllAppActionDispositionFailures,
   interactivityAllAppActionProductionFailures,
   INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY,
-  interactivityAllAppLaunchesFromSource,
-  INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY,
-  interactivityAllAppLaunchCoverageFailures,
-  interactivityAllAppPlaygroundLaunchNames,
+  interactivityAllAppGateFailures,
+  interactivityAllAppPlaygroundsFromSource,
+  interactivityAllAppRenderersFromSource,
+  interactivityAllAppPlaygroundSurfaces,
+  interactivityAllAppSurfaceCoverageFailures,
   interactivityIsRuntimeSource,
   policyReadFileSafe,
   INTERACTIVITY_AUDIT_UI_RECONCILE_FILE,

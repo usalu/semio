@@ -1,0 +1,17 @@
+{
+  "beam_types": {
+    "new-1": {
+      "entry": "Created",
+      "material": "m-steel",
+      "name": "Beam",
+      "profile": {
+        "IShape": {
+          "depth": 0.2,
+          "flange": 0.009,
+          "web": 0.006,
+          "width": 0.1
+        }
+      }
+    }
+  }
+}

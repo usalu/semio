@@ -31,7 +31,7 @@ bun ./📜️script.ts clean --dry
 3. **Oversized paths inside ticket folders only** (`…/🎆️YY/🌙️MM/☀️DD/TICKETSLUG/…`): files > 5MB, subfolders > 10MB. The ticket slug folder itself and year/month/day parents are never size-deleted.
 4. **Empty directories** — `bun ./📜️script.ts clean empty-folders` (and `clean marker-only-folders` for trees that contain only taxonomy marker files).
 5. **Build artifacts** named `target`, `🎯️target*`, `dist`, `build`, `out` larger than **10GB**.
-6. **Dev leftovers** — known dev executables (`bun`, `node`, `cargo`, `rustc`, `vite`, `esbuild`, `nx`, `turbo`, `cursor-agent`, …) plus command markers (`/semio/`, `node_modules/.bin`, `📜️script.ts`, `cursor-agent worker start`, …): every live match outside this script's ancestry and outside IDE hosts (Cursor/VS Code/Electron) is killed; zombies (including macOS `<defunct>` rows) are reaped by killing their still-live parent. Repeats until a pass finds nothing.
+6. **Dev leftovers** — known dev executables (`bun`, `node`, `cargo`, `rustc`, `vite`, `esbuild`, `nx`, `turbo`, `cursor-agent`, …) plus command markers (`/semio/`, `node_modules/.bin`, `📜️script.ts`, `cursor-agent worker start`, …): every live match outside this script's ancestry, outside IDE hosts (Cursor/VS Code/Electron) and outside the dashboard control plane (the daemon recorded in `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/daemon.pid`, every dashboard executable and daemon process, and all tasks they supervise; stop those with `bun run dashboard daemon stop`) is killed; zombies (including macOS `<defunct>` rows) are reaped by killing their still-live parent. Repeats until a pass finds nothing.
 
 Fast path (same stray-process step as full `clean`, without filesystem work):
 

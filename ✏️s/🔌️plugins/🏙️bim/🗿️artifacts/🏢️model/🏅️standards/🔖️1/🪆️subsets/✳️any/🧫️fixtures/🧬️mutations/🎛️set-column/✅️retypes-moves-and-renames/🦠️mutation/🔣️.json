@@ -1,0 +1,11 @@
+{
+  "mutation": "setColumn",
+  "id": "c-a1",
+  "column_type": "ct-500",
+  "position": {
+    "x": 1.5,
+    "y": 0.5
+  },
+  "rotation": 0.5,
+  "name": "A1 heavy"
+}

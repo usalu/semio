@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-elements/schema.json",
+  "title": "DeleteElements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 65536
+  },
+  "properties": {
+    "mutation": {
+      "const": "deleteElements"
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to act on; unknown ids refuse the whole call.",
+          "de": "Zu bearbeitende Elemente; unbekannte Ids verweigern den ganzen Aufruf."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "s.bim.model@1",
+  "project": { "name": "Oracle House", "description": "", "author": "", "organization": "", "phase_names": [] },
+  "materials": {
+    "m-brick": { "name": "Brick", "category": "Masonry", "color": { "r": 0.7, "g": 0.35, "b": 0.25 }, "density": 1800.0, "conductivity": 0.8, "specific_heat": 900.0 },
+    "m-insulation": { "name": "Mineral Wool", "category": "Insulation", "color": { "r": 0.9, "g": 0.85, "b": 0.3 }, "density": 40.0, "conductivity": 0.035, "specific_heat": 1030.0 }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        { "material": "m-brick", "thickness": 0.2, "function": "Structure" },
+        { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }
+      ]
+    },
+    "wt-150": {
+      "name": "Brick 150",
+      "layers": [{ "material": "m-brick", "thickness": 0.15, "function": "Structure" }]
+    }
+  },
+  "sites": {
+    "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 100.0, "true_north": 0.0, "boundary": [] }
+  },
+  "buildings": {
+    "bldg-1": { "site": "site-1", "name": "House", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 2.5 },
+    "bldg-2": { "site": "site-1", "name": "Shed", "origin": { "x": 20.0, "y": 0.0 }, "rotation": 0.0, "elevation": -0.5 }
+  },
+  "storeys": {
+    "st-basement": { "building": "bldg-1", "name": "Basement", "level": -1, "height": 2.6 },
+    "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 },
+    "st-first": { "building": "bldg-1", "name": "First", "level": 1, "height": 2.8 },
+    "st-roof": { "building": "bldg-1", "name": "Roof", "level": 2, "height": 0.5 },
+    "st-shed": { "building": "bldg-2", "name": "Shed", "level": 0, "height": 3.3 }
+  },
+  "walls": {
+    "w-basement-west": {
+      "storey": "st-basement", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 0.0, "y": 6.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "Unconnected": { "height": 2.0 } }, "phase": "New", "name": "Basement West"
+    },
+    "w-ground-south": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 8.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Ground South"
+    },
+    "w-ground-east": {
+      "storey": "st-ground", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 8.0, "y": 0.0 }, "end": { "x": 8.0, "y": 6.0 } } },
+      "location": "Exterior", "base_offset": 0.1, "top": { "Unconnected": { "height": 2.4 } }, "phase": "Existing", "name": "Ground East"
+    },
+    "w-ground-arc": {
+      "storey": "st-ground", "wall_type": "wt-300",
+      "axis": { "Arc": { "start": { "x": 8.0, "y": 6.0 }, "end": { "x": 0.0, "y": 6.0 }, "bulge": 0.5 } },
+      "location": "Center", "base_offset": 0.0, "top": { "Storey": { "storey": "st-first", "offset": -0.2 } }, "phase": "New", "name": "Ground Arc"
+    },
+    "w-first-west": {
+      "storey": "st-first", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 0.0, "y": 6.0 }, "end": { "x": 0.0, "y": 0.0 } } },
+      "location": "Interior", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.3 } }, "phase": "New", "name": "First West"
+    },
+    "w-first-north": {
+      "storey": "st-first", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 8.0, "y": 6.0 }, "end": { "x": 0.0, "y": 6.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "Storey": { "storey": "st-roof", "offset": 0.0 } }, "phase": "New", "name": "First North"
+    },
+    "w-shed-south": {
+      "storey": "st-shed", "wall_type": "wt-150",
+      "axis": { "Line": { "start": { "x": 20.0, "y": 0.0 }, "end": { "x": 26.0, "y": 0.0 } } },
+      "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Shed South"
+    }
+  }
+}

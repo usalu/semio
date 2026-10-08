@@ -1,0 +1,9 @@
+{
+  "stairs": {
+    "s-1": {
+      "entry": "Patched",
+      "max_riser": 0.175,
+      "name": "Garden stair"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {},
+  "wall_types": {},
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {},
+  "grids": {},
+  "walls": {},
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {}
+}

@@ -1,0 +1,39 @@
+{
+  "curtain_walls": {
+    "cw-2": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.3,
+          "end": {
+            "x": 8.0,
+            "y": 8.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 8.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-alu",
+      "name": "Bow",
+      "panel_material": "m-glass",
+      "storey": "st-ground",
+      "top": {
+        "Storey": {
+          "offset": 0.0,
+          "storey": "st-first"
+        }
+      },
+      "u_spacing": 1.5,
+      "v_spacing": 1.2
+    }
+  }
+}

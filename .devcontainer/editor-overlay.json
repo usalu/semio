@@ -1,0 +1,12 @@
+{
+  "settings": {
+    "omit": ["terminal.integrated.env.windows", "terminal.integrated.env.osx"],
+    "set": {
+      "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+    }
+  },
+  "extensions": {
+    "omit": ["ms-vscode-remote.remote-containers"],
+    "add": ["anthropic.claude-code"]
+  }
+}

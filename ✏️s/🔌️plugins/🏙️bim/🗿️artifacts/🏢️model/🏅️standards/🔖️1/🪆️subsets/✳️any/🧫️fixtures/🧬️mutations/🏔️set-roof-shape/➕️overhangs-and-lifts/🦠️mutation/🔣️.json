@@ -1,0 +1,6 @@
+{
+  "mutation": "setRoofShape",
+  "id": "rf-main",
+  "overhang": 0.6,
+  "base_offset": 0.1
+}

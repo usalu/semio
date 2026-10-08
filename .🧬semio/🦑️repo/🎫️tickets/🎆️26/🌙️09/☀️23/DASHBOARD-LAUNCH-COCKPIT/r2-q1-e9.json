@@ -1,0 +1,2 @@
+[["        eprintln!(\"[semio] unknown verb {:?}\", argv.first().map_or(\"\", String::as_str));", "        let text = labels(cli_locale(root, &ParsedArgs::default()));\n        eprintln!(\"{}\", text.cli_unknown_verb.fill(&[(\"verb\", &format!(\"{:?}\", argv.first().map_or(\"\", String::as_str)))]).into_string());"],
+ ["use crate::proc::spawn_inherit;", "use crate::args::ParsedArgs;\nuse crate::preferences::cli_locale;\nuse crate::proc::spawn_inherit;\nuse crate::terminal::labels::labels;"]]

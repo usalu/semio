@@ -1,0 +1,7 @@
+{
+  "mutation": "setMaterial",
+  "id": "m-brick",
+  "density": 1900,
+  "conductivity": 0.9,
+  "specific_heat": 880
+}

@@ -3000,51 +3000,6 @@ func applySystemAutofixes(breachs []model.Breach) (int, error) {
 	fixed := 0
 	for _, v := range breachs {
 		switch v.Kind {
-		case model.BreachSystemDevcontainerVscodeSettingsOutside:
-			settingsPath := filepath.Join(workspace.RootDir, ".vscode", "settings.json")
-			settingsData, err := os.ReadFile(settingsPath)
-			if err != nil {
-				continue
-			}
-			var settings map[string]interface{}
-			if err := json.Unmarshal(settingsData, &settings); err != nil {
-				continue
-			}
-			devcontainerPath := filepath.Join(workspace.RootDir, ".devcontainer", "devcontainer.json")
-			var devcontainer map[string]interface{}
-			if dcData, err := os.ReadFile(devcontainerPath); err == nil {
-				_ = json.Unmarshal(dcData, &devcontainer)
-			}
-			if devcontainer == nil {
-				devcontainer = map[string]interface{}{}
-			}
-			customizations, _ := devcontainer["customizations"].(map[string]interface{})
-			if customizations == nil {
-				customizations = map[string]interface{}{}
-			}
-			vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
-			if vscodeCustom == nil {
-				vscodeCustom = map[string]interface{}{}
-			}
-			vscodeCustom["settings"] = settings
-			customizations["vscode"] = vscodeCustom
-			devcontainer["customizations"] = customizations
-			dcOut, err := json.MarshalIndent(devcontainer, "", "  ")
-			if err != nil {
-				continue
-			}
-			if err := os.MkdirAll(filepath.Join(workspace.RootDir, ".devcontainer"), 0755); err != nil {
-				continue
-			}
-			if err := os.WriteFile(devcontainerPath, append(dcOut, '\n'), 0644); err != nil {
-				continue
-			}
-			_ = os.Remove(settingsPath)
-			vscodeDir := filepath.Join(workspace.RootDir, ".vscode")
-			if entries, err := os.ReadDir(vscodeDir); err == nil && len(entries) == 0 {
-				_ = os.Remove(vscodeDir)
-			}
-			fixed++
 		case model.BreachFolderIllegalEmpty:
 			folderPath := filepath.Join(workspace.RootDir, v.Excerpt)
 			entries, readErr := os.ReadDir(folderPath)
@@ -3053,17 +3008,6 @@ func applySystemAutofixes(breachs []model.Breach) (int, error) {
 					fixed++
 				}
 			}
-		case model.BreachSystemDevcontainerVscodeExtensionsOutside:
-			devcontainerExtensions := statutespkg.ReadDevcontainerVscodeExtensions(workspace.RootDir)
-			workspaceRecommendations, _ := statutespkg.ReadWorkspaceExtensionRecommendations(workspace.RootDir)
-			merged := statutespkg.MergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
-			if len(merged) == 0 {
-				continue
-			}
-			if err := statutespkg.WriteWorkspaceExtensionRecommendations(workspace.RootDir, merged); err != nil {
-				continue
-			}
-			fixed++
 		}
 	}
 	return fixed, nil

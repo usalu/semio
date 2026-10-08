@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-beam-type/schema.json",
+  "title": "DeleteBeamType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteBeamType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Beam type",
+          "de": "Trägertyp"
+        },
+        "ref": {
+          "kind": "beam-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

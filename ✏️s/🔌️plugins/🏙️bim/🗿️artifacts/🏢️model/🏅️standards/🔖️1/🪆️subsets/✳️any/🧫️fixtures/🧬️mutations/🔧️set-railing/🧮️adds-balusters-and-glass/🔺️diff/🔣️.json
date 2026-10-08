@@ -1,0 +1,28 @@
+{
+  "railings": {
+    "rl-1": {
+      "baluster": {
+        "value": {
+          "profile": {
+            "Rectangle": {
+              "depth": 0.02,
+              "width": 0.02
+            }
+          },
+          "spacing": 0.12
+        }
+      },
+      "entry": "Patched",
+      "infill": {
+        "Glass": {
+          "thickness": 0.012
+        }
+      },
+      "profile": {
+        "Circle": {
+          "diameter": 0.05
+        }
+      }
+    }
+  }
+}

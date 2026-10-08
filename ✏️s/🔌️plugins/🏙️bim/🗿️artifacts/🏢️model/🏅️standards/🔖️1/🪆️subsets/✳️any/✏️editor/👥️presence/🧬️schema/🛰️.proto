@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.app.bim.model;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message BimPresence {
+  string engagement_input = 1;
+  string storey = 2;
+  semio.framework.ui.viewport.Viewport2d camera = 3;
+}

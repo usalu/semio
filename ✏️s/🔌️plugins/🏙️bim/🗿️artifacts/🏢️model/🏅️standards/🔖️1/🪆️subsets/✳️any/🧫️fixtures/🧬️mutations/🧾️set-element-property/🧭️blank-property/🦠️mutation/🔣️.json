@@ -1,0 +1,11 @@
+{
+  "mutation": "setElementProperty",
+  "id": "c-1",
+  "pset": "Pset_ColumnCommon",
+  "property": "",
+  "value": {
+    "Boolean": {
+      "value": true
+    }
+  }
+}

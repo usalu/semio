@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️set-wall-axis",
+  "semanticKind": "set-wall-axis",
+  "displayName": "Set Wall Axis",
+  "emoji": "〰️",
+  "aggregateVariant": "SetWallAxis",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 400,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "columns": {
+    "c-a1": {
+      "column_type": "ct-500",
+      "entry": "Patched",
+      "name": "A1 heavy",
+      "position": {
+        "x": 1.5,
+        "y": 0.5
+      },
+      "rotation": 0.5
+    }
+  }
+}

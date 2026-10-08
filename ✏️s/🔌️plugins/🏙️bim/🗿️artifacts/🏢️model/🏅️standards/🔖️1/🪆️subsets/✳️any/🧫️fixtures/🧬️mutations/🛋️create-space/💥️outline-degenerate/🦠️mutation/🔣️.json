@@ -1,0 +1,37 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-1",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.01",
+    "name": "Sliver",
+    "boundary": {
+      "Explicit": {
+        "outline": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 2,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 4,
+              "y": 0
+            },
+            "bulge": 0
+          }
+        ]
+      }
+    },
+    "usage": "Living"
+  }
+}

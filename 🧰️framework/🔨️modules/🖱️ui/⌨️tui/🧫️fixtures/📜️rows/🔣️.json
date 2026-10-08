@@ -1,0 +1,32 @@
+{
+  "schema": "row-filter",
+  "oracle": "plain substring scan per lowercase token",
+  "labels": [
+    "dev / 🧰️framework / 🖥️platform / puzzle3d",
+    "build / 🧰️framework / ⌨️tui / test",
+    "test / 🧰️framework / ⌨️tui / unit",
+    "dev / 🧰️framework / 🖱️ui / playground",
+    "check / 🛍️products / 🦑️repo / dashboard",
+    "serve / 🛍️products / 🦑️repo / dashboard",
+    "Überblick / docs",
+    "ÜBER dev / mixed case",
+    "format / 🧰️framework / 🧑‍💻dev / lint",
+    "bench / ⌨️tui / Αθήνα"
+  ],
+  "queries": [
+    { "query": "", "rows": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "query": "dev", "rows": [0, 3, 7, 8] },
+    { "query": "DEV", "rows": [0, 3, 7, 8] },
+    { "query": "dev tui", "rows": [] },
+    { "query": "tui dev", "rows": [] },
+    { "query": "überblick", "rows": [6] },
+    { "query": "ÜBER", "rows": [6, 7] },
+    { "query": "🧰", "rows": [0, 1, 2, 3, 8] },
+    { "query": "framework tui", "rows": [1, 2] },
+    { "query": "dashboard repo", "rows": [4, 5] },
+    { "query": "αθήνα", "rows": [9] },
+    { "query": "nothing", "rows": [] },
+    { "query": "dev  dev", "rows": [0, 3, 7, 8] },
+    { "query": "dev de", "rows": [0, 3, 7, 8] }
+  ]
+}

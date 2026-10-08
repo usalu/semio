@@ -1,0 +1,9 @@
+{
+  "mutation": "setOpening",
+  "id": "o-1",
+  "kind": {
+    "Window": {
+      "window_type": "win-9"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "stringer": {
+    "kind": "Mono",
+    "width": 0.12,
+    "depth": 0.3
+  },
+  "riser": "Open",
+  "nosing": 0.03,
+  "tread_thickness": 0.05,
+  "landing_depth": 1.2
+}

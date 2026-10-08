@@ -1,0 +1,58 @@
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {},
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {},
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {},
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {},
+  "window_types": {}
+}

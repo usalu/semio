@@ -27,6 +27,7 @@ import {
   MonorepoTreeItem,
   parseRepoEvents,
   parseUri,
+  resolveRepoBinaryPath,
   RepoEvent,
   slugify,
   TicketData,
@@ -968,7 +969,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
+    assert.ok(hasRepoAccess(), "repo CLI binary (semio-repo) must be built or named by REPO_CLI_BIN");
     assert.ok(children.length > 0, "CLI returned no children — check that 'search' command exists");
     const labels = children.map((c) => c.label as string);
     assert.ok(
@@ -981,7 +982,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
+    assert.ok(hasRepoAccess(), "repo CLI binary (semio-repo) must be built or named by REPO_CLI_BIN");
     assert.ok(roots.length > 0, "CLI returned no root elements — check that 'search' command exists");
     for (const r of roots) {
       assert.strictEqual(r.contextValue, "category", `Root ${r.label} should have category contextValue`);
@@ -1003,7 +1004,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
+    assert.ok(hasRepoAccess(), "repo CLI binary (semio-repo) must be built or named by REPO_CLI_BIN");
     const codebaseRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Codebase"));
     assert.ok(codebaseRoot, "Codebase category not found in tree root");
     const expanded = await provider.getChildren(codebaseRoot);
@@ -1234,6 +1235,24 @@ suite("RepoEvent Extended Parsing Test Suite", () => {
     const output = '{"kind":"result","result":{}}\n\n  \n';
     const events = parseRepoEvents(output);
     assert.strictEqual(events.length, 1);
+  });
+
+  test("resolveRepoBinaryPath names the semio-repo deliverable of the shared Cargo target-dir, or REPO_CLI_BIN", () => {
+    const root = fs.mkdtempSync(path.join(require("os").tmpdir(), "repo-binary-"));
+    try {
+      const ext = process.platform === "win32" ? ".exe" : "";
+      const built = path.join(root, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", `semio-repo${ext}`);
+      assert.strictEqual(resolveRepoBinaryPath(root, {}), undefined);
+      fs.mkdirSync(path.dirname(built), { recursive: true });
+      fs.writeFileSync(built, "");
+      assert.strictEqual(resolveRepoBinaryPath(root, {}), built);
+      const own = path.join(root, "own-cli");
+      assert.strictEqual(resolveRepoBinaryPath(root, { REPO_CLI_BIN: own }), undefined);
+      fs.writeFileSync(own, "");
+      assert.strictEqual(resolveRepoBinaryPath(root, { REPO_CLI_BIN: own }), own);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("extractRepoResult handles empty events", () => {

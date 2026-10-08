@@ -68,7 +68,7 @@
             },
             "parameters": [
               {
-                "id": "port",
+                "id": "stories-port",
                 "kind": "text",
                 "default": "6069",
                 "valueEnv": "PETS_STORIES_PORT"

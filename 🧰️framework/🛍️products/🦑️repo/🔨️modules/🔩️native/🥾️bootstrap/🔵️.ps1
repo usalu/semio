@@ -414,7 +414,7 @@ Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".�
 Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
-Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "compose"
+Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
 Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
 Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
 #endregion 🗂️UserState

@@ -54,12 +54,12 @@ bun ./📜️script.ts test                        # the unit suites of the Type
 bun ./📜️script.ts test quick                  # every sweep and statistical session in full (`long` runs the same amount)
 bun ./📜️script.ts test exhaustive             # more seeds, finer grids, longer sessions, and coverage
 
-bun nx run @semio-tech/pets:test              # the same through nx            (bun run test:pets)
-bun nx run @semio-tech/pets:typecheck         # the core, its suites, adapters  (bun run typecheck:pets)
-bun nx run @semio-tech/pets-rs:test           # the Rust core                  (bun run test:pets:rs)
-bun nx run @semio-tech/pets-react:test        # the React target               (bun run test:pets:react)
-bun nx run @semio-tech/pets-react:typecheck   # its types                      (bun run typecheck:pets:react)
-bun nx run @semio-tech/pets-react:dev         # the stories gallery            (bun run dev:pets:stories)
+bun nx run @semio-tech/pets:test              # the same through nx
+bun nx run @semio-tech/pets:typecheck         # the core, its suites, adapters
+bun nx run @semio-tech/pets-rs:test           # the Rust core
+bun nx run @semio-tech/pets-react:test        # the React target
+bun nx run @semio-tech/pets-react:typecheck   # its types
+bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready   # the stories gallery (prints its URL)
 
 cd "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
 bun ./📜️script.ts contract --owner "🧰️framework/🛍️products/🐾️pets"
@@ -335,7 +335,7 @@ in print the layer is not shown. A fault inside the show ends the show silently.
 
 Time comes from the pacer (`createPacer`): frames at the rate the stage asks for — 64, 32 or 16 ticks per second —
 and a timer for the next scheduled change while nothing moves. The cast rotates every 60 to 120 seconds of stage
-time, never while the stage is `still` or quiet. The stories gallery (`📖️stories`, `bun run dev:pets:stories`, port
+time, never while the stage is `still` or quiet. The stories gallery (`📖️stories`, dashboard command `@semio-tech/pets-react:dev`, port
 6069; `PETS_MENAGERIE` names another menagerie) has a page per species — at rest and every clip, every state with its
 tint, look and particles, every trick and the purr, every clip of getting around with its gear, wall, ladder, rope,
 block or hand, on a light and a dark ground — and a sandbox of mock cards (walls, gutters, rows marked

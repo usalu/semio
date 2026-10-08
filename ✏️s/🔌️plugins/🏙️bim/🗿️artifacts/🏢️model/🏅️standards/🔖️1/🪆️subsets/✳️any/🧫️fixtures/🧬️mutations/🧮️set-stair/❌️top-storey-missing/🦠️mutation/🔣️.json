@@ -1,0 +1,10 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "top": {
+    "Storey": {
+      "storey": "st-attic",
+      "offset": 0
+    }
+  }
+}

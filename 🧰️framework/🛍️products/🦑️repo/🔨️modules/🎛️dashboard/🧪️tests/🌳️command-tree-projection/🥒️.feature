@@ -3,7 +3,7 @@
 @comparison-ordered-json-v1
 Feature: One workspace always projects the same dashboard command tree
   The dashboard discovers what it can run by walking a repository: every `📋️project.json` target
-  becomes a wizard path whose first step is the verb its name begins with (`task` for any other
+  becomes a registry command and a wizard path whose first step is the verb its name begins with (`task` for any other
   name), whose middle steps are the taxonomy segments of the manifest's directory with the noise
   segments dropped and whose last step is the exact target name, and the repo
   domain contributes its own branches — one branch per ticket found under
@@ -20,7 +20,7 @@ Feature: One workspace always projects the same dashboard command tree
   Scenario: A frozen workspace projects one command tree
     Given the workspace vector shared://🌳️command-tree-projection/🏗️workspace.json
     When each implementation materialises the workspace and discovers its command tree
-    Then every implementation projects the same tree document, with the nx targets first and the repo-domain branches carrying their action keys and their Go argv
+    Then every implementation projects the same tree document, with the nx targets first, each leaf naming its registry command id, and the repo-domain branches carrying their action keys and their Go argv
 
   @id-the-projection-does-not-depend-on-directory-order
   @level-quick

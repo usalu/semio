@@ -1,0 +1,188 @@
+[
+ {
+  "name": "unit square column mid height",
+  "outer": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    1.0,
+    0.0
+   ],
+   [
+    1.0,
+    1.0
+   ],
+   [
+    0.0,
+    1.0
+   ]
+  ],
+  "holes": [],
+  "bottom": 0,
+  "top": 2,
+  "z": 1,
+  "expected": [
+   {
+    "closed": true,
+    "area": 1,
+    "points": 4
+   }
+  ]
+ },
+ {
+  "name": "cut above the solid",
+  "outer": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    1.0,
+    0.0
+   ],
+   [
+    1.0,
+    1.0
+   ],
+   [
+    0.0,
+    1.0
+   ]
+  ],
+  "holes": [],
+  "bottom": 0,
+  "top": 2,
+  "z": 3,
+  "expected": []
+ },
+ {
+  "name": "slab with opening",
+  "outer": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    4.0,
+    0.0
+   ],
+   [
+    4.0,
+    4.0
+   ],
+   [
+    0.0,
+    4.0
+   ]
+  ],
+  "holes": [
+   [
+    [
+     1.0,
+     1.0
+    ],
+    [
+     3.0,
+     1.0
+    ],
+    [
+     3.0,
+     3.0
+    ],
+    [
+     1.0,
+     3.0
+    ]
+   ]
+  ],
+  "bottom": 0,
+  "top": 0.2,
+  "z": 0.1,
+  "expected": [
+   {
+    "closed": true,
+    "area": 16,
+    "points": 4
+   },
+   {
+    "closed": true,
+    "area": -4,
+    "points": 4
+   }
+  ]
+ },
+ {
+  "name": "L shape wall",
+  "outer": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    2.0,
+    0.0
+   ],
+   [
+    2.0,
+    1.0
+   ],
+   [
+    1.0,
+    1.0
+   ],
+   [
+    1.0,
+    2.0
+   ],
+   [
+    0.0,
+    2.0
+   ]
+  ],
+  "holes": [],
+  "bottom": 0,
+  "top": 3,
+  "z": 1.5,
+  "expected": [
+   {
+    "closed": true,
+    "area": 3,
+    "points": 6
+   }
+  ]
+ },
+ {
+  "name": "cut exactly at the top face",
+  "outer": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    1.0,
+    0.0
+   ],
+   [
+    1.0,
+    1.0
+   ],
+   [
+    0.0,
+    1.0
+   ]
+  ],
+  "holes": [],
+  "bottom": 0,
+  "top": 2,
+  "z": 2,
+  "expected": [
+   {
+    "closed": true,
+    "area": 1,
+    "points": 4
+   }
+  ]
+ }
+]

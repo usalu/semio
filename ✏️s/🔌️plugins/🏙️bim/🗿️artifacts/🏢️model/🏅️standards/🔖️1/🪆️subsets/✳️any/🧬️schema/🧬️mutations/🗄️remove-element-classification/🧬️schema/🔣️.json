@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/remove-element-classification/schema.json",
+  "title": "RemoveElementClassification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeElementClassification"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-beam",
+  "semanticKind": "delete-beam",
+  "displayName": "Delete Beam",
+  "emoji": "✂️",
+  "aggregateVariant": "DeleteBeam",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 504,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

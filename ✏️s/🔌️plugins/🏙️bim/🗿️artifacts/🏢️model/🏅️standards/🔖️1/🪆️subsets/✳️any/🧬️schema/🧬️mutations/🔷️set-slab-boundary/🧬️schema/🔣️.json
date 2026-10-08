@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-slab-boundary/schema.json",
+  "title": "SetSlabBoundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "boundary",
+    "holes"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSlabBoundary"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slab",
+          "de": "Decke"
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "boundary": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Boundary",
+          "de": "Umriss"
+        },
+        "group": "outline",
+        "order": 20
+      }
+    },
+    "holes": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Holes",
+          "de": "Öffnungen"
+        },
+        "group": "outline",
+        "order": 30
+      }
+    }
+  }
+}

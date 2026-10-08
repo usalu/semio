@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-slab/schema.json",
+  "title": "CreateSlab",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "slab"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSlab"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Slab id",
+          "de": "Decken-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "slab": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slab",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Slab",
+          "de": "Decke"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "mutation": "createStair",
+  "id": "s-1",
+  "stair": {
+    "storey": "st-ground",
+    "start": {
+      "x": 1,
+      "y": 1
+    },
+    "direction": 0,
+    "width": 1,
+    "flight": {
+      "UTurn": {
+        "gap": -1
+      }
+    },
+    "top": {
+      "StoreyTop": {
+        "offset": 0
+      }
+    },
+    "max_riser": 0.18,
+    "min_tread": 0.27,
+    "stringer": {
+      "kind": "None",
+      "width": 0.05,
+      "depth": 0.25
+    },
+    "nosing": 0,
+    "tread_thickness": 0.04,
+    "riser": "Closed",
+    "landing_depth": 1,
+    "name": "Main stair"
+  }
+}

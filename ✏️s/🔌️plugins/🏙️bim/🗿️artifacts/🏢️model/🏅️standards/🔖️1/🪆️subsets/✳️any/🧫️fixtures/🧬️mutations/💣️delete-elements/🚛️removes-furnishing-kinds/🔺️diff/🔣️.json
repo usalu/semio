@@ -1,0 +1,47 @@
+{
+  "beams": {
+    "b-1": {
+      "entry": "Deleted"
+    }
+  },
+  "columns": {
+    "c-1": {
+      "entry": "Deleted"
+    }
+  },
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Deleted"
+    }
+  },
+  "grids": {
+    "g-a": {
+      "entry": "Deleted"
+    }
+  },
+  "railings": {
+    "r-1": {
+      "entry": "Deleted"
+    }
+  },
+  "roofs": {
+    "rf-1": {
+      "entry": "Deleted"
+    }
+  },
+  "slabs": {
+    "sl-1": {
+      "entry": "Deleted"
+    }
+  },
+  "spaces": {
+    "sp-1": {
+      "entry": "Deleted"
+    }
+  },
+  "stairs": {
+    "s-1": {
+      "entry": "Deleted"
+    }
+  }
+}

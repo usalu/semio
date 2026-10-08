@@ -144,7 +144,7 @@ mod platform {
             let inner = UnixListener::bind(&path)?;
             std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
             inner.set_nonblocking(true)?;
-            std::fs::create_dir_all(ipc::dashboard_cache_dir(root))?;
+            std::fs::create_dir_all(ipc::daemon_dir(root))?;
             record_endpoint(root, &path.display().to_string())?;
             Ok(Self { inner, root: root.to_path_buf(), path, lock, _held: held })
         }
@@ -258,6 +258,7 @@ mod platform {
     const PIPE_ACCESS_DUPLEX: u32 = 0x0000_0003;
     const FILE_FLAG_OVERLAPPED: u32 = 0x4000_0000;
     const FILE_FLAG_FIRST_PIPE_INSTANCE: u32 = 0x0008_0000;
+    const SECURITY_SQOS_PRESENT: u32 = 0x0010_0000;
     const PIPE_REJECT_REMOTE_CLIENTS: u32 = 0x0000_0008;
     const PIPE_UNLIMITED_INSTANCES: u32 = 255;
     const PIPE_BUFFER_BYTES: u32 = 64 * 1024;
@@ -342,7 +343,7 @@ mod platform {
         Ok(unsafe { OwnedHandle::from_raw_handle(handle.cast()) })
     }
 
-    /// ⏱️ Completes one overlapped read or write and answers how many bytes it moved.
+    /// 🔚️ Completes one overlapped read or write and answers how many bytes it moved.
     fn complete(pipe: Handle, started: i32, overlapped: &mut Overlapped, moved: &mut u32) -> bool {
         if started != 0 { return true; }
         if std::io::Error::last_os_error().raw_os_error() != Some(ERROR_IO_PENDING) { return false; }
@@ -356,7 +357,7 @@ mod platform {
         if let Some(signal) = signal { signal.raise(); }
     }
 
-    /// 🔌 A connected named pipe whose reads and writes never wait: one thread blocks on overlapped
+    /// 🚇️ A connected named pipe whose reads and writes never wait: one thread blocks on overlapped
     /// reads, one on overlapped writes, and each side of the stream only touches a bounded queue.
     pub struct Stream {
         pipe: Arc<std::fs::File>,
@@ -366,12 +367,12 @@ mod platform {
     }
 
     impl Stream {
-        /// 🤝 Connects to the daemon of a workspace, retrying while the daemon is between two pipe instances.
+        /// 🔗️ Connects to the daemon of a workspace, retrying while the daemon is between two pipe instances.
         pub fn connect(root: &Path) -> std::io::Result<Self> {
             let name = ipc::endpoint(root);
             let deadline = std::time::Instant::now() + Duration::from_secs(1);
             loop {
-                match std::fs::OpenOptions::new().read(true).write(true).custom_flags(FILE_FLAG_OVERLAPPED).open(&name) {
+                match std::fs::OpenOptions::new().read(true).write(true).custom_flags(FILE_FLAG_OVERLAPPED).security_qos_flags(SECURITY_SQOS_PRESENT).open(&name) {
                     Ok(file) => return Self::adopt(file),
                     Err(error) if matches!(error.raw_os_error(), Some(ERROR_FILE_NOT_FOUND | ERROR_PIPE_BUSY)) && std::time::Instant::now() < deadline => std::thread::sleep(Duration::from_millis(20)),
                     Err(error) => return Err(error),
@@ -434,13 +435,16 @@ mod platform {
                     }
                     rest = &rest[written as usize..];
                 }
-                if let Ok(mut state) = outbound.state.lock() { state.bytes.drain(..chunk.len().min(state.bytes.len())); }
+                if let Ok(mut state) = outbound.state.lock() {
+                    let count = chunk.len().min(state.bytes.len());
+                    state.bytes.drain(..count);
+                }
                 raise(&watch);
             })?;
             Ok(stream)
         }
 
-        /// 📥 `Some(0)` is the end of the stream, `None` means nothing has arrived yet.
+        /// 📨️ `Some(0)` is the end of the stream, `None` means nothing has arrived yet.
         pub fn try_read(&mut self, buf: &mut [u8]) -> std::io::Result<Option<usize>> {
             let mut state = self.inbound.state.lock().map_err(|_| std::io::Error::other("dashboard pipe queue poisoned"))?;
             if state.bytes.is_empty() { return Ok(state.closed.then_some(0)); }
@@ -450,7 +454,7 @@ mod platform {
             Ok(Some(count))
         }
 
-        /// 📤 How many bytes the outbound queue took; `0` means it is full for now. Bytes stay queued
+        /// 📩️ How many bytes the outbound queue took; `0` means it is full for now. Bytes stay queued
         /// until the pipe has taken them, so the queue length is what the peer has not accepted yet.
         pub fn try_write(&mut self, data: &[u8]) -> std::io::Result<usize> {
             let mut state = self.outbound.state.lock().map_err(|_| std::io::Error::other("dashboard pipe queue poisoned"))?;
@@ -472,9 +476,68 @@ mod platform {
         }
     }
 
+    #[repr(C)]
+    struct SecurityAttributes {
+        length: u32,
+        descriptor: *mut c_void,
+        inherit: i32,
+    }
+
+    #[repr(C)]
+    struct TokenUser {
+        sid: *mut c_void,
+        attributes: u32,
+    }
+
+    #[link(name = "advapi32")]
+    extern "system" {
+        fn OpenProcessToken(process: Handle, access: u32, token: *mut Handle) -> i32;
+        fn GetTokenInformation(token: Handle, class: u32, information: *mut c_void, length: u32, returned: *mut u32) -> i32;
+        fn ConvertSidToStringSidW(sid: *mut c_void, text: *mut *mut u16) -> i32;
+        fn ConvertStringSecurityDescriptorToSecurityDescriptorW(text: *const u16, revision: u32, descriptor: *mut *mut c_void, size: *mut u32) -> i32;
+    }
+
+    extern "system" {
+        fn GetCurrentProcess() -> Handle;
+        fn CloseHandle(handle: Handle) -> i32;
+        fn LocalFree(memory: *mut c_void) -> *mut c_void;
+    }
+
+    /// 🔐 The security descriptor of the daemon's pipe: a protected DACL that grants full access to the user
+    /// the daemon runs as and to nobody else, whatever the pipe's creator inherits by default.
+    ///
+    /// @see https://learn.microsoft.com/windows/win32/secauthz/security-descriptor-string-format
+    fn pipe_descriptor() -> std::io::Result<usize> {
+        static DESCRIPTOR: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
+        if let Some(descriptor) = DESCRIPTOR.get() { return Ok(*descriptor); }
+        const TOKEN_QUERY: u32 = 0x0008;
+        const TOKEN_USER_CLASS: u32 = 1;
+        const SDDL_REVISION_1: u32 = 1;
+        let failure = || std::io::Error::last_os_error();
+        let mut token: Handle = std::ptr::null_mut();
+        if unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) } == 0 { return Err(failure()); }
+        let mut needed = 0u32;
+        unsafe { GetTokenInformation(token, TOKEN_USER_CLASS, std::ptr::null_mut(), 0, &mut needed) };
+        let mut buffer = vec![0u64; (needed as usize).div_ceil(8).max(8)];
+        let read = unsafe { GetTokenInformation(token, TOKEN_USER_CLASS, buffer.as_mut_ptr().cast(), (buffer.len() * 8) as u32, &mut needed) };
+        let error = failure();
+        unsafe { CloseHandle(token) };
+        if read == 0 { return Err(error); }
+        let mut text: *mut u16 = std::ptr::null_mut();
+        if unsafe { ConvertSidToStringSidW((*buffer.as_ptr().cast::<TokenUser>()).sid, &mut text) } == 0 { return Err(failure()); }
+        let length = (0..).take_while(|index| unsafe { *text.add(*index) } != 0).count();
+        let sid = String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(text, length) });
+        unsafe { LocalFree(text.cast()) };
+        let sddl: Vec<u16> = std::ffi::OsStr::new(&format!("D:P(A;;GA;;;{sid})")).encode_wide().chain(std::iter::once(0)).collect();
+        let mut descriptor: *mut c_void = std::ptr::null_mut();
+        if unsafe { ConvertStringSecurityDescriptorToSecurityDescriptorW(sddl.as_ptr(), SDDL_REVISION_1, &mut descriptor, std::ptr::null_mut()) } == 0 { return Err(failure()); }
+        Ok(*DESCRIPTOR.get_or_init(|| descriptor as usize))
+    }
+
     fn instance(name: &str, first: bool) -> std::io::Result<std::fs::File> {
         let wide: Vec<u16> = std::ffi::OsStr::new(name).encode_wide().chain(std::iter::once(0)).collect();
-        let handle = unsafe { CreateNamedPipeW(wide.as_ptr(), PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED | if first { FILE_FLAG_FIRST_PIPE_INSTANCE } else { 0 }, PIPE_REJECT_REMOTE_CLIENTS, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_BYTES, PIPE_BUFFER_BYTES, 0, std::ptr::null_mut()) };
+        let mut attributes = SecurityAttributes { length: size_of::<SecurityAttributes>() as u32, descriptor: pipe_descriptor()? as *mut c_void, inherit: 0 };
+        let handle = unsafe { CreateNamedPipeW(wide.as_ptr(), PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED | if first { FILE_FLAG_FIRST_PIPE_INSTANCE } else { 0 }, PIPE_REJECT_REMOTE_CLIENTS, PIPE_UNLIMITED_INSTANCES, PIPE_BUFFER_BYTES, PIPE_BUFFER_BYTES, 0, (&mut attributes as *mut SecurityAttributes).cast()) };
         if handle.is_null() || handle as isize == -1 {
             let error = std::io::Error::last_os_error();
             return Err(if error.raw_os_error() == Some(ERROR_ACCESS_DENIED) { std::io::Error::new(std::io::ErrorKind::AlreadyExists, "workspace dashboard daemon is already listening") } else { error });
@@ -482,7 +545,7 @@ mod platform {
         Ok(unsafe { std::fs::File::from_raw_handle(handle.cast()) })
     }
 
-    /// 👂 The daemon's named pipe. One thread owns the wait for the next peer and hands every
+    /// 🎧️ The daemon's named pipe. One thread owns the wait for the next peer and hands every
     /// connected instance over; the first instance is created exclusively, so a second daemon fails.
     pub struct Listener {
         accepted: mpsc::Receiver<std::fs::File>,
@@ -497,7 +560,7 @@ mod platform {
         pub fn bind(root: &Path) -> std::io::Result<Self> {
             let name = ipc::pipe_name(root);
             let first = instance(&name, true)?;
-            std::fs::create_dir_all(ipc::dashboard_cache_dir(root))?;
+            std::fs::create_dir_all(ipc::daemon_dir(root))?;
             record_endpoint(root, &name)?;
             let (sender, accepted) = mpsc::channel();
             let (stop, watch, listening, done) = (Arc::new(AtomicBool::new(false)), Watch::default(), name.clone(), event()?);
@@ -539,7 +602,7 @@ mod platform {
         }
     }
 
-    /// ⏰ Ends a wait from another thread, and is what streams and pseudo-terminals raise.
+    /// 🛎️ Ends a wait from another thread, and is what streams and pseudo-terminals raise.
     #[derive(Clone)]
     pub struct Waker {
         signal: Arc<Signal>,
@@ -558,7 +621,7 @@ mod platform {
         }
     }
 
-    /// ⏳ One wait over the listener, the streams and the pseudo-terminals named since `begin`. Nothing
+    /// 🕰️ One wait over the listener, the streams and the pseudo-terminals named since `begin`. Nothing
     /// here can be asked whether it is ready, so every named source is reported and its queue answers.
     pub struct Poller {
         signal: Arc<Signal>,

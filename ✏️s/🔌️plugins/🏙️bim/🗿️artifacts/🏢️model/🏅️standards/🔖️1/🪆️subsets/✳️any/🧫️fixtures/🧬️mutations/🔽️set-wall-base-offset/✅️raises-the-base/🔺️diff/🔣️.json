@@ -1,0 +1,8 @@
+{
+  "walls": {
+    "w-south": {
+      "base_offset": 0.15,
+      "entry": "Patched"
+    }
+  }
+}

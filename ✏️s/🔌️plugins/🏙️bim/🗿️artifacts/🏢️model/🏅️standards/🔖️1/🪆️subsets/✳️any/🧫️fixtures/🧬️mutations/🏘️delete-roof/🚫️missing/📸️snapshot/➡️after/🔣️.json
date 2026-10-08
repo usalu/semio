@@ -1,0 +1,230 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Model",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    },
+    "m-concrete": {
+      "name": "Concrete",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800,
+      "conductivity": 0.8,
+      "specific_heat": 900
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "stt-22": {
+      "name": "Concrete 22",
+      "layers": [
+        {
+          "material": "m-concrete",
+          "thickness": 0.22,
+          "function": "Structure"
+        }
+      ]
+    },
+    "stt-30": {
+      "name": "Concrete 30",
+      "layers": [
+        {
+          "material": "m-concrete",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rt-tiles": {
+      "name": "Tiled roof",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.05,
+          "function": "Finish"
+        }
+      ]
+    }
+  },
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47,
+      "longitude": 8,
+      "elevation": 100,
+      "true_north": 0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rotation": 0,
+      "elevation": 0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "grids": {},
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8,
+            "y": 0
+          },
+          "end": {
+            "x": 8,
+            "y": 6
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    }
+  },
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {
+    "rf-main": {
+      "storey": "st-first",
+      "roof_type": "rt-tiles",
+      "footprint": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 8,
+            "y": 6
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 6
+          },
+          "bulge": 0
+        }
+      ],
+      "shape": {
+        "Gable": {
+          "pitch": 0.6,
+          "ridge_direction": 0
+        }
+      },
+      "overhang": 0.4,
+      "base_offset": 0,
+      "name": "Main roof"
+    }
+  },
+  "openings": {},
+  "stairs": {},
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {}
+}

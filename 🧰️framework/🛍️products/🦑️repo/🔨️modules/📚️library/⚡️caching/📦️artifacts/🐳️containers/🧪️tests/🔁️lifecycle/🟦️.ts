@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, WORKSPACE_EXTENSION, configureGitKrakenWorkspace, devcontainerStart, editorCliOrder, gitKrakenWorkspaceState, installWorkspaceExtension, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, WORKSPACE_EXTENSION, configureGitKrakenWorkspace, configureRepoHooks, devcontainerStart, editorCliOrder, gitKrakenWorkspaceState, installWorkspaceExtension, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
 function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
@@ -81,6 +81,13 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   assert.equal(start.inputs.get("sudo tee /etc/fonts/local.conf"), EMOJI_FONTCONFIG);
   assert.deepEqual(flat.filter((call) => call.startsWith("git config --global --add safe.directory")), [`git config --global --add safe.directory ${join(checkout, "♻️mit-bestand/🔎️recherche")}`]);
   assert.deepEqual(flat.filter((call) => fixture.forbiddenCommands.some((forbidden: string) => call.includes(forbidden))), [], "a container start never discards source-control or database state");
+
+  for (const [status, message] of [[0, "✅️ Git hooks installed."], [1, "⚠️  Git hook installation failed, continuing without blocking attach."]] as const) {
+    const hooks = recordingHost(() => ({ status }));
+    configureRepoHooks(hooks, context);
+    assert.deepEqual(hooks.calls, [["bun", "./📜️script.ts", "micro-commit", "install-hooks"]], "hooks are installed by the workspace script, never by an unbuilt binary");
+    assert.deepEqual(hooks.lines, [message]);
+  }
 
   for (const row of fixture.extension.cases) {
     const root = mkdtempSync(join(generated, `lifecycle-extension-${row.id}-`)), packageRoot = join(root, WORKSPACE_EXTENSION.packageRoot);

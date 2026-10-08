@@ -1,0 +1,15 @@
+{
+  "storeys": {
+    "st-ground": {
+      "entry": "Deleted"
+    }
+  },
+  "walls": {
+    "w-east": {
+      "entry": "Deleted"
+    },
+    "w-south": {
+      "entry": "Deleted"
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { buildRepositoryCargoArtifacts } from "../../../📚️library/⚡️cac
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (nx bridge for `repo/dashboard/rs`). */
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
-import { dashboardInstalled, installedDashboard, installDashboard } from "../../📦️installation/🟦️.ts";
+import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard } from "../../📦️installation/🟦️.ts";
 import { devToolingEnv, runRepositoryCargoTests, runCmd, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -12,10 +12,7 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 const crate = "semio-framework-repo-dashboard";
 
 class BuildScript extends BundleScript {
-  async run(): Promise<void> {
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "semio"], this.repoRoot);
-    await installDashboard(this.root, this.repoRoot);
-  }
+  async run(): Promise<void> { await buildAndInstallDashboard(this.root, this.repoRoot); }
 }
 
 class InstallScript extends BundleScript {
@@ -33,11 +30,40 @@ class TestScript extends BundleScript {
       await mkdir(artifacts, { recursive: true });
       runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧊️execution/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_TEST_ARTIFACT_DIR: artifacts }) }); return;
     }
+    if (BATTLE_SUITES.includes(segments[0] ?? "")) { battle(this.root, this.repoRoot, segments[0]!); return; }
     const { rest } = resolveTestLevel(segments);
     process.env.SEMIO_TEST_PATH ??= process.env.PATH;
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🌀️control-plane/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
+    const target = process.env.CARGO_TARGET_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/cargo/target");
+    runCmd("cargo", ["build", "-p", crate, "--bin", "semio"], { cwd: this.repoRoot, env: devToolingEnv() });
+    const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: join(target, "debug", process.platform === "win32" ? "semio.exe" : "semio") });
+    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
+    runCmd("bun", ["test", "--timeout", "240000", join(this.root, "../../🧪️tests/🧭️cli/🟦️.ts")], { cwd: this.repoRoot, env: native });
     await runRepositoryCargoTests([crate], this.repoRoot, rest);
   }
+}
+
+const BATTLE_SUITES = ["coverage", "journeys", "load", "smoke"];
+
+/**
+ * ⚔️ Battle tests (`test coverage|journeys|load|smoke`): the real debug `semio` against the real monorepo or the
+ * journey fixture workspace. The pseudo-terminal suites are Rust test executables run directly, never under
+ * `cargo test`, whose job object forbids the breakaway the daemon needs.
+ */
+function battle(root: string, repoRoot: string, suite: string): void {
+  const dashboardRoot = join(root, "../..");
+  const target = process.env.CARGO_TARGET_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/cargo/target");
+  runCmd("cargo", ["build", "-p", crate, "--bin", "semio"], { cwd: repoRoot, env: devToolingEnv() });
+  const env = devToolingEnv({ SEMIO_TEST_CLI: process.env.SEMIO_TEST_CLI ?? join(target, "debug", process.platform === "win32" ? "semio.exe" : "semio") });
+  const suites: Record<string, string[]> = { coverage: ["🗺️coverage/🟦️.ts"], journeys: ["🧭️journeys/🟦️.ts"], load: ["🧭️journeys/🏋️load/🟦️.ts"], smoke: ["🧭️journeys/💨️smoke/🟦️.ts"] };
+  for (const file of suites[suite]!) runCmd("bun", ["test", join(dashboardRoot, "🧪️tests", file), "--timeout", "3600000"], { cwd: repoRoot, env });
+  const rust = { journeys: "journeys", load: "load" }[suite];
+  if (!rust) return;
+  const manifest = join(dashboardRoot, "🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml");
+  const built = Bun.spawnSync(["cargo", "test", "--manifest-path", manifest, "--test", rust, "--no-run", "--message-format=json"], { cwd: repoRoot, env, stdout: "pipe", stderr: "inherit" });
+  const executable = built.stdout.toString().split("\n").flatMap((line) => { try { return [JSON.parse(line).executable as string | null]; } catch { return []; } }).filter(Boolean).at(-1);
+  if (!executable) throw new Error(`no ${rust} test executable was built`);
+  runCmd(executable, ["--test-threads=1"], { cwd: repoRoot, env });
 }
 
 /** ▶️ Runs the installed native dashboard without a build prerequisite. */
@@ -60,26 +86,28 @@ class DaemonScript extends BundleScript {
   }
 }
 
-/**
- * 🌊️ Forwards `semio workflow …` using the installed native executable.
- */
-class WorkflowScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const bin = await dashboardExecutable(this.root, this.repoRoot);
-    const status = runCmdStatus(bin, ["workflow", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
-    process.exit(status);
-  }
+/** 🔨️ Builds the release executable and installs it; the sources are captured first so edits made during the build stay detectable, and Ctrl+C cancels the build. */
+export async function buildAndInstallDashboard(packageRoot: string, workspace: string): Promise<string> {
+  const controller = new AbortController(), cancel = () => controller.abort();
+  process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
+  try {
+    const sources = await captureDashboardSources(packageRoot, workspace);
+    await buildRepositoryCargoArtifacts(join(packageRoot, "Cargo.toml"), ["--release", "--bin", "semio"], workspace, { signal: controller.signal });
+    return await installDashboard(packageRoot, workspace, sources);
+  } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
 }
 
-/** 🚀️ Resolves the installed immutable executable, building and installing it once when none is recorded. */
+/** 🚀️ Resolves the installed immutable executable, rebuilding and reinstalling it when none is recorded or its sources changed. */
 export async function dashboardExecutable(packageRoot: string, workspace: string): Promise<string> {
-  if (dashboardInstalled(workspace)) return installedDashboard(workspace);
-  console.log("[dashboard] Not installed yet; building and installing once");
-  await buildRepositoryCargoArtifacts(join(packageRoot, "Cargo.toml"), ["--release", "--bin", "semio"], workspace);
-  return await installDashboard(packageRoot, workspace);
+  const reason = await staleDashboard(workspace);
+  if (reason) {
+    console.log(`[dashboard] Rebuilding because ${reason}; Ctrl+C cancels`);
+    return await buildAndInstallDashboard(packageRoot, workspace);
+  }
+  return installedDashboard(workspace);
 }
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript);
+  const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("install", InstallScript).register("preferences", PreferencesScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript);
   await runScriptMain(router);
 }

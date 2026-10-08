@@ -1,0 +1,10 @@
+{
+  "slabs": {
+    "sl-ground": {
+      "entry": "Patched",
+      "slope": {
+        "value": null
+      }
+    }
+  }
+}

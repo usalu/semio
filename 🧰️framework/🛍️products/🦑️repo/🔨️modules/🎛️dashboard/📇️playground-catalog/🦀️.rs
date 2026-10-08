@@ -5,7 +5,7 @@ use crate::catalog::{load_playground_catalog, playgrounds_json_text, PlaygroundE
 use std::path::Path;
 
 // #region 🔖️Command
-/// 📇️ Lists generated playground registrations as JSON or tabular terminal text.
+/// 🗄️ Lists generated playground registrations as JSON or tabular terminal text.
 pub fn run(root: &Path, parsed: &ParsedArgs) -> i32 {
     if parsed.has_flag("json") {
         print!("{}", playgrounds_json_text(root));

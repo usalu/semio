@@ -1,0 +1,6 @@
+{
+  "mutation": "splitWall",
+  "id": "w-south",
+  "t": 0,
+  "new_id": "w-south-2"
+}

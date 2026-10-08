@@ -1,7 +1,81 @@
 use crate::args::parse;
 use crate::catalog::{playgrounds_json_text, PlaygroundEntry, Ports};
 use crate::env_contract::{build_dev_env, resolve_port, DevOptions};
-use crate::options::{parse_lock, Lock};
+use crate::options::Lock;
+
+/// 🥒️ Fails unless the scenarios of a feature are exactly the titles of `proofs`, in order, and every test a title names is a test of one of `sources`.
+pub(crate) fn assert_proved(feature: &str, sources: &[&str], proofs: &[(&str, &[&str])]) {
+    let titles: Vec<&str> = feature.lines().filter_map(|line| line.trim().strip_prefix("Scenario: ")).collect();
+    assert_eq!(titles, proofs.iter().map(|(title, _)| *title).collect::<Vec<_>>());
+    let is_test = |name: &str| sources.iter().any(|source| source.find(&format!("fn {name}(")).is_some_and(|at| source[..at].trim_end().ends_with("#[test]")));
+    for (title, names) in proofs {
+        assert!(!names.is_empty(), "{title}: no test proves it");
+        for name in *names { assert!(is_test(name), "{title}: {name} is no test"); }
+    }
+}
+
+/// 🔎️ The verbs a text names: for each line `prefix <verbs>`, the first word split at `|` (and at an escaped one).
+fn verbs_named(text: &str, prefix: &str) -> std::collections::BTreeSet<String> {
+    text.lines().filter_map(|line| line.trim_start_matches(' ').strip_prefix(prefix.trim_start_matches(' '))).filter(|rest| !rest.starts_with(' ') && !rest.starts_with('<')).flat_map(|rest| {
+        let word = rest.split([' ', '`']).next().unwrap_or_default();
+        word.replace("\\|", "|").split('|').map(str::to_string).collect::<Vec<_>>()
+    }).filter(|verb| verb.chars().next().is_some_and(|first| first.is_ascii_lowercase()) && verb.chars().all(|character| character.is_ascii_lowercase() || character == '-')).collect()
+}
+
+/// 🚩️ The flags a text names after each `--`, up to the next character that cannot be part of a flag name.
+fn flags_named(text: &str) -> std::collections::BTreeSet<String> {
+    text.split("--").skip(1).map(|rest| rest.chars().take_while(|character| character.is_ascii_lowercase() || *character == '-').collect::<String>()).map(|name| name.trim_end_matches('-').to_string()).filter(|name| !name.is_empty()).collect()
+}
+
+/// 🪓 The string literals of a source between a marker and the next `terminator`.
+fn literals_after(source: &str, marker: &str, terminator: char) -> Vec<String> {
+    source.split(marker).skip(1).flat_map(|rest| rest.split(terminator).next().unwrap_or_default().split('"').skip(1).step_by(2).map(str::to_string).collect::<Vec<_>>()).collect()
+}
+
+#[test]
+fn the_dispatch_table_the_usage_text_and_the_readme_verb_table_name_the_same_verbs() {
+    let dispatch = include_str!("../../📦️packages/🦀️rust/🦀️.rs");
+    let table = dispatch.split("match parsed.verb.as_str() {").nth(1).and_then(|rest| rest.split("_ => {").next()).unwrap();
+    let arms: std::collections::BTreeSet<String> = table.lines().filter_map(|line| line.trim().split(" =>").next().filter(|_| line.contains("=>"))).flat_map(|patterns| patterns.split(" if ").next().unwrap_or_default().split('|').map(|pattern| pattern.trim().trim_matches('"').to_string()).collect::<Vec<_>>()).collect();
+    let native: std::collections::BTreeSet<String> = crate::NATIVE_VERBS.iter().map(ToString::to_string).collect();
+    assert_eq!(arms, native, "NATIVE_VERBS and the dispatch arms differ");
+    let documented: std::collections::BTreeSet<String> = native.iter().filter(|verb| !crate::INTERNAL_VERBS.contains(&verb.as_str())).cloned().collect();
+    assert_eq!(verbs_named(crate::usage::USAGE, "  semio "), documented, "the usage text and the dispatch table differ");
+    let readme = include_str!("../../README.md");
+    let in_table: std::collections::BTreeSet<String> = readme.lines().filter(|line| line.starts_with("| `semio ")).filter_map(|line| line.strip_prefix("| ")).flat_map(|row| verbs_named(row.trim_start_matches('`'), "semio ")).collect();
+    assert_eq!(in_table, documented, "the README verb table and the dispatch table differ");
+}
+
+#[test]
+fn every_flag_a_verb_reads_is_in_the_usage_text_the_readme_verb_row_and_the_argument_readers() {
+    let usage = crate::usage::USAGE;
+    let readme = include_str!("../../README.md");
+    let block = |verb: &str| -> String {
+        let lines: Vec<&str> = usage.lines().collect();
+        let start = lines.iter().position(|line| line.trim_start().starts_with(&format!("semio {verb}")) || (["stop", "restart", "kill"].contains(&verb) && line.contains("semio stop|restart|kill"))).unwrap_or_else(|| panic!("{verb} has no usage line"));
+        lines[start..].iter().enumerate().take_while(|(offset, line)| *offset == 0 || !line.starts_with("  semio ")).map(|(_, line)| *line).collect::<Vec<_>>().join(" ")
+    };
+    let row = |verb: &str| -> String {
+        let marker = if ["stop", "restart", "kill"].contains(&verb) { "| `semio stop\\|restart\\|kill".to_string() } else { format!("| `semio {verb}") };
+        readme.lines().find(|line| line.starts_with(&marker)).unwrap_or_else(|| panic!("{verb} has no README row")).to_string()
+    };
+    for (verb, flags) in crate::usage::FLAGS {
+        let (in_usage, in_row) = (flags_named(&block(verb)), flags_named(&row(verb)));
+        for flag in *flags {
+            assert!(in_usage.contains(*flag), "--{flag} of {verb} is missing in the usage text");
+            assert!(in_row.contains(*flag), "--{flag} of {verb} is missing in the README row");
+        }
+        for flag in &in_usage { assert!(flags.contains(&flag.as_str()) || flag == "help", "usage names --{flag} for {verb}, which FLAGS does not list"); }
+    }
+    let cli = include_str!("../../🧭️cli/🦀️.rs");
+    let mut read: std::collections::BTreeSet<String> = ["has(\"", "value(\"", "pairs(\"", "all(\""].iter().flat_map(|marker| cli.split(marker).skip(1).map(|rest| rest.split('"').next().unwrap_or_default().to_string()).collect::<Vec<_>>()).collect();
+    read.extend(literals_after(cli, "Arguments::parse(argv, &[", ']'));
+    read.remove("");
+    let listed: std::collections::BTreeSet<String> = crate::usage::FLAGS.iter().filter(|(verb, _)| ["commands", "run", "tasks", "logs", "stop", "restart", "kill", "open"].contains(verb)).flat_map(|(_, flags)| flags.iter().map(ToString::to_string)).collect();
+    assert_eq!(read, listed, "the flags the command line reads and the flags FLAGS lists differ");
+    let help = crate::usage::USAGE;
+    assert!(help.contains("semio --help"), "{help}");
+}
 
 #[test]
 fn args_split_verb_segments_and_flags() {
@@ -57,12 +131,6 @@ fn resolve_port_prefers_explicit_then_catalog_then_fallback() {
     assert_eq!(resolve_port(None, "react", None), 6066);
 }
 
-#[test]
-fn parse_lock_all_is_case_insensitive() {
-    assert_eq!(parse_lock("All"), Lock::All);
-    assert_eq!(parse_lock("dark"), Lock::Individual("dark".to_string()));
-}
-
 //#region 🔖️CatalogConsumer
 /// 🧪️ Unique scratch dir under the configured artifact root, cleaned up by the caller.
 fn temp_root(name: &str) -> std::path::PathBuf {
@@ -93,151 +161,3 @@ fn playgrounds_json_text_passes_generated_content_through_verbatim() {
     std::fs::remove_dir_all(&root).ok();
 }
 //#endregion 🔖️CatalogConsumer
-
-//#region 🔖️Ipc
-#[test]
-fn ipc_frame_roundtrip_and_output_codec() {
-    use crate::ipc::{self, ClientMsg, ServerMsg};
-    let mut buf = Vec::new();
-    let msg = ClientMsg::Ping {};
-    ipc::write_control(&mut buf, &msg).unwrap();
-    let mut cursor = std::io::Cursor::new(buf);
-    let (kind, payload) = ipc::read_frame(&mut cursor).unwrap();
-    assert_eq!(kind, ipc::KIND_CONTROL);
-    let decoded: ClientMsg = ipc::decode_control(&payload).unwrap();
-    assert_eq!(decoded, ClientMsg::Ping {});
-
-    let out = ipc::encode_output("s1", b"hi");
-    let (id, data) = ipc::decode_output(&out).unwrap();
-    assert_eq!(id, "s1");
-    assert_eq!(data, b"hi");
-
-    let mut buf = Vec::new();
-    ipc::write_control(&mut buf, &ServerMsg::Pong {}).unwrap();
-    assert!(!buf.is_empty());
-}
-
-#[test]
-fn ipc_nonblocking_decoder_preserves_fragmented_and_concatenated_frames() {
-    use crate::ipc::{self, ClientMsg};
-    let mut encoded = Vec::new();
-    ipc::write_control(&mut encoded, &ClientMsg::Ping {}).unwrap();
-    ipc::write_control(&mut encoded, &ClientMsg::Detach {}).unwrap();
-    let split = 3usize;
-    let mut buffered = encoded[..split].to_vec();
-    assert_eq!(ipc::try_decode_frame(&mut buffered).unwrap(), None);
-    buffered.extend_from_slice(&encoded[split..]);
-    let (_, first) = ipc::try_decode_frame(&mut buffered).unwrap().expect("first frame");
-    let (_, second) = ipc::try_decode_frame(&mut buffered).unwrap().expect("second frame");
-    assert_eq!(ipc::decode_control::<ClientMsg>(&first).unwrap(), ClientMsg::Ping {});
-    assert_eq!(ipc::decode_control::<ClientMsg>(&second).unwrap(), ClientMsg::Detach {});
-    assert!(buffered.is_empty());
-}
-
-#[test]
-fn ipc_nonblocking_decoder_rejects_oversized_prefix_without_allocating() {
-    use crate::ipc;
-    let mut buffered = ((ipc::MAX_FRAME_BYTES as u32) + 1).to_le_bytes().to_vec();
-    let error = ipc::try_decode_frame(&mut buffered).expect_err("oversized frame must fail");
-    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
-    assert_eq!(buffered.len(), 4);
-}
-
-#[test]
-fn daemon_supervisor_queries_do_not_append_lifecycle_events() {
-    use crate::daemon::supervisor::{self as daemon, Supervisor};
-    use crate::ipc::{self, ClientMsg, ServerMsg};
-    let root = temp_root("daemon-sup");
-    let mut sup = Supervisor::new(&root).unwrap();
-    let (a, mut b) = duplex_pair();
-    // attach uses write on the client-facing end we keep in supervisor
-    sup.attach_client(a).unwrap();
-    // read Attached
-    let (kind, payload) = ipc::read_frame(&mut b).unwrap();
-    assert_eq!(kind, ipc::KIND_CONTROL);
-    let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
-    assert!(matches!(msg, ServerMsg::Attached { .. }));
-    daemon::handle_one_for_test(&mut sup, ClientMsg::Ping {}).unwrap();
-    let (kind, payload) = ipc::read_frame(&mut b).unwrap();
-    assert_eq!(kind, ipc::KIND_CONTROL);
-    let msg: ServerMsg = ipc::decode_control(&payload).unwrap();
-    assert_eq!(msg, ServerMsg::Pong {});
-    assert!(!ipc::event_log_path(&root).exists());
-    std::fs::remove_dir_all(&root).ok();
-}
-
-#[cfg(unix)]
-#[test]
-fn daemon_nonblocking_connection_cursor_serves_ping_end_to_end() {
-    use crate::daemon::supervisor as daemon;
-    use crate::ipc::{self, ClientMsg, ServerMsg};
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
-    use std::time::Duration;
-
-    let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let root = std::path::PathBuf::from("/tmp").join(format!("sd{}{}", std::process::id(), nanos % 1_000_000));
-    std::fs::create_dir_all(&root).unwrap();
-    let running = Arc::new(AtomicBool::new(true));
-    let server_running = running.clone();
-    let server_root = root.clone();
-    let server = std::thread::spawn(move || daemon::serve(&server_root, server_running));
-    let mut client = (0..100)
-        .find_map(|_| match ipc::connect(&root) {
-            Ok(stream) => Some(stream),
-            Err(_) => {
-                std::thread::sleep(Duration::from_millis(5));
-                None
-            }
-        })
-        .expect("daemon socket must become reachable");
-    client.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
-    let (_, attached) = ipc::read_frame(&mut client).expect("attached frame");
-    assert!(matches!(ipc::decode_control::<ServerMsg>(&attached).unwrap(), ServerMsg::Attached { .. }));
-    ipc::write_control(&mut client, &ClientMsg::Ping {}).unwrap();
-    let (_, pong) = ipc::read_frame(&mut client).expect("pong frame");
-    assert_eq!(ipc::decode_control::<ServerMsg>(&pong).unwrap(), ServerMsg::Pong {});
-    running.store(false, Ordering::SeqCst);
-    server.join().expect("daemon thread must not panic").expect("daemon must stop cleanly");
-    std::fs::remove_dir_all(&root).ok();
-}
-
-/// 🧵 Tiny in-memory bidirectional pipe for supervisor tests.
-fn duplex_pair() -> (DuplexEnd, DuplexEnd) {
-    use std::sync::mpsc::channel;
-    let (t1, r1) = channel::<Vec<u8>>();
-    let (t2, r2) = channel::<Vec<u8>>();
-    (DuplexEnd { tx: t1, rx: r2, buf: Vec::new() }, DuplexEnd { tx: t2, rx: r1, buf: Vec::new() })
-}
-
-struct DuplexEnd {
-    tx: std::sync::mpsc::Sender<Vec<u8>>,
-    rx: std::sync::mpsc::Receiver<Vec<u8>>,
-    buf: Vec<u8>,
-}
-
-impl std::io::Read for DuplexEnd {
-    fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {
-        while self.buf.is_empty() {
-            match self.rx.recv_timeout(std::time::Duration::from_secs(2)) {
-                Ok(chunk) => self.buf.extend_from_slice(&chunk),
-                Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "duplex closed")),
-            }
-        }
-        let n = out.len().min(self.buf.len());
-        out[..n].copy_from_slice(&self.buf[..n]);
-        self.buf.drain(..n);
-        Ok(n)
-    }
-}
-
-impl std::io::Write for DuplexEnd {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.tx.send(buf.to_vec()).map_err(|_| std::io::Error::new(std::io::ErrorKind::BrokenPipe, "duplex"))?;
-        Ok(buf.len())
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-//#endregion 🔖️Ipc

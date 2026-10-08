@@ -1,0 +1,4 @@
+module bim_bim_inference;
+type Document = unit {
+    payload: bytes &eod;
+};

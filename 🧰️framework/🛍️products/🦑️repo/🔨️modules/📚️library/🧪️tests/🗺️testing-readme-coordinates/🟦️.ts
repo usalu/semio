@@ -90,7 +90,6 @@ test("README exact inline coordinates resolve their declared current owners", ()
     expect(facts.inline.filter((value) => value === row.value).length, row.id).toBe(row.count);
     if (row.target !== null) expect(readOwned(row.target).length, row.id).toBeGreaterThan(0);
   }
-  expect(source).toContain("repository-root\n    " + tick + "🚚️migration.json" + tick);
 });
 
 for (const row of vector.paragraphs) test("README reviewed requirement and routing prose: " + row.id, () => {

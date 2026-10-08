@@ -1,0 +1,22 @@
+{
+  "columns": {
+    "c-b1": {
+      "base_offset": 0.0,
+      "column_type": "ct-400",
+      "entry": "Created",
+      "name": "B1",
+      "position": {
+        "x": 6.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "storey": "st-ground",
+      "top": {
+        "Storey": {
+          "offset": 0.2,
+          "storey": "st-first"
+        }
+      }
+    }
+  }
+}

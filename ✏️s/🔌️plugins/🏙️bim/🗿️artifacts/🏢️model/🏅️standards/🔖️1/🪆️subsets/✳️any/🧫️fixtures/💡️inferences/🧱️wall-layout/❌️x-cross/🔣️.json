@@ -1,0 +1,40 @@
+{
+  "description": "Two walls cross in both interiors: nothing is trimmed and both report a Cross whose overlap is the 0.3 by 0.15 square both bodies cover.",
+  "before": {
+    "schema": "s.bim.model@1",
+    "project": { "name": "X cross", "description": "", "author": "", "organization": "", "phase_names": [] },
+    "wall_types": {
+      "wt-300": { "name": "Brick 300", "layers": [{ "material": "m-brick", "thickness": 0.2, "function": "Structure" }, { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }] },
+      "wt-150": { "name": "Brick 150", "layers": [{ "material": "m-brick", "thickness": 0.15, "function": "Structure" }] }
+    },
+    "sites": { "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 0.0, "true_north": 0.0, "boundary": [] } },
+    "buildings": { "bldg-1": { "site": "site-1", "name": "House", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 0.0 } },
+    "storeys": { "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 } },
+    "walls": {
+      "a": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 6.0, "y": 0.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "A" },
+      "b": { "storey": "st-ground", "wall_type": "wt-150", "axis": { "Line": { "start": { "x": 3.0, "y": -3.0 }, "end": { "x": 3.0, "y": 3.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "B" }
+    }
+  },
+  "expected": {
+    "a": {
+      "footprint": [
+        { "point": { "x": 0.0, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 6.0, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 6.0, "y": 0.15 }, "bulge": 0.0 },
+        { "point": { "x": 0.0, "y": 0.15 }, "bulge": 0.0 }
+      ],
+      "footprint_area": 1.8,
+      "joins": [{ "kind": "Cross", "end": "Along", "other": "b", "other_end": "Along", "point": { "x": 3.0, "y": 0.0 }, "overlap_area": 0.045 }]
+    },
+    "b": {
+      "footprint": [
+        { "point": { "x": 3.075, "y": -3.0 }, "bulge": 0.0 },
+        { "point": { "x": 3.075, "y": 3.0 }, "bulge": 0.0 },
+        { "point": { "x": 2.925, "y": 3.0 }, "bulge": 0.0 },
+        { "point": { "x": 2.925, "y": -3.0 }, "bulge": 0.0 }
+      ],
+      "footprint_area": 0.9,
+      "joins": [{ "kind": "Cross", "end": "Along", "other": "a", "other_end": "Along", "point": { "x": 3.0, "y": 0.0 }, "overlap_area": 0.045 }]
+    }
+  }
+}

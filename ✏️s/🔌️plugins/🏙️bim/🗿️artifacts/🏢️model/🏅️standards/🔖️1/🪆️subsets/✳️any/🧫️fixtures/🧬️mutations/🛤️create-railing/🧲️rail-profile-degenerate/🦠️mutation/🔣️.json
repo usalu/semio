@@ -1,0 +1,39 @@
+{
+  "mutation": "createRailing",
+  "id": "rl-1",
+  "railing": {
+    "storey": "st-first",
+    "path": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 3
+      }
+    ],
+    "height": 1,
+    "post_spacing": 1.2,
+    "profile": {
+      "Rectangle": {
+        "width": 0,
+        "depth": 0.04
+      }
+    },
+    "post_profile": {
+      "Rectangle": {
+        "width": 0.05,
+        "depth": 0.05
+      }
+    },
+    "infill": "None",
+    "material": "m-steel",
+    "base_offset": 0,
+    "name": "Balustrade"
+  }
+}

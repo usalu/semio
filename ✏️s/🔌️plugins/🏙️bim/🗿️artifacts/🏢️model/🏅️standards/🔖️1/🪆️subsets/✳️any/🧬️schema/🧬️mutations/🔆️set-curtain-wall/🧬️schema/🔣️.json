@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-curtain-wall/schema.json",
+  "title": "SetCurtainWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setCurtainWall"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Curtain wall",
+          "de": "Vorhangfassade"
+        },
+        "ref": {
+          "kind": "curtain-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "axis": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Axis",
+          "de": "Achse"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "base_offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Base offset (m)",
+          "de": "Fußversatz (m)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "top": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/TopConstraint",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Top",
+          "de": "Oberkante"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "u_spacing": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Horizontal spacing (m)",
+          "de": "Horizontaler Raster (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "v_spacing": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Vertical spacing (m)",
+          "de": "Vertikaler Raster (m)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "mullion": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Mullion profile",
+          "de": "Pfostenprofil"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "panel_material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Panel material",
+          "de": "Füllungsmaterial"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "mullion_material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Mullion material",
+          "de": "Pfostenmaterial"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 90
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 100
+      }
+    }
+  }
+}

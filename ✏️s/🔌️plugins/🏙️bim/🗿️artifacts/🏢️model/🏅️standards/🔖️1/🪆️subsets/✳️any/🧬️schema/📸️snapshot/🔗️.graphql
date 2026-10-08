@@ -1,0 +1,31 @@
+# 🧬️ BIM model snapshot schema — authored parameters only.
+
+type ModelSnapshot {
+  schema: String! @state(class: ARTIFACT)
+  project: Project! @state(class: ARTIFACT)
+  materials: [MaterialRow!]! @state(class: ARTIFACT)
+  wall_types: [WallTypeRow!]! @state(class: ARTIFACT)
+  slab_types: [SlabTypeRow!]! @state(class: ARTIFACT)
+  roof_types: [RoofTypeRow!]! @state(class: ARTIFACT)
+  column_types: [ColumnTypeRow!]! @state(class: ARTIFACT)
+  beam_types: [BeamTypeRow!]! @state(class: ARTIFACT)
+  window_types: [WindowTypeRow!]! @state(class: ARTIFACT)
+  door_types: [DoorTypeRow!]! @state(class: ARTIFACT)
+  sites: [SiteRow!]! @state(class: ARTIFACT)
+  buildings: [BuildingRow!]! @state(class: ARTIFACT)
+  storeys: [StoreyRow!]! @state(class: ARTIFACT)
+  grids: [GridLineRow!]! @state(class: ARTIFACT)
+  walls: [WallRow!]! @state(class: ARTIFACT)
+  curtain_walls: [CurtainWallRow!]! @state(class: ARTIFACT)
+  columns: [ColumnRow!]! @state(class: ARTIFACT)
+  beams: [BeamRow!]! @state(class: ARTIFACT)
+  slabs: [SlabRow!]! @state(class: ARTIFACT)
+  roofs: [RoofRow!]! @state(class: ARTIFACT)
+  openings: [OpeningRow!]! @state(class: ARTIFACT)
+  stairs: [StairRow!]! @state(class: ARTIFACT)
+  railings: [RailingRow!]! @state(class: ARTIFACT)
+  spaces: [SpaceRow!]! @state(class: ARTIFACT)
+  properties: [PropertySetRow!]! @state(class: ARTIFACT)
+  classifications: [ClassificationRow!]! @state(class: ARTIFACT)
+}
+

@@ -5,3 +5,7 @@
 /.🧬semio/🗺️map/**
 **/pkg/package.json
 **/.lake/**
+
+# 🧫️ fixture workspaces are standalone workspace roots copied into temporary workspaces by tests; they must never become projects of this repository.
+**/🧫️fixtures/**/📋️project.json
+**/🧫️fixtures/**/project.json

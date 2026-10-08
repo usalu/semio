@@ -1,0 +1,6 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "name": "Garden stair",
+  "max_riser": 0.175
+}

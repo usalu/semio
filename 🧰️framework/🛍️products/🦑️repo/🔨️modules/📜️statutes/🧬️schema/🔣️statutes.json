@@ -411,20 +411,20 @@
       "autofixable": false
     },
     {
-      "kind": "system/devcontainer/vscode/settings-outside-devcontainer",
+      "kind": "system/devcontainer/vscode/settings-drift",
       "policyId": "system",
       "priority": "high",
-      "reason": "VSCode settings must be inside devcontainer.json customizations, not in .vscode/settings.json",
-      "solution": "Move .vscode/settings.json to customizations.vscode.settings inside .devcontainer/devcontainer.json",
-      "autofixable": true
+      "reason": "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+      "solution": "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+      "autofixable": false
     },
     {
-      "kind": "system/devcontainer/vscode/extensions-outside-devcontainer",
+      "kind": "system/devcontainer/vscode/extensions-drift",
       "policyId": "system",
       "priority": "high",
-      "reason": "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
-      "solution": "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
-      "autofixable": true
+      "reason": "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+      "solution": "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+      "autofixable": false
     },
     {
       "kind": "folder/illegal/empty",
@@ -866,7 +866,8 @@
       "scopes": [
         ".vscode/settings.json",
         ".vscode/extensions.json",
-        ".devcontainer/devcontainer.json"
+        ".devcontainer/devcontainer.json",
+        ".devcontainer/editor-overlay.json"
       ],
       "priority": "high",
       "groups": [
@@ -876,10 +877,10 @@
           "groups": [
             {
               "name": "VSCode",
-              "description": "VSCode settings and extensions must be inside devcontainer.json",
+              "description": "The devcontainer editor block must equal its derivation from the host editor files",
               "kinds": [
-                "system/devcontainer/vscode/settings-outside-devcontainer",
-                "system/devcontainer/vscode/extensions-outside-devcontainer"
+                "system/devcontainer/vscode/settings-drift",
+                "system/devcontainer/vscode/extensions-drift"
               ]
             }
           ]

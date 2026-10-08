@@ -1,0 +1,56 @@
+{
+  "mutation": "createColumnType",
+  "id": "new-2",
+  "column_type": {
+    "name": "Column",
+    "profile": {
+      "Custom": {
+        "outline": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.4,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.4,
+              "y": 0.1
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.1,
+              "y": 0.1
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.1,
+              "y": 0.4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 0.4
+            },
+            "bulge": 0
+          }
+        ]
+      }
+    },
+    "material": "m-concrete"
+  }
+}

@@ -1,0 +1,460 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Stairs",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {},
+  "wall_types": {},
+  "slab_types": {},
+  "roof_types": {},
+  "column_types": {},
+  "beam_types": {},
+  "window_types": {},
+  "door_types": {},
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "elevation": 100.0,
+      "true_north": 0.0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "elevation": 0.0
+    }
+  },
+  "storeys": {
+    "st-base": {
+      "building": "bldg-1",
+      "name": "Basement",
+      "level": -1,
+      "height": 2.6
+    },
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3.0
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    },
+    "st-roof": {
+      "building": "bldg-1",
+      "name": "Roof",
+      "level": 2,
+      "height": 0.5
+    }
+  },
+  "grids": {},
+  "walls": {},
+  "curtain_walls": {},
+  "columns": {},
+  "beams": {},
+  "slabs": {},
+  "roofs": {},
+  "openings": {},
+  "stairs": {
+    "s-straight": {
+      "storey": "st-ground",
+      "start": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-straight-tall": {
+      "storey": "st-first",
+      "start": {
+        "x": 2.0,
+        "y": 1.0
+      },
+      "direction": 0.3,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.17,
+      "min_tread": 0.28,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-lturn": {
+      "storey": "st-ground",
+      "start": {
+        "x": 5.0,
+        "y": 0.0
+      },
+      "direction": 1.0,
+      "width": 1.0,
+      "flight": {
+        "LTurn": {
+          "split": 0.5,
+          "turn": "Left"
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-lturn-right": {
+      "storey": "st-ground",
+      "start": {
+        "x": 9.0,
+        "y": 0.0
+      },
+      "direction": -0.5,
+      "width": 1.2,
+      "flight": {
+        "LTurn": {
+          "split": 0.3,
+          "turn": "Right"
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.2,
+      "name": "Stair"
+    },
+    "s-uturn": {
+      "storey": "st-ground",
+      "start": {
+        "x": 12.0,
+        "y": 3.0
+      },
+      "direction": 1.5707963267948966,
+      "width": 1.0,
+      "flight": {
+        "UTurn": {
+          "gap": 0.2
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-spiral": {
+      "storey": "st-ground",
+      "start": {
+        "x": 20.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": {
+        "Spiral": {
+          "radius": 1.5,
+          "sweep": 6.283185307179586
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-spiral-cw": {
+      "storey": "st-ground",
+      "start": {
+        "x": 24.0,
+        "y": 0.0
+      },
+      "direction": 0.7,
+      "width": 1.0,
+      "flight": {
+        "Spiral": {
+          "radius": 1.2,
+          "sweep": -4.0
+        }
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-two-storeys": {
+      "storey": "st-ground",
+      "start": {
+        "x": 30.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "Storey": {
+          "storey": "st-roof",
+          "offset": -0.5
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-free": {
+      "storey": "st-ground",
+      "start": {
+        "x": 34.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-basement": {
+      "storey": "st-base",
+      "start": {
+        "x": 38.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.19,
+      "min_tread": 0.26,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-steep": {
+      "storey": "st-ground",
+      "start": {
+        "x": 42.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.25,
+      "min_tread": 0.2,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-one-riser": {
+      "storey": "st-ground",
+      "start": {
+        "x": 46.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": {
+        "UTurn": {
+          "gap": 0.1
+        }
+      },
+      "top": {
+        "Unconnected": {
+          "height": 0.15
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-flat": {
+      "storey": "st-ground",
+      "start": {
+        "x": 50.0,
+        "y": 0.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "Unconnected": {
+          "height": 0.0
+        }
+      },
+      "max_riser": 0.1875,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    }
+  },
+  "railings": {},
+  "spaces": {},
+  "properties": {},
+  "classifications": {}
+}

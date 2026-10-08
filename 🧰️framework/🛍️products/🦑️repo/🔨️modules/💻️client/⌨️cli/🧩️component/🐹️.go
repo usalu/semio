@@ -42,6 +42,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"runtime"
 	"slices"
@@ -15877,8 +15878,8 @@ const (
 	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
 	BreachRepoMissingCommand                           Statute = "repo/missing-command"
 	BreachRepoMissingTicketTracking                    Statute = "repo/missing-ticket-tracking"
-	BreachSystemDevcontainerVscodeSettingsOutside      Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
-	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
+	BreachSystemDevcontainerVscodeSettingsDrift      Statute = "system/devcontainer/vscode/settings-drift"
+	BreachSystemDevcontainerVscodeExtensionsDrift    Statute = "system/devcontainer/vscode/extensions-drift"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFolderNameMissingEmoji                       Statute = "folder/name/missing-emoji"
 	BreachFolderNameGenericEmoji                       Statute = "folder/name/generic-emoji"
@@ -16270,19 +16271,19 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
 	},
-	BreachSystemDevcontainerVscodeSettingsOutside: {
-		Kind:        BreachSystemDevcontainerVscodeSettingsOutside,
+	BreachSystemDevcontainerVscodeSettingsDrift: {
+		Kind:        BreachSystemDevcontainerVscodeSettingsDrift,
 		Priority:    BreachPriorityHigh,
-		Reason:      "VSCode settings must be inside devcontainer.json customizations, not in .vscode/settings.json",
-		Solution:    "Move .vscode/settings.json to customizations.vscode.settings inside .devcontainer/devcontainer.json",
-		Autofixable: true,
+		Reason:      "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Autofixable: false,
 	},
-	BreachSystemDevcontainerVscodeExtensionsOutside: {
-		Kind:        BreachSystemDevcontainerVscodeExtensionsOutside,
+	BreachSystemDevcontainerVscodeExtensionsDrift: {
+		Kind:        BreachSystemDevcontainerVscodeExtensionsDrift,
 		Priority:    BreachPriorityHigh,
-		Reason:      "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
-		Solution:    "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
-		Autofixable: true,
+		Reason:      "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Autofixable: false,
 	},
 	BreachFolderIllegalEmpty: {
 		Kind:        BreachFolderIllegalEmpty,
@@ -18711,7 +18712,7 @@ var policies = []PolicyDef{
 		ID:          "system",
 		Name:        "System",
 		Description: "Validates system configuration files like devcontainer and editor settings",
-		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json"},
+		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json", ".devcontainer/editor-overlay.json"},
 		Priority:    BreachPriorityHigh,
 		Groups: []Territory{
 			{
@@ -18720,10 +18721,10 @@ var policies = []PolicyDef{
 				Groups: []Territory{
 					{
 						Name:        "VSCode",
-						Description: "VSCode settings and extensions must be inside devcontainer.json",
+						Description: "The devcontainer editor block must equal its derivation from the host editor files",
 						Kinds: []Statute{
-							BreachSystemDevcontainerVscodeSettingsOutside,
-							BreachSystemDevcontainerVscodeExtensionsOutside,
+							BreachSystemDevcontainerVscodeSettingsDrift,
+							BreachSystemDevcontainerVscodeExtensionsDrift,
 						},
 					},
 				},
@@ -20645,42 +20646,123 @@ func repoPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// 📦️readDevcontainerVscodeExtensions returns extension ids from devcontainer customizations.vscode.extensions.
-func readDevcontainerVscodeExtensions(rootDir string) []string {
-	devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
-	dcData, err := os.ReadFile(devcontainerPath)
-	if err != nil {
-		return nil
-	}
-	var devcontainer map[string]interface{}
-	if err := json.Unmarshal(dcData, &devcontainer); err != nil {
-		return nil
-	}
-	customizations, _ := devcontainer["customizations"].(map[string]interface{})
-	if customizations == nil {
-		return nil
-	}
-	vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
-	if vscodeCustom == nil {
-		return nil
-	}
-	rawExtensions, _ := vscodeCustom["extensions"].([]interface{})
-	return extensionIDsFromJSONList(rawExtensions)
+// 📝️EditorSurface is the editor state of one host: workspace settings and recommended extensions.
+type EditorSurface struct {
+	Settings   map[string]interface{}
+	Extensions []string
 }
 
-// 📦️readWorkspaceExtensionRecommendations returns recommendation ids from .vscode/extensions.json when present.
-func readWorkspaceExtensionRecommendations(rootDir string) ([]string, bool) {
-	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
-	extData, err := os.ReadFile(extensionsPath)
+// 🧩️EditorOverlay declares what the devcontainer does not inherit from the host editor files and what only it adds (`.devcontainer/editor-overlay.json`).
+type EditorOverlay struct {
+	Settings struct {
+		Omit []string               `json:"omit"`
+		Set  map[string]interface{} `json:"set"`
+	} `json:"settings"`
+	Extensions struct {
+		Omit []string `json:"omit"`
+		Add  []string `json:"add"`
+	} `json:"extensions"`
+}
+
+// 🧮️DeriveContainerEditor derives the devcontainer editor surface from the host canonical surface and the declared overlay:
+// the host entries minus the omitted ones, `${workspaceFolder}` rewritten to `${containerWorkspaceFolder}`, then the overlay's own settings and extensions.
+func DeriveContainerEditor(canonical EditorSurface, overlay EditorOverlay) EditorSurface {
+	settings := map[string]interface{}{}
+	encoded, err := json.Marshal(canonical.Settings)
+	if err == nil {
+		_ = json.Unmarshal([]byte(strings.ReplaceAll(string(encoded), "${workspaceFolder}", "${containerWorkspaceFolder}")), &settings)
+	}
+	for _, key := range overlay.Settings.Omit {
+		delete(settings, key)
+	}
+	for key, value := range overlay.Settings.Set {
+		settings[key] = value
+	}
+	var extensions []string
+	seen := map[string]struct{}{}
+	for _, id := range append(slices.DeleteFunc(slices.Clone(canonical.Extensions), func(id string) bool { return slices.Contains(overlay.Extensions.Omit, id) }), overlay.Extensions.Add...) {
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			extensions = append(extensions, id)
+		}
+	}
+	return EditorSurface{Settings: settings, Extensions: extensions}
+}
+
+// 📦️stripJSONComments removes // and /* */ comments outside strings so JSONC files parse as JSON.
+func stripJSONComments(data []byte) []byte {
+	out := make([]byte, 0, len(data))
+	for index := 0; index < len(data); index++ {
+		switch {
+		case data[index] == '"':
+			start := index
+			for index++; index < len(data) && data[index] != '"'; index++ {
+				if data[index] == '\\' {
+					index++
+				}
+			}
+			out = append(out, data[start:min(index+1, len(data))]...)
+		case data[index] == '/' && index+1 < len(data) && data[index+1] == '/':
+			for index < len(data) && data[index] != '\n' {
+				index++
+			}
+			out = append(out, '\n')
+		case data[index] == '/' && index+1 < len(data) && data[index+1] == '*':
+			end := strings.Index(string(data[index+2:]), "*/")
+			if end < 0 {
+				return out
+			}
+			index += end + 3
+		default:
+			out = append(out, data[index])
+		}
+	}
+	return out
+}
+
+// 📦️readJSONC parses a JSONC file into `out`.
+func readJSONC(path string, out interface{}) bool {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, false
+		return false
 	}
-	var extFile map[string]interface{}
-	if err := json.Unmarshal(extData, &extFile); err != nil {
-		return nil, false
+	return json.Unmarshal(stripJSONComments(data), out) == nil
+}
+
+// 📖️ReadHostEditor reads the host canonical editor surface (`.vscode/settings.json`, `.vscode/extensions.json`).
+func ReadHostEditor(rootDir string) (EditorSurface, bool) {
+	var surface EditorSurface
+	var extensions struct {
+		Recommendations []interface{} `json:"recommendations"`
 	}
-	rawRecommendations, _ := extFile["recommendations"].([]interface{})
-	return extensionIDsFromJSONList(rawRecommendations), true
+	if !readJSONC(filepath.Join(rootDir, ".vscode", "settings.json"), &surface.Settings) || !readJSONC(filepath.Join(rootDir, ".vscode", "extensions.json"), &extensions) {
+		return surface, false
+	}
+	surface.Extensions = extensionIDsFromJSONList(extensions.Recommendations)
+	return surface, true
+}
+
+// 📖️ReadContainerEditor reads the editor surface checked into `.devcontainer/devcontainer.json`.
+func ReadContainerEditor(rootDir string) (EditorSurface, bool) {
+	var devcontainer struct {
+		Customizations struct {
+			Vscode struct {
+				Settings   map[string]interface{} `json:"settings"`
+				Extensions []interface{}          `json:"extensions"`
+			} `json:"vscode"`
+		} `json:"customizations"`
+	}
+	if !readJSONC(filepath.Join(rootDir, ".devcontainer", "devcontainer.json"), &devcontainer) {
+		return EditorSurface{}, false
+	}
+	return EditorSurface{Settings: devcontainer.Customizations.Vscode.Settings, Extensions: extensionIDsFromJSONList(devcontainer.Customizations.Vscode.Extensions)}, true
+}
+
+// 📖️ReadEditorOverlay reads `.devcontainer/editor-overlay.json`; a missing file declares no overlay.
+func ReadEditorOverlay(rootDir string) EditorOverlay {
+	var overlay EditorOverlay
+	readJSONC(filepath.Join(rootDir, ".devcontainer", "editor-overlay.json"), &overlay)
+	return overlay
 }
 
 // 📦️extensionIDsFromJSONList normalizes a JSON string list of extension ids.
@@ -20699,86 +20781,26 @@ func extensionIDsFromJSONList(values []interface{}) []string {
 	return ids
 }
 
-// 📦️missingWorkspaceExtensionRecommendations lists devcontainer extensions absent from workspace recommendations.
-func missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
-	if len(devcontainerExtensions) == 0 {
-		return nil
-	}
-	recommended := map[string]struct{}{}
-	for _, id := range workspaceRecommendations {
-		recommended[id] = struct{}{}
-	}
-	var missing []string
-	for _, id := range devcontainerExtensions {
-		if _, ok := recommended[id]; !ok {
-			missing = append(missing, id)
-		}
-	}
-	return missing
-}
-
-// 📦️mergeWorkspaceExtensionRecommendations builds a deduplicated recommendation list (devcontainer first, then extras).
-func mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations []string) []string {
-	merged := make([]string, 0, len(devcontainerExtensions)+len(workspaceRecommendations))
-	seen := map[string]struct{}{}
-	appendUnique := func(ids []string) {
-		for _, id := range ids {
-			if id == "" {
-				continue
-			}
-			if _, ok := seen[id]; ok {
-				continue
-			}
-			seen[id] = struct{}{}
-			merged = append(merged, id)
-		}
-	}
-	appendUnique(devcontainerExtensions)
-	appendUnique(workspaceRecommendations)
-	return merged
-}
-
-// 📦️writeWorkspaceExtensionRecommendations writes .vscode/extensions.json for host editor recommendations.
-func writeWorkspaceExtensionRecommendations(rootDir string, recommendations []string) error {
-	extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
-	if err := os.MkdirAll(filepath.Dir(extensionsPath), 0755); err != nil {
-		return err
-	}
-	rawRecommendations := make([]interface{}, len(recommendations))
-	for i, id := range recommendations {
-		rawRecommendations[i] = id
-	}
-	payload := map[string]interface{}{
-		"recommendations":         rawRecommendations,
-		"unwantedRecommendations": []interface{}{},
-	}
-	out, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(extensionsPath, append(out, '\n'), 0644)
-}
-
-// Ôù╗️´©ÅsystemPolicy holds the data fields for a systemPolicy record.
+// ⚖️systemPolicy requires the devcontainer editor block to equal its derivation from the host editor files and the declared overlay.
 func systemPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
-	settingsPath := filepath.Join(ctx.RootDir, ".vscode", "settings.json")
-	if _, err := os.Stat(settingsPath); err == nil {
-		breachs = append(breachs, ctx.CreateBreach(
-			"VSCode settings.json must be inside .devcontainer/devcontainer.json customizations.vscode.settings",
-			BreachSystemDevcontainerVscodeSettingsOutside,
-			".vscode/settings.json", 1, 0, ""))
+	canonical, hasCanonical := ReadHostEditor(ctx.RootDir)
+	actual, hasContainer := ReadContainerEditor(ctx.RootDir)
+	if !hasCanonical || !hasContainer {
+		return ctx.FilterIgnored(breachs)
 	}
-	devcontainerExtensions := readDevcontainerVscodeExtensions(ctx.RootDir)
-	if len(devcontainerExtensions) > 0 {
-		workspaceRecommendations, hasWorkspaceRecommendations := readWorkspaceExtensionRecommendations(ctx.RootDir)
-		missing := missingWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
-		if !hasWorkspaceRecommendations || len(missing) > 0 {
-			breachs = append(breachs, ctx.CreateBreach(
-				".vscode/extensions.json must recommend every extension from devcontainer customizations.vscode.extensions for host editors (Cursor reads this file)",
-				BreachSystemDevcontainerVscodeExtensionsOutside,
-				".vscode/extensions.json", 1, 0, ""))
-		}
+	expected := DeriveContainerEditor(canonical, ReadEditorOverlay(ctx.RootDir))
+	if !reflect.DeepEqual(expected.Settings, actual.Settings) {
+		breachs = append(breachs, ctx.CreateBreach(
+			".devcontainer/devcontainer.json customizations.vscode.settings must equal .vscode/settings.json plus .devcontainer/editor-overlay.json",
+			BreachSystemDevcontainerVscodeSettingsDrift,
+			".devcontainer/devcontainer.json", 1, 0, ""))
+	}
+	if !slices.Equal(expected.Extensions, actual.Extensions) {
+		breachs = append(breachs, ctx.CreateBreach(
+			".devcontainer/devcontainer.json customizations.vscode.extensions must equal .vscode/extensions.json plus .devcontainer/editor-overlay.json",
+			BreachSystemDevcontainerVscodeExtensionsDrift,
+			".devcontainer/devcontainer.json", 1, 0, ""))
 	}
 	return ctx.FilterIgnored(breachs)
 }
@@ -29755,51 +29777,6 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 	fixed := 0
 	for _, v := range breachs {
 		switch v.Kind {
-		case BreachSystemDevcontainerVscodeSettingsOutside:
-			settingsPath := filepath.Join(rootDir, ".vscode", "settings.json")
-			settingsData, err := os.ReadFile(settingsPath)
-			if err != nil {
-				continue
-			}
-			var settings map[string]interface{}
-			if err := json.Unmarshal(settingsData, &settings); err != nil {
-				continue
-			}
-			devcontainerPath := filepath.Join(rootDir, ".devcontainer", "devcontainer.json")
-			var devcontainer map[string]interface{}
-			if dcData, err := os.ReadFile(devcontainerPath); err == nil {
-				_ = json.Unmarshal(dcData, &devcontainer)
-			}
-			if devcontainer == nil {
-				devcontainer = map[string]interface{}{}
-			}
-			customizations, _ := devcontainer["customizations"].(map[string]interface{})
-			if customizations == nil {
-				customizations = map[string]interface{}{}
-			}
-			vscodeCustom, _ := customizations["vscode"].(map[string]interface{})
-			if vscodeCustom == nil {
-				vscodeCustom = map[string]interface{}{}
-			}
-			vscodeCustom["settings"] = settings
-			customizations["vscode"] = vscodeCustom
-			devcontainer["customizations"] = customizations
-			dcOut, err := json.MarshalIndent(devcontainer, "", "  ")
-			if err != nil {
-				continue
-			}
-			if err := os.MkdirAll(filepath.Join(rootDir, ".devcontainer"), 0755); err != nil {
-				continue
-			}
-			if err := os.WriteFile(devcontainerPath, append(dcOut, '\n'), 0644); err != nil {
-				continue
-			}
-			_ = os.Remove(settingsPath)
-			vscodeDir := filepath.Join(rootDir, ".vscode")
-			if entries, err := os.ReadDir(vscodeDir); err == nil && len(entries) == 0 {
-				_ = os.Remove(vscodeDir)
-			}
-			fixed++
 		case BreachFolderIllegalEmpty:
 			folderPath := filepath.Join(rootDir, v.Excerpt)
 			entries, readErr := os.ReadDir(folderPath)
@@ -29808,17 +29785,6 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 					fixed++
 				}
 			}
-		case BreachSystemDevcontainerVscodeExtensionsOutside:
-			devcontainerExtensions := readDevcontainerVscodeExtensions(rootDir)
-			workspaceRecommendations, _ := readWorkspaceExtensionRecommendations(rootDir)
-			merged := mergeWorkspaceExtensionRecommendations(devcontainerExtensions, workspaceRecommendations)
-			if len(merged) == 0 {
-				continue
-			}
-			if err := writeWorkspaceExtensionRecommendations(rootDir, merged); err != nil {
-				continue
-			}
-			fixed++
 		}
 	}
 	return fixed, nil

@@ -1,0 +1,5 @@
+{
+  "mutation": "setBuilding",
+  "id": "bldg-1",
+  "elevation": 1.5
+}

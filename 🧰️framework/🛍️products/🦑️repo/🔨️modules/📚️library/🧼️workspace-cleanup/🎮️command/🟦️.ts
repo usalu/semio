@@ -113,7 +113,7 @@ export class CleanScript extends Script {
 
   /** 🧟️Reaps stray bun/zsh/cargo/node/esbuild/rustc processes left over from crashed or abandoned sessions. */
   private runKillStrayProcesses(dry: boolean): void {
-    const removals = cleanKillStrayProcesses(dry);
+    const removals = cleanKillStrayProcesses(dry, repoCacheDirectory(this.root, "🎛️dashboard"));
     console.log(`[clean] stray-processes ${dry ? "dry-run" : "applied"} removals=${removals.length}`);
     for (const row of removals) console.log(`[clean] ${dry ? "would-kill" : "killed"} ${row.action} pid=${row.pid} ppid=${row.ppid} ${row.name}`);
   }

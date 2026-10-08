@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-location/schema.json",
+  "title": "SetWallLocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "location"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWallLocation"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "location": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/LocationLine",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Location line",
+          "de": "Bezugslinie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

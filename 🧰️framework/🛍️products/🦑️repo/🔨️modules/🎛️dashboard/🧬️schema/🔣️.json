@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/command-tree.json",
   "title": "🌳️ Dashboard command tree",
-  "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf carrying either the process the pseudo-terminal window runs or the repo-domain action the Rust domain crates answer in process. `semio command-tree --dump-tree` prints exactly this document.",
+  "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf naming the registry command it starts or the repo-domain action the Rust domain crates answer in process. `semio command-tree --dump-tree` prints exactly this document.",
   "$ref": "#/$defs/CommandNode",
   "$defs": {
     "CommandNode": {
@@ -12,44 +12,28 @@
         "key": { "type": "string", "description": "🔑️ The stable key the wizard path is built from; a project target is keyed `:<target>` under its owner." },
         "label": { "type": "string", "description": "🏷️ The line the wizard shows." },
         "leaf": { "$ref": "#/$defs/CommandLeaf" },
-        "children": { "type": "array", "items": { "$ref": "#/$defs/CommandNode" }, "description": "🌿️ The next wizard step: the verb at the root in launcher order, then the owner taxonomy, workspace scripts or launch configurations, sorted alphabetically." }
+        "children": { "type": "array", "items": { "$ref": "#/$defs/CommandNode" }, "description": "🌿️ The next wizard step: the verb at the root in launcher order, then the owner taxonomy of the command, sorted alphabetically." }
       },
       "required": ["key", "label"],
       "additionalProperties": false
     },
     "CommandLeaf": {
-      "description": "🍃️ What activating the leaf does.",
-      "oneOf": [{ "$ref": "#/$defs/ProcessLeaf" }, { "$ref": "#/$defs/CompoundLeaf" }, { "$ref": "#/$defs/RepoLeaf" }]
+      "description": "🍃️ What activating the leaf starts: a registry command or a repo-domain operation.",
+      "oneOf": [{ "$ref": "#/$defs/InvocationLeaf" }, { "$ref": "#/$defs/RepoLeaf" }]
     },
-    "CompoundLeaf": {
+    "InvocationLeaf": {
       "type": "object",
-      "description": "🧭️ Several processes started together, each in its own pseudo-terminal window.",
+      "description": "▶️ A registry command and the parameters the row pins. Resolving it to a launch is the registry's business (`semio run <id> --dry-run`); the tree starts nothing itself.",
       "properties": {
-        "kind": { "const": "compound" },
-        "processes": { "type": "array", "items": { "$ref": "#/$defs/ProcessLeaf" }, "minItems": 1 }
-      },
-      "required": ["kind", "processes"],
-      "additionalProperties": false
-    },
-    "ProcessLeaf": {
-      "type": "object",
-      "description": "▶️ A process spawned into a pseudo-terminal window.",
-      "properties": {
-        "kind": { "const": "process" },
-        "cmd": { "type": "string" },
-        "args": { "type": "array", "items": { "type": "string" } },
-        "cwd": { "type": "string", "description": "📁️ Repository-relative working directory, forward-slashed; empty for the repository root." },
-        "env": {
+        "kind": { "const": "command" },
+        "id": { "type": "string", "minLength": 3, "description": "🪪️ The command id of `🧬️schema/🎮️registry/🔣️.json#/$defs/CommandId`." },
+        "parameters": {
           "type": "array",
-          "items": {
-            "type": "object",
-            "properties": { "name": { "type": "string" }, "value": { "type": "string" } },
-            "required": ["name", "value"],
-            "additionalProperties": false
-          }
+          "items": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": "string" }], "items": false, "minItems": 2 },
+          "description": "🎛️ `[parameter id, value]` pairs: a playground row pins its renderer."
         }
       },
-      "required": ["kind", "cmd", "args", "cwd", "env"],
+      "required": ["kind", "id", "parameters"],
       "additionalProperties": false
     },
     "RepoLeaf": {

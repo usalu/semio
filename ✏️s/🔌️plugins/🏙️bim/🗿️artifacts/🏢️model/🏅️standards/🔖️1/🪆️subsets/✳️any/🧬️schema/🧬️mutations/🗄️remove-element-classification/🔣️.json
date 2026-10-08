@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️remove-element-classification",
+  "semanticKind": "remove-element-classification",
+  "displayName": "Remove Element Classification",
+  "emoji": "🗄️",
+  "aggregateVariant": "RemoveElementClassification",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 907,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

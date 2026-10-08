@@ -1,0 +1,20 @@
+{
+  "roof_types": {
+    "rf-metal": {
+      "entry": "Created",
+      "layers": [
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.24
+        },
+        {
+          "function": "Finish",
+          "material": "m-screed",
+          "thickness": 0.01
+        }
+      ],
+      "name": "Glass Wool 300"
+    }
+  }
+}

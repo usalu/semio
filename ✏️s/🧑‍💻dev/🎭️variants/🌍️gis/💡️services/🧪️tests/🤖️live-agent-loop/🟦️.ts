@@ -223,7 +223,7 @@ class Peer {
 function semioEntry(): ServerEntry {
   const config = JSON.parse(readFileSync(join(REPO_ROOT, ".mcp.json"), "utf8")) as { mcpServers: Record<string, ServerEntry> };
   const entry = config.mcpServers.semio;
-  if (!entry) throw new Error(".mcp.json declares no `semio` server — the gate drives the shipped launch line, never a hand-rolled one");
+  if (!entry) throw new Error(".mcp.json declares no `semio` server — the gate drives the shipped server command line, never a hand-rolled one");
   return entry;
 }
 
@@ -295,7 +295,7 @@ const entry = semioEntry();
 const reachable = await fetch(SHELL_URL).then((response) => response.ok).catch(() => false);
 if (!reachable)
   throw new Error(
-    `no live dev session answers ${SHELL_URL}. Start one first (launch row "🛠️dev🗒️${PLUGIN}⚛️react", or \`bun nx run workspace:dev -- ${PLUGIN}\`) and re-run; point the gate elsewhere with S_OS_MCP_LIVE_SHELL_URL.`,
+    `no live dev session answers ${SHELL_URL}. Start one first (dashboard command \`playground:${PLUGIN}\`, or \`semio run playground:${PLUGIN} --detach --wait-ready\`) and re-run; point the gate elsewhere with S_OS_MCP_LIVE_SHELL_URL.`,
   );
 
 // 🧱️ Precondition, not a step: a serve that is not transforming THIS tree's `🏛️ShellHost` cannot

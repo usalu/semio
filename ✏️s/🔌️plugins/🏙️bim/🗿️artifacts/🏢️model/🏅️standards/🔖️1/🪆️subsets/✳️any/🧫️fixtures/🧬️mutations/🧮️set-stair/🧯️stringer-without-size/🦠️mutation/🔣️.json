@@ -1,0 +1,9 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "stringer": {
+    "kind": "Closed",
+    "width": 0,
+    "depth": 0.2
+  }
+}

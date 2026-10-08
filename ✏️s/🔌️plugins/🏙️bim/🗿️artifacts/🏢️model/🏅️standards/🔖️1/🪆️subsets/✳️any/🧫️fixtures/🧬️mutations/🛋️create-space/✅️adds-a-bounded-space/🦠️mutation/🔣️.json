@@ -1,0 +1,18 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-1",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.01",
+    "name": "Kitchen",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    },
+    "usage": "Kitchen"
+  }
+}

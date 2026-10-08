@@ -1,0 +1,17 @@
+{
+  "mutation": "setRoofType",
+  "id": "rf-tile",
+  "name": "Tiled (renamed)",
+  "layers": [
+    {
+      "material": "m-wool",
+      "thickness": 0.3,
+      "function": "Insulation"
+    },
+    {
+      "material": "m-brick",
+      "thickness": 0.03,
+      "function": "Finish"
+    }
+  ]
+}

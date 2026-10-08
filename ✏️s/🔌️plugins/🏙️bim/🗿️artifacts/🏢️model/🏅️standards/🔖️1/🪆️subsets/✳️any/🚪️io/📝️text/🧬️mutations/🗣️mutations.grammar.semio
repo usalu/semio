@@ -1,0 +1,9 @@
+dialect grammar
+grammar bim.op
+extension bim
+start mutation
+
+artifact-mark = "bim.model-op"
+mutation = artifact-mark model-op+
+model-op = "create-site" | "delete-site" | "create-building" | "delete-building" | "create-storey" | "rename-storey" | "set-storey-height" | "set-storey-level" | "delete-storey" | "create-wall" | "delete-wall" | "set-wall-top" | "set-storey-cut-height" | "create-material" | "delete-material" | "set-material" | "create-wall-type" | "delete-wall-type" | "set-wall-type" | "create-slab-type" | "delete-slab-type" | "set-slab-type" | "create-roof-type" | "delete-roof-type" | "set-roof-type" | "create-column-type" | "delete-column-type" | "set-column-type" | "create-beam-type" | "delete-beam-type" | "set-beam-type" | "create-window-type" | "delete-window-type" | "set-window-type" | "create-door-type" | "delete-door-type" | "set-door-type" | "set-project-info" | "set-site" | "set-building" | "create-grid-line" | "delete-grid-line" | "set-grid-line" | "set-wall-axis" | "set-wall-base-offset" | "set-wall-type-of" | "set-wall-location" | "flip-wall" | "split-wall" | "create-curtain-wall" | "delete-curtain-wall" | "set-curtain-wall" | "create-column" | "delete-column" | "set-column" | "create-beam" | "delete-beam" | "set-beam" | "create-slab" | "delete-slab" | "set-slab-boundary" | "set-slab" | "create-roof" | "delete-roof" | "set-roof-footprint" | "set-roof-shape" | "create-opening" | "delete-opening" | "move-opening" | "set-opening" | "create-stair" | "delete-stair" | "set-stair" | "create-railing" | "delete-railing" | "set-railing" | "create-space" | "delete-space" | "set-space" | "move-elements" | "rotate-elements" | "delete-elements" | "rename-element" | "set-element-property" | "remove-element-property" | "set-element-classification" | "remove-element-classification" | "place-elements" field+
+field = IDENT "=" TEXT

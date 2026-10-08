@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-beam-type/schema.json",
+  "title": "SetBeamType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setBeamType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Beam type",
+          "de": "Trägertyp"
+        },
+        "ref": {
+          "kind": "beam-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "profile": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Profile",
+          "de": "Profil"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "group": "value",
+        "order": 40,
+        "ref": {
+          "kind": "material"
+        }
+      }
+    }
+  }
+}

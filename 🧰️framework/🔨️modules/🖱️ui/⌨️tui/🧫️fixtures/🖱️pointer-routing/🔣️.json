@@ -1,0 +1,219 @@
+{
+  "contract": {
+    "onlyTheLeftButtonActivates": true,
+    "everyControlCarriesItsTabIndex": true,
+    "clickingFocusesTheContainingFocusable": true,
+    "theWheelGoesToTheWidgetUnderThePointer": true,
+    "dragsAreCapturedByWhatWasPressed": true,
+    "hitTestingUsesTheGeometryThatIsPainted": true
+  },
+  "scene": {
+    "size": [80, 40],
+    "layout": {
+      "kind": "row",
+      "stacks": [
+        { "active": "w1", "windows": [ { "id": "w1", "title": "alpha" }, { "id": "w3", "title": "beta" }, { "id": "w4", "title": "gamma" } ] },
+        { "active": "w2", "windows": [ { "id": "w2", "title": "delta" } ] }
+      ]
+    },
+    "widgets": { "w1": "wizard", "w2": "tabs" }
+  },
+  "frame": {
+    "first": 2,
+    "rows": [
+      "┌─────────┐┌────────┐┌─────────┐   ┌───┐ ┌─────────┐                       ┌───┐",
+      "│ alpha ✕ ││ beta ✕ ││ gamma ✕ │   │ ⤢ │ │ delta ✕ │                       │ ⤢ │",
+      "│         └┴────────┴┴─────────┴───┴───┤ │         └───────────────────────┴───┤"
+    ]
+  },
+  "windows": [
+    { "window": "w1", "x": 0, "right": 39, "textRow": 3, "active": 0 },
+    { "window": "w2", "x": 41, "right": 79, "textRow": 3, "active": 0 }
+  ],
+  "chips": [
+    { "window": "w1", "index": 0, "x": 0, "right": 10, "close": 8 },
+    { "window": "w1", "index": 1, "x": 11, "right": 20, "close": 18 },
+    { "window": "w1", "index": 2, "x": 21, "right": 31, "close": 29 },
+    { "window": "w2", "index": 0, "x": 41, "right": 51, "close": 49 }
+  ],
+  "controls": [
+    { "window": "w1", "x": 35, "right": 39, "maximize": 37 },
+    { "window": "w2", "x": 75, "right": 79, "maximize": 77 }
+  ],
+  "elision": [
+    { "text": "short", "max": 10, "out": "short" },
+    { "text": "a longer label", "max": 8, "out": "a longe…" },
+    { "text": "anything", "max": 1, "out": "…" },
+    { "text": "anything", "max": 0, "out": "" },
+    { "text": "task number 11 with a long tail", "max": 18, "out": "task number 11 wi…" },
+    { "text": "日本語のタスク名", "max": 7, "out": "日本語…" },
+    { "text": "日本語のタスク名", "max": 16, "out": "日本語のタスク名" }
+  ],
+  "cases": [
+    {
+      "name": "a left press on an inactive chip activates that tab and focuses its window",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 13, "y": 3 } ],
+      "signals": [ "w1:WindowFocus", "w1:WindowTabActivated(1)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "the close glyph of an inactive chip closes that chip and leaves focus alone",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 18, "y": 3 } ],
+      "signals": [ "w1:WindowClose(1)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "the close glyph of the active chip names its own index",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 8, "y": 3 } ],
+      "signals": [ "w1:WindowClose(0)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "right and middle presses on a close glyph do nothing",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "right", "x": 18, "y": 3 }, { "t": "up", "b": "right", "x": 18, "y": 3 }, { "t": "down", "b": "middle", "x": 18, "y": 3 }, { "t": "up", "b": "middle", "x": 18, "y": 3 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "a right press on a chip asks for that tab's context menu at the pointer cell",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "right", "x": 13, "y": 3 } ],
+      "signals": [ "w1:ContextMenu(13,3,1)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "the maximize control of each window names that window's active tab",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 37, "y": 3 }, { "t": "down", "b": "left", "x": 77, "y": 3 } ],
+      "signals": [ "w1:WindowMaximize(0)", "w2:WindowMaximize(0)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "the gap between the chips and the controls focuses the window and nothing else",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 33, "y": 3 } ],
+      "signals": [ "w1:WindowFocus" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "dragging a chip onto a later chip reports the move when the button is released",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 13, "y": 3 }, { "t": "drag", "b": "left", "x": 19, "y": 3 }, { "t": "drag", "b": "left", "x": 25, "y": 3 }, { "t": "up", "b": "left", "x": 25, "y": 3 } ],
+      "signals": [ "w1:WindowFocus", "w1:WindowTabActivated(1)", "w1:TabMoved(1->2)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "dragging a chip back onto itself reports no move",
+      "model": "chrome",
+      "events": [ { "t": "down", "b": "left", "x": 13, "y": 3 }, { "t": "drag", "b": "left", "x": 16, "y": 3 }, { "t": "up", "b": "left", "x": 16, "y": 3 } ],
+      "signals": [ "w1:WindowFocus", "w1:WindowTabActivated(1)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "a left press on a wizard row focuses it and selects the row without activating it",
+      "events": [ { "t": "down", "b": "left", "x": 10, "y": 7, "at": 1000 } ],
+      "signals": [ "w1:WindowFocus", "w1.wizard:SelectionChanged(1)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "a double press on a wizard row activates the option",
+      "events": [ { "t": "down", "b": "left", "x": 10, "y": 7, "at": 1000 }, { "t": "down", "b": "left", "x": 10, "y": 7, "at": 1200 } ],
+      "signals": [ "w1:WindowFocus", "w1.wizard:SelectionChanged(1)", "w1.wizard:Activated(1)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "a right press on a widget row reports the pointer cell with the row it is over and still focuses the widget",
+      "events": [ { "t": "down", "b": "right", "x": 10, "y": 10 } ],
+      "signals": [ "w1:WindowFocus", "w1.wizard:ContextMenu(10,10,4)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "the wheel goes to the widget under the pointer and never moves focus",
+      "start_focus": "w1.wizard",
+      "events": [ { "t": "wheel", "dy": 1, "x": 50, "y": 5 } ],
+      "signals": [ "w2.tabs:TabChanged(1)" ],
+      "focus": "w1.wizard",
+      "hovered": null
+    },
+    {
+      "name": "the wheel over window chrome reaches no widget",
+      "events": [ { "t": "wheel", "dy": 1, "x": 13, "y": 3 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "a captured node receives the wheel wherever the pointer is",
+      "capture": "w2.tabs",
+      "events": [ { "t": "wheel", "dy": 1, "x": 5, "y": 10 } ],
+      "signals": [ "w2.tabs:TabChanged(1)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "two quick presses on the same tab are a double click that activates it",
+      "events": [ { "t": "down", "b": "left", "x": 49, "y": 5, "at": 1000 }, { "t": "down", "b": "left", "x": 49, "y": 5, "at": 1200 } ],
+      "signals": [ "w2:WindowFocus", "w2.tabs:TabChanged(1)", "w2.tabs:Activated(1)" ],
+      "focus": "w2.tabs",
+      "hovered": null
+    },
+    {
+      "name": "two presses a second apart are two single clicks",
+      "events": [ { "t": "down", "b": "left", "x": 49, "y": 5, "at": 1000 }, { "t": "down", "b": "left", "x": 49, "y": 5, "at": 2200 } ],
+      "signals": [ "w2:WindowFocus", "w2.tabs:TabChanged(1)" ],
+      "focus": "w2.tabs",
+      "hovered": null
+    },
+    {
+      "name": "moving across widgets and chrome tracks the hovered node",
+      "events": [ { "t": "move", "x": 10, "y": 10 }, { "t": "move", "x": 50, "y": 5 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": "w2.tabs"
+    },
+    {
+      "name": "hovering window chrome hovers the window",
+      "events": [ { "t": "move", "x": 13, "y": 3 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": "w1"
+    },
+    {
+      "name": "the gutter between the stacks is a hover target of its own",
+      "events": [ { "t": "move", "x": 40, "y": 10 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": "axis"
+    },
+    {
+      "name": "dragging the gutter reports incremental splitter deltas for the axis path",
+      "events": [ { "t": "down", "b": "left", "x": 40, "y": 10 }, { "t": "drag", "b": "left", "x": 43, "y": 10 }, { "t": "drag", "b": "left", "x": 45, "y": 10 }, { "t": "drag", "b": "left", "x": 41, "y": 12 }, { "t": "up", "b": "left", "x": 41, "y": 12 } ],
+      "signals": [ "axis:SplitterDragged(0,3)", "axis:SplitterDragged(0,2)", "axis:SplitterDragged(0,-4)" ],
+      "focus": null,
+      "hovered": null
+    },
+    {
+      "name": "releasing or dragging without a press is harmless",
+      "events": [ { "t": "up", "b": "left", "x": 10, "y": 10 }, { "t": "drag", "b": "right", "x": 10, "y": 10 } ],
+      "signals": [],
+      "focus": null,
+      "hovered": "w1.wizard"
+    }
+  ]
+}

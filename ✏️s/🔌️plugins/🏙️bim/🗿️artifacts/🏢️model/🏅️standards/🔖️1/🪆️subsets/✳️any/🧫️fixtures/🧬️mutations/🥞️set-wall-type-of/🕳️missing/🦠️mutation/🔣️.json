@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallTypeOf",
+  "id": "w-attic",
+  "wall_type": "wt-150"
+}

@@ -5,7 +5,7 @@ use crate::proc::spawn_inherit;
 use std::path::Path;
 
 // #region 🔖️Command
-/// 🔌️ Verifies and regenerates the canonical plugin and playground registry.
+/// 🔧️ Verifies and regenerates the canonical plugin and playground registry.
 pub fn run(root: &Path, subcommand: &str) -> i32 {
     match subcommand {
         "check" => {

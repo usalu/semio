@@ -1,0 +1,17 @@
+{
+  "column_types": {
+    "ct-400": {
+      "entry": "Patched",
+      "material": "m-steel",
+      "name": "Everything",
+      "profile": {
+        "IShape": {
+          "depth": 0.4,
+          "flange": 0.013,
+          "web": 0.008,
+          "width": 0.2
+        }
+      }
+    }
+  }
+}

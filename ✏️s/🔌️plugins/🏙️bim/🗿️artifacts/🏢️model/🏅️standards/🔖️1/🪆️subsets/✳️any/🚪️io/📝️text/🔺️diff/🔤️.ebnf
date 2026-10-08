@@ -1,0 +1,3 @@
+(* ebnf bim.model.diff *)
+document = header, body ;
+header = 'schema', space, 'bim.model.diff', newline ;

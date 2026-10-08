@@ -1,0 +1,14 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const file = "C:/git/semio/🎓️teaching/🏛️architecture/❓️quiz/README.md";
+const block = readFileSync("C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DASHBOARD-LAUNCH-COCKPIT/🗑️generated/r2-l2-quiz-block.md", "utf8").replace(" (`compound:@teaching/architecture-quiz/quiz-with-proctor` starts the same two as separate tasks)", "");
+let s = readFileSync(file, "utf8");
+const a = s.indexOf("Run everything from `.vscode/launch.json`");
+const b = s.indexOf("### One command for backend and frontend");
+s = s.slice(0, a) + block + s.slice(b);
+const pets = "launch row `🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories` (Claude preview `architecture-pets-stories`), http://127.0.0.1:6074/";
+if (!s.includes(pets)) throw new Error("pets row");
+s = s.replace(pets, "dashboard command `@semio-tech/pets-react:dev` (`semio run @semio-tech/pets-react:dev --param port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready`), http://127.0.0.1:6074/");
+const pub = "Launch rows: `🚚️publish🎓️teaching🏛️architecture❓️quiz`, `📦️build🎓️teaching🏛️architecture❓️quiz🐳️docker-image`,\n`📦️bundle🎓️teaching🏛️architecture❓️quiz🐳️docker-stack`.";
+if (!s.includes(pub)) throw new Error("pub row");
+s = s.replace(pub, "Dashboard command ids: `@teaching/architecture-quiz:publish`, `@teaching/architecture-quiz:docker-image-build`,\n`@teaching/architecture-quiz:docker-stack-bundle`.");
+writeFileSync(file, s);

@@ -1,0 +1,9 @@
+{
+  "mutation": "setGridLine",
+  "id": "g-1",
+  "label": "A",
+  "start": {
+    "x": 0,
+    "y": 0
+  }
+}

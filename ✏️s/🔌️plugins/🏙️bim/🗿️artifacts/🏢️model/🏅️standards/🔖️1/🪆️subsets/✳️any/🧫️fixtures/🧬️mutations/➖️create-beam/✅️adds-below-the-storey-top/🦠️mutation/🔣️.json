@@ -1,0 +1,18 @@
+{
+  "mutation": "createBeam",
+  "id": "b-b",
+  "beam": {
+    "storey": "st-ground",
+    "beam_type": "bt-40x60",
+    "start": {
+      "x": 0,
+      "y": 3
+    },
+    "end": {
+      "x": 4,
+      "y": 3
+    },
+    "top_offset": -0.2,
+    "name": "Beam B"
+  }
+}

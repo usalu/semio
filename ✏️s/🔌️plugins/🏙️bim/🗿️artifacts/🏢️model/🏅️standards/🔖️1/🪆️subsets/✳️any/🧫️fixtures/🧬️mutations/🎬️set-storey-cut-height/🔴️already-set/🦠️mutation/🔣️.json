@@ -1,0 +1,7 @@
+{
+  "mutation": "setStoreyCutHeight",
+  "id": "st-ground",
+  "cut_height": {
+    "value": 1.5
+  }
+}

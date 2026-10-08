@@ -1,0 +1,41 @@
+{
+  "mutation": "createSlab",
+  "id": "sl-ground",
+  "slab": {
+    "storey": "st-ground",
+    "slab_type": "stt-22",
+    "boundary": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 4
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 4
+        },
+        "bulge": 0
+      }
+    ],
+    "holes": [],
+    "offset": 0,
+    "name": "Ground slab"
+  }
+}

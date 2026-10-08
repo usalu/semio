@@ -1,0 +1,16 @@
+{
+  "mutation": "createBeamType",
+  "id": "st-ground",
+  "beam_type": {
+    "name": "Beam",
+    "profile": {
+      "IShape": {
+        "width": 0.1,
+        "depth": 0.2,
+        "web": 0.006,
+        "flange": 0.009
+      }
+    },
+    "material": "m-steel"
+  }
+}

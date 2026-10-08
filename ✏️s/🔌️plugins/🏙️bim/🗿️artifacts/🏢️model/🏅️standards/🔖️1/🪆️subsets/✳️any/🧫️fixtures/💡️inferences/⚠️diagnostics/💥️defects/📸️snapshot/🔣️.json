@@ -1,0 +1,992 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Plan Defects",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    },
+    "m-insulation": {
+      "name": "Mineral Wool",
+      "category": "Insulation",
+      "color": {
+        "r": 0.9,
+        "g": 0.85,
+        "b": 0.3
+      },
+      "density": 40.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    },
+    "m-concrete": {
+      "name": "Concrete",
+      "category": "Concrete",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.6
+      },
+      "density": 2400.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    },
+    "m-steel": {
+      "name": "Steel",
+      "category": "Metal",
+      "color": {
+        "r": 0.6,
+        "g": 0.6,
+        "b": 0.6
+      },
+      "density": 7800.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    },
+    "m-glass": {
+      "name": "Glass",
+      "category": "Glass",
+      "color": {
+        "r": 0.6,
+        "g": 0.8,
+        "b": 0.9
+      },
+      "density": 2500.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    },
+    "m-wood": {
+      "name": "Wood",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.4,
+        "b": 0.2
+      },
+      "density": 500.0,
+      "conductivity": 1.0,
+      "specific_heat": 900.0
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.2,
+          "function": "Structure"
+        },
+        {
+          "material": "m-insulation",
+          "thickness": 0.1,
+          "function": "Insulation"
+        }
+      ]
+    },
+    "wt-150": {
+      "name": "Brick 150",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.15,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "slab_types": {
+    "slt-22": {
+      "name": "Concrete 220",
+      "layers": [
+        {
+          "material": "m-concrete",
+          "thickness": 0.22,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "roof_types": {
+    "rt-30": {
+      "name": "Timber 300",
+      "layers": [
+        {
+          "material": "m-wood",
+          "thickness": 0.3,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "column_types": {
+    "ct-400": {
+      "name": "Column 400",
+      "profile": {
+        "Rectangle": {
+          "width": 0.4,
+          "depth": 0.4
+        }
+      },
+      "material": "m-concrete"
+    }
+  },
+  "beam_types": {
+    "bt-30x50": {
+      "name": "Beam 30x50",
+      "profile": {
+        "Rectangle": {
+          "width": 0.3,
+          "depth": 0.5
+        }
+      },
+      "material": "m-concrete"
+    }
+  },
+  "window_types": {
+    "wnd-120": {
+      "name": "Window 120",
+      "width": 1.2,
+      "height": 1.2,
+      "sill": 0.9,
+      "frame_width": 0.05,
+      "frame_depth": 0.08,
+      "panes": 2,
+      "material": "m-glass"
+    }
+  },
+  "door_types": {
+    "dr-100": {
+      "name": "Door 100",
+      "width": 1.0,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.1,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-wood"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "elevation": 0.0,
+      "true_north": 0.0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "elevation": 0.0
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3.0
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    },
+    "st-dup": {
+      "building": "bldg-1",
+      "name": "Duplicate",
+      "level": 1,
+      "height": 3.0
+    },
+    "st-far": {
+      "building": "bldg-1",
+      "name": "Far",
+      "level": 4,
+      "height": 3.0
+    }
+  },
+  "grids": {
+    "g-A": {
+      "building": "bldg-1",
+      "label": "A",
+      "start": {
+        "x": 0.0,
+        "y": -1.0
+      },
+      "end": {
+        "x": 0.0,
+        "y": 7.0
+      }
+    },
+    "g-1": {
+      "building": "bldg-1",
+      "label": "1",
+      "start": {
+        "x": -1.0,
+        "y": 0.0
+      },
+      "end": {
+        "x": 9.0,
+        "y": 0.0
+      }
+    }
+  },
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-north": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "North"
+    },
+    "w-west": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "West"
+    },
+    "w-part": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 4.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 4.0,
+            "y": 3.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "Partition"
+    },
+    "w-first-south": {
+      "storey": "st-first",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "First South"
+    },
+    "w-first-east": {
+      "storey": "st-first",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "First East"
+    },
+    "w-first-west": {
+      "storey": "st-first",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "First West"
+    },
+    "w-missing-type": {
+      "storey": "st-ground",
+      "wall_type": "wt-missing",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 1.0,
+            "y": 2.0
+          },
+          "end": {
+            "x": 3.0,
+            "y": 2.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "No Type"
+    },
+    "w-zero": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 2.0,
+            "y": 2.0
+          },
+          "end": {
+            "x": 2.0,
+            "y": 2.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "Zero"
+    },
+    "w-into-column": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 6.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 6.0,
+            "y": 3.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "Into Column"
+    }
+  },
+  "curtain_walls": {
+    "cw-first-north": {
+      "storey": "st-first",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "u_spacing": 2.0,
+      "v_spacing": 1.0,
+      "mullion": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.1
+        }
+      },
+      "panel_material": "m-glass",
+      "mullion_material": "m-steel",
+      "name": "North Facade"
+    }
+  },
+  "columns": {
+    "c-1": {
+      "storey": "st-ground",
+      "column_type": "ct-400",
+      "position": {
+        "x": 6.0,
+        "y": 3.0
+      },
+      "rotation": 0.0,
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "name": "C1"
+    },
+    "c-2": {
+      "storey": "st-ground",
+      "column_type": "ct-400",
+      "position": {
+        "x": 6.2,
+        "y": 3.1
+      },
+      "rotation": 0.0,
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "name": "C2"
+    }
+  },
+  "beams": {
+    "b-1": {
+      "storey": "st-ground",
+      "beam_type": "bt-30x50",
+      "start": {
+        "x": 0.0,
+        "y": 4.5
+      },
+      "end": {
+        "x": 8.0,
+        "y": 4.5
+      },
+      "top_offset": -0.25,
+      "name": "B1"
+    }
+  },
+  "slabs": {
+    "sl-ground": {
+      "storey": "st-ground",
+      "slab_type": "slt-22",
+      "boundary": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "holes": [],
+      "offset": 0.0,
+      "name": "Ground Slab"
+    },
+    "sl-first": {
+      "storey": "st-first",
+      "slab_type": "slt-22",
+      "boundary": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "holes": [
+        [
+          {
+            "point": {
+              "x": 1.0,
+              "y": 4.7
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5.5,
+              "y": 4.7
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5.5,
+              "y": 5.7
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 5.7
+            },
+            "bulge": 0.0
+          }
+        ]
+      ],
+      "offset": 0.0,
+      "name": "First Slab"
+    }
+  },
+  "roofs": {
+    "rf-1": {
+      "storey": "st-first",
+      "roof_type": "rt-30",
+      "footprint": [
+        {
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        },
+        {
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.0
+        }
+      ],
+      "shape": {
+        "Gable": {
+          "pitch": 0.5,
+          "ridge_direction": 0.0
+        }
+      },
+      "overhang": 0.3,
+      "base_offset": 2.8,
+      "name": "Roof"
+    }
+  },
+  "openings": {
+    "o-door": {
+      "host": "w-south",
+      "kind": {
+        "Door": {
+          "door_type": "dr-100"
+        }
+      },
+      "offset": 2.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Door"
+    },
+    "o-win-south": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 5.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window South"
+    },
+    "o-win-north": {
+      "host": "w-north",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 4.0,
+      "sill_override": 1.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Window North High"
+    },
+    "o-outside": {
+      "host": "w-south",
+      "kind": {
+        "Door": {
+          "door_type": "dr-100"
+        }
+      },
+      "offset": 7.9,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Outside"
+    },
+    "o-orphan": {
+      "host": "w-nowhere",
+      "kind": {
+        "Door": {
+          "door_type": "dr-100"
+        }
+      },
+      "offset": 1.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Orphan"
+    }
+  },
+  "stairs": {
+    "s-1": {
+      "storey": "st-ground",
+      "start": {
+        "x": 1.0,
+        "y": 5.2
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.18,
+      "min_tread": 0.25,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Stair"
+    },
+    "s-comfort": {
+      "storey": "st-ground",
+      "start": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "direction": 0.0,
+      "width": 1.0,
+      "flight": "Straight",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "max_riser": 0.18,
+      "min_tread": 0.4,
+      "stringer": {
+        "kind": "None",
+        "width": 0.05,
+        "depth": 0.25
+      },
+      "nosing": 0,
+      "tread_thickness": 0.04,
+      "riser": "Closed",
+      "landing_depth": 1.0,
+      "name": "Steep"
+    }
+  },
+  "railings": {
+    "r-1": {
+      "storey": "st-ground",
+      "path": [
+        {
+          "x": 1.0,
+          "y": 4.65
+        },
+        {
+          "x": 5.2,
+          "y": 4.65
+        }
+      ],
+      "height": 1.0,
+      "post_spacing": 1.2,
+      "profile": {
+        "Rectangle": {
+          "width": 0.06,
+          "depth": 0.04
+        }
+      },
+      "post_profile": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.05
+        }
+      },
+      "infill": "None",
+      "material": "m-steel",
+      "base_offset": 0.0,
+      "name": "Rail"
+    }
+  },
+  "spaces": {
+    "sp-living": {
+      "storey": "st-ground",
+      "number": "G.01",
+      "name": "Living",
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "point": {
+                "x": 0.15,
+                "y": 0.15
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 7.85,
+                "y": 0.15
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 7.85,
+                "y": 5.85
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 0.15,
+                "y": 5.85
+              },
+              "bulge": 0.0
+            }
+          ]
+        }
+      },
+      "usage": "Living"
+    },
+    "sp-hall": {
+      "storey": "st-ground",
+      "number": "G.02",
+      "name": "Hall",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 2.0,
+            "y": 2.0
+          }
+        }
+      },
+      "usage": "Circulation"
+    },
+    "sp-twin": {
+      "storey": "st-ground",
+      "number": "G.01",
+      "name": "Twin",
+      "boundary": {
+        "Bounded": {
+          "seed": {
+            "x": 7.0,
+            "y": 5.0
+          }
+        }
+      },
+      "usage": "Living"
+    }
+  }
+}

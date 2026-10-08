@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-stair/schema.json",
+  "title": "CreateStair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "stair"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createStair"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Stair id",
+          "de": "Treppen-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "stair": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Stair",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Stair",
+          "de": "Treppe"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

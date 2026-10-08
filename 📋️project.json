@@ -187,7 +187,7 @@
             "verb": "dev",
             "command": [
               "bun",
-              "📜️script.ts",
+              "./📜️script.ts",
               "dev",
               "mcp",
               "stdio"
@@ -200,20 +200,58 @@
                 "default": "client",
                 "valuePositional": true
               }
-            ]
+            ],
+            "mcp": {
+              "server": "repo",
+              "clients": {
+                "claude-code": {
+                  "parameters": {
+                    "client": "client"
+                  }
+                },
+                "vscode": {
+                  "parameters": {
+                    "client": "copilot"
+                  }
+                },
+                "cursor": {
+                  "parameters": {
+                    "client": "cursor"
+                  }
+                },
+                "codex": {
+                  "parameters": {
+                    "client": "codex"
+                  }
+                }
+              }
+            }
           },
           {
             "id": "os-mcp-stdio",
             "verb": "dev",
             "command": [
               "bun",
-              "📜️script.ts",
+              "./📜️script.ts",
               "dev",
               "mcp",
               "stdio",
-              "os"
+              "os",
+              "--folder",
+              ".🧬semio/🔗space/os-mcp",
+              "--scopes",
+              "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
             ],
-            "continuous": true
+            "continuous": true,
+            "mcp": {
+              "server": "semio",
+              "clients": {
+                "claude-code": {},
+                "vscode": {},
+                "cursor": {},
+                "codex": {}
+              }
+            }
           },
           {
             "id": "os-mcp-http",
@@ -222,13 +260,17 @@
               "bun",
               "nx",
               "run",
-              "workspace:dev",
+              "@semio-tech/framework-os-mcp-rs:dev",
               "--",
-              "mcp",
               "http",
-              "os"
+              "--port",
+              "{port}"
             ],
-            "continuous": true
+            "continuous": true,
+            "ready": {
+              "port": 8792,
+              "portEnv": "S_OS_MCP_PORT"
+            }
           },
           {
             "id": "mcp-inspector-os",
@@ -245,7 +287,18 @@
             "continuous": true,
             "ready": {
               "port": 6274,
-              "portEnv": "CLIENT_PORT"
+              "portEnv": "CLIENT_PORT",
+              "printed": true
+            }
+          },
+          {
+            "id": "storybook-static",
+            "verb": "dev",
+            "command": ["bun", "./📜️script.ts", "dev", "storybook-static"],
+            "continuous": true,
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
             }
           },
           {
@@ -351,7 +404,8 @@
               {
                 "run": "playground:s",
                 "parameters": {
-                  "renderer": "react"
+                  "renderer": "react",
+                  "hub": true
                 }
               }
             ]
@@ -384,14 +438,16 @@
                 "run": "playground:s",
                 "parameters": {
                   "renderer": "react",
-                  "user-slot": 1
+                  "user-slot": 1,
+                  "hub": true
                 }
               },
               {
                 "run": "playground:s",
                 "parameters": {
                   "renderer": "react",
-                  "user-slot": 2
+                  "user-slot": 2,
+                  "hub": true
                 }
               }
             ]
@@ -399,40 +455,8 @@
         ],
         "groups": [
           {
-            "id": "process-extension-catalogs",
-            "target": "describe",
-            "projects": [
-              "@semio-tech/process-extension-wood-rust",
-              "@semio-tech/process-extension-metal-rust",
-              "@semio-tech/process-extension-concrete-rust",
-              "@semio-tech/process-extension-robotic-rust"
-            ]
-          },
-          {
-            "id": "sourcing-extension-catalogs",
-            "target": "describe",
-            "projects": [
-              "@semio-tech/sourcing-extension-beams-rust",
-              "@semio-tech/sourcing-extension-slabs-rust",
-              "@semio-tech/sourcing-extension-windows-rust"
-            ]
-          },
-          {
-            "id": "extension-catalogs",
-            "target": "describe",
-            "projects": [
-              "@semio-tech/process-extension-wood-rust",
-              "@semio-tech/process-extension-metal-rust",
-              "@semio-tech/process-extension-concrete-rust",
-              "@semio-tech/process-extension-robotic-rust",
-              "@semio-tech/sourcing-extension-beams-rust",
-              "@semio-tech/sourcing-extension-slabs-rust",
-              "@semio-tech/sourcing-extension-windows-rust"
-            ]
-          },
-          {
             "id": "process-extension-tests",
-            "target": "test",
+            "targets": ["test"],
             "projects": [
               "@semio-tech/process-extension-wood-rust",
               "@semio-tech/process-extension-metal-rust",
@@ -442,7 +466,7 @@
           },
           {
             "id": "sourcing-extension-tests",
-            "target": "test",
+            "targets": ["test"],
             "projects": [
               "@semio-tech/sourcing-extension-beams-rust",
               "@semio-tech/sourcing-extension-slabs-rust",
@@ -451,15 +475,24 @@
           },
           {
             "id": "stdio-artifact-tests",
-            "target": "test",
+            "targets": ["test"],
             "projects": [
               "@semio-tech/stdio-*-rs",
               "!@semio-tech/stdio-artifact-contract-rs"
             ]
           },
           {
+            "id": "stdio-initial-record-tests",
+            "targets": ["test"],
+            "projects": [
+              "@semio-tech/stdio-jpg-rs",
+              "@semio-tech/stdio-tiff-rs",
+              "@semio-tech/stdio-pdf-rs"
+            ]
+          },
+          {
             "id": "puzzle-spatial-tests",
-            "target": "test",
+            "targets": ["test"],
             "projects": [
               "@semio-tech/puzzle-3d-rs",
               "@semio-tech/puzzle-5d-rs"
@@ -467,7 +500,7 @@
           },
           {
             "id": "snapshot-sqlite-parent-baselines",
-            "target": "test-snapshot-sqlite-native",
+            "targets": ["test-snapshot-sqlite-native"],
             "projects": [
               "@semio-tech/block-2d-rs",
               "@semio-tech/block-3d-rs",
@@ -491,21 +524,21 @@
           },
           {
             "id": "snapshot-sqlite-native",
-            "target": "test-snapshot-sqlite-native",
+            "targets": ["test-snapshot-sqlite-native"],
             "projects": [
               "*"
             ]
           },
           {
             "id": "snapshot-sqlite-source",
-            "target": "test-snapshot-sqlite-source",
+            "targets": ["test-snapshot-sqlite-source"],
             "projects": [
               "*"
             ]
           },
           {
             "id": "dag-actor-wasm",
-            "target": "wasm",
+            "targets": ["wasm"],
             "projects": [
               "semio-framework-os-flow-core",
               "@semio-tech/framework-surface-rs",
@@ -525,6 +558,20 @@
     ]
   },
   "targets": {
+    "agents-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts agents check"
+      }
+    },
+    "agents-write": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts agents write"
+      }
+    },
     "fem-pcg-publication-owners": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1167,21 +1214,6 @@
         "@semio-tech/framework-os-mcp-rs:build"
       ]
     },
-    "start": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts start"
-      }
-    },
-    "dev": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts dev",
-        "forwardAllArgs": true
-      }
-    },
     "dev-storybook": {
       "metadata": {
         "semio": {
@@ -1461,7 +1493,8 @@
           "dashboard": {
             "ready": {
               "port": 6274,
-              "portEnv": "CLIENT_PORT"
+              "portEnv": "CLIENT_PORT",
+              "printed": true
             }
           }
         }
@@ -1473,21 +1506,14 @@
         "forwardAllArgs": true
       }
     },
-    "dev-mcp-engine": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts dev mcp engine",
-        "forwardAllArgs": true
-      }
-    },
     "dev-mcp-repo": {
       "metadata": {
         "semio": {
           "dashboard": {
             "ready": {
               "port": 6274,
-              "portEnv": "CLIENT_PORT"
+              "portEnv": "CLIENT_PORT",
+              "printed": true
             }
           }
         }
@@ -1498,6 +1524,22 @@
         "command": "bun ./📜️script.ts dev mcp repo",
         "forwardAllArgs": true
       }
+    },
+    "generate-config": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate config"
+      },
+      "outputs": []
+    },
+    "generate-config-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate config --check"
+      },
+      "outputs": []
     },
     "generate-taxonomy-census": {
       "executor": "nx:run-commands",
@@ -1926,6 +1968,33 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts bench plugins",
+        "forwardAllArgs": true
+      }
+    },
+    "os": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts os",
+        "forwardAllArgs": true
+      }
+    },
+    "semio": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts semio",
+        "forwardAllArgs": true
+      }
+    },
+    "examples": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts examples",
         "forwardAllArgs": true
       }
     },

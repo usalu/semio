@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "curtain_wall",
+    "panel_material"
+  ]
+}

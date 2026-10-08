@@ -111,8 +111,8 @@ The startup line reports the three postures it resolved:
 ### As the dev loop (development mode)
 
 ```bash
-bun nx run os-hub:dev                 # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
-bun nx run os-hub:dev-secure-suite    # hub + React `s` + native + MCP children, one credential each
+bun run dashboard run os-hub:dev --detach --wait-ready               # loopback hub, fd-3 supervised, data root ./.🧬semio/🌐hub
+bun run dashboard run os-hub:dev-secure-suite --detach --wait-ready  # hub + React `s` + native + MCP children, one credential each
 ```
 
 `dev` publishes a trusted catalog into the data root on first run if none is there yet (it
@@ -210,8 +210,8 @@ Chosen independently of the document store.
 | `OS_HUB_DIRECTORY_NEO4J_USER` | `neo4j` | Neo4j user. |
 | `OS_HUB_DIRECTORY_NEO4J_PASSWORD` | empty string | Neo4j password. |
 
-Launching both halves on PostgreSQL in development: `bun nx run os-hub:dev-postgres` (launch rows
-`🛠️dev🐘️os-hub🗄️postgres` / `📦️build-dev🐘️os-hub🗄️postgres`). It stages its own binary with the
+Launching both halves on PostgreSQL in development: `bun run dashboard run os-hub:dev-postgres --detach --wait-ready` (dashboard
+commands `os-hub:dev-postgres` / `os-hub:build-dev-postgres`; `semio …` is `bun run dashboard …`). It stages its own binary with the
 `postgres,neo4j` features into `dist/build-dev-postgres`, requires `OS_HUB_DATABASE_URL`, and points the
 directory at the same database unless `OS_HUB_DIRECTORY_BACKEND`/`OS_HUB_DIRECTORY_DATABASE_URL` say
 otherwise. The live lanes behind `bun nx run os-hub:directory-live-lanes` exercise both databases for

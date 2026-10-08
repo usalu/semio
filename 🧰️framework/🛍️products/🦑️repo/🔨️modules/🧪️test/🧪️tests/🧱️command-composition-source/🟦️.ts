@@ -210,7 +210,7 @@ test("keeps fixture provenance output isolated from committed expectations", () 
   expect(source).not.toMatch(/writeFileSync\([^\n]*fixture\.(?:before|after)/);
 });
 
-test("registers the ordinary Bun Nx launch route without losing HTML source inputs", () => {
+test("registers the ordinary Bun Nx route without losing HTML source inputs", () => {
   const project = JSON.parse(readFileSync(resolve(domainRoot, "📋️project.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
   expect(project.targets[fixture.route.target]?.inputs).toEqual([fixture.route.namedInput]);
@@ -224,15 +224,8 @@ test("registers the ordinary Bun Nx launch route without losing HTML source inpu
     "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🐍️.py",
     "{projectRoot}/🧪️tests/🧪️test-platform/🟦️.ts",
     "{projectRoot}/🖥️host/🐍️.py",
-    "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-    "{workspaceRoot}/.vscode/launch.json",
   ])
     expect(inputs.has(path), path).toBe(true);
   expect(project.targets["test-fixture-verify"].inputs).toContain("htmlSourcePairs");
   expect(project.namedInputs.htmlSourcePairs).toHaveLength(17);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const source = readFileSync(resolve(repoRoot, path), "utf8");
-    expect(source.split(fixture.route.launchName).length - 1).toBe(1);
-    expect(source).toContain(fixture.route.launchCommand);
-  }
 });

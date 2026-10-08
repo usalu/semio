@@ -1,0 +1,14 @@
+{
+  "mutation": "createRoofType",
+  "id": "rf-metal",
+  "roof_type": {
+    "name": "Flat",
+    "layers": [
+      {
+        "material": "m-brick",
+        "thickness": 0,
+        "function": "Structure"
+      }
+    ]
+  }
+}

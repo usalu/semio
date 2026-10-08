@@ -1,0 +1,12 @@
+{
+  "properties": {
+    "w-south": {
+      "assigned": {
+        "Pset_WallCommon": {
+          "IsExternal": null
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

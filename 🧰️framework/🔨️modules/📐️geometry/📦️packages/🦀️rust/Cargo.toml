@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
 autotests = false
-description = "First-party 2D geometry (Point/Vec2/Affine/shapes/BezPath, selection and curve math), the fixed-size render matrices Vec3/Mat4, and the seeded reproducible Rng — the framework-internal geometric vocabulary every framework crate may name without reaching a plugin. `kurbo` is a differential-test oracle only — see RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/REIMPLEMENT-KURBO-BACKED-GEOMETRY-TYPES-FIRST-PARTY (26/09/01)."
+description = "First-party 2D geometry (Point/Vec2/Affine/shapes/BezPath, selection and curve math), bulged segments and loops, polygon triangulation, double-precision triangle-mesh solids and plane sections, the fixed-size render matrices Vec3/Mat4, and the seeded reproducible Rng — the framework-internal geometric vocabulary every framework crate may name without reaching a plugin. `kurbo` is a differential-test oracle only — see RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/REIMPLEMENT-KURBO-BACKED-GEOMETRY-TYPES-FIRST-PARTY (26/09/01)."
 
 [package.metadata.semio]
 role = "framework"
@@ -22,7 +22,14 @@ path = "🦀️.rs"
 name = "first_party_geometry"
 path = "../../🧪️tests/📐️first-party-geometry/🦀️.rs"
 
+[[test]]
+name = "aec_geometry_oracles"
+path = "../../🧪️tests/🏙️aec-oracles/🦀️.rs"
+
 [dependencies]
 
 [dev-dependencies]
 kurbo = "0.13.1"
+# 🧪️ Language-agnostic fixtures (`🧫️fixtures/*/🔣️.json`) are parsed by tests only; parry3d is the mesh volume/area/section oracle only.
+serde_json = { workspace = true }
+parry3d = "0.17"

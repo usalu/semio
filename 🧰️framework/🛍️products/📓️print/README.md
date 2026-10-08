@@ -19,7 +19,7 @@ driven from the repository's design tokens and both built through `📜️script
 ## Commands
 
 Everything runs through `📦️packages/🟦️typescript/📜️script.ts`; `📋️project.json` registers the same
-entry points as nx targets, and `.vscode/🧩️launch.seed.jsonc` as launch configurations.
+entry points as nx targets, which the dashboard offers as commands (`<project>:<target>`, `bun run dashboard`).
 
 ```bash
 cd "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"

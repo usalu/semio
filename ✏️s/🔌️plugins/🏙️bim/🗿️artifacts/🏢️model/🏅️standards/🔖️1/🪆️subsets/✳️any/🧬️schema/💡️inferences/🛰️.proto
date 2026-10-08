@@ -1,0 +1,557 @@
+syntax = "proto3";
+package semio.s.bim.model.inference;
+
+// 💡️ BIM model inference schema: derived elevations and wall layouts, keyed by element id.
+
+message ModelInference {
+  // @derived
+  map<string, ElementSolid> element_solids = 8;
+  // @derived
+  map<string, StairRun> stair_runs = 5;
+  // @derived
+  map<string, SpaceRoom> spaces = 6;
+  // @derived
+  ModelQuantities quantities = 7;
+  // @derived
+  map<string, OpeningFrame> opening_frames = 4;
+  // @derived
+  map<string, StoreyLevel> storey_levels = 1;
+  // @derived
+  map<string, WallLayout> wall_layout = 2;
+  // @derived
+  map<string, CurtainLayout> curtain_layout = 3;
+  // @derived
+  map<string, PlanLinework> plan_linework = 9;
+  // @derived
+  repeated Diagnostic diagnostics = 10;
+}
+
+message StoreyLevel {
+  double elevation = 1;
+  double top_elevation = 2;
+  double absolute_elevation = 3;
+  double absolute_top_elevation = 4;
+}
+
+enum JoinEnd {
+  JOIN_END_START = 0;
+  JOIN_END_END = 1;
+  JOIN_END_ALONG = 2;
+}
+
+enum JoinKind {
+  JOIN_KIND_MITER = 0;
+  JOIN_KIND_BUTT = 1;
+  JOIN_KIND_THROUGH = 2;
+  JOIN_KIND_CROSS = 3;
+}
+
+message Point2 {
+  double x = 1;
+  double y = 2;
+}
+
+message Vertex {
+  Point2 point = 1;
+  double bulge = 2;
+}
+
+message FaceCurve {
+  Point2 start = 1;
+  Point2 end = 2;
+  double bulge = 3;
+}
+
+message WallJoin {
+  JoinKind kind = 1;
+  JoinEnd end = 2;
+  string other = 3;
+  JoinEnd other_end = 4;
+  Point2 point = 5;
+  double overlap_area = 6;
+}
+
+message WallLayout {
+  double base_z = 1;
+  double top_z = 2;
+  double height = 3;
+  double thickness = 4;
+  double length = 5;
+  double offset_left = 6;
+  double offset_right = 7;
+  repeated double layer_offsets = 8;
+  FaceCurve left_face = 9;
+  FaceCurve right_face = 10;
+  double left_length = 11;
+  double right_length = 12;
+  double left_area = 13;
+  double right_area = 14;
+  double side_area = 15;
+  repeated Vertex footprint = 16;
+  double footprint_area = 17;
+  double volume = 18;
+  repeated WallJoin joins = 19;
+}
+
+message CurtainLayout {
+  double base_z = 1;
+  double top_z = 2;
+  double height = 3;
+  double length = 4;
+  double area = 5;
+  uint32 u_panels = 6;
+  uint32 v_panels = 7;
+  double panel_width = 8;
+  double panel_height = 9;
+}
+
+enum Swing {
+  SWING_LEFT = 0;
+  SWING_RIGHT = 1;
+}
+
+enum OpeningIssue {
+  OPENING_ISSUE_HOST_MISSING = 0;
+  OPENING_ISSUE_TYPE_MISSING = 1;
+  OPENING_ISSUE_NON_POSITIVE_SIZE = 2;
+  OPENING_ISSUE_OUTSIDE_HOST_EXTENT = 3;
+  OPENING_ISSUE_BELOW_HOST_BASE = 4;
+  OPENING_ISSUE_ABOVE_HOST_TOP = 5;
+  OPENING_ISSUE_OVERLAPS_SIBLING = 6;
+}
+
+enum PlanRole {
+  PLAN_ROLE_LEAF = 0;
+  PLAN_ROLE_SWING = 1;
+  PLAN_ROLE_GLAZING = 2;
+}
+
+message Vec3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Frame {
+  Vec3 origin = 1;
+  Vec3 x_axis = 2;
+  Vec3 y_axis = 3;
+  Vec3 z_axis = 4;
+}
+
+message OpeningCut {
+  double s_min = 1;
+  double s_max = 2;
+  double z_min = 3;
+  double z_max = 4;
+}
+
+message PlanLine {
+  Point2 from = 1;
+  Point2 to = 2;
+}
+
+message PlanArc {
+  Point2 centre = 1;
+  double radius = 2;
+  double start_angle = 3;
+  double sweep = 4;
+}
+
+message PlanShape {
+  oneof shape {
+    PlanLine line = 1;
+    PlanArc arc = 2;
+  }
+}
+
+message PlanStroke {
+  PlanRole role = 1;
+  PlanShape shape = 2;
+}
+
+message OpeningFrame {
+  double width = 1;
+  double height = 2;
+  double sill = 3;
+  double offset = 4;
+  OpeningCut cut = 5;
+  double reveal_depth = 6;
+  double face_front = 7;
+  double face_back = 8;
+  double host_length = 9;
+  double host_height = 10;
+  Point2 point = 11;
+  Frame local = 12;
+  Frame world = 13;
+  optional Swing hand = 14;
+  repeated PlanStroke plan = 15;
+  repeated OpeningIssue issues = 16;
+  repeated string overlaps = 17;
+  bool valid = 18;
+}
+
+message StairRun {
+  double base_z = 1;
+  double top_z = 2;
+  double rise = 3;
+  uint32 riser_count = 4;
+  double riser_height = 5;
+  uint32 tread_count = 6;
+  double tread = 7;
+  double stride = 8;
+  double width = 9;
+  double run_length = 10;
+  repeated StairFlightRun flights = 11;
+  repeated StairLanding landings = 12;
+  StairCompliance compliance = 13;
+}
+
+message StairFlightRun {
+  uint32 first_riser = 1;
+  uint32 risers = 2;
+  uint32 treads = 3;
+  Point2 start = 4;
+  double direction = 5;
+  double tread = 6;
+  double base_z = 7;
+  double length = 8;
+  optional StairWinder winder = 9;
+}
+
+message StairWinder {
+  Point2 centre = 1;
+  double inner_radius = 2;
+  double outer_radius = 3;
+  double start_angle = 4;
+  double sweep = 5;
+}
+
+message StairLanding {
+  uint32 after_flight = 1;
+  double z = 2;
+  Point2 centre = 3;
+  double direction = 4;
+  double width = 5;
+  double depth = 6;
+}
+
+message StairCompliance {
+  bool rise_positive = 1;
+  bool riser_ok = 2;
+  bool tread_ok = 3;
+  bool blondel_ok = 4;
+  bool compliant = 5;
+}
+
+message SpaceRoom {
+  SpaceStatus status = 1;
+  repeated Vertex outline = 2;
+  repeated VertexLoop holes = 3;
+  Point2 point = 4;
+  double area = 5;
+  double perimeter = 6;
+  double net_floor_area = 7;
+  double floor_z = 8;
+  double clear_height = 9;
+  double volume = 10;
+  string ceiling_slab = 11;
+  repeated string bounding_walls = 12;
+}
+
+enum SpaceStatus {
+  SPACE_STATUS_INFERRED = 0;
+  SPACE_STATUS_EXPLICIT = 1;
+  SPACE_STATUS_NOT_ENCLOSED = 2;
+  SPACE_STATUS_SEED_INSIDE_WALL = 3;
+  SPACE_STATUS_INVALID_OUTLINE = 4;
+}
+
+message ModelQuantities {
+  map<string, ElementQuantity> elements = 1;
+  map<string, QuantityTotals> storeys = 2;
+  map<string, QuantityTotals> buildings = 3;
+  QuantityTotals project = 4;
+}
+
+message ElementQuantity {
+  QuantityKind kind = 1;
+  string storey = 2;
+  string type_id = 3;
+  uint32 count = 4;
+  double length = 5;
+  double width = 6;
+  double height = 7;
+  double perimeter = 8;
+  double gross_side_area = 9;
+  double opening_area = 10;
+  double net_side_area = 11;
+  double gross_area = 12;
+  double net_area = 13;
+  double surface_area = 14;
+  double gross_volume = 15;
+  double net_volume = 16;
+  double mass = 17;
+  uint32 risers = 18;
+  repeated LayerQuantity layers = 19;
+}
+
+enum QuantityKind {
+  QUANTITY_KIND_WALL = 0;
+  QUANTITY_KIND_CURTAIN_WALL = 1;
+  QUANTITY_KIND_SLAB = 2;
+  QUANTITY_KIND_ROOF = 3;
+  QUANTITY_KIND_COLUMN = 4;
+  QUANTITY_KIND_BEAM = 5;
+  QUANTITY_KIND_WINDOW = 6;
+  QUANTITY_KIND_DOOR = 7;
+  QUANTITY_KIND_VOID = 8;
+  QUANTITY_KIND_STAIR = 9;
+  QUANTITY_KIND_RAILING = 10;
+  QUANTITY_KIND_SPACE = 11;
+}
+
+message LayerQuantity {
+  string material = 1;
+  double thickness = 2;
+  double area = 3;
+  double volume = 4;
+  double mass = 5;
+}
+
+message QuantityTotals {
+  map<string, Totals> kinds = 1;
+  map<string, Totals> types = 2;
+  map<string, Totals> materials = 3;
+}
+
+message Totals {
+  uint32 count = 1;
+  double length = 2;
+  double area = 3;
+  double volume = 4;
+  double mass = 5;
+}
+
+message VertexLoop {
+  repeated Vertex vertices = 1;
+}
+
+enum SolidFamily {
+  SOLID_FAMILY_WALL = 0;
+  SOLID_FAMILY_CURTAIN_WALL = 1;
+  SOLID_FAMILY_WINDOW = 2;
+  SOLID_FAMILY_DOOR = 3;
+  SOLID_FAMILY_COLUMN = 4;
+  SOLID_FAMILY_BEAM = 5;
+  SOLID_FAMILY_SLAB = 6;
+  SOLID_FAMILY_ROOF = 7;
+  SOLID_FAMILY_STAIR = 8;
+  SOLID_FAMILY_RAILING = 9;
+}
+
+message SolidPoint {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message SolidBounds {
+  SolidPoint min = 1;
+  SolidPoint max = 2;
+}
+
+message SolidPlacement {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double rotation = 4;
+}
+
+message SolidGroup {
+  string part = 1;
+  string material = 2;
+  uint32 layer = 3;
+}
+
+message ElementSolid {
+  SolidFamily family = 1;
+  string storey = 2;
+  SolidPlacement placement = 3;
+  repeated SolidGroup groups = 4;
+  repeated double positions = 5;
+  repeated double normals = 6;
+  repeated uint32 indices = 7;
+  repeated uint32 face_groups = 8;
+  SolidBounds bounds = 9;
+  double volume = 10;
+  double area = 11;
+}
+
+message PlanVertexRing {
+  repeated PlanVertex vertices = 1;
+}
+
+enum PlanStyle {
+  PLAN_STYLE_CUT = 0;
+  PLAN_STYLE_PROJECTION = 1;
+  PLAN_STYLE_HIDDEN = 2;
+  PLAN_STYLE_ANNOTATION = 3;
+}
+
+enum PlanKind {
+  PLAN_KIND_WALL_CUT = 0;
+  PLAN_KIND_WALL_LAYER = 1;
+  PLAN_KIND_WALL_OUTLINE = 2;
+  PLAN_KIND_CURTAIN_AXIS = 3;
+  PLAN_KIND_CURTAIN_MULLION = 4;
+  PLAN_KIND_WINDOW_FRAME = 5;
+  PLAN_KIND_WINDOW_GLAZING = 6;
+  PLAN_KIND_WINDOW_SILL = 7;
+  PLAN_KIND_DOOR_LEAF = 8;
+  PLAN_KIND_DOOR_SWING = 9;
+  PLAN_KIND_COLUMN_CUT = 10;
+  PLAN_KIND_COLUMN_OUTLINE = 11;
+  PLAN_KIND_BEAM_OUTLINE = 12;
+  PLAN_KIND_SLAB_EDGE = 13;
+  PLAN_KIND_SLAB_HOLE = 14;
+  PLAN_KIND_ROOF_OUTLINE = 15;
+  PLAN_KIND_STAIR_OUTLINE = 16;
+  PLAN_KIND_STAIR_RISER = 17;
+  PLAN_KIND_STAIR_CUT_LINE = 18;
+  PLAN_KIND_STAIR_ARROW = 19;
+  PLAN_KIND_STAIR_LANDING = 20;
+  PLAN_KIND_RAILING_PATH = 21;
+  PLAN_KIND_SPACE_OUTLINE = 22;
+  PLAN_KIND_SPACE_TAG = 23;
+  PLAN_KIND_GRID_LINE = 24;
+  PLAN_KIND_GRID_BUBBLE = 25;
+  PLAN_KIND_GRID_LABEL = 26;
+}
+
+message PlanVertex {
+  double x = 1;
+  double y = 2;
+  double bulge = 3;
+}
+
+message PlanRegion {
+  string id = 1;
+  string element = 2;
+  PlanKind kind = 3;
+  PlanStyle style = 4;
+  repeated PlanVertex outer = 5;
+  repeated PlanVertexRing holes = 6;
+}
+
+message PlanPolyline {
+  string id = 1;
+  string element = 2;
+  PlanKind kind = 3;
+  PlanStyle style = 4;
+  bool closed = 5;
+  repeated PlanVertex vertices = 6;
+}
+
+message PlanText {
+  string id = 1;
+  string element = 2;
+  PlanKind kind = 3;
+  PlanStyle style = 4;
+  double x = 5;
+  double y = 6;
+  double rotation = 7;
+  string label = 8;
+  string detail = 9;
+  optional double measure = 10;
+}
+
+message PlanBounds {
+  double min_x = 1;
+  double min_y = 2;
+  double max_x = 3;
+  double max_y = 4;
+}
+
+message PlanLinework {
+  string storey = 1;
+  double cut_height = 2;
+  double cut_elevation = 3;
+  repeated PlanRegion regions = 4;
+  repeated PlanPolyline polylines = 5;
+  repeated PlanText texts = 6;
+  PlanBounds bounds = 7;
+}
+
+enum Severity {
+  SEVERITY_INFO = 0;
+  SEVERITY_WARNING = 1;
+  SEVERITY_ERROR = 2;
+}
+
+enum DiagnosticCode {
+  DIAGNOSTIC_CODE_CLASH_WALL_WALL = 0;
+  DIAGNOSTIC_CODE_CLASH_WALL_COLUMN = 1;
+  DIAGNOSTIC_CODE_CLASH_COLUMN_COLUMN = 2;
+  DIAGNOSTIC_CODE_CLASH_WALL_BEAM = 3;
+  DIAGNOSTIC_CODE_CLASH_BEAM_COLUMN = 4;
+  DIAGNOSTIC_CODE_CLASH_BEAM_BEAM = 5;
+  DIAGNOSTIC_CODE_CLASH_BEAM_SLAB = 6;
+  DIAGNOSTIC_CODE_CLASH_STAIR_WALL = 7;
+  DIAGNOSTIC_CODE_CLASH_STAIR_COLUMN = 8;
+  DIAGNOSTIC_CODE_CLASH_STAIR_BEAM = 9;
+  DIAGNOSTIC_CODE_CLASH_STAIR_STAIR = 10;
+  DIAGNOSTIC_CODE_CLASH_SLAB_SLAB = 11;
+  DIAGNOSTIC_CODE_REF_WALL_TYPE = 12;
+  DIAGNOSTIC_CODE_REF_COLUMN_TYPE = 13;
+  DIAGNOSTIC_CODE_REF_BEAM_TYPE = 14;
+  DIAGNOSTIC_CODE_REF_SLAB_TYPE = 15;
+  DIAGNOSTIC_CODE_REF_ROOF_TYPE = 16;
+  DIAGNOSTIC_CODE_REF_WINDOW_TYPE = 17;
+  DIAGNOSTIC_CODE_REF_DOOR_TYPE = 18;
+  DIAGNOSTIC_CODE_REF_TOP_STOREY = 19;
+  DIAGNOSTIC_CODE_REF_OPENING_HOST = 20;
+  DIAGNOSTIC_CODE_REF_ELEMENT_STOREY = 21;
+  DIAGNOSTIC_CODE_REF_STOREY_BUILDING = 22;
+  DIAGNOSTIC_CODE_REF_BUILDING_SITE = 23;
+  DIAGNOSTIC_CODE_REF_GRID_BUILDING = 24;
+  DIAGNOSTIC_CODE_REF_LAYER_MATERIAL = 25;
+  DIAGNOSTIC_CODE_REF_TYPE_MATERIAL = 26;
+  DIAGNOSTIC_CODE_REF_PROPERTY_ELEMENT = 27;
+  DIAGNOSTIC_CODE_DUPLICATE_ID = 28;
+  DIAGNOSTIC_CODE_OPENING_OUTSIDE_HOST = 29;
+  DIAGNOSTIC_CODE_OPENING_BELOW_BASE = 30;
+  DIAGNOSTIC_CODE_OPENING_ABOVE_TOP = 31;
+  DIAGNOSTIC_CODE_OPENING_OVERLAP = 32;
+  DIAGNOSTIC_CODE_OPENING_SIZE = 33;
+  DIAGNOSTIC_CODE_DEGENERATE_AXIS = 34;
+  DIAGNOSTIC_CODE_DEGENERATE_THICKNESS = 35;
+  DIAGNOSTIC_CODE_DEGENERATE_HEIGHT = 36;
+  DIAGNOSTIC_CODE_DEGENERATE_PROFILE = 37;
+  DIAGNOSTIC_CODE_DEGENERATE_LOOP = 38;
+  DIAGNOSTIC_CODE_SELF_INTERSECTING_LOOP = 39;
+  DIAGNOSTIC_CODE_DEGENERATE_PATH = 40;
+  DIAGNOSTIC_CODE_NON_FINITE = 41;
+  DIAGNOSTIC_CODE_DEGENERATE_SPACING = 42;
+  DIAGNOSTIC_CODE_DEGENERATE_STOREY = 43;
+  DIAGNOSTIC_CODE_STOREY_LEVEL_GAP = 44;
+  DIAGNOSTIC_CODE_STOREY_LEVEL_DUPLICATE = 45;
+  DIAGNOSTIC_CODE_STOREY_NO_DATUM = 46;
+  DIAGNOSTIC_CODE_STAIR_NO_RISE = 47;
+  DIAGNOSTIC_CODE_STAIR_RISER_HEIGHT = 48;
+  DIAGNOSTIC_CODE_STAIR_TREAD_DEPTH = 49;
+  DIAGNOSTIC_CODE_STAIR_COMFORT = 50;
+  DIAGNOSTIC_CODE_SPACE_NOT_ENCLOSED = 51;
+  DIAGNOSTIC_CODE_SPACE_SEED_IN_WALL = 52;
+  DIAGNOSTIC_CODE_SPACE_DUPLICATE_NUMBER = 53;
+}
+
+message Diagnostic {
+  DiagnosticCode code = 1;
+  Severity severity = 2;
+  string message_key = 3;
+  repeated string elements = 4;
+  repeated string missing = 5;
+  optional string storey = 6;
+  map<string, double> values = 7;
+}

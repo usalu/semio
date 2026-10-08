@@ -1,0 +1,3875 @@
+semio bim.model.dsl v1
+schema="s.bim.model@1"
+project {
+  name="Office Building" description="Four-storey office building on a six metre structural grid with two escape stair cores and a curtain wall façade." author=semio organization=semio phase-names=[ Design Permit Construction ]
+}
+materials={
+  m-concrete={ name="Reinforced Concrete" category=concrete density=2400 conductivity=2.3 specific-heat=1000
+  color {
+    r=0.62 g=0.62 b=0.6
+  }
+  } m-glass={ name="Float Glass" category=glass density=2500 conductivity=1 specific-heat=750
+  color {
+    r=0.65 g=0.85 b=0.9
+  }
+  } m-gravel={ name="Ballast Gravel" category=other density=1800 conductivity=0.7 specific-heat=840
+  color {
+    r=0.6 g=0.58 b=0.55
+  }
+  } m-insulation={ name="Mineral Wool" category=insulation density=40 conductivity=0.035 specific-heat=1030
+  color {
+    r=0.95 g=0.85 b=0.35
+  }
+  } m-membrane={ name="Bitumen Membrane" category=membrane density=1100 conductivity=0.17 specific-heat=1000
+  color {
+    r=0.15 g=0.15 b=0.15
+  }
+  } m-plaster={ name="Lime Gypsum Plaster" category=finish density=1400 conductivity=0.7 specific-heat=1000
+  color {
+    r=0.92 g=0.92 b=0.88
+  }
+  } m-screed={ name="Cement Screed" category=finish density=2000 conductivity=1.4 specific-heat=1000
+  color {
+    r=0.75 g=0.75 b=0.72
+  }
+  } m-steel={ name="Structural Steel" category=metal density=7850 conductivity=50 specific-heat=450
+  color {
+    r=0.55 g=0.58 b=0.62
+  }
+  }
+}
+wall-types={
+  wt-core-25={ name="Core Wall 25"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-concrete 0.25 structure
+  }
+  } wt-infill-34={ name="Infill Wall 34"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.015 finish
+    m-concrete 0.15 structure
+    m-insulation 0.16 insulation
+    m-plaster 0.015 finish
+  }
+  } wt-parapet-25={ name="Parapet 25"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-concrete 0.19 structure
+    m-insulation 0.06 insulation
+  }
+  }
+}
+slab-types={
+  sl-floor={ name="Office Floor 36"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-screed 0.08 finish
+    m-concrete 0.28 structure
+  }
+  } sl-ground={ name="Ground Slab 56"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-screed 0.07 finish
+    m-insulation 0.14 insulation
+    m-concrete 0.35 structure
+  }
+  }
+}
+roof-types={
+  rt-flat={ name="Flat Roof 55"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-gravel 0.05 finish
+    m-membrane 0.01 membrane
+    m-insulation 0.24 insulation
+    m-concrete 0.25 structure
+  }
+  }
+}
+column-types={
+  ct-rc-400={ name="RC Column 400" material=m-concrete
+  profile {
+    rectangle width=0.4 depth=0.4
+  }
+  } ct-rc-500={ name="RC Column 500" material=m-concrete
+  profile {
+    rectangle width=0.5 depth=0.5
+  }
+  }
+}
+beam-types={
+  bt-rc-primary={ name="RC Beam 400x600" material=m-concrete
+  profile {
+    rectangle width=0.4 depth=0.6
+  }
+  } bt-rc-secondary={ name="RC Beam 300x500" material=m-concrete
+  profile {
+    rectangle width=0.3 depth=0.5
+  }
+  }
+}
+window-types={
+  wn-ribbon={ name="Ribbon Window" width=3 height=1.6 sill=0.85 frame-width=0.07 frame-depth=0.08 panes=3 material=m-steel }
+}
+door-types={
+  dr-core={ name="Fire Door" width=0.9 height=2.1 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-steel } dr-glass={ name="Glass Entrance Door" width=1.8 height=2.4 frame-width=0.07 frame-depth=0.08 leaves=double swing=left material=m-steel }
+}
+sites={
+  site-1={ name="Plot Zurich" latitude=47.391 longitude=8.488 elevation=408 true-north=0.12
+  boundary [x:NUM y:NUM] {
+    0 0
+    56 0
+    56 48
+    0 48
+  }
+  }
+}
+buildings={
+  bldg-1={ site=site-1 name="Office Building" rotation=0 elevation=0
+  origin {
+    x=12 y=14
+  }
+  }
+}
+storeys={
+  st-0={ building=bldg-1 name="Ground Floor" level=0 height=4 } st-1={ building=bldg-1 name="First Floor" level=1 height=3.8 } st-2={ building=bldg-1 name="Second Floor" level=2 height=3.8 } st-3={ building=bldg-1 name="Third Floor" level=3 height=3.8 } st-r={ building=bldg-1 name=Roof level=4 height=1.2 }
+}
+grids={
+  g-1={ building=bldg-1 label="1"
+  start {
+    x=-2 y=0
+  }
+  end {
+    x=32 y=0
+  }
+  } g-2={ building=bldg-1 label="2"
+  start {
+    x=-2 y=6
+  }
+  end {
+    x=32 y=6
+  }
+  } g-3={ building=bldg-1 label="3"
+  start {
+    x=-2 y=12
+  }
+  end {
+    x=32 y=12
+  }
+  } g-4={ building=bldg-1 label="4"
+  start {
+    x=-2 y=18
+  }
+  end {
+    x=32 y=18
+  }
+  } g-A={ building=bldg-1 label=A
+  start {
+    x=0 y=-2
+  }
+  end {
+    x=0 y=20
+  }
+  } g-B={ building=bldg-1 label=B
+  start {
+    x=6 y=-2
+  }
+  end {
+    x=6 y=20
+  }
+  } g-C={ building=bldg-1 label=C
+  start {
+    x=12 y=-2
+  }
+  end {
+    x=12 y=20
+  }
+  } g-D={ building=bldg-1 label=D
+  start {
+    x=18 y=-2
+  }
+  end {
+    x=18 y=20
+  }
+  } g-E={ building=bldg-1 label=E
+  start {
+    x=24 y=-2
+  }
+  end {
+    x=24 y=20
+  }
+  } g-F={ building=bldg-1 label=F
+  start {
+    x=30 y=-2
+  }
+  end {
+    x=30 y=20
+  }
+  }
+}
+walls={
+  w-0-core-e-east={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E East"
+  axis {
+    line
+    start {
+      x=23 y=6.4
+    }
+    end {
+      x=23 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-e-north={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E North"
+  axis {
+    line
+    start {
+      x=23 y=11.6
+    }
+    end {
+      x=20 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-e-south={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E South"
+  axis {
+    line
+    start {
+      x=20 y=6.4
+    }
+    end {
+      x=23 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-e-west={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E West"
+  axis {
+    line
+    start {
+      x=20 y=11.6
+    }
+    end {
+      x=20 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-w-east={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W East"
+  axis {
+    line
+    start {
+      x=10 y=6.4
+    }
+    end {
+      x=10 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-w-north={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W North"
+  axis {
+    line
+    start {
+      x=10 y=11.6
+    }
+    end {
+      x=7 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-w-south={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W South"
+  axis {
+    line
+    start {
+      x=7 y=6.4
+    }
+    end {
+      x=10 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-core-w-west={ storey=st-0 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W West"
+  axis {
+    line
+    start {
+      x=7 y=11.6
+    }
+    end {
+      x=7 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-0-east-1={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 1"
+  axis {
+    line
+    start {
+      x=30 y=0.25
+    }
+    end {
+      x=30 y=5.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-0-east-2={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 2"
+  axis {
+    line
+    start {
+      x=30 y=6.25
+    }
+    end {
+      x=30 y=11.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-0-east-3={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 3"
+  axis {
+    line
+    start {
+      x=30 y=12.25
+    }
+    end {
+      x=30 y=17.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-0-west-1={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 1"
+  axis {
+    line
+    start {
+      x=0 y=5.75
+    }
+    end {
+      x=0 y=0.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-0-west-2={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 2"
+  axis {
+    line
+    start {
+      x=0 y=11.75
+    }
+    end {
+      x=0 y=6.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-0-west-3={ storey=st-0 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 3"
+  axis {
+    line
+    start {
+      x=0 y=17.75
+    }
+    end {
+      x=0 y=12.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-core-e-east={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E East"
+  axis {
+    line
+    start {
+      x=23 y=6.4
+    }
+    end {
+      x=23 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-e-north={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E North"
+  axis {
+    line
+    start {
+      x=23 y=11.6
+    }
+    end {
+      x=20 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-e-south={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E South"
+  axis {
+    line
+    start {
+      x=20 y=6.4
+    }
+    end {
+      x=23 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-e-west={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E West"
+  axis {
+    line
+    start {
+      x=20 y=11.6
+    }
+    end {
+      x=20 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-w-east={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W East"
+  axis {
+    line
+    start {
+      x=10 y=6.4
+    }
+    end {
+      x=10 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-w-north={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W North"
+  axis {
+    line
+    start {
+      x=10 y=11.6
+    }
+    end {
+      x=7 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-w-south={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W South"
+  axis {
+    line
+    start {
+      x=7 y=6.4
+    }
+    end {
+      x=10 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-core-w-west={ storey=st-1 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W West"
+  axis {
+    line
+    start {
+      x=7 y=11.6
+    }
+    end {
+      x=7 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-1-east-1={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 1"
+  axis {
+    line
+    start {
+      x=30 y=0.25
+    }
+    end {
+      x=30 y=5.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-east-2={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 2"
+  axis {
+    line
+    start {
+      x=30 y=6.25
+    }
+    end {
+      x=30 y=11.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-east-3={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 3"
+  axis {
+    line
+    start {
+      x=30 y=12.25
+    }
+    end {
+      x=30 y=17.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-west-1={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 1"
+  axis {
+    line
+    start {
+      x=0 y=5.75
+    }
+    end {
+      x=0 y=0.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-west-2={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 2"
+  axis {
+    line
+    start {
+      x=0 y=11.75
+    }
+    end {
+      x=0 y=6.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-1-west-3={ storey=st-1 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 3"
+  axis {
+    line
+    start {
+      x=0 y=17.75
+    }
+    end {
+      x=0 y=12.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-core-e-east={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E East"
+  axis {
+    line
+    start {
+      x=23 y=6.4
+    }
+    end {
+      x=23 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-e-north={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E North"
+  axis {
+    line
+    start {
+      x=23 y=11.6
+    }
+    end {
+      x=20 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-e-south={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E South"
+  axis {
+    line
+    start {
+      x=20 y=6.4
+    }
+    end {
+      x=23 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-e-west={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E West"
+  axis {
+    line
+    start {
+      x=20 y=11.6
+    }
+    end {
+      x=20 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-w-east={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W East"
+  axis {
+    line
+    start {
+      x=10 y=6.4
+    }
+    end {
+      x=10 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-w-north={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W North"
+  axis {
+    line
+    start {
+      x=10 y=11.6
+    }
+    end {
+      x=7 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-w-south={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W South"
+  axis {
+    line
+    start {
+      x=7 y=6.4
+    }
+    end {
+      x=10 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-core-w-west={ storey=st-2 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W West"
+  axis {
+    line
+    start {
+      x=7 y=11.6
+    }
+    end {
+      x=7 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-2-east-1={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 1"
+  axis {
+    line
+    start {
+      x=30 y=0.25
+    }
+    end {
+      x=30 y=5.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-east-2={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 2"
+  axis {
+    line
+    start {
+      x=30 y=6.25
+    }
+    end {
+      x=30 y=11.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-east-3={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 3"
+  axis {
+    line
+    start {
+      x=30 y=12.25
+    }
+    end {
+      x=30 y=17.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-west-1={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 1"
+  axis {
+    line
+    start {
+      x=0 y=5.75
+    }
+    end {
+      x=0 y=0.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-west-2={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 2"
+  axis {
+    line
+    start {
+      x=0 y=11.75
+    }
+    end {
+      x=0 y=6.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-2-west-3={ storey=st-2 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 3"
+  axis {
+    line
+    start {
+      x=0 y=17.75
+    }
+    end {
+      x=0 y=12.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-core-e-east={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E East"
+  axis {
+    line
+    start {
+      x=23 y=6.4
+    }
+    end {
+      x=23 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-e-north={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E North"
+  axis {
+    line
+    start {
+      x=23 y=11.6
+    }
+    end {
+      x=20 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-e-south={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E South"
+  axis {
+    line
+    start {
+      x=20 y=6.4
+    }
+    end {
+      x=23 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-e-west={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core E West"
+  axis {
+    line
+    start {
+      x=20 y=11.6
+    }
+    end {
+      x=20 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-w-east={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W East"
+  axis {
+    line
+    start {
+      x=10 y=6.4
+    }
+    end {
+      x=10 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-w-north={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W North"
+  axis {
+    line
+    start {
+      x=10 y=11.6
+    }
+    end {
+      x=7 y=11.6
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-w-south={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W South"
+  axis {
+    line
+    start {
+      x=7 y=6.4
+    }
+    end {
+      x=10 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-core-w-west={ storey=st-3 wall-type=wt-core-25 location=center base-offset=0 phase=new name="Core W West"
+  axis {
+    line
+    start {
+      x=7 y=11.6
+    }
+    end {
+      x=7 y=6.4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-3-east-1={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 1"
+  axis {
+    line
+    start {
+      x=30 y=0.25
+    }
+    end {
+      x=30 y=5.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-east-2={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 2"
+  axis {
+    line
+    start {
+      x=30 y=6.25
+    }
+    end {
+      x=30 y=11.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-east-3={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="East Infill 3"
+  axis {
+    line
+    start {
+      x=30 y=12.25
+    }
+    end {
+      x=30 y=17.75
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-west-1={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 1"
+  axis {
+    line
+    start {
+      x=0 y=5.75
+    }
+    end {
+      x=0 y=0.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-west-2={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 2"
+  axis {
+    line
+    start {
+      x=0 y=11.75
+    }
+    end {
+      x=0 y=6.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-3-west-3={ storey=st-3 wall-type=wt-infill-34 location=center base-offset=0 phase=new name="West Infill 3"
+  axis {
+    line
+    start {
+      x=0 y=17.75
+    }
+    end {
+      x=0 y=12.25
+    }
+  }
+  top {
+    storey-top offset=-0.86
+  }
+  } w-r-par-east={ storey=st-r wall-type=wt-parapet-25 location=center base-offset=0 phase=new name="Parapet East"
+  axis {
+    line
+    start {
+      x=30.3 y=-0.3
+    }
+    end {
+      x=30.3 y=18.3
+    }
+  }
+  top {
+    unconnected height=1
+  }
+  } w-r-par-north={ storey=st-r wall-type=wt-parapet-25 location=center base-offset=0 phase=new name="Parapet North"
+  axis {
+    line
+    start {
+      x=30.3 y=18.3
+    }
+    end {
+      x=-0.3 y=18.3
+    }
+  }
+  top {
+    unconnected height=1
+  }
+  } w-r-par-south={ storey=st-r wall-type=wt-parapet-25 location=center base-offset=0 phase=new name="Parapet South"
+  axis {
+    line
+    start {
+      x=-0.3 y=-0.3
+    }
+    end {
+      x=30.3 y=-0.3
+    }
+  }
+  top {
+    unconnected height=1
+  }
+  } w-r-par-west={ storey=st-r wall-type=wt-parapet-25 location=center base-offset=0 phase=new name="Parapet West"
+  axis {
+    line
+    start {
+      x=-0.3 y=18.3
+    }
+    end {
+      x=-0.3 y=-0.3
+    }
+  }
+  top {
+    unconnected height=1
+  }
+  }
+}
+curtain-walls={
+  cu-0-north={ storey=st-0 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 0"
+  axis {
+    line
+    start {
+      x=30 y=18.45
+    }
+    end {
+      x=0 y=18.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-0-south={ storey=st-0 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 0"
+  axis {
+    line
+    start {
+      x=0 y=-0.45
+    }
+    end {
+      x=30 y=-0.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-1-north={ storey=st-1 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 1"
+  axis {
+    line
+    start {
+      x=30 y=18.45
+    }
+    end {
+      x=0 y=18.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-1-south={ storey=st-1 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 1"
+  axis {
+    line
+    start {
+      x=0 y=-0.45
+    }
+    end {
+      x=30 y=-0.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-2-north={ storey=st-2 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 2"
+  axis {
+    line
+    start {
+      x=30 y=18.45
+    }
+    end {
+      x=0 y=18.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-2-south={ storey=st-2 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 2"
+  axis {
+    line
+    start {
+      x=0 y=-0.45
+    }
+    end {
+      x=30 y=-0.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-3-north={ storey=st-3 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="North Curtain Wall 3"
+  axis {
+    line
+    start {
+      x=30 y=18.45
+    }
+    end {
+      x=0 y=18.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  } cu-3-south={ storey=st-3 base-offset=0 u-spacing=1.5 v-spacing=1.3 panel-material=m-glass mullion-material=m-steel name="South Curtain Wall 3"
+  axis {
+    line
+    start {
+      x=0 y=-0.45
+    }
+    end {
+      x=30 y=-0.45
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  mullion {
+    rectangle width=0.05 depth=0.15
+  }
+  }
+}
+columns={
+  c-0-A1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A1"
+  position {
+    x=0 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-A2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A2"
+  position {
+    x=0 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-A3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A3"
+  position {
+    x=0 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-A4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A4"
+  position {
+    x=0 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-B1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B1"
+  position {
+    x=6 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-B2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B2"
+  position {
+    x=6 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-B3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B3"
+  position {
+    x=6 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-B4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B4"
+  position {
+    x=6 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-C1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C1"
+  position {
+    x=12 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-C2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C2"
+  position {
+    x=12 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-C3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C3"
+  position {
+    x=12 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-C4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C4"
+  position {
+    x=12 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-D1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D1"
+  position {
+    x=18 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-D2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D2"
+  position {
+    x=18 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-D3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D3"
+  position {
+    x=18 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-D4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D4"
+  position {
+    x=18 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-E1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E1"
+  position {
+    x=24 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-E2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E2"
+  position {
+    x=24 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-E3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E3"
+  position {
+    x=24 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-E4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E4"
+  position {
+    x=24 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-F1={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F1"
+  position {
+    x=30 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-F2={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F2"
+  position {
+    x=30 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-F3={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F3"
+  position {
+    x=30 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-0-F4={ storey=st-0 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F4"
+  position {
+    x=30 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-A1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A1"
+  position {
+    x=0 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-A2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A2"
+  position {
+    x=0 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-A3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A3"
+  position {
+    x=0 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-A4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column A4"
+  position {
+    x=0 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-B1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B1"
+  position {
+    x=6 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-B2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B2"
+  position {
+    x=6 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-B3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B3"
+  position {
+    x=6 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-B4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column B4"
+  position {
+    x=6 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-C1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C1"
+  position {
+    x=12 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-C2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C2"
+  position {
+    x=12 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-C3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C3"
+  position {
+    x=12 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-C4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column C4"
+  position {
+    x=12 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-D1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D1"
+  position {
+    x=18 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-D2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D2"
+  position {
+    x=18 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-D3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D3"
+  position {
+    x=18 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-D4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column D4"
+  position {
+    x=18 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-E1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E1"
+  position {
+    x=24 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-E2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E2"
+  position {
+    x=24 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-E3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E3"
+  position {
+    x=24 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-E4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column E4"
+  position {
+    x=24 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-F1={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F1"
+  position {
+    x=30 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-F2={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F2"
+  position {
+    x=30 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-F3={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F3"
+  position {
+    x=30 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-1-F4={ storey=st-1 column-type=ct-rc-500 rotation=0 base-offset=0 name="Column F4"
+  position {
+    x=30 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-A1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A1"
+  position {
+    x=0 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-A2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A2"
+  position {
+    x=0 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-A3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A3"
+  position {
+    x=0 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-A4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A4"
+  position {
+    x=0 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-B1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B1"
+  position {
+    x=6 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-B2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B2"
+  position {
+    x=6 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-B3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B3"
+  position {
+    x=6 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-B4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B4"
+  position {
+    x=6 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-C1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C1"
+  position {
+    x=12 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-C2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C2"
+  position {
+    x=12 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-C3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C3"
+  position {
+    x=12 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-C4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C4"
+  position {
+    x=12 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-D1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D1"
+  position {
+    x=18 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-D2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D2"
+  position {
+    x=18 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-D3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D3"
+  position {
+    x=18 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-D4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D4"
+  position {
+    x=18 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-E1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E1"
+  position {
+    x=24 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-E2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E2"
+  position {
+    x=24 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-E3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E3"
+  position {
+    x=24 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-E4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E4"
+  position {
+    x=24 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-F1={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F1"
+  position {
+    x=30 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-F2={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F2"
+  position {
+    x=30 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-F3={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F3"
+  position {
+    x=30 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-2-F4={ storey=st-2 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F4"
+  position {
+    x=30 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-A1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A1"
+  position {
+    x=0 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-A2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A2"
+  position {
+    x=0 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-A3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A3"
+  position {
+    x=0 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-A4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column A4"
+  position {
+    x=0 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-B1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B1"
+  position {
+    x=6 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-B2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B2"
+  position {
+    x=6 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-B3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B3"
+  position {
+    x=6 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-B4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column B4"
+  position {
+    x=6 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-C1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C1"
+  position {
+    x=12 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-C2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C2"
+  position {
+    x=12 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-C3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C3"
+  position {
+    x=12 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-C4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column C4"
+  position {
+    x=12 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-D1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D1"
+  position {
+    x=18 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-D2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D2"
+  position {
+    x=18 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-D3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D3"
+  position {
+    x=18 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-D4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column D4"
+  position {
+    x=18 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-E1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E1"
+  position {
+    x=24 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-E2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E2"
+  position {
+    x=24 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-E3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E3"
+  position {
+    x=24 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-E4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column E4"
+  position {
+    x=24 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-F1={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F1"
+  position {
+    x=30 y=0
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-F2={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F2"
+  position {
+    x=30 y=6
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-F3={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F3"
+  position {
+    x=30 y=12
+  }
+  top {
+    storey-top offset=0
+  }
+  } c-3-F4={ storey=st-3 column-type=ct-rc-400 rotation=0 base-offset=0 name="Column F4"
+  position {
+    x=30 y=18
+  }
+  top {
+    storey-top offset=0
+  }
+  }
+}
+beams={
+  bm-0-x-A1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=6 y=0
+  }
+  } bm-0-x-A2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-0-x-A3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-0-x-A4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
+  start {
+    x=0 y=18
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-0-x-B1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=12 y=0
+  }
+  } bm-0-x-B2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-0-x-B3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-0-x-B4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
+  start {
+    x=6 y=18
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-0-x-C1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=18 y=0
+  }
+  } bm-0-x-C2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-0-x-C3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-0-x-C4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
+  start {
+    x=12 y=18
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-0-x-D1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=24 y=0
+  }
+  } bm-0-x-D2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-0-x-D3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-0-x-D4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
+  start {
+    x=18 y=18
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-0-x-E1={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=30 y=0
+  }
+  } bm-0-x-E2={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-0-x-E3={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-0-x-E4={ storey=st-0 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
+  start {
+    x=24 y=18
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-0-y-A1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=0 y=6
+  }
+  } bm-0-y-A2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=0 y=12
+  }
+  } bm-0-y-A3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=0 y=18
+  }
+  } bm-0-y-B1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-0-y-B2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-0-y-B3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-0-y-C1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-0-y-C2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-0-y-C3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-0-y-D1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-0-y-D2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-0-y-D3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-0-y-E1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-0-y-E2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-0-y-E3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-0-y-F1={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
+  start {
+    x=30 y=0
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-0-y-F2={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
+  start {
+    x=30 y=6
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-0-y-F3={ storey=st-0 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
+  start {
+    x=30 y=12
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-1-x-A1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=6 y=0
+  }
+  } bm-1-x-A2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-1-x-A3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-1-x-A4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
+  start {
+    x=0 y=18
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-1-x-B1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=12 y=0
+  }
+  } bm-1-x-B2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-1-x-B3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-1-x-B4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
+  start {
+    x=6 y=18
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-1-x-C1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=18 y=0
+  }
+  } bm-1-x-C2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-1-x-C3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-1-x-C4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
+  start {
+    x=12 y=18
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-1-x-D1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=24 y=0
+  }
+  } bm-1-x-D2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-1-x-D3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-1-x-D4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
+  start {
+    x=18 y=18
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-1-x-E1={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=30 y=0
+  }
+  } bm-1-x-E2={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-1-x-E3={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-1-x-E4={ storey=st-1 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
+  start {
+    x=24 y=18
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-1-y-A1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=0 y=6
+  }
+  } bm-1-y-A2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=0 y=12
+  }
+  } bm-1-y-A3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=0 y=18
+  }
+  } bm-1-y-B1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-1-y-B2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-1-y-B3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-1-y-C1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-1-y-C2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-1-y-C3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-1-y-D1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-1-y-D2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-1-y-D3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-1-y-E1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-1-y-E2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-1-y-E3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-1-y-F1={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
+  start {
+    x=30 y=0
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-1-y-F2={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
+  start {
+    x=30 y=6
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-1-y-F3={ storey=st-1 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
+  start {
+    x=30 y=12
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-2-x-A1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=6 y=0
+  }
+  } bm-2-x-A2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-2-x-A3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-2-x-A4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
+  start {
+    x=0 y=18
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-2-x-B1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=12 y=0
+  }
+  } bm-2-x-B2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-2-x-B3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-2-x-B4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
+  start {
+    x=6 y=18
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-2-x-C1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=18 y=0
+  }
+  } bm-2-x-C2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-2-x-C3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-2-x-C4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
+  start {
+    x=12 y=18
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-2-x-D1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=24 y=0
+  }
+  } bm-2-x-D2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-2-x-D3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-2-x-D4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
+  start {
+    x=18 y=18
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-2-x-E1={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=30 y=0
+  }
+  } bm-2-x-E2={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-2-x-E3={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-2-x-E4={ storey=st-2 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
+  start {
+    x=24 y=18
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-2-y-A1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=0 y=6
+  }
+  } bm-2-y-A2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=0 y=12
+  }
+  } bm-2-y-A3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=0 y=18
+  }
+  } bm-2-y-B1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-2-y-B2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-2-y-B3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-2-y-C1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-2-y-C2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-2-y-C3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-2-y-D1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-2-y-D2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-2-y-D3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-2-y-E1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-2-y-E2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-2-y-E3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-2-y-F1={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
+  start {
+    x=30 y=0
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-2-y-F2={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
+  start {
+    x=30 y=6
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-2-y-F3={ storey=st-2 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
+  start {
+    x=30 y=12
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-3-x-A1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A1-B1"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=6 y=0
+  }
+  } bm-3-x-A2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A2-B2"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-3-x-A3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A3-B3"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-3-x-A4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam A4-B4"
+  start {
+    x=0 y=18
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-3-x-B1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B1-C1"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=12 y=0
+  }
+  } bm-3-x-B2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B2-C2"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-3-x-B3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B3-C3"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-3-x-B4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam B4-C4"
+  start {
+    x=6 y=18
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-3-x-C1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C1-D1"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=18 y=0
+  }
+  } bm-3-x-C2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C2-D2"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-3-x-C3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C3-D3"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-3-x-C4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam C4-D4"
+  start {
+    x=12 y=18
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-3-x-D1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D1-E1"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=24 y=0
+  }
+  } bm-3-x-D2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D2-E2"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-3-x-D3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D3-E3"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-3-x-D4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam D4-E4"
+  start {
+    x=18 y=18
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-3-x-E1={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E1-F1"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=30 y=0
+  }
+  } bm-3-x-E2={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E2-F2"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-3-x-E3={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E3-F3"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-3-x-E4={ storey=st-3 beam-type=bt-rc-primary top-offset=-0.36 name="Beam E4-F4"
+  start {
+    x=24 y=18
+  }
+  end {
+    x=30 y=18
+  }
+  } bm-3-y-A1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A1-A2"
+  start {
+    x=0 y=0
+  }
+  end {
+    x=0 y=6
+  }
+  } bm-3-y-A2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A2-A3"
+  start {
+    x=0 y=6
+  }
+  end {
+    x=0 y=12
+  }
+  } bm-3-y-A3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam A3-A4"
+  start {
+    x=0 y=12
+  }
+  end {
+    x=0 y=18
+  }
+  } bm-3-y-B1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B1-B2"
+  start {
+    x=6 y=0
+  }
+  end {
+    x=6 y=6
+  }
+  } bm-3-y-B2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B2-B3"
+  start {
+    x=6 y=6
+  }
+  end {
+    x=6 y=12
+  }
+  } bm-3-y-B3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam B3-B4"
+  start {
+    x=6 y=12
+  }
+  end {
+    x=6 y=18
+  }
+  } bm-3-y-C1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C1-C2"
+  start {
+    x=12 y=0
+  }
+  end {
+    x=12 y=6
+  }
+  } bm-3-y-C2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C2-C3"
+  start {
+    x=12 y=6
+  }
+  end {
+    x=12 y=12
+  }
+  } bm-3-y-C3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam C3-C4"
+  start {
+    x=12 y=12
+  }
+  end {
+    x=12 y=18
+  }
+  } bm-3-y-D1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D1-D2"
+  start {
+    x=18 y=0
+  }
+  end {
+    x=18 y=6
+  }
+  } bm-3-y-D2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D2-D3"
+  start {
+    x=18 y=6
+  }
+  end {
+    x=18 y=12
+  }
+  } bm-3-y-D3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam D3-D4"
+  start {
+    x=18 y=12
+  }
+  end {
+    x=18 y=18
+  }
+  } bm-3-y-E1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E1-E2"
+  start {
+    x=24 y=0
+  }
+  end {
+    x=24 y=6
+  }
+  } bm-3-y-E2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E2-E3"
+  start {
+    x=24 y=6
+  }
+  end {
+    x=24 y=12
+  }
+  } bm-3-y-E3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam E3-E4"
+  start {
+    x=24 y=12
+  }
+  end {
+    x=24 y=18
+  }
+  } bm-3-y-F1={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F1-F2"
+  start {
+    x=30 y=0
+  }
+  end {
+    x=30 y=6
+  }
+  } bm-3-y-F2={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F2-F3"
+  start {
+    x=30 y=6
+  }
+  end {
+    x=30 y=12
+  }
+  } bm-3-y-F3={ storey=st-3 beam-type=bt-rc-secondary top-offset=-0.36 name="Beam F3-F4"
+  start {
+    x=30 y=12
+  }
+  end {
+    x=30 y=18
+  }
+  }
+}
+slabs={
+  sl-0={ storey=st-0 slab-type=sl-ground offset=0 name="Ground Slab" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=-0.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=18.3
+    }
+    0
+ {
+      x=-0.3 y=18.3
+    }
+    0
+  }
+  } sl-1={ storey=st-1 slab-type=sl-floor offset=0 name="Floor Slab 1" holes=[ [ { bulge=0
+  point {
+    x=7.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=7.15 y=11.45
+  }
+  } ] [ { bulge=0
+  point {
+    x=20.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=20.15 y=11.45
+  }
+  } ] ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=-0.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=18.3
+    }
+    0
+ {
+      x=-0.3 y=18.3
+    }
+    0
+  }
+  } sl-2={ storey=st-2 slab-type=sl-floor offset=0 name="Floor Slab 2" holes=[ [ { bulge=0
+  point {
+    x=7.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=7.15 y=11.45
+  }
+  } ] [ { bulge=0
+  point {
+    x=20.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=20.15 y=11.45
+  }
+  } ] ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=-0.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=18.3
+    }
+    0
+ {
+      x=-0.3 y=18.3
+    }
+    0
+  }
+  } sl-3={ storey=st-3 slab-type=sl-floor offset=0 name="Floor Slab 3" holes=[ [ { bulge=0
+  point {
+    x=7.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=9.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=7.15 y=11.45
+  }
+  } ] [ { bulge=0
+  point {
+    x=20.15 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=6.55
+  }
+  } { bulge=0
+  point {
+    x=22.85 y=11.45
+  }
+  } { bulge=0
+  point {
+    x=20.15 y=11.45
+  }
+  } ] ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=-0.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=18.3
+    }
+    0
+ {
+      x=-0.3 y=18.3
+    }
+    0
+  }
+  }
+}
+roofs={
+  rf-main={ storey=st-r roof-type=rt-flat overhang=0 base-offset=0 name="Flat Roof"
+  shape {
+    flat
+  }
+  footprint [point:BLOCK bulge:NUM] {
+ {
+      x=-0.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=-0.3
+    }
+    0
+ {
+      x=30.3 y=18.3
+    }
+    0
+ {
+      x=-0.3 y=18.3
+    }
+    0
+  }
+  }
+}
+openings={
+  o-0-core-e-in={ host=w-0-core-e-south offset=1.5 flip-hand=false flip-facing=false name="Core E Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-0-core-e-out={ host=w-0-core-e-north offset=1.5 flip-hand=true flip-facing=false name="Core E Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-0-core-w-in={ host=w-0-core-w-south offset=1.5 flip-hand=false flip-facing=false name="Core W Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-0-core-w-out={ host=w-0-core-w-north offset=1.5 flip-hand=true flip-facing=false name="Core W Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-0-east-1={ host=w-0-east-1 offset=2.75 flip-hand=false flip-facing=true name="East Window 0.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-0-east-2={ host=w-0-east-2 offset=2.75 flip-hand=false flip-facing=true name="East Window 0.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-0-east-3={ host=w-0-east-3 offset=2.75 flip-hand=false flip-facing=true name="East Window 0.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-0-entry={ host=cu-0-south offset=15 flip-hand=false flip-facing=false name="Main Entrance"
+  kind {
+    door door-type=dr-glass
+  }
+  } o-0-west-1={ host=w-0-west-1 offset=2.75 flip-hand=false flip-facing=false name="West Window 0.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-0-west-2={ host=w-0-west-2 offset=2.75 flip-hand=false flip-facing=false name="West Window 0.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-0-west-3={ host=w-0-west-3 offset=2.75 flip-hand=false flip-facing=false name="West Window 0.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-core-e-in={ host=w-1-core-e-south offset=1.5 flip-hand=false flip-facing=false name="Core E Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-1-core-e-out={ host=w-1-core-e-north offset=1.5 flip-hand=true flip-facing=false name="Core E Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-1-core-w-in={ host=w-1-core-w-south offset=1.5 flip-hand=false flip-facing=false name="Core W Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-1-core-w-out={ host=w-1-core-w-north offset=1.5 flip-hand=true flip-facing=false name="Core W Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-1-east-1={ host=w-1-east-1 offset=2.75 flip-hand=false flip-facing=true name="East Window 1.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-east-2={ host=w-1-east-2 offset=2.75 flip-hand=false flip-facing=true name="East Window 1.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-east-3={ host=w-1-east-3 offset=2.75 flip-hand=false flip-facing=true name="East Window 1.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-west-1={ host=w-1-west-1 offset=2.75 flip-hand=false flip-facing=false name="West Window 1.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-west-2={ host=w-1-west-2 offset=2.75 flip-hand=false flip-facing=false name="West Window 1.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-1-west-3={ host=w-1-west-3 offset=2.75 flip-hand=false flip-facing=false name="West Window 1.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-core-e-in={ host=w-2-core-e-south offset=1.5 flip-hand=false flip-facing=false name="Core E Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-2-core-e-out={ host=w-2-core-e-north offset=1.5 flip-hand=true flip-facing=false name="Core E Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-2-core-w-in={ host=w-2-core-w-south offset=1.5 flip-hand=false flip-facing=false name="Core W Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-2-core-w-out={ host=w-2-core-w-north offset=1.5 flip-hand=true flip-facing=false name="Core W Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-2-east-1={ host=w-2-east-1 offset=2.75 flip-hand=false flip-facing=true name="East Window 2.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-east-2={ host=w-2-east-2 offset=2.75 flip-hand=false flip-facing=true name="East Window 2.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-east-3={ host=w-2-east-3 offset=2.75 flip-hand=false flip-facing=true name="East Window 2.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-west-1={ host=w-2-west-1 offset=2.75 flip-hand=false flip-facing=false name="West Window 2.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-west-2={ host=w-2-west-2 offset=2.75 flip-hand=false flip-facing=false name="West Window 2.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-2-west-3={ host=w-2-west-3 offset=2.75 flip-hand=false flip-facing=false name="West Window 2.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-core-e-in={ host=w-3-core-e-south offset=1.5 flip-hand=false flip-facing=false name="Core E Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-3-core-e-out={ host=w-3-core-e-north offset=1.5 flip-hand=true flip-facing=false name="Core E Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-3-core-w-in={ host=w-3-core-w-south offset=1.5 flip-hand=false flip-facing=false name="Core W Entry"
+  kind {
+    door door-type=dr-core
+  }
+  } o-3-core-w-out={ host=w-3-core-w-north offset=1.5 flip-hand=true flip-facing=false name="Core W Exit"
+  kind {
+    door door-type=dr-core
+  }
+  } o-3-east-1={ host=w-3-east-1 offset=2.75 flip-hand=false flip-facing=true name="East Window 3.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-east-2={ host=w-3-east-2 offset=2.75 flip-hand=false flip-facing=true name="East Window 3.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-east-3={ host=w-3-east-3 offset=2.75 flip-hand=false flip-facing=true name="East Window 3.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-west-1={ host=w-3-west-1 offset=2.75 flip-hand=false flip-facing=false name="West Window 3.1"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-west-2={ host=w-3-west-2 offset=2.75 flip-hand=false flip-facing=false name="West Window 3.2"
+  kind {
+    window window-type=wn-ribbon
+  }
+  } o-3-west-3={ host=w-3-west-3 offset=2.75 flip-hand=false flip-facing=false name="West Window 3.3"
+  kind {
+    window window-type=wn-ribbon
+  }
+  }
+}
+stairs={
+  sr-0-e={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 0"
+  start {
+    x=21.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  } sr-0-w={ storey=st-0 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 0"
+  start {
+    x=8.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  } sr-1-e={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 1"
+  start {
+    x=21.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  } sr-1-w={ storey=st-1 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 1"
+  start {
+    x=8.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  } sr-2-e={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair E 2"
+  start {
+    x=21.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  } sr-2-w={ storey=st-2 direction=1.5707963267948966 width=1.2 max-riser=0.2 min-tread=0.22 nosing=0 tread-thickness=0.06 riser=closed landing-depth=1.2 name="Escape Stair W 2"
+  start {
+    x=8.5 y=6.65
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=mono width=0.2 depth=0.3
+  }
+  }
+}
+railings={
+}
+spaces={
+  sp-0-1={ storey=st-0 number="0.01" name=Lobby usage=Lobby
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=0
+      }
+      0
+ {
+        x=30 y=0
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=0 y=6
+      }
+      0
+    }
+  }
+  } sp-0-2={ storey=st-0 number="0.02" name="Open Office North" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=12
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=30 y=18
+      }
+      0
+ {
+        x=0 y=18
+      }
+      0
+    }
+  }
+  } sp-0-3={ storey=st-0 number="0.03" name="Circulation West" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=6
+      }
+      0
+ {
+        x=7 y=6
+      }
+      0
+ {
+        x=7 y=12
+      }
+      0
+ {
+        x=0 y=12
+      }
+      0
+    }
+  }
+  } sp-0-4={ storey=st-0 number="0.04" name="Circulation Centre" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=10 y=6
+      }
+      0
+ {
+        x=20 y=6
+      }
+      0
+ {
+        x=20 y=12
+      }
+      0
+ {
+        x=10 y=12
+      }
+      0
+    }
+  }
+  } sp-0-5={ storey=st-0 number="0.05" name="Circulation East" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=23 y=6
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=23 y=12
+      }
+      0
+    }
+  }
+  } sp-0-6={ storey=st-0 number="0.06" name="Stair Core West" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=8.5 y=9
+    }
+  }
+  } sp-0-7={ storey=st-0 number="0.07" name="Stair Core East" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=21.5 y=9
+    }
+  }
+  } sp-1-1={ storey=st-1 number="1.01" name="Open Office South" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=0
+      }
+      0
+ {
+        x=30 y=0
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=0 y=6
+      }
+      0
+    }
+  }
+  } sp-1-2={ storey=st-1 number="1.02" name="Open Office North" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=12
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=30 y=18
+      }
+      0
+ {
+        x=0 y=18
+      }
+      0
+    }
+  }
+  } sp-1-3={ storey=st-1 number="1.03" name="Circulation West" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=6
+      }
+      0
+ {
+        x=7 y=6
+      }
+      0
+ {
+        x=7 y=12
+      }
+      0
+ {
+        x=0 y=12
+      }
+      0
+    }
+  }
+  } sp-1-4={ storey=st-1 number="1.04" name="Circulation Centre" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=10 y=6
+      }
+      0
+ {
+        x=20 y=6
+      }
+      0
+ {
+        x=20 y=12
+      }
+      0
+ {
+        x=10 y=12
+      }
+      0
+    }
+  }
+  } sp-1-5={ storey=st-1 number="1.05" name="Circulation East" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=23 y=6
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=23 y=12
+      }
+      0
+    }
+  }
+  } sp-1-6={ storey=st-1 number="1.06" name="Stair Core West" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=8.5 y=9
+    }
+  }
+  } sp-1-7={ storey=st-1 number="1.07" name="Stair Core East" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=21.5 y=9
+    }
+  }
+  } sp-2-1={ storey=st-2 number="2.01" name="Open Office South" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=0
+      }
+      0
+ {
+        x=30 y=0
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=0 y=6
+      }
+      0
+    }
+  }
+  } sp-2-2={ storey=st-2 number="2.02" name="Open Office North" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=12
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=30 y=18
+      }
+      0
+ {
+        x=0 y=18
+      }
+      0
+    }
+  }
+  } sp-2-3={ storey=st-2 number="2.03" name="Circulation West" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=6
+      }
+      0
+ {
+        x=7 y=6
+      }
+      0
+ {
+        x=7 y=12
+      }
+      0
+ {
+        x=0 y=12
+      }
+      0
+    }
+  }
+  } sp-2-4={ storey=st-2 number="2.04" name="Circulation Centre" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=10 y=6
+      }
+      0
+ {
+        x=20 y=6
+      }
+      0
+ {
+        x=20 y=12
+      }
+      0
+ {
+        x=10 y=12
+      }
+      0
+    }
+  }
+  } sp-2-5={ storey=st-2 number="2.05" name="Circulation East" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=23 y=6
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=23 y=12
+      }
+      0
+    }
+  }
+  } sp-2-6={ storey=st-2 number="2.06" name="Stair Core West" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=8.5 y=9
+    }
+  }
+  } sp-2-7={ storey=st-2 number="2.07" name="Stair Core East" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=21.5 y=9
+    }
+  }
+  } sp-3-1={ storey=st-3 number="3.01" name="Open Office South" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=0
+      }
+      0
+ {
+        x=30 y=0
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=0 y=6
+      }
+      0
+    }
+  }
+  } sp-3-2={ storey=st-3 number="3.02" name="Open Office North" usage=Office
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=12
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=30 y=18
+      }
+      0
+ {
+        x=0 y=18
+      }
+      0
+    }
+  }
+  } sp-3-3={ storey=st-3 number="3.03" name="Circulation West" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=0 y=6
+      }
+      0
+ {
+        x=7 y=6
+      }
+      0
+ {
+        x=7 y=12
+      }
+      0
+ {
+        x=0 y=12
+      }
+      0
+    }
+  }
+  } sp-3-4={ storey=st-3 number="3.04" name="Circulation Centre" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=10 y=6
+      }
+      0
+ {
+        x=20 y=6
+      }
+      0
+ {
+        x=20 y=12
+      }
+      0
+ {
+        x=10 y=12
+      }
+      0
+    }
+  }
+  } sp-3-5={ storey=st-3 number="3.05" name="Circulation East" usage=Circulation
+  boundary {
+    explicit
+    outline [point:BLOCK bulge:NUM] {
+ {
+        x=23 y=6
+      }
+      0
+ {
+        x=30 y=6
+      }
+      0
+ {
+        x=30 y=12
+      }
+      0
+ {
+        x=23 y=12
+      }
+      0
+    }
+  }
+  } sp-3-6={ storey=st-3 number="3.06" name="Stair Core West" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=8.5 y=9
+    }
+  }
+  } sp-3-7={ storey=st-3 number="3.07" name="Stair Core East" usage="Escape Stair"
+  boundary {
+    bounded
+    seed {
+      x=21.5 y=9
+    }
+  }
+  }
+}
+properties={
+  c-0-A1={
+    Pset_ColumnCommon={
+      FireRating={
+        Text={
+          value="R 90"
+        }
+      }
+      LoadBearing={
+        Boolean={
+          value=true
+        }
+      }
+    }
+  }
+  cu-0-south={
+    Pset_CurtainWallCommon={
+      IsExternal={
+        Boolean={
+          value=true
+        }
+      }
+      ThermalTransmittance={
+        Real={
+          value=1.1
+        }
+      }
+    }
+  }
+  sp-0-1={
+    Pset_SpaceCommon={
+      OccupancyType={
+        Text={
+          value="Lobby"
+        }
+      }
+      Reference={
+        Text={
+          value="0.01"
+        }
+      }
+    }
+  }
+  w-0-core-w-south={
+    Pset_WallCommon={
+      FireRating={
+        Text={
+          value="REI 120"
+        }
+      }
+      IsExternal={
+        Boolean={
+          value=false
+        }
+      }
+      LoadBearing={
+        Boolean={
+          value=true
+        }
+      }
+    }
+  }
+}
+classifications={
+  c-0-A1={ system="DIN 276" code="333" title=Außenstützen } c-1-B2={ system="DIN 276" code="343" title=Innenstützen } cu-0-south={ system="DIN 276" code="337" title="Elementierte Außenwände" } rf-main={ system="DIN 276" code="360" title=Dächer } w-0-core-w-south={ system="DIN 276" code="341" title="Tragende Innenwände" }
+}

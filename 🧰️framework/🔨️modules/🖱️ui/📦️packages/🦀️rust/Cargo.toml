@@ -145,6 +145,11 @@ semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️pa
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
 semio-framework-ui-viewport = { path = "../../🪟️viewport/📦️packages/🦀️rust" }
 tiny-skia = "0.11.4"
+# 📏️ Independent oracles for the `tui` text model: `unicode-width` (UAX #11 plus emoji sequences) and
+# `unicode-segmentation` (UAX #29) must agree with `⌨️tui/📝️text` on every scalar and the width fixture.
+# Dev-only: the terminal text model itself carries its own Unicode tables and no runtime dependency.
+unicode-width = "0.2.2"
+unicode-segmentation = "1.13.2"
 # 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
 # crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

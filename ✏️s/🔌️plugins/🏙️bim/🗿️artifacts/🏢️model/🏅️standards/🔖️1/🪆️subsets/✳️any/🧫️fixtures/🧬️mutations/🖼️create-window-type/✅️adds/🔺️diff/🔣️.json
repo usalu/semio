@@ -1,0 +1,15 @@
+{
+  "window_types": {
+    "win-2": {
+      "entry": "Created",
+      "frame_depth": 0.1,
+      "frame_width": 0.05,
+      "height": 1.0,
+      "material": "m-timber",
+      "name": "Window 0.60",
+      "panes": 1,
+      "sill": 1.1,
+      "width": 0.6
+    }
+  }
+}

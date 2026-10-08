@@ -1,0 +1,24 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const r = "C:/git/semio/";
+const sub = (file: string, pattern: RegExp, to: string) => {
+  const s = readFileSync(r + file, "utf8");
+  if (!pattern.test(s)) throw new Error(`${file}: ${pattern}`);
+  writeFileSync(r + file, s.replace(pattern, to));
+};
+const O = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/";
+sub(O + "♻️activation/🩺️readiness/🟦️.ts", /used by every other os-dev variant\/launch\.json entry\./, "used by every other os-dev variant dashboard command.");
+sub(O + "🚀️local-hub/🏃️execution/🟦️.ts", /Which launch row reaches a clean data root first/, "Which dashboard command reaches a clean data root first");
+const L = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/";
+sub(L + "🎮️playground/🔒️preferences/🟦️.ts", /a launch row could not reach it, and no artifact's read-only surface was reachable from any launch\n \* entry /, "a dashboard command could not reach it, and no artifact's read-only surface was reachable from any dashboard\n * command ");
+sub(L + "🟦️.ts", /\(launch row, `extra`\)/, "(dashboard parameter, `extra`)");
+sub(L + "🟦️.ts", /so a react launch\n \* row reaches Vite/, "so a react dashboard\n * command reaches Vite");
+const E = "✏️s/🔌️plugins/🔋️energy/";
+sub(E + "🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🧪️tests/🔬️unit/🦀️.rs", /Run it through the `[^`]*` launch entry\./, "Run it explicitly with `--ignored` (extra arguments of the crate's `test` dashboard command).");
+const X = E + "🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/";
+sub(X + "🧪️tests/🏛️export-epjson-runs-in-energyplus/🐍️.py", /\(or the [^)]*launch entry\)/, "(the dashboard command of the same id)");
+sub(X + "🚪️io/📤️export/🧵️serializers/🗿️artifacts/⚡️epjson/🔖️25.2/✳️any/🧪️tests/🔬️unit/🦀️.rs", /`oracle-epjson` and the\n\/\/\/ `[^`]*` launch entry have/, "`oracle-epjson` and its dashboard command\n/// `@semio-tech/energy-oracle-py:oracle-epjson` have");
+const P = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts";
+sub(P, /and the launch\.json entries that call them all inherit/, "and the dashboard commands that call them all inherit");
+sub(P, /and the launch\.json entries that call them all measure/, "and the dashboard commands that call them all measure");
+const example = JSON.parse(readFileSync(r + "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json", "utf8")).find((e: any) => e.variant === "generation3d").examples.find((e: string) => e.endsWith("mesh-workbench"));
+sub("✏️s/🔌️plugins/🌀️procedural/README.md", /the `[^`]*mesh-workbench[^`]*` launch configuration\./, "the dashboard command `playground:generation3d` with the parameters `renderer=react` and `example=" + example + "`.");

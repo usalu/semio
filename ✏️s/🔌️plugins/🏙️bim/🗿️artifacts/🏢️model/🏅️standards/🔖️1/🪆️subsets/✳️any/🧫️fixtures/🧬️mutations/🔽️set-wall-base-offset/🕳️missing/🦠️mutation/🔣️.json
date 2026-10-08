@@ -1,0 +1,5 @@
+{
+  "mutation": "setWallBaseOffset",
+  "id": "w-attic",
+  "base_offset": 0.1
+}

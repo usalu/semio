@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-beam/schema.json",
+  "title": "CreateBeam",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "beam"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createBeam"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Beam id",
+          "de": "Träger-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "beam": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Beam",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Beam",
+          "de": "Träger"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

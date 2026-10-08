@@ -1,0 +1,17 @@
+{
+  "beam_types": {
+    "bt-i300": {
+      "entry": "Patched",
+      "material": "m-concrete",
+      "name": "Everything",
+      "profile": {
+        "IShape": {
+          "depth": 0.4,
+          "flange": 0.013,
+          "web": 0.008,
+          "width": 0.2
+        }
+      }
+    }
+  }
+}

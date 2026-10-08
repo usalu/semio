@@ -1,0 +1,113 @@
+{
+  "spellings": [
+    { "spec": "ctrl+b", "canonical": "ctrl+b", "label": "Ctrl+B" },
+    { "spec": "shift+tab", "canonical": "backtab", "label": "Shift+Tab" },
+    { "spec": "backtab", "canonical": "backtab", "label": "Shift+Tab" },
+    { "spec": "shift+q", "canonical": "Q", "label": "Q" },
+    { "spec": "Q", "canonical": "Q", "label": "Q" },
+    { "spec": "ctrl+space", "canonical": "ctrl+space", "label": "Ctrl+Space" },
+    { "spec": "space", "canonical": "space", "label": "Space" },
+    { "spec": "alt++", "canonical": "alt++", "label": "Alt++" },
+    { "spec": "+", "canonical": "+", "label": "+" },
+    { "spec": "|", "canonical": "|", "label": "|" },
+    { "spec": "ctrl+alt+x", "canonical": "ctrl+alt+x", "label": "Ctrl+Alt+X" },
+    { "spec": "f5", "canonical": "f5", "label": "F5" },
+    { "spec": "alt+pagedown", "canonical": "alt+pagedown", "label": "Alt+PgDn" },
+    { "spec": "shift+up", "canonical": "shift+up", "label": "Shift+Up" },
+    { "spec": "esc", "canonical": "esc", "label": "Esc" }
+  ],
+  "terminal": [
+    { "bytes": [27, 91, 65], "spec": "up" },
+    { "bytes": [27, 91, 66], "spec": "down" },
+    { "bytes": [27, 91, 90], "spec": "backtab" },
+    { "bytes": [27, 98], "spec": "alt+b" },
+    { "bytes": [13], "spec": "enter" },
+    { "bytes": [127], "spec": "backspace" },
+    { "bytes": [23], "spec": "ctrl+w" },
+    { "bytes": [27, 91, 53, 126], "spec": "pageup" },
+    { "bytes": [27, 91, 54, 126], "spec": "pagedown" },
+    { "bytes": [81], "spec": "Q" },
+    { "bytes": [124], "spec": "|" },
+    { "bytes": [27, 79, 80], "spec": "f1" },
+    { "bytes": [9], "spec": "tab" },
+    { "bytes": [0], "spec": "ctrl+space" },
+    { "bytes": [2], "spec": "ctrl+b" }
+  ],
+  "rejected": ["", "Ctrl+B", "CTRL+Alt+x", "F5", "Enter", "Space", "ctrl+", "ctrl+i", "ctrl+j", "ctrl+m", "ctrl+h", "ctrl+shift+x", "shift+1", "ctrl+1", "ctrl++", "meta+x", "f0", "f25", "f01", "enter+x", " ", "ctrl+ "],
+  "defaults": {
+    "prefix": "ctrl+b",
+    "resolve": [
+      { "scope": "prefix", "key": "n", "action": "new-task" },
+      { "scope": "prefix", "key": "|", "action": "split-right" },
+      { "scope": "prefix", "key": "v", "action": "split-right" },
+      { "scope": "prefix", "key": "Q", "action": "shutdown" },
+      { "scope": "prefix", "key": "q", "action": null },
+      { "scope": "prefix", "key": "ctrl+b", "action": "send-prefix" },
+      { "scope": "prefix", "key": "esc", "action": "cancel-prefix" },
+      { "scope": "window", "key": "tab", "action": "next-window" },
+      { "scope": "window", "key": "ctrl+w", "action": "close-window" },
+      { "scope": "window", "key": "q", "action": null },
+      { "scope": "view", "key": "enter", "action": "activate" },
+      { "scope": "view", "key": "esc", "action": "back" },
+      { "scope": "view", "key": "x", "action": null }
+    ]
+  },
+  "cases": [
+    {
+      "name": "a binding takes new keys and releases its old ones",
+      "prefix": "ctrl+b",
+      "overrides": { "prefix.split-right": ["w"] },
+      "resolve": [{ "scope": "prefix", "key": "w", "action": "split-right" }, { "scope": "prefix", "key": "|", "action": null }, { "scope": "prefix", "key": "v", "action": null }],
+      "problems": 0
+    },
+    {
+      "name": "two bindings swap keys at once",
+      "prefix": "ctrl+b",
+      "overrides": { "prefix.split-right": ["-"], "prefix.split-down": ["|"] },
+      "resolve": [{ "scope": "prefix", "key": "-", "action": "split-right" }, { "scope": "prefix", "key": "|", "action": "split-down" }],
+      "problems": 0
+    },
+    {
+      "name": "a collision keeps the defaults and is reported",
+      "prefix": "ctrl+b",
+      "overrides": { "prefix.detach": ["n"] },
+      "resolve": [{ "scope": "prefix", "key": "n", "action": "new-task" }, { "scope": "prefix", "key": "d", "action": "detach" }],
+      "problems": 1
+    },
+    {
+      "name": "an unknown binding is reported",
+      "prefix": "ctrl+b",
+      "overrides": { "prefix.teleport": ["t"] },
+      "resolve": [{ "scope": "prefix", "key": "t", "action": "toggle-input" }],
+      "problems": 1
+    },
+    {
+      "name": "a typing key in a direct scope is reported",
+      "prefix": "ctrl+b",
+      "overrides": { "view.back": ["q"] },
+      "resolve": [{ "scope": "view", "key": "q", "action": null }, { "scope": "view", "key": "esc", "action": "back" }],
+      "problems": 1
+    },
+    {
+      "name": "a new prefix replaces the old one",
+      "prefix": "ctrl+a",
+      "overrides": {},
+      "resolve": [{ "scope": "prefix", "key": "ctrl+a", "action": "send-prefix" }, { "scope": "prefix", "key": "ctrl+b", "action": null }, { "scope": "prefix", "key": "n", "action": "new-task" }],
+      "problems": 0
+    },
+    {
+      "name": "a prefix that shadows a direct key is reported and ignored",
+      "prefix": "ctrl+w",
+      "overrides": {},
+      "resolve": [{ "scope": "prefix", "key": "ctrl+b", "action": "send-prefix" }, { "scope": "window", "key": "ctrl+w", "action": "close-window" }],
+      "problems": 1
+    },
+    {
+      "name": "a prefix that only types is reported and ignored",
+      "prefix": "x",
+      "overrides": {},
+      "resolve": [{ "scope": "prefix", "key": "ctrl+b", "action": "send-prefix" }],
+      "problems": 1
+    }
+  ]
+}

@@ -17,6 +17,7 @@ members = [
     "🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust",
     "🧩️compositions/🎬️sequence/📦️packages/🦀️rust",
     "🧩️compositions/🏗️fem/📦️packages/🦀️rust",
+    "🧩️compositions/🏙️bim/📦️packages/🦀️rust",
     "🧩️compositions/🏛️architect/📦️packages/🦀️rust",
     "🧩️compositions/🏭️process/📦️packages/🦀️rust",
     "🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
@@ -83,6 +84,7 @@ semio-s-artifact-shooting-shooting = { path = "../✏️s/🔌️plugins/🎥️
 semio-s-artifact-demonstrator-playground = { path = "../✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust" }
 semio-s-artifact-sequence-sequence = { path = "../✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust" }
 semio-s-artifact-architect-program = { path = "../✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model = { path = "../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { path = "../✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust" }
 semio-s-artifact-lowpoly-lowpoly = { path = "../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust" }
 semio-s-artifact-reasoning-wires = { path = "../✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust" }

@@ -1,0 +1,13 @@
+{
+  "buildings": {
+    "bldg-1": {
+      "entry": "Patched",
+      "name": "Villa",
+      "origin": {
+        "x": 12.0,
+        "y": -4.0
+      },
+      "rotation": 0.5
+    }
+  }
+}

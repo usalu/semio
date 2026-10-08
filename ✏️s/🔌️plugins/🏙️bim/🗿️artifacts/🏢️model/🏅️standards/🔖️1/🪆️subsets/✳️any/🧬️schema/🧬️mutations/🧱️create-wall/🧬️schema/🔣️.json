@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-wall/schema.json",
+  "title": "CreateWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "wall"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createWall"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Wall id",
+          "de": "Wand-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "wall": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Wall",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

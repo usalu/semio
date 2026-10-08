@@ -1,0 +1,6 @@
+{
+  "mutation": "removeElementProperty",
+  "id": "o-1",
+  "pset": "Pset_WindowCommon",
+  "property": "ThermalTransmittance"
+}

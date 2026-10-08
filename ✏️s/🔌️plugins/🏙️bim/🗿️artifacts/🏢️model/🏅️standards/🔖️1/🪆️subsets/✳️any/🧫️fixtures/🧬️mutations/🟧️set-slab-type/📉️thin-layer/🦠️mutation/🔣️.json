@@ -1,0 +1,11 @@
+{
+  "mutation": "setSlabType",
+  "id": "sl-200",
+  "layers": [
+    {
+      "material": "m-brick",
+      "thickness": -0.1,
+      "function": "Structure"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "mutation": "rotateElements",
+  "ids": [
+    "st-ground"
+  ],
+  "pivot": {
+    "x": 0,
+    "y": 0
+  },
+  "angle": 1
+}

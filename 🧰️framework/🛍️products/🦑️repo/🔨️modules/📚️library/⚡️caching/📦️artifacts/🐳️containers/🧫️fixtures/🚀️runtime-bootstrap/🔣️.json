@@ -64,18 +64,18 @@
       "moby": false
     }
   },
-  "forwardedLaunchRows": [
-    "🛠️dev🗄️os-hub",
-    "🛠️dev🪐️space⚛️react",
-    "🛠️dev🪐️space👤️1⚛️react",
-    "🛠️dev🪐️space👤️2⚛️react",
-    "🛠️dev🪐️space🧊️wgpu🌐️wasm",
-    "🛠️dev🪐️space👤️1🧊️wgpu🌐️wasm",
-    "🛠️dev🪐️space👤️2🧊️wgpu🌐️wasm",
-    "🛠️dev📖️storybook"
+  "forwardedCommands": [
+    { "label": "os-hub", "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json", "target": "dev" },
+    { "label": "s React", "playground": "s", "surface": "react", "slot": 0 },
+    { "label": "s React user 1", "playground": "s", "surface": "react", "slot": 1 },
+    { "label": "s React user 2", "playground": "s", "surface": "react", "slot": 2 },
+    { "label": "s wgpu", "playground": "s", "surface": "wgpu", "slot": 0 },
+    { "label": "s wgpu user 1", "playground": "s", "surface": "wgpu", "slot": 1 },
+    { "label": "s wgpu user 2", "playground": "s", "surface": "wgpu", "slot": 2 },
+    { "label": "Storybook", "manifest": "📋️project.json", "target": "dev-storybook" },
+    { "label": "MCP Inspector", "manifest": "📋️project.json", "tool": "mcp-inspector-os" }
   ],
-  "forwardedToolPorts": [
-    6274,
-    6277
+  "forwardedUndeclaredPorts": [
+    { "label": "MCP Inspector Proxy", "port": 6277 }
   ]
 }

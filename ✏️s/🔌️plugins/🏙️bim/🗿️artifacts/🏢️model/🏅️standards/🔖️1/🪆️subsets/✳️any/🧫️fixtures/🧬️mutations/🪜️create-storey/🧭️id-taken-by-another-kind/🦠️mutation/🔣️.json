@@ -1,0 +1,10 @@
+{
+  "mutation": "createStorey",
+  "id": "site-1",
+  "storey": {
+    "building": "bldg-1",
+    "name": "Ground",
+    "level": 0,
+    "height": 3
+  }
+}

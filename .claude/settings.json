@@ -7,77 +7,9 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
-  // Agent hooks disabled while logging is off — re-enable by uncommenting entries below.
   "hooks": {},
-  // "hooks": {
-  //   "Notification": [
-  //     {
-  //       "hooks": [
-  //         {
-  //           "command": "target/release/semio hook Notification claude-code",
-  //           "type": "command"
-  //         }
-  //       ],
-  //       "matcher": ""
-  //     }
-  //   ],
-  //   "PermissionRequest": [
-  //     {
-  //       "hooks": [
-  //         {
-  //           "command": "target/release/semio hook PermissionRequest claude-code",
-  //           "type": "command"
-  //         }
-  //       ],
-  //       "matcher": ""
-  //     }
-  //   ],
-  //   "TaskCompleted": [
-  //     {
-  //       "hooks": [
-  //         {
-  //           "command": "target/release/semio hook TaskCompleted claude-code",
-  //           "type": "command"
-  //         }
-  //       ],
-  //       "matcher": ""
-  //     }
-  //   ],
-  //   "TeammateIdle": [
-  //     {
-  //       "hooks": [
-  //         {
-  //           "command": "target/release/semio hook TeammateIdle claude-code",
-  //           "type": "command"
-  //         }
-  //       ],
-  //       "matcher": ""
-  //     }
-  //   ]
-  // },
   "permissions": {
-    "allow": [
-      "Read(net/Compose.Grasshopper/Compose.Grasshopper.cs)",
-      "Edit(net/Compose.Grasshopper/Compose.Grasshopper.cs)",
-      "Read(net\\Compose.Grasshopper\\Compose.Grasshopper.cs)",
-      "Edit(net\\Compose.Grasshopper\\Compose.Grasshopper.cs)",
-      "Read(net/Compose/Compose.cs)",
-      "Edit(net/Compose/Compose.cs)",
-      "Read(net\\Compose\\Compose.cs)",
-      "Edit(net\\Compose\\Compose.cs)",
-      "Read(py/main.py)",
-      "Edit(py/main.py)",
-      "Read(py\\main.py)",
-      "Edit(py\\main.py)",
-      "Read(js/compose/compose.ts)",
-      "Edit(js/compose/compose.ts)",
-      "Read(js\\js\\compose.ts)",
-      "Edit(js\\js\\compose.ts)",
-      "Read(js/compose/components/**)",
-      "Edit(js/compose/components/**)",
-      "Read(js\\js\\components/**)",
-      "Edit(js\\js\\components/**)"
-    ],
+    "allow": [],
     "ask": [],
     "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Bash(git checkout)"]
   }

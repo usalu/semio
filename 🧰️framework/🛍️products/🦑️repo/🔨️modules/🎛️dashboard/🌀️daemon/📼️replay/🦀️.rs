@@ -11,6 +11,8 @@
 //! @see https://vt100.net/emu/dec_ansi_parser
 //! @see https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 
+use super::ipc::Ready;
+use super::ready::ReadyMatcher;
 use std::collections::{BTreeSet, VecDeque};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
@@ -21,12 +23,12 @@ pub const RING_BYTES: usize = 2 * 1024 * 1024;
 pub const SEGMENT_BYTES: u64 = 8 * 1024 * 1024;
 /// 📍 The least distance between two places a replay may start from.
 pub const MARK_SPACING: u64 = 64 * 1024;
+/// 🖼️ The most output a replay of a full-screen program starts before the present to reach the moment it took the screen.
+pub const SCREEN_REPLAY_BYTES: u64 = 8 * 1024 * 1024;
 const TITLE_BYTES: usize = 512;
 const SEQUENCE_BYTES: usize = 4096;
-const LINE_BYTES: usize = 1024;
 const DEFAULT_OFF_MODES: [u16; 16] = [1, 6, 47, 66, 1000, 1002, 1003, 1004, 1005, 1006, 1015, 1016, 1047, 1049, 2004, 2026];
 const DEFAULT_ON_MODES: [u16; 2] = [7, 25];
-const READY_HOSTS: [&str; 3] = ["127.0.0.1", "localhost", "0.0.0.0"];
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 enum Color {
@@ -166,7 +168,7 @@ enum State {
     TextEscape,
 }
 
-/// 📍 A place a replay may start from, and the bytes that restore what came before it.
+/// 📌️ A place a replay may start from, and the bytes that restore what came before it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Mark {
     pub offset: u64,
@@ -180,46 +182,44 @@ pub struct Tracker {
     modes: Modes,
     title: Option<String>,
     title_changed: bool,
-    needles: Vec<Vec<u8>>,
-    line: Vec<u8>,
-    undecided: Option<usize>,
-    ready: Option<String>,
+    matcher: Option<ReadyMatcher>,
     marks: Vec<Mark>,
     next_mark: u64,
+    at: u64,
+    escape_at: u64,
+    screen: Option<Mark>,
 }
 
 impl Tracker {
-    /// 🟢 `ready_port` names the port whose local address in the output means the task is ready.
-    pub fn new(ready_port: Option<u16>) -> Self {
-        let mut tracker = Self { state: State::Ground, sequence: Vec::new(), modes: Modes::default(), title: None, title_changed: false, needles: Vec::new(), line: Vec::new(), undecided: None, ready: None, marks: Vec::new(), next_mark: MARK_SPACING };
-        tracker.await_ready(ready_port);
-        tracker
+    /// 🟢 `ready` names the address whose appearance in the output means the task is ready.
+    pub fn new(ready: Option<&Ready>) -> Self {
+        Self { state: State::Ground, sequence: Vec::new(), modes: Modes::default(), title: None, title_changed: false, matcher: ready.map(ReadyMatcher::new), marks: Vec::new(), next_mark: MARK_SPACING, at: 0, escape_at: 0, screen: None }
     }
 
     /// 🔁 Starts looking for a ready address again, as a restarted task announces it again.
-    pub fn await_ready(&mut self, port: Option<u16>) {
-        self.needles = port.map_or_else(Vec::new, |port| READY_HOSTS.iter().map(|host| format!("http://{host}:{port}").into_bytes()).collect());
-        self.line.clear();
-        self.undecided = None;
-        self.ready = None;
+    pub fn await_ready(&mut self, ready: Option<&Ready>) {
+        self.matcher = ready.map(ReadyMatcher::new);
     }
 
     pub fn title(&self) -> Option<&str> { self.title.as_deref() }
 
     pub fn take_title_change(&mut self) -> bool { std::mem::take(&mut self.title_changed) }
 
-    /// 🟢 The `http://host:port` the output showed, once.
-    pub fn take_ready(&mut self) -> Option<String> { self.ready.take() }
+    /// 📡️ The address the output showed, once.
+    pub fn take_ready(&mut self) -> Option<String> { self.matcher.as_mut().and_then(ReadyMatcher::take) }
 
-    /// ⏳ Whether the output ends in the awaited address without the byte that would prove the port complete.
-    pub fn ready_undecided(&self) -> bool { self.undecided.is_some() }
+    /// ⏳ Whether the output ends in the awaited address without the byte that would prove it complete.
+    pub fn ready_undecided(&self) -> bool { self.matcher.as_ref().is_some_and(ReadyMatcher::undecided) }
 
     /// ✅ Accepts an address the output has ended in for long enough.
     pub fn settle_ready(&mut self) {
-        if let Some(index) = self.undecided.take() { self.found(index); }
+        if let Some(matcher) = self.matcher.as_mut() { matcher.settle(); }
     }
 
     pub fn alternate_screen(&self) -> bool { self.modes.alternate() }
+
+    /// 🪟️ Where the program that holds the alternate screen took it, and the modes before that.
+    pub fn screen_entry(&self) -> Option<&Mark> { self.screen.as_ref() }
 
     pub fn take_marks(&mut self) -> Vec<Mark> { std::mem::take(&mut self.marks) }
 
@@ -230,7 +230,7 @@ impl Tracker {
             if self.state == State::Ground {
                 let run = data[index..].iter().position(|byte| *byte < 0x20).unwrap_or(data.len() - index);
                 if run > 0 {
-                    if !self.needles.is_empty() { self.scan(&data[index..index + run]); }
+                    if let Some(matcher) = self.matcher.as_mut() { matcher.text(&data[index..index + run]); }
                     index += run;
                     let at = offset + index as u64;
                     if at >= self.next_mark + 4 * MARK_SPACING && data[index - 1] < 0x80 { self.mark(at); }
@@ -238,6 +238,7 @@ impl Tracker {
                 }
             }
             let byte = data[index];
+            self.at = offset + index as u64;
             index += 1;
             self.step(byte);
             if byte == b'\n' && self.state == State::Ground && offset + index as u64 >= self.next_mark { self.mark(offset + index as u64); }
@@ -252,11 +253,11 @@ impl Tracker {
     fn step(&mut self, byte: u8) {
         match self.state {
             State::Ground => match byte {
-                0x1b => self.enter(State::Escape),
+                0x1b => { self.escape_at = self.at; self.enter(State::Escape) }
                 0x0e => self.modes.shifted = true,
                 0x0f => self.modes.shifted = false,
-                b'\n' | b'\r' => self.end_line(),
-                _ => {}
+                0x08 | 0x07 => {}
+                _ => self.end_line(),
             },
             State::Escape => match byte {
                 b'[' => self.enter(State::Control),
@@ -319,7 +320,15 @@ impl Tracker {
         let numbers = || body.split(|byte| *byte == b';').map(|field| std::str::from_utf8(field).ok().and_then(|text| text.parse::<u16>().ok()).unwrap_or(0));
         match last {
             b'm' if !private && body.iter().all(|byte| byte.is_ascii_digit() || matches!(byte, b';' | b':')) => self.modes.rendition.apply(body),
-            b'h' | b'l' if private => for mode in numbers() { self.modes.private(mode, last == b'h'); },
+            b'h' | b'l' if private => for mode in numbers() {
+                let before = (!self.modes.alternate()).then(|| self.preamble());
+                self.modes.private(mode, last == b'h');
+                match (before, self.modes.alternate()) {
+                    (Some(preamble), true) => self.screen = Some(Mark { offset: self.escape_at, preamble }),
+                    (None, false) => self.screen = None,
+                    _ => {}
+                }
+            },
             b'h' | b'l' if body == b"4" => self.modes.insert = last == b'h',
             b'r' if !private && body.iter().all(|byte| byte.is_ascii_digit() || *byte == b';') => {
                 let mut bounds = numbers();
@@ -340,49 +349,13 @@ impl Tracker {
             let title = (!title.is_empty()).then_some(title);
             if title != self.title { self.title = title; self.title_changed = true; }
         } else if let Some(link) = sequence.strip_prefix(b"8;").and_then(|rest| rest.iter().position(|byte| *byte == b';').map(|at| &rest[at + 1..])) {
-            if !self.needles.is_empty() && !link.is_empty() {
-                let line = std::mem::take(&mut self.line);
-                self.scan(link);
-                self.end_line();
-                self.line = line;
-            }
+            if let Some(matcher) = self.matcher.as_mut().filter(|_| !link.is_empty()) { matcher.link(link); }
         }
         self.sequence = sequence;
     }
 
     fn end_line(&mut self) {
-        if let Some(index) = self.undecided.take() { self.found(index); }
-        self.line.clear();
-    }
-
-    fn found(&mut self, index: usize) {
-        self.ready = self.needles.get(index).map(|needle| String::from_utf8_lossy(needle).into_owned());
-        self.needles.clear();
-        self.line.clear();
-    }
-
-    fn scan(&mut self, text: &[u8]) {
-        if let Some(index) = self.undecided.take() {
-            if !text[0].is_ascii_digit() { return self.found(index); }
-        }
-        let longest = self.needles.iter().map(Vec::len).max().unwrap_or(0);
-        let searched = self.line.len().saturating_sub(longest);
-        self.line.extend_from_slice(text);
-        for index in 0..self.needles.len() {
-            let needle = &self.needles[index];
-            let mut from = searched;
-            while let Some(at) = self.line[from..].windows(needle.len()).position(|window| window == needle.as_slice()).map(|at| from + at) {
-                match self.line.get(at + needle.len()) {
-                    None => { self.undecided = Some(index); break; }
-                    Some(next) if !next.is_ascii_digit() => return self.found(index),
-                    Some(_) => from = at + 1,
-                }
-            }
-        }
-        if self.line.len() > LINE_BYTES {
-            let excess = self.line.len() - LINE_BYTES / 2;
-            self.line.drain(..excess);
-        }
+        if let Some(matcher) = self.matcher.as_mut() { matcher.end_line(); }
     }
 
     /// 🎬 The bytes that bring a fresh terminal to the modes the stream has established so far.
@@ -406,7 +379,7 @@ impl Tracker {
     /// ending whatever sequence the stream stopped in; a new process then starts on a clean line.
     pub fn reset_sequence(&mut self) -> Vec<u8> {
         let mut out = String::new();
-        if self.state != State::Ground { out.push_str("\x18"); }
+        if self.state != State::Ground { out.push('\x18'); }
         out.push_str("\x1b[0m");
         for mode in self.modes.set.iter().rev() { out.push_str(&format!("\x1b[?{mode}l")); }
         for mode in &self.modes.reset { out.push_str(&format!("\x1b[?{mode}h")); }
@@ -424,7 +397,7 @@ impl Tracker {
 /// 🏷️ The file name stem of a session's logs: its readable characters plus a hash that keeps it unique.
 pub fn log_stem(session_id: &str) -> String {
     let readable: String = session_id.chars().take(48).map(|character| if character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-') { character } else { '_' }).collect();
-    format!("{readable}-{:016x}", super::ipc::fnv1a64(session_id.as_bytes()))
+    format!("{readable}-{:016x}", super::ipc::stable_hash(session_id.as_bytes()))
 }
 
 fn segment_path(directory: &Path, stem: &str, segment: u64) -> PathBuf { directory.join(format!("{stem}.{segment}.log")) }
@@ -438,7 +411,7 @@ fn segments(directory: &Path, stem: &str) -> Vec<(u64, u64)> {
     let mut found: Vec<(u64, u64)> = entries.flatten().filter_map(|entry| {
         let name = entry.file_name();
         let segment = name.to_str()?.strip_prefix(&prefix)?.strip_suffix(".log")?.parse().ok()?;
-        Some((segment, entry.metadata().ok()?.len()))
+        Some((segment, std::fs::metadata(entry.path()).ok()?.len()))
     }).collect();
     found.sort_unstable();
     found
@@ -482,11 +455,11 @@ pub struct SessionLog {
 
 impl SessionLog {
     /// 🆕 The log of a session that starts now; what an earlier session of the same name left is removed.
-    pub fn create(directory: &Path, session_id: &str, ready_port: Option<u16>) -> Self {
+    pub fn create(directory: &Path, session_id: &str, ready: Option<&Ready>) -> Self {
         let stem = log_stem(session_id);
         for (segment, _) in segments(directory, &stem) { let _ = std::fs::remove_file(segment_path(directory, &stem, segment)); }
         let _ = std::fs::remove_file(marks_path(directory, &stem));
-        Self { directory: directory.to_path_buf(), stem, end: 0, ring: VecDeque::new(), ring_start: 0, hot: true, writer: None, unwritten: Vec::new(), reader: None, marks: VecDeque::new(), marks_loaded: true, tracker: Tracker::new(ready_port), known: true }
+        Self { directory: directory.to_path_buf(), stem, end: 0, ring: VecDeque::new(), ring_start: 0, hot: true, writer: None, unwritten: Vec::new(), reader: None, marks: VecDeque::new(), marks_loaded: true, tracker: Tracker::new(ready), known: true }
     }
 
     /// ♻️ The log an earlier daemon left for a session: files only, read when someone asks.
@@ -500,7 +473,7 @@ impl SessionLog {
 
     pub fn tracker(&mut self) -> &mut Tracker { &mut self.tracker }
 
-    /// 🧽 What to write between two runs of the same session so the second starts from terminal defaults.
+    /// 🧼️ What to write between two runs of the same session so the second starts from terminal defaults.
     pub fn separator(&mut self) -> Vec<u8> {
         if self.end == 0 { return Vec::new(); }
         if self.known { self.tracker.reset_sequence() } else { self.known = true; self.tracker = Tracker::new(None); b"\x18\x1bc".to_vec() }
@@ -522,6 +495,9 @@ impl SessionLog {
         self.end += data.len() as u64;
         if self.unwritten.len() >= 256 * 1024 { self.flush(); }
     }
+
+    /// 📝 Whether output was appended that the log files do not hold yet.
+    pub fn dirty(&self) -> bool { !self.unwritten.is_empty() }
 
     /// 💾 Hands what was appended since the last flush to the log files.
     pub fn flush(&mut self) {
@@ -574,7 +550,9 @@ impl SessionLog {
         on_disk.unwrap_or(if self.hot { self.ring_start } else { self.end }).min(if self.hot { self.ring_start } else { u64::MAX })
     }
 
-    /// 🎬 Where a replay starts and what precedes it; the third value states that older output is not replayed.
+    /// 🎞️ Where a replay starts and what precedes it; the third value states that older output is not replayed.
+    /// A program that holds the alternate screen is replayed from the moment it took the screen, so the
+    /// screen it drew is rebuilt from its own first frame.
     pub fn replay(&mut self) -> (u64, Vec<u8>, bool) {
         if !self.marks_loaded {
             self.marks_loaded = true;
@@ -583,10 +561,15 @@ impl SessionLog {
         }
         let oldest = self.oldest();
         let target = self.end.saturating_sub(RING_BYTES as u64).max(oldest);
-        if target == 0 { return (0, Vec::new(), false); }
-        match self.marks.iter().find(|mark| mark.offset >= target) {
-            Some(mark) => (mark.offset, mark.preamble.clone(), true),
-            None => (self.end, self.tracker.preamble(), true),
+        let base = if target == 0 { (0, Vec::new(), false) } else {
+            match self.marks.iter().find(|mark| mark.offset >= target) {
+                Some(mark) => (mark.offset, mark.preamble.clone(), true),
+                None => (self.end, self.tracker.preamble(), true),
+            }
+        };
+        match self.tracker.screen_entry().filter(|entry| entry.offset >= oldest && entry.offset < base.0 && self.end - entry.offset <= SCREEN_REPLAY_BYTES) {
+            Some(entry) => (entry.offset, entry.preamble.clone(), entry.offset > 0),
+            None => base,
         }
     }
 
@@ -636,7 +619,7 @@ fn hex(bytes: &[u8]) -> String {
 
 fn unhex(text: &str) -> Option<Vec<u8>> {
     if text == "-" { return Some(Vec::new()); }
-    if text.len() % 2 != 0 { return None; }
+    if !text.len().is_multiple_of(2) { return None; }
     (0..text.len() / 2).map(|index| u8::from_str_radix(text.get(index * 2..index * 2 + 2)?, 16).ok()).collect()
 }
 
@@ -654,7 +637,7 @@ impl LogReader {
         Self { directory: directory.to_path_buf(), stem, offset }
     }
 
-    /// 📖 Appends what the files hold beyond what was read so far and answers how much that was.
+    /// 🪜️ Appends what the files hold beyond what was read so far and answers how much that was.
     pub fn read(&mut self, out: &mut Vec<u8>) -> std::io::Result<usize> {
         let mut total = 0;
         loop {
@@ -667,7 +650,7 @@ impl LogReader {
             let count = file.take(SEGMENT_BYTES - self.offset % SEGMENT_BYTES).read_to_end(out)?;
             self.offset += count as u64;
             total += count;
-            if count == 0 || self.offset % SEGMENT_BYTES != 0 { return Ok(total); }
+            if count == 0 || !self.offset.is_multiple_of(SEGMENT_BYTES) { return Ok(total); }
         }
     }
 }

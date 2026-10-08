@@ -1,0 +1,32 @@
+{
+  "clash.column-column|c-1+c-2": {
+    "measure": 0.06
+  },
+  "clash.wall-column|c-1+w-into-column": {
+    "measure": 0.03
+  },
+  "clash.wall-column|c-2+w-into-column": {
+    "measure": 0.0075
+  },
+  "degenerate.axis-length|w-zero": {
+    "measure": 0.0
+  },
+  "opening.outside-host|o-outside": {
+    "measure": 0.0
+  },
+  "reference.opening-host|o-orphan": {
+    "measure": 0.0
+  },
+  "reference.wall-type|w-missing-type": {
+    "measure": 0.0
+  },
+  "space.duplicate-number|sp-living+sp-twin": {
+    "measure": 0.0
+  },
+  "storey.level-duplicate|st-dup+st-first": {
+    "measure": 0.0
+  },
+  "storey.level-gap|st-dup+st-far": {
+    "measure": 3.0
+  }
+}

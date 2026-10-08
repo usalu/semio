@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "owner": "🌎️hub/🧩️compositions/🏙️bim",
+  "originalLaw": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🦀️.rs",
+  "law": "🧪️tests/🛂️committed-descriptor/🦀️.rs",
+  "fixture": "🧫️fixtures/🛂️committed-descriptor/🔣️.json",
+  "descriptorPath": "🌎️hub/🧩️compositions/🏙️bim/🛂️.descriptor.semio",
+  "componentDirectory": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/dist",
+  "componentName": "semio_hub_bim.wasm",
+  "profiles": [
+    "component-dev",
+    "component-release"
+  ],
+  "pluginId": "bim",
+  "load": "hot_reload_plugin",
+  "manifest": "plugin_graph().manifest",
+  "missingComponent": "return-without-runtime-proof"
+}

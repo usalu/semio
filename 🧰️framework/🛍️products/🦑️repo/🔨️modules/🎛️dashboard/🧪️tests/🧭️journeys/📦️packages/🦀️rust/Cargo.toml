@@ -1,0 +1,21 @@
+[package]
+name = "semio-dashboard-journeys"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "pseudo-terminal journeys of the semio dashboard: the real binary, a third-party terminal driver and a third-party screen model"
+
+[workspace]
+
+[[test]]
+name = "journeys"
+path = "../../🦀️.rs"
+
+[[test]]
+name = "load"
+path = "../../🏋️load/🦀️.rs"
+
+[dev-dependencies]
+portable-pty = "0.9"
+vt100 = "0.16"
+serde_json = "1"

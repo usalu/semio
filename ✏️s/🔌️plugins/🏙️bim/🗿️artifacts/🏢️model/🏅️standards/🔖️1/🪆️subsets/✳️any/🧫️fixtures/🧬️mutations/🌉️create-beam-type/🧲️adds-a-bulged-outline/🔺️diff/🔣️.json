@@ -1,0 +1,43 @@
+{
+  "beam_types": {
+    "new-2": {
+      "entry": "Created",
+      "material": "m-steel",
+      "name": "Beam",
+      "profile": {
+        "Custom": {
+          "outline": [
+            {
+              "bulge": 1.0,
+              "point": {
+                "x": -0.2,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.2,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.2,
+                "y": 0.3
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": -0.2,
+                "y": 0.3
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

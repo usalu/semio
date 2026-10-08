@@ -1,0 +1,374 @@
+{
+  "schema": "s.bim.model@1",
+  "project": {
+    "name": "Opening Frames Placed",
+    "description": "",
+    "author": "",
+    "organization": "",
+    "phase_names": []
+  },
+  "materials": {
+    "m-brick": {
+      "name": "Brick",
+      "category": "Masonry",
+      "color": {
+        "r": 0.7,
+        "g": 0.35,
+        "b": 0.25
+      },
+      "density": 1800.0,
+      "conductivity": 0.8,
+      "specific_heat": 900.0
+    },
+    "m-frame": {
+      "name": "Oak",
+      "category": "Wood",
+      "color": {
+        "r": 0.6,
+        "g": 0.45,
+        "b": 0.25
+      },
+      "density": 700.0,
+      "conductivity": 0.15,
+      "specific_heat": 1600.0
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "name": "Brick 300",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.2,
+          "function": "Structure"
+        },
+        {
+          "material": "m-brick",
+          "thickness": 0.1,
+          "function": "Finish"
+        }
+      ]
+    },
+    "wt-150": {
+      "name": "Brick 150",
+      "layers": [
+        {
+          "material": "m-brick",
+          "thickness": 0.15,
+          "function": "Structure"
+        }
+      ]
+    }
+  },
+  "window_types": {
+    "wnd-120": {
+      "name": "Window 120",
+      "width": 1.2,
+      "height": 1.4,
+      "sill": 0.9,
+      "frame_width": 0.06,
+      "frame_depth": 0.07,
+      "panes": 2,
+      "material": "m-frame"
+    }
+  },
+  "door_types": {
+    "dr-single": {
+      "name": "Door 90",
+      "width": 0.9,
+      "height": 2.1,
+      "frame_width": 0.05,
+      "frame_depth": 0.07,
+      "leaves": "Single",
+      "swing": "Left",
+      "material": "m-frame"
+    },
+    "dr-double": {
+      "name": "Door 180",
+      "width": 1.8,
+      "height": 2.2,
+      "frame_width": 0.05,
+      "frame_depth": 0.07,
+      "leaves": "Double",
+      "swing": "Right",
+      "material": "m-frame"
+    }
+  },
+  "sites": {
+    "site-1": {
+      "name": "Plot",
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "elevation": 100.0,
+      "true_north": 0.0,
+      "boundary": []
+    }
+  },
+  "buildings": {
+    "bldg-1": {
+      "site": "site-1",
+      "name": "House",
+      "origin": {
+        "x": 10.0,
+        "y": 5.0
+      },
+      "rotation": 0.5,
+      "elevation": 2.5
+    }
+  },
+  "storeys": {
+    "st-ground": {
+      "building": "bldg-1",
+      "name": "Ground",
+      "level": 0,
+      "height": 3.0
+    },
+    "st-first": {
+      "building": "bldg-1",
+      "name": "First",
+      "level": 1,
+      "height": 2.8
+    }
+  },
+  "walls": {
+    "w-south": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "South"
+    },
+    "w-east": {
+      "storey": "st-ground",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 8.0,
+            "y": 0.0
+          },
+          "end": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        }
+      },
+      "location": "Exterior",
+      "base_offset": 0.1,
+      "top": {
+        "Unconnected": {
+          "height": 2.4
+        }
+      },
+      "phase": "New",
+      "name": "East"
+    },
+    "w-arc": {
+      "storey": "st-ground",
+      "wall_type": "wt-300",
+      "axis": {
+        "Arc": {
+          "start": {
+            "x": 8.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "bulge": 0.5
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": -0.2
+        }
+      },
+      "phase": "New",
+      "name": "Arc"
+    },
+    "w-first": {
+      "storey": "st-first",
+      "wall_type": "wt-150",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 6.0
+          },
+          "end": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "location": "Center",
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "phase": "New",
+      "name": "First"
+    }
+  },
+  "curtain_walls": {
+    "cw-1": {
+      "storey": "st-ground",
+      "axis": {
+        "Line": {
+          "start": {
+            "x": 0.0,
+            "y": 10.0
+          },
+          "end": {
+            "x": 6.0,
+            "y": 10.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "u_spacing": 1.5,
+      "v_spacing": 1.0,
+      "mullion": {
+        "Rectangle": {
+          "width": 0.05,
+          "depth": 0.12
+        }
+      },
+      "panel_material": "m-frame",
+      "mullion_material": "m-frame",
+      "name": "Glass Front"
+    }
+  },
+  "openings": {
+    "o-door-east": {
+      "host": "w-east",
+      "kind": {
+        "Door": {
+          "door_type": "dr-double"
+        }
+      },
+      "offset": 3.0,
+      "flip_hand": true,
+      "flip_facing": false,
+      "name": "East Double Door"
+    },
+    "o-door-south": {
+      "host": "w-south",
+      "kind": {
+        "Door": {
+          "door_type": "dr-single"
+        }
+      },
+      "offset": 7.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "South Door"
+    },
+    "o-door-arc": {
+      "host": "w-arc",
+      "kind": {
+        "Door": {
+          "door_type": "dr-single"
+        }
+      },
+      "offset": 7.5,
+      "flip_hand": true,
+      "flip_facing": true,
+      "name": "Arc Door"
+    },
+    "o-void-curtain": {
+      "host": "cw-1",
+      "kind": {
+        "Void": {
+          "width": 2.0,
+          "height": 2.0
+        }
+      },
+      "offset": 3.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Curtain Void"
+    },
+    "o-void-first": {
+      "host": "w-first",
+      "kind": {
+        "Void": {
+          "width": 1.0,
+          "height": 1.0
+        }
+      },
+      "offset": 3.0,
+      "sill_override": 0.5,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "First Void"
+    },
+    "o-win-arc": {
+      "host": "w-arc",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 4.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "Arc Window"
+    },
+    "o-win-south": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 2.0,
+      "flip_hand": false,
+      "flip_facing": false,
+      "name": "South Window"
+    },
+    "o-win-south-wide": {
+      "host": "w-south",
+      "kind": {
+        "Window": {
+          "window_type": "wnd-120"
+        }
+      },
+      "offset": 5.5,
+      "sill_override": 1.1,
+      "width": 2.0,
+      "height": 1.0,
+      "flip_hand": false,
+      "flip_facing": true,
+      "name": "South Wide Window"
+    }
+  }
+}

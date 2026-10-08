@@ -1,0 +1,67 @@
+{
+  "tools": [
+    {
+      "id": "serve-supervised",
+      "verb": "dev",
+      "command": [
+        "bash",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔁️serve-supervisor.sh"
+      ],
+      "cwd": "",
+      "continuous": true,
+      "parameters": [
+        {
+          "id": "variant",
+          "kind": "choice",
+          "default": "puzzle5d",
+          "values": [
+            {
+              "id": "puzzle5d",
+              "args": [
+                "puzzle5d",
+                "6014"
+              ]
+            },
+            {
+              "id": "puzzle3d",
+              "args": [
+                "puzzle3d",
+                "6013"
+              ]
+            },
+            {
+              "id": "puzzle2d",
+              "args": [
+                "puzzle2d",
+                "6012"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "puzzle5d-battery",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔍️browser-probe-5d.ts",
+        "--battery",
+        "--reload-between-groups",
+        "--port=6014"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "puzzle5d-battery-explore",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/PUZZLE-2D-5D-FEATURE-PARITY-WITH-3D/🔍️browser-probe-5d.ts",
+        "--explore",
+        "--port=6014"
+      ],
+      "cwd": ""
+    }
+  ]
+}

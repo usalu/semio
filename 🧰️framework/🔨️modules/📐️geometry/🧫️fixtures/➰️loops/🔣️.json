@@ -1,0 +1,653 @@
+{
+ "loops": [
+  {
+   "name": "unit square ccw",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     1,
+     0,
+     0.0
+    ],
+    [
+     1,
+     1,
+     0.0
+    ],
+    [
+     0,
+     1,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": 1,
+    "area": 1,
+    "perimeter": 4,
+    "centroid": [
+     0.5,
+     0.5
+    ],
+    "bounds": [
+     0,
+     0,
+     1,
+     1
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      0.5,
+      0.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1.5,
+      0.5
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      1,
+      0.5
+     ],
+     "at": "boundary"
+    }
+   ]
+  },
+  {
+   "name": "unit square cw",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     0,
+     1,
+     0.0
+    ],
+    [
+     1,
+     1,
+     0.0
+    ],
+    [
+     1,
+     0,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": -1,
+    "area": 1,
+    "perimeter": 4,
+    "centroid": [
+     0.5,
+     0.5
+    ],
+    "bounds": [
+     0,
+     0,
+     1,
+     1
+    ],
+    "ccw": false
+   },
+   "contains": [
+    {
+     "point": [
+      0.5,
+      0.5
+     ],
+     "at": "inside"
+    }
+   ]
+  },
+  {
+   "name": "rectangle with semicircular top",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": 3.5707963267948966,
+    "area": 3.5707963267948966,
+    "perimeter": 7.141592653589793,
+    "centroid": [
+     1,
+     0.9066501410814071
+    ],
+    "bounds": [
+     0,
+     0,
+     2,
+     2
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      1,
+      1.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1,
+      2.5
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      1.9,
+      1.9
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      0.5,
+      1.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1,
+      2
+     ],
+     "at": "boundary"
+    }
+   ]
+  },
+  {
+   "name": "circle from two semicircles",
+   "vertices": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     -1,
+     0,
+     1
+    ]
+   ],
+   "expected": {
+    "signed_area": 3.141592653589793,
+    "area": 3.141592653589793,
+    "perimeter": 6.283185307179586,
+    "centroid": [
+     0,
+     0
+    ],
+    "bounds": [
+     -1,
+     -1,
+     1,
+     1
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      0,
+      0
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      0.99,
+      0
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1.01,
+      0
+     ],
+     "at": "outside"
+    }
+   ]
+  },
+  {
+   "name": "square with semicircular notch",
+   "vertices": [
+    [
+     0,
+     0,
+     -1
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     2,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": 2.4292036732051034,
+    "area": 2.4292036732051034,
+    "perimeter": 9.141592653589793,
+    "centroid": [
+     1,
+     1.3721917886511825
+    ],
+    "bounds": [
+     0,
+     0,
+     2,
+     2
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      1,
+      0.5
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      1,
+      1.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1,
+      1
+     ],
+     "at": "boundary"
+    },
+    {
+     "point": [
+      1,
+      1.2
+     ],
+     "at": "inside"
+    }
+   ]
+  },
+  {
+   "name": "270 degree pie",
+   "vertices": [
+    [
+     1,
+     0,
+     2.414213562373095
+    ],
+    [
+     0,
+     -1,
+     0.0
+    ],
+    [
+     0,
+     0,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": 2.356194490192345,
+    "area": 2.356194490192345,
+    "perimeter": 6.71238898038469,
+    "centroid": [
+     -0.1414710605261292,
+     0.1414710605261292
+    ],
+    "bounds": [
+     -1,
+     -1,
+     1,
+     1
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      -0.5,
+      0.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      0.3,
+      -0.3
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      0.5,
+      -0.5
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      0.5,
+      0.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      -0.9,
+      -0.9
+     ],
+     "at": "outside"
+    }
+   ]
+  },
+  {
+   "name": "L shape",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     1,
+     0.0
+    ],
+    [
+     1,
+     1,
+     0.0
+    ],
+    [
+     1,
+     2,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ]
+   ],
+   "expected": {
+    "signed_area": 3,
+    "area": 3,
+    "perimeter": 8,
+    "centroid": [
+     0.8333333333333334,
+     0.8333333333333334
+    ],
+    "bounds": [
+     0,
+     0,
+     2,
+     2
+    ],
+    "ccw": true
+   },
+   "contains": [
+    {
+     "point": [
+      1.5,
+      0.5
+     ],
+     "at": "inside"
+    },
+    {
+     "point": [
+      1.5,
+      1.5
+     ],
+     "at": "outside"
+    },
+    {
+     "point": [
+      0.5,
+      1.5
+     ],
+     "at": "inside"
+    }
+   ]
+  }
+ ],
+ "offsets": [
+  {
+   "name": "square grows",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     2,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ]
+   ],
+   "distance": 0.5,
+   "miter_limit": 4,
+   "expected_area": 9,
+   "expected_perimeter": 12
+  },
+  {
+   "name": "square shrinks",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     2,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ]
+   ],
+   "distance": -0.5,
+   "miter_limit": 4,
+   "expected_area": 1,
+   "expected_perimeter": 4
+  },
+  {
+   "name": "clockwise square grows too",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ],
+    [
+     2,
+     2,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ]
+   ],
+   "distance": 0.5,
+   "miter_limit": 4,
+   "expected_area": 9,
+   "expected_perimeter": 12
+  },
+  {
+   "name": "circle grows",
+   "vertices": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     -1,
+     0,
+     1
+    ]
+   ],
+   "distance": 0.5,
+   "miter_limit": 4,
+   "expected_area": 7.0685834705770345,
+   "expected_perimeter": 9.42477796076938
+  },
+  {
+   "name": "circle shrinks",
+   "vertices": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     -1,
+     0,
+     1
+    ]
+   ],
+   "distance": -0.5,
+   "miter_limit": 4,
+   "expected_area": 0.7853981633974483,
+   "expected_perimeter": 3.141592653589793
+  },
+  {
+   "name": "circle collapses",
+   "vertices": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     -1,
+     0,
+     1
+    ]
+   ],
+   "distance": -1,
+   "miter_limit": 4,
+   "expected_area": null,
+   "expected_perimeter": null
+  },
+  {
+   "name": "L shape grows with miters",
+   "vertices": [
+    [
+     0,
+     0,
+     0.0
+    ],
+    [
+     2,
+     0,
+     0.0
+    ],
+    [
+     2,
+     1,
+     0.0
+    ],
+    [
+     1,
+     1,
+     0.0
+    ],
+    [
+     1,
+     2,
+     0.0
+    ],
+    [
+     0,
+     2,
+     0.0
+    ]
+   ],
+   "distance": 0.25,
+   "miter_limit": 4,
+   "expected_area": 5.25,
+   "expected_perimeter": 10.0
+  }
+ ]
+}

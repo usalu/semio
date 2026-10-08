@@ -17,9 +17,6 @@
     "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
     "test:browser-worker": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser-worker",
     "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
-    "serve": "bun nx run @semio-tech/framework-renderer-wgpu:serve",
-    "dev": "bun nx run @semio-tech/framework-renderer-wgpu:dev",
-    "native": "bun nx run @semio-tech/framework-renderer-wgpu:native",
     "browser:embedded:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
     "generate:renderer-boot": "bun nx run @semio-tech/framework-renderer-wgpu:generate-renderer-boot",
     "test:worker-cell": "bun nx run @semio-tech/framework-renderer-wgpu:test-worker-cell"

@@ -1,0 +1,19 @@
+{
+  "wall_types": {
+    "wt-300": {
+      "entry": "Patched",
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.24
+        },
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.12
+        }
+      ]
+    }
+  }
+}

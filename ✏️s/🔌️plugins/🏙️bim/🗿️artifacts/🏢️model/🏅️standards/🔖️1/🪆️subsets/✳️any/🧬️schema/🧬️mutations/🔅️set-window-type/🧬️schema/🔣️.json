@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-window-type/schema.json",
+  "title": "SetWindowType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWindowType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Window type",
+          "de": "Fenstertyp"
+        },
+        "ref": {
+          "kind": "window-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "width": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Width (m)",
+          "de": "Breite (m)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "height": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Height (m)",
+          "de": "Höhe (m)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "sill": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Sill height (m)",
+          "de": "Brüstungshöhe (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "frame_width": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Frame width (m)",
+          "de": "Rahmenbreite (m)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "frame_depth": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Frame depth (m)",
+          "de": "Rahmentiefe (m)"
+        },
+        "group": "value",
+        "order": 70
+      }
+    },
+    "panes": {
+      "type": "integer",
+      "x-semio-ui": {
+        "widget": "integer",
+        "role": "value",
+        "label": {
+          "en": "Panes",
+          "de": "Scheiben"
+        },
+        "group": "value",
+        "order": 80
+      }
+    },
+    "material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "group": "value",
+        "order": 90,
+        "ref": {
+          "kind": "material"
+        }
+      }
+    }
+  }
+}

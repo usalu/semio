@@ -1,0 +1,26 @@
+{
+  "curtain_walls": {
+    "cw-1": {
+      "axis": {
+        "Arc": {
+          "bulge": 0.3,
+          "end": {
+            "x": 8.0,
+            "y": 8.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 8.0
+          }
+        }
+      },
+      "entry": "Patched",
+      "top": {
+        "Storey": {
+          "offset": 0.2,
+          "storey": "st-first"
+        }
+      }
+    }
+  }
+}

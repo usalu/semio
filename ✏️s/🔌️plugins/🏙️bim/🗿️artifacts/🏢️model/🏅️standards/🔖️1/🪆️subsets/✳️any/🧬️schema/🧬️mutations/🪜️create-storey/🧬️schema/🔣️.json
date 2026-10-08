@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-storey/schema.json",
+  "title": "CreateStorey",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "storey"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createStorey"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Storey id",
+          "de": "Geschoss-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "storey": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Storey",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

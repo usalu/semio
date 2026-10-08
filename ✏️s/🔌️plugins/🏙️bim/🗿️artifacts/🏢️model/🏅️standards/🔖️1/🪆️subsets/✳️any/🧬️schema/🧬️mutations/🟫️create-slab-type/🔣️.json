@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️create-slab-type",
+  "semanticKind": "create-slab-type",
+  "displayName": "Create Slab type",
+  "emoji": "🟫️",
+  "aggregateVariant": "CreateSlabType",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 106,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

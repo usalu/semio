@@ -19,6 +19,7 @@ import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts"
 import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { requestLocalBrokerSession } from "../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
 import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
+import { agentClientLauncher, readDeclaredTools } from "../../../../🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts";
 import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🧬️schema/🟦️.ts";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
@@ -997,7 +998,7 @@ export function semioBlobVitePlugin() {
  * would otherwise be delivered into the dev server's event loop.
  *
  * `🤖️generated` and `.vscode` stay listed for the reason Vite's own `server.watch.ignored` once carried:
- * those files are config dependencies, so reacting to a registry or launch-config rewrite restarts the
+ * those files are config dependencies, so reacting to a registry or editor-settings rewrite restarts the
  * server in a loop.
  * @see https://github.com/paulmillr/chokidar/blob/3.6.0/lib/fsevents-handler.js */
 export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
@@ -1402,13 +1403,13 @@ function agentCredentialFileIsWellFormed(contents: string): boolean {
 /** 🔌️ Turns an agent delegation into a working MCP client on a development host: the delegation
  * pane posts the one-time credential here, this server writes it owner-only (`0600` in a `0700`
  * directory) under the delegation's own file name, and answers with its absolute path and the launcher
- * that starts `semio-os-mcp` from this checkout (`bun <repo>/📜️script.ts dev mcp stdio os`, which
+ * that starts `semio-os-mcp` from this checkout (the `semio` server declared in the root `📋️project.json`, `bun <repo>/📜️script.ts dev mcp stdio os`, which
  * stages the binary itself). `DELETE <endpoint>/<delegationId>` removes it once the delegation is
  * withdrawn. Only same-origin requests are served, so no other site can plant or remove a credential.
  * Contract: `📇️directory/🧬️schema` `AgentCredentialInstallRequestV1` / `AgentCredentialInstallReceiptV1`. */
 export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRoot: string; readonly credentialsRoot?: string }) {
   const root = options.credentialsRoot ?? agentCredentialsDir();
-  const launcher = { command: process.execPath, args: [join(options.repoRoot, "📜️script.ts"), "dev", "mcp", "stdio", "os"] };
+  const launcherOf = (): { readonly command: string; readonly args: readonly string[] } => agentClientLauncher(readDeclaredTools(options.repoRoot), options.repoRoot, "semio", process.execPath);
   return {
     name: "semio-agent-credential-install",
     apply: "serve" as const,
@@ -1452,6 +1453,7 @@ export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRo
             if (Object.keys(request).sort().join(",") !== "contents,delegationId,schema" || request.schema !== AGENT_CREDENTIAL_INSTALL_SCHEMA_V1 || typeof request.delegationId !== "string" || typeof request.contents !== "string" || !agentCredentialFileIsWellFormed(request.contents)) {
               return answer(400, { error: "not an AgentCredentialInstallRequestV1" });
             }
+            const launcher = launcherOf();
             const file = join(root, agentCredentialInstallFileNameV1(request.delegationId));
             mkdirSync(root, { recursive: true, mode: 0o700 });
             protectOwnerOnly(root, "directory");

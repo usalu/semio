@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-window-type/schema.json",
+  "title": "CreateWindowType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "window_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createWindowType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Window type id",
+          "de": "Fenstertyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "window_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WindowType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Window type",
+          "de": "Fenstertyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

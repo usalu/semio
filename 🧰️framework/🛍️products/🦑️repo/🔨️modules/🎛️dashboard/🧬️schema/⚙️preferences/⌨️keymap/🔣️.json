@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dashboard Keymap",
+  "description": "The prefix key and the bindings of every dashboard action, as data. A binding belongs to one scope: `prefix` (after the prefix key), `window` (direct, while no terminal owns the keyboard) or `view` (direct, inside the launcher, task list, settings and help). Direct scopes bind no plain printable key, so typing a search never triggers an action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["prefix", "bindings"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "prefix": { "$ref": "#/definitions/Key" },
+    "bindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scope", "action", "keys"],
+        "properties": {
+          "scope": { "enum": ["prefix", "window", "view"] },
+          "action": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "keys": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/Key" } }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Key": {
+      "type": "string",
+      "description": "Zero or more `ctrl+`, `alt+`, `shift+` modifiers, then one printable character or a lowercase key name (enter, esc, tab, backtab, backspace, delete, insert, up, down, left, right, home, end, pageup, pagedown, space, f1 to f24).",
+      "pattern": "^((ctrl|alt|shift)\\+)*(\\S|[a-z]+[0-9]*)$"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+use super::*;
+use protocol::os_spr::protocol_laws::assert_diff_algebra_between_law;
+use protocol::{OpBinary, OpText};
+use store::{ArtifactDsl, ArtifactPack};
+
+fn pinned() -> BimWorldWindowConfig {
+    BimWorldWindowConfig {
+        camera: store::Viewport3dOrbit { position: [9.0, -9.0, 6.0], target: [4.0, 3.0, 1.0], zoom: 1.5, up: None },
+        isolated_storey: "st-first".into(),
+        hidden_storeys: vec!["st-ground".into()],
+        section_enabled: true,
+        section_axis: "x".into(),
+        section_offset: 2.5,
+        framed: true,
+        ..BimWorldWindowConfig::default()
+    }
+}
+
+fn snapshot(config: BimWorldWindowConfig) -> BimWorldWindowConfigMutation {
+    BimWorldWindowConfigMutation::Snapshot { config }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_default_shows_every_storey_without_a_section() {
+    let config = BimWorldWindowConfig::default();
+    assert!(config.isolated_storey.is_empty() && config.hidden_storeys.is_empty() && !config.section_enabled && !config.framed);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_inverse_sums_to_the_negative_diff_and_between_is_the_state_delta() {
+    crate::render::window_config::assert_window_config_laws(&BimWorldWindowConfig::default(), &snapshot(pinned())).await;
+    assert_diff_algebra_between_law::<BimWorldWindowConfig, BimWorldWindowConfig>(&pinned(), &BimWorldWindowConfig::default()).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_config_round_trips_through_text_pack_and_the_op_codecs() {
+    let config = pinned();
+    assert_eq!(BimWorldWindowConfig::parse_dsl(&config.print_dsl()).expect("text"), config);
+    assert_eq!(BimWorldWindowConfig::decode_pack(&config.encode_pack()).expect("pack"), config);
+    let mutation = snapshot(config);
+    assert_eq!(BimWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("op text"), mutation);
+    assert_eq!(BimWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("encode")).expect("op binary"), mutation);
+}

@@ -1,0 +1,98 @@
+{
+  "width": 160.75,
+  "height": 582.0,
+  "storeys": {
+    "st-roof": {
+      "name": "Roof",
+      "level": 2,
+      "regions": 0,
+      "lines": 10,
+      "texts": 6,
+      "styles": {
+        "cut": 0,
+        "projection": 1,
+        "hidden": 0,
+        "annotation": 9
+      },
+      "arcs": 12,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 30.4,
+        "hidden": 0.0,
+        "annotation": 30.0
+      }
+    },
+    "st-first": {
+      "name": "First",
+      "level": 1,
+      "regions": 7,
+      "lines": 41,
+      "texts": 7,
+      "styles": {
+        "cut": 14,
+        "projection": 13,
+        "hidden": 9,
+        "annotation": 12
+      },
+      "arcs": 14,
+      "pocheArea": 1.8849999999999996,
+      "lineLength": {
+        "cut": 24.412609238233735,
+        "projection": 52.2,
+        "hidden": 9.0,
+        "annotation": 53.71851648071345
+      }
+    },
+    "st-ground": {
+      "name": "Ground",
+      "level": 0,
+      "regions": 13,
+      "lines": 57,
+      "texts": 7,
+      "styles": {
+        "cut": 19,
+        "projection": 26,
+        "hidden": 12,
+        "annotation": 13
+      },
+      "arcs": 23,
+      "pocheArea": 7.82998952,
+      "lineLength": {
+        "cut": 17.312609238233737,
+        "projection": 70.50001592072772,
+        "hidden": 22.8,
+        "annotation": 67.95851648071344
+      }
+    },
+    "st-base": {
+      "name": "Basement",
+      "level": -1,
+      "regions": 0,
+      "lines": 9,
+      "texts": 6,
+      "styles": {
+        "cut": 0,
+        "projection": 0,
+        "hidden": 0,
+        "annotation": 9
+      },
+      "arcs": 12,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 0.0,
+        "hidden": 0.0,
+        "annotation": 30.0
+      }
+    }
+  },
+  "audit": {
+    "sampledPocheArea": {
+      "st-roof": 0.0,
+      "st-first": 1.885,
+      "st-ground": 8.437667707,
+      "st-base": 0.0
+    }
+  }
+}

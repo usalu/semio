@@ -1,0 +1,42 @@
+{
+  "mutation": "createBeamType",
+  "id": "new-1",
+  "beam_type": {
+    "name": "Beam",
+    "profile": {
+      "Custom": {
+        "outline": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.4,
+              "y": 0.4
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0.4,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 0.4
+            },
+            "bulge": 0
+          }
+        ]
+      }
+    },
+    "material": "m-steel"
+  }
+}

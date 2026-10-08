@@ -1,0 +1,1 @@
+[["        for depth in keep..groups.len() {\n            let parent = open.last().copied();\n            nodes.push(Node { key: key_of(depth), label: groups[depth].1.clone(),", "        for (depth, (_, label)) in groups.iter().enumerate().skip(keep) {\n            let parent = open.last().copied();\n            nodes.push(Node { key: key_of(depth), label: label.clone(),"]]

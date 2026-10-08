@@ -1,0 +1,4 @@
+type BimWindowTransient {
+  engagementInput: String!
+  pointerGeneration: Long!
+}

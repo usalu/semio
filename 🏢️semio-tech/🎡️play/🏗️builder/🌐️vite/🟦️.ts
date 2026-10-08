@@ -66,7 +66,7 @@ export default defineConfig(({ command }) => {
       port: Number(process.env.SEMIO_TECH_PLAY_PORT ?? 6033),
       strictPort: true,
       fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, ...extensionModuleDirNames.map(extensionDir)] },
-      watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"] },
+      watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**"] },
     },
     plugins: [
       semioServeCloseVitePlugin(),

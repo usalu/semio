@@ -1,0 +1,30 @@
+syntax = "proto3";
+package semio.app.bim.model.world_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🛰️.proto";
+message BimWorldProjection {
+  string kind = 1;
+  string orthographic_view = 2;
+  string axonometric_variant = 3;
+  double axonometric_angle_a = 4;
+  double axonometric_angle_b = 5;
+  string axonometric_quadrant = 6;
+  string oblique_variant = 7;
+  double oblique_angle = 8;
+  double oblique_depth = 9;
+  string one_point_axis = 10;
+  double fov = 11;
+  double two_point_shift = 12;
+  double curvilinear_fov = 13;
+  double curvilinear_strength = 14;
+  string curvilinear_mapping = 15;
+}
+message BimWorldWindowConfig {
+  semio.framework.ui.viewport.Viewport3dOrbit camera = 1;
+  BimWorldProjection projection = 2;
+  string isolated_storey = 3;
+  repeated string hidden_storeys = 4;
+  bool section_enabled = 5;
+  string section_axis = 6;
+  double section_offset = 7;
+  bool framed = 8;
+}

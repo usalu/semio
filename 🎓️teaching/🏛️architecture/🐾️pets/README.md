@@ -355,8 +355,8 @@ ground — and a sandbox with mock cards on which a chosen cast lives (scene, mo
 
 | Where | Entry | Address |
 |---|---|---|
-| Claude preview (`.claude/launch.json`) | `architecture-pets-stories` | http://127.0.0.1:6074/ |
-| VS Code (`.vscode/launch.json`, group `3_dev`) | `🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories` | http://127.0.0.1:6074/ |
+| Dashboard (`bun run dashboard`, `Ctrl+B n`) | `@semio-tech/pets-react:dev` with parameters `stories-port=6074` and `menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts` | http://127.0.0.1:6074/ |
+| Agents and scripts | `bun run dashboard run @semio-tech/pets-react:dev --param stories-port=6074 --param menagerie=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts --detach --wait-ready` (prints the URL) | http://127.0.0.1:6074/ |
 
 Both run `bun nx run @semio-tech/pets-react:dev` with `PETS_STORIES_PORT=6074` and
 `PETS_MENAGERIE=🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts`. In the real site the pets are on by default (`calm`); the

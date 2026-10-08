@@ -1,0 +1,18 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-1",
+  "space": {
+    "storey": "st-attic",
+    "number": "2.01",
+    "name": "Loft",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    "usage": "Living"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-4",
+  "space": {
+    "storey": "st-first",
+    "number": "0.01",
+    "name": "Study",
+    "boundary": {
+      "Bounded": {
+        "seed": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    "usage": "Office"
+  }
+}

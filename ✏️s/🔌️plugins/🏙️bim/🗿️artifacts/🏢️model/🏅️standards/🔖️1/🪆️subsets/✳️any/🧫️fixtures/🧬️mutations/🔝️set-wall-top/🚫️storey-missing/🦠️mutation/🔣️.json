@@ -1,0 +1,10 @@
+{
+  "mutation": "setWallTop",
+  "id": "w-east",
+  "top": {
+    "Storey": {
+      "storey": "st-attic",
+      "offset": 0
+    }
+  }
+}

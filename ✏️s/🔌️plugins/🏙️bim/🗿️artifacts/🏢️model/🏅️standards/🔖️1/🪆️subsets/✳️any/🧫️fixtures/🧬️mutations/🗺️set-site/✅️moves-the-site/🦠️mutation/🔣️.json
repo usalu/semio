@@ -1,0 +1,7 @@
+{
+  "mutation": "setSite",
+  "id": "site-1",
+  "latitude": 46.95,
+  "longitude": 7.45,
+  "elevation": 540
+}

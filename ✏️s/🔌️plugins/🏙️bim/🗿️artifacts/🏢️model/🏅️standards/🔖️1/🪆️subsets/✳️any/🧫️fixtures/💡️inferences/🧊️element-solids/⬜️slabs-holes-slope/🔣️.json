@@ -1,0 +1,494 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Slabs",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-concrete": {
+        "name": "Concrete",
+        "category": "Concrete",
+        "color": {
+          "r": 0.6,
+          "g": 0.6,
+          "b": 0.6
+        },
+        "density": 2400.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      },
+      "m-clay": {
+        "name": "Clay Tile",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.3,
+          "b": 0.2
+        },
+        "density": 1900.0,
+        "conductivity": 1.0,
+        "specific_heat": 900.0
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47.0,
+        "longitude": 8.0,
+        "elevation": 100.0,
+        "true_north": 0.0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Frame",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "rotation": 0.0,
+        "elevation": 2.5
+      }
+    },
+    "storeys": {
+      "st-ground": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3.0
+      },
+      "st-first": {
+        "building": "bldg-1",
+        "name": "First",
+        "level": 1,
+        "height": 2.8
+      }
+    },
+    "slab_types": {
+      "slt-two": {
+        "name": "Floor",
+        "layers": [
+          {
+            "material": "m-wood",
+            "thickness": 0.05,
+            "function": "Finish"
+          },
+          {
+            "material": "m-concrete",
+            "thickness": 0.2,
+            "function": "Structure"
+          }
+        ]
+      },
+      "slt-bare": {
+        "name": "Bare",
+        "layers": []
+      },
+      "slt-thin": {
+        "name": "Thin",
+        "layers": [
+          {
+            "material": "m-concrete",
+            "thickness": 0.15,
+            "function": "Structure"
+          }
+        ]
+      }
+    },
+    "slabs": {
+      "s-holed": {
+        "storey": "st-ground",
+        "slab_type": "slt-two",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 6.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [
+          [
+            {
+              "point": {
+                "x": 2.0,
+                "y": 1.0
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 3.0,
+                "y": 1.0
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 3.0,
+                "y": 2.0
+              },
+              "bulge": 0.0
+            },
+            {
+              "point": {
+                "x": 2.0,
+                "y": 2.0
+              },
+              "bulge": 0.0
+            }
+          ]
+        ],
+        "offset": 0.0,
+        "name": "Holed"
+      },
+      "s-sloped": {
+        "storey": "st-ground",
+        "slab_type": "slt-thin",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 5.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [],
+        "offset": -0.05,
+        "name": "Sloped",
+        "slope": {
+          "direction": 0.0,
+          "angle": 0.05
+        }
+      },
+      "s-diagonal-slope": {
+        "storey": "st-first",
+        "slab_type": "slt-thin",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 3.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 3.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [],
+        "offset": -0.1,
+        "name": "Diagonal fall",
+        "slope": {
+          "direction": 1.0471975511965976,
+          "angle": 0.1
+        }
+      },
+      "s-curved": {
+        "storey": "st-first",
+        "slab_type": "slt-two",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 0.0
+            },
+            "bulge": 1.0
+          },
+          {
+            "point": {
+              "x": 4.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 4.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [
+          [
+            {
+              "point": {
+                "x": 1.0,
+                "y": 2.0
+              },
+              "bulge": 1.0
+            },
+            {
+              "point": {
+                "x": 2.0,
+                "y": 2.0
+              },
+              "bulge": 1.0
+            }
+          ]
+        ],
+        "offset": -0.1,
+        "name": "Curved with round hole"
+      },
+      "s-bare": {
+        "storey": "st-ground",
+        "slab_type": "slt-bare",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [],
+        "offset": 0.0,
+        "name": "No layers"
+      },
+      "s-unknown-type": {
+        "storey": "st-ground",
+        "slab_type": "slt-none",
+        "boundary": [
+          {
+            "point": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 0.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "bulge": 0.0
+          },
+          {
+            "point": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "bulge": 0.0
+          }
+        ],
+        "holes": [],
+        "offset": 0.0,
+        "name": "Unknown type"
+      }
+    }
+  },
+  "expected": {
+    "s-holed": {
+      "family": "Slab",
+      "volume": 5.75,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        -0.25
+      ],
+      "max": [
+        6.0,
+        4.0,
+        0.0
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.25,
+      "top_z": 0.0,
+      "fall": 0.0
+    },
+    "s-sloped": {
+      "family": "Slab",
+      "volume": 3.0,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        -0.450208541878
+      ],
+      "max": [
+        5.0,
+        4.0,
+        -0.05
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.15,
+      "top_z": -0.05,
+      "fall": 0.250208541878
+    },
+    "s-diagonal-slope": {
+      "family": "Slab",
+      "volume": 1.8,
+      "volume_tolerance": 1e-09,
+      "min": [
+        0.0,
+        0.0,
+        2.28865353111
+      ],
+      "max": [
+        4.0,
+        3.0,
+        2.9
+      ],
+      "bounds_tolerance": 1e-09,
+      "curved": false,
+      "thickness": 0.15,
+      "top_z": 2.9,
+      "fall": 0.46134646889
+    },
+    "s-curved": {
+      "family": "Slab",
+      "volume": 5.374446785946,
+      "volume_tolerance": 0.000247400421,
+      "min": [
+        0.0,
+        0.0,
+        2.65
+      ],
+      "max": [
+        6.0,
+        4.0,
+        2.9
+      ],
+      "bounds_tolerance": 0.000105,
+      "curved": true,
+      "thickness": 0.25,
+      "top_z": 2.9,
+      "fall": 0.0
+    },
+    "s-bare": null,
+    "s-unknown-type": null
+  },
+  "meshes": {}
+}

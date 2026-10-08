@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-space/schema.json",
+  "title": "CreateSpace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "space"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSpace"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Space id",
+          "de": "Raum-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "space": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Space",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Space",
+          "de": "Raum"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

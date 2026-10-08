@@ -72,6 +72,41 @@
         { "pid": 951, "ppid": 950, "stat": "S", "name": "caffeinate", "command": "caffeinate -dimsu" }
       ],
       "expected": []
+    },
+    {
+      "id": "dashboard-daemon-and-task-tree-protected-by-recorded-pid",
+      "daemonPids": [1100],
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 1100, "ppid": 1, "stat": "S", "name": "tool", "command": "/opt/tools/runner serve" },
+        { "pid": 1101, "ppid": 1100, "stat": "S", "name": "bun", "command": "bun nx run os-hub:dev" },
+        { "pid": 1102, "ppid": 1101, "stat": "S", "name": "node", "command": "node /home/dev/semio/node_modules/.bin/vite" },
+        { "pid": 1103, "ppid": 1102, "stat": "S", "name": "esbuild", "command": "/home/dev/semio/node_modules/@esbuild/linux-x64/bin/esbuild --service" },
+        { "pid": 1200, "ppid": 1, "stat": "S", "name": "rustc", "command": "/home/dev/.rustup/toolchains/stable/bin/rustc lib.rs" }
+      ],
+      "expected": [{ "pid": 1200, "ppid": 1, "name": "rustc", "action": "killed-stray" }]
+    },
+    {
+      "id": "dashboard-daemon-and-view-protected-by-command",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 1300, "ppid": 1, "stat": "S", "name": "semio", "command": "/home/dev/semio/.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/semio daemon serve" },
+        { "pid": 1301, "ppid": 1300, "stat": "S", "name": "bun", "command": "bun /home/dev/semio/📜️script.ts dev storybook" },
+        { "pid": 1302, "ppid": 1301, "stat": "S", "name": "vite", "command": "/home/dev/semio/node_modules/.bin/vite --port 6010" },
+        { "pid": 1310, "ppid": 1311, "stat": "S", "name": "semio", "command": "/home/dev/semio/.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/semio" },
+        { "pid": 1311, "ppid": 1, "stat": "S", "name": "bun", "command": "bun run dashboard" },
+        { "pid": 1400, "ppid": 1, "stat": "S", "name": "vite", "command": "/home/dev/semio/node_modules/.bin/vite --port 6011" }
+      ],
+      "expected": [{ "pid": 1400, "ppid": 1, "name": "vite", "action": "killed-stray" }]
+    },
+    {
+      "id": "debug-build-daemon-protected",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 1500, "ppid": 1, "stat": "S", "name": "semio", "command": "/home/dev/semio/target/debug/semio daemon serve" },
+        { "pid": 1501, "ppid": 1500, "stat": "S", "name": "node", "command": "node server.js" }
+      ],
+      "expected": []
     }
   ]
 }

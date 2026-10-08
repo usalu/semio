@@ -44,11 +44,12 @@
     },
     "Ready": {
       "type": "object",
-      "description": "The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.",
+      "description": "The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the port ends there; the ready URL is that match plus `path`, or with `printed` the whole printed address up to the next whitespace.",
       "required": ["port", "path"],
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-        "path": { "type": "string", "pattern": "^[^\\s\\u0000]*$" }
+        "path": { "type": "string", "pattern": "^[^\\s\\u0000]*$" },
+        "printed": { "type": "boolean", "description": "Take the printed address as the ready URL instead of the match plus `path`; absent means false." }
       },
       "additionalProperties": false
     },
@@ -246,7 +247,7 @@
         {
           "description": "The greeting of every connection. A client whose `protocol` differs reports the mismatch instead of continuing.",
           "type": "object",
-          "required": ["type", "daemon_pid"],
+          "required": ["type", "daemon_pid", "protocol", "build_id"],
           "properties": {
             "type": { "const": "attached" },
             "daemon_pid": { "type": "integer", "minimum": 1 },
@@ -298,7 +299,7 @@
           "properties": {
             "type": { "const": "error" },
             "message": { "type": "string" },
-            "code": { "enum": ["protocol", "decode", "invalid", "unknown_session", "unknown_group", "already_running", "limit", "spawn", "not_running", "input_backlog"] },
+            "code": { "enum": ["protocol", "decode", "invalid", "hello_required", "unknown_session", "unknown_group", "already_running", "limit", "view_limit", "spawn", "not_running", "input_backlog"], "description": "What kind of failure this is: `protocol` revision mismatch or a broken frame, `decode` an unreadable control message, `invalid` a message that breaks its limits, `hello_required` a start without a preceding hello, `unknown_*` a missing session or group, `already_running` the same task still runs, `limit` the workspace holds as many sessions as it keeps, `view_limit` the daemon serves as many connections or attached views as it allows, `spawn` a process that could not start or a group member that failed before its readiness, `not_running` input for an ended session, `input_backlog` input the process does not take." },
             "session_id": { "$ref": "#/definitions/Identifier" }
           },
           "additionalProperties": false

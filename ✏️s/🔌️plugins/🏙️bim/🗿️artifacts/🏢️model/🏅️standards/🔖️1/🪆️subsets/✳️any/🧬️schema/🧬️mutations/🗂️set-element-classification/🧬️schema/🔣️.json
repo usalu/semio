@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-classification/schema.json",
+  "title": "SetElementClassification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "classification"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setElementClassification"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "classification": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Classification",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Classification",
+          "de": "Klassifizierung"
+        },
+        "group": "classification",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mutation": "setMaterial",
+  "id": "m-brick",
+  "name": "Red Brick",
+  "color": {
+    "r": 0.8,
+    "g": 0.2,
+    "b": 0.15
+  }
+}

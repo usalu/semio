@@ -1,0 +1,12 @@
+{
+  "mutation": "rotateElements",
+  "ids": [
+    "w-south",
+    "c-1"
+  ],
+  "pivot": {
+    "x": 0,
+    "y": 0
+  },
+  "angle": 1.5707963267948966
+}

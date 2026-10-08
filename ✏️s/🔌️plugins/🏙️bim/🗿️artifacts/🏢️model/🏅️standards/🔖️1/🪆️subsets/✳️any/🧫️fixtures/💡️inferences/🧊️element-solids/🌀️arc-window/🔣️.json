@@ -1,0 +1,227 @@
+{
+  "snapshot": {
+    "schema": "s.bim.model@1",
+    "project": {
+      "name": "Element Solids",
+      "description": "",
+      "author": "",
+      "organization": "",
+      "phase_names": []
+    },
+    "materials": {
+      "m-brick": {
+        "name": "Brick",
+        "category": "Masonry",
+        "color": {
+          "r": 0.7,
+          "g": 0.35,
+          "b": 0.25
+        },
+        "density": 1800,
+        "conductivity": 0.8,
+        "specific_heat": 900
+      },
+      "m-insulation": {
+        "name": "Mineral Wool",
+        "category": "Insulation",
+        "color": {
+          "r": 0.9,
+          "g": 0.85,
+          "b": 0.3
+        },
+        "density": 40,
+        "conductivity": 0.035,
+        "specific_heat": 1030
+      },
+      "m-wood": {
+        "name": "Oak",
+        "category": "Wood",
+        "color": {
+          "r": 0.55,
+          "g": 0.4,
+          "b": 0.2
+        },
+        "density": 700,
+        "conductivity": 0.17,
+        "specific_heat": 1600
+      },
+      "m-steel": {
+        "name": "Steel",
+        "category": "Metal",
+        "color": {
+          "r": 0.6,
+          "g": 0.62,
+          "b": 0.65
+        },
+        "density": 7850,
+        "conductivity": 50,
+        "specific_heat": 470
+      },
+      "m-glass": {
+        "name": "Glass",
+        "category": "Glass",
+        "color": {
+          "r": 0.6,
+          "g": 0.8,
+          "b": 0.9
+        },
+        "density": 2500,
+        "conductivity": 1,
+        "specific_heat": 840
+      }
+    },
+    "wall_types": {
+      "wt-200": {
+        "name": "Brick 200",
+        "layers": [
+          {
+            "material": "m-brick",
+            "thickness": 0.2,
+            "function": "Structure"
+          }
+        ]
+      },
+      "wt-300": {
+        "name": "Brick 300",
+        "layers": [
+          {
+            "material": "m-brick",
+            "thickness": 0.2,
+            "function": "Structure"
+          },
+          {
+            "material": "m-insulation",
+            "thickness": 0.1,
+            "function": "Insulation"
+          }
+        ]
+      }
+    },
+    "window_types": {
+      "wn-1": {
+        "name": "Window 1.2 x 1.0",
+        "width": 1.2,
+        "height": 1,
+        "sill": 0,
+        "frame_width": 0.06,
+        "frame_depth": 0.12,
+        "panes": 2,
+        "material": "m-wood"
+      }
+    },
+    "door_types": {
+      "dr-1": {
+        "name": "Door 0.9 x 2.1",
+        "width": 0.9,
+        "height": 2.1,
+        "frame_width": 0.05,
+        "frame_depth": 0.1,
+        "leaves": "Single",
+        "swing": "Left",
+        "material": "m-wood"
+      },
+      "dr-2": {
+        "name": "Door 1.6 x 2.1",
+        "width": 1.6,
+        "height": 2.1,
+        "frame_width": 0.05,
+        "frame_depth": 0.1,
+        "leaves": "Double",
+        "swing": "Right",
+        "material": "m-wood"
+      }
+    },
+    "sites": {
+      "site-1": {
+        "name": "Plot",
+        "latitude": 47,
+        "longitude": 8,
+        "elevation": 0,
+        "true_north": 0,
+        "boundary": []
+      }
+    },
+    "buildings": {
+      "bldg-1": {
+        "site": "site-1",
+        "name": "Building",
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "rotation": 0,
+        "elevation": 0
+      }
+    },
+    "storeys": {
+      "st-1": {
+        "building": "bldg-1",
+        "name": "Ground",
+        "level": 0,
+        "height": 3
+      }
+    },
+    "walls": {
+      "w-arc": {
+        "storey": "st-1",
+        "wall_type": "wt-200",
+        "axis": {
+          "Arc": {
+            "start": {
+              "x": 4,
+              "y": 0
+            },
+            "end": {
+              "x": 0,
+              "y": 4
+            },
+            "bulge": 0.41421356237309503
+          }
+        },
+        "location": "Center",
+        "base_offset": 0,
+        "top": {
+          "Unconnected": {
+            "height": 2.5
+          }
+        },
+        "phase": "New",
+        "name": ""
+      }
+    },
+    "openings": {
+      "o-win-arc": {
+        "host": "w-arc",
+        "kind": {
+          "Window": {
+            "window_type": "wn-1"
+          }
+        },
+        "offset": 3.141592653589793,
+        "sill_override": 0.9,
+        "flip_hand": false,
+        "flip_facing": false,
+        "name": ""
+      }
+    }
+  },
+  "expected": {
+    "w-arc": {
+      "volume": 2.90159265359,
+      "area": 33.40920065877,
+      "bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          4.1,
+          4.1,
+          2.5
+        ]
+      }
+    }
+  },
+  "meshes": {}
+}

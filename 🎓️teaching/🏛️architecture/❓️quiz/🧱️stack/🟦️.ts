@@ -17,7 +17,7 @@
  * @see ../../../🛂️proctor/🏗️bootstrap/🟦️.ts — building, launching and probing the proctor
  * @see ../🏗️builder/🌐️vite/🟦️.ts — the dev server and its proxy
  * @see ../🎭️e2e/🟦️.ts — the end-to-end gate
- * @see ../README.md — the launch rows */
+ * @see ../README.md — the dashboard commands */
 import { spawn } from "node:child_process";
 import { closeSync, openSync, readFileSync, statSync, watch, type FSWatcher } from "node:fs";
 import { createServer } from "node:http";

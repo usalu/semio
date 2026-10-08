@@ -1,0 +1,14 @@
+{
+  "column_types": {
+    "new-1": {
+      "entry": "Created",
+      "material": "m-concrete",
+      "name": "Column",
+      "profile": {
+        "Circle": {
+          "diameter": 0.5
+        }
+      }
+    }
+  }
+}

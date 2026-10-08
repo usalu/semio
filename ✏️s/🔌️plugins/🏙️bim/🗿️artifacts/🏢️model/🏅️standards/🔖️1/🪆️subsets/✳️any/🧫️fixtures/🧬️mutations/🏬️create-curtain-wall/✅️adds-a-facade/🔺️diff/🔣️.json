@@ -1,0 +1,37 @@
+{
+  "curtain_walls": {
+    "cw-1": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 8.0,
+            "y": 8.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 8.0
+          }
+        }
+      },
+      "base_offset": 0.0,
+      "entry": "Created",
+      "mullion": {
+        "Rectangle": {
+          "depth": 0.15,
+          "width": 0.05
+        }
+      },
+      "mullion_material": "m-alu",
+      "name": "Facade",
+      "panel_material": "m-glass",
+      "storey": "st-ground",
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "u_spacing": 1.5,
+      "v_spacing": 1.2
+    }
+  }
+}

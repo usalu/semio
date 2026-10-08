@@ -7,5 +7,56 @@
     {"args":["run","@semio-tech/repo-dashboard-rs:preferences","set","--language","de"],"expected":["preferences","set","--language","de"]},
     {"args":["run","@semio-tech/repo-dashboard-rs:run","--graph"],"expected":null},
     {"args":["run","@semio-tech/repo-dashboard-rs:build"],"expected":null}
-  ]
+  ],
+  "mayRunStale": [
+    {"args":[],"expected":false},
+    {"args":["run","os-hub:dev"],"expected":false},
+    {"args":["commands","hub"],"expected":false},
+    {"args":["restart","1"],"expected":false},
+    {"args":["daemon","start"],"expected":false},
+    {"args":["daemon","attach"],"expected":false},
+    {"args":["daemon","stop"],"expected":true},
+    {"args":["daemon","status"],"expected":true},
+    {"args":["stop","1"],"expected":true},
+    {"args":["kill","1","--group"],"expected":true},
+    {"args":["tasks","--json"],"expected":true},
+    {"args":["logs","1","--follow"],"expected":true},
+    {"args":["open","1"],"expected":true}
+  ],
+  "staleness": {
+    "package": "mod/📦️packages/🦀️rust",
+    "files": {
+      "Cargo.toml": "[workspace]\n[workspace.dependencies]\nshared = { path = \"dep/📦️packages/🦀️rust\" }\n",
+      "Cargo.lock": "# lock\n",
+      "mod/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"app\"\n[lib]\npath = \"🦀️.rs\"\n[dependencies]\nshared = { workspace = true }\nlocal = { path = \"../../../local\" }\n[dev-dependencies]\nonly_tests = { path = \"../../../tests-only\" }\n",
+      "mod/📦️packages/🦀️rust/🦀️.rs": "pub fn app() {}\n",
+      "mod/🎮️registry/🦀️.rs": "pub fn registry() {}\n",
+      "mod/🧪️tests/🔬️unit/🦀️.rs": "#[test] fn t() {}\n",
+      "mod/📦️packages/🦀️rust/dist/build/semio": "binary",
+      "dep/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"shared\"\n",
+      "dep/📦️packages/🦀️rust/🦀️.rs": "pub fn shared() {}\n",
+      "dep/🌱️sibling/🦀️.rs": "pub fn sibling() {}\n",
+      "local/Cargo.toml": "[package]\nname = \"local\"\n",
+      "local/🦀️.rs": "pub fn local() {}\n",
+      "local/target/debug/out": "object",
+      "tests-only/Cargo.toml": "[package]\nname = \"only_tests\"\n",
+      "tests-only/🦀️.rs": "pub fn only() {}\n",
+      "unrelated/🦀️.rs": "pub fn unrelated() {}\n"
+    },
+    "roots": ["dep", "local", "mod"],
+    "mutations": [
+      {"name": "dashboard module sibling edited", "write": {"mod/🎮️registry/🦀️.rs": "pub fn registry() { 1; }\n"}, "stale": true},
+      {"name": "crate source edited", "write": {"mod/📦️packages/🦀️rust/🦀️.rs": "pub fn app() { 1; }\n"}, "stale": true},
+      {"name": "path dependency sibling module edited", "write": {"dep/🌱️sibling/🦀️.rs": "pub fn sibling() { 1; }\n"}, "stale": true},
+      {"name": "relative path dependency edited", "write": {"local/🦀️.rs": "pub fn local() { 1; }\n"}, "stale": true},
+      {"name": "modification time only", "touch": {"mod/🎮️registry/🦀️.rs": 60}, "stale": true},
+      {"name": "new source file", "write": {"mod/🎮️registry/🆕️.rs": "pub fn new() {}\n"}, "stale": true},
+      {"name": "lockfile edited", "write": {"Cargo.lock": "# lock 2\n"}, "stale": true},
+      {"name": "test tree edited", "write": {"mod/🧪️tests/🔬️unit/🦀️.rs": "#[test] fn t2() {}\n"}, "stale": false},
+      {"name": "build output edited", "write": {"mod/📦️packages/🦀️rust/dist/build/semio": "other binary"}, "stale": false},
+      {"name": "cargo target edited", "write": {"local/target/debug/out": "other object"}, "stale": false},
+      {"name": "dev dependency edited", "write": {"tests-only/🦀️.rs": "pub fn only() { 1; }\n"}, "stale": false},
+      {"name": "unrelated tree edited", "write": {"unrelated/🦀️.rs": "pub fn unrelated() { 1; }\n"}, "stale": false}
+    ]
+  }
 }

@@ -1,0 +1,16 @@
+{
+  "mutation": "createMaterial",
+  "id": "m-pine",
+  "material": {
+    "name": "Pine",
+    "category": "Wood",
+    "color": {
+      "r": 1.2,
+      "g": 0.5,
+      "b": 0.5
+    },
+    "density": 500,
+    "conductivity": 0.13,
+    "specific_heat": 1600
+  }
+}

@@ -44,6 +44,7 @@ print/asset/font/
 .🧬semio/🔗space/
 .🧬semio/🗺️map/
 .🧬semio/🦑️repo/⚡️cache/
+.🧬semio/🦑️repo/compose-micro-commit-bun
 # Ticket worktree snapshots. Staging one makes GitKraken unstage walk gigabytes and restart macOS.
 **/w3-backup/
 .🧬semio/🦑️repo/📊️metrics/coverage/
@@ -587,8 +588,6 @@ FodyWeavers.xsd
 nul
 #--------------------------------------EXCEPTIONS--------------------------------------
 !.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-workspace
 !js/**/public

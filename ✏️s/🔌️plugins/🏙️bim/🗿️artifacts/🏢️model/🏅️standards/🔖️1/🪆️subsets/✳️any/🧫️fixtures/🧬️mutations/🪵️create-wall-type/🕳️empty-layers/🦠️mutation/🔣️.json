@@ -1,0 +1,8 @@
+{
+  "mutation": "createWallType",
+  "id": "wt-timber",
+  "wall_type": {
+    "name": "Hollow",
+    "layers": []
+  }
+}

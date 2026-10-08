@@ -1,0 +1,13 @@
+{
+  "mutation": "setBeamType",
+  "id": "bt-i300",
+  "name": "Renamed",
+  "profile": {
+    "IShape": {
+      "width": 0.15,
+      "depth": 0.3,
+      "web": 0.007,
+      "flange": 0.011
+    }
+  }
+}

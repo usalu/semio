@@ -1,10 +1,12 @@
 {
-  "defaults": { "language": "en", "appearance": "dark", "terminology": "native", "renderer": "react", "layout": "tabs" },
-  "valid": [{"language":"de"},{"appearance":"light"},{"terminology":"reuse"},{"renderer":"wgpu-native","layout":"columns"},{"renderer":"wgpu-wasm","layout":"rows"}],
-  "invalid": [{},{"language":"fr"},{"appearance":"auto"},{"terminology":"legacy"},{"renderer":"wgpu"},{"layout":"unknown"},{"language":"en","surprise":true},{"appearance":null}],
+  "defaults": { "language": "en", "appearance": "dark", "terminology": "native", "renderer": "react", "layout": "tabs", "prefix": "ctrl+b", "bindings": {} },
+  "valid": [{"language":"de"},{"appearance":"light"},{"terminology":"reuse"},{"renderer":"wgpu-native","layout":"columns"},{"renderer":"wgpu-wasm","layout":"rows"},{"prefix":"ctrl+a"},{"prefix":"f12"},{"bindings":{"prefix.split-right":["v"]}},{"bindings":{"prefix.split-right":["|","v"],"window.close-window":["ctrl+q"]}}],
+  "invalid": [{},{"language":"fr"},{"appearance":"auto"},{"terminology":"legacy"},{"renderer":"wgpu"},{"layout":"unknown"},{"language":"en","surprise":true},{"appearance":null},{"prefix":"b"},{"prefix":"ctrl+"},{"prefix":""},{"bindings":{}},{"bindings":{"split-right":["v"]}},{"bindings":{"prefix.split-right":[]}},{"bindings":{"prefix.split-right":"v"}},{"bindings":{"prefix.split-right":["v","v"]}},{"bindings":{"prefix.split-right":[" "]}},{"bindings":null}],
   "cases": [
-    {"layers":[],"expected":{"language":"en","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs"}},
-    {"layers":[{"language":"de","renderer":"wgpu-native"},{"appearance":"light"},{"language":"en"},{"renderer":"wgpu-wasm","layout":"rows"}],"expected":{"language":"en","appearance":"light","terminology":"native","renderer":"wgpu-wasm","layout":"rows"}},
-    {"layers":[{"language":"de","terminology":"reuse"},{"terminology":"native"}],"expected":{"language":"de","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs"}}
+    {"layers":[],"expected":{"language":"en","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs","prefix":"ctrl+b","bindings":{}}},
+    {"layers":[{"language":"de","renderer":"wgpu-native"},{"appearance":"light"},{"language":"en"},{"renderer":"wgpu-wasm","layout":"rows"}],"expected":{"language":"en","appearance":"light","terminology":"native","renderer":"wgpu-wasm","layout":"rows","prefix":"ctrl+b","bindings":{}}},
+    {"layers":[{"language":"de","terminology":"reuse"},{"terminology":"native"}],"expected":{"language":"de","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs","prefix":"ctrl+b","bindings":{}}},
+    {"layers":[{"prefix":"ctrl+a"},{"language":"de"},{"prefix":"ctrl+space"}],"expected":{"language":"de","appearance":"dark","terminology":"native","renderer":"react","layout":"tabs","prefix":"ctrl+space","bindings":{}}},
+    {"layers":[{"appearance":"light"},{"bindings":{"prefix.split-right":["v"]}}],"expected":{"language":"en","appearance":"light","terminology":"native","renderer":"react","layout":"tabs","prefix":"ctrl+b","bindings":{"prefix.split-right":["v"]}}}
   ]
 }

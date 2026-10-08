@@ -790,19 +790,12 @@ describe("package boundary glue-content classification", () => {
     expect(fixedContractScopeSpecificityRank("sibling-fixed-filename-contract")).toBeGreaterThan(fixedContractScopeSpecificityRank("package-root"));
   });
 
-  test("the focused policy command is registered from package through both launch authorities", () => {
+  test("the focused policy command is registered from package through its Nx target", () => {
     const libraryPackageRoot = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(join(libraryPackageRoot, "📋️project.json"), "utf8"));
     const libraryPackage = JSON.parse(readFileSync(join(libraryPackageRoot, "package.json"), "utf8"));
-    const workspacePackage = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"));
-    const command = "bun nx run @semio-tech/repo-lib:test-package-body-policy";
     expect(project.targets["test-package-body-policy"].options.command).toBe("bun ./📜️script.ts test package-body-policy");
     expect(libraryPackage.scripts["test-package-body-policy"]).toBe("nx run @semio-tech/repo-lib:test-package-body-policy");
-    expect(workspacePackage.scripts["test:repo-lib:package-body-policy"]).toBe(command);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(join(repoRoot, path), "utf8")) as { configurations: readonly { command?: string }[] };
-      expect(launch.configurations.filter((entry) => entry.command === command)).toHaveLength(1);
-    }
   });
 
   test("the remaining package-purity fixture stays registered as frozen history", () => {

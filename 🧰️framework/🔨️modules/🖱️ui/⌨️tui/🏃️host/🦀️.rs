@@ -1,25 +1,33 @@
-use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
+use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser, ClickCounter, CursorEmitter};
 use crate::tui::engine::Tui;
 use crate::tui::event::Event;
 use crate::tui::geometry::Size;
 use crate::tui::theme::Theme;
 use ui_styling::appearance::AppearanceName;
 
-/// ??? A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
+/// 🏃️ A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
 pub struct WasmHost {
     pub tui: Tui,
     parser: AnsiParser,
+    clicks: ClickCounter,
+    cursor: CursorEmitter,
 }
 
 impl WasmHost {
     pub fn new(width: u16, height: u16, dark: bool) -> Self {
         let appearance = if dark { AppearanceName::Dark } else { AppearanceName::Light };
-        Self { tui: Tui::new(Size { width, height }, Theme::new(appearance)), parser: AnsiParser::new() }
+        Self { tui: Tui::new(Size { width, height }, Theme::new(appearance)), parser: AnsiParser::new(), clicks: ClickCounter::default(), cursor: CursorEmitter::default() }
     }
 
     pub fn feed(&mut self, bytes: &[u8]) -> Vec<Event> {
+        self.feed_at(bytes, 0)
+    }
+
+    /// 🖱️ Feeds terminal input observed at `now_ms` (monotonic milliseconds) so double and triple clicks are counted.
+    pub fn feed_at(&mut self, bytes: &[u8], now_ms: u64) -> Vec<Event> {
         let mut events = Vec::new();
         self.parser.feed(bytes, &mut events);
+        self.clicks.stamp_all(&mut events, now_ms);
         for event in &events {
             self.tui.dispatch(event);
         }
@@ -31,7 +39,8 @@ impl WasmHost {
     }
 
     pub fn render(&mut self) -> String {
-        self.tui.render().0
+        let patch = self.tui.render().0;
+        self.cursor.frame(&patch, self.tui.cursor(), false)
     }
 
     pub fn setup(&self) -> String {
@@ -43,15 +52,13 @@ impl WasmHost {
     }
 }
 
-// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only
-// xterm.js bridge around the pure `WasmHost` renderer, so it is narrowed to exclude the
-// WASI component target.
+/// 🌉️ `target_arch = "wasm32"` is true for `wasm32-wasip2` too; this is a browser-only xterm.js bridge around the pure `WasmHost` renderer, so it excludes the WASI component target.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "tui-bindgen"))]
 mod bindgen_host {
     use super::WasmHost;
     use wasm_bindgen::prelude::*;
 
-    /// ??? The `wasm-bindgen` surface for browser hosts (e.g. an xterm.js terminal).
+    /// 🌐️ The `wasm-bindgen` surface for browser hosts (e.g. an xterm.js terminal).
     #[wasm_bindgen]
     pub struct TuiHost(WasmHost);
 
@@ -64,6 +71,10 @@ mod bindgen_host {
 
         pub fn feed(&mut self, bytes: &[u8]) {
             self.0.feed(bytes);
+        }
+
+        pub fn feed_at(&mut self, bytes: &[u8], now_ms: f64) {
+            self.0.feed_at(bytes, now_ms as u64);
         }
 
         pub fn resize(&mut self, width: u16, height: u16) {

@@ -187,7 +187,7 @@ export function resolveHubBinaryPath(repoRoot: string): string {
 export function hubSeedTrustedCatalog(catalogRoot: string, dataRoot: string): string {
   const source = join(catalogRoot, "trusted-catalog");
   const current = join(source, "current.json");
-  if (!existsSync(current)) throw new Error(`no published trusted catalog at ${source}; publish one first (launch row 🛠️dev🗄️os-hub publishes the development catalog into .🧬semio/🌐hub/hub-dev)`);
+  if (!existsSync(current)) throw new Error(`no published trusted catalog at ${source}; publish one first (dashboard command os-hub:dev publishes the development catalog into .🧬semio/🌐hub/hub-dev)`);
   const generation = String((JSON.parse(readFileSync(current, "utf8")) as { generationId?: unknown }).generationId ?? "");
   if (!/^[0-9a-f]{64}$/u.test(generation)) throw new Error(`${current} names no generation`);
   const target = join(dataRoot, "trusted-catalog");

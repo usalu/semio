@@ -1,0 +1,43 @@
+{
+  "roofs": {
+    "rf-flat": {
+      "base_offset": 0.1,
+      "entry": "Created",
+      "footprint": [
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 0.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 8.0,
+            "y": 6.0
+          }
+        },
+        {
+          "bulge": 0.0,
+          "point": {
+            "x": 0.0,
+            "y": 6.0
+          }
+        }
+      ],
+      "name": "Flat roof",
+      "overhang": 0.0,
+      "roof_type": "rt-tiles",
+      "shape": "Flat",
+      "storey": "st-first"
+    }
+  }
+}

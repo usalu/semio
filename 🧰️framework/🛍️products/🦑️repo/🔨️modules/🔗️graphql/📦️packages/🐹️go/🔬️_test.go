@@ -8,6 +8,7 @@ import (
 	os "os"
 	exec "os/exec"
 	filepath "path/filepath"
+	reflect "reflect"
 	runtime "runtime"
 	strings "strings"
 	testing "testing"
@@ -1107,231 +1108,106 @@ func TestPythonTripleQuoteDocstringMerge(t *testing.T) {
 }
 
 func TestSystemPolicy(t *testing.T) {
-	t.Run("detects settings.json outside devcontainer", func(t *testing.T) {
+	const settings = `{"editor.fontSize": 14, "python.testing.cwd": "${workspaceFolder}", "terminal.integrated.env.windows": {"A": "b"}}`
+	const extensions = `{"recommendations": ["ms-python.python", "ms-vscode-remote.remote-containers"]}`
+	const overlay = `{"settings": {"omit": ["terminal.integrated.env.windows"], "set": {"python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"}}, "extensions": {"omit": ["ms-vscode-remote.remote-containers"], "add": ["anthropic.claude-code"]}}`
+	const devcontainer = "// SPDX-License-Identifier: AGPL-3.0-only\n{\n  /* derived */\n  \"name\": \"https://example.test/a\",\n  \"customizations\": {\"vscode\": {\"settings\": {\"editor.fontSize\": 14, \"python.testing.cwd\": \"${containerWorkspaceFolder}\", \"python.defaultInterpreterPath\": \"${containerWorkspaceFolder}/.venv/bin/python\"}, \"extensions\": [\"ms-python.python\", \"anthropic.claude-code\"]}}\n}\n"
+	arrange := func(t *testing.T, files map[string]string) {
 		tmpDir := t.TempDir()
 		oldRoot := workspace.RootDir
 		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
-		ctx := statutes.NewPolicyContext(workspace.Scope{Kind: workspace.ScopeRepo}, []model.Bundle{})
-		breachs := statutes.SystemPolicy(ctx)
-		found := false
-		for _, v := range breachs {
-			if v.Kind == model.BreachSystemDevcontainerVscodeSettingsOutside {
-				found = true
+		t.Cleanup(func() { workspace.RootDir = oldRoot })
+		for name, content := range files {
+			os.MkdirAll(filepath.Dir(filepath.Join(tmpDir, name)), 0o755)
+			workspace.WriteTextFile(filepath.Join(tmpDir, name), content)
+		}
+	}
+	kinds := func() map[model.Statute]bool {
+		found := map[model.Statute]bool{}
+		for _, v := range statutes.SystemPolicy(statutes.NewPolicyContext(workspace.Scope{Kind: workspace.ScopeRepo}, []model.Bundle{})) {
+			found[v.Kind] = true
+		}
+		return found
+	}
+	files := func(overrides map[string]string) map[string]string {
+		base := map[string]string{".vscode/settings.json": settings, ".vscode/extensions.json": extensions, ".devcontainer/editor-overlay.json": overlay, ".devcontainer/devcontainer.json": devcontainer}
+		for name, content := range overrides {
+			base[name] = content
+		}
+		return base
+	}
+	t.Run("no breach when the devcontainer block equals its derivation", func(t *testing.T) {
+		arrange(t, files(nil))
+		if found := kinds(); len(found) != 0 {
+			t.Errorf("expected no breach, got %v", found)
+		}
+	})
+	t.Run("detects drifted settings", func(t *testing.T) {
+		arrange(t, files(map[string]string{".vscode/settings.json": `{"editor.fontSize": 15}`}))
+		found := kinds()
+		if !found[model.BreachSystemDevcontainerVscodeSettingsDrift] || found[model.BreachSystemDevcontainerVscodeExtensionsDrift] {
+			t.Errorf("expected only the settings drift breach, got %v", found)
+		}
+	})
+	t.Run("detects drifted extensions", func(t *testing.T) {
+		arrange(t, files(map[string]string{".vscode/extensions.json": `{"recommendations": ["ms-python.python", "golang.go"]}`}))
+		found := kinds()
+		if found[model.BreachSystemDevcontainerVscodeSettingsDrift] || !found[model.BreachSystemDevcontainerVscodeExtensionsDrift] {
+			t.Errorf("expected only the extensions drift breach, got %v", found)
+		}
+	})
+	t.Run("a missing overlay declares no overlay", func(t *testing.T) {
+		arrange(t, files(map[string]string{".devcontainer/editor-overlay.json": ""}))
+		found := kinds()
+		if !found[model.BreachSystemDevcontainerVscodeSettingsDrift] || !found[model.BreachSystemDevcontainerVscodeExtensionsDrift] {
+			t.Errorf("expected both drift breaches without overlay, got %v", found)
+		}
+	})
+	t.Run("no breachs when the editor files are absent", func(t *testing.T) {
+		arrange(t, nil)
+		if found := kinds(); len(found) != 0 {
+			t.Errorf("expected 0 breachs, got %v", found)
+		}
+	})
+	t.Run("derivation equals the language-agnostic fixture", func(t *testing.T) {
+		data, err := os.ReadFile("../../../📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧫️fixtures/📝️derived-config/🔣️.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var fixture struct {
+			Editor []struct {
+				Name      string
+				Canonical statutes.EditorSurface
+				Overlay   statutes.EditorOverlay
+				Expected  statutes.EditorSurface
 			}
 		}
-		if !found {
-			t.Error("expected settings-outside-devcontainer breach")
+		if err := json.Unmarshal(data, &fixture); err != nil {
+			t.Fatal(err)
 		}
-	})
-	t.Run("detects extensions.json missing devcontainer recommendations", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
-		ctx := statutes.NewPolicyContext(workspace.Scope{Kind: workspace.ScopeRepo}, []model.Bundle{})
-		breachs := statutes.SystemPolicy(ctx)
-		found := false
-		for _, v := range breachs {
-			if v.Kind == model.BreachSystemDevcontainerVscodeExtensionsOutside {
-				found = true
-			}
+		if len(fixture.Editor) == 0 {
+			t.Fatal("fixture holds no editor cases")
 		}
-		if !found {
-			t.Error("expected extensions-outside-devcontainer breach")
-		}
-	})
-	t.Run("no extensions breach when workspace recommendations include devcontainer extensions", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python","golang.go","ms-vscode-remote.remote-containers"]}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
-		ctx := statutes.NewPolicyContext(workspace.Scope{Kind: workspace.ScopeRepo}, []model.Bundle{})
-		breachs := statutes.SystemPolicy(ctx)
-		for _, v := range breachs {
-			if v.Kind == model.BreachSystemDevcontainerVscodeExtensionsOutside {
-				t.Error("expected no extensions breach when workspace recommendations include devcontainer extensions")
+		for _, row := range fixture.Editor {
+			derived := statutes.DeriveContainerEditor(row.Canonical, row.Overlay)
+			if !reflect.DeepEqual(derived.Settings, row.Expected.Settings) || !reflect.DeepEqual(derived.Extensions, row.Expected.Extensions) {
+				t.Errorf("%s: derived %v, expected %v", row.Name, derived, row.Expected)
 			}
 		}
 	})
-	t.Run("no breachs when .vscode files absent", func(t *testing.T) {
-		tmpDir := t.TempDir()
+	t.Run("the checked-in devcontainer block equals its derivation", func(t *testing.T) {
+		root, err := filepath.Abs("../../../../../../..")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(filepath.Join(root, ".devcontainer", "editor-overlay.json")); err != nil {
+			t.Skipf("not running inside the repository checkout: %v", err)
+		}
 		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		ctx := statutes.NewPolicyContext(workspace.Scope{Kind: workspace.ScopeRepo}, []model.Bundle{})
-		breachs := statutes.SystemPolicy(ctx)
-		if len(breachs) != 0 {
-			t.Errorf("expected 0 breachs, got %d", len(breachs))
-		}
-	})
-	t.Run("autofix moves settings.json into devcontainer.json", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
-		breachs := []model.Breach{
-			{Kind: model.BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
-		}
-		fixed, err := applySystemAutofixes(breachs)
-		if err != nil {
-			t.Fatalf("autofix error: %v", err)
-		}
-		if fixed != 1 {
-			t.Fatalf("expected 1 fix, got %d", fixed)
-		}
-		if _, err := os.Stat(filepath.Join(tmpDir, ".vscode", "settings.json")); !os.IsNotExist(err) {
-			t.Error("expected .vscode/settings.json to be removed")
-		}
-		dcPath := filepath.Join(tmpDir, ".devcontainer", "devcontainer.json")
-		dcData, err := os.ReadFile(dcPath)
-		if err != nil {
-			t.Fatalf("expected devcontainer.json to exist: %v", err)
-		}
-		var dc map[string]interface{}
-		if err := json.Unmarshal(dcData, &dc); err != nil {
-			t.Fatalf("invalid json: %v", err)
-		}
-		customizations, _ := dc["customizations"].(map[string]interface{})
-		if customizations == nil {
-			t.Fatal("expected customizations key")
-		}
-		vscode, _ := customizations["vscode"].(map[string]interface{})
-		if vscode == nil {
-			t.Fatal("expected vscode key in customizations")
-		}
-		settings, _ := vscode["settings"].(map[string]interface{})
-		if settings == nil {
-			t.Fatal("expected settings key in customizations.vscode")
-		}
-		if settings["editor.fontSize"] != float64(14) {
-			t.Errorf("expected editor.fontSize=14, got %v", settings["editor.fontSize"])
-		}
-	})
-	t.Run("autofix syncs extensions.json from devcontainer.json", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
-		breachs := []model.Breach{
-			{Kind: model.BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
-		}
-		fixed, err := applySystemAutofixes(breachs)
-		if err != nil {
-			t.Fatalf("autofix error: %v", err)
-		}
-		if fixed != 1 {
-			t.Fatalf("expected 1 fix, got %d", fixed)
-		}
-		extPath := filepath.Join(tmpDir, ".vscode", "extensions.json")
-		if _, err := os.Stat(extPath); err != nil {
-			t.Fatalf("expected .vscode/extensions.json to remain: %v", err)
-		}
-		extData, err := os.ReadFile(extPath)
-		if err != nil {
-			t.Fatalf("read extensions.json: %v", err)
-		}
-		var extFile map[string]interface{}
-		if err := json.Unmarshal(extData, &extFile); err != nil {
-			t.Fatalf("invalid json: %v", err)
-		}
-		recommendations, _ := extFile["recommendations"].([]interface{})
-		if len(recommendations) != 2 {
-			t.Fatalf("expected 2 recommendations, got %d", len(recommendations))
-		}
-		if recommendations[0] != "ms-python.python" {
-			t.Errorf("expected first recommendation ms-python.python, got %v", recommendations[0])
-		}
-		if recommendations[1] != "golang.go" {
-			t.Errorf("expected second recommendation golang.go, got %v", recommendations[1])
-		}
-	})
-	t.Run("autofix merges into existing devcontainer.json", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.tabSize": 2}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"name": "test", "image": "ubuntu"}`)
-		breachs := []model.Breach{
-			{Kind: model.BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
-		}
-		fixed, err := applySystemAutofixes(breachs)
-		if err != nil {
-			t.Fatalf("autofix error: %v", err)
-		}
-		if fixed != 1 {
-			t.Fatalf("expected 1 fix, got %d", fixed)
-		}
-		dcData, _ := os.ReadFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"))
-		var dc map[string]interface{}
-		json.Unmarshal(dcData, &dc)
-		if dc["name"] != "test" {
-			t.Errorf("expected existing name=test to be preserved, got %v", dc["name"])
-		}
-		if dc["image"] != "ubuntu" {
-			t.Errorf("expected existing image=ubuntu to be preserved, got %v", dc["image"])
-		}
-		customizations, _ := dc["customizations"].(map[string]interface{})
-		vscode, _ := customizations["vscode"].(map[string]interface{})
-		settings, _ := vscode["settings"].(map[string]interface{})
-		if settings["editor.tabSize"] != float64(2) {
-			t.Errorf("expected editor.tabSize=2, got %v", settings["editor.tabSize"])
-		}
-	})
-	t.Run("autofix both settings and extensions together", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
-		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
-		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
-		workspace.WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"customizations":{"vscode":{"extensions":["ms-python.python","golang.go"]}}}`)
-		breachs := []model.Breach{
-			{Kind: model.BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
-			{Kind: model.BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
-		}
-		fixed, err := applySystemAutofixes(breachs)
-		if err != nil {
-			t.Fatalf("autofix error: %v", err)
-		}
-		if fixed != 2 {
-			t.Fatalf("expected 2 fixes, got %d", fixed)
-		}
-		dcData, _ := os.ReadFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"))
-		var dc map[string]interface{}
-		json.Unmarshal(dcData, &dc)
-		customizations, _ := dc["customizations"].(map[string]interface{})
-		vscode, _ := customizations["vscode"].(map[string]interface{})
-		if vscode["settings"] == nil {
-			t.Error("expected settings in devcontainer.json")
-		}
-		extData, _ := os.ReadFile(filepath.Join(tmpDir, ".vscode", "extensions.json"))
-		var extFile map[string]interface{}
-		json.Unmarshal(extData, &extFile)
-		recommendations, _ := extFile["recommendations"].([]interface{})
-		if len(recommendations) != 2 {
-			t.Fatalf("expected synced extensions.json recommendations, got %v", recommendations)
+		workspace.RootDir = root
+		t.Cleanup(func() { workspace.RootDir = oldRoot })
+		if found := kinds(); len(found) != 0 {
+			t.Errorf("run bun nx run workspace:generate-config; the checked-in block drifts: %v", found)
 		}
 	})
 	t.Run("policy registered with correct id", func(t *testing.T) {
@@ -1343,34 +1219,19 @@ func TestSystemPolicy(t *testing.T) {
 			t.Errorf("expected name System, got %s", p.Name)
 		}
 		kinds := p.AllKinds()
-		if len(kinds) != 2 {
-			t.Fatalf("expected 2 statutes, got %d", len(kinds))
-		}
-		kindSet := map[model.Statute]bool{}
-		for _, k := range kinds {
-			kindSet[k] = true
-		}
-		if !kindSet[model.BreachSystemDevcontainerVscodeSettingsOutside] {
-			t.Error("expected settings-outside-devcontainer kind")
-		}
-		if !kindSet[model.BreachSystemDevcontainerVscodeExtensionsOutside] {
-			t.Error("expected extensions-outside-devcontainer kind")
+		if len(kinds) != 2 || kinds[0] != model.BreachSystemDevcontainerVscodeSettingsDrift || kinds[1] != model.BreachSystemDevcontainerVscodeExtensionsDrift {
+			t.Fatalf("expected the settings and extensions drift statutes, got %v", kinds)
 		}
 	})
 	t.Run("statute meta is correct", func(t *testing.T) {
-		settingsMeta := model.BreachSystemDevcontainerVscodeSettingsOutside.Info()
-		if !settingsMeta.Autofixable {
-			t.Error("expected settings breach to be autofixable")
-		}
-		if settingsMeta.Priority != model.BreachPriorityHigh {
-			t.Error("expected settings breach to be high priority")
-		}
-		extMeta := model.BreachSystemDevcontainerVscodeExtensionsOutside.Info()
-		if !extMeta.Autofixable {
-			t.Error("expected extensions breach to be autofixable")
-		}
-		if extMeta.Priority != model.BreachPriorityHigh {
-			t.Error("expected extensions breach to be high priority")
+		for _, kind := range []model.Statute{model.BreachSystemDevcontainerVscodeSettingsDrift, model.BreachSystemDevcontainerVscodeExtensionsDrift} {
+			meta := kind.Info()
+			if meta.Autofixable {
+				t.Errorf("%s: a derived copy is rewritten by generate-config, never autofixed", kind)
+			}
+			if meta.Priority != model.BreachPriorityHigh {
+				t.Errorf("%s: expected high priority", kind)
+			}
 		}
 	})
 }

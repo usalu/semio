@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-project-info/schema.json",
+  "title": "SetProjectInfo",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setProjectInfo"
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "description": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "author": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Author",
+          "de": "Autor"
+        },
+        "group": "identity",
+        "order": 30
+      }
+    },
+    "organization": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Organization",
+          "de": "Organisation"
+        },
+        "group": "identity",
+        "order": 40
+      }
+    },
+    "phase_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Phase names",
+          "de": "Phasennamen"
+        },
+        "group": "value",
+        "order": 50
+      }
+    }
+  }
+}

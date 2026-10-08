@@ -1,0 +1,29 @@
+{
+  "mutation": "createWall",
+  "id": "st-ground",
+  "wall": {
+    "storey": "st-first",
+    "wall_type": "wt-300",
+    "axis": {
+      "Line": {
+        "start": {
+          "x": 0,
+          "y": 0
+        },
+        "end": {
+          "x": 8,
+          "y": 0
+        }
+      }
+    },
+    "location": "Center",
+    "base_offset": 0,
+    "top": {
+      "StoreyTop": {
+        "offset": 0
+      }
+    },
+    "phase": "New",
+    "name": "First"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "description": "A quarter-circle wall of radius 5 around (80, 0) continues tangentially into a straight wall: the faces are concentric arcs of radius 4.85 (left, inner) and 5.15 (right, outer) and meet the line faces at the tangent points (80, 4.85) and (80, 5.15). The arc footprint is the exact annular sector (pi / 4) * (5.15^2 - 4.85^2) = 0.75 pi.",
+  "before": {
+    "schema": "s.bim.model@1",
+    "project": { "name": "Arc tangent", "description": "", "author": "", "organization": "", "phase_names": [] },
+    "wall_types": {
+      "wt-300": { "name": "Brick 300", "layers": [{ "material": "m-brick", "thickness": 0.2, "function": "Structure" }, { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }] }
+    },
+    "sites": { "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 0.0, "true_north": 0.0, "boundary": [] } },
+    "buildings": { "bldg-1": { "site": "site-1", "name": "House", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 0.0 } },
+    "storeys": { "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 } },
+    "walls": {
+      "arc": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Arc": { "start": { "x": 85.0, "y": 0.0 }, "end": { "x": 80.0, "y": 5.0 }, "bulge": 0.41421356237309503 } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Arc" },
+      "line": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Line": { "start": { "x": 80.0, "y": 5.0 }, "end": { "x": 76.0, "y": 5.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Line" }
+    }
+  },
+  "expected": {
+    "arc": {
+      "length": 7.853981633974483, "offset_left": 0.15, "offset_right": 0.15,
+      "left_face": { "start": { "x": 84.85, "y": 0.0 }, "end": { "x": 80.0, "y": 4.85 }, "bulge": 0.41421356237309503 },
+      "right_face": { "start": { "x": 85.15, "y": 0.0 }, "end": { "x": 80.0, "y": 5.15 }, "bulge": 0.41421356237309503 },
+      "left_length": 7.618362184955248, "right_length": 8.089601082993717,
+      "left_area": 22.855086554865744, "right_area": 24.26880324898115,
+      "footprint_area": 2.356194490192345, "volume": 7.068583470577035,
+      "joins": [{ "kind": "Miter", "end": "End", "other": "line", "other_end": "Start", "point": { "x": 80.0, "y": 5.0 }, "overlap_area": 0.0 }]
+    },
+    "line": {
+      "length": 4.0,
+      "left_face": { "start": { "x": 80.0, "y": 4.85 }, "end": { "x": 76.0, "y": 4.85 }, "bulge": 0.0 },
+      "right_face": { "start": { "x": 80.0, "y": 5.15 }, "end": { "x": 76.0, "y": 5.15 }, "bulge": 0.0 },
+      "footprint_area": 1.2,
+      "joins": [{ "kind": "Miter", "end": "Start", "other": "arc", "other_end": "End", "point": { "x": 80.0, "y": 5.0 }, "overlap_area": 0.0 }]
+    }
+  }
+}

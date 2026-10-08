@@ -1,0 +1,611 @@
+syntax = "proto3";
+package semio.s.bim.model.mutation;
+
+import "google/protobuf/struct.proto";
+
+// 🏙️ BIM model direct-mutation union; the wire tag of each member is its leaf `binaryTag`.
+
+message CreateSite {
+  string id = 1;
+  Site site = 2;
+}
+
+message DeleteSite {
+  string id = 1;
+}
+
+message CreateBuilding {
+  string id = 1;
+  Building building = 2;
+}
+
+message DeleteBuilding {
+  string id = 1;
+}
+
+message CreateStorey {
+  string id = 1;
+  Storey storey = 2;
+}
+
+message RenameStorey {
+  string id = 1;
+  string name = 2;
+}
+
+message SetStoreyHeight {
+  string id = 1;
+  double height = 2;
+}
+
+message SetStoreyLevel {
+  string id = 1;
+  int32 level = 2;
+}
+
+message DeleteStorey {
+  string id = 1;
+}
+
+message CreateWall {
+  string id = 1;
+  Wall wall = 2;
+}
+
+message DeleteWall {
+  string id = 1;
+}
+
+message SetWallTop {
+  string id = 1;
+  TopConstraint top = 2;
+}
+
+message SetStoreyCutHeight {
+  string id = 1;
+  map<string, google.protobuf.Value> cut_height = 2;
+}
+
+message CreateMaterial {
+  string id = 1;
+  Material material = 2;
+}
+
+message DeleteMaterial {
+  string id = 1;
+}
+
+message SetMaterial {
+  string id = 1;
+  optional string name = 2;
+  optional MaterialCategory category = 3;
+  optional Rgb color = 4;
+  optional double density = 5;
+  optional double conductivity = 6;
+  optional double specific_heat = 7;
+}
+
+message CreateWallType {
+  string id = 1;
+  WallType wall_type = 2;
+}
+
+message DeleteWallType {
+  string id = 1;
+}
+
+message SetWallType {
+  string id = 1;
+  optional string name = 2;
+  repeated Layer layers = 3;
+}
+
+message CreateSlabType {
+  string id = 1;
+  SlabType slab_type = 2;
+}
+
+message DeleteSlabType {
+  string id = 1;
+}
+
+message SetSlabType {
+  string id = 1;
+  optional string name = 2;
+  repeated Layer layers = 3;
+}
+
+message CreateRoofType {
+  string id = 1;
+  RoofType roof_type = 2;
+}
+
+message DeleteRoofType {
+  string id = 1;
+}
+
+message SetRoofType {
+  string id = 1;
+  optional string name = 2;
+  repeated Layer layers = 3;
+}
+
+message CreateColumnType {
+  string id = 1;
+  ColumnType column_type = 2;
+}
+
+message DeleteColumnType {
+  string id = 1;
+}
+
+message SetColumnType {
+  string id = 1;
+  optional string name = 2;
+  optional Profile profile = 3;
+  optional string material = 4;
+}
+
+message CreateBeamType {
+  string id = 1;
+  BeamType beam_type = 2;
+}
+
+message DeleteBeamType {
+  string id = 1;
+}
+
+message SetBeamType {
+  string id = 1;
+  optional string name = 2;
+  optional Profile profile = 3;
+  optional string material = 4;
+}
+
+message CreateWindowType {
+  string id = 1;
+  WindowType window_type = 2;
+}
+
+message DeleteWindowType {
+  string id = 1;
+}
+
+message SetWindowType {
+  string id = 1;
+  optional string name = 2;
+  optional double width = 3;
+  optional double height = 4;
+  optional double sill = 5;
+  optional double frame_width = 6;
+  optional double frame_depth = 7;
+  optional int32 panes = 8;
+  optional string material = 9;
+}
+
+message CreateDoorType {
+  string id = 1;
+  DoorType door_type = 2;
+}
+
+message DeleteDoorType {
+  string id = 1;
+}
+
+message SetDoorType {
+  string id = 1;
+  optional string name = 2;
+  optional double width = 3;
+  optional double height = 4;
+  optional double frame_width = 5;
+  optional double frame_depth = 6;
+  optional DoorLeaves leaves = 7;
+  optional Swing swing = 8;
+  optional string material = 9;
+}
+
+message SetProjectInfo {
+  optional string name = 1;
+  optional string description = 2;
+  optional string author = 3;
+  optional string organization = 4;
+  repeated string phase_names = 5;
+}
+
+message SetSite {
+  string id = 1;
+  optional string name = 2;
+  optional double latitude = 3;
+  optional double longitude = 4;
+  optional double elevation = 5;
+  optional double true_north = 6;
+  repeated Point2 boundary = 7;
+}
+
+message SetBuilding {
+  string id = 1;
+  optional string name = 2;
+  optional Point2 origin = 3;
+  optional double rotation = 4;
+  optional double elevation = 5;
+}
+
+message CreateGridLine {
+  string id = 1;
+  GridLine grid_line = 2;
+}
+
+message DeleteGridLine {
+  string id = 1;
+}
+
+message SetGridLine {
+  string id = 1;
+  optional string label = 2;
+  optional Point2 start = 3;
+  optional Point2 end = 4;
+}
+
+message SetWallAxis {
+  string id = 1;
+  Axis axis = 2;
+}
+
+message SetWallBaseOffset {
+  string id = 1;
+  double base_offset = 2;
+}
+
+message SetWallTypeOf {
+  string id = 1;
+  string wall_type = 2;
+}
+
+message SetWallLocation {
+  string id = 1;
+  LocationLine location = 2;
+}
+
+message FlipWall {
+  string id = 1;
+}
+
+message SplitWall {
+  string id = 1;
+  double t = 2;
+  string new_id = 3;
+}
+
+message CreateCurtainWall {
+  string id = 1;
+  CurtainWall curtain_wall = 2;
+}
+
+message DeleteCurtainWall {
+  string id = 1;
+}
+
+message SetCurtainWall {
+  string id = 1;
+  optional Axis axis = 2;
+  optional double base_offset = 3;
+  optional TopConstraint top = 4;
+  optional double u_spacing = 5;
+  optional double v_spacing = 6;
+  optional Profile mullion = 7;
+  optional string panel_material = 8;
+  optional string mullion_material = 9;
+  optional string name = 10;
+}
+
+message CreateColumn {
+  string id = 1;
+  Column column = 2;
+}
+
+message DeleteColumn {
+  string id = 1;
+}
+
+message SetColumn {
+  string id = 1;
+  optional string column_type = 2;
+  optional Point2 position = 3;
+  optional double rotation = 4;
+  optional double base_offset = 5;
+  optional TopConstraint top = 6;
+  optional string name = 7;
+}
+
+message CreateBeam {
+  string id = 1;
+  Beam beam = 2;
+}
+
+message DeleteBeam {
+  string id = 1;
+}
+
+message SetBeam {
+  string id = 1;
+  optional string beam_type = 2;
+  optional Point2 start = 3;
+  optional Point2 end = 4;
+  optional double top_offset = 5;
+  optional string name = 6;
+}
+
+message CreateSlab {
+  string id = 1;
+  Slab slab = 2;
+}
+
+message DeleteSlab {
+  string id = 1;
+}
+
+message SetSlabBoundary {
+  string id = 1;
+  repeated Vertex boundary = 2;
+  repeated repeated Vertex holes = 3;
+}
+
+message SetSlab {
+  string id = 1;
+  optional string slab_type = 2;
+  optional double offset = 3;
+  optional Slope slope = 4;
+  optional string name = 5;
+}
+
+message CreateRoof {
+  string id = 1;
+  Roof roof = 2;
+}
+
+message DeleteRoof {
+  string id = 1;
+}
+
+message SetRoofFootprint {
+  string id = 1;
+  repeated Vertex footprint = 2;
+}
+
+message SetRoofShape {
+  string id = 1;
+  optional RoofShape shape = 2;
+  optional double overhang = 3;
+  optional double base_offset = 4;
+}
+
+message CreateOpening {
+  string id = 1;
+  Opening opening = 2;
+}
+
+message DeleteOpening {
+  string id = 1;
+}
+
+message MoveOpening {
+  string id = 1;
+  double offset = 2;
+  optional string host = 3;
+}
+
+message SetOpening {
+  string id = 1;
+  optional OpeningKind kind = 2;
+  optional map<string, google.protobuf.Value> sill_override = 3;
+  optional map<string, google.protobuf.Value> width = 4;
+  optional map<string, google.protobuf.Value> height = 5;
+  optional bool flip_hand = 6;
+  optional bool flip_facing = 7;
+  optional string name = 8;
+}
+
+message CreateStair {
+  string id = 1;
+  Stair stair = 2;
+}
+
+message DeleteStair {
+  string id = 1;
+}
+
+message SetStair {
+  string id = 1;
+  optional Point2 start = 2;
+  optional double direction = 3;
+  optional double width = 4;
+  optional StairFlight flight = 5;
+  optional TopConstraint top = 6;
+  optional double max_riser = 7;
+  optional double min_tread = 8;
+  optional StairStringer stringer = 9;
+  optional double nosing = 10;
+  optional double tread_thickness = 11;
+  optional RiserKind riser = 12;
+  optional double landing_depth = 13;
+  optional string name = 14;
+}
+
+message CreateRailing {
+  string id = 1;
+  Railing railing = 2;
+}
+
+message DeleteRailing {
+  string id = 1;
+}
+
+message SetRailing {
+  string id = 1;
+  repeated Point2 path = 2;
+  optional double height = 3;
+  optional double post_spacing = 4;
+  optional Profile profile = 5;
+  optional Profile post_profile = 6;
+  optional Baluster baluster = 7;
+  optional Infill infill = 8;
+  optional string material = 9;
+  optional double base_offset = 10;
+  optional string name = 11;
+}
+
+message CreateSpace {
+  string id = 1;
+  Space space = 2;
+}
+
+message DeleteSpace {
+  string id = 1;
+}
+
+message SetSpace {
+  string id = 1;
+  optional string number = 2;
+  optional string name = 3;
+  optional SpaceBoundary boundary = 4;
+  optional string usage = 5;
+}
+
+message MoveElements {
+  repeated string ids = 1;
+  Point2 vector = 2;
+}
+
+message RotateElements {
+  repeated string ids = 1;
+  Point2 pivot = 2;
+  double angle = 3;
+}
+
+message DeleteElements {
+  repeated string ids = 1;
+}
+
+message RenameElement {
+  string id = 1;
+  string name = 2;
+}
+
+message SetElementProperty {
+  string id = 1;
+  string pset = 2;
+  string property = 3;
+  PropertyValue value = 4;
+}
+
+message RemoveElementProperty {
+  string id = 1;
+  string pset = 2;
+  string property = 3;
+}
+
+message SetElementClassification {
+  string id = 1;
+  Classification classification = 2;
+}
+
+message RemoveElementClassification {
+  string id = 1;
+}
+
+message PlaceElements {
+  map<string, google.protobuf.Value> placements = 1;
+}
+
+message ModelMutation {
+  oneof mutation {
+    CreateSite create_site = 1;
+    DeleteSite delete_site = 2;
+    CreateBuilding create_building = 3;
+    DeleteBuilding delete_building = 4;
+    CreateStorey create_storey = 5;
+    RenameStorey rename_storey = 6;
+    SetStoreyHeight set_storey_height = 7;
+    SetStoreyLevel set_storey_level = 8;
+    DeleteStorey delete_storey = 9;
+    CreateWall create_wall = 10;
+    DeleteWall delete_wall = 11;
+    SetWallTop set_wall_top = 12;
+    SetStoreyCutHeight set_storey_cut_height = 13;
+    CreateMaterial create_material = 101;
+    DeleteMaterial delete_material = 102;
+    SetMaterial set_material = 103;
+    CreateWallType create_wall_type = 104;
+    DeleteWallType delete_wall_type = 105;
+    SetWallType set_wall_type = 106;
+    CreateSlabType create_slab_type = 107;
+    DeleteSlabType delete_slab_type = 108;
+    SetSlabType set_slab_type = 109;
+    CreateRoofType create_roof_type = 110;
+    DeleteRoofType delete_roof_type = 111;
+    SetRoofType set_roof_type = 112;
+    CreateColumnType create_column_type = 201;
+    DeleteColumnType delete_column_type = 202;
+    SetColumnType set_column_type = 203;
+    CreateBeamType create_beam_type = 204;
+    DeleteBeamType delete_beam_type = 205;
+    SetBeamType set_beam_type = 206;
+    CreateWindowType create_window_type = 207;
+    DeleteWindowType delete_window_type = 208;
+    SetWindowType set_window_type = 209;
+    CreateDoorType create_door_type = 210;
+    DeleteDoorType delete_door_type = 211;
+    SetDoorType set_door_type = 212;
+    SetProjectInfo set_project_info = 301;
+    SetSite set_site = 302;
+    SetBuilding set_building = 303;
+    CreateGridLine create_grid_line = 304;
+    DeleteGridLine delete_grid_line = 305;
+    SetGridLine set_grid_line = 306;
+    SetWallAxis set_wall_axis = 401;
+    SetWallBaseOffset set_wall_base_offset = 402;
+    SetWallTypeOf set_wall_type_of = 403;
+    SetWallLocation set_wall_location = 404;
+    FlipWall flip_wall = 405;
+    SplitWall split_wall = 406;
+    CreateCurtainWall create_curtain_wall = 407;
+    DeleteCurtainWall delete_curtain_wall = 408;
+    SetCurtainWall set_curtain_wall = 409;
+    CreateColumn create_column = 501;
+    DeleteColumn delete_column = 502;
+    SetColumn set_column = 503;
+    CreateBeam create_beam = 504;
+    DeleteBeam delete_beam = 505;
+    SetBeam set_beam = 506;
+    CreateSlab create_slab = 601;
+    DeleteSlab delete_slab = 602;
+    SetSlabBoundary set_slab_boundary = 603;
+    SetSlab set_slab = 604;
+    CreateRoof create_roof = 605;
+    DeleteRoof delete_roof = 606;
+    SetRoofFootprint set_roof_footprint = 607;
+    SetRoofShape set_roof_shape = 608;
+    CreateOpening create_opening = 701;
+    DeleteOpening delete_opening = 702;
+    MoveOpening move_opening = 703;
+    SetOpening set_opening = 704;
+    CreateStair create_stair = 705;
+    DeleteStair delete_stair = 706;
+    SetStair set_stair = 707;
+    CreateRailing create_railing = 801;
+    DeleteRailing delete_railing = 802;
+    SetRailing set_railing = 803;
+    CreateSpace create_space = 804;
+    DeleteSpace delete_space = 805;
+    SetSpace set_space = 806;
+    MoveElements move_elements = 901;
+    RotateElements rotate_elements = 902;
+    DeleteElements delete_elements = 903;
+    RenameElement rename_element = 904;
+    SetElementProperty set_element_property = 905;
+    RemoveElementProperty remove_element_property = 906;
+    SetElementClassification set_element_classification = 907;
+    RemoveElementClassification remove_element_classification = 908;
+    PlaceElements place_elements = 909;
+  }
+}

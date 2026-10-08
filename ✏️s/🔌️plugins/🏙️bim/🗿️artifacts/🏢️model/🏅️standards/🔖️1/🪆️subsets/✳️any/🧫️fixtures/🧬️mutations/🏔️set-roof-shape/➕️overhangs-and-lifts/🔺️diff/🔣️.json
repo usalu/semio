@@ -1,0 +1,9 @@
+{
+  "roofs": {
+    "rf-main": {
+      "base_offset": 0.1,
+      "entry": "Patched",
+      "overhang": 0.6
+    }
+  }
+}

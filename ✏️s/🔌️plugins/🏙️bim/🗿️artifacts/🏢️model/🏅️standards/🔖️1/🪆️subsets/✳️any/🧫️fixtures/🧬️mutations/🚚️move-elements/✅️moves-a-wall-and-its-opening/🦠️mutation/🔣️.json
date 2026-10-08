@@ -1,0 +1,11 @@
+{
+  "mutation": "moveElements",
+  "ids": [
+    "w-south",
+    "o-1"
+  ],
+  "vector": {
+    "x": 1.5,
+    "y": -2
+  }
+}

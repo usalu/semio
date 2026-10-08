@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/bim/model/world-window-config/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera",
+    "projection",
+    "isolatedStorey",
+    "hiddenStoreys",
+    "sectionEnabled",
+    "sectionAxis",
+    "sectionOffset",
+    "framed"
+  ],
+  "properties": {
+    "camera": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d"
+    },
+    "projection": {
+      "$ref": "#/$defs/BimWorldProjection"
+    },
+    "isolatedStorey": {
+      "type": "string"
+    },
+    "hiddenStoreys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sectionEnabled": {
+      "type": "boolean"
+    },
+    "sectionAxis": {
+      "type": "string"
+    },
+    "sectionOffset": {
+      "type": "number"
+    },
+    "framed": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "BimWorldProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "orthographicView",
+        "axonometricVariant",
+        "axonometricAngleA",
+        "axonometricAngleB",
+        "axonometricQuadrant",
+        "obliqueVariant",
+        "obliqueAngle",
+        "obliqueDepth",
+        "onePointAxis",
+        "fov",
+        "twoPointShift",
+        "curvilinearFov",
+        "curvilinearStrength",
+        "curvilinearMapping"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "orthographicView": {
+          "type": "string"
+        },
+        "axonometricVariant": {
+          "type": "string"
+        },
+        "axonometricAngleA": {
+          "type": "number"
+        },
+        "axonometricAngleB": {
+          "type": "number"
+        },
+        "axonometricQuadrant": {
+          "type": "string"
+        },
+        "obliqueVariant": {
+          "type": "string"
+        },
+        "obliqueAngle": {
+          "type": "number"
+        },
+        "obliqueDepth": {
+          "type": "number"
+        },
+        "onePointAxis": {
+          "type": "string"
+        },
+        "fov": {
+          "type": "number"
+        },
+        "twoPointShift": {
+          "type": "number"
+        },
+        "curvilinearFov": {
+          "type": "number"
+        },
+        "curvilinearStrength": {
+          "type": "number"
+        },
+        "curvilinearMapping": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

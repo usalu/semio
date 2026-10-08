@@ -6,8 +6,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun nx run @teaching/architecture-quiz:dev",
-    "dev:site": "bun nx run @teaching/architecture-quiz:dev-site",
     "build": "bun nx run @teaching/architecture-quiz:build",
     "test": "bun nx run @teaching/architecture-quiz:test",
     "test:e2e": "bun nx run @teaching/architecture-quiz:test-e2e",

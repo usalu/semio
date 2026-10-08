@@ -1,0 +1,2 @@
+[["fn materialise(name: &str) -> PathBuf {\n    let nanos", "fn materialise(name: &str) -> PathBuf { materialise_text(name, FIXTURE) }\n\nfn materialise_text(name: &str, fixture: &str) -> PathBuf {\n    let nanos"],
+ ["let document: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();", "let document: serde_json::Value = serde_json::from_str(fixture).unwrap();"]]

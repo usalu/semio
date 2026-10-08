@@ -1,11 +1,12 @@
 use crate::tui::cell::{Cell, CellBuffer};
 use crate::tui::footer::paint_footer;
 use crate::tui::geometry::{Pos, Rect};
-use crate::tui::layout::{solve_window_layout, WindowLayout};
+use crate::tui::layout::{solve_window_layout, weight_of, WindowLayout, WindowStackCorner, WINDOW_GAP};
 use crate::tui::navbar::paint_navbar;
-use crate::tui::scene::{Node, NodeContent, NodeId, Scene};
-use crate::tui::text::{display_width, truncate_to};
-use crate::tui::theme::{Role, Surface, Theme};
+use crate::tui::scene::{AxisState, Node, NodeContent, NodeId, Scene};
+use crate::tui::text::{display_width, elide_end};
+use crate::tui::theme::{GlyphSet, Role, Status, Surface, Theme};
+use crate::tui::widget::WidgetSignal;
 use crate::tui::window::paint_window;
 
 #[derive(Clone)]
@@ -36,17 +37,46 @@ pub struct FooterState {
 #[derive(Clone, Debug, PartialEq)]
 pub struct WindowStackTabState {
     pub label: String,
-    pub corner: crate::tui::layout::WindowStackCorner,
+    pub corner: WindowStackCorner,
+    /// 🚦️ The task status drawn as a glyph in the tab's own colour role; `None` draws no glyph.
+    pub status: Option<Status>,
 }
 
 impl WindowStackTabState {
-    pub fn new(label: impl Into<String>, corner: crate::tui::layout::WindowStackCorner) -> Self {
-        Self { label: label.into(), corner }
+    pub fn new(label: impl Into<String>, corner: WindowStackCorner) -> Self {
+        Self { label: label.into(), corner, status: None }
+    }
+
+    pub fn with_status(mut self, status: Option<Status>) -> Self {
+        self.status = status;
+        self
     }
 
     pub fn top_left(label: impl Into<String>) -> Self {
-        Self::new(label, crate::tui::layout::WindowStackCorner::TopLeft)
+        Self::new(label, WindowStackCorner::TopLeft)
     }
+}
+
+/// 🗣️ The accessible names of the window controls; the app supplies them in the user's language, empty hides the tooltip.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ChromeLabels {
+    pub close: String,
+    pub maximize: String,
+    pub restore: String,
+    pub new_tab: String,
+    pub previous_tabs: String,
+    pub next_tabs: String,
+}
+
+/// 🎯 What a window chrome cell stands for; every control carries the stack tab index it acts on.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WindowHit {
+    Tab(usize),
+    Close(usize),
+    Maximize(usize),
+    NewTab(usize),
+    OverflowPrev(usize),
+    OverflowNext(usize),
 }
 
 pub struct WindowState {
@@ -57,11 +87,42 @@ pub struct WindowState {
     pub maximizable: bool,
     pub stack_tabs: Vec<WindowStackTabState>,
     pub active_stack_tab: usize,
+    pub compact: bool,
+    pub zoomed: bool,
+    pub peers: usize,
+    pub new_tab: bool,
+    pub labels: ChromeLabels,
+    pub hover: Option<WindowHit>,
+    pub drop_target: Option<usize>,
+    /// 📌 This window's own task status; `Shell::set_status` mirrors it into every sibling's tab strip.
+    pub status: Option<Status>,
+    /// 🆔️ The window id behind each stack tab, parallel to `stack_tabs`, set when the layout is mounted.
+    pub tab_ids: Vec<String>,
+    /// 🌀️ The spinner frame of running tabs; the engine advances it on `tick`.
+    pub spin: u64,
 }
 
 impl WindowState {
     pub fn new(title: impl Into<String>) -> Self {
-        Self { title: title.into(), number: None, focused: false, closable: true, maximizable: true, stack_tabs: Vec::new(), active_stack_tab: 0 }
+        Self {
+            title: title.into(),
+            number: None,
+            focused: false,
+            closable: true,
+            maximizable: true,
+            stack_tabs: Vec::new(),
+            active_stack_tab: 0,
+            compact: false,
+            zoomed: false,
+            peers: 1,
+            new_tab: false,
+            labels: ChromeLabels::default(),
+            hover: None,
+            drop_target: None,
+            status: None,
+            tab_ids: Vec::new(),
+            spin: 0,
+        }
     }
 
     /// 📑 Attaches per-stack tab labels (defaulting each to top-left); `active` is clamped into range.
@@ -78,6 +139,11 @@ impl WindowState {
         self
     }
 
+    /// 🔎️ Whether the maximize control shows: only when there is something to maximize against, or something to restore.
+    pub fn show_maximize(&self) -> bool {
+        self.maximizable && (self.peers > 1 || self.zoomed)
+    }
+
     /// ↕️ Extra chrome rows consumed by raised top and/or bottom corner tab boxes.
     pub fn stack_tab_strip_height(&self) -> u16 {
         let tabs = effective_stack_tabs(self);
@@ -92,7 +158,7 @@ pub enum ChromeState {
     Navbar(NavbarState),
     Footer(FooterState),
     Canvas,
-    Window(WindowState),
+    Window(Box<WindowState>),
 }
 
 impl ChromeState {
@@ -108,67 +174,143 @@ impl ChromeState {
         }
     }
 
-    /// 🎯 Resolves window chrome hits: per-tab glyphs and label activation across corner groups.
-    pub fn window_hit(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
+    /// 🕵️ The window control or tab under `pos`, resolved from the same geometry the painter uses.
+    pub fn window_target(&self, rect: Rect, pos: Pos) -> Option<WindowHit> {
         let ChromeState::Window(w) = self else { return None };
         let layout = window_chip_layout(w, rect);
-        if !layout.has_tabs {
+        if layout.mode == ChromeMode::Flat {
             return None;
         }
         for group in &layout.groups {
-            let text_y = match group.corner {
-                crate::tui::layout::WindowStackCorner::TopLeft | crate::tui::layout::WindowStackCorner::TopRight => rect.y + 1,
-                crate::tui::layout::WindowStackCorner::BottomLeft | crate::tui::layout::WindowStackCorner::BottomRight => rect.y + rect.height.saturating_sub(2),
-            };
-            if pos.y != text_y {
+            if pos.y != layout.text_y(group.corner, rect) {
                 continue;
             }
             for tab in &group.tabs {
-                if tab.close_x == Some(pos.x) && w.closable {
-                    return Some(crate::tui::widget::WidgetSignal::WindowClose(w.active_stack_tab));
+                let right = tab.x.saturating_add(tab.interior_width.saturating_add(1));
+                if pos.x <= tab.x || pos.x >= right {
+                    continue;
                 }
-                if tab.maximize_x == Some(pos.x) && w.maximizable {
-                    return Some(crate::tui::widget::WidgetSignal::WindowMaximize);
-                }
-                if tab.new_x == Some(pos.x) {
-                    return Some(crate::tui::widget::WidgetSignal::WindowNewTab);
-                }
-                let tab_right = tab.x.saturating_add(tab.interior_width.saturating_add(1));
-                if pos.x > tab.x && pos.x < tab_right {
-                    return Some(crate::tui::widget::WidgetSignal::WindowTabActivated(tab.index));
-                }
+                return match tab.kind {
+                    TabKind::Tab if tab.close_x == Some(pos.x) && w.closable => Some(WindowHit::Close(tab.index)),
+                    TabKind::Tab => Some(WindowHit::Tab(tab.index)),
+                    TabKind::Controls if tab.maximize_x == Some(pos.x) && w.show_maximize() => Some(WindowHit::Maximize(w.active_stack_tab)),
+                    TabKind::Controls if tab.new_x == Some(pos.x) && w.new_tab => Some(WindowHit::NewTab(w.active_stack_tab)),
+                    TabKind::Controls => None,
+                    TabKind::OverflowPrev(target) => Some(WindowHit::OverflowPrev(target)),
+                    TabKind::OverflowNext(target) => Some(WindowHit::OverflowNext(target)),
+                };
             }
         }
         None
     }
 
-    /// 🎯 Control-only hit testing; delegates to `window_hit`.
-    pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
+    /// 👇 Resolves a left-press on window chrome into the signal the app acts on.
+    pub fn window_hit(&self, rect: Rect, pos: Pos) -> Option<WidgetSignal> {
+        Some(match self.window_target(rect, pos)? {
+            WindowHit::Tab(i) | WindowHit::OverflowPrev(i) | WindowHit::OverflowNext(i) => WidgetSignal::WindowTabActivated(i),
+            WindowHit::Close(i) => WidgetSignal::WindowClose(i),
+            WindowHit::Maximize(i) => WidgetSignal::WindowMaximize(i),
+            WindowHit::NewTab(i) => WidgetSignal::WindowNewTab(i),
+        })
+    }
+
+    /// 🎚️ Control-only hit testing; delegates to `window_hit`.
+    pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<WidgetSignal> {
         match self.window_hit(rect, pos)? {
-            s @ (crate::tui::widget::WidgetSignal::WindowClose(_) | crate::tui::widget::WidgetSignal::WindowMaximize) => Some(s),
+            s @ (WidgetSignal::WindowClose(_) | WidgetSignal::WindowMaximize(_) | WidgetSignal::WindowNewTab(_)) => Some(s),
             _ => None,
+        }
+    }
+
+    /// 👆️ Tracks the pointer over the window controls; true when the highlighted control changed.
+    pub fn set_hover(&mut self, rect: Rect, pos: Option<Pos>) -> bool {
+        let hover = pos.and_then(|pos| self.window_target(rect, pos));
+        let ChromeState::Window(w) = self else { return false };
+        let changed = w.hover != hover;
+        w.hover = hover;
+        changed
+    }
+
+    /// 💡️ The tooltip for the control or elided tab under `pos`.
+    pub fn tooltip(&self, rect: Rect, pos: Pos) -> Option<String> {
+        let ChromeState::Window(w) = self else { return None };
+        let text = match self.window_target(rect, pos)? {
+            WindowHit::Close(_) => w.labels.close.clone(),
+            WindowHit::Maximize(_) if w.zoomed => w.labels.restore.clone(),
+            WindowHit::Maximize(_) => w.labels.maximize.clone(),
+            WindowHit::NewTab(_) => w.labels.new_tab.clone(),
+            WindowHit::OverflowPrev(_) => w.labels.previous_tabs.clone(),
+            WindowHit::OverflowNext(_) => w.labels.next_tabs.clone(),
+            WindowHit::Tab(i) => {
+                let label = effective_stack_tabs(w).into_iter().find(|(index, _, _)| *index == i).map(|(_, label, _)| label)?;
+                if display_width(&label) <= TAB_LABEL_CELLS {
+                    return None;
+                }
+                label
+            }
+        };
+        (!text.is_empty()).then_some(text)
+    }
+
+    /// 🧲 The stack tab a drag at `pos` would drop onto: the tab under it, else the nearest end.
+    pub fn window_drop_index(&self, rect: Rect, pos: Pos) -> Option<usize> {
+        let ChromeState::Window(w) = self else { return None };
+        let layout = window_chip_layout(w, rect);
+        let tabs: Vec<&WindowCornerTab> = layout.groups.iter().filter(|group| group.corner.is_top()).flat_map(|group| group.tabs.iter()).filter(|tab| tab.kind == TabKind::Tab).collect();
+        let first = tabs.first()?;
+        let last = tabs.last()?;
+        if pos.x < first.x {
+            return Some(first.index);
+        }
+        tabs.iter().find(|tab| pos.x >= tab.x && pos.x <= tab.x + tab.interior_width + 1).map(|tab| tab.index).or(Some(last.index))
+    }
+
+    /// 🚩 Marks the tab a running drag would drop onto.
+    pub fn set_drop_target(&mut self, target: Option<usize>) {
+        if let ChromeState::Window(w) = self {
+            w.drop_target = target;
         }
     }
 }
 
 const WINDOW_TAB_MAXIMIZE_GLYPH: char = '\u{2922}';
-const WINDOW_TAB_NEW_GLYPH: char = '\u{29C9}';
+const WINDOW_TAB_RESTORE_GLYPH: char = '\u{2921}';
+const WINDOW_TAB_NEW_GLYPH: char = '+';
 const WINDOW_TAB_CLOSE_GLYPH: char = '\u{2715}';
+const OVERFLOW_PREV_GLYPH: char = '\u{2039}';
+const OVERFLOW_NEXT_GLYPH: char = '\u{203a}';
 
-/// 🪟 One 2-row tab recessed into a corner: `x` is its left-wall column, `interior` sits between walls.
-/// `pub(crate)`: shared with `crate::tui::window`'s `paint_window`/`paint_corner_tab`.
+/// 📏️ The widest a tab chip grows, walls included (the 12 rem cap of the dock).
+pub const TAB_CHIP_CELLS: u16 = 24;
+/// 🔤 The widest a tab label shows before it is elided (chip minus walls, padding and the close glyph).
+pub const TAB_LABEL_CELLS: u16 = TAB_CHIP_CELLS - 6;
+const MIN_FULL_ROWS_ONE_ROW: u16 = 4;
+const MIN_FULL_ROWS_TWO_ROWS: u16 = 6;
+
+/// 🔩 One chip's seam geometry: `x` is its left-wall column, the interior of `interior_width` cells sits between walls.
+/// `pub(crate)`: shared with `crate::tui::window`'s `paint_window`/`paint_tab_seam`.
 pub(crate) struct WindowTab {
     pub(crate) x: u16,
-    pub(crate) interior: String,
     pub(crate) interior_width: u16,
 }
 
-/// 🏷️ One corner tab chip with absolute glyph columns for hit-testing.
+/// 🪪 What a chip stands for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TabKind {
+    Tab,
+    OverflowPrev(usize),
+    OverflowNext(usize),
+    Controls,
+}
+
+/// 🔖 One corner chip with absolute glyph columns for hit-testing.
 pub(crate) struct WindowCornerTab {
     pub(crate) x: u16,
     pub(crate) interior: String,
     pub(crate) interior_width: u16,
     pub(crate) index: usize,
+    pub(crate) kind: TabKind,
+    pub(crate) status: Option<Status>,
     pub(crate) maximize_x: Option<u16>,
     pub(crate) new_x: Option<u16>,
     pub(crate) close_x: Option<u16>,
@@ -176,260 +318,318 @@ pub(crate) struct WindowCornerTab {
 
 impl WindowCornerTab {
     pub(crate) fn as_window_tab(&self) -> WindowTab {
-        WindowTab { x: self.x, interior: self.interior.clone(), interior_width: self.interior_width }
+        WindowTab { x: self.x, interior_width: self.interior_width }
     }
 }
 
-/// 🧭️ Tabs docked into one stack corner.
+/// 🗂️ Tabs docked into one stack corner.
 pub(crate) struct WindowCornerChipGroup {
-    pub(crate) corner: crate::tui::layout::WindowStackCorner,
+    pub(crate) corner: WindowStackCorner,
     pub(crate) tabs: Vec<WindowCornerTab>,
 }
 
-/// 🪟 `pub(crate)`: shared with `crate::tui::window`'s `paint_window`.
+/// 🧱️ How much chrome a window can afford.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ChromeMode {
+    Flat,
+    Full,
+    Compact,
+}
+
+/// 🔗 `pub(crate)`: shared with `crate::tui::window`'s `paint_window`.
 pub(crate) struct WindowChipLayout {
-    pub(crate) has_tabs: bool,
+    pub(crate) mode: ChromeMode,
     pub(crate) groups: Vec<WindowCornerChipGroup>,
     pub(crate) top_body_y: u16,
     pub(crate) bottom_body_y: Option<u16>,
-    #[allow(dead_code)]
-    pub(crate) top_left_end_x: u16,
-    #[allow(dead_code)]
-    pub(crate) top_right_start_x: u16,
-    #[allow(dead_code)]
-    pub(crate) bottom_left_end_x: u16,
-    #[allow(dead_code)]
-    pub(crate) bottom_right_start_x: u16,
 }
 
-fn effective_stack_tabs(w: &WindowState) -> Vec<(usize, String, crate::tui::layout::WindowStackCorner)> {
+impl WindowChipLayout {
+    fn flat(rect: Rect) -> Self {
+        Self { mode: ChromeMode::Flat, groups: Vec::new(), top_body_y: rect.y, bottom_body_y: None }
+    }
+
+    /// 🪧 The row that carries a corner group's text.
+    pub(crate) fn text_y(&self, corner: WindowStackCorner, rect: Rect) -> u16 {
+        match (self.mode, corner.is_top()) {
+            (ChromeMode::Compact, _) => rect.y,
+            (_, true) => rect.y + 1,
+            (_, false) => rect.y + rect.height.saturating_sub(2),
+        }
+    }
+}
+
+fn effective_stack_tabs(w: &WindowState) -> Vec<(usize, String, WindowStackCorner)> {
     if w.stack_tabs.is_empty() {
         let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
-        return vec![(0, format!("{number_prefix}{}", w.title), crate::tui::layout::WindowStackCorner::TopLeft)];
+        return vec![(0, format!("{number_prefix}{}", w.title), WindowStackCorner::TopLeft)];
     }
     w.stack_tabs.iter().enumerate().map(|(i, t)| (i, t.label.clone(), t.corner)).collect()
 }
 
-fn build_corner_tab_interior(label: &str, w: &WindowState, room: u16) -> (String, u16, Option<u16>, Option<u16>, Option<u16>) {
-    if room < 3 {
-        return (String::new(), 0, None, None, None);
+/// 🪡 A tab's interior ` label ✕ ` within `max_interior` cells; the label is elided, the close glyph never is.
+fn tab_interior(label: &str, closable: bool, status: bool, max_interior: u16) -> Option<(String, u16, Option<u16>)> {
+    let overhead = 2 + if closable { 2 } else { 0 } + if status { 2 } else { 0 };
+    if max_interior < overhead + 1 {
+        return None;
     }
-    let mut show_max = w.maximizable;
-    let mut show_close = w.closable;
-    let mut show_new_glyph = true;
+    let shown = elide_end(label, (max_interior - overhead).min(TAB_LABEL_CELLS));
+    let mut interior = if status { format!(" {} {shown} ", Status::Waiting.glyph(GlyphSet::Unicode, 0)) } else { format!(" {shown} ") };
+    let mut close_off = None;
+    if closable {
+        close_off = Some(display_width(&interior));
+        interior.push(WINDOW_TAB_CLOSE_GLYPH);
+        interior.push(' ');
+    }
+    let width = display_width(&interior);
+    Some((interior, width, close_off))
+}
+
+fn controls_interior(w: &WindowState) -> Option<(String, u16, Option<u16>, Option<u16>)> {
+    let show_max = w.show_maximize();
+    if !show_max && !w.new_tab {
+        return None;
+    }
+    let mut interior = String::from(" ");
+    let mut max_off = None;
+    let mut new_off = None;
+    if show_max {
+        max_off = Some(display_width(&interior));
+        interior.push(if w.zoomed { WINDOW_TAB_RESTORE_GLYPH } else { WINDOW_TAB_MAXIMIZE_GLYPH });
+        interior.push(' ');
+    }
+    if w.new_tab {
+        new_off = Some(display_width(&interior));
+        interior.push(WINDOW_TAB_NEW_GLYPH);
+        interior.push(' ');
+    }
+    let width = display_width(&interior);
+    Some((interior, width, max_off, new_off))
+}
+
+fn overflow_chip(glyph: char, count: usize, leading: bool) -> (String, u16) {
+    let interior = if leading { format!(" {glyph}{count} ") } else { format!(" {count}{glyph} ") };
+    let width = display_width(&interior);
+    (interior, width)
+}
+
+/// 🎞️ One tab strip: chips in order, the chip index of the first and last shown tab, hidden counts on each side.
+struct Strip {
+    chips: Vec<WindowCornerTab>,
+}
+
+/// 🧮️ The `[start, end)` slice of `widths` that fits `budget` and keeps `active` in view, preferring to extend to the right.
+fn fit_window(widths: &[u16], active: usize, budget: u16, chip_overhead: u16, count_chip: impl Fn(usize) -> u16) -> (usize, usize) {
+    let n = widths.len();
+    if n == 0 {
+        return (0, 0);
+    }
+    let total: u16 = widths.iter().map(|w| w + chip_overhead).sum();
+    if total <= budget {
+        return (0, n);
+    }
+    let active = active.min(n - 1);
+    let (mut start, mut end) = (active, active + 1);
+    let used = |start: usize, end: usize| -> u16 {
+        let tabs: u16 = widths[start..end].iter().map(|w| w + chip_overhead).sum();
+        tabs + if start > 0 { count_chip(start) + chip_overhead } else { 0 } + if end < n { count_chip(n - end) + chip_overhead } else { 0 }
+    };
     loop {
-        let actions = u16::from(show_max) * 2 + u16::from(show_new_glyph) * 2 + u16::from(show_close) * 2;
-        let label_room = room.saturating_sub(2 + actions).max(1);
-        let (label_trunc, _) = truncate_to(label, label_room);
-        let mut interior = format!(" {label_trunc} ");
-        let mut maximize_off = None;
-        let mut new_off = None;
-        let mut close_off = None;
-        if show_max {
-            maximize_off = Some(display_width(&interior));
-            interior.push(WINDOW_TAB_MAXIMIZE_GLYPH);
-            interior.push(' ');
+        let mut grew = false;
+        if end < n && used(start, end + 1) <= budget {
+            end += 1;
+            grew = true;
         }
-        if show_new_glyph {
-            new_off = Some(display_width(&interior));
-            interior.push(WINDOW_TAB_NEW_GLYPH);
-            interior.push(' ');
+        if start > 0 && used(start - 1, end) <= budget {
+            start -= 1;
+            grew = true;
         }
-        if show_close {
-            close_off = Some(display_width(&interior));
-            interior.push(WINDOW_TAB_CLOSE_GLYPH);
-            interior.push(' ');
+        if !grew {
+            break;
         }
-        let width = display_width(&interior);
-        if width <= room {
-            return (interior, width, maximize_off, new_off, close_off);
-        }
-        if show_new_glyph {
-            show_new_glyph = false;
-            continue;
-        }
-        if show_max {
-            show_max = false;
-            continue;
-        }
-        if show_close {
-            show_close = false;
-            continue;
-        }
-        let (label_trunc, _) = truncate_to(label, room.saturating_sub(2).max(1));
-        let interior = format!(" {label_trunc} ");
-        return (interior.clone(), display_width(&interior).min(room), None, None, None);
     }
+    (start, end)
 }
 
-fn layout_corner_tabs(entries: &[(usize, String)], w: &WindowState, start_x: u16, end_x: u16, from_left: bool) -> Vec<WindowCornerTab> {
-    if entries.is_empty() || end_x <= start_x + 2 {
-        return Vec::new();
+/// 🛤️ Builds the chips of one strip inside `[x0, x1)`; `from_left` anchors it to the left edge, else to the right.
+fn build_strip(entries: &[(usize, String)], w: &WindowState, x0: u16, x1: u16, from_left: bool, chip_overhead: u16) -> Strip {
+    let budget = x1.saturating_sub(x0);
+    if entries.is_empty() || budget < chip_overhead + 3 {
+        return Strip { chips: Vec::new() };
     }
-    let span = end_x.saturating_sub(start_x);
-    let mut tabs = Vec::new();
-    if from_left {
-        let mut x = start_x;
-        for (index, label) in entries {
-            if x + 3 >= end_x {
-                break;
-            }
-            let room = end_x.saturating_sub(x + 2);
-            let (interior, interior_width, max_off, new_off, close_off) = build_corner_tab_interior(label, w, room);
-            if interior_width < 3 {
-                break;
-            }
-            let width = interior_width + 2;
-            if x + width > end_x {
-                break;
-            }
-            tabs.push(WindowCornerTab { x, interior, interior_width, index: *index, maximize_x: max_off.map(|o| x + 1 + o), new_x: new_off.map(|o| x + 1 + o), close_x: close_off.map(|o| x + 1 + o) });
-            x = x.saturating_add(width);
-        }
-    } else {
-        let mut right = end_x;
-        let mut rev = Vec::new();
-        for (index, label) in entries.iter().rev() {
-            if right <= start_x + 3 {
-                break;
-            }
-            let room = right.saturating_sub(start_x + 2).min(span);
-            let (interior, interior_width, max_off, new_off, close_off) = build_corner_tab_interior(label, w, room);
-            if interior_width < 3 {
-                break;
-            }
-            let width = interior_width + 2;
-            if right < start_x + width {
-                break;
-            }
-            let x = right - width;
-            if x < start_x {
-                break;
-            }
-            rev.push(WindowCornerTab { x, interior, interior_width, index: *index, maximize_x: max_off.map(|o| x + 1 + o), new_x: new_off.map(|o| x + 1 + o), close_x: close_off.map(|o| x + 1 + o) });
-            right = x;
-        }
-        rev.reverse();
-        tabs = rev;
+    let max_interior = TAB_CHIP_CELLS - chip_overhead;
+    let has_status = |index: usize| w.stack_tabs.get(index).is_some_and(|tab| tab.status.is_some());
+    let natural: Vec<(String, u16, Option<u16>)> = entries.iter().filter_map(|(index, label)| tab_interior(label, w.closable, has_status(*index), max_interior)).collect();
+    if natural.len() != entries.len() {
+        return Strip { chips: Vec::new() };
     }
-    tabs
+    let widths: Vec<u16> = natural.iter().map(|(_, width, _)| *width).collect();
+    let active_pos = entries.iter().position(|(index, _)| *index == w.active_stack_tab).unwrap_or(0);
+    let count_chip = |count: usize| overflow_chip(OVERFLOW_PREV_GLYPH, count, true).1;
+    let (start, end) = fit_window(&widths, active_pos, budget, chip_overhead, count_chip);
+    let left_chip = if start > 0 { overflow_chip(OVERFLOW_PREV_GLYPH, start, true).1 + chip_overhead } else { 0 };
+    let right_chip = if end < entries.len() { overflow_chip(OVERFLOW_NEXT_GLYPH, entries.len() - end, false).1 + chip_overhead } else { 0 };
+    let tab_budget = budget.saturating_sub(left_chip + right_chip);
+    let (show_left, show_right, tab_budget) = if tab_budget < chip_overhead + 3 { (false, false, budget) } else { (start > 0, end < entries.len(), tab_budget) };
+    let mut chips: Vec<WindowCornerTab> = Vec::new();
+    let mut push = |interior: String, interior_width: u16, index: usize, kind: TabKind, close_off: Option<u16>| {
+        chips.push(WindowCornerTab { x: 0, interior, interior_width, index, kind, status: None, maximize_x: None, new_x: None, close_x: close_off });
+    };
+    if show_left {
+        let (interior, width) = overflow_chip(OVERFLOW_PREV_GLYPH, start, true);
+        push(interior, width, usize::MAX, TabKind::OverflowPrev(entries[start - 1].0), None);
+    }
+    for k in start..end {
+        let (interior, width, close_off) = natural[k].clone();
+        let mut room_width = width;
+        let mut interior = interior;
+        let mut close_off = close_off;
+        let used: u16 = widths[start..end].iter().map(|w| w + chip_overhead).sum();
+        if end - start == 1 && used > tab_budget {
+            if let Some((fitted, fitted_width, fitted_close)) = tab_interior(&entries[k].1, w.closable, has_status(entries[k].0), tab_budget.saturating_sub(chip_overhead)) {
+                interior = fitted;
+                room_width = fitted_width;
+                close_off = fitted_close;
+            }
+        }
+        push(interior, room_width, entries[k].0, TabKind::Tab, close_off);
+    }
+    if show_right {
+        let (interior, width) = overflow_chip(OVERFLOW_NEXT_GLYPH, entries.len() - end, false);
+        push(interior, width, usize::MAX, TabKind::OverflowNext(entries[end].0), None);
+    }
+    let total: u16 = chips.iter().map(|chip| chip.interior_width + chip_overhead).sum();
+    let mut x = if from_left { x0 } else { x1.saturating_sub(total).max(x0) };
+    for chip in &mut chips {
+        chip.x = x;
+        chip.close_x = chip.close_x.map(|offset| x + 1 + offset);
+        if chip.kind == TabKind::Tab {
+            chip.status = w.stack_tabs.get(chip.index).and_then(|tab| tab.status);
+        }
+        x += chip.interior_width + chip_overhead;
+    }
+    Strip { chips }
 }
 
-/// 🎯 Shared by paint and click hit-testing so the two can never drift apart.
-/// Returns up to four corner chip groups; each tab carries inline action glyph columns.
+fn controls_chip(w: &WindowState, x: u16) -> Option<WindowCornerTab> {
+    let (interior, interior_width, max_off, new_off) = controls_interior(w)?;
+    Some(WindowCornerTab { x, interior, interior_width, index: usize::MAX, kind: TabKind::Controls, status: None, maximize_x: max_off.map(|o| x + 1 + o), new_x: new_off.map(|o| x + 1 + o), close_x: None })
+}
+
+/// 🧷 Shared by paint and click hit-testing so the two can never drift apart.
+/// Returns up to four corner chip groups; each tab carries its close glyph column, the controls chip the others.
 /// `pub(crate)`: called from `crate::tui::window`'s `paint_window`.
 pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
-    use crate::tui::layout::WindowStackCorner;
-
-    let flat = WindowChipLayout {
-        has_tabs: false,
-        groups: Vec::new(),
-        top_body_y: rect.y,
-        bottom_body_y: None,
-        top_left_end_x: rect.x,
-        top_right_start_x: rect.x + rect.width.saturating_sub(1),
-        bottom_left_end_x: rect.x,
-        bottom_right_start_x: rect.x + rect.width.saturating_sub(1),
-    };
-    if rect.width < 4 || rect.height < 4 {
-        return flat;
+    if rect.width < 4 || rect.height < 3 {
+        return WindowChipLayout::flat(rect);
     }
-
     let effective = effective_stack_tabs(w);
-    let mut tl = Vec::new();
-    let mut tr = Vec::new();
-    let mut bl = Vec::new();
-    let mut br = Vec::new();
+    let mut by_corner: [Vec<(usize, String)>; 4] = Default::default();
     for (index, label, corner) in &effective {
-        match corner {
-            WindowStackCorner::TopLeft => tl.push((*index, label.clone())),
-            WindowStackCorner::TopRight => tr.push((*index, label.clone())),
-            WindowStackCorner::BottomLeft => bl.push((*index, label.clone())),
-            WindowStackCorner::BottomRight => br.push((*index, label.clone())),
-        }
+        let slot = match corner {
+            WindowStackCorner::TopLeft => 0,
+            WindowStackCorner::TopRight => 1,
+            WindowStackCorner::BottomLeft => 2,
+            WindowStackCorner::BottomRight => 3,
+        };
+        by_corner[slot].push((*index, label.clone()));
     }
-
-    let has_top = !tl.is_empty() || !tr.is_empty();
-    let has_bottom = !bl.is_empty() || !br.is_empty();
-    let min_h = match (has_top, has_bottom) {
-        (true, true) => 6,
-        (true, false) | (false, true) => 4,
-        (false, false) => 2,
+    let has_top = !by_corner[0].is_empty() || !by_corner[1].is_empty();
+    let has_bottom = !by_corner[2].is_empty() || !by_corner[3].is_empty();
+    let min_rows = match (has_top, has_bottom) {
+        (true, true) => MIN_FULL_ROWS_TWO_ROWS,
+        (true, false) | (false, true) => MIN_FULL_ROWS_ONE_ROW,
+        (false, false) => return WindowChipLayout::flat(rect),
     };
-    if rect.height < min_h || (!has_top && !has_bottom) {
-        return flat;
+    if w.compact || rect.height < min_rows {
+        return compact_layout(w, rect, &effective);
     }
-
-    let mid = rect.x + rect.width / 2;
-    let right = rect.x + rect.width;
-
-    let tl_tabs = layout_corner_tabs(&tl, w, rect.x, mid.saturating_add(1).max(rect.x + 3), true);
-    let tr_tabs = layout_corner_tabs(&tr, w, mid.saturating_sub(1).min(right.saturating_sub(3)), right, false);
-    let bl_tabs = layout_corner_tabs(&bl, w, rect.x, mid.saturating_add(1).max(rect.x + 3), true);
-    let br_tabs = layout_corner_tabs(&br, w, mid.saturating_sub(1).min(right.saturating_sub(3)), right, false);
-
-    // Resolve collisions on an edge: prefer left group, shrink right start.
-    let top_left_end_x = tl_tabs.last().map(|t| t.x + t.interior_width + 2).unwrap_or(rect.x);
-    let mut top_right_start_x = tr_tabs.first().map(|t| t.x).unwrap_or(right.saturating_sub(1));
-    if !tr_tabs.is_empty() && top_right_start_x < top_left_end_x.saturating_add(1) {
-        top_right_start_x = top_left_end_x.saturating_add(1).min(right.saturating_sub(1));
-    }
-    let bottom_left_end_x = bl_tabs.last().map(|t| t.x + t.interior_width + 2).unwrap_or(rect.x);
-    let mut bottom_right_start_x = br_tabs.first().map(|t| t.x).unwrap_or(right.saturating_sub(1));
-    if !br_tabs.is_empty() && bottom_right_start_x < bottom_left_end_x.saturating_add(1) {
-        bottom_right_start_x = bottom_left_end_x.saturating_add(1).min(right.saturating_sub(1));
-    }
-
+    let controls_on_top = has_top;
+    let controls = controls_chip(w, 0);
+    let controls_width = controls.as_ref().map_or(0, |chip| chip.interior_width + 2);
     let mut groups = Vec::new();
-    if !tl_tabs.is_empty() {
-        groups.push(WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs: tl_tabs });
-    }
-    if !tr_tabs.is_empty() {
-        // Drop colliding right tabs that start before left end.
-        let tabs: Vec<_> = tr_tabs.into_iter().filter(|t| t.x >= top_left_end_x.saturating_add(1)).collect();
-        if !tabs.is_empty() {
-            top_right_start_x = tabs.first().map(|t| t.x).unwrap_or(top_right_start_x);
-            groups.push(WindowCornerChipGroup { corner: WindowStackCorner::TopRight, tabs });
-        } else {
-            top_right_start_x = right.saturating_sub(1);
+    for (row_is_top, left, right) in [(true, 0usize, 1usize), (false, 2, 3)] {
+        let reserve = if row_is_top == controls_on_top { controls_width } else { 0 };
+        let avail = rect.width.saturating_sub(reserve);
+        let (left_entries, right_entries) = (&by_corner[left], &by_corner[right]);
+        let mid = rect.x + if left_entries.is_empty() || right_entries.is_empty() { avail } else { avail.div_ceil(2) };
+        let corners = [(left, true), (right, false)];
+        for (slot, from_left) in corners {
+            let entries = &by_corner[slot];
+            let (x0, x1) = match (from_left, right_entries.is_empty(), left_entries.is_empty()) {
+                (true, true, _) => (rect.x, rect.x + avail),
+                (true, false, _) => (rect.x, mid),
+                (false, _, true) => (rect.x, rect.x + avail),
+                (false, _, false) => (mid, rect.x + avail),
+            };
+            let strip = build_strip(entries, w, x0, x1, from_left, 2);
+            if !strip.chips.is_empty() {
+                let corner = match (row_is_top, from_left) {
+                    (true, true) => WindowStackCorner::TopLeft,
+                    (true, false) => WindowStackCorner::TopRight,
+                    (false, true) => WindowStackCorner::BottomLeft,
+                    (false, false) => WindowStackCorner::BottomRight,
+                };
+                groups.push(WindowCornerChipGroup { corner, tabs: strip.chips });
+            }
         }
     }
-    if !bl_tabs.is_empty() {
-        groups.push(WindowCornerChipGroup { corner: WindowStackCorner::BottomLeft, tabs: bl_tabs });
-    }
-    if !br_tabs.is_empty() {
-        let tabs: Vec<_> = br_tabs.into_iter().filter(|t| t.x >= bottom_left_end_x.saturating_add(1)).collect();
-        if !tabs.is_empty() {
-            bottom_right_start_x = tabs.first().map(|t| t.x).unwrap_or(bottom_right_start_x);
-            groups.push(WindowCornerChipGroup { corner: WindowStackCorner::BottomRight, tabs });
-        } else {
-            bottom_right_start_x = right.saturating_sub(1);
+    if let Some(mut chip) = controls {
+        let x = rect.x + rect.width - controls_width;
+        chip.x = x;
+        chip.maximize_x = chip.maximize_x.map(|o| x + o);
+        chip.new_x = chip.new_x.map(|o| x + o);
+        let corner = if controls_on_top { WindowStackCorner::TopRight } else { WindowStackCorner::BottomRight };
+        match groups.iter_mut().find(|group| group.corner == corner) {
+            Some(group) => group.tabs.push(chip),
+            None => groups.push(WindowCornerChipGroup { corner, tabs: vec![chip] }),
         }
     }
-
     if groups.is_empty() {
-        return flat;
+        return WindowChipLayout::flat(rect);
     }
-
-    let top_body_y = if has_top { rect.y + 2 } else { rect.y };
-    let bottom_body_y = if has_bottom { Some(rect.y + rect.height.saturating_sub(3)) } else { None };
-
+    groups.sort_by_key(|group| match group.corner {
+        WindowStackCorner::TopLeft => 0,
+        WindowStackCorner::TopRight => 1,
+        WindowStackCorner::BottomLeft => 2,
+        WindowStackCorner::BottomRight => 3,
+    });
+    let has_top = groups.iter().any(|group| group.corner.is_top());
+    let has_bottom = groups.iter().any(|group| !group.corner.is_top());
     WindowChipLayout {
-        has_tabs: true,
+        mode: ChromeMode::Full,
         groups,
-        top_body_y,
-        bottom_body_y,
-        top_left_end_x: if has_top { top_left_end_x } else { rect.x },
-        top_right_start_x: if has_top { top_right_start_x } else { right.saturating_sub(1) },
-        bottom_left_end_x: if has_bottom { bottom_left_end_x } else { rect.x },
-        bottom_right_start_x: if has_bottom { bottom_right_start_x } else { right.saturating_sub(1) },
+        top_body_y: if has_top { rect.y + 2 } else { rect.y },
+        bottom_body_y: if has_bottom { Some(rect.y + rect.height.saturating_sub(3)) } else { None },
     }
+}
+
+/// 📱️ One-row chrome: every tab sits on the top border, `┌ ◐ dev ✕ │ ✓ Tasks ✕ ──── ⤢ ┐`.
+fn compact_layout(w: &WindowState, rect: Rect, effective: &[(usize, String, WindowStackCorner)]) -> WindowChipLayout {
+    let entries: Vec<(usize, String)> = effective.iter().map(|(index, label, _)| (*index, label.clone())).collect();
+    let controls = controls_chip(w, 0);
+    let controls_width = controls.as_ref().map_or(0, |chip| chip.interior_width + 1);
+    let x0 = rect.x;
+    let x1 = (rect.x + rect.width).saturating_sub(1 + controls_width);
+    let strip = build_strip(&entries, w, x0, x1.saturating_sub(1), true, 1);
+    let mut tabs = strip.chips;
+    if tabs.is_empty() && controls.is_none() {
+        return WindowChipLayout::flat(rect);
+    }
+    if let Some(mut chip) = controls {
+        let x = rect.x + rect.width - 1 - controls_width;
+        chip.x = x;
+        chip.maximize_x = chip.maximize_x.map(|o| x + o);
+        chip.new_x = chip.new_x.map(|o| x + o);
+        tabs.push(chip);
+    }
+    WindowChipLayout { mode: ChromeMode::Compact, groups: vec![WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs }], top_body_y: rect.y, bottom_body_y: None }
 }
 
 /// 🚪 Content inset that keeps children inside the closed outline, under the hairline a chip bends into.
 pub(crate) fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
     let layout = window_chip_layout(w, rect);
-    if !layout.has_tabs {
+    if layout.mode != ChromeMode::Full {
         return [1, 1, 1, 1];
     }
     let has_top = layout.groups.iter().any(|group| group.corner.is_top());
@@ -444,7 +644,7 @@ pub(crate) fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
     [top, 1, bottom, 1]
 }
 
-/// ??? The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
+/// 🏗️ The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
 pub struct Shell {
     pub navbar: NodeId,
     pub canvas: NodeId,
@@ -453,38 +653,36 @@ pub struct Shell {
     pub mount_root: Option<NodeId>,
 }
 
-/// ??? Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
+/// 🏛️ Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
 pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout: &WindowLayout) -> Shell {
+    use crate::tui::layout::{Constraint, Dimension, Direction};
     let root = scene.root();
     let navbar_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Navbar(navbar))));
     let canvas_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
     let footer_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Footer(footer))));
-    {
-        let mut root_mut = scene.node_mut(root);
-        root_mut.set_constraint(crate::tui::layout::Constraint { direction: crate::tui::layout::Direction::Column, ..Default::default() });
-    }
-    scene.node_mut(navbar_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
-    scene.node_mut(canvas_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Weight(1), direction: crate::tui::layout::Direction::Stack, ..Default::default() });
-    scene.node_mut(footer_id).set_constraint(crate::tui::layout::Constraint { height: crate::tui::layout::Dimension::Cells(2), ..Default::default() });
+    scene.node_mut(root).set_constraint(Constraint { direction: Direction::Column, ..Default::default() });
+    scene.node_mut(navbar_id).set_constraint(Constraint { height: Dimension::Cells(2), ..Default::default() });
+    scene.node_mut(canvas_id).set_constraint(Constraint { height: Dimension::Weight(1), direction: Direction::Stack, ..Default::default() });
+    scene.node_mut(footer_id).set_constraint(Constraint { height: Dimension::Cells(2), ..Default::default() });
     let mut windows = Vec::new();
     for measure in solve_window_layout(layout, Rect::default()) {
-        let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
-        scene.node_mut(id).set_constraint(crate::tui::layout::Constraint {
-            width: crate::tui::layout::Dimension::Weight(1),
-            height: crate::tui::layout::Dimension::Weight(1),
-            direction: crate::tui::layout::Direction::Column,
-            padding: [2, 1, 1, 1],
-            gap: 1,
-            ..Default::default()
-        });
+        let title = measure.title.clone().unwrap_or_else(|| measure.window_kind_id.clone());
+        let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(Box::new(WindowState::new(title))))));
+        scene.node_mut(id).set_constraint(window_constraint());
         windows.push((measure.window_kind_id, id));
     }
     Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows, mount_root: None }
 }
 
-/// ?? Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
+fn window_constraint() -> crate::tui::layout::Constraint {
+    use crate::tui::layout::{Constraint, Dimension, Direction};
+    Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() }
+}
+
+/// 🪆 Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
+/// Axes become splitter-bearing `Axis` nodes one gutter cell apart; a zoomed layout hides every other window.
 pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
-    use crate::tui::layout::{Dimension, Direction, WindowLayoutChild, WindowLayoutRoot};
+    use crate::tui::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
 
     if let Some(old) = *mount_root {
         for (_, window) in windows {
@@ -494,76 +692,145 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
         *mount_root = None;
     }
     let mount = scene.add(canvas, Node::new(NodeContent::Box));
-    scene.node_mut(mount).set_constraint(crate::tui::layout::Constraint { direction: Direction::Stack, width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
+    scene.node_mut(mount).set_constraint(Constraint { direction: Direction::Stack, width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
     *mount_root = Some(mount);
-
-    fn weight(size: Option<f64>) -> u16 {
-        ((size.unwrap_or(1.0) * 100.0).round() as u16).max(1)
-    }
 
     fn find_window(windows: &[(String, NodeId)], id: &str) -> Option<NodeId> {
         windows.iter().find(|(k, _)| k == id).map(|(_, n)| *n)
     }
 
-    fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &crate::tui::layout::WindowLayoutStackNode, windows: &[(String, NodeId)], w: u16) {
+    fn count_stacks(child: &WindowLayoutChild) -> usize {
+        match child {
+            WindowLayoutChild::Stack(s) => usize::from(!s.children.is_empty()),
+            WindowLayoutChild::Axis(a) => a.children.iter().map(count_stacks).sum(),
+        }
+    }
+
+    fn tab_label(child: &crate::tui::layout::WindowLayoutWindowNode) -> String {
+        child.title.clone().unwrap_or_else(|| child.window_kind_id.clone())
+    }
+
+    /// 🧿 Which tab of a stack a window node shows, how many stacks share the canvas and whether it is zoomed.
+    struct StackSlot<'a> {
+        own: &'a str,
+        active: &'a str,
+        peers: usize,
+        zoomed: bool,
+    }
+
+    fn style_window(scene: &mut Scene, windows: &[(String, NodeId)], win_id: NodeId, stack: &WindowLayoutStackNode, slot: &StackSlot<'_>) {
+        let StackSlot { own, active, peers, zoomed } = *slot;
+        let status_of = |scene: &Scene, id: &str| windows.iter().find(|(known, _)| known == id).and_then(|(_, node)| match &scene.node(*node).content {
+            NodeContent::Chrome(ChromeState::Window(state)) => state.status,
+            _ => None,
+        });
+        let tabs: Vec<WindowStackTabState> = stack.children.iter().map(|c| WindowStackTabState { label: tab_label(c), corner: c.corner.unwrap_or_default(), status: status_of(scene, &c.window_kind_id) }).collect();
+        let ids: Vec<String> = stack.children.iter().map(|c| c.window_kind_id.clone()).collect();
+        let active_idx = stack.children.iter().position(|t| t.window_kind_id == active).unwrap_or(0);
+        let title = stack.children.iter().find(|c| c.window_kind_id == own).map(tab_label);
+        let visible = own == active;
+        scene.node_mut(win_id).set_visible(visible);
+        scene.node_mut(win_id).set_constraint(window_constraint());
+        if let Some(ChromeState::Window(ws)) = scene.node_mut(win_id).chrome() {
+            ws.stack_tabs = tabs;
+            ws.tab_ids = ids;
+            ws.active_stack_tab = active_idx;
+            ws.peers = peers;
+            ws.zoomed = zoomed;
+            if let Some(title) = title {
+                ws.title = title;
+            }
+        }
+    }
+
+    fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &WindowLayoutStackNode, windows: &[(String, NodeId)], weight: u16, peers: usize) {
         let box_id = scene.add(parent, Node::new(NodeContent::Box));
-        scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint { direction: Direction::Stack, width: Dimension::Weight(w), height: Dimension::Weight(w), ..Default::default() });
-        let active = stack.active_window_kind_id.as_deref().unwrap_or_else(|| stack.children.first().map(|c| c.window_kind_id.as_str()).unwrap_or(""));
-        let tabs: Vec<WindowStackTabState> = stack.children.iter().map(|c| WindowStackTabState { label: c.window_kind_id.clone(), corner: c.corner.unwrap_or_default() }).collect();
-        let active_idx = tabs.iter().position(|t| t.label == active).unwrap_or(0);
+        scene.node_mut(box_id).set_constraint(Constraint { direction: Direction::Stack, width: Dimension::Weight(weight), height: Dimension::Weight(weight), ..Default::default() });
+        let active = stack.active_window_kind_id.as_deref().unwrap_or_else(|| stack.children.first().map_or("", |c| c.window_kind_id.as_str()));
         for child in &stack.children {
             if let Some(win_id) = find_window(windows, &child.window_kind_id) {
                 scene.reparent(win_id, box_id);
-                let visible = child.window_kind_id == active;
-                scene.node_mut(win_id).set_visible(visible);
-                scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
-                if let Some(chrome) = scene.node_mut(win_id).chrome() {
-                    if let ChromeState::Window(ref mut ws) = chrome {
-                        ws.stack_tabs = tabs.clone();
-                        ws.active_stack_tab = active_idx;
-                        ws.title = child.title.clone().unwrap_or_else(|| child.window_kind_id.clone());
+                style_window(scene, windows, win_id, stack, &StackSlot { own: &child.window_kind_id, active, peers, zoomed: false });
+            }
+        }
+    }
+
+    fn mount_child(scene: &mut Scene, parent: NodeId, child: &WindowLayoutChild, windows: &[(String, NodeId)], path: &[usize], peers: usize) {
+        match child {
+            WindowLayoutChild::Axis(axis) => {
+                let is_row = axis.kind == "row";
+                let weight = weight_of(axis.size);
+                let box_id = scene.add(parent, Node::new(NodeContent::Axis(AxisState::new(is_row, path.to_vec()))));
+                scene.node_mut(box_id).set_constraint(Constraint {
+                    direction: if is_row { Direction::Row } else { Direction::Column },
+                    width: Dimension::Weight(weight),
+                    height: Dimension::Weight(weight),
+                    gap: WINDOW_GAP,
+                    ..Default::default()
+                });
+                for (i, c) in axis.children.iter().enumerate() {
+                    let mut child_path = path.to_vec();
+                    child_path.push(i);
+                    mount_child(scene, box_id, c, windows, &child_path, peers);
+                }
+            }
+            WindowLayoutChild::Stack(stack) => mount_stack(scene, parent, stack, windows, weight_of(stack.size), peers),
+        }
+    }
+
+    let peers = match &layout.root {
+        WindowLayoutRoot::Axis(axis) => count_stacks(&WindowLayoutChild::Axis(axis.clone())),
+        WindowLayoutRoot::Stack(stack) => usize::from(!stack.children.is_empty()),
+    };
+
+    if let Some(zid) = layout.zoomed.as_deref() {
+        if let Some(zoomed) = find_window(windows, zid) {
+            for (id, window) in windows {
+                scene.reparent(*window, mount);
+                scene.node_mut(*window).set_visible(id == zid);
+            }
+            let stack = crate::tui::layout::stack_hosting(layout, zid);
+            match stack {
+                Some(stack) => style_window(scene, windows, zoomed, &stack, &StackSlot { own: zid, active: zid, peers, zoomed: true }),
+                None => {
+                    scene.node_mut(zoomed).set_constraint(window_constraint());
+                    if let Some(ChromeState::Window(ws)) = scene.node_mut(zoomed).chrome() {
+                        ws.zoomed = true;
+                        ws.peers = peers;
+                    }
+                }
+            }
+            return;
+        }
+    }
+
+    match &layout.root {
+        WindowLayoutRoot::Axis(axis) => mount_child(scene, mount, &WindowLayoutChild::Axis(axis.clone()), windows, &[], peers),
+        WindowLayoutRoot::Stack(stack) => mount_stack(scene, mount, stack, windows, 1, peers),
+    }
+}
+
+impl Shell {
+    /// 📍 Sets the task status of window `id` and mirrors it into the tab strip of every window that shows it as a tab.
+    pub fn set_status(&self, scene: &mut Scene, id: &str, status: Option<Status>) {
+        for (_, node) in &self.windows {
+            if let Some(ChromeState::Window(state)) = scene.node_mut(*node).chrome() {
+                if self.windows.iter().any(|(known, own)| known == id && own == node) {
+                    state.status = status;
+                }
+                let tabs = state.tab_ids.clone();
+                for (index, tab_id) in tabs.iter().enumerate() {
+                    if tab_id == id {
+                        if let Some(tab) = state.stack_tabs.get_mut(index) {
+                            tab.status = status;
+                        }
                     }
                 }
             }
         }
     }
 
-    fn mount_child(scene: &mut Scene, parent: NodeId, child: &WindowLayoutChild, windows: &[(String, NodeId)]) {
-        match child {
-            WindowLayoutChild::Axis(axis) => {
-                let is_row = axis.kind == "row";
-                let box_id = scene.add(parent, Node::new(NodeContent::Box));
-                scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint {
-                    direction: if is_row { Direction::Row } else { Direction::Column },
-                    width: Dimension::Weight(weight(axis.size)),
-                    height: Dimension::Weight(weight(axis.size)),
-                    ..Default::default()
-                });
-                for c in &axis.children {
-                    mount_child(scene, box_id, c, windows);
-                }
-            }
-            WindowLayoutChild::Stack(stack) => mount_stack(scene, parent, stack, windows, weight(stack.size)),
-        }
-    }
-
-    if let Some(zid) = layout.zoomed.as_deref() {
-        if let Some(win_id) = find_window(windows, zid) {
-            scene.reparent(win_id, mount);
-            scene.node_mut(win_id).set_visible(true);
-            scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
-        }
-        return;
-    }
-
-    match &layout.root {
-        WindowLayoutRoot::Axis(axis) => mount_child(scene, mount, &WindowLayoutChild::Axis(axis.clone()), windows),
-        WindowLayoutRoot::Stack(stack) => mount_stack(scene, mount, stack, windows, 1),
-    }
-}
-
-impl Shell {
-    /// ?? Rebuilds the tiling mount tree and reparents window nodes.
+    /// 🔨 Rebuilds the tiling mount tree and reparents window nodes.
     pub fn remount(&mut self, scene: &mut Scene, layout: &WindowLayout) {
         mount_window_layout(scene, self.canvas, layout, &self.windows, &mut self.mount_root);
     }

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-storey",
+  "semanticKind": "rename-storey",
+  "displayName": "Rename Storey",
+  "emoji": "🏷️",
+  "aggregateVariant": "RenameStorey",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

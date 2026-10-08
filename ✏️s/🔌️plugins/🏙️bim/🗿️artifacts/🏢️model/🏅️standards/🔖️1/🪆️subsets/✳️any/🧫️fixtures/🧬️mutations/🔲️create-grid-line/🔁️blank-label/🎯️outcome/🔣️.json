@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "grid_line",
+    "label"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "beams": {
+    "b-a": {
+      "beam_type": "bt-40x60",
+      "end": {
+        "x": 6.0,
+        "y": 0.0
+      },
+      "entry": "Patched",
+      "name": "Beam A long"
+    }
+  }
+}

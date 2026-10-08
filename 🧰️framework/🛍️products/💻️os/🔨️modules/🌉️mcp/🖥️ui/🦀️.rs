@@ -83,7 +83,7 @@ fn bridge_not_running_error() -> GatewayError {
 /// 🕳️ A `BridgeHandle` exists but no shell connection is live — the normal headless state, not a
 /// bug. The gateway's offer is already published, so a shell started now dials it on its own.
 fn no_shell_attached_error() -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start `bun ./📜️script.ts dev s` (it dials this gateway on its own) and retry").retryable()
+    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start `bun run dashboard run playground:s` (it dials this gateway on its own) and retry").retryable()
 }
 
 /// 🧭️ The connection this facet routes `ShellCommand`/`semio://window…` reads through — the

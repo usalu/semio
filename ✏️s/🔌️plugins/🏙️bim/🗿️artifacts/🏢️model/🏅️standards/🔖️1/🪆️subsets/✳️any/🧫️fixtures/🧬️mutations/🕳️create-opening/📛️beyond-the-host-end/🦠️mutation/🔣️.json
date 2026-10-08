@@ -1,0 +1,16 @@
+{
+  "mutation": "createOpening",
+  "id": "o-1",
+  "opening": {
+    "host": "w-south",
+    "kind": {
+      "Window": {
+        "window_type": "win-1"
+      }
+    },
+    "offset": 7.7,
+    "flip_hand": false,
+    "flip_facing": false,
+    "name": "Kitchen"
+  }
+}

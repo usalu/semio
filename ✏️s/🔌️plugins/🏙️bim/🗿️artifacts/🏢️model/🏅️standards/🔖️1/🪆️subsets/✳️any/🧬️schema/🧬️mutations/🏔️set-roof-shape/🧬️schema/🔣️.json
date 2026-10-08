@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-roof-shape/schema.json",
+  "title": "SetRoofShape",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRoofShape"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "ref": {
+          "kind": "roof"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "shape": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofShape",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Shape",
+          "de": "Dachform"
+        },
+        "group": "shape",
+        "order": 20,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "overhang": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Overhang (m)",
+          "de": "Überstand (m)"
+        },
+        "group": "placement",
+        "order": 30,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    },
+    "base_offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Base offset (m)",
+          "de": "Fußversatz (m)"
+        },
+        "group": "placement",
+        "order": 40,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "description": {
+          "en": "Leave empty to keep the current value.",
+          "de": "Leer lassen, um den aktuellen Wert zu behalten."
+        }
+      }
+    }
+  }
+}

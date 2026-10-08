@@ -1,0 +1,6 @@
+{
+  "mutation": "setBeam",
+  "id": "b-a",
+  "beam_type": "bt-30x50",
+  "top_offset": -0.25
+}

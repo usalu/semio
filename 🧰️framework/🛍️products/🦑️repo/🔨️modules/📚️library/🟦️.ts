@@ -35,7 +35,6 @@ import { isGeneratedPath, repoCacheDirectory } from "./⚡️caching/🟦️.ts"
 import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, loadTaxonomy, taxonomyRelativePathIsExcluded } from "./🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
-import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playground/🧭️selection/🟦️.ts";
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
@@ -935,6 +934,7 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-hub-sequence": { quick: 600_000 },
   "semio-hub-fem": { quick: 1_800_000 },
   "semio-hub-architect": { quick: 1_800_000 },
+  "semio-hub-bim": { quick: 1_800_000 },
   "semio-hub-process": { quick: 1_200_000 },
   "semio-hub-lowpoly": { quick: 900_000 },
   "semio-hub-reasoning": { quick: 600_000 },
@@ -1976,42 +1976,6 @@ export const SEMIO_ASSET_SERVER_PORT = 6141;
 
 /** 🔌️ Process env for the absolute asset server URL base (native-bin wgpu route-relative fetches). */
 export const SEMIO_ASSET_BASE_URL_ENV = "SEMIO_ASSET_BASE_URL";
-
-/** 🔌️ Resolves the default dev port for a given catalog variant and renderer. */
-export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVariant[], variant: string, renderer: string): number {
-  const row = catalog.find((r) => r.variant === variant);
-  if (!row) return 6066;
-  return renderer === "wgpu" ? row.ports.wgpu : row.ports.react;
-}
-
-/** 🎯️ Resolves `bun ./📜️script.ts dev …` segments to a framework OS plugin filter via the catalog. */
-export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundVariant[], segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
-  if (segments.length === 0) return null;
-  for (let len = segments.length; len >= 1; len--) {
-    const alias = segments.slice(0, len).join(" ");
-    const row = catalog.find((r) => r.variant === alias || r.aliases.includes(alias));
-    if (row) {
-      return { plugin: row.variant, rest: segments.slice(len) };
-    }
-  }
-  return null;
-}
-
-/** 🧊️ Env for `@semio-tech/framework-os-dev:dev` with a plugin filter and the renderer an
- * explicit `SEMIO_RENDERER` (launch row, `extra`) selects — wgpu only as the unset default. The value
- * picks the `dev-<variant>-<renderer>-<profile>` target in `resolveNxInvocation`, so a react launch
- * row reaches Vite and never the wgpu browser server. */
-export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: Partial<NodeJS.ProcessEnv> = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const renderer = extra.SEMIO_RENDERER ?? env.SEMIO_RENDERER ?? "wgpu";
-  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
-  const portVal = extra.S_OS_PORT || env.S_OS_PORT || String(defaultPort);
-  return devToolingEnv({
-    SEMIO_PLUGIN: plugin,
-    ...extra,
-    SEMIO_RENDERER: renderer,
-    S_OS_PORT: portVal,
-  });
-}
 //#endregion 🖥️FrameworkOsPlaygroundDev
 
 /** 🧰️Play/vite dev env with optional file-watcher polling defaults. Polling only makes sense where
@@ -5650,6 +5614,5 @@ export * from "./🏃️process/🟦️.ts";
 /** 🎮️ Generated playground catalog, dev/test port table and locked-example define — owned by
  * `📚️library/🎮️playground/🟦️.ts` so port consumers need no taxonomy walk. */
 export * from "./🎮️playground/🟦️.ts";
-export { loadFrameworkOsPlaygroundSelections } from "./🎮️playground/🧭️selection/🟦️.ts";
 export { playgroundVariantsFromCrateManifest, registerPlaygroundSiteBuildCommands } from "./🎮️playground/🌐️site/🟦️.ts";
 //#endregion 🎮️Playground

@@ -141,11 +141,11 @@ class Peer {
 function semioEntry(): ServerEntry {
   const config = JSON.parse(readFileSync(join(REPO_ROOT, ".mcp.json"), "utf8")) as { mcpServers: Record<string, ServerEntry> };
   const entry = config.mcpServers.semio;
-  if (!entry) throw new Error(".mcp.json declares no `semio` server — the gate drives the shipped launch line, never a hand-rolled one");
+  if (!entry) throw new Error(".mcp.json declares no `semio` server — the gate drives the shipped server command line, never a hand-rolled one");
   return entry;
 }
 
-/** 🔐️ The same launch line with `conversation.write` REMOVED — the negative control for step 2.
+/** 🔐️ The same server command line with `conversation.write` REMOVED — the negative control for step 2.
  * Built by rewriting the shipped `--scopes` rather than by hand, so it can never drift into
  * granting something the real config does not. */
 function unscopedEntry(entry: ServerEntry): ServerEntry {

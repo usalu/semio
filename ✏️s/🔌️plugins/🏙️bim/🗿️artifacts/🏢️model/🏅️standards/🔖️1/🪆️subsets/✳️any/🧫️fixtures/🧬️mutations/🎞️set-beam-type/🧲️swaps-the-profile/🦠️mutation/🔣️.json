@@ -1,0 +1,10 @@
+{
+  "mutation": "setBeamType",
+  "id": "bt-i300",
+  "profile": {
+    "Rectangle": {
+      "width": 0.2,
+      "depth": 0.4
+    }
+  }
+}

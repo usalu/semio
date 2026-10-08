@@ -1,0 +1,9 @@
+dialect grammar
+grammar bim.diff
+extension bim
+start document
+
+document = header body
+header = "schema" SP "bim.model.diff" NL
+body = payload NL?
+payload = OCTET+

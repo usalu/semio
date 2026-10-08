@@ -1,0 +1,16 @@
+{
+  "mutation": "setWallType",
+  "id": "wt-300",
+  "layers": [
+    {
+      "material": "m-brick",
+      "thickness": 0.24,
+      "function": "Structure"
+    },
+    {
+      "material": "m-wool",
+      "thickness": 0.12,
+      "function": "Insulation"
+    }
+  ]
+}

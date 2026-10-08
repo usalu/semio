@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-slab-type/schema.json",
+  "title": "DeleteSlabType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteSlabType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slab type",
+          "de": "Deckentyp"
+        },
+        "ref": {
+          "kind": "slab-type"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "slabs": {
+    "sl-ground": {
+      "entry": "Patched",
+      "slope": {
+        "value": {
+          "angle": 0.05,
+          "direction": 1.57
+        }
+      }
+    }
+  }
+}

@@ -596,51 +596,6 @@
         "forwardAllArgs": true
       }
     },
-    "serve": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "continuous": true,
-      "outputs": [],
-      "dependsOn": [
-        "generate-frame-worker",
-        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
-      ],
-      "options": {
-        "command": "bun ../../🌐️server/📜️script.ts serve s dev",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
-      }
-    },
-    "dev": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "continuous": true,
-      "outputs": [],
-      "dependsOn": [
-        "generate-frame-worker",
-        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
-      ],
-      "options": {
-        "command": "bun ../../🌐️server/📜️script.ts serve s dev",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": true
-      }
-    },
-    "native": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "continuous": true,
-      "outputs": [],
-      "dependsOn": [
-        "native-build",
-        "@semio-tech/framework-os-dev:prepare-s-native-dev"
-      ],
-      "options": {
-        "command": "bun ../../⌨️native-entrypoint/📜️script.ts run s dev",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "forwardAllArgs": false
-      }
-    },
     "native-environment-check": {
       "executor": "nx:run-commands",
       "options": {
@@ -678,34 +633,6 @@
       "options": {
         "command": "bun \"../../🏗️compiler/🦀️native/📜️script.ts\" build release",
         "cwd": "{projectRoot}"
-      }
-    },
-    "native-release": {
-      "metadata": {
-        "semio": {
-          "dashboard": {
-            "parameters": [
-              {
-                "id": "variant",
-                "kind": "text",
-                "valuePositional": true
-              }
-            ]
-          }
-        }
-      },
-      "executor": "nx:run-commands",
-      "cache": false,
-      "continuous": true,
-      "outputs": [],
-      "dependsOn": [
-        "native-build-release",
-        "@semio-tech/framework-os-dev:prepare-s-native-release"
-      ],
-      "options": {
-        "command": "bun ../../⌨️native-entrypoint/📜️script.ts run s release",
-        "cwd": "{projectRoot}",
-        "forwardAllArgs": false
       }
     },
     "lint": {

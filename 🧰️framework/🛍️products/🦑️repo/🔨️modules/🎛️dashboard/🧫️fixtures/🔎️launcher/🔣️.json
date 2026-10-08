@@ -1,5 +1,388 @@
 {
   "options": ["test / ui / rust", "build / quiz / rust", "dev / demo / react / all examples", "dev / demo / wgpu-native / examples / first", "Aufgaben / Übung"],
   "cases": [{"filter":"test ui","index":0},{"filter":"quiz","index":1},{"filter":"dev react","index":2},{"filter":"native first","index":3},{"filter":"ÜBUNG","index":4},{"filter":"nothing","index":null}],
-  "pointer": [{"filter":"dev","selected":1,"height":4,"row":1,"index":2},{"filter":"dev","selected":1,"height":4,"row":2,"index":3},{"filter":"","selected":4,"height":3,"row":1,"index":3},{"filter":"","selected":4,"height":3,"row":0,"index":null}]
+  "pointer": [{"filter":"dev","selected":1,"height":4,"row":1,"index":2},{"filter":"dev","selected":1,"height":4,"row":2,"index":3},{"filter":"","selected":4,"height":3,"row":1,"index":3},{"filter":"","selected":4,"height":3,"row":0,"index":null}],
+  "workspace": {
+    "projects": [
+      {
+        "name": "workspace", "root": ".", "manifest": "📋️project.json",
+        "dashboard": {
+          "parameters": [
+            { "id": "cache", "kind": "choice", "appliesTo": { "verbs": ["build", "test"], "playground": false }, "default": "use", "values": [{ "id": "use" }, { "id": "skip-local", "nxFlags": ["--skip-nx-cache"] }] },
+            { "id": "test-level", "kind": "choice", "appliesTo": { "verbs": ["test"] }, "values": [{ "id": "quick", "env": { "SEMIO_TEST_LEVEL": "quick" } }, { "id": "long", "env": { "SEMIO_TEST_LEVEL": "long" } }] },
+            { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "nxFlags": ["--excludeTaskDependencies"] },
+            { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" }
+          ],
+          "tools": [
+            { "id": "docs", "verb": "serve", "command": ["bun", "x", "docs", "--dir", "{dir}"], "parameters": [{ "id": "dir", "kind": "text", "required": true }] }
+          ],
+          "compounds": [
+            { "id": "quiz-with-hub", "verb": "dev", "stop": "together", "members": ["@fx/hub:dev", "@fx/quiz:dev"] }
+          ]
+        }
+      },
+      {
+        "name": "@fx/hub", "root": "🧰️framework/🛍️products/🌎️hub", "manifest": "🧰️framework/🛍️products/🌎️hub/📋️project.json",
+        "targets": [
+          { "name": "dev", "continuous": true, "dashboard": { "ready": { "port": 6080, "path": "/" } } },
+          { "name": "test" }
+        ]
+      },
+      {
+        "name": "@fx/quiz", "root": "🧰️framework/🛍️products/🎓️quiz", "manifest": "🧰️framework/🛍️products/🎓️quiz/📋️project.json",
+        "targets": [
+          { "name": "dev", "continuous": true, "dashboard": { "ready": { "port": 6061, "path": "/admin" }, "requires": ["@fx/hub:dev"] } },
+          { "name": "test" },
+          { "name": "build" }
+        ]
+      }
+    ],
+    "playgrounds": [{ "variant": "puzzle3d", "plugin": "puzzle", "react": 6012, "wgpu": 6112, "examples": ["sphere", "cube"] }],
+    "tickets": [{ "id": "26/09/23/DEMO", "open": true, "title": "Demo ticket", "folder": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/DEMO" }],
+    "problems": []
+  },
+  "entries": [
+    {"id": "playground:puzzle3d", "label": "dev / puzzle / puzzle3d"},
+    {"id": "compound:workspace/quiz-with-hub", "label": "dev / workspace / quiz-with-hub"},
+    {"id": "@fx/hub:dev", "label": "dev / 🧰️framework / 🌎️hub / dev"},
+    {"id": "@fx/quiz:dev", "label": "dev / 🧰️framework / 🎓️quiz / dev"},
+    {"id": "tool:workspace/docs", "label": "serve / workspace / docs"},
+    {"id": "@fx/quiz:build", "label": "build / 🧰️framework / 🎓️quiz / build"},
+    {"id": "@fx/hub:test", "label": "test / 🧰️framework / 🌎️hub / test"},
+    {"id": "@fx/quiz:test", "label": "test / 🧰️framework / 🎓️quiz / test"},
+    {"id": "repo:ticket.close:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / close"},
+    {"id": "repo:ticket.files:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / files"},
+    {"id": "repo:ticket.show:26/09/23/DEMO", "label": "tickets / 26/09/23/DEMO [open] Demo ticket / show"},
+    {"id": "repo:goals.list", "label": "goals / list"},
+    {"id": "repo:goals.tree", "label": "goals / tree"},
+    {"id": "repo:analyze:all", "label": "analyze / all"},
+    {"id": "repo:analyze:go", "label": "analyze / go"},
+    {"id": "repo:analyze:markdown", "label": "analyze / markdown"},
+    {"id": "repo:analyze:python", "label": "analyze / python"},
+    {"id": "repo:analyze:rust", "label": "analyze / rust"},
+    {"id": "repo:analyze:typescript", "label": "analyze / typescript"},
+    {"id": "repo:tree.goal", "label": "tree / goal"},
+    {"id": "repo:tree.monorepo", "label": "tree / monorepo"},
+    {"id": "repo:tree.statute", "label": "tree / statute"},
+    {"id": "repo:tree.territory", "label": "tree / territory"},
+    {"id": "repo:statutes.catalog", "label": "statutes / catalog"}
+  ],
+  "journeys": [
+    {
+      "name": "search narrows the tree to the matching commands",
+      "steps": [
+        "type:quiz test"
+      ],
+      "expect": {
+        "stage": "browse",
+        "ids": [
+          "@fx/quiz:test"
+        ],
+        "caption": "1 of 24 commands · bun nx run @fx/quiz:test",
+        "input": "quiz test",
+        "outcome": null
+      }
+    },
+    {
+      "name": "words may come in any order and also match the id",
+      "steps": [
+        "type:test @fx/quiz"
+      ],
+      "expect": {
+        "ids": [
+          "@fx/quiz:test"
+        ]
+      }
+    },
+    {
+      "name": "nothing matching says so and backspace widens the search again",
+      "steps": [
+        "type:quizz"
+      ],
+      "expect": {
+        "ids": [],
+        "caption": "No command matches"
+      }
+    },
+    {
+      "name": "backspace after a miss finds the commands again",
+      "steps": [
+        "type:quizz",
+        "backspace"
+      ],
+      "expect": {
+        "ids": [
+          "compound:workspace/quiz-with-hub",
+          "@fx/quiz:dev",
+          "@fx/quiz:build",
+          "@fx/quiz:test"
+        ]
+      }
+    },
+    {
+      "name": "an arrow opens a group and the opposite arrow closes it",
+      "steps": [
+        "right"
+      ],
+      "expect": {
+        "contains": [
+          "▾ dev"
+        ]
+      }
+    },
+    {
+      "name": "closing a group hides its children",
+      "steps": [
+        "right",
+        "left"
+      ],
+      "expect": {
+        "lacks": [
+          "▾"
+        ]
+      }
+    },
+    {
+      "name": "enter on the found command opens its parameter form",
+      "steps": [
+        "type:quiz test",
+        "enter"
+      ],
+      "expect": {
+        "stage": "configure",
+        "contains": [
+          "cache: ‹use› (default)",
+          "test-level:",
+          "dependencies",
+          "cargo-jobs",
+          "[ Start ]",
+          "bun nx run @fx/quiz:test"
+        ]
+      }
+    },
+    {
+      "name": "choosing a value and starting sends exactly what was chosen",
+      "steps": [
+        "type:quiz test",
+        "enter",
+        "pgup",
+        "down",
+        "right",
+        "pgdn",
+        "enter"
+      ],
+      "expect": {
+        "outcome": {
+          "start": {
+            "id": "@fx/quiz:test",
+            "chosen": [
+              [
+                "test-level",
+                "quick"
+              ]
+            ],
+            "extra": [],
+            "env": []
+          }
+        }
+      }
+    },
+    {
+      "name": "a flag toggles with space and left or right",
+      "steps": [
+        "type:quiz test",
+        "enter",
+        "pgup",
+        "down",
+        "down",
+        "type: ",
+        "pgdn",
+        "enter"
+      ],
+      "expect": {
+        "outcome": {
+          "start": {
+            "id": "@fx/quiz:test",
+            "chosen": [
+              [
+                "dependencies",
+                "true"
+              ]
+            ],
+            "extra": [],
+            "env": []
+          }
+        }
+      }
+    },
+    {
+      "name": "extra arguments and environment ride along",
+      "steps": [
+        "type:quiz test",
+        "enter",
+        "pgup",
+        "down",
+        "down",
+        "down",
+        "down",
+        "type:--filter 'a b'",
+        "down",
+        "type:FOO=1 BAR='x y'",
+        "down",
+        "enter"
+      ],
+      "expect": {
+        "outcome": {
+          "start": {
+            "id": "@fx/quiz:test",
+            "chosen": [],
+            "extra": [
+              "--filter",
+              "a b"
+            ],
+            "env": [
+              [
+                "FOO",
+                "1"
+              ],
+              [
+                "BAR",
+                "x y"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "a text parameter without a value blocks the start and says why",
+      "steps": [
+        "type:docs",
+        "enter",
+        "enter"
+      ],
+      "expect": {
+        "stage": "configure",
+        "outcome": null,
+        "contains": [
+          "Cannot start"
+        ]
+      }
+    },
+    {
+      "name": "typing the required text lets the start through",
+      "steps": [
+        "type:docs",
+        "enter",
+        "type:site",
+        "down",
+        "down",
+        "down",
+        "enter"
+      ],
+      "expect": {
+        "outcome": {
+          "start": {
+            "id": "tool:workspace/docs",
+            "chosen": [
+              [
+                "dir",
+                "site"
+              ]
+            ],
+            "extra": [],
+            "env": []
+          }
+        }
+      }
+    },
+    {
+      "name": "a command that changes the repository asks before it starts",
+      "steps": [
+        "type:ticket.close",
+        "enter",
+        "enter"
+      ],
+      "expect": {
+        "stage": "confirm",
+        "outcome": null,
+        "contains": [
+          "changes the repository"
+        ]
+      }
+    },
+    {
+      "name": "confirming starts it",
+      "steps": [
+        "type:ticket.close",
+        "enter",
+        "enter",
+        "enter"
+      ],
+      "expect": {
+        "outcome": {
+          "start": {
+            "id": "repo:ticket.close:26/09/23/DEMO",
+            "chosen": [],
+            "extra": [],
+            "env": []
+          }
+        }
+      }
+    },
+    {
+      "name": "going back from the confirmation returns to the form",
+      "steps": [
+        "type:ticket.close",
+        "enter",
+        "enter",
+        "esc"
+      ],
+      "expect": {
+        "stage": "configure",
+        "outcome": null
+      }
+    },
+    {
+      "name": "a service the command requires is shown before it starts",
+      "steps": [
+        "type:@fx/quiz:dev",
+        "enter"
+      ],
+      "expect": {
+        "stage": "configure",
+        "contains": [
+          "Starts first",
+          "hub"
+        ]
+      }
+    },
+    {
+      "name": "a compound lists its members before it starts",
+      "steps": [
+        "type:quiz-with-hub",
+        "enter"
+      ],
+      "expect": {
+        "contains": [
+          "Starts together (2)"
+        ]
+      }
+    },
+    {
+      "name": "back steps out one level at a time and finally leaves",
+      "steps": [
+        "type:quiz test",
+        "enter",
+        "esc",
+        "esc",
+        "esc"
+      ],
+      "expect": {
+        "stage": "browse",
+        "input": "",
+        "outcome": "leave"
+      }
+    }
+  ]
 }

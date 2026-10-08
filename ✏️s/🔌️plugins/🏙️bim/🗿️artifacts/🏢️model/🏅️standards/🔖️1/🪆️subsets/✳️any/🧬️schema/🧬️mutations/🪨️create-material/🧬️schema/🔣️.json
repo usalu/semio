@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-material/schema.json",
+  "title": "CreateMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "material"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createMaterial"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Material id",
+          "de": "Material-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "material": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Material",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

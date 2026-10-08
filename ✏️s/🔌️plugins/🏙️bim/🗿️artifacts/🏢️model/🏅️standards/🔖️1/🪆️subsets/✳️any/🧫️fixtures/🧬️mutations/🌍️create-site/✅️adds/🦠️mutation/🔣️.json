@@ -1,0 +1,12 @@
+{
+  "mutation": "createSite",
+  "id": "site-1",
+  "site": {
+    "name": "Plot",
+    "latitude": 47,
+    "longitude": 8,
+    "elevation": 100,
+    "true_north": 0,
+    "boundary": []
+  }
+}

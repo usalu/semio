@@ -1,0 +1,8 @@
+{
+  "walls": {
+    "w-south": {
+      "entry": "Patched",
+      "location": "Exterior"
+    }
+  }
+}

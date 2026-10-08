@@ -1,0 +1,57 @@
+{
+  "column_types": {
+    "new-2": {
+      "entry": "Created",
+      "material": "m-concrete",
+      "name": "Column",
+      "profile": {
+        "Custom": {
+          "outline": [
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.4,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.4,
+                "y": 0.1
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.1,
+                "y": 0.1
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.1,
+                "y": 0.4
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 0.4
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

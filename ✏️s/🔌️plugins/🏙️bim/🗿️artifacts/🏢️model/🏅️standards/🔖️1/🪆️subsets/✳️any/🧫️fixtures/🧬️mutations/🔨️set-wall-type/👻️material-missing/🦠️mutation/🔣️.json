@@ -1,0 +1,11 @@
+{
+  "mutation": "setWallType",
+  "id": "wt-300",
+  "layers": [
+    {
+      "material": "m-ghost",
+      "thickness": 0.2,
+      "function": "Structure"
+    }
+  ]
+}

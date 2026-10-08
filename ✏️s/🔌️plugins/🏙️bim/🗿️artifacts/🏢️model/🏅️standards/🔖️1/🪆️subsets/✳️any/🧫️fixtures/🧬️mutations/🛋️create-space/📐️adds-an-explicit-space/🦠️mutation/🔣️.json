@@ -1,0 +1,44 @@
+{
+  "mutation": "createSpace",
+  "id": "sp-2",
+  "space": {
+    "storey": "st-ground",
+    "number": "0.02",
+    "name": "Hall",
+    "boundary": {
+      "Explicit": {
+        "outline": [
+          {
+            "point": {
+              "x": 0,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 0
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 3,
+              "y": 2
+            },
+            "bulge": 0
+          },
+          {
+            "point": {
+              "x": 0,
+              "y": 2
+            },
+            "bulge": 0
+          }
+        ]
+      }
+    },
+    "usage": "Circulation"
+  }
+}

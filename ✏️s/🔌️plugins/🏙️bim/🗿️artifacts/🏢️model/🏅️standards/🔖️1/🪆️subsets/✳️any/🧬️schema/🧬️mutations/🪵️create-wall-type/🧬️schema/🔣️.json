@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-wall-type/schema.json",
+  "title": "CreateWallType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "wall_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createWallType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Wall type id",
+          "de": "Wandtyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "wall_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/WallType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Wall type",
+          "de": "Wandtyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

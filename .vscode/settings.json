@@ -35,10 +35,6 @@
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [
     {
-      "directory": "elements/ui",
-      "changeProcessCWD": true
-    },
-    {
       "directory": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️vscode/📦️packages/🟦️typescript",
       "changeProcessCWD": true
     }
@@ -49,23 +45,7 @@
   },
   "workbench.externalBrowser": "chrome",
   "workbench.trustedDomains": ["*"],
-  "remote.autoForwardPorts": true,
-  "remote.portsAttributes": {
-    "6010": {
-      "label": "Monorepo Storybook",
-      "onAutoForward": "openBrowser"
-    },
-    "6274": {
-      "label": "MCP Inspector UI",
-      "onAutoForward": "openBrowser"
-    },
-    "6277": {
-      "label": "MCP Inspector Proxy",
-      "onAutoForward": "silent"
-    }
-  },
   "editor.formatOnSave": true,
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -85,19 +65,10 @@
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}", "compose/py", "compose/engine"],
+  "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}"],
   "python.testing.cwd": "${workspaceFolder}",
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "python.analysis.languageServerMode": "full",
-  "sqltools.useNodeRuntime": true,
-  "sqltools.connections": [
-    {
-      "name": "metabolism",
-      "database": "./example/metabolism/.compose/kit.db",
-      "driver": "SQLite",
-      "previewLimit": 50
-    }
-  ],
   "dotnet.defaultSolution": "Monorepo.sln",
   "cmake.useCMakePresets": "always",
   "cmake.configureOnOpen": false,
@@ -116,7 +87,7 @@
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "file": ".agents/skills/committing.SKILL.md"
+      "file": ".agents/skills/commit/SKILL.md"
     }
   ],
   "chat.subagents.allowInvocationsFromSubagents": false,
@@ -134,26 +105,24 @@
   "inlineChat.accessibleDiffView": "off",
   "cursor.composer.shouldAutoAcceptDiffs": true,
   "cursor.diffs.useCharacterLevelDiffs": false,
-  "latex-workshop.latex.recipe.default": "semio-tectonic",
-  "latex-workshop.latex.autoBuild.run": "onSave",
-  "latex-workshop.latex.autoClean.run": "onFailed",
-  "latex-workshop.latex.outDir": "%DIR%/dist",
-  "latex-workshop.latex.search.rootFiles.include": ["mit-bestand/bericht/**/*.tex", "print/template/**/*.tex"],
+  "latex-workshop.latex.recipe.default": "semio-dashboard",
+  "latex-workshop.latex.autoBuild.run": "never",
+  "latex-workshop.latex.search.rootFiles.include": ["♻️mit-bestand/📋️bericht/**/*.tex", "🧰️framework/🛍️products/📓️print/🧾️template/**/*.tex"],
   "latex-workshop.latex.tools": [
     {
-      "name": "semio-tectonic",
+      "name": "semio-dashboard",
       "command": "bun",
-      "args": ["${workspaceFolder}/mit-bestand/bericht/📜️script.ts", "latex", "%DOC%", "%OUTDIR%"]
+      "args": ["run", "--cwd", "%WORKSPACE_FOLDER%", "dashboard", "run", "@semio-tech/mit-bestand-bericht:build"]
     }
   ],
   "latex-workshop.latex.recipes": [
     {
-      "name": "semio-tectonic",
-      "tools": ["semio-tectonic"]
+      "name": "semio-dashboard",
+      "tools": ["semio-dashboard"]
     }
   ],
   "latex-workshop.intellisense.package.env": {
-    "TEXINPUTS": "${workspaceFolder}/print/tex//:"
+    "TEXINPUTS": "${workspaceFolder}/🧰️framework/🛍️products/📓️print/🖋️latex//:"
   },
   "latex-workshop.view.pdf.viewer": "tab",
   "latex-workshop.synctex.afterBuild.enabled": true,

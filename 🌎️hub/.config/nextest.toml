@@ -41,6 +41,11 @@ slow-timeout = { period = "1800s", terminate-after = 1 }
 
 
 [[profile.quick.overrides]]
+filter = 'package(semio-hub-bim)'
+slow-timeout = { period = "1800s", terminate-after = 1 }
+
+
+[[profile.quick.overrides]]
 filter = 'package(semio-hub-procedural)'
 slow-timeout = { period = "1200s", terminate-after = 1 }
 
@@ -158,4 +163,3 @@ slow-timeout = { period = "1200s", terminate-after = 1 }
 [[profile.quick.overrides]]
 filter = 'package(semio-hub-sourcing)'
 slow-timeout = { period = "600s", terminate-after = 1 }
-

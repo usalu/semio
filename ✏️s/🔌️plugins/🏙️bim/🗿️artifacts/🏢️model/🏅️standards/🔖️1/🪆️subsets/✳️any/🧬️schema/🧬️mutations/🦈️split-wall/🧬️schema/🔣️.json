@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/split-wall/schema.json",
+  "title": "SplitWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "t",
+    "new_id"
+  ],
+  "x-semio-inverse-rows": {
+    "bounded": 4096
+  },
+  "properties": {
+    "mutation": {
+      "const": "splitWall"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "t": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Split position (0 to 1)",
+          "de": "Teilungsstelle (0 bis 1)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "new_id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "New wall id",
+          "de": "Id der neuen Wand"
+        },
+        "group": "identity",
+        "order": 30
+      }
+    }
+  }
+}

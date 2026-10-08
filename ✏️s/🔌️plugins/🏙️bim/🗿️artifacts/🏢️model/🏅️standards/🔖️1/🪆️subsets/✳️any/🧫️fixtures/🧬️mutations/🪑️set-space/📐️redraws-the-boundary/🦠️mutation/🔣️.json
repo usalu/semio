@@ -1,0 +1,38 @@
+{
+  "mutation": "setSpace",
+  "id": "sp-1",
+  "boundary": {
+    "Explicit": {
+      "outline": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 4,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 4,
+            "y": 3
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 3
+          },
+          "bulge": 0
+        }
+      ]
+    }
+  }
+}

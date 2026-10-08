@@ -1,0 +1,30 @@
+{
+  "mutation": "placeElements",
+  "placements": {
+    "w-south": {
+      "Wall": {
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 1,
+              "y": 1
+            },
+            "end": {
+              "x": 9,
+              "y": 1
+            }
+          }
+        }
+      }
+    },
+    "c-1": {
+      "Column": {
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "rotation": 1
+      }
+    }
+  }
+}

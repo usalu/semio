@@ -1,0 +1,11 @@
+{
+  "mutation": "setElementProperty",
+  "id": "w-missing",
+  "pset": "Pset_WallCommon",
+  "property": "FireRating",
+  "value": {
+    "Text": {
+      "value": "F90"
+    }
+  }
+}

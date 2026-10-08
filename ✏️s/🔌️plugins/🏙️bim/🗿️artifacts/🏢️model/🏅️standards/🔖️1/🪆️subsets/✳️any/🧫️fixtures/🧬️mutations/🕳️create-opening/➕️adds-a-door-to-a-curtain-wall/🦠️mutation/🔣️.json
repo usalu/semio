@@ -1,0 +1,16 @@
+{
+  "mutation": "createOpening",
+  "id": "o-1",
+  "opening": {
+    "host": "cw-1",
+    "kind": {
+      "Door": {
+        "door_type": "door-1"
+      }
+    },
+    "offset": 2,
+    "flip_hand": false,
+    "flip_facing": false,
+    "name": "Entrance"
+  }
+}

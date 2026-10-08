@@ -8,7 +8,7 @@ Devcontainer configuration: one Compose service, the image, and the lifecycle co
 
 Devcontainer configuration with VS Code customizations, container/remote env, the create/start/attach lifecycle commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
 
-It forwards exactly the ports the launch rows start (a law in `⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap` keeps the list equal to the rows): `os-hub` 8787 (`🛠️dev🗄️os-hub`), the `s` React serve 6070 and its two-person pair 6072/6073, the `s` wgpu serve 6066 and 6067/6068, Storybook 6010, and the MCP Inspector 6274/6277. `hostRequirements` states what a container that builds the hub needs (4 CPUs, 8 GB memory, 32 GB disk: a fresh-clone run measured 7 GB and 25 GB). The hub's Postgres/Neo4j backends (`os-hub-ts:backend-up`) run in the container's own Docker daemon (`docker-in-docker`), whose state persists in that feature's volume.
+It forwards exactly the ports the dashboard commands start (a law in `⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap` keeps the list equal to those commands): `os-hub` 8787 (`os-hub:dev`), the `s` React serve 6070 and its two-person pair 6072/6073 (`playground:s` with `user-slot=1` and `2`), the `s` wgpu serve 6066 and 6067/6068 (`playground:s renderer=wgpu-wasm`), Storybook 6010 (`workspace:dev-storybook`), and the MCP Inspector 6274/6277 (`tool:workspace/mcp-inspector-os`). Inside the container start them with `bun run dashboard` or `semio run <command id> --detach --wait-ready`. `hostRequirements` states what a container that builds the hub needs (4 CPUs, 8 GB memory, 32 GB disk: a fresh-clone run measured 7 GB and 25 GB). The hub's Postgres/Neo4j backends (`os-hub-ts:backend-up`) run in the container's own Docker daemon (`docker-in-docker`), whose state persists in that feature's volume.
 
 On macOS, Docker Desktop must be allowed to read the folder the repository lives in (System Settings → Privacy & Security → Files and Folders / Full Disk Access for Docker); without it the bind mount of the checkout fails with `operation not permitted`.
 
@@ -29,12 +29,14 @@ Every lifecycle step is a program argv — no shell script — implemented once 
 | `onCreateCommand` | `sudo chown vscode:vscode` of the two checkout volumes | Docker creates them root-owned |
 | `postCreateCommand` | `bun nx run workspace:setup` | every language environment, the generated sources, the agent instruction aliases and both MCP binaries |
 | `postStartCommand` | `bun ./📜️script.ts setup devcontainer start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
-| `postAttachCommand` | `bun ./📜️script.ts setup devcontainer attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; syncs the repo hook configuration; packages the workspace VS Code extension through `@semio-tech/repo-vscode:build-vsix` and installs it into the first editor CLI that confirms it |
+| `postAttachCommand` | `bun ./📜️script.ts setup devcontainer attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; reinstalls the git hooks (`bun ./📜️script.ts micro-commit install-hooks`); packages the workspace VS Code extension through `@semio-tech/repo-vscode:build-vsix` and installs it into the first editor CLI that confirms it |
 | on demand | `bun ./📜️script.ts setup devcontainer gitkraken` | starts GitKraken Desktop on the checkout, on the virtual display `:99` (Xvfb) when none is set |
 
-Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_GITKRAKEN_WORKSPACE_NAME` (workspace name), `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` (skip the GUI tool installs), `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL` (skip the extension), `SEMIO_REPO_IMPLEMENTATION=go` (sync hooks through the Go repo client).
+Optional steps report and continue; a start never runs a destructive source-control or database command. Environment: `SEMIO_GITKRAKEN_WORKSPACE_NAME` (workspace name), `SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL` (skip the GUI tool installs), `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL` (skip the extension).
 
 MCP client configurations are repository files (`.mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`, …) kept consistent by the root `📜️script.ts` policy, not by the container lifecycle.
+
+The editor block of `devcontainer.json` (`customizations.vscode.settings` and `extensions`) is derived, never edited: `.vscode/settings.json` and `.vscode/extensions.json` are canonical for every native host, `editor-overlay.json` declares what the container omits (host-only entries) or sets (the Linux interpreter) and adds, and `bun nx run workspace:generate-config` rewrites the block (`generate-config-check` verifies it; so does the root policy). The same command keeps the cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
 
 ## Devcontainer Persistence
 
@@ -56,6 +58,6 @@ Devcontainer attach MUST install Linux GitKraken Desktop and the `gk` CLI when m
 
 Devcontainer start MUST enforce the fontconfig fallback to `Noto Color Emoji` for the generic font families used by Electron and GTK applications.
 
-Forwarded ports MUST equal the ports the launch rows start.
+Forwarded ports MUST equal the ports the dashboard commands start.
 
 Playwright browser caches MUST use the shared `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` path.

@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-railing/schema.json",
+  "title": "SetRailing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setRailing"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Railing",
+          "de": "Geländer"
+        },
+        "ref": {
+          "kind": "railing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Path",
+          "de": "Verlauf"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "height": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Height (m)",
+          "de": "Höhe (m)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "post_spacing": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Post spacing (m)",
+          "de": "Pfostenabstand (m)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "profile": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Top rail section",
+          "de": "Handlaufprofil"
+        },
+        "group": "value",
+        "order": 41
+      }
+    },
+    "post_profile": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Profile",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Post section",
+          "de": "Pfostenprofil"
+        },
+        "group": "value",
+        "order": 42
+      }
+    },
+    "baluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Baluster"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Baluster row (null removes it)",
+          "de": "Stabreihe (null entfernt sie)"
+        },
+        "group": "value",
+        "order": 43
+      }
+    },
+    "infill": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Infill",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Infill",
+          "de": "Füllung"
+        },
+        "group": "value",
+        "order": 44
+      }
+    },
+    "material": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "base_offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Base offset (m)",
+          "de": "Fußversatz (m)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 70
+      }
+    }
+  }
+}

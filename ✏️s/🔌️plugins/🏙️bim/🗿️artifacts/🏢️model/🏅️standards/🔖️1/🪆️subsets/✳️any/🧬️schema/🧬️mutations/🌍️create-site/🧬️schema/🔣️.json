@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-site/schema.json",
+  "title": "CreateSite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "site"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createSite"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Site id",
+          "de": "Standort-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "site": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Site",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Site",
+          "de": "Standort"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

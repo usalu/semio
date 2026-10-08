@@ -1,0 +1,45 @@
+{
+  "description": "A 0.15 stem ends on the axis of a 0.3 wall: the stem butts against the near (left, y = 0.15) face and the through wall is not trimmed.",
+  "before": {
+    "schema": "s.bim.model@1",
+    "project": { "name": "T butt", "description": "", "author": "", "organization": "", "phase_names": [] },
+    "wall_types": {
+      "wt-300": { "name": "Brick 300", "layers": [{ "material": "m-brick", "thickness": 0.2, "function": "Structure" }, { "material": "m-insulation", "thickness": 0.1, "function": "Insulation" }] },
+      "wt-150": { "name": "Brick 150", "layers": [{ "material": "m-brick", "thickness": 0.15, "function": "Structure" }] }
+    },
+    "sites": { "site-1": { "name": "Plot", "latitude": 47.0, "longitude": 8.0, "elevation": 0.0, "true_north": 0.0, "boundary": [] } },
+    "buildings": { "bldg-1": { "site": "site-1", "name": "House", "origin": { "x": 0.0, "y": 0.0 }, "rotation": 0.0, "elevation": 0.0 } },
+    "storeys": { "st-ground": { "building": "bldg-1", "name": "Ground", "level": 0, "height": 3.0 } },
+    "walls": {
+      "t": { "storey": "st-ground", "wall_type": "wt-300", "axis": { "Line": { "start": { "x": 0.0, "y": 0.0 }, "end": { "x": 6.0, "y": 0.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Through" },
+      "s": { "storey": "st-ground", "wall_type": "wt-150", "axis": { "Line": { "start": { "x": 3.0, "y": 3.0 }, "end": { "x": 3.0, "y": 0.0 } } }, "location": "Center", "base_offset": 0.0, "top": { "StoreyTop": { "offset": 0.0 } }, "phase": "New", "name": "Stem" }
+    }
+  },
+  "expected": {
+    "t": {
+      "length": 6.0, "left_length": 6.0, "right_length": 6.0, "footprint_area": 1.8, "volume": 5.4,
+      "footprint": [
+        { "point": { "x": 0.0, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 6.0, "y": -0.15 }, "bulge": 0.0 },
+        { "point": { "x": 6.0, "y": 0.15 }, "bulge": 0.0 },
+        { "point": { "x": 0.0, "y": 0.15 }, "bulge": 0.0 }
+      ],
+      "joins": [{ "kind": "Through", "end": "Along", "other": "s", "other_end": "End", "point": { "x": 3.0, "y": 0.0 }, "overlap_area": 0.0 }]
+    },
+    "s": {
+      "thickness": 0.15, "length": 3.0, "offset_left": 0.075, "offset_right": 0.075,
+      "layer_offsets": [0.075, -0.075],
+      "left_face": { "start": { "x": 3.075, "y": 3.0 }, "end": { "x": 3.075, "y": 0.15 }, "bulge": 0.0 },
+      "right_face": { "start": { "x": 2.925, "y": 3.0 }, "end": { "x": 2.925, "y": 0.15 }, "bulge": 0.0 },
+      "left_length": 2.85, "right_length": 2.85, "left_area": 8.55, "right_area": 8.55, "side_area": 9.0,
+      "footprint": [
+        { "point": { "x": 2.925, "y": 3.0 }, "bulge": 0.0 },
+        { "point": { "x": 2.925, "y": 0.15 }, "bulge": 0.0 },
+        { "point": { "x": 3.075, "y": 0.15 }, "bulge": 0.0 },
+        { "point": { "x": 3.075, "y": 3.0 }, "bulge": 0.0 }
+      ],
+      "footprint_area": 0.4275, "volume": 1.2825,
+      "joins": [{ "kind": "Butt", "end": "End", "other": "t", "other_end": "Along", "point": { "x": 3.0, "y": 0.0 }, "overlap_area": 0.0 }]
+    }
+  }
+}

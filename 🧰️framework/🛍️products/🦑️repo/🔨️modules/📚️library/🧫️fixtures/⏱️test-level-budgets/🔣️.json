@@ -40,6 +40,9 @@
     "semio-hub-architect": {
       "quick": 1800000
     },
+    "semio-hub-bim": {
+      "quick": 1800000
+    },
     "semio-hub-process": {
       "quick": 1200000
     },

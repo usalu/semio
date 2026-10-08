@@ -1,0 +1,6 @@
+{
+  "mutation": "setSlab",
+  "id": "sl-ground",
+  "slab_type": "stt-30",
+  "offset": -0.3
+}

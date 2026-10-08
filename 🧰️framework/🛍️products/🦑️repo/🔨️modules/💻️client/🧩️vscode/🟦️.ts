@@ -1653,14 +1653,19 @@ function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
+/** 🗃️ The repo command line binary (`semio-repo`) the workspace built: `REPO_CLI_BIN` when set, else the debug deliverable below the shared Cargo `target-dir` of `.cargo/config.toml`. */
+export function resolveRepoBinaryPath(root: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const configured = env.REPO_CLI_BIN?.trim();
+  const ext = process.platform === "win32" ? ".exe" : "";
+  const candidate = configured ? path.resolve(root, configured) : path.join(root, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", `semio-repo${ext}`);
+  return fs.existsSync(candidate) ? candidate : undefined;
+}
+
 /** getRepoBinaryPath holds the data fields for a getRepoBinaryPath record.
  **/
 function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
-  if (!root) return undefined;
-  const ext = process.platform === "win32" ? ".exe" : "";
-  const candidate = path.join(root, "repo", "cli", `cli${ext}`);
-  return fs.existsSync(candidate) ? candidate : undefined;
+  return root ? resolveRepoBinaryPath(root) : undefined;
 }
 
 /**
@@ -1726,27 +1731,6 @@ function getGitHubRepoBaseUrl(): string | undefined {
   }
   cachedRepoBaseUrl.current = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
   return cachedRepoBaseUrl.current;
-}
-
-/**
- * runRepoCommand holds the data fields for a runRepoCommand record.
- **/
-function runRepoCommand(args: string): void {
-  const command = getRepoCommand();
-  if (!command) {
-    vscode.window.showErrorMessage("repo binary not found");
-    return;
-  }
-  const root = getWorkspaceRoot();
-  if (!root) {
-    vscode.window.showErrorMessage("No workspace folder open");
-    return;
-  }
-  const fullCommand = `"${command}" ${args}`;
-  log("runRepoCommand:", fullCommand, "cwd:", root);
-  const terminal = vscode.window.createTerminal({ name: "compose", cwd: root });
-  terminal.show();
-  terminal.sendText(fullCommand);
 }
 
 /**

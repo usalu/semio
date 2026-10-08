@@ -1,0 +1,16 @@
+{
+  "stairs": {
+    "s-1": {
+      "entry": "Patched",
+      "landing_depth": 1.2,
+      "nosing": 0.03,
+      "riser": "Open",
+      "stringer": {
+        "depth": 0.3,
+        "kind": "Mono",
+        "width": 0.12
+      },
+      "tread_thickness": 0.05
+    }
+  }
+}

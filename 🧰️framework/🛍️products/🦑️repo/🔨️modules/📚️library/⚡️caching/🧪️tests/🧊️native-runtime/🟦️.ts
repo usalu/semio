@@ -36,14 +36,12 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   const declaration = launcher.statements.find((node: any) => node.name?.text === "resolveNxInvocation");
   const resolveInvocation = new Function("process", ts.transpileModule(declaration.getText(launcher), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText.replace("export ", "") + "; return resolveNxInvocation;")({ env: { SEMIO_PLUGIN: fixture.variant } });
   for (const profile of fixture.profiles) for (const operation of ["run", "smoke"]) {
-    const selected = profile === "release" ? ["--release"] : [];
-    if (operation === "smoke") selected.push("--smoke");
-    assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", fixture.variant, ...selected]).args, ["run", `@semio-tech/framework-os-dev:${operation}-${fixture.variant}-native-${profile}`]);
+    const target = `@semio-tech/framework-os-dev:${operation}-${fixture.variant}-native-${profile}`, resolved = resolveInvocation(["run", target]);
+    assert.deepEqual(resolved.args, ["run", target], "The generated per-playground native target is the only entry; the registry resolves playground:<variant> renderer=wgpu-native to it");
+    assert.deepEqual(resolved.env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" });
   }
-  assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native"]).args, ["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-dev`]);
-  assert.throws(() => resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", fixture.variant, "--unknown"]));
+  for (const retired of [["--", fixture.variant, "--release"], ["--", fixture.variant, "--smoke"], []]) assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", ...retired]).args, ["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], "The hard-coded native alias no longer picks a variant");
   assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`]).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "ship" });
-  assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", "--scale", "fixture.json", "--release"]).args, ["run", "@semio-tech/framework-renderer-wgpu:native-scale-release", "--", "--scale", "fixture.json"]);
   const script = readFileSync(join(native, "📜️script.ts"), "utf8"), old = readFileSync(join(native, "../📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   assert.ok(!/runCmdStatus|new NativeRunScript|\["nx", "run"/.test(script));
   assert.ok(!/class NativeRunScript|ensureAssetServer/.test(old));

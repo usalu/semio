@@ -45,6 +45,15 @@ export type PlaygroundEntry = {
   /** 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
    * studio dev servers) — one port per concurrent user, over and above the single-user `ports` row. */
   readonly userPorts?: { readonly react: readonly number[]; readonly wgpu: readonly number[] };
+  /** 🔗️ The hub a collaborative session of this variant joins (`hub = "…"`); the dashboard offers it as the `hub` flag. */
+  readonly hub?: string;
+  /** 💾️ Repo-root-relative directory the variant keeps its documents in (`data_dir`), and per user slot (`user_data_dir`, `{N}` is the slot). */
+  readonly dataDir?: string;
+  readonly userDataDir?: string;
+  /** 🔒️ The variant can run without any hub (`local_only = true`). */
+  readonly localOnly?: boolean;
+  /** 👁️ The path a browser opens for the viewer role (`viewer_path`). */
+  readonly viewerPath?: string;
   readonly examples: readonly string[];
   /** 🔌️ Crate paths whose `wasm` build target must run for this playground variant. */
   readonly engines: readonly string[];
@@ -81,9 +90,14 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const userPortsWgpu = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "wgpu") : [];
   const userPorts = userPortsReact.length > 0 && userPortsWgpu.length > 0 ? { react: userPortsReact, wgpu: userPortsWgpu } : undefined;
   const engines = parseTomlStringArray(block, "engines");
+  const hub = block.match(/^hub\s*=\s*"([^"]+)"/m)?.[1];
+  const dataDir = block.match(/^data_dir\s*=\s*"([^"]+)"/m)?.[1];
+  const userDataDir = block.match(/^user_data_dir\s*=\s*"([^"]+)"/m)?.[1];
+  const localOnly = /^local_only\s*=\s*true\b/m.test(block);
+  const viewerPath = block.match(/^viewer_path\s*=\s*"([^"]+)"/m)?.[1];
   const nativeHost = parsePlaygroundNativeHostV1(block) as PlaygroundNativeHostV1 | undefined;
   const mcpHost = parsePlaygroundNativeHostV1(block,"mcpHost") as PlaygroundNativeHostV1 | undefined;
-  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
+  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), ...(hub ? { hub } : {}), ...(dataDir ? { dataDir } : {}), ...(userDataDir ? { userDataDir } : {}), ...(localOnly ? { localOnly } : {}), ...(viewerPath ? { viewerPath } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
 }
 
 

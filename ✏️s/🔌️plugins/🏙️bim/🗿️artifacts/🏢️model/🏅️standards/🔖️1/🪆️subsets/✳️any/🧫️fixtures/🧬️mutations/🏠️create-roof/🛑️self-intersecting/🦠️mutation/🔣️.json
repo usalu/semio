@@ -1,0 +1,47 @@
+{
+  "mutation": "createRoof",
+  "id": "rf-main",
+  "roof": {
+    "storey": "st-first",
+    "roof_type": "rt-tiles",
+    "footprint": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 4
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 4
+        },
+        "bulge": 0
+      }
+    ],
+    "shape": {
+      "Gable": {
+        "pitch": 0.6,
+        "ridge_direction": 0
+      }
+    },
+    "overhang": 0.4,
+    "base_offset": 0,
+    "name": "Main roof"
+  }
+}

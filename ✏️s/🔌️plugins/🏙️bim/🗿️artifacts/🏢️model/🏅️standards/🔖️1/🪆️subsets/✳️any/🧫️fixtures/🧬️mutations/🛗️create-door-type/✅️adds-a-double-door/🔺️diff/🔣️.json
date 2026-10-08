@@ -1,0 +1,15 @@
+{
+  "door_types": {
+    "door-2": {
+      "entry": "Created",
+      "frame_depth": 0.1,
+      "frame_width": 0.06,
+      "height": 2.1,
+      "leaves": "Double",
+      "material": "m-timber",
+      "name": "Door 1.80",
+      "swing": "Right",
+      "width": 1.8
+    }
+  }
+}

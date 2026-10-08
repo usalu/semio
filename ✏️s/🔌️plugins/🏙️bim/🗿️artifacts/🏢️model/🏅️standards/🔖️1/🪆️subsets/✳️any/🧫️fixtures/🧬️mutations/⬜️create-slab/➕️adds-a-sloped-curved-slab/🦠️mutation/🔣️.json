@@ -1,0 +1,45 @@
+{
+  "mutation": "createSlab",
+  "id": "sl-terrace",
+  "slab": {
+    "storey": "st-first",
+    "slab_type": "stt-22",
+    "boundary": [
+      {
+        "point": {
+          "x": 0,
+          "y": 0
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 0
+        },
+        "bulge": 0.4
+      },
+      {
+        "point": {
+          "x": 6,
+          "y": 6
+        },
+        "bulge": 0
+      },
+      {
+        "point": {
+          "x": 0,
+          "y": 6
+        },
+        "bulge": 0
+      }
+    ],
+    "holes": [],
+    "offset": -0.1,
+    "slope": {
+      "direction": 0,
+      "angle": 0.05
+    },
+    "name": "Terrace"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mutation": "setBuilding",
+  "id": "bldg-1",
+  "name": "Villa",
+  "origin": {
+    "x": 12,
+    "y": -4
+  },
+  "rotation": 0.5
+}

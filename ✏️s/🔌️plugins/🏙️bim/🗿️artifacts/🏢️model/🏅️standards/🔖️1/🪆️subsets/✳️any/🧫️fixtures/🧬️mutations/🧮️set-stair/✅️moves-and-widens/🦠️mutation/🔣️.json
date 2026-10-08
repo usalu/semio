@@ -1,0 +1,10 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "start": {
+    "x": 2,
+    "y": 1
+  },
+  "direction": 1.57,
+  "width": 1.2
+}

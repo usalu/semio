@@ -1,0 +1,45 @@
+{
+  "spaces": {
+    "sp-2": {
+      "boundary": {
+        "Explicit": {
+          "outline": [
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 3.0,
+                "y": 0.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 3.0,
+                "y": 2.0
+              }
+            },
+            {
+              "bulge": 0.0,
+              "point": {
+                "x": 0.0,
+                "y": 2.0
+              }
+            }
+          ]
+        }
+      },
+      "entry": "Created",
+      "name": "Hall",
+      "number": "0.02",
+      "storey": "st-ground",
+      "usage": "Circulation"
+    }
+  }
+}

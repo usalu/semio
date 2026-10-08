@@ -1,0 +1,295 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/place-elements/schema.json",
+  "title": "PlaceElements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "placements"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "placeElements"
+    },
+    "placements": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Placement"
+      },
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Placements",
+          "de": "Platzierungen"
+        },
+        "description": {
+          "en": "Element id to its absolute placement fields.",
+          "de": "Element-Id auf seine absoluten Platzierungsfelder."
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  },
+  "$defs": {
+    "Placement": {
+      "description": "Absolute placement fields of one placed element, tagged by its kind.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Wall"
+          ],
+          "properties": {
+            "Wall": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "axis"
+              ],
+              "properties": {
+                "axis": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CurtainWall"
+          ],
+          "properties": {
+            "CurtainWall": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "axis"
+              ],
+              "properties": {
+                "axis": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Column"
+          ],
+          "properties": {
+            "Column": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "position",
+                "rotation"
+              ],
+              "properties": {
+                "position": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                },
+                "rotation": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Beam"
+          ],
+          "properties": {
+            "Beam": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                },
+                "end": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Slab"
+          ],
+          "properties": {
+            "Slab": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "boundary",
+                "holes"
+              ],
+              "properties": {
+                "boundary": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+                  }
+                },
+                "holes": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+                    }
+                  }
+                },
+                "slope": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Slope"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Roof"
+          ],
+          "properties": {
+            "Roof": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "footprint",
+                "shape"
+              ],
+              "properties": {
+                "footprint": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Vertex"
+                  }
+                },
+                "shape": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/RoofShape"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Stair"
+          ],
+          "properties": {
+            "Stair": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "direction"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                },
+                "direction": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Railing"
+          ],
+          "properties": {
+            "Railing": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path"
+              ],
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Space"
+          ],
+          "properties": {
+            "Space": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "boundary"
+              ],
+              "properties": {
+                "boundary": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/SpaceBoundary"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Grid"
+          ],
+          "properties": {
+            "Grid": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                },
+                "end": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

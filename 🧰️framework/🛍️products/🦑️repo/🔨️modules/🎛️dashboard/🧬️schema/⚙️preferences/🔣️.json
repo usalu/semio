@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Dashboard Preference Change",
+  "description": "One preference event. `prefix` and `bindings` customize the keymap whose defaults are described by the sibling `⌨️keymap` schema; a binding id is `<scope>.<action>` and its keys replace the default keys of that binding.",
   "type": "object",
   "minProperties": 1,
   "additionalProperties": false,
@@ -9,6 +10,28 @@
     "appearance": { "enum": ["dark", "light"] },
     "terminology": { "enum": ["native", "reuse"] },
     "renderer": { "enum": ["react", "wgpu-wasm", "wgpu-native"] },
-    "layout": { "enum": ["tabs", "columns", "rows"] }
+    "layout": { "enum": ["tabs", "columns", "rows"] },
+    "prefix": { "$ref": "#/definitions/PrefixKey" },
+    "bindings": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^(prefix|window|view)\\.[a-z][a-z0-9-]*$" },
+      "additionalProperties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/Key" } }
+    }
+  },
+  "definitions": {
+    "PrefixKey": {
+      "type": "string",
+      "description": "A key the terminal tells from typing: held with ctrl or alt, or a named key.",
+      "anyOf": [
+        { "pattern": "^((ctrl|alt|shift)\\+)*(ctrl|alt)\\+((ctrl|alt|shift)\\+)*(\\S|[a-z]+[0-9]*)$" },
+        { "pattern": "^(shift\\+)*([a-z]{2,}[0-9]*|f[0-9]+)$" }
+      ]
+    },
+    "Key": {
+      "type": "string",
+      "description": "Zero or more `ctrl+`, `alt+`, `shift+` modifiers, then one printable character or a lowercase key name (enter, esc, tab, backtab, backspace, delete, insert, up, down, left, right, home, end, pageup, pagedown, space, f1 to f24).",
+      "pattern": "^((ctrl|alt|shift)\\+)*(\\S|[a-z]+[0-9]*)$"
+    }
   }
 }

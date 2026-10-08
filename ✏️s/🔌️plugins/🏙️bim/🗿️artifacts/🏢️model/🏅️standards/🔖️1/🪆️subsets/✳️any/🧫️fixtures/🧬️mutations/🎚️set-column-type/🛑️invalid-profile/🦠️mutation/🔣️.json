@@ -1,0 +1,9 @@
+{
+  "mutation": "setColumnType",
+  "id": "ct-400",
+  "profile": {
+    "Circle": {
+      "diameter": 0
+    }
+  }
+}

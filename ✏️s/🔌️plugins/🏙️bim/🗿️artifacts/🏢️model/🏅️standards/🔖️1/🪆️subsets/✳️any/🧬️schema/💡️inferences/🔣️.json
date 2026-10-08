@@ -1,0 +1,1501 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/inference.json",
+  "title": "ModelInference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "element_solids",
+    "stair_runs",
+    "spaces",
+    "quantities",
+    "opening_frames",
+    "storey_levels",
+    "wall_layout",
+    "curtain_layout",
+    "plan_linework",
+    "diagnostics"
+  ],
+  "properties": {
+    "element_solids": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/ElementSolid"
+      },
+      "x-semio-derived": true
+    },
+    "stair_runs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/StairRun"
+      },
+      "x-semio-derived": true
+    },
+    "spaces": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/SpaceRoom"
+      },
+      "x-semio-derived": true
+    },
+    "quantities": {
+      "$ref": "#/$defs/ModelQuantities",
+      "x-semio-derived": true
+    },
+    "opening_frames": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/OpeningFrame"
+      },
+      "x-semio-derived": true
+    },
+    "storey_levels": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/StoreyLevel"
+      },
+      "x-semio-derived": true
+    },
+    "wall_layout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/WallLayout"
+      },
+      "x-semio-derived": true
+    },
+    "curtain_layout": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/CurtainLayout"
+      },
+      "x-semio-derived": true
+    },
+    "plan_linework": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PlanLinework"
+      },
+      "x-semio-derived": true
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      },
+      "x-semio-derived": true
+    }
+  },
+  "$defs": {
+    "SolidPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SolidBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/SolidPoint"
+        },
+        "max": {
+          "$ref": "#/$defs/SolidPoint"
+        }
+      }
+    },
+    "SolidPlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    },
+    "SolidGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "part",
+        "material",
+        "layer"
+      ],
+      "properties": {
+        "part": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ElementSolid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "storey",
+        "placement",
+        "groups",
+        "positions",
+        "normals",
+        "indices",
+        "face_groups",
+        "bounds",
+        "volume",
+        "area"
+      ],
+      "properties": {
+        "family": {
+          "enum": [
+            "Wall",
+            "CurtainWall",
+            "Window",
+            "Door",
+            "Column",
+            "Beam",
+            "Slab",
+            "Roof",
+            "Stair",
+            "Railing"
+          ]
+        },
+        "storey": {
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/SolidPlacement"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SolidGroup"
+          }
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "face_groups": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "bounds": {
+          "$ref": "#/$defs/SolidBounds"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        }
+      }
+    },
+    "StairRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_z",
+        "top_z",
+        "rise",
+        "riser_count",
+        "riser_height",
+        "tread_count",
+        "tread",
+        "stride",
+        "width",
+        "run_length",
+        "flights",
+        "landings",
+        "compliance"
+      ],
+      "properties": {
+        "base_z": {
+          "type": "number"
+        },
+        "top_z": {
+          "type": "number"
+        },
+        "rise": {
+          "type": "number"
+        },
+        "riser_count": {
+          "type": "integer"
+        },
+        "riser_height": {
+          "type": "number"
+        },
+        "tread_count": {
+          "type": "integer"
+        },
+        "tread": {
+          "type": "number"
+        },
+        "stride": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "run_length": {
+          "type": "number"
+        },
+        "flights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StairFlightRun"
+          }
+        },
+        "landings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StairLanding"
+          }
+        },
+        "compliance": {
+          "$ref": "#/$defs/StairCompliance"
+        }
+      }
+    },
+    "StairFlightRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "first_riser",
+        "risers",
+        "treads",
+        "start",
+        "direction",
+        "tread",
+        "base_z",
+        "length"
+      ],
+      "properties": {
+        "first_riser": {
+          "type": "integer"
+        },
+        "risers": {
+          "type": "integer"
+        },
+        "treads": {
+          "type": "integer"
+        },
+        "start": {
+          "$ref": "#/$defs/Point2"
+        },
+        "direction": {
+          "type": "number"
+        },
+        "tread": {
+          "type": "number"
+        },
+        "base_z": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "winder": {
+          "$ref": "#/$defs/StairWinder"
+        }
+      }
+    },
+    "StairWinder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "centre",
+        "inner_radius",
+        "outer_radius",
+        "start_angle",
+        "sweep"
+      ],
+      "properties": {
+        "centre": {
+          "$ref": "#/$defs/Point2"
+        },
+        "inner_radius": {
+          "type": "number"
+        },
+        "outer_radius": {
+          "type": "number"
+        },
+        "start_angle": {
+          "type": "number"
+        },
+        "sweep": {
+          "type": "number"
+        }
+      }
+    },
+    "StairLanding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after_flight",
+        "z",
+        "centre",
+        "direction",
+        "width",
+        "depth"
+      ],
+      "properties": {
+        "after_flight": {
+          "type": "integer"
+        },
+        "z": {
+          "type": "number"
+        },
+        "centre": {
+          "$ref": "#/$defs/Point2"
+        },
+        "direction": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        }
+      }
+    },
+    "StairCompliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rise_positive",
+        "riser_ok",
+        "tread_ok",
+        "blondel_ok",
+        "compliant"
+      ],
+      "properties": {
+        "rise_positive": {
+          "type": "boolean"
+        },
+        "riser_ok": {
+          "type": "boolean"
+        },
+        "tread_ok": {
+          "type": "boolean"
+        },
+        "blondel_ok": {
+          "type": "boolean"
+        },
+        "compliant": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SpaceRoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "outline",
+        "holes",
+        "point",
+        "area",
+        "perimeter",
+        "net_floor_area",
+        "floor_z",
+        "clear_height",
+        "volume",
+        "ceiling_slab",
+        "bounding_walls"
+      ],
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/SpaceStatus"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Vertex"
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Vertex"
+            }
+          }
+        },
+        "point": {
+          "$ref": "#/$defs/Point2"
+        },
+        "area": {
+          "type": "number"
+        },
+        "perimeter": {
+          "type": "number"
+        },
+        "net_floor_area": {
+          "type": "number"
+        },
+        "floor_z": {
+          "type": "number"
+        },
+        "clear_height": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "ceiling_slab": {
+          "type": "string"
+        },
+        "bounding_walls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SpaceStatus": {
+      "enum": [
+        "Inferred",
+        "Explicit",
+        "NotEnclosed",
+        "SeedInsideWall",
+        "InvalidOutline"
+      ]
+    },
+    "ModelQuantities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "storeys",
+        "buildings",
+        "project"
+      ],
+      "properties": {
+        "elements": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ElementQuantity"
+          }
+        },
+        "storeys": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/QuantityTotals"
+          }
+        },
+        "buildings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/QuantityTotals"
+          }
+        },
+        "project": {
+          "$ref": "#/$defs/QuantityTotals"
+        }
+      }
+    },
+    "ElementQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "storey",
+        "type_id",
+        "count",
+        "length",
+        "width",
+        "height",
+        "perimeter",
+        "gross_side_area",
+        "opening_area",
+        "net_side_area",
+        "gross_area",
+        "net_area",
+        "surface_area",
+        "gross_volume",
+        "net_volume",
+        "mass",
+        "risers",
+        "layers"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/QuantityKind"
+        },
+        "storey": {
+          "type": "string"
+        },
+        "type_id": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "length": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "perimeter": {
+          "type": "number"
+        },
+        "gross_side_area": {
+          "type": "number"
+        },
+        "opening_area": {
+          "type": "number"
+        },
+        "net_side_area": {
+          "type": "number"
+        },
+        "gross_area": {
+          "type": "number"
+        },
+        "net_area": {
+          "type": "number"
+        },
+        "surface_area": {
+          "type": "number"
+        },
+        "gross_volume": {
+          "type": "number"
+        },
+        "net_volume": {
+          "type": "number"
+        },
+        "mass": {
+          "type": "number"
+        },
+        "risers": {
+          "type": "integer"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayerQuantity"
+          }
+        }
+      }
+    },
+    "QuantityKind": {
+      "enum": [
+        "Wall",
+        "CurtainWall",
+        "Slab",
+        "Roof",
+        "Column",
+        "Beam",
+        "Window",
+        "Door",
+        "Void",
+        "Stair",
+        "Railing",
+        "Space"
+      ]
+    },
+    "LayerQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material",
+        "thickness",
+        "area",
+        "volume",
+        "mass"
+      ],
+      "properties": {
+        "material": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "mass": {
+          "type": "number"
+        }
+      }
+    },
+    "QuantityTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kinds",
+        "types",
+        "materials"
+      ],
+      "properties": {
+        "kinds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Totals"
+          }
+        },
+        "types": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Totals"
+          }
+        },
+        "materials": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Totals"
+          }
+        }
+      }
+    },
+    "Totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "length",
+        "area",
+        "volume",
+        "mass"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "length": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "mass": {
+          "type": "number"
+        }
+      }
+    },
+    "Swing": {
+      "enum": [
+        "Left",
+        "Right"
+      ]
+    },
+    "OpeningIssue": {
+      "enum": [
+        "HostMissing",
+        "TypeMissing",
+        "NonPositiveSize",
+        "OutsideHostExtent",
+        "BelowHostBase",
+        "AboveHostTop",
+        "OverlapsSibling"
+      ]
+    },
+    "PlanRole": {
+      "enum": [
+        "Leaf",
+        "Swing",
+        "Glazing"
+      ]
+    },
+    "Vec3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "x_axis",
+        "y_axis",
+        "z_axis"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "x_axis": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "y_axis": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "z_axis": {
+          "$ref": "#/$defs/Vec3"
+        }
+      }
+    },
+    "OpeningCut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "s_min",
+        "s_max",
+        "z_min",
+        "z_max"
+      ],
+      "properties": {
+        "s_min": {
+          "type": "number"
+        },
+        "s_max": {
+          "type": "number"
+        },
+        "z_min": {
+          "type": "number"
+        },
+        "z_max": {
+          "type": "number"
+        }
+      }
+    },
+    "PlanShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Line"
+          ],
+          "properties": {
+            "Line": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to"
+              ],
+              "properties": {
+                "from": {
+                  "$ref": "#/$defs/Point2"
+                },
+                "to": {
+                  "$ref": "#/$defs/Point2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Arc"
+          ],
+          "properties": {
+            "Arc": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "centre",
+                "radius",
+                "start_angle",
+                "sweep"
+              ],
+              "properties": {
+                "centre": {
+                  "$ref": "#/$defs/Point2"
+                },
+                "radius": {
+                  "type": "number"
+                },
+                "start_angle": {
+                  "type": "number"
+                },
+                "sweep": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PlanStroke": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "shape"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/PlanRole"
+        },
+        "shape": {
+          "$ref": "#/$defs/PlanShape"
+        }
+      }
+    },
+    "OpeningFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "sill",
+        "offset",
+        "cut",
+        "reveal_depth",
+        "face_front",
+        "face_back",
+        "host_length",
+        "host_height",
+        "point",
+        "local",
+        "world",
+        "plan",
+        "issues",
+        "overlaps",
+        "valid"
+      ],
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "sill": {
+          "type": "number"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "cut": {
+          "$ref": "#/$defs/OpeningCut"
+        },
+        "reveal_depth": {
+          "type": "number"
+        },
+        "face_front": {
+          "type": "number"
+        },
+        "face_back": {
+          "type": "number"
+        },
+        "host_length": {
+          "type": "number"
+        },
+        "host_height": {
+          "type": "number"
+        },
+        "point": {
+          "$ref": "#/$defs/Point2"
+        },
+        "local": {
+          "$ref": "#/$defs/Frame"
+        },
+        "world": {
+          "$ref": "#/$defs/Frame"
+        },
+        "hand": {
+          "$ref": "#/$defs/Swing"
+        },
+        "plan": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanStroke"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpeningIssue"
+          }
+        },
+        "overlaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StoreyLevel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elevation",
+        "top_elevation",
+        "absolute_elevation",
+        "absolute_top_elevation"
+      ],
+      "properties": {
+        "elevation": {
+          "type": "number"
+        },
+        "top_elevation": {
+          "type": "number"
+        },
+        "absolute_elevation": {
+          "type": "number"
+        },
+        "absolute_top_elevation": {
+          "type": "number"
+        }
+      }
+    },
+    "JoinEnd": {
+      "enum": ["Start", "End", "Along"]
+    },
+    "JoinKind": {
+      "enum": ["Miter", "Butt", "Through", "Cross"]
+    },
+    "Point2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Vertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["point", "bulge"],
+      "properties": {
+        "point": { "$ref": "#/$defs/Point2" },
+        "bulge": { "type": "number" }
+      }
+    },
+    "FaceCurve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "bulge"],
+      "properties": {
+        "start": { "$ref": "#/$defs/Point2" },
+        "end": { "$ref": "#/$defs/Point2" },
+        "bulge": { "type": "number" }
+      }
+    },
+    "WallJoin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "end", "other", "other_end", "point", "overlap_area"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/JoinKind" },
+        "end": { "$ref": "#/$defs/JoinEnd" },
+        "other": { "type": "string" },
+        "other_end": { "$ref": "#/$defs/JoinEnd" },
+        "point": { "$ref": "#/$defs/Point2" },
+        "overlap_area": { "type": "number" }
+      }
+    },
+    "WallLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_z",
+        "top_z",
+        "height",
+        "thickness",
+        "length",
+        "offset_left",
+        "offset_right",
+        "layer_offsets",
+        "left_face",
+        "right_face",
+        "left_length",
+        "right_length",
+        "left_area",
+        "right_area",
+        "side_area",
+        "footprint",
+        "footprint_area",
+        "volume",
+        "joins"
+      ],
+      "properties": {
+        "base_z": { "type": "number" },
+        "top_z": { "type": "number" },
+        "height": { "type": "number" },
+        "thickness": { "type": "number" },
+        "length": { "type": "number" },
+        "offset_left": { "type": "number" },
+        "offset_right": { "type": "number" },
+        "layer_offsets": { "type": "array", "items": { "type": "number" } },
+        "left_face": { "$ref": "#/$defs/FaceCurve" },
+        "right_face": { "$ref": "#/$defs/FaceCurve" },
+        "left_length": { "type": "number" },
+        "right_length": { "type": "number" },
+        "left_area": { "type": "number" },
+        "right_area": { "type": "number" },
+        "side_area": { "type": "number" },
+        "footprint": { "type": "array", "items": { "$ref": "#/$defs/Vertex" } },
+        "footprint_area": { "type": "number" },
+        "volume": { "type": "number" },
+        "joins": { "type": "array", "items": { "$ref": "#/$defs/WallJoin" } }
+      }
+    },
+    "CurtainLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_z", "top_z", "height", "length", "area", "u_panels", "v_panels", "panel_width", "panel_height"],
+      "properties": {
+        "base_z": { "type": "number" },
+        "top_z": { "type": "number" },
+        "height": { "type": "number" },
+        "length": { "type": "number" },
+        "area": { "type": "number" },
+        "u_panels": { "type": "integer", "minimum": 0 },
+        "v_panels": { "type": "integer", "minimum": 0 },
+        "panel_width": { "type": "number" },
+        "panel_height": { "type": "number" }
+      }
+    },
+    "PlanStyle": {
+      "type": "string",
+      "enum": [
+        "Cut",
+        "Projection",
+        "Hidden",
+        "Annotation"
+      ]
+    },
+    "PlanKind": {
+      "type": "string",
+      "enum": [
+        "WallCut",
+        "WallLayer",
+        "WallOutline",
+        "CurtainAxis",
+        "CurtainMullion",
+        "WindowFrame",
+        "WindowGlazing",
+        "WindowSill",
+        "DoorLeaf",
+        "DoorSwing",
+        "ColumnCut",
+        "ColumnOutline",
+        "BeamOutline",
+        "SlabEdge",
+        "SlabHole",
+        "RoofOutline",
+        "StairOutline",
+        "StairRiser",
+        "StairCutLine",
+        "StairArrow",
+        "StairLanding",
+        "RailingPath",
+        "SpaceOutline",
+        "SpaceTag",
+        "GridLine",
+        "GridBubble",
+        "GridLabel"
+      ]
+    },
+    "PlanVertex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "bulge"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "bulge": {
+          "type": "number"
+        }
+      }
+    },
+    "PlanRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "element",
+        "kind",
+        "style",
+        "outer",
+        "holes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "element": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/PlanKind"
+        },
+        "style": {
+          "$ref": "#/$defs/PlanStyle"
+        },
+        "outer": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanVertex"
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/PlanVertex"
+            }
+          }
+        }
+      }
+    },
+    "PlanPolyline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "element",
+        "kind",
+        "style",
+        "closed",
+        "vertices"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "element": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/PlanKind"
+        },
+        "style": {
+          "$ref": "#/$defs/PlanStyle"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "vertices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanVertex"
+          }
+        }
+      }
+    },
+    "PlanText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "element",
+        "kind",
+        "style",
+        "x",
+        "y",
+        "rotation",
+        "label",
+        "detail"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "element": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/PlanKind"
+        },
+        "style": {
+          "$ref": "#/$defs/PlanStyle"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "measure": {
+          "type": "number"
+        }
+      }
+    },
+    "PlanBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_x",
+        "min_y",
+        "max_x",
+        "max_y"
+      ],
+      "properties": {
+        "min_x": {
+          "type": "number"
+        },
+        "min_y": {
+          "type": "number"
+        },
+        "max_x": {
+          "type": "number"
+        },
+        "max_y": {
+          "type": "number"
+        }
+      }
+    },
+    "PlanLinework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "storey",
+        "cut_height",
+        "cut_elevation",
+        "regions",
+        "polylines",
+        "texts",
+        "bounds"
+      ],
+      "properties": {
+        "storey": {
+          "type": "string"
+        },
+        "cut_height": {
+          "type": "number"
+        },
+        "cut_elevation": {
+          "type": "number"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanRegion"
+          }
+        },
+        "polylines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanPolyline"
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlanText"
+          }
+        },
+        "bounds": {
+          "$ref": "#/$defs/PlanBounds"
+        }
+      }
+    },
+    "Severity": {
+      "type": "string",
+      "enum": [
+        "Info",
+        "Warning",
+        "Error"
+      ]
+    },
+    "DiagnosticCode": {
+      "type": "string",
+      "enum": [
+        "ClashWallWall",
+        "ClashWallColumn",
+        "ClashColumnColumn",
+        "ClashWallBeam",
+        "ClashBeamColumn",
+        "ClashBeamBeam",
+        "ClashBeamSlab",
+        "ClashStairWall",
+        "ClashStairColumn",
+        "ClashStairBeam",
+        "ClashStairStair",
+        "ClashSlabSlab",
+        "RefWallType",
+        "RefColumnType",
+        "RefBeamType",
+        "RefSlabType",
+        "RefRoofType",
+        "RefWindowType",
+        "RefDoorType",
+        "RefTopStorey",
+        "RefOpeningHost",
+        "RefElementStorey",
+        "RefStoreyBuilding",
+        "RefBuildingSite",
+        "RefGridBuilding",
+        "RefLayerMaterial",
+        "RefTypeMaterial",
+        "RefPropertyElement",
+        "DuplicateId",
+        "OpeningOutsideHost",
+        "OpeningBelowBase",
+        "OpeningAboveTop",
+        "OpeningOverlap",
+        "OpeningSize",
+        "DegenerateAxis",
+        "DegenerateThickness",
+        "DegenerateHeight",
+        "DegenerateProfile",
+        "DegenerateLoop",
+        "SelfIntersectingLoop",
+        "DegeneratePath",
+        "NonFinite",
+        "DegenerateSpacing",
+        "DegenerateStorey",
+        "StoreyLevelGap",
+        "StoreyLevelDuplicate",
+        "StoreyNoDatum",
+        "StairNoRise",
+        "StairRiserHeight",
+        "StairTreadDepth",
+        "StairComfort",
+        "SpaceNotEnclosed",
+        "SpaceSeedInWall",
+        "SpaceDuplicateNumber"
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message_key",
+        "elements",
+        "missing",
+        "values"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/DiagnosticCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "message_key": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storey": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

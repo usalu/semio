@@ -814,7 +814,7 @@ export async function runProgramMatrix(repoRoot: string, options: ProgramMatrixO
     report.census = { registryRows: probe.plugins.length, loaded: probe.plugins.filter((row) => row.status === "loaded").length, notLoaded: probe.plugins.filter((row) => row.status !== "loaded").map((row) => `${row.pluginId}:${row.status}`), programs: probe.programs.length, selected: selected.length, installsSettled: settled, installWaitMs: waitedMs };
     log(`boot ${JSON.stringify(report.boots.at(-1))} census ${JSON.stringify(report.census)}`);
     const onDemand = probe.plugins.filter((row) => row.status === "available").length;
-    if (selected.length === 0 && onDemand > 0) throw new Error(`0 programs selected: ${onDemand}/${probe.plugins.length} plugins are only installable on demand on this serve (hub-joined lanes install per document); run the matrix against a local-only serve (launch row 🛠️dev🪐️space⚛️react🔒local-only, S_LOCAL_ONLY=1) where every plugin loads`);
+    if (selected.length === 0 && onDemand > 0) throw new Error(`0 programs selected: ${onDemand}/${probe.plugins.length} plugins are only installable on demand on this serve (hub-joined lanes install per document); run the matrix against a local-only serve (dashboard command playground:s with S_LOCAL_ONLY=1) where every plugin loads`);
     let sinceBoot = 0;
     for (const [index, program] of selected.entries()) {
       if (options.signal.aborted) {

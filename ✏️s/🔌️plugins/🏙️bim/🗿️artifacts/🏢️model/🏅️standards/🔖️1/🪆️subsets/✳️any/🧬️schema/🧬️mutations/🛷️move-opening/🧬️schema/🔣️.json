@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/move-opening/schema.json",
+  "title": "MoveOpening",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "offset"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveOpening"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Opening",
+          "de": "Öffnung"
+        },
+        "ref": {
+          "kind": "opening"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "offset": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Offset along host (m)",
+          "de": "Abstand entlang des Trägers (m)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "host": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "New host",
+          "de": "Neuer Träger"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

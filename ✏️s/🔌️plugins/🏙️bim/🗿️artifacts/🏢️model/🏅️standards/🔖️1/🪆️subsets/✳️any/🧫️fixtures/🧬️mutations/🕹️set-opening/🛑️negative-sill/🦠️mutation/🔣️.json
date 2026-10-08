@@ -1,0 +1,7 @@
+{
+  "mutation": "setOpening",
+  "id": "o-1",
+  "sill_override": {
+    "value": -0.2
+  }
+}

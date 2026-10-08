@@ -19,7 +19,7 @@ mount it through the renderer.
 ## Commands
 
 Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry
-points as nx targets, and `.vscode/🧩️launch.seed.jsonc` as launch configurations.
+points as nx targets, which the dashboard offers as commands (`<project>:<target>`, `bun run dashboard`).
 
 ```bash
 cd "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript"

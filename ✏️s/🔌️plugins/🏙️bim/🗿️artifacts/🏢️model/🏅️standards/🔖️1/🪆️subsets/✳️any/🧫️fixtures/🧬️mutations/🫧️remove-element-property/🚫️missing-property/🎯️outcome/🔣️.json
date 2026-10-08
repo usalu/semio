@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "w-south",
+    "Pset_WallCommon",
+    "Nope"
+  ]
+}

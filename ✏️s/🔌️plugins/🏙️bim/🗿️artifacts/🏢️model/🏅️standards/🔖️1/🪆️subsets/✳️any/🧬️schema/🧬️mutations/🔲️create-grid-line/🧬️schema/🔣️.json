@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-grid-line/schema.json",
+  "title": "CreateGridLine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "grid_line"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createGridLine"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Grid line id",
+          "de": "Rasterlinien-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "grid_line": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/GridLine",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Grid line",
+          "de": "Rasterlinie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

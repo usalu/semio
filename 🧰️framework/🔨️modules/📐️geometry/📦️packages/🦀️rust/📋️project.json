@@ -1,0 +1,93 @@
+{
+  "name": "semio-framework-geometry",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📐️geometry/**/*",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "test-oracle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-python"
+      ],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
+      ]
+    },
+    "test-oracle-three": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle three",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
+      ]
+    },
+    "test-oracle-shapely": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test oracle shapely",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-python"
+      ],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
+      ]
+    }
+  }
+}

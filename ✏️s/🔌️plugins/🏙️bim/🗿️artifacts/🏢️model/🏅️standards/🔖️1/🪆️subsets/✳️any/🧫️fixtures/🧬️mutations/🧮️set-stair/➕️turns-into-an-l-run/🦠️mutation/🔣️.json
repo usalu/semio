@@ -1,0 +1,16 @@
+{
+  "mutation": "setStair",
+  "id": "s-1",
+  "flight": {
+    "LTurn": {
+      "split": 0.5,
+      "turn": "Left"
+    }
+  },
+  "top": {
+    "Storey": {
+      "storey": "st-first",
+      "offset": 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mutation": "createBuilding",
+  "id": "bldg-1",
+  "building": {
+    "site": "site-1",
+    "name": "House",
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "rotation": 0,
+    "elevation": 0
+  }
+}

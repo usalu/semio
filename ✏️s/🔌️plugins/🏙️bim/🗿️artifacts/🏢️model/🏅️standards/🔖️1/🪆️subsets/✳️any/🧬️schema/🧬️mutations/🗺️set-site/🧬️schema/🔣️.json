@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-site/schema.json",
+  "title": "SetSite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setSite"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Site",
+          "de": "Standort"
+        },
+        "ref": {
+          "kind": "site"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "name": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "latitude": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Latitude (deg)",
+          "de": "Breitengrad (°)"
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
+    "longitude": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Longitude (deg)",
+          "de": "Längengrad (°)"
+        },
+        "group": "value",
+        "order": 40
+      }
+    },
+    "elevation": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "Elevation (m)",
+          "de": "Höhe (m)"
+        },
+        "group": "value",
+        "order": 50
+      }
+    },
+    "true_north": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "value",
+        "label": {
+          "en": "True north (rad)",
+          "de": "Geographisch Nord (rad)"
+        },
+        "group": "value",
+        "order": 60
+      }
+    },
+    "boundary": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Point2"
+      },
+      "x-semio-ui": {
+        "widget": "list",
+        "role": "value",
+        "label": {
+          "en": "Boundary",
+          "de": "Grundstücksgrenze"
+        },
+        "group": "value",
+        "order": 70
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
 import { requestLocalBrokerSession } from "../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
 /** 🚀️ Zero-touch loopback development hub for `dev s`: ONE detached owner per hub port and data root holds the hub's
  * local-bootstrap pipe and its session broker, and every `s` serve — single-user rows and both two-user rows — signs in
- * through that broker. Which launch row reaches a clean data root first (`▶️start`, a `dev s` row, the compound rows) no
+ * through that broker. Which dashboard command reaches a clean data root first (`▶️start`, a `dev s` row, the compound rows) no
  * longer decides who can sign in, and stopping one UI never takes the hub away from another.
  *
  * Only the DEFAULT hub is ever started here. A hub named explicitly (`S_HUB_URL`, or a hub url a caller passes) belongs to

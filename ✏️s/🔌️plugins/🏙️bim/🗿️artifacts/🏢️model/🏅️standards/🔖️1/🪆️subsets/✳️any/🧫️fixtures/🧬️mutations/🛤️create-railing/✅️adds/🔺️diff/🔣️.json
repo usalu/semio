@@ -1,0 +1,40 @@
+{
+  "railings": {
+    "rl-1": {
+      "base_offset": 0.0,
+      "entry": "Created",
+      "height": 1.0,
+      "infill": "None",
+      "material": "m-steel",
+      "name": "Balustrade",
+      "path": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 3.0
+        }
+      ],
+      "post_profile": {
+        "Rectangle": {
+          "depth": 0.05,
+          "width": 0.05
+        }
+      },
+      "post_spacing": 1.2,
+      "profile": {
+        "Rectangle": {
+          "depth": 0.04,
+          "width": 0.06
+        }
+      },
+      "storey": "st-first"
+    }
+  }
+}

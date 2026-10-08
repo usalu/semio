@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { countStrayDevToolZombies, isDevLeftoverRow, planStrayProcessRemovals, strayProcessExecutableName } from "../../🔨️modules/📚️library/🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts";
+import { countStrayDevToolZombies, dashboardDaemonPid, isDevLeftoverRow, listDevLeftoverRows, planStrayProcessRemovals, strayProcessExecutableName } from "../../🔨️modules/📚️library/🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"), "utf8"));
 
@@ -26,8 +27,24 @@ test("stray process executable names match ps command basenames", () => {
 
 test("stray process plan matches fixture oracle", () => {
   for (const row of vector.cases) {
-    expect(planStrayProcessRemovals(row.rows, vector.selfPid)).toEqual(row.expected);
+    expect(planStrayProcessRemovals(row.rows, vector.selfPid, row.daemonPids ?? []), row.id).toEqual(row.expected);
   }
+});
+
+test("the recorded dashboard daemon pid is read from daemon.pid and ignored when absent or invalid", () => {
+  const directory = mkdtempSync(join(tmpdir(), "stray-dashboard-"));
+  try {
+    expect(dashboardDaemonPid(directory)).toBeUndefined();
+    writeFileSync(join(directory, "daemon.pid"), "24408\n");
+    expect(dashboardDaemonPid(directory)).toBe(24408);
+    writeFileSync(join(directory, "daemon.pid"), "not a pid\n");
+    expect(dashboardDaemonPid(directory)).toBeUndefined();
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("dashboard processes stay out of the leftover audit", () => {
+  const ide = vector.cases.find((row: { id: string }) => row.id === "dashboard-daemon-and-task-tree-protected-by-recorded-pid");
+  expect(listDevLeftoverRows(ide.rows, vector.selfPid, ide.daemonPids).map((row) => row.pid)).toEqual([1200]);
 });
 
 test("stray dev-tool zombie counter ignores IDE-hosted defunct rows", () => {

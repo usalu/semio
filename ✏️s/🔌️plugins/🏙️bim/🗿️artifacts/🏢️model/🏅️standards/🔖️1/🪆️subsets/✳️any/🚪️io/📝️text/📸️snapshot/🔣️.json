@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot/text.json",
+  "title": "ModelSnapshotText",
+  "type": "string",
+  "description": "🚚️ The text representation of ModelSnapshot: the instance is the serialized document this facet's grammar and codec speak."
+}

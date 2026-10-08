@@ -10099,7 +10099,7 @@ const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
 /** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`
  * package they depend on — in publication order: a host after every owner it hosts kinds of (the publisher binds a hosted row to
  * the owner's already-published codec rows), so `demonstrator` comes last. */
-const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,block,cad,dag,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer,demonstrator";
+const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,bim,block,cad,dag,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer,demonstrator";
 
 /** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
  * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
@@ -10120,6 +10120,7 @@ const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Obj
   Object.freeze({ pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
   Object.freeze({ pluginId: "animate", cargoPackage: "semio-hub-animate", componentPackageId: "semio:animate", outputName: "semio_hub_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "architect", cargoPackage: "semio-hub-architect", componentPackageId: "semio:architect", outputName: "semio_hub_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "bim", cargoPackage: "semio-hub-bim", componentPackageId: "semio:bim", outputName: "semio_hub_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "block", cargoPackage: "semio-hub-block", componentPackageId: "semio:block", outputName: "semio_hub_block.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "cad", cargoPackage: "semio-hub-cad", componentPackageId: "semio:cad", outputName: "semio_hub_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "dag", cargoPackage: "semio-hub-dag", componentPackageId: "semio:dag", outputName: "semio_hub_dag.wasm", linkedCodecRegistry: null, opensDocuments: true }),
@@ -12269,7 +12270,7 @@ async function startGisMapShellPeerV1(options: {
   const peerDataRoot = mkdtempSync(join(options.artifactRoot, "shell-peer-" + options.profileId + "-"));
   if (process.platform !== "win32") chmodSync(peerDataRoot, 0o700);
   const devRoot = join(options.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
-  const daemon = spawnDaemon("bun", [join(devRoot, "📜️script.ts"), "dev", "served"], {
+  const daemon = spawnDaemon("bun", [join(devRoot, "📜️script.ts"), "serve", "s", "react", "dev"], {
     cwd: devRoot,
     env: {
       ...process.env,
@@ -13289,7 +13290,7 @@ class DevScript extends BundleScript {
         const envelope = await issueLocalCredential(run, "developer", "react-relay", 4);
         relay = startLocalBrowserRelay(`http://127.0.0.1:${run.port}`, uiOrigin, envelope);
         const uiScript = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-        ui = spawn(process.execPath, [uiScript, "dev", "s"], {
+        ui = spawn(process.execPath, [uiScript, "serve", "s", "react", "dev"], {
           cwd: join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
           env: { ...process.env, S_OS_PORT: String(uiPort), S_HUB_URL: `http://127.0.0.1:${run.port}`, S_LOCAL_RELAY_URL: relay.url, S_LOCAL_RELAY_SECRET: relay.secret.toString("hex"), SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react" },
           shell: false,

@@ -1,0 +1,517 @@
+# 🏙️ BIM model direct-mutation union.
+
+scalar JSON
+
+type CreateSite {
+  id: String!
+  site: Site!
+}
+
+type DeleteSite {
+  id: String!
+}
+
+type CreateBuilding {
+  id: String!
+  building: Building!
+}
+
+type DeleteBuilding {
+  id: String!
+}
+
+type CreateStorey {
+  id: String!
+  storey: Storey!
+}
+
+type RenameStorey {
+  id: String!
+  name: String!
+}
+
+type SetStoreyHeight {
+  id: String!
+  height: Float!
+}
+
+type SetStoreyLevel {
+  id: String!
+  level: Int!
+}
+
+type DeleteStorey {
+  id: String!
+}
+
+type CreateWall {
+  id: String!
+  wall: Wall!
+}
+
+type DeleteWall {
+  id: String!
+}
+
+type SetWallTop {
+  id: String!
+  top: TopConstraint!
+}
+
+type SetStoreyCutHeight {
+  id: String!
+  cut_height: JSON!
+}
+
+type CreateMaterial {
+  id: String!
+  material: Material!
+}
+
+type DeleteMaterial {
+  id: String!
+}
+
+type SetMaterial {
+  id: String!
+  name: String
+  category: MaterialCategory
+  color: Rgb
+  density: Float
+  conductivity: Float
+  specific_heat: Float
+}
+
+type CreateWallType {
+  id: String!
+  wall_type: WallType!
+}
+
+type DeleteWallType {
+  id: String!
+}
+
+type SetWallType {
+  id: String!
+  name: String
+  layers: [Layer!]
+}
+
+type CreateSlabType {
+  id: String!
+  slab_type: SlabType!
+}
+
+type DeleteSlabType {
+  id: String!
+}
+
+type SetSlabType {
+  id: String!
+  name: String
+  layers: [Layer!]
+}
+
+type CreateRoofType {
+  id: String!
+  roof_type: RoofType!
+}
+
+type DeleteRoofType {
+  id: String!
+}
+
+type SetRoofType {
+  id: String!
+  name: String
+  layers: [Layer!]
+}
+
+type CreateColumnType {
+  id: String!
+  column_type: ColumnType!
+}
+
+type DeleteColumnType {
+  id: String!
+}
+
+type SetColumnType {
+  id: String!
+  name: String
+  profile: Profile
+  material: String
+}
+
+type CreateBeamType {
+  id: String!
+  beam_type: BeamType!
+}
+
+type DeleteBeamType {
+  id: String!
+}
+
+type SetBeamType {
+  id: String!
+  name: String
+  profile: Profile
+  material: String
+}
+
+type CreateWindowType {
+  id: String!
+  window_type: WindowType!
+}
+
+type DeleteWindowType {
+  id: String!
+}
+
+type SetWindowType {
+  id: String!
+  name: String
+  width: Float
+  height: Float
+  sill: Float
+  frame_width: Float
+  frame_depth: Float
+  panes: Int
+  material: String
+}
+
+type CreateDoorType {
+  id: String!
+  door_type: DoorType!
+}
+
+type DeleteDoorType {
+  id: String!
+}
+
+type SetDoorType {
+  id: String!
+  name: String
+  width: Float
+  height: Float
+  frame_width: Float
+  frame_depth: Float
+  leaves: DoorLeaves
+  swing: Swing
+  material: String
+}
+
+type SetProjectInfo {
+  name: String
+  description: String
+  author: String
+  organization: String
+  phase_names: [String!]
+}
+
+type SetSite {
+  id: String!
+  name: String
+  latitude: Float
+  longitude: Float
+  elevation: Float
+  true_north: Float
+  boundary: [Point2!]
+}
+
+type SetBuilding {
+  id: String!
+  name: String
+  origin: Point2
+  rotation: Float
+  elevation: Float
+}
+
+type CreateGridLine {
+  id: String!
+  grid_line: GridLine!
+}
+
+type DeleteGridLine {
+  id: String!
+}
+
+type SetGridLine {
+  id: String!
+  label: String
+  start: Point2
+  end: Point2
+}
+
+type SetWallAxis {
+  id: String!
+  axis: Axis!
+}
+
+type SetWallBaseOffset {
+  id: String!
+  base_offset: Float!
+}
+
+type SetWallTypeOf {
+  id: String!
+  wall_type: String!
+}
+
+type SetWallLocation {
+  id: String!
+  location: LocationLine!
+}
+
+type FlipWall {
+  id: String!
+}
+
+type SplitWall {
+  id: String!
+  t: Float!
+  new_id: String!
+}
+
+type CreateCurtainWall {
+  id: String!
+  curtain_wall: CurtainWall!
+}
+
+type DeleteCurtainWall {
+  id: String!
+}
+
+type SetCurtainWall {
+  id: String!
+  axis: Axis
+  base_offset: Float
+  top: TopConstraint
+  u_spacing: Float
+  v_spacing: Float
+  mullion: Profile
+  panel_material: String
+  mullion_material: String
+  name: String
+}
+
+type CreateColumn {
+  id: String!
+  column: Column!
+}
+
+type DeleteColumn {
+  id: String!
+}
+
+type SetColumn {
+  id: String!
+  column_type: String
+  position: Point2
+  rotation: Float
+  base_offset: Float
+  top: TopConstraint
+  name: String
+}
+
+type CreateBeam {
+  id: String!
+  beam: Beam!
+}
+
+type DeleteBeam {
+  id: String!
+}
+
+type SetBeam {
+  id: String!
+  beam_type: String
+  start: Point2
+  end: Point2
+  top_offset: Float
+  name: String
+}
+
+type CreateSlab {
+  id: String!
+  slab: Slab!
+}
+
+type DeleteSlab {
+  id: String!
+}
+
+type SetSlabBoundary {
+  id: String!
+  boundary: [Vertex!]!
+  holes: [[Vertex!]!]!
+}
+
+type SetSlab {
+  id: String!
+  slab_type: String
+  offset: Float
+  slope: Slope
+  name: String
+}
+
+type CreateRoof {
+  id: String!
+  roof: Roof!
+}
+
+type DeleteRoof {
+  id: String!
+}
+
+type SetRoofFootprint {
+  id: String!
+  footprint: [Vertex!]!
+}
+
+type SetRoofShape {
+  id: String!
+  shape: RoofShape
+  overhang: Float
+  base_offset: Float
+}
+
+type CreateOpening {
+  id: String!
+  opening: Opening!
+}
+
+type DeleteOpening {
+  id: String!
+}
+
+type MoveOpening {
+  id: String!
+  offset: Float!
+  host: String
+}
+
+type SetOpening {
+  id: String!
+  kind: OpeningKind
+  sill_override: JSON
+  width: JSON
+  height: JSON
+  flip_hand: Boolean
+  flip_facing: Boolean
+  name: String
+}
+
+type CreateStair {
+  id: String!
+  stair: Stair!
+}
+
+type DeleteStair {
+  id: String!
+}
+
+type SetStair {
+  id: String!
+  start: Point2
+  direction: Float
+  width: Float
+  flight: StairFlight
+  top: TopConstraint
+  max_riser: Float
+  min_tread: Float
+  stringer: StairStringer
+  nosing: Float
+  tread_thickness: Float
+  riser: RiserKind
+  landing_depth: Float
+  name: String
+}
+
+type CreateRailing {
+  id: String!
+  railing: Railing!
+}
+
+type DeleteRailing {
+  id: String!
+}
+
+type SetRailing {
+  id: String!
+  path: [Point2!]
+  height: Float
+  post_spacing: Float
+  profile: Profile
+  post_profile: Profile
+  baluster: Baluster
+  infill: Infill
+  material: String
+  base_offset: Float
+  name: String
+}
+
+type CreateSpace {
+  id: String!
+  space: Space!
+}
+
+type DeleteSpace {
+  id: String!
+}
+
+type SetSpace {
+  id: String!
+  number: String
+  name: String
+  boundary: SpaceBoundary
+  usage: String
+}
+
+type MoveElements {
+  ids: [String!]!
+  vector: Point2!
+}
+
+type RotateElements {
+  ids: [String!]!
+  pivot: Point2!
+  angle: Float!
+}
+
+type DeleteElements {
+  ids: [String!]!
+}
+
+type RenameElement {
+  id: String!
+  name: String!
+}
+
+type SetElementProperty {
+  id: String!
+  pset: String!
+  property: String!
+  value: PropertyValue!
+}
+
+type RemoveElementProperty {
+  id: String!
+  pset: String!
+  property: String!
+}
+
+type SetElementClassification {
+  id: String!
+  classification: Classification!
+}
+
+type RemoveElementClassification {
+  id: String!
+}
+
+type PlaceElements {
+  placements: JSON!
+}
+
+union ModelMutation = CreateSite | DeleteSite | CreateBuilding | DeleteBuilding | CreateStorey | RenameStorey | SetStoreyHeight | SetStoreyLevel | DeleteStorey | CreateWall | DeleteWall | SetWallTop | SetStoreyCutHeight | CreateMaterial | DeleteMaterial | SetMaterial | CreateWallType | DeleteWallType | SetWallType | CreateSlabType | DeleteSlabType | SetSlabType | CreateRoofType | DeleteRoofType | SetRoofType | CreateColumnType | DeleteColumnType | SetColumnType | CreateBeamType | DeleteBeamType | SetBeamType | CreateWindowType | DeleteWindowType | SetWindowType | CreateDoorType | DeleteDoorType | SetDoorType | SetProjectInfo | SetSite | SetBuilding | CreateGridLine | DeleteGridLine | SetGridLine | SetWallAxis | SetWallBaseOffset | SetWallTypeOf | SetWallLocation | FlipWall | SplitWall | CreateCurtainWall | DeleteCurtainWall | SetCurtainWall | CreateColumn | DeleteColumn | SetColumn | CreateBeam | DeleteBeam | SetBeam | CreateSlab | DeleteSlab | SetSlabBoundary | SetSlab | CreateRoof | DeleteRoof | SetRoofFootprint | SetRoofShape | CreateOpening | DeleteOpening | MoveOpening | SetOpening | CreateStair | DeleteStair | SetStair | CreateRailing | DeleteRailing | SetRailing | CreateSpace | DeleteSpace | SetSpace | MoveElements | RotateElements | DeleteElements | RenameElement | SetElementProperty | RemoveElementProperty | SetElementClassification | RemoveElementClassification | PlaceElements

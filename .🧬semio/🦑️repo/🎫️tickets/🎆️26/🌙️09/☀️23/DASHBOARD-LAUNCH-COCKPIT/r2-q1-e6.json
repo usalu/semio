@@ -1,0 +1,5 @@
+[["    fn skew_text(&self, skew: &crate::daemon::client::Skew) -> String {\n        let text = self.text();\n        if skew.incompatible() { text.skew_incompatible.fill(&[(\"daemon\", &skew.daemon_protocol.to_string()), (\"client\", &skew.client_protocol.to_string())]).into_string() } else { text.skew_build.fill(&[(\"daemon\", &skew.daemon_build), (\"client\", &skew.client_build)]).into_string() }\n    }\n\n", ""],
+ ["let root = self.root.clone();\n            std::thread::spawn(move || {", "let root = self.root.clone();\n            let text = self.text();\n            std::thread::spawn(move || {"],
+ ["if crate::daemon::supervisor::start_detached(&root, &executable) != 0 { return Err(std::io::Error::other(\"daemon startup failed\")); }", "if crate::daemon::supervisor::start_detached(&root, &executable, text) != 0 { return Err(std::io::Error::other(text.cli_daemon_startup_failed.as_str())); }"],
+ ["self.skew_text(&skew)).unwrap_or_default()", "self.text().skew(&skew)).unwrap_or_default()"],
+ ["self.notice = Some(self.skew_text(&skew));", "self.notice = Some(self.text().skew(&skew));"]]

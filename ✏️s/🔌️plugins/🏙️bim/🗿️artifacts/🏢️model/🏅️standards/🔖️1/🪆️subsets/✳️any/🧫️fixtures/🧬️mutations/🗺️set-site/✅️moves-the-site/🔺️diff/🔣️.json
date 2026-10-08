@@ -1,0 +1,10 @@
+{
+  "sites": {
+    "site-1": {
+      "elevation": 540.0,
+      "entry": "Patched",
+      "latitude": 46.95,
+      "longitude": 7.45
+    }
+  }
+}

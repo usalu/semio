@@ -1,0 +1,32 @@
+{
+  "st-ground": {
+    "elevation": 0.0,
+    "top_elevation": 3.0,
+    "absolute_elevation": 102.5,
+    "absolute_top_elevation": 105.5
+  },
+  "st-first": {
+    "elevation": 3.0,
+    "top_elevation": 5.8,
+    "absolute_elevation": 105.5,
+    "absolute_top_elevation": 108.3
+  },
+  "st-roof": {
+    "elevation": 5.8,
+    "top_elevation": 6.3,
+    "absolute_elevation": 108.3,
+    "absolute_top_elevation": 108.8
+  },
+  "st-basement": {
+    "elevation": -2.6,
+    "top_elevation": -0.0,
+    "absolute_elevation": 99.9,
+    "absolute_top_elevation": 102.5
+  },
+  "st-shed": {
+    "elevation": 0.0,
+    "top_elevation": 3.3,
+    "absolute_elevation": 99.5,
+    "absolute_top_elevation": 102.8
+  }
+}

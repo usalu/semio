@@ -91,8 +91,7 @@ selector.
 10. **Run `dependency`.** Every external dependency of the feature must be test-only and absent from
     the public API and from production artifacts.
 11. **Run `clean --dry`.** All output must be cache-local; no fixture may change.
-12. **Delete the replaced legacy test** in the same owner change, and lower this owner's count in the repository-root
-    `🚚️migration.json`. Never leave two test hierarchies alive.
+12. **Delete the replaced legacy test** in the same owner change. Never leave two test hierarchies alive.
 
 ## Mutations, subsets and external oracles
 

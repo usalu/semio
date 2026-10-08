@@ -128,7 +128,7 @@ Let me walk you through 🚶️
 > **Status, plainly.** This repository is the source, not a distribution. There is no installer, no
 > published container image, no package on any registry and no hosted instance; `.github/workflows/`
 > is empty and nothing is uploaded anywhere. Everything below is built from this checkout after
-> `npm run setup`, and every release binary named below lands under its own product's `dist/`.
+> `bun run setup`, and every release binary named below lands under its own product's `dist/`.
 
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
@@ -142,21 +142,17 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 **Getting started** — the browser shell, hosting every plugin in one window:
 
 ```bash
-npm run setup                                                    # once, after cloning
-
-export SEMIO_RENDERER=react NX_DAEMON=false
-bun nx run @semio-tech/framework-os-dev:activate-s-react-dev     # stages and compiles the components
-
-cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript
-S_OS_PORT=6060 bun ./📜️script.ts serve s react dev              # → http://127.0.0.1:6060
+bun run setup                                                                    # once, after cloning
+bun run dashboard run playground:s --param renderer=react --detach --wait-ready  # prints http://127.0.0.1:6070/
 ```
 
-The first activation compiles every plugin to WebAssembly and takes tens of minutes; serving
-afterwards takes seconds. Put a single plugin's name where `s` is (`activate-draw-react-dev`, then
-`serve draw react dev`) for a first look that activates in a fraction of the time. Keep activation
-and serving as two commands rather than using `bun nx run @semio-tech/framework-os-dev:dev s` — `dev`
-watches the whole repository and re-activates, taking the running server down with it, on any edit.
-
+`semio …` is shorthand for `bun run dashboard …` (see *The four golden paths* below). The
+command activates the shell first (the Nx-cached `activate-s-react-dev` prerequisite stages and compiles the
+components) and then serves it. The first activation compiles every plugin to WebAssembly and takes tens of
+minutes; later starts take seconds. The same command is a row of the dashboard (`bun run dashboard`,
+`Ctrl+B n`, type `s react`), where `renderer`, `example`, `user-slot` and the hub are parameters. Another
+plugin is another variant: `playground:draw` activates and serves only that plugin, a first look in a fraction
+of the time.
 
 ## 👥️ studio [↑](#%EF%B8%8F-products-)
 
@@ -167,8 +163,8 @@ A studio is a synchronous collaboriation environment for teams to work together 
 **Getting started** — two people in one document needs the hub, the server half of semio:
 
 ```bash
-bun nx run os-hub:dev-secure-suite   # hub + React `s` + native + MCP children, one credential each
-bun nx run os-hub:dev                # the hub alone, loopback, data root ./.🧬semio/🌐hub
+bun run dashboard run os-hub:dev-secure-suite --detach --wait-ready   # hub + React `s` + native + MCP children, one credential each
+bun run dashboard run os-hub:dev --detach --wait-ready                # the hub alone, loopback, data root ./.🧬semio/🌐hub
 ```
 
 That is the *development* topology: supervised, loopback-only, and it will not start as a bare
@@ -657,20 +653,41 @@ The devcontainer includes:
 
 ### 🏁️ The four golden paths
 
-Every one of these is a `.vscode/launch.json` row — no terminal needed (AGENTS.md: devs use
-`launch.json`, never the CLI).
+The dashboard is the only developer control plane. Start it with `bun run dashboard`: it opens the
+interactive TUI where `Ctrl+B n`, a few typed words and `Enter` start any command. Everything it offers
+is also reachable without a terminal UI through the same workspace daemon:
 
-| what | launch row(s) | nx target it resolves to |
+```bash
+semio commands dev hub                          # list matching command ids (add --json for machines)
+semio run os-hub:dev --detach --wait-ready      # start, wait until ready, print the ready URL
+semio run playground:s --param renderer=wgpu-wasm
+semio tasks                                     # running tasks; also logs, stop, restart, kill, open
+```
+
+`semio …` is shorthand for `bun run dashboard …`: only the devcontainer puts a `semio` executable on
+`PATH`, so on a native host type `bun run dashboard commands dev hub`, `bun run dashboard run os-hub:dev
+--detach --wait-ready` and so on. The first start builds and installs the executable, and every later
+start rebuilds it first when the dashboard sources changed.
+
+Agents (Claude Code, Codex, Cursor, …) start servers the same way, with
+`bun run dashboard run <command id> --detach --wait-ready`, and attach browser previews to the URL it prints.
+A command id is `<project>:<target>[:configuration]` for an Nx target, `playground:<variant>`,
+`tool:<project>/<id>`, `compound:<project>/<id>`, `group:<project>/<id>`,
+`ticket:<ticket id>/<tool id>` or `repo:<action>`; parameters are `--param key=value`, free extra
+arguments follow `--`. Runnable things that Nx does not describe are declared next to their owner in
+`metadata.semio.dashboard` of a `📋️project.json`.
+
+| what | dashboard command id | nx target it resolves to |
 |---|---|---|
-| `s` React frontend | `🛠️dev🪐️space⚛️react` (6070), `🛠️dev🪐️space⚛️react📦️served` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-dev` / `serve-s-react-dev` |
-| `s` wgpu frontend | `🛠️dev🪐️space🧊️wgpu🌐️wasm` (6071) | `…:dev-s-wgpu-dev` |
-| hub backend | `🛠️dev🗄️os-hub` (8787) | `os-hub:dev` |
-| two-user collaboration | compound `🧭️compound🖥️s👥️users🗄️os-hub` (hub + `🛠️dev🪐️space👤️1⚛️react` 6072 + `👤️2⚛️react` 6073), or `🛠️dev🤝️os-collab-e2e` for the automated scenario | `os-hub:dev` + `…:dev-s-react-dev` ×2 |
-| MCP servers | `🦑️mcp dev` (repo, stdio), `🛠️dev🌉️os-mcp🧵️stdio` / `🛠️dev🌉️os-mcp🌐️http` (os) | `workspace:dev -- mcp …` |
+| `s` React frontend | `playground:s` (6070), `@semio-tech/framework-os-dev:serve-s-react-dev` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-dev` / `serve-s-react-dev` |
+| `s` wgpu frontend | `playground:s renderer=wgpu-wasm` (6066) | `@semio-tech/framework-os-dev:dev-s-wgpu-dev` |
+| hub backend | `os-hub:dev` (8787, `/admin`) | `os-hub:dev` |
+| two-user collaboration | `compound:workspace/s-users-with-hub` (hub + `playground:s renderer=react user-slot=1` 6072 + `user-slot=2` 6073), or `os-hub:dev-collaboration` for the automated scenario | `os-hub:dev` + `@semio-tech/framework-os-dev:dev-s-react-dev` ×2 |
+| MCP servers | `tool:workspace/repo-mcp` (repo, stdio; `client=<name>`), `tool:workspace/os-mcp-stdio` (os, `bun ./📜️script.ts dev mcp stdio os`: started by the MCP clients from the configurations `bun ./📜️script.ts agents write` writes, not by developers) / `tool:workspace/os-mcp-http` (os, port 8792) | `bun ./📜️script.ts dev mcp stdio …` / `@semio-tech/framework-os-mcp-rs:dev -- http --port 6300` |
 
-`SEMIO_RENDERER` in a row's `env` is what picks the renderer: `bun nx` routes through the repo's Nx
-wrapper (root `package.json:"nx"`), which rewrites `workspace:dev -- <variant>` into
-`<dev\|serve>-<variant>-<react\|wgpu>-<dev\|release>`. No server script ever overrides it.
+The `renderer` parameter of a playground command (`react`, `wgpu-wasm`, `wgpu-native`) picks the Nx
+target (`dev-<variant>-react-dev`, `dev-<variant>-wgpu-dev`, `run-<variant>-native-dev`); no server
+script overrides it.
 
 ## 🪟️ Windows Setup [↑](#-development)
 
@@ -823,7 +840,7 @@ Used for simple tasks (small edits, small refactors, small doc updates) 🧩️
 
 The canonical root agent instructions live in `AGENTS.md`. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and `kiro-cli` read that file directly; the clients that cannot are served by links recreated from it — `CLAUDE.md` (`claude-code`), `GEMINI.md` (`antigravity-chat`) and `.github/copilot-instructions.md` (`copilot-chat`). `bun ./📜️script.ts setup git` writes them, using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells. It is a `dependsOn` of `workspace:setup`, so a fresh clone or devcontainer gets them without a manual step.
 
-Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./📜️script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
+Run `bun run setup` once after cloning for the full workspace bootstrap, or run `bun ./📜️script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁️ Cloud [↑](#-tools-)
 
@@ -860,9 +877,9 @@ The default model for agent work is the one native to the platform we use for th
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Each one also has a `.vscode/launch.json` row in the `3_dev` group next to `⚙️setup`, so devs reach them from the Run panel rather than the CLI. Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
-The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
-Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands, which are dashboard commands: `workspace:setup`, `workspace:lint`, `workspace:format`, `workspace:test`, `workspace:build` and `workspace:publish`. Devs pick them in the dashboard (`bun run dashboard`, `Ctrl+B n`); agents and CI run `bun run dashboard run workspace:<target>` (the bootstrap itself is `bun run setup`). Playgrounds and servers (`playground:<variant>`, `os-hub:dev`, `workspace:dev-storybook`, the `tool:workspace/*` servers) stay live for watch mode, while the root commands exit so CI and agents can finish reliably. The local development hub that `playground:s` signs in through is the dashboard command `os-hub:local-hub-owner`: the daemon supervises it, it declares its ready address, and no root verb starts it behind the daemon's back.
+Nx orchestrates the command pipeline, and the root `📋️project.json` delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
+Git hooks are not installed by this repo; run `workspace:lint`, `workspace:format` and `workspace:test` (`bun run dashboard run workspace:lint`, …) explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ Examples [↑](#-overview)
 
@@ -1073,3 +1090,4 @@ If you have any security vulnerabilities or concerns, please contact [us over em
 # 📊️ [Stats](https://stats.docs.semio-tech.com)
 
 We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-composedocs-) 📈️
+cs](#-composedocs-) 📈️

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 160.75 582" width="160.75mm" height="582mm" xmlns="http://www.w3.org/2000/svg" class="plan"
+    version="1.1" data-scale="100" data-unit="mm"><title>IFC House</title><desc>Floor plans of IFC House, one group per storey, scale 1:100, paper millimetres, north up.</desc><style>
+      .plan{font-family:sans-serif}
+      path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .cut{stroke-width:0.5}
+      .projection{stroke-width:0.25}
+      .hidden{stroke-width:0.18}
+      .annotation{stroke-width:0.13}
+      .hidden{stroke-dasharray:1.5 0.75}
+      path.region{fill-rule:evenodd}
+      path.region.cut{fill:#1a1a1a}
+      path.region.projection{fill:#e6e6e6}
+      text{fill:#000;stroke:none;font-size:3.2px}
+      text.title{font-size:5px;font-weight:bold}
+      text.space-tag{text-anchor:middle}
+      text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
+    </style><g id="storey-st-roof" class="storey" transform="translate(10,10)" data-storey="st-roof"
+        data-building="bldg-1" data-name="Roof" data-level="2" aria-label="Roof"><title>Roof</title><text x="8" y="6.5"
+            class="title">Roof</text><g class="layer regions"/><g class="layer lines"><path
+                d="M 21 115 L 107 115 L 107 49 L 21 49 Z" class="line projection roof-outline" data-element="r-1"
+                data-id="r-1/RoofOutline/0"/><path d="M 14 112 L 114 112" class="line annotation grid-line"
+                data-element="g-1" data-id="g-1/GridLine/0"/><path d="M 14 112 A 3 3 0 0 0 8 112 A 3 3 0 0 0 14 112 Z"
+                class="line annotation grid-bubble" data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 120 112 A 3 3 0 0 0 114 112 A 3 3 0 0 0 120 112 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/><path d="M 24 122 L 24 22"
+                class="line annotation grid-line" data-element="g-a" data-id="g-a/GridLine/0"/><path
+                d="M 27 125 A 3 3 0 0 0 21 125 A 3 3 0 0 0 27 125 Z" class="line annotation grid-bubble"
+                data-element="g-a" data-id="g-a/GridBubble/0"/><path d="M 27 19 A 3 3 0 0 0 21 19 A 3 3 0 0 0 27 19 Z"
+                class="line annotation grid-bubble" data-element="g-a" data-id="g-a/GridBubble/1"/><path
+                d="M 104 122 L 104 22" class="line annotation grid-line" data-element="g-b" data-id="g-b/GridLine/0"/><path
+                d="M 107 125 A 3 3 0 0 0 101 125 A 3 3 0 0 0 107 125 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/0"/><path
+                d="M 107 19 A 3 3 0 0 0 101 19 A 3 3 0 0 0 107 19 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/1"/></g><g class="layer texts"><text x="11" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="117" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text><text x="24" y="125"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/0">A</text><text x="24" y="19"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/1">A</text><text x="104" y="125"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/0">B</text><text x="104" y="19"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/1">B</text></g></g><g
+        id="storey-st-first" class="storey" transform="translate(10,152)" data-storey="st-first" data-building="bldg-1"
+        data-name="First" data-level="1" aria-label="First"><title>First</title><text x="8" y="6.5"
+            class="title">First</text><g class="layer regions"><path d="M 24 113.5 L 55 113.5 L 55 110.5 L 24 110.5 Z"
+                class="region cut wall-cut" data-element="w-first-south" data-id="w-first-south/WallCut/0"/><path
+                d="M 73 113.5 L 104 113.5 L 104 110.5 L 73 110.5 Z" class="region cut wall-cut"
+                data-element="w-first-south" data-id="w-first-south/WallCut/1"/><path
+                d="M 23.75 52.5 L 24.25 52.5 L 24.25 51.5 L 23.75 51.5 Z" class="region cut curtain-mullion"
+                data-element="cw-1" data-id="cw-1/CurtainMullion/0"/><path
+                d="M 38.75 52.5 L 39.25 52.5 L 39.25 51.5 L 38.75 51.5 Z" class="region cut curtain-mullion"
+                data-element="cw-1" data-id="cw-1/CurtainMullion/1"/><path
+                d="M 53.75 52.5 L 54.25 52.5 L 54.25 51.5 L 53.75 51.5 Z" class="region cut curtain-mullion"
+                data-element="cw-1" data-id="cw-1/CurtainMullion/2"/><path
+                d="M 68.75 52.5 L 69.25 52.5 L 69.25 51.5 L 68.75 51.5 Z" class="region cut curtain-mullion"
+                data-element="cw-1" data-id="cw-1/CurtainMullion/3"/><path
+                d="M 83.75 52.5 L 84.25 52.5 L 84.25 51.5 L 83.75 51.5 Z" class="region cut curtain-mullion"
+                data-element="cw-1" data-id="cw-1/CurtainMullion/4"/></g><g class="layer lines"><path
+                d="M 52.9 77 L 52.9 67" class="line hidden stair-riser" data-element="s-2" data-id="s-2/StairRiser/6"/><path
+                d="M 62.9 67 L 52.9 67" class="line hidden stair-riser" data-element="s-2" data-id="s-2/StairRiser/7"/><path
+                d="M 62.9 64.3 L 52.9 64.3" class="line hidden stair-riser" data-element="s-2"
+                data-id="s-2/StairRiser/8"/><path d="M 62.9 61.6 L 52.9 61.6" class="line hidden stair-riser"
+                data-element="s-2" data-id="s-2/StairRiser/9"/><path d="M 62.9 58.9 L 52.9 58.9"
+                class="line hidden stair-riser" data-element="s-2" data-id="s-2/StairRiser/10"/><path
+                d="M 62.9 56.2 L 52.9 56.2" class="line hidden stair-riser" data-element="s-2"
+                data-id="s-2/StairRiser/11"/><path d="M 62.9 53.5 L 52.9 53.5" class="line hidden stair-riser"
+                data-element="s-2" data-id="s-2/StairRiser/12"/><path d="M 62.9 50.8 L 52.9 50.8"
+                class="line hidden stair-riser" data-element="s-2" data-id="s-2/StairRiser/13"/><path
+                d="M 62.9 48.1 L 52.9 48.1" class="line hidden stair-riser" data-element="s-2"
+                data-id="s-2/StairRiser/14"/><path d="M 24 112.5 L 55 112.5" class="line projection wall-layer"
+                data-element="w-first-south" data-id="w-first-south/WallLayer/0"/><path d="M 73 112.5 L 104 112.5"
+                class="line projection wall-layer" data-element="w-first-south" data-id="w-first-south/WallLayer/1"/><path
+                d="M 64 110.5 A 9 9 0 0 1 73 101.5" class="line projection door-swing" data-element="o-door-2"
+                data-id="o-door-2/DoorSwing/0"/><path d="M 64 110.5 A 9 9 0 0 0 55 101.5"
+                class="line projection door-swing" data-element="o-door-2" data-id="o-door-2/DoorSwing/1"/><path
+                d="M 104 112 L 124 112 L 124 92 L 104 92 Z" class="line projection slab-edge" data-element="sl-balcony"
+                data-id="sl-balcony/SlabEdge/0"/><path d="M 24 112 L 104 112 L 104 52 L 24 52 Z"
+                class="line projection slab-edge" data-element="sl-first" data-id="sl-first/SlabEdge/0"/><path
+                d="M 24 112 L 44 112 L 44 92" class="line projection railing-path" data-element="rl-1"
+                data-id="rl-1/RailingPath/0"/><path d="M 34 77 L 34 67" class="line projection stair-riser"
+                data-element="s-2" data-id="s-2/StairRiser/0"/><path d="M 36.7 77 L 36.7 67"
+                class="line projection stair-riser" data-element="s-2" data-id="s-2/StairRiser/1"/><path
+                d="M 39.4 77 L 39.4 67" class="line projection stair-riser" data-element="s-2"
+                data-id="s-2/StairRiser/2"/><path d="M 42.1 77 L 42.1 67" class="line projection stair-riser"
+                data-element="s-2" data-id="s-2/StairRiser/3"/><path d="M 44.8 77 L 44.8 67"
+                class="line projection stair-riser" data-element="s-2" data-id="s-2/StairRiser/4"/><path
+                d="M 47.5 77 L 47.5 67" class="line projection stair-riser" data-element="s-2"
+                data-id="s-2/StairRiser/5"/><path d="M 73 110.5 L 73 101.5" class="line cut door-leaf"
+                data-element="o-door-2" data-id="o-door-2/DoorLeaf/0"/><path d="M 55 110.5 L 55 101.5"
+                class="line cut door-leaf" data-element="o-door-2" data-id="o-door-2/DoorLeaf/1"/><path
+                d="M 24 52 L 84 52" class="line cut curtain-axis" data-element="cw-1" data-id="cw-1/CurtainAxis/0"/><path
+                d="M 34 77 L 52.9 77 L 52.9 67 L 34 67 Z" class="line cut stair-outline" data-element="s-2"
+                data-id="s-2/StairOutline/0"/><path d="M 50.2 77 L 50.875 73 L 49.525 71 L 50.2 67"
+                class="line cut stair-cut-line" data-element="s-2" data-id="s-2/StairCutLine/0"/><path
+                d="M 62.9 67 L 62.9 48.1 L 52.9 48.1 L 52.9 67 Z" class="line cut stair-outline" data-element="s-2"
+                data-id="s-2/StairOutline/1"/><path d="M 52.9 77 L 62.9 77 L 62.9 67 L 52.9 67 Z"
+                class="line cut stair-landing" data-element="s-2" data-id="s-2/StairLanding/0"/><path
+                d="M 14 112 L 114 112" class="line annotation grid-line" data-element="g-1" data-id="g-1/GridLine/0"/><path
+                d="M 14 112 A 3 3 0 0 0 8 112 A 3 3 0 0 0 14 112 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 120 112 A 3 3 0 0 0 114 112 A 3 3 0 0 0 120 112 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/><path d="M 24 122 L 24 22"
+                class="line annotation grid-line" data-element="g-a" data-id="g-a/GridLine/0"/><path
+                d="M 27 125 A 3 3 0 0 0 21 125 A 3 3 0 0 0 27 125 Z" class="line annotation grid-bubble"
+                data-element="g-a" data-id="g-a/GridBubble/0"/><path d="M 27 19 A 3 3 0 0 0 21 19 A 3 3 0 0 0 27 19 Z"
+                class="line annotation grid-bubble" data-element="g-a" data-id="g-a/GridBubble/1"/><path
+                d="M 104 122 L 104 22" class="line annotation grid-line" data-element="g-b" data-id="g-b/GridLine/0"/><path
+                d="M 107 125 A 3 3 0 0 0 101 125 A 3 3 0 0 0 107 125 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/0"/><path
+                d="M 107 19 A 3 3 0 0 0 101 19 A 3 3 0 0 0 107 19 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/1"/><path
+                d="M 34 72 L 52.9 72 L 57.9 72 L 57.9 67 L 57.9 48.1" class="line annotation stair-arrow"
+                data-element="s-2" data-id="s-2/StairArrow/0"/><path d="M 56.9 50.6 L 57.9 48.1 L 58.9 50.6"
+                class="line annotation stair-arrow" data-element="s-2" data-id="s-2/StairArrow/1"/><path
+                d="M 26 110 L 62 110 L 62 54 L 26 54 Z" class="line annotation space-outline" data-element="sp-2"
+                data-id="sp-2/SpaceOutline/0"/></g><g class="layer texts"><text x="11" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="117" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text><text x="24" y="125"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/0">A</text><text x="24" y="19"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/1">A</text><text x="104" y="125"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/0">B</text><text x="104" y="19"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/1">B</text><text x="44" y="82"
+                class="annotation space-tag" data-element="sp-2" data-id="sp-2/SpaceTag/0"><tspan x="44"
+                    dy="-3.68">1.01</tspan><tspan x="44" dy="3.68">Bedroom</tspan><tspan x="44"
+                    dy="3.68">20.16 m²</tspan></text></g></g><g id="storey-st-ground" class="storey"
+        transform="translate(10,294)" data-storey="st-ground" data-building="bldg-1" data-name="Ground" data-level="0"
+        aria-label="Ground"><title>Ground</title><text x="8" y="6.5" class="title">Ground</text><g
+            class="layer regions"><path
+                d="M 124.543 102.517 A 29.749862 29.749862 0 0 0 132.584 85.143 L 131.092 84.984 A 28.250906 28.250906 0 0 1 123.457 101.483 Z"
+                class="region cut wall-cut" data-element="w-arc" data-id="w-arc/WallCut/0"/><path
+                d="M 131.35 72.983 A 29.750058 29.750058 0 0 0 124.543 61.483 L 123.457 62.517 A 28.249971 28.249971 0 0 1 129.921 73.437 Z"
+                class="region cut wall-cut" data-element="w-arc" data-id="w-arc/WallCut/1"/><path
+                d="M 104 113.5 L 104 85 L 101 85 L 101 110.5 Z" class="region cut wall-cut" data-element="w-east"
+                data-id="w-east/WallCut/0"/><path d="M 104 79 L 104 50.5 L 101 53.5 L 101 79 Z"
+                class="region cut wall-cut" data-element="w-east" data-id="w-east/WallCut/1"/><path
+                d="M 44 92.75 L 74 92.75 L 74 91.25 L 44 91.25 Z" class="region cut wall-cut" data-element="w-free"
+                data-id="w-free/WallCut/0"/><path d="M 104 50.5 L 69 50.5 L 69 53.5 L 101 53.5 Z"
+                class="region cut wall-cut" data-element="w-north" data-id="w-north/WallCut/0"/><path
+                d="M 59 50.5 L 21 50.5 L 24 53.5 L 59 53.5 Z" class="region cut wall-cut" data-element="w-north"
+                data-id="w-north/WallCut/1"/><path d="M 21 113.5 L 38 113.5 L 38 110.5 L 24 110.5 Z"
+                class="region cut wall-cut" data-element="w-south" data-id="w-south/WallCut/0"/><path
+                d="M 50 113.5 L 79.5 113.5 L 79.5 110.5 L 50 110.5 Z" class="region cut wall-cut" data-element="w-south"
+                data-id="w-south/WallCut/1"/><path d="M 88.5 113.5 L 104 113.5 L 101 110.5 L 88.5 110.5 Z"
+                class="region cut wall-cut" data-element="w-south" data-id="w-south/WallCut/2"/><path
+                d="M 21 50.5 L 21 113.5 L 24 110.5 L 24 53.5 Z" class="region cut wall-cut" data-element="w-west"
+                data-id="w-west/WallCut/0"/><path d="M 63.01 83.876 L 65.876 82.99 L 64.99 80.124 L 62.124 81.01 Z"
+                class="region cut column-cut" data-element="c-1" data-id="c-1/ColumnCut/0"/><path
+                d="M 86 82 A 2 2 0 0 0 82 82 A 2 2 0 0 0 86 82 Z" class="region cut column-cut" data-element="c-2"
+                data-id="c-2/ColumnCut/0"/></g><g class="layer lines"><path
+                d="M 64 82.75 L 84 82.75 L 84 81.25 L 64 81.25 Z" class="line hidden beam-outline" data-element="b-1"
+                data-id="b-1/BeamOutline/0"/><path d="M 24 83.25 L 64 83.25 L 64 80.75 L 24 80.75 Z"
+                class="line hidden beam-outline" data-element="b-2" data-id="b-2/BeamOutline/0"/><path
+                d="M 52.9 107 L 52.9 97" class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/6"/><path
+                d="M 55.6 107 L 55.6 97" class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/7"/><path
+                d="M 58.3 107 L 58.3 97" class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/8"/><path
+                d="M 61 107 L 61 97" class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/9"/><path
+                d="M 63.7 107 L 63.7 97" class="line hidden stair-riser" data-element="s-1"
+                data-id="s-1/StairRiser/10"/><path d="M 66.4 107 L 66.4 97" class="line hidden stair-riser"
+                data-element="s-1" data-id="s-1/StairRiser/11"/><path d="M 69.1 107 L 69.1 97"
+                class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/12"/><path
+                d="M 71.8 107 L 71.8 97" class="line hidden stair-riser" data-element="s-1"
+                data-id="s-1/StairRiser/13"/><path d="M 74.5 107 L 74.5 97" class="line hidden stair-riser"
+                data-element="s-1" data-id="s-1/StairRiser/14"/><path d="M 77.2 107 L 77.2 97"
+                class="line hidden stair-riser" data-element="s-1" data-id="s-1/StairRiser/15"/><path
+                d="M 131.092 84.984 A 28.249487 28.249487 0 0 0 129.921 73.437" class="line projection window-sill"
+                data-element="o-win-arc" data-id="o-win-arc/WindowSill/0"/><path
+                d="M 132.584 85.143 A 29.749384 29.749384 0 0 0 131.35 72.983" class="line projection window-sill"
+                data-element="o-win-arc" data-id="o-win-arc/WindowSill/1"/><path d="M 132.457 85.044 L 131.247 73.105"
+                class="line projection window-glazing" data-element="o-win-arc" data-id="o-win-arc/WindowGlazing/0"/><path
+                d="M 103 112.5 L 103 85" class="line projection wall-layer" data-element="w-east"
+                data-id="w-east/WallLayer/0"/><path d="M 103 79 L 103 51.5" class="line projection wall-layer"
+                data-element="w-east" data-id="w-east/WallLayer/1"/><path d="M 103 51.5 L 69 51.5"
+                class="line projection wall-layer" data-element="w-north" data-id="w-north/WallLayer/0"/><path
+                d="M 59 51.5 L 22 51.5" class="line projection wall-layer" data-element="w-north"
+                data-id="w-north/WallLayer/1"/><path d="M 69 53.5 L 59 53.5" class="line projection window-sill"
+                data-element="o-win-2" data-id="o-win-2/WindowSill/0"/><path d="M 69 50.5 L 59 50.5"
+                class="line projection window-sill" data-element="o-win-2" data-id="o-win-2/WindowSill/1"/><path
+                d="M 59 52 L 69 52" class="line projection window-glazing" data-element="o-win-2"
+                data-id="o-win-2/WindowGlazing/0"/><path d="M 22 112.5 L 38 112.5" class="line projection wall-layer"
+                data-element="w-south" data-id="w-south/WallLayer/0"/><path d="M 50 112.5 L 79.5 112.5"
+                class="line projection wall-layer" data-element="w-south" data-id="w-south/WallLayer/1"/><path
+                d="M 88.5 112.5 L 103 112.5" class="line projection wall-layer" data-element="w-south"
+                data-id="w-south/WallLayer/2"/><path d="M 88.5 110.5 A 9 9 0 0 0 79.5 101.5"
+                class="line projection door-swing" data-element="o-door-1" data-id="o-door-1/DoorSwing/0"/><path
+                d="M 38 110.5 L 50 110.5" class="line projection window-sill" data-element="o-win-1"
+                data-id="o-win-1/WindowSill/0"/><path d="M 38 113.5 L 50 113.5" class="line projection window-sill"
+                data-element="o-win-1" data-id="o-win-1/WindowSill/1"/><path d="M 38 112 L 50 112"
+                class="line projection window-glazing" data-element="o-win-1" data-id="o-win-1/WindowGlazing/0"/><path
+                d="M 22 51.5 L 22 112.5" class="line projection wall-layer" data-element="w-west"
+                data-id="w-west/WallLayer/0"/><path d="M 24 112 L 104 112 L 104 52 L 24 52 Z"
+                class="line projection slab-edge" data-element="sl-ground" data-id="sl-ground/SlabEdge/0"/><path
+                d="M 79 72 L 89 72 L 89 62 L 79 62 Z" class="line projection slab-hole" data-element="sl-ground"
+                data-id="sl-ground/SlabHole/0"/><path d="M 34 107 L 34 97" class="line projection stair-riser"
+                data-element="s-1" data-id="s-1/StairRiser/0"/><path d="M 36.7 107 L 36.7 97"
+                class="line projection stair-riser" data-element="s-1" data-id="s-1/StairRiser/1"/><path
+                d="M 39.4 107 L 39.4 97" class="line projection stair-riser" data-element="s-1"
+                data-id="s-1/StairRiser/2"/><path d="M 42.1 107 L 42.1 97" class="line projection stair-riser"
+                data-element="s-1" data-id="s-1/StairRiser/3"/><path d="M 44.8 107 L 44.8 97"
+                class="line projection stair-riser" data-element="s-1" data-id="s-1/StairRiser/4"/><path
+                d="M 47.5 107 L 47.5 97" class="line projection stair-riser" data-element="s-1"
+                data-id="s-1/StairRiser/5"/><path
+                d="M 132.235 85.106 A 29.399169 29.399169 0 0 0 131.017 73.089 L 130.255 73.331 A 28.599211 28.599211 0 0 1 131.44 85.021 Z"
+                class="line cut window-frame" data-element="o-win-arc" data-id="o-win-arc/WindowFrame/0"/><path
+                d="M 69 51.6 L 59 51.6 L 59 52.4 L 69 52.4 Z" class="line cut window-frame" data-element="o-win-2"
+                data-id="o-win-2/WindowFrame/0"/><path d="M 79.5 110.5 L 79.5 101.5" class="line cut door-leaf"
+                data-element="o-door-1" data-id="o-door-1/DoorLeaf/0"/><path
+                d="M 38 112.4 L 50 112.4 L 50 111.6 L 38 111.6 Z" class="line cut window-frame" data-element="o-win-1"
+                data-id="o-win-1/WindowFrame/0"/><path d="M 34 107 L 77.2 107 L 77.2 97 L 34 97 Z"
+                class="line cut stair-outline" data-element="s-1" data-id="s-1/StairOutline/0"/><path
+                d="M 50.2 107 L 50.875 103 L 49.525 101 L 50.2 97" class="line cut stair-cut-line" data-element="s-1"
+                data-id="s-1/StairCutLine/0"/><path d="M 14 112 L 114 112" class="line annotation grid-line"
+                data-element="g-1" data-id="g-1/GridLine/0"/><path d="M 14 112 A 3 3 0 0 0 8 112 A 3 3 0 0 0 14 112 Z"
+                class="line annotation grid-bubble" data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 120 112 A 3 3 0 0 0 114 112 A 3 3 0 0 0 120 112 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/><path d="M 24 122 L 24 22"
+                class="line annotation grid-line" data-element="g-a" data-id="g-a/GridLine/0"/><path
+                d="M 27 125 A 3 3 0 0 0 21 125 A 3 3 0 0 0 27 125 Z" class="line annotation grid-bubble"
+                data-element="g-a" data-id="g-a/GridBubble/0"/><path d="M 27 19 A 3 3 0 0 0 21 19 A 3 3 0 0 0 27 19 Z"
+                class="line annotation grid-bubble" data-element="g-a" data-id="g-a/GridBubble/1"/><path
+                d="M 104 122 L 104 22" class="line annotation grid-line" data-element="g-b" data-id="g-b/GridLine/0"/><path
+                d="M 107 125 A 3 3 0 0 0 101 125 A 3 3 0 0 0 107 125 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/0"/><path
+                d="M 107 19 A 3 3 0 0 0 101 19 A 3 3 0 0 0 107 19 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/1"/><path d="M 34 102 L 77.2 102"
+                class="line annotation stair-arrow" data-element="s-1" data-id="s-1/StairArrow/0"/><path
+                d="M 74.7 101 L 77.2 102 L 74.7 103" class="line annotation stair-arrow" data-element="s-1"
+                data-id="s-1/StairArrow/1"/><path d="M 24 110.5 L 101 110.5 L 101 53.5 L 24 53.5 Z"
+                class="line annotation space-outline" data-element="sp-1" data-id="sp-1/SpaceOutline/0"/><path
+                d="M 44 91.25 L 74 91.25 L 74 92.75 L 44 92.75 Z" class="line annotation space-outline"
+                data-element="sp-1" data-id="sp-1/SpaceOutline/1"/></g><g class="layer texts"><text x="11" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="117" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text><text x="24" y="125"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/0">A</text><text x="24" y="19"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/1">A</text><text x="104" y="125"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/0">B</text><text x="104" y="19"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/1">B</text><text x="92" y="62"
+                class="annotation space-tag" data-element="sp-1" data-id="sp-1/SpaceTag/0"><tspan x="92"
+                    dy="-3.68">0.01</tspan><tspan x="92" dy="3.68">Living room</tspan><tspan x="92"
+                    dy="3.68">43.44 m²</tspan></text></g></g><g id="storey-st-base" class="storey"
+        transform="translate(10,436)" data-storey="st-base" data-building="bldg-1" data-name="Basement" data-level="-1"
+        aria-label="Basement"><title>Basement</title><text x="8" y="6.5" class="title">Basement</text><g
+            class="layer regions"/><g class="layer lines"><path d="M 14 112 L 114 112" class="line annotation grid-line"
+                data-element="g-1" data-id="g-1/GridLine/0"/><path d="M 14 112 A 3 3 0 0 0 8 112 A 3 3 0 0 0 14 112 Z"
+                class="line annotation grid-bubble" data-element="g-1" data-id="g-1/GridBubble/0"/><path
+                d="M 120 112 A 3 3 0 0 0 114 112 A 3 3 0 0 0 120 112 Z" class="line annotation grid-bubble"
+                data-element="g-1" data-id="g-1/GridBubble/1"/><path d="M 24 122 L 24 22"
+                class="line annotation grid-line" data-element="g-a" data-id="g-a/GridLine/0"/><path
+                d="M 27 125 A 3 3 0 0 0 21 125 A 3 3 0 0 0 27 125 Z" class="line annotation grid-bubble"
+                data-element="g-a" data-id="g-a/GridBubble/0"/><path d="M 27 19 A 3 3 0 0 0 21 19 A 3 3 0 0 0 27 19 Z"
+                class="line annotation grid-bubble" data-element="g-a" data-id="g-a/GridBubble/1"/><path
+                d="M 104 122 L 104 22" class="line annotation grid-line" data-element="g-b" data-id="g-b/GridLine/0"/><path
+                d="M 107 125 A 3 3 0 0 0 101 125 A 3 3 0 0 0 107 125 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/0"/><path
+                d="M 107 19 A 3 3 0 0 0 101 19 A 3 3 0 0 0 107 19 Z" class="line annotation grid-bubble"
+                data-element="g-b" data-id="g-b/GridBubble/1"/></g><g class="layer texts"><text x="11" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="117" y="112"
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text><text x="24" y="125"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/0">A</text><text x="24" y="19"
+                class="annotation grid-label" data-element="g-a" data-id="g-a/GridLabel/1">A</text><text x="104" y="125"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/0">B</text><text x="104" y="19"
+                class="annotation grid-label" data-element="g-b" data-id="g-b/GridLabel/1">B</text></g></g></svg>

@@ -10,26 +10,17 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🚪️entrypoint/🦀️.rs
 
-#[path = "../../🌊️workflow/🦀️.rs"]
-pub mod workflow;
-
 #[path = "../../🔌️plugin-registry/🦀️.rs"]
 pub mod plugin_registry;
 
 #[path = "../../🌀️daemon/🦀️.rs"]
 pub mod daemon;
 
-#[path = "../../🛝️playground-session/🦀️.rs"]
-pub mod playground_session;
-
 #[path = "../../⌨️usage/🦀️.rs"]
 pub mod usage;
 
 #[path = "../../📇️playground-catalog/🦀️.rs"]
 pub mod playground_catalog;
-
-#[path = "../../📜️root-delegation/🦀️.rs"]
-pub mod root_delegation;
 
 #[path = "../../🌳️command-tree/🦀️.rs"]
 pub mod command_tree;
@@ -43,6 +34,12 @@ pub mod inventory;
 #[path = "../../🎮️registry/🦀️.rs"]
 pub mod registry;
 
+#[path = "../../🏛️repo-domain/🦀️.rs"]
+pub mod repo_domain;
+
+#[path = "../../🧭️cli/🦀️.rs"]
+pub mod cli;
+
 #[path = "../../🖥️terminal/🦀️.rs"]
 pub mod terminal;
 
@@ -50,22 +47,37 @@ pub mod terminal;
 pub use daemon::ipc;
 
 // #region 🔖️Dispatch
+/// 🗂️ The verbs `run` answers itself, in dispatch order. The usage text and the README verb table list every
+/// one of them except the internal ones; a test fails when the three drift apart.
+pub const NATIVE_VERBS: &[&str] = &["dashboard", "preferences", "repo-view", "daemon", "catalog", "command-tree", "plugin", "commands", "run", "tasks", "logs", "stop", "restart", "kill", "open"];
+/// 🔒️ Native verbs that exist for the dashboard's own child processes and are not documented as commands.
+pub const INTERNAL_VERBS: &[&str] = &["repo-view"];
+
 /// 🚦️ Runs one `semio` invocation and returns its process exit code.
 pub fn run(argv: &[String]) -> i32 {
     let root = semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+    if argv.first().is_some_and(|first| matches!(first.as_str(), "--help" | "-h" | "help")) { usage::help(); return 0; }
     let parsed = invocation(argv);
+    let rest = argv.get(1..).unwrap_or_default();
     match parsed.verb.as_str() {
         "dashboard" => terminal::run_with(&root, &parsed),
         "preferences" => preferences::run(&root, &parsed),
-        "repo-view" => command_tree::run_action(&root, &parsed),
+        "repo-view" => repo_domain::run_action(&root, &parsed),
         "daemon" => daemon::run(&root, &parsed),
-        "workflow" => workflow::run(&root, &parsed),
-        "dev" => playground_session::run(&root, &parsed),
         "catalog" => playground_catalog::run(&root, &parsed),
         "command-tree" => command_tree::run(&root, &parsed),
-        "commands" => registry::run(&root, &parsed),
         "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry::run(&root, parsed.segments.get(1).map_or("generate", String::as_str)),
-        _ => root_delegation::run(&root, &parsed),
+        "commands" => cli::commands(&root, rest),
+        "run" => cli::run(&root, rest),
+        "tasks" => cli::tasks(&root, rest),
+        "logs" => cli::logs(&root, rest),
+        "stop" | "restart" | "kill" => cli::act(&root, &parsed.verb, rest),
+        "open" => cli::open(&root, rest),
+        _ => {
+            eprintln!("[semio] unknown verb {:?}", argv.first().map_or("", String::as_str));
+            usage::print();
+            2
+        }
     }
 }
 
@@ -82,7 +94,7 @@ fn invocation(argv: &[String]) -> args::ParsedArgs {
 pub mod args {
     use std::collections::HashMap;
 
-    /// 🎛️ One `semio <verb> [segments…] [--flag [value]]` invocation, split into its parts.
+    /// ✂️ One `semio <verb> [segments…] [--flag [value]]` invocation, split into its parts.
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     pub struct ParsedArgs {
         pub verb: String,
@@ -100,7 +112,7 @@ pub mod args {
         }
     }
 
-    /// ✂️ Splits raw argv into a verb, positional segments, and `--flag [value]` pairs.
+    /// 🔪️ Splits raw argv into a verb, positional segments, and `--flag [value]` pairs.
     ///
     /// A flag consumes the next token as its value unless that token is itself a `--flag` or
     /// there is no next token, in which case the flag is boolean (`has_flag` only).
@@ -136,7 +148,8 @@ pub mod proc {
         match status {
             Ok(s) => s.code().unwrap_or(1),
             Err(e) => {
-                eprintln!("[semio] failed to run {cmd}: {e}");
+                let text = crate::terminal::labels::labels(crate::preferences::cli_locale(cwd, &crate::args::ParsedArgs::default()));
+                eprintln!("{}", text.cli_run_failed.fill(&[("command", cmd), ("error", &e.to_string())]).into_string());
                 1
             }
         }
@@ -155,7 +168,6 @@ pub mod catalog {
     use std::fs;
     use std::path::{Path, PathBuf};
 
-    //#region 🔖️Entries
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
     pub struct Ports {
         pub react: u32,
@@ -174,12 +186,12 @@ pub mod catalog {
         /// 🔌️ Crate paths (e.g. `framework/surface/tiled-map/rs`) whose `wasm` build target must run
         /// for this playground variant, read from `engines = […]` on its `[[…playground]]` row.
         pub engines: Vec<String>,
-        /// 🗂️ Dev-time asset serving needs for this variant, read from the crate's
+        /// 🗃️ Dev-time asset serving needs for this variant, read from the crate's
         /// `[[package.metadata.semio.assets]]` rows (see [`AssetSpec`]).
         pub assets: Vec<AssetSpec>,
     }
 
-    /// 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
+    /// 📎️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
     /// plugin crate (tile proxy, static directory, or mesh collection). `app` optionally scopes the
     /// row to one playground variant of a multi-app crate (unset ⇒ every variant of the crate).
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -194,9 +206,7 @@ pub mod catalog {
         pub placeholder: Option<String>,
         pub filter_from_examples: bool,
     }
-    //#endregion 🔖️Entries
 
-    //#region 🔖️GenerateCheck
     /// 📁️ Resolves the canonical generated plugin-registry output directory.
     pub(crate) fn generated_dir(root: &Path) -> PathBuf {
         root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")
@@ -245,7 +255,6 @@ pub mod catalog {
             filter_from_examples: v.get("filterFromExamples").and_then(|x| x.as_bool()).unwrap_or(false),
         })
     }
-    //#endregion 🔖️GenerateCheck
 }
 // #endregion 🔖️Catalog
 
@@ -258,15 +267,6 @@ pub mod options {
         #[default]
         All,
         Individual(String),
-    }
-
-    /// 📥️ Parses a `--flag` value: `"all"` (case-insensitive) means runtime-switchable.
-    pub fn parse_lock(raw: &str) -> Lock {
-        if raw.eq_ignore_ascii_case("all") {
-            Lock::All
-        } else {
-            Lock::Individual(raw.to_string())
-        }
     }
 }
 // #endregion 🔖️Options
@@ -285,14 +285,11 @@ pub mod env_contract {
         pub terminology: Lock,
         pub theme: Lock,
         pub appearance: Lock,
-        pub skip_plugin_build: bool,
-        pub skip_engine_build: bool,
-        pub skip_wgpu_build: bool,
     }
 
     
 
-    /// 🔌️ Resolves the dev-server port: `--port`, else the catalog's port for this renderer, else 6066.
+    /// 🚪️ Resolves the dev-server port: `--port`, else the catalog's port for this renderer, else 6066.
     pub fn resolve_port(playground: Option<&PlaygroundEntry>, renderer: &str, explicit: Option<u16>) -> u16 {
         if let Some(port) = explicit {
             return port;
@@ -317,6 +314,7 @@ pub mod env_contract {
         env.push(("VITE_SEMIO_RENDERER".to_string(), renderer.to_string()));
         if let Some(app) = playground.and_then(|p| p.app.as_ref()) {
             env.push(("VITE_SEMIO_APP_ID".to_string(), app.clone()));
+            env.push(("SEMIO_APP_ID".to_string(), app.clone()));
         }
         if let Lock::Individual(id) = &opts.example {
             env.push(("PLAYGROUND_LOCKED_EXAMPLE_ID".to_string(), id.clone()));
@@ -334,15 +332,6 @@ pub mod env_contract {
         if let Lock::Individual(v) = &opts.appearance {
             env.push(("SEMIO_LOCKED_APPEARANCE".to_string(), v.clone()));
         }
-        if opts.skip_plugin_build {
-            env.push(("SKIP_PLUGIN_BUILD".to_string(), "1".to_string()));
-        }
-        if opts.skip_engine_build {
-            env.push(("SKIP_ENGINE_BUILD".to_string(), "1".to_string()));
-        }
-        if opts.skip_wgpu_build {
-            env.push(("SKIP_WGPU_BUILD".to_string(), "1".to_string()));
-        }
         env.push(("NX_TASKS_RUNNER_DYNAMIC_OUTPUT".to_string(), "false".to_string()));
         env.extend(crate::registry::RUNNER_ENV.iter().map(|(key, value)| ((*key).to_string(), (*value).to_string())));
         env
@@ -355,3 +344,4 @@ pub mod env_contract {
 #[path = "../../🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 // #endregion 🔖️Tests
+

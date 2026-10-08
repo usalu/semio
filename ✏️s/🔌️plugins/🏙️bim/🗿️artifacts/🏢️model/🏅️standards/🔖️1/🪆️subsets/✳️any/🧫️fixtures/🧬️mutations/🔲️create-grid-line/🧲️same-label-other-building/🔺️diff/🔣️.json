@@ -1,0 +1,17 @@
+{
+  "grids": {
+    "g-x": {
+      "building": "bldg-2",
+      "end": {
+        "x": 8.0,
+        "y": 0.0
+      },
+      "entry": "Created",
+      "label": "1",
+      "start": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  }
+}

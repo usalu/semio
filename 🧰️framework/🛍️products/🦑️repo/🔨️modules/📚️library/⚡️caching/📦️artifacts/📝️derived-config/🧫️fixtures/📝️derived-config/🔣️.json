@@ -1,0 +1,82 @@
+{
+  "editor": [
+    {
+      "name": "inherits, drops omitted keys, rewrites the folder variable and applies the overlay",
+      "canonical": {
+        "settings": {
+          "editor.formatOnSave": true,
+          "terminal.integrated.env.windows": { "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx" },
+          "terminal.integrated.env.linux": { "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx" },
+          "python.testing.cwd": "${workspaceFolder}",
+          "cmake.buildDirectory": "${workspaceFolder}/.build/${presetName}",
+          "[python]": { "editor.defaultFormatter": "charliermarsh.ruff" },
+          "python.testing.pytestArgs": ["--rootdir=${workspaceFolder}"]
+        },
+        "extensions": ["ms-vscode-remote.remote-containers", "esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+      },
+      "overlay": {
+        "settings": { "omit": ["terminal.integrated.env.windows", "not.present"], "set": { "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python", "editor.formatOnSave": false } },
+        "extensions": { "omit": ["ms-vscode-remote.remote-containers"], "add": ["anthropic.claude-code", "esbenp.prettier-vscode"] }
+      },
+      "expected": {
+        "settings": {
+          "editor.formatOnSave": false,
+          "terminal.integrated.env.linux": { "NX_WORKSPACE_DATA_DIRECTORY": "${containerWorkspaceFolder}/.nx" },
+          "python.testing.cwd": "${containerWorkspaceFolder}",
+          "cmake.buildDirectory": "${containerWorkspaceFolder}/.build/${presetName}",
+          "[python]": { "editor.defaultFormatter": "charliermarsh.ruff" },
+          "python.testing.pytestArgs": ["--rootdir=${containerWorkspaceFolder}"],
+          "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+        },
+        "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "anthropic.claude-code"]
+      }
+    },
+    {
+      "name": "an empty overlay is the identity apart from the folder variable",
+      "canonical": { "settings": { "a": "${workspaceFolder}/x" }, "extensions": ["b.c"] },
+      "overlay": { "settings": { "omit": [], "set": {} }, "extensions": { "omit": [], "add": [] } },
+      "expected": { "settings": { "a": "${containerWorkspaceFolder}/x" }, "extensions": ["b.c"] }
+    }
+  ],
+  "jsonc": [
+    {
+      "name": "replaces a nested object between comments and keeps every sibling",
+      "text": "// header\n{\n  // region\n  \"a\": { \"x\": 1 }, // trailing\n  \"customizations\": {\n    \"vscode\": {\n      \"extensions\": [\n        \"old.one\"\n      ],\n      \"settings\": { \"k\": \"v/*not a comment*/\", \"u\": \"https://example.test\" }\n    }\n  },\n  \"z\": [1, 2]\n}\n",
+      "path": ["customizations", "vscode", "settings"],
+      "value": { "k": 2, "list": ["a", "b"] },
+      "preserved": ["// header", "// region", "// trailing", "\"old.one\"", "\"z\": [1, 2]"]
+    },
+    {
+      "name": "replaces an array whose strings hold brackets",
+      "text": "{\n  \"customizations\": {\n    \"vscode\": {\n      \"extensions\": [\"a]\", \"b[\"]\n    }\n  }\n}\n",
+      "path": ["customizations", "vscode", "extensions"],
+      "value": ["c", "d"],
+      "preserved": []
+    }
+  ],
+  "nextest": [
+    {
+      "name": "a scope keeps only its own quick overrides under the current root",
+      "root": "[profile.quick]\nslow-timeout = { period = \"300s\", terminate-after = 1 }\n\n[[profile.default.overrides]]\nfilter = 'test(/^a::/)'\ntest-group = 'g'\n",
+      "scope": "[profile.quick]\nslow-timeout = { period = \"100s\", terminate-after = 1 }\n\n[[profile.quick.overrides]]\nfilter = 'package(p1)'\nslow-timeout = { period = \"600s\", terminate-after = 1 }\n\n\n[[profile.quick.overrides]]\nfilter = 'package(p2)'\nslow-timeout = { period = \"900s\", terminate-after = 1 }\n",
+      "overrides": 2
+    },
+    {
+      "name": "a scope without overrides equals the root",
+      "root": "[profile.quick]\nslow-timeout = { period = \"300s\", terminate-after = 1 }\n",
+      "scope": "[profile.quick]\nslow-timeout = { period = \"1s\", terminate-after = 1 }\n",
+      "overrides": 0
+    }
+  ],
+  "dependabot": {
+    "goWork": "go 1.25\n\nuse (\n\t./mod/a\n\t./mod/b\n)\n",
+    "files": ["mod/a/go.mod", "mod/b/go.mod", "pkg/one/package.json", "pkg/two/package.json", ".github/workflows/ci.yml"],
+    "valid": "version: 2\nupdates:\n  - package-ecosystem: \"gomod\"\n    directories:\n      - \"/mod/a\"\n      - \"/mod/b\"\n    schedule:\n      interval: \"weekly\"\n  - package-ecosystem: \"bun\"\n    directories:\n      - \"/pkg/*\"\n    schedule:\n      interval: \"weekly\"\n  - package-ecosystem: \"github-actions\"\n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n",
+    "invalid": "version: 2\nupdates:\n  - package-ecosystem: \"gomod\"\n    directories:\n      - \"/mod/a\"\n      - \"/mod/gone\"\n    schedule:\n      interval: \"weekly\"\n  - package-ecosystem: \"bun\"\n    directories:\n      - \"/mod/a\"\n    schedule:\n      interval: \"weekly\"\n",
+    "invalidProblems": [
+      ".github/dependabot.yml: gomod directory /mod/gone does not exist",
+      ".github/dependabot.yml: bun directory /mod/a holds no manifest",
+      ".github/dependabot.yml: go.work module mod/b has no gomod entry"
+    ]
+  }
+}

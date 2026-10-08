@@ -1,0 +1,38 @@
+{
+  "mutation": "setBeamType",
+  "id": "bt-i300",
+  "profile": {
+    "Custom": {
+      "outline": [
+        {
+          "point": {
+            "x": 0,
+            "y": 0
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0,
+            "y": 0.4
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0.4,
+            "y": 0.4
+          },
+          "bulge": 0
+        },
+        {
+          "point": {
+            "x": 0.4,
+            "y": 0
+          },
+          "bulge": 0
+        }
+      ]
+    }
+  }
+}

@@ -1274,6 +1274,7 @@ test = [
     { name = "mercantile" },
     { name = "networkx" },
     { name = "openpyxl" },
+    { name = "py-straight-skeleton" },
     { name = "pynitefea" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1312,6 +1313,7 @@ test = [
     { name = "mercantile", specifier = ">=1.2.1" },
     { name = "networkx", specifier = ">=3.6.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "py-straight-skeleton", specifier = ">=0.1.0" },
     { name = "pynitefea", specifier = ">=1.1.6" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
@@ -1692,6 +1694,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cd/05/0a34433a064256a578f1783a10da6df098ceaa4a57bbeaa96a6c0352786b/pure_eval-0.2.3.tar.gz", hash = "sha256:5f4e983f40564c576c7c8635ae88db5956bb2229d7e9237d03b3c0b0190eaf42", size = 19752, upload-time = "2024-07-21T12:58:21.801Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/37/efad0257dc6e593a18957422533ff0f87ede7c9c6ea010a2177d738fb82f/pure_eval-0.2.3-py3-none-any.whl", hash = "sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0", size = 11842, upload-time = "2024-07-21T12:58:20.04Z" },
+]
+
+[[package]]
+name = "py-straight-skeleton"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a6/4f/294a289ff07f22df4c10e6408adf4af1532620d77bce2063faa19b342e70/py_straight_skeleton-0.1.0.tar.gz", hash = "sha256:4d7a178a5d070d3dc798ad159fa50fe37d67fa95fdd271dd8e02695a523b9593", size = 36863, upload-time = "2024-12-20T23:29:32.36Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/02/eabf98188445e1864e1589b1c8fdc658de688fff92b7ddb77550ef4aa281/py_straight_skeleton-0.1.0-py3-none-any.whl", hash = "sha256:f9602b88d09147bf69551ec81e209281eca3e295a40b7d6e26ee0921b8c8d317", size = 39039, upload-time = "2024-12-20T23:29:31.107Z" },
 ]
 
 [[package]]

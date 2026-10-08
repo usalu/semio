@@ -1,0 +1,25 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "profile": {
+    "Circle": {
+      "diameter": 0.05
+    }
+  },
+  "baluster": {
+    "value": {
+      "profile": {
+        "Rectangle": {
+          "width": 0.02,
+          "depth": 0.02
+        }
+      },
+      "spacing": 0.12
+    }
+  },
+  "infill": {
+    "Glass": {
+      "thickness": 0.012
+    }
+  }
+}

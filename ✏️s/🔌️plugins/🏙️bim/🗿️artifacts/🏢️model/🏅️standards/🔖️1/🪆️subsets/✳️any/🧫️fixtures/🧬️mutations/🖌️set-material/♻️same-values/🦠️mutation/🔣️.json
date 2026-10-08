@@ -1,0 +1,6 @@
+{
+  "mutation": "setMaterial",
+  "id": "m-brick",
+  "name": "Brick",
+  "density": 1800
+}

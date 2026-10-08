@@ -1,0 +1,6 @@
+{
+  "mutation": "setWindowType",
+  "id": "win-1",
+  "sill": 0,
+  "panes": 3
+}

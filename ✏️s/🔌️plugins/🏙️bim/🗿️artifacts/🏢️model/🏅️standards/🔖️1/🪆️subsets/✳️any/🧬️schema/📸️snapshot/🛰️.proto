@@ -1,0 +1,35 @@
+syntax = "proto3";
+package semio.s.bim.model.snapshot;
+import "../🛰️.proto";
+
+// 🧬️ BIM model snapshot schema — authored parameters only.
+
+message ModelSnapshot {
+  string schema = 1;
+  Project project = 2;
+  map<string, artifact.Material> materials = 3;
+  map<string, artifact.WallType> wall_types = 4;
+  map<string, artifact.SlabType> slab_types = 5;
+  map<string, artifact.RoofType> roof_types = 6;
+  map<string, artifact.ColumnType> column_types = 7;
+  map<string, artifact.BeamType> beam_types = 8;
+  map<string, artifact.WindowType> window_types = 9;
+  map<string, artifact.DoorType> door_types = 10;
+  map<string, artifact.Site> sites = 11;
+  map<string, artifact.Building> buildings = 12;
+  map<string, artifact.Storey> storeys = 13;
+  map<string, artifact.GridLine> grids = 14;
+  map<string, artifact.Wall> walls = 15;
+  map<string, artifact.CurtainWall> curtain_walls = 16;
+  map<string, artifact.Column> columns = 17;
+  map<string, artifact.Beam> beams = 18;
+  map<string, artifact.Slab> slabs = 19;
+  map<string, artifact.Roof> roofs = 20;
+  map<string, artifact.Opening> openings = 21;
+  map<string, artifact.Stair> stairs = 22;
+  map<string, artifact.Railing> railings = 23;
+  map<string, artifact.Space> spaces = 24;
+  map<string, artifact.PropertySetRows> properties = 25;
+  map<string, artifact.Classification> classifications = 26;
+}
+

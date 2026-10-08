@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-building/schema.json",
+  "title": "CreateBuilding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "building"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createBuilding"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Building id",
+          "de": "Gebäude-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "building": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Building",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

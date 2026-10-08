@@ -2767,9 +2767,9 @@ const BreachRepoMissingCommand Statute = "repo/missing-command"
 
 const BreachRepoMissingTicketTracking Statute = "repo/missing-ticket-tracking"
 
-const BreachSystemDevcontainerVscodeSettingsOutside Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
+const BreachSystemDevcontainerVscodeSettingsDrift Statute = "system/devcontainer/vscode/settings-drift"
 
-const BreachSystemDevcontainerVscodeExtensionsOutside Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
+const BreachSystemDevcontainerVscodeExtensionsDrift Statute = "system/devcontainer/vscode/extensions-drift"
 
 const BreachFolderIllegalEmpty Statute = "folder/illegal/empty"
 
@@ -3181,19 +3181,19 @@ var StatuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
 	},
-	BreachSystemDevcontainerVscodeSettingsOutside: {
-		Kind:        BreachSystemDevcontainerVscodeSettingsOutside,
+	BreachSystemDevcontainerVscodeSettingsDrift: {
+		Kind:        BreachSystemDevcontainerVscodeSettingsDrift,
 		Priority:    BreachPriorityHigh,
-		Reason:      "VSCode settings must be inside devcontainer.json customizations, not in .vscode/settings.json",
-		Solution:    "Move .vscode/settings.json to customizations.vscode.settings inside .devcontainer/devcontainer.json",
-		Autofixable: true,
+		Reason:      "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Autofixable: false,
 	},
-	BreachSystemDevcontainerVscodeExtensionsOutside: {
-		Kind:        BreachSystemDevcontainerVscodeExtensionsOutside,
+	BreachSystemDevcontainerVscodeExtensionsDrift: {
+		Kind:        BreachSystemDevcontainerVscodeExtensionsDrift,
 		Priority:    BreachPriorityHigh,
-		Reason:      "Host editors (Cursor, VS Code) read .vscode/extensions.json for workspace recommendations; it must include every extension from devcontainer customizations.vscode.extensions",
-		Solution:    "Sync .vscode/extensions.json recommendations with customizations.vscode.extensions in .devcontainer/devcontainer.json (host-only extras such as Dev Containers are allowed)",
-		Autofixable: true,
+		Reason:      "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
+		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Autofixable: false,
 	},
 	BreachFolderIllegalEmpty: {
 		Kind:        BreachFolderIllegalEmpty,

@@ -1,0 +1,12 @@
+{
+  "column_types": {
+    "ct-400": {
+      "entry": "Patched",
+      "profile": {
+        "Circle": {
+          "diameter": 0.45
+        }
+      }
+    }
+  }
+}

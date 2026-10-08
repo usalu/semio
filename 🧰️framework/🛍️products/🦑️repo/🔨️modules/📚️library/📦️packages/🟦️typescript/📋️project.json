@@ -52,8 +52,6 @@
     ],
     "cargoTransactionCommandSources": [
       "sharedGlobals",
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
@@ -577,8 +575,6 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/.vscode/settings.json",
-        "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-        "{workspaceRoot}/.vscode/launch.json",
         "{workspaceRoot}/📜️script.ts",
         "{workspaceRoot}/**/📜️script.ts",
         "{workspaceRoot}/**/📋️project.json",
@@ -606,8 +602,6 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/.vscode/settings.json",
-        "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-        "{workspaceRoot}/.vscode/launch.json",
         "{workspaceRoot}/📜️script.ts",
         "{workspaceRoot}/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/{🏗️builder/🌐️vite/🟦️.ts,🔨️modules/{📦️site,🧩️runtime,🧪️e2e}/📜️script.ts,🔨️modules/🧪️e2e/🎚️config/🟦️.ts,📋️project.json}",

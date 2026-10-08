@@ -1,0 +1,32 @@
+{
+  "stairs": {
+    "s-1": {
+      "direction": 0.0,
+      "entry": "Created",
+      "flight": "Straight",
+      "landing_depth": 1.0,
+      "max_riser": 0.18,
+      "min_tread": 0.27,
+      "name": "Main stair",
+      "nosing": 0.0,
+      "riser": "Closed",
+      "start": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "storey": "st-ground",
+      "stringer": {
+        "depth": 0.25,
+        "kind": "None",
+        "width": 0.05
+      },
+      "top": {
+        "StoreyTop": {
+          "offset": 0.0
+        }
+      },
+      "tread_thickness": 0.04,
+      "width": 1.0
+    }
+  }
+}

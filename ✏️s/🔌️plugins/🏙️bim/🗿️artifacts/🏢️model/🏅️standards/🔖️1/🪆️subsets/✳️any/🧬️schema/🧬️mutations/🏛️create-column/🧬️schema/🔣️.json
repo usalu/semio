@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-column/schema.json",
+  "title": "CreateColumn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "column"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createColumn"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Column id",
+          "de": "Stützen-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "column": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Column",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Column",
+          "de": "Stütze"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

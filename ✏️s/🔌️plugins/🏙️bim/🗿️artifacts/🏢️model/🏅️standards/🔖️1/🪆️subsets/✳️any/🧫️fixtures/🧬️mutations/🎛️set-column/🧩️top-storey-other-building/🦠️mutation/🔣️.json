@@ -1,0 +1,10 @@
+{
+  "mutation": "setColumn",
+  "id": "c-a1",
+  "top": {
+    "Storey": {
+      "storey": "st-annex",
+      "offset": 0
+    }
+  }
+}

@@ -2,7 +2,7 @@
  * `postAttachCommand` → `bun ./📜️script.ts setup devcontainer start|attach`), replacing the retired Bash hooks with one
  * owned, testable implementation. Start: emoji font fallback, ownership of the persisted home volumes and submodules,
  * Claude Code auth storage, git `safe.directory` for the bind-mounted checkout, the SSH commit-signing agent. Attach: the
- * optional GUI tools (GitKraken Desktop + CLI, F3D), the GitKraken workspace, the repo hook configuration, and the
+ * optional GUI tools (GitKraken Desktop + CLI, F3D), the GitKraken workspace, the git hooks, and the
  * workspace VS Code extension packaged through Nx and installed into every reachable editor CLI. Every external program
  * runs through an injected {@link LifecycleHost} (one argv, never a shell), so each step is exercised against recording
  * hosts on any machine; failures of optional steps are reported and never block the container.
@@ -417,11 +417,10 @@ export async function installWorkspaceExtension(host: LifecycleHost, context: Li
 //#endregion 🧩️Extension
 
 //#region 🔁️Lifecycle
-/** 🔧️ Syncs the repo hook configuration through the built repo client (`SEMIO_REPO_IMPLEMENTATION=go` selects the Go one). */
+/** 🔧️ Reinstalls the git hooks (micro-commit hooks; blocking pre-commit hooks are dropped) through the workspace script, which needs no built binary. */
 export function configureRepoHooks(host: LifecycleHost, context: LifecycleContext): void {
-  const client = context.env.SEMIO_REPO_IMPLEMENTATION === "go" ? join(context.workspace, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", "semio-repo") : join(context.workspace, "target", "release", "semio");
-  if (!existsSync(client)) return host.log("⚠️  Repo CLI binary not found, skipping repo configure.");
-  host.log(host.run(client, ["configure", "--repo", context.workspace]).status === 0 ? "✅️ Repo hook configuration synced." : "⚠️  Repo configure failed, continuing without blocking attach.");
+  const installed = host.run("bun", ["./📜️script.ts", "micro-commit", "install-hooks"], { cwd: context.workspace });
+  host.log(installed.status === 0 ? "✅️ Git hooks installed." : "⚠️  Git hook installation failed, continuing without blocking attach.");
 }
 
 /** 🔁️ `setup devcontainer start`: fonts, ownership, Claude auth storage, git trust, commit signing. */
@@ -436,7 +435,7 @@ export function devcontainerStart(host: LifecycleHost, context: LifecycleContext
 }
 
 /** 🔁️ `setup devcontainer attach`: optional GUI tools (`SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL`), the GitKraken workspace,
- * repo hooks and the workspace extension (`SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`). */
+ * git hooks and the workspace extension (`SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`). */
 export async function devcontainerAttach(host: LifecycleHost, context: LifecycleContext): Promise<void> {
   const skipTools = Boolean(context.env.SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL);
   if (skipTools) host.log("ℹ  Tool installation skipped.");

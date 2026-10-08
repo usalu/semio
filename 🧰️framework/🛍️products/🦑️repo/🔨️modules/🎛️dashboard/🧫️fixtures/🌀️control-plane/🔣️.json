@@ -1,160 +1,82 @@
 {
   "valid": [
-    {
-      "type": "attach",
-      "client_id": "developer"
-    },
-    {
-      "type": "spawn",
-      "session_id": "test",
-      "command": {
-        "cmd": "bun",
-        "args": [
-          "nx",
-          "run",
-          "workspace:test"
-        ],
-        "cwd": ".",
-        "env": [
-          [
-            "SEMIO_TEST_LEVEL",
-            "quick"
-          ]
-        ],
-        "cols": 80,
-        "rows": 24
-      }
-    },
-    {
-      "type": "input",
-      "session_id": "test",
-      "data": [
-        3
-      ]
-    },
-    {
-      "type": "resize",
-      "session_id": "test",
-      "cols": 120,
-      "rows": 32
-    },
-    {
-      "type": "stop",
-      "session_id": "test"
-    },
-    {
-      "type": "kill",
-      "session_id": "test"
-    },
-    {
-      "type": "restart",
-      "session_id": "test"
-    },
-    {
-      "type": "list"
-    },
-    {
-      "type": "shutdown"
-    },
-    {
-      "type": "detach"
-    },
-    {
-      "type": "ping"
-    },
-    {
-      "type": "attached",
-      "daemon_pid": 1
-    },
-    {
-      "type": "sessions",
-      "sessions": []
-    },
-    {
-      "type": "session_changed",
-      "session": {
-        "session_id": "test",
-        "command": {
-          "cmd": "bun",
-          "args": [
-            "nx",
-            "run",
-            "workspace:test"
-          ],
-          "cwd": ".",
-          "env": [],
-          "cols": 80,
-          "rows": 24
-        },
-        "status": "running",
-        "pid": 2,
-        "code": null
-      }
-    },
-    {
-      "type": "replay_complete"
-    },
-    {
-      "type": "error",
-      "message": "Unknown session"
-    },
-    {
-      "type": "pong"
-    }
+    { "type": "hello", "client_id": "client-1", "protocol": 2, "build_id": "dev-0123456789abcdef", "env": [["PATH", "/usr/bin"], ["TERM", "xterm"]] },
+    { "type": "attach", "client_id": "developer" },
+    { "type": "watch" },
+    { "type": "subscribe", "session_id": "test" },
+    { "type": "unsubscribe", "session_id": "test" },
+    { "type": "detach" },
+    { "type": "spawn", "session_id": "test", "command": { "cmd": "bun", "args": ["nx", "run", "workspace:test"], "cwd": ".", "env": [["SEMIO_TEST_LEVEL", "quick"]], "cols": 80, "rows": 24, "command_id": "workspace:test", "label": { "verb": "test", "owner": ["workspace"], "subject": "workspace", "qualifier": "", "parameters": [["test-level", "quick"]], "members": 0 }, "group": "group-1", "ready": { "port": 6061, "path": "/admin" } } },
+    { "type": "spawn", "session_id": "plain", "command": { "cmd": "echo", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } } },
+    { "type": "spawn", "session_id": "printed", "command": { "cmd": "bun", "args": ["x", "vite"], "cwd": "web", "env": [], "cols": 120, "rows": 40, "command_id": "web:dev", "label": { "verb": "dev", "owner": [], "subject": "web", "qualifier": "", "parameters": [], "members": 0 }, "ready": { "port": 5173, "path": "", "printed": true } } },
+    { "type": "spawn_group", "group_id": "group-1", "stop": "together", "members": [{ "session_id": "group-1.0", "command": { "cmd": "bun", "args": ["nx", "run", "hub:dev"], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "hub:dev", "label": { "verb": "dev", "owner": [], "subject": "hub", "qualifier": "", "parameters": [], "members": 0 }, "group": "group-1", "ready": { "port": 6070, "path": "" } } }], "requires": [{ "session_id": "group-1.r0", "command": { "cmd": "bun", "args": ["nx", "run", "db:serve"], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "db:serve", "label": { "verb": "serve", "owner": [], "subject": "db", "qualifier": "", "parameters": [], "members": 0 } } }] },
+    { "type": "spawn_group", "group_id": "group-2", "stop": "independent", "members": [{ "session_id": "group-2.0", "command": { "cmd": "echo", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } } }], "requires": [] },
+    { "type": "input", "session_id": "test", "data": [3] },
+    { "type": "resize", "session_id": "test", "cols": 120, "rows": 32 },
+    { "type": "stop", "session_id": "test" },
+    { "type": "kill", "session_id": "test" },
+    { "type": "restart", "session_id": "test" },
+    { "type": "stop_group", "group_id": "group-1" },
+    { "type": "kill_group", "group_id": "group-1" },
+    { "type": "forget", "session_id": "test" },
+    { "type": "list" },
+    { "type": "shutdown" },
+    { "type": "ping" },
+    { "type": "attached", "daemon_pid": 4242, "protocol": 2, "build_id": "dev-0123456789abcdef" },
+    { "type": "session_changed", "session": { "session_id": "test", "command": { "cmd": "bun", "args": ["nx", "run", "workspace:test"], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "workspace:test", "label": { "verb": "test", "owner": ["workspace"], "subject": "workspace", "qualifier": "", "parameters": [], "members": 0 } }, "status": "running", "pid": 2, "code": null, "started_ms": 1790000000000 } },
+    { "type": "session_changed", "session": { "session_id": "waiting", "command": { "cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 }, "group": "group-1" }, "status": "pending", "pid": null, "code": null, "started_ms": 0, "group": "group-1" } },
+    { "type": "session_changed", "session": { "session_id": "ended", "command": { "cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } }, "status": "exited", "pid": 3, "code": 143, "started_ms": 1790000000000, "ended_ms": 1790000001000, "ready_url": "http://localhost:6061/admin", "title": "bun", "group": "group-1" } },
+    { "type": "session_changed", "session": { "session_id": "broken", "command": { "cmd": "missing", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } }, "status": "failed", "pid": null, "code": null, "started_ms": 1790000000000, "ended_ms": 1790000000001 } },
+    { "type": "session_changed", "session": { "session_id": "lost", "command": { "cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } }, "status": "interrupted", "pid": null, "code": null, "started_ms": 1790000000000, "ended_ms": 1790000002000 } },
+    { "type": "session_removed", "session_id": "test" },
+    { "type": "sessions", "sessions": [], "more": false },
+    { "type": "sessions", "sessions": [{ "session_id": "stopping", "command": { "cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": { "verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0 } }, "status": "stopping", "pid": 4, "code": null, "started_ms": 1790000000000 }], "more": true },
+    { "type": "replay_start", "session_id": "test", "truncated": true },
+    { "type": "replay_start", "session_id": "test", "truncated": false },
+    { "type": "replay_complete", "session_id": "test" },
+    { "type": "replay_complete" },
+    { "type": "error", "message": "revision mismatch", "code": "protocol" },
+    { "type": "error", "message": "unreadable", "code": "decode" },
+    { "type": "error", "message": "out of limits", "code": "invalid" },
+    { "type": "error", "message": "say hello first", "code": "hello_required" },
+    { "type": "error", "message": "unknown session", "code": "unknown_session", "session_id": "test" },
+    { "type": "error", "message": "unknown group", "code": "unknown_group" },
+    { "type": "error", "message": "already running", "code": "already_running", "session_id": "test" },
+    { "type": "error", "message": "too many sessions", "code": "limit" },
+    { "type": "error", "message": "16 attached views are the limit", "code": "view_limit" },
+    { "type": "error", "message": "could not start", "code": "spawn", "session_id": "test" },
+    { "type": "error", "message": "not running", "code": "not_running", "session_id": "test" },
+    { "type": "error", "message": "input is not taken", "code": "input_backlog", "session_id": "test" },
+    { "type": "error", "message": "an error of no kind" },
+    { "type": "pong" },
+    { "type": "shutdown" }
   ],
   "invalid": [
-    {
-      "type": "spawn",
-      "session_id": "test"
-    },
-    {
-      "type": "kill"
-    },
-    {
-      "type": "resize",
-      "session_id": "test",
-      "cols": 0,
-      "rows": 24
-    },
-    {
-      "type": "input",
-      "session_id": "test",
-      "data": [
-        256
-      ]
-    },
-    {
-      "type": "attached"
-    },
-    {
-      "type": "unknown"
-    },
-    {
-      "type": "ping",
-      "session_id": "foreign"
-    },
-    {
-      "rows": 24,
-      "type": "resize",
-      "cols": 65535,
-      "session_id": "test"
-    },
-    {
-      "type": "session_changed",
-      "session": {
-        "status": "running",
-        "code": null,
-        "pid": 0,
-        "command": {
-          "cmd": "bun",
-          "env": [],
-          "args": [],
-          "cols": 80,
-          "cwd": ".",
-          "rows": 24
-        },
-        "session_id": "test"
-      }
-    }
+    { "type": "spawn", "session_id": "test" },
+    { "type": "kill" },
+    { "type": "resize", "session_id": "test", "cols": 0, "rows": 24 },
+    { "type": "input", "session_id": "test", "data": [256] },
+    { "type": "input", "session_id": "", "data": [3] },
+    { "type": "attached", "daemon_pid": 1 },
+    { "type": "unknown" },
+    { "type": "ping", "session_id": "foreign" },
+    { "type": "resize", "cols": 65535, "rows": 24, "session_id": "test" },
+    { "type": "hello", "client_id": "client-1", "build_id": "x" },
+    { "type": "hello", "client_id": "client-1", "protocol": 2, "build_id": "x", "env": [["A=B", "c"]] },
+    { "type": "spawn_group", "group_id": "g", "stop": "together", "members": [] },
+    { "type": "spawn_group", "group_id": "g", "stop": "sometimes", "members": [{ "session_id": "a", "command": { "cmd": "x", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24 } }] },
+    { "type": "spawn", "session_id": "ready", "command": { "cmd": "x", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24, "ready": { "port": 0, "path": "" } } },
+    { "type": "spawn", "session_id": "ready", "command": { "cmd": "x", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24, "ready": { "port": 80, "path": "/a b" } } },
+    { "type": "spawn", "session_id": "ready", "command": { "cmd": "x", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24, "ready": { "port": 80, "path": "", "printed": "yes" } } },
+    { "type": "replay_start", "truncated": true },
+    { "type": "error", "message": "of a kind nobody knows", "code": "teapot" },
+    { "type": "stop_group" },
+    { "type": "session_removed" },
+    { "type": "sessions", "sessions": [{ "session_id": "x", "status": "zombie", "pid": null, "code": null, "command": { "cmd": "x", "args": [], "cwd": "", "env": [], "cols": 80, "rows": 24 } }] },
+    { "type": "session_changed", "session": { "status": "running", "code": null, "pid": 0, "command": { "cmd": "bun", "env": [], "args": [], "cols": 80, "cwd": ".", "rows": 24 }, "session_id": "test" } }
+  ],
+  "frames": [
+    { "name": "a terminal output frame", "kind": 2, "session_id": "s1", "data_hex": "68690a", "frame_hex": "08000000020200733168690a" },
+    { "name": "terminal input of one key", "kind": 3, "session_id": "task", "data_hex": "03", "frame_hex": "080000000304007461736b03" }
   ]
 }

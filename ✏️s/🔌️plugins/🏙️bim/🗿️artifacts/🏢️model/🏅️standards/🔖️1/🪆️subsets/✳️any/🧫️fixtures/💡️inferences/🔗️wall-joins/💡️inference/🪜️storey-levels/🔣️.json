@@ -1,0 +1,14 @@
+{
+  "st-ground": {
+    "elevation": 0.0,
+    "top_elevation": 3.0,
+    "absolute_elevation": 100.0,
+    "absolute_top_elevation": 103.0
+  },
+  "st-first": {
+    "elevation": 3.0,
+    "top_elevation": 6.0,
+    "absolute_elevation": 103.0,
+    "absolute_top_elevation": 106.0
+  }
+}

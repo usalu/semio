@@ -25,6 +25,11 @@ catalog-default = true
 devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json"
 ports = { react = 6070, wgpu = 6066 }
 user_ports = { react = [6072, 6073], wgpu = [6067, 6068] }
+# 🔗️ The dashboard offers these as the `hub`, `data` and `local-only` parameters of `playground:s`.
+hub = "http://127.0.0.1:8787"
+data_dir = ".🧬semio/🔗space/s-dev"
+user_data_dir = ".🧬semio/🔗space/s-user{N}"
+local_only = true
 
 [[package.metadata.semio.playground]]
 variant = "home"

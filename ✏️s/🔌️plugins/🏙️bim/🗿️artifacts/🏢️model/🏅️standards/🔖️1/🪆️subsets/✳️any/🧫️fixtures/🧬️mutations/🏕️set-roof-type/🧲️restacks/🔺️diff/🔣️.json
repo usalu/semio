@@ -1,0 +1,19 @@
+{
+  "roof_types": {
+    "rf-tile": {
+      "entry": "Patched",
+      "layers": [
+        {
+          "function": "Insulation",
+          "material": "m-wool",
+          "thickness": 0.3
+        },
+        {
+          "function": "Finish",
+          "material": "m-brick",
+          "thickness": 0.03
+        }
+      ]
+    }
+  }
+}

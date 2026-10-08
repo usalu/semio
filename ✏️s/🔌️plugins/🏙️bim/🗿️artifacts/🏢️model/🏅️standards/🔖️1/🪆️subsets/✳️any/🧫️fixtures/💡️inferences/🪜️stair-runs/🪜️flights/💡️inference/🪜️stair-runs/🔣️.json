@@ -1,0 +1,538 @@
+{
+  "s-straight": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.0,
+    "run_length": 3.75,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 16,
+        "treads": 15,
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 3.75
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-straight-tall": {
+    "base_z": 3.0,
+    "top_z": 5.8,
+    "rise": 2.8,
+    "riser_count": 17,
+    "riser_height": 0.16470588235294117,
+    "tread_count": 16,
+    "tread": 0.29058823529411765,
+    "stride": 0.62,
+    "width": 1.0,
+    "run_length": 4.649411764705882,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 17,
+        "treads": 16,
+        "start": {
+          "x": 2.0,
+          "y": 1.0
+        },
+        "direction": 0.3,
+        "tread": 0.29058823529411765,
+        "base_z": 3.0,
+        "length": 4.649411764705882
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-lturn": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.0,
+    "run_length": 3.5,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 5.0,
+          "y": 0.0
+        },
+        "direction": 1.0,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 1.75
+      },
+      {
+        "first_riser": 9,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 5.794944695799367,
+          "y": 2.1634608687518373
+        },
+        "direction": 2.5707963267948966,
+        "tread": 0.25,
+        "base_z": 1.5,
+        "length": 1.75
+      }
+    ],
+    "landings": [
+      {
+        "after_flight": 0,
+        "z": 1.5,
+        "centre": {
+          "x": 6.215680188203315,
+          "y": 1.8933097158177672
+        },
+        "direction": 1.0,
+        "width": 1.0,
+        "depth": 1.0
+      }
+    ],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-lturn-right": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.2,
+    "run_length": 3.5,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 5,
+        "treads": 4,
+        "start": {
+          "x": 9.0,
+          "y": 0.0
+        },
+        "direction": -0.5,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 1.0
+      },
+      {
+        "first_riser": 6,
+        "risers": 11,
+        "treads": 10,
+        "start": {
+          "x": 10.116476775862075,
+          "y": -1.2936303989009486
+        },
+        "direction": -2.0707963267948966,
+        "tread": 0.25,
+        "base_z": 0.9375,
+        "length": 2.5
+      }
+    ],
+    "landings": [
+      {
+        "after_flight": 0,
+        "z": 0.9375,
+        "centre": {
+          "x": 10.404132099024597,
+          "y": -0.7670808617667249
+        },
+        "direction": -0.5,
+        "width": 1.2,
+        "depth": 1.2
+      }
+    ],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-uturn": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.25,
+    "stride": 0.625,
+    "width": 1.0,
+    "run_length": 3.5,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 12.0,
+          "y": 3.0
+        },
+        "direction": 1.5707963267948966,
+        "tread": 0.25,
+        "base_z": 0.0,
+        "length": 1.75
+      },
+      {
+        "first_riser": 9,
+        "risers": 8,
+        "treads": 7,
+        "start": {
+          "x": 10.8,
+          "y": 4.75
+        },
+        "direction": 4.71238898038469,
+        "tread": 0.25,
+        "base_z": 1.5,
+        "length": 1.75
+      }
+    ],
+    "landings": [
+      {
+        "after_flight": 0,
+        "z": 1.5,
+        "centre": {
+          "x": 11.4,
+          "y": 5.25
+        },
+        "direction": 1.5707963267948966,
+        "width": 2.2,
+        "depth": 1.0
+      }
+    ],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-spiral": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.41887902047863906,
+    "stride": 0.793879020478639,
+    "width": 1.0,
+    "run_length": 6.283185307179586,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 16,
+        "treads": 15,
+        "start": {
+          "x": 20.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.41887902047863906,
+        "base_z": 0.0,
+        "length": 6.283185307179586,
+        "winder": {
+          "centre": {
+            "x": 20.0,
+            "y": 1.0
+          },
+          "inner_radius": 0.5,
+          "outer_radius": 1.5,
+          "start_angle": -1.5707963267948966,
+          "sweep": 6.283185307179586
+        }
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": false,
+      "compliant": false
+    }
+  },
+  "s-spiral-cw": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 16,
+    "riser_height": 0.1875,
+    "tread_count": 15,
+    "tread": 0.18666666666666665,
+    "stride": 0.5616666666666666,
+    "width": 1.0,
+    "run_length": 2.8,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 16,
+        "treads": 15,
+        "start": {
+          "x": 24.0,
+          "y": 0.0
+        },
+        "direction": 0.7,
+        "tread": 0.18666666666666665,
+        "base_z": 0.0,
+        "length": 2.8,
+        "winder": {
+          "centre": {
+            "x": 24.450952381066383,
+            "y": -0.5353895310991418
+          },
+          "inner_radius": 0.19999999999999996,
+          "outer_radius": 1.2,
+          "start_angle": 2.2707963267948967,
+          "sweep": -4.0
+        }
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": false,
+      "blondel_ok": false,
+      "compliant": false
+    }
+  },
+  "s-two-storeys": {
+    "base_z": 0.0,
+    "top_z": 5.3,
+    "rise": 5.3,
+    "riser_count": 29,
+    "riser_height": 0.18275862068965518,
+    "tread_count": 28,
+    "tread": 0.25448275862068964,
+    "stride": 0.62,
+    "width": 1.0,
+    "run_length": 7.12551724137931,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 29,
+        "treads": 28,
+        "start": {
+          "x": 30.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.25448275862068964,
+        "base_z": 0.0,
+        "length": 7.12551724137931
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-free": {
+    "base_z": 0.0,
+    "top_z": 2.4,
+    "rise": 2.4,
+    "riser_count": 13,
+    "riser_height": 0.1846153846153846,
+    "tread_count": 12,
+    "tread": 0.2507692307692308,
+    "stride": 0.62,
+    "width": 1.0,
+    "run_length": 3.0092307692307694,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 13,
+        "treads": 12,
+        "start": {
+          "x": 34.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.2507692307692308,
+        "base_z": 0.0,
+        "length": 3.0092307692307694
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-basement": {
+    "base_z": -2.6,
+    "top_z": 0.0,
+    "rise": 2.6,
+    "riser_count": 14,
+    "riser_height": 0.18571428571428572,
+    "tread_count": 13,
+    "tread": 0.26,
+    "stride": 0.6314285714285715,
+    "width": 1.0,
+    "run_length": 3.38,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 14,
+        "treads": 13,
+        "start": {
+          "x": 38.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.26,
+        "base_z": -2.6,
+        "length": 3.38
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-steep": {
+    "base_z": 0.0,
+    "top_z": 3.0,
+    "rise": 3.0,
+    "riser_count": 12,
+    "riser_height": 0.25,
+    "tread_count": 11,
+    "tread": 0.2,
+    "stride": 0.7,
+    "width": 1.0,
+    "run_length": 2.2,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 12,
+        "treads": 11,
+        "start": {
+          "x": 42.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.2,
+        "base_z": 0.0,
+        "length": 2.2
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": false,
+      "compliant": false
+    }
+  },
+  "s-one-riser": {
+    "base_z": 0.0,
+    "top_z": 0.15,
+    "rise": 0.15,
+    "riser_count": 1,
+    "riser_height": 0.15,
+    "tread_count": 0,
+    "tread": 0.32,
+    "stride": 0.62,
+    "width": 1.0,
+    "run_length": 0.0,
+    "flights": [
+      {
+        "first_riser": 1,
+        "risers": 1,
+        "treads": 0,
+        "start": {
+          "x": 46.0,
+          "y": 0.0
+        },
+        "direction": 0.0,
+        "tread": 0.32,
+        "base_z": 0.0,
+        "length": 0.0
+      }
+    ],
+    "landings": [],
+    "compliance": {
+      "rise_positive": true,
+      "riser_ok": true,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": true
+    }
+  },
+  "s-flat": {
+    "base_z": 0.0,
+    "top_z": 0.0,
+    "rise": 0.0,
+    "riser_count": 0,
+    "riser_height": 0.0,
+    "tread_count": 0,
+    "tread": 0.62,
+    "stride": 0.62,
+    "width": 1.0,
+    "run_length": 0.0,
+    "flights": [],
+    "landings": [],
+    "compliance": {
+      "rise_positive": false,
+      "riser_ok": false,
+      "tread_ok": true,
+      "blondel_ok": true,
+      "compliant": false
+    }
+  }
+}

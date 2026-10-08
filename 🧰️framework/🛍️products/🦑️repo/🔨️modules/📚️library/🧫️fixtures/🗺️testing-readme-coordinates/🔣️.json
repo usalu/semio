@@ -66,12 +66,6 @@
       "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️.json"
     },
     {
-      "id": "repository-migration-baseline",
-      "value": "🚚️migration.json",
-      "count": 1,
-      "target": "🚚️migration.json"
-    },
-    {
       "id": "owner-oracle-manifest",
       "value": "🔮️oracles/🔣️.json",
       "count": 2,
@@ -135,7 +129,6 @@
     "Every phase additionally accepts the full v2 selector set",
     "narrow any phase.",
     "A run directory is published with one atomic rename, never written in place",
-    "📇️registry/🚚️migration.json",
     "component.feature"
   ],
   "parserCases": [

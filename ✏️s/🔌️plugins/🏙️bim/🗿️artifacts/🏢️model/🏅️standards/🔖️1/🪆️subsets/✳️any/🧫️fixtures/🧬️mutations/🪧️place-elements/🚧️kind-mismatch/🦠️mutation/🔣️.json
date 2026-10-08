@@ -1,0 +1,14 @@
+{
+  "mutation": "placeElements",
+  "placements": {
+    "w-south": {
+      "Column": {
+        "position": {
+          "x": 5,
+          "y": 5
+        },
+        "rotation": 1
+      }
+    }
+  }
+}

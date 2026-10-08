@@ -1,0 +1,8 @@
+{
+  "mutation": "setOpening",
+  "id": "o-1",
+  "sill_override": {
+    "value": 1.1
+  },
+  "flip_hand": false
+}

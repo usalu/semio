@@ -1,0 +1,4801 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. Wave F registers the two third-party reproductions of its first inferences, `🪜️storey-levels` and `🧱️wall-layout`: shapely 2 (GEOS) audits wall axes and footprints, IfcOpenShell 0.8.4.post1 measures straight walls with its geometry kernel. The host packages both adapters import are declared one level up, in the plugin's own 🔮️oracles/🔣️.json. Later waves APPEND their oracles, mutation catalogs and manifests here.",
+  "oracles": [
+    {
+      "id": "bim-1-shapely-geometry",
+      "ecosystem": "python",
+      "package": "shapely",
+      "version": "2.1.2",
+      "capabilities": [
+        "bim-1-infer"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://shapely.readthedocs.io",
+      "rationale": "Shapely 2 over GEOS is the reference planar geometry library. A wall axis becomes a real LineString (an arc is sampled into 4096 chords) and shapely, not this repository, measures the join-trimmed footprint polygons, the face lengths and the join invariants of the committed wall-layout table: every straight corner is re-derived from GEOS offset_curve carriers, joined footprints must not overlap, a cross overlaps by exactly its committed area, a two-wall node covers the area of LineString.buffer(join_style=mitre) and a butt equals its band minus the body of the wall it butts against. The same oracle proves the parametric law as a metamorphic property. Storey elevations are a running sum that no third-party engine owns, so they are pinned by math.fsum against the subject's f64 sum, by the parametric law, and by the kernel z-extents of the sibling ifcopenshell case. The solids case re-derives the volume and bounds of every planar column, beam, slab, roof, stair and railing from the authored snapshot alone with Polygon.area, affinity, mitred buffer, convex_hull, LineString.interpolate and a numpy linear program audited by shapely.ops.polylabel. The floor plan (poche, column and mullion areas and outline lengths on real polygons) and the diagnostics (clash overlap areas by polygon intersection, missing ids, level arithmetic) are audited the same way.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "geos",
+        "implementation": "Shapely 2 over the GEOS geometry engine",
+        "version": "2.1.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-ifcopenshell-kernel",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "capabilities": [
+        "bim-1-infer"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "IfcOpenShell is the reference open-source IFC implementation and ships its own C++ geometry kernel. Every straight wall of the committed layout is written as an IfcWall whose body is its committed join-trimmed footprint extruded by its height (IfcArbitraryClosedProfileDef), placed at its committed base z; the walls of the element-solids cases additionally get one IfcOpeningElement per window, door and void (IfcRelVoidsElement) so that the kernel's boolean subtracts them. The model is serialised to ISO 10303-21 text, re-opened and tessellated; the measured z extent and volume of the triangulation must equal the committed base_z, top_z and volume. The same engine validates the IFC export and its quantities in the IO wave.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-three-mesh",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "capabilities": [
+        "bim-1-infer"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://threejs.org",
+      "rationale": "three.js is the renderer the editor and viewer meshes are ultimately drawn with, written by unrelated authors. Every element solid of the walls, curtain walls and window and door fillers is committed as a blessed mesh next to its authored snapshot; this oracle loads each mesh as a BufferGeometry and measures volume (the signed sum of tetrahedra with three's Vector3 dot and cross, three ships no volume function), surface area (Triangle.getArea), bounds (Box3.setFromBufferAttribute) and the triangle count, and the subject reports the same numbers from its live element-solids inference. Adapter at ../🧪️tests/🎲️infer-bim-1-solids-three/🟦️.ts.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "threejs",
+        "implementation": "three.js BufferGeometry / Triangle / Box3 over the bun runtime",
+        "version": "0.182.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-ifcopenshell-ifc",
+      "ecosystem": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "capabilities": [
+        "bim-1-export-ifc"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "LGPL-3.0-or-later",
+      "testOnly": true,
+      "homepage": "https://ifcopenshell.org",
+      "rationale": "IfcOpenShell is the reference open-source IFC implementation, written by unrelated authors, and ships its own C++ geometry kernel. It opens the committed IFC 2x3 export of the BIM house (a file the subject wrote with its own Part-21 writer), checks that the file parses and declares IFC2X3, counts the entities of every class the export writes, reads the spatial containment of every product, and tessellates every straight wall, level slab, column and beam with its kernel (openings are subtracted through IfcRelVoidsElement). The kernel volumes must equal the written base quantities and the subject's report.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "ifcopenshell",
+        "implementation": "IfcOpenShell C++/Python IFC engine",
+        "version": "0.8.4.post1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-three-gltf",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "capabilities": [
+        "bim-1-export-gltf"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://threejs.org",
+      "rationale": "three.js is the reference WebGL scene graph, written by unrelated authors. Its GLTFLoader parses the committed binary glTF export of the BIM house (a file the subject wrote with its own GLB container writer): it checks the container framing and the JSON, reads the accessors and index buffers, composes the node transforms and builds the scene graph. The oracle counts the nodes, meshes, primitives, triangles and materials, the element nodes per kind and per storey (node extras surface as userData) and measures the world bounds of every vertex through the whole site, building and storey chain with Box3.setFromObject(scene, true).",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "threejs",
+        "implementation": "three.js GLTFLoader scene graph over the bun runtime",
+        "version": "0.182.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-lxml-shapely-svg",
+      "ecosystem": "python",
+      "package": "lxml",
+      "version": "6.1.3",
+      "capabilities": [
+        "bim-1-export-svg"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://lxml.de",
+      "rationale": "lxml (libxml2) is a namespace-aware XML parser written by unrelated authors, and shapely (GEOS) is the reference computational-geometry library. lxml opens the committed SVG export of the BIM house (a file the subject wrote with its own XML writer), requires the SVG 1.1 root with a millimetre size equal to its viewBox, finds the storey groups and counts their regions, lines, texts, style classes and arc commands. An own SVG path reader feeds shapely, which measures the even-odd area of the straight cut poche regions and the length of the straight lines per style, converted from paper millimetres to model metres at 1:100. Arcs are sampled for an audit value only.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lxml-shapely",
+        "implementation": "lxml 6.1.3 (libxml2) XML parser with shapely 2.1.2 (GEOS) geometry",
+        "version": "6.1.3"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "bim-1-any",
+      "capability": "bim-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-curtain-wall",
+          "sourceMutationDirectoryName": "🔆️set-curtain-wall",
+          "mutationDirectoryName": "🔆️set-curtain-wall",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "re-grids-the-facade",
+              "directoryName": "✅️re-grids-the-facade"
+            },
+            {
+              "id": "curves-the-facade",
+              "directoryName": "🌀️curves-the-facade"
+            },
+            {
+              "id": "swaps-materials-and-renames",
+              "directoryName": "🎨️swaps-materials-and-renames"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "spacing-non-positive",
+              "directoryName": "🚫️spacing-non-positive"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-curtain-wall",
+          "sourceMutationDirectoryName": "🦖️delete-curtain-wall",
+          "mutationDirectoryName": "🦖️delete-curtain-wall",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "cascades-the-opening",
+              "directoryName": "🧭️cascades-the-opening"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧮️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-curtain-wall",
+          "sourceMutationDirectoryName": "🏬️create-curtain-wall",
+          "mutationDirectoryName": "🏬️create-curtain-wall",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-facade",
+              "directoryName": "✅️adds-a-facade"
+            },
+            {
+              "id": "adds-a-curved-facade",
+              "directoryName": "🌀️adds-a-curved-facade"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "💥️zero-length"
+            },
+            {
+              "id": "spacing-non-positive",
+              "directoryName": "📏️spacing-non-positive"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🧪️material-missing"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "split-wall",
+          "sourceMutationDirectoryName": "🦈️split-wall",
+          "mutationDirectoryName": "🦈️split-wall",
+          "scenarios": [
+            {
+              "id": "beyond-the-end",
+              "directoryName": "⛔️beyond-the-end"
+            },
+            {
+              "id": "splits-a-straight-wall",
+              "directoryName": "✅️splits-a-straight-wall"
+            },
+            {
+              "id": "splits-an-arc",
+              "directoryName": "🌀️splits-an-arc"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "at-the-start",
+              "directoryName": "🚫️at-the-start"
+            },
+            {
+              "id": "new-id-taken",
+              "directoryName": "🧩️new-id-taken"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "hands-openings-over",
+              "directoryName": "🪝️hands-openings-over"
+            }
+          ]
+        },
+        {
+          "mutationId": "flip-wall",
+          "sourceMutationDirectoryName": "🪞️flip-wall",
+          "mutationDirectoryName": "🪞️flip-wall",
+          "scenarios": [
+            {
+              "id": "reverses-a-line",
+              "directoryName": "✅️reverses-a-line"
+            },
+            {
+              "id": "reverses-an-arc",
+              "directoryName": "🌀️reverses-an-arc"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "pointlike-wall",
+              "directoryName": "🧲️pointlike-wall"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-location",
+          "sourceMutationDirectoryName": "🦚️set-wall-location",
+          "mutationDirectoryName": "🦚️set-wall-location",
+          "scenarios": [
+            {
+              "id": "moves-to-the-exterior-face",
+              "directoryName": "✅️moves-to-the-exterior-face"
+            },
+            {
+              "id": "moves-to-the-core-centre",
+              "directoryName": "🌟️moves-to-the-core-centre"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-type-of",
+          "sourceMutationDirectoryName": "🥞️set-wall-type-of",
+          "mutationDirectoryName": "🥞️set-wall-type-of",
+          "scenarios": [
+            {
+              "id": "retypes-the-wall",
+              "directoryName": "✅️retypes-the-wall"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🚫️type-missing"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-base-offset",
+          "sourceMutationDirectoryName": "🔽️set-wall-base-offset",
+          "mutationDirectoryName": "🔽️set-wall-base-offset",
+          "scenarios": [
+            {
+              "id": "raises-the-base",
+              "directoryName": "✅️raises-the-base"
+            },
+            {
+              "id": "sinks-below-the-floor",
+              "directoryName": "🌟️sinks-below-the-floor"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-axis",
+          "sourceMutationDirectoryName": "〰️set-wall-axis",
+          "mutationDirectoryName": "〰️set-wall-axis",
+          "scenarios": [
+            {
+              "id": "flat-arc",
+              "directoryName": "⛔️flat-arc"
+            },
+            {
+              "id": "stretches-under-an-opening",
+              "directoryName": "✅️stretches-under-an-opening"
+            },
+            {
+              "id": "curves-the-wall",
+              "directoryName": "🌀️curves-the-wall"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🕳️missing"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "🚫️zero-length"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🧲️unchanged"
+            },
+            {
+              "id": "straightens-the-arc",
+              "directoryName": "🧵️straightens-the-arc"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-site",
+          "sourceMutationDirectoryName": "🌍️create-site",
+          "mutationDirectoryName": "🌍️create-site",
+          "scenarios": [
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-site",
+          "sourceMutationDirectoryName": "🧹️delete-site",
+          "mutationDirectoryName": "🧹️delete-site",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "cascades-its-buildings",
+              "directoryName": "🌊️cascades-its-buildings"
+            },
+            {
+              "id": "cascades-the-whole-site",
+              "directoryName": "🏗️cascades-the-whole-site"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-building",
+          "sourceMutationDirectoryName": "🏢️create-building",
+          "mutationDirectoryName": "🏢️create-building",
+          "scenarios": [
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "site-missing",
+              "directoryName": "🚫️site-missing"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-building",
+          "sourceMutationDirectoryName": "🏚️delete-building",
+          "mutationDirectoryName": "🏚️delete-building",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "cascades-its-storeys",
+              "directoryName": "🌊️cascades-its-storeys"
+            },
+            {
+              "id": "cascades-the-whole-building",
+              "directoryName": "🏗️cascades-the-whole-building"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-storey",
+          "sourceMutationDirectoryName": "🪜️create-storey",
+          "mutationDirectoryName": "🪜️create-storey",
+          "scenarios": [
+            {
+              "id": "building-missing",
+              "directoryName": "⛔️building-missing"
+            },
+            {
+              "id": "stacks-above",
+              "directoryName": "✅️stacks-above"
+            },
+            {
+              "id": "level-taken",
+              "directoryName": "🚫️level-taken"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "with-a-plan-cut-height",
+              "directoryName": "🧮️with-a-plan-cut-height"
+            },
+            {
+              "id": "non-positive-plan-cut-height",
+              "directoryName": "🧯️non-positive-plan-cut-height"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-storey",
+          "sourceMutationDirectoryName": "🏷️rename-storey",
+          "mutationDirectoryName": "🏷️rename-storey",
+          "scenarios": [
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-storey-height",
+          "sourceMutationDirectoryName": "📏️set-storey-height",
+          "mutationDirectoryName": "📏️set-storey-height",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "raises-the-ground-storey",
+              "directoryName": "✅️raises-the-ground-storey"
+            },
+            {
+              "id": "non-positive",
+              "directoryName": "🚫️non-positive"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-storey-cut-height",
+          "sourceMutationDirectoryName": "🎬️set-storey-cut-height",
+          "mutationDirectoryName": "🎬️set-storey-cut-height",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "sets-the-cut",
+              "directoryName": "✅️sets-the-cut"
+            },
+            {
+              "id": "clears-the-cut",
+              "directoryName": "➕️clears-the-cut"
+            },
+            {
+              "id": "already-set",
+              "directoryName": "🔴️already-set"
+            },
+            {
+              "id": "non-positive",
+              "directoryName": "🚫️non-positive"
+            },
+            {
+              "id": "already-default",
+              "directoryName": "🟢️already-default"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-storey-level",
+          "sourceMutationDirectoryName": "🔢️set-storey-level",
+          "mutationDirectoryName": "🔢️set-storey-level",
+          "scenarios": [
+            {
+              "id": "relevels",
+              "directoryName": "✅️relevels"
+            },
+            {
+              "id": "level-taken",
+              "directoryName": "🚫️level-taken"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-storey",
+          "sourceMutationDirectoryName": "🚮️delete-storey",
+          "mutationDirectoryName": "🚮️delete-storey",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "cascades-the-walls",
+              "directoryName": "✅️cascades-the-walls"
+            },
+            {
+              "id": "cascades-the-opening",
+              "directoryName": "🌊️cascades-the-opening"
+            },
+            {
+              "id": "cascades-everything-on-it",
+              "directoryName": "🏗️cascades-everything-on-it"
+            },
+            {
+              "id": "constrains-another-wall",
+              "directoryName": "🚫️constrains-another-wall"
+            },
+            {
+              "id": "empty-storey",
+              "directoryName": "🧲️empty-storey"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-wall",
+          "sourceMutationDirectoryName": "🧱️create-wall",
+          "mutationDirectoryName": "🧱️create-wall",
+          "scenarios": [
+            {
+              "id": "zero-length",
+              "directoryName": "⛔️zero-length"
+            },
+            {
+              "id": "adds-on-the-first-storey",
+              "directoryName": "✅️adds-on-the-first-storey"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🚫️type-missing"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-wall",
+          "sourceMutationDirectoryName": "💥️delete-wall",
+          "mutationDirectoryName": "💥️delete-wall",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "cascades-the-opening",
+              "directoryName": "🌊️cascades-the-opening"
+            },
+            {
+              "id": "cascades-the-opening-and-data",
+              "directoryName": "🏗️cascades-the-opening-and-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-top",
+          "sourceMutationDirectoryName": "🔝️set-wall-top",
+          "mutationDirectoryName": "🔝️set-wall-top",
+          "scenarios": [
+            {
+              "id": "constrains-to-the-first-storey",
+              "directoryName": "✅️constrains-to-the-first-storey"
+            },
+            {
+              "id": "storey-missing",
+              "directoryName": "🚫️storey-missing"
+            },
+            {
+              "id": "frees-the-height",
+              "directoryName": "🧲️frees-the-height"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-project-info",
+          "sourceMutationDirectoryName": "📇️set-project-info",
+          "mutationDirectoryName": "📇️set-project-info",
+          "scenarios": [
+            {
+              "id": "unchanged",
+              "directoryName": "⛔️unchanged"
+            },
+            {
+              "id": "renames-the-project",
+              "directoryName": "✅️renames-the-project"
+            },
+            {
+              "id": "blank-phase",
+              "directoryName": "💥️blank-phase"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "🚫️empty-patch"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "sets-the-phases",
+              "directoryName": "🧲️sets-the-phases"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-site",
+          "sourceMutationDirectoryName": "🗺️set-site",
+          "mutationDirectoryName": "🗺️set-site",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "moves-the-site",
+              "directoryName": "✅️moves-the-site"
+            },
+            {
+              "id": "longitude-out-of-range",
+              "directoryName": "💥️longitude-out-of-range"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🔁️unchanged"
+            },
+            {
+              "id": "open-boundary",
+              "directoryName": "🔒️open-boundary"
+            },
+            {
+              "id": "latitude-out-of-range",
+              "directoryName": "🚫️latitude-out-of-range"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "outlines-the-boundary",
+              "directoryName": "🧲️outlines-the-boundary"
+            },
+            {
+              "id": "clears-the-boundary",
+              "directoryName": "🧵️clears-the-boundary"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-building",
+          "sourceMutationDirectoryName": "🏗️set-building",
+          "mutationDirectoryName": "🏗️set-building",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "raises-the-datum",
+              "directoryName": "✅️raises-the-datum"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "🔁️empty-patch"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "places-the-building",
+              "directoryName": "🧲️places-the-building"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-grid-line",
+          "sourceMutationDirectoryName": "🔲️create-grid-line",
+          "mutationDirectoryName": "🔲️create-grid-line",
+          "scenarios": [
+            {
+              "id": "building-missing",
+              "directoryName": "⛔️building-missing"
+            },
+            {
+              "id": "adds-axis-a",
+              "directoryName": "✅️adds-axis-a"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "💥️zero-length"
+            },
+            {
+              "id": "blank-label",
+              "directoryName": "🔁️blank-label"
+            },
+            {
+              "id": "label-taken",
+              "directoryName": "🔒️label-taken"
+            },
+            {
+              "id": "duplicate-id",
+              "directoryName": "🚫️duplicate-id"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "same-label-other-building",
+              "directoryName": "🧲️same-label-other-building"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-grid-line",
+          "sourceMutationDirectoryName": "🔳️delete-grid-line",
+          "mutationDirectoryName": "🔳️delete-grid-line",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-grid-line",
+          "sourceMutationDirectoryName": "🧭️set-grid-line",
+          "mutationDirectoryName": "🧭️set-grid-line",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "relabels",
+              "directoryName": "✅️relabels"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "💥️zero-length"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🔁️unchanged"
+            },
+            {
+              "id": "label-taken",
+              "directoryName": "🚫️label-taken"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "moves-the-end",
+              "directoryName": "🧲️moves-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-column-type",
+          "sourceMutationDirectoryName": "🗼️create-column-type",
+          "mutationDirectoryName": "🗼️create-column-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds-a-round-column",
+              "directoryName": "✅️adds-a-round-column"
+            },
+            {
+              "id": "clockwise-outline",
+              "directoryName": "❌️clockwise-outline"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "non-positive-profile",
+              "directoryName": "🛑️non-positive-profile"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-an-l-shaped-outline",
+              "directoryName": "🧲️adds-an-l-shaped-outline"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-column-type",
+          "sourceMutationDirectoryName": "🏺️delete-column-type",
+          "mutationDirectoryName": "🏺️delete-column-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "in-use",
+              "directoryName": "🚫️in-use"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-column-type",
+          "sourceMutationDirectoryName": "🎚️set-column-type",
+          "mutationDirectoryName": "🎚️set-column-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "changes-every-field",
+              "directoryName": "✨️changes-every-field"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "❌️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "invalid-profile",
+              "directoryName": "🛑️invalid-profile"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "swaps-the-profile",
+              "directoryName": "🧲️swaps-the-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-beam-type",
+          "sourceMutationDirectoryName": "🌉️create-beam-type",
+          "mutationDirectoryName": "🌉️create-beam-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds-an-i-shape",
+              "directoryName": "✅️adds-an-i-shape"
+            },
+            {
+              "id": "self-crossing-outline",
+              "directoryName": "❌️self-crossing-outline"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "oversized-flanges",
+              "directoryName": "🛑️oversized-flanges"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-a-bulged-outline",
+              "directoryName": "🧲️adds-a-bulged-outline"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-beam-type",
+          "sourceMutationDirectoryName": "🪢️delete-beam-type",
+          "mutationDirectoryName": "🪢️delete-beam-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "in-use",
+              "directoryName": "🚫️in-use"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-beam-type",
+          "sourceMutationDirectoryName": "🎞️set-beam-type",
+          "mutationDirectoryName": "🎞️set-beam-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "changes-every-field",
+              "directoryName": "✨️changes-every-field"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "❌️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "invalid-profile",
+              "directoryName": "🛑️invalid-profile"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "swaps-the-profile",
+              "directoryName": "🧲️swaps-the-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-window-type",
+          "sourceMutationDirectoryName": "🖼️create-window-type",
+          "mutationDirectoryName": "🖼️create-window-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "negative-sill",
+              "directoryName": "❌️negative-sill"
+            },
+            {
+              "id": "no-panes",
+              "directoryName": "📛️no-panes"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "non-positive-frame",
+              "directoryName": "🚷️non-positive-frame"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "🛑️non-positive-width"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-a-floor-level-window",
+              "directoryName": "🧲️adds-a-floor-level-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-window-type",
+          "sourceMutationDirectoryName": "🧊️delete-window-type",
+          "mutationDirectoryName": "🧊️delete-window-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "in-use",
+              "directoryName": "🚫️in-use"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-window-type",
+          "sourceMutationDirectoryName": "🔅️set-window-type",
+          "mutationDirectoryName": "🔅️set-window-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "widens",
+              "directoryName": "✅️widens"
+            },
+            {
+              "id": "renames-and-reframes",
+              "directoryName": "✨️renames-and-reframes"
+            },
+            {
+              "id": "negative-sill",
+              "directoryName": "❌️negative-sill"
+            },
+            {
+              "id": "no-panes",
+              "directoryName": "📛️no-panes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚳️unchanged"
+            },
+            {
+              "id": "non-positive-frame-depth",
+              "directoryName": "🚷️non-positive-frame-depth"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "🛑️non-positive-width"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "lowers-the-sill-and-adds-panes",
+              "directoryName": "🧲️lowers-the-sill-and-adds-panes"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-door-type",
+          "sourceMutationDirectoryName": "🛗️create-door-type",
+          "mutationDirectoryName": "🛗️create-door-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds-a-double-door",
+              "directoryName": "✅️adds-a-double-door"
+            },
+            {
+              "id": "non-positive-frame",
+              "directoryName": "❌️non-positive-frame"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "non-positive-height",
+              "directoryName": "🛑️non-positive-height"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-door-type",
+          "sourceMutationDirectoryName": "🔒️delete-door-type",
+          "mutationDirectoryName": "🔒️delete-door-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "in-use",
+              "directoryName": "🚫️in-use"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-door-type",
+          "sourceMutationDirectoryName": "🔑️set-door-type",
+          "mutationDirectoryName": "🔑️set-door-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "widens",
+              "directoryName": "✅️widens"
+            },
+            {
+              "id": "non-positive-frame-width",
+              "directoryName": "❌️non-positive-frame-width"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "📛️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "non-positive-height",
+              "directoryName": "🛑️non-positive-height"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "swaps-leaves-and-swing",
+              "directoryName": "🧲️swaps-leaves-and-swing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "🪨️create-material",
+          "mutationDirectoryName": "🪨️create-material",
+          "scenarios": [
+            {
+              "id": "negative-density",
+              "directoryName": "⛔️negative-density"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "colour-out-of-range",
+              "directoryName": "🌈️colour-out-of-range"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "🗑️delete-material",
+          "mutationDirectoryName": "🗑️delete-material",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-a-column-type",
+              "directoryName": "🏛️used-by-a-column-type"
+            },
+            {
+              "id": "used-by-a-layer",
+              "directoryName": "🚫️used-by-a-layer"
+            },
+            {
+              "id": "used-by-a-railing",
+              "directoryName": "🛤️used-by-a-railing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-material",
+          "sourceMutationDirectoryName": "🖌️set-material",
+          "mutationDirectoryName": "🖌️set-material",
+          "scenarios": [
+            {
+              "id": "same-values",
+              "directoryName": "♻️same-values"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "recolours-and-renames",
+              "directoryName": "✅️recolours-and-renames"
+            },
+            {
+              "id": "colour-out-of-range",
+              "directoryName": "🌈️colour-out-of-range"
+            },
+            {
+              "id": "retunes-the-physics",
+              "directoryName": "🌡️retunes-the-physics"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "📭️empty-patch"
+            },
+            {
+              "id": "negative-conductivity",
+              "directoryName": "🚫️negative-conductivity"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "recategorises",
+              "directoryName": "🧲️recategorises"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-wall-type",
+          "sourceMutationDirectoryName": "🪵️create-wall-type",
+          "mutationDirectoryName": "🪵️create-wall-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-wall-type",
+          "sourceMutationDirectoryName": "🚧️delete-wall-type",
+          "mutationDirectoryName": "🚧️delete-wall-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-walls",
+              "directoryName": "🚫️used-by-walls"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-wall-type",
+          "sourceMutationDirectoryName": "🔨️set-wall-type",
+          "mutationDirectoryName": "🔨️set-wall-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "👻️material-missing"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "📭️empty-patch"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "both-fields",
+              "directoryName": "🧩️both-fields"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "restacks",
+              "directoryName": "🧲️restacks"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-slab-type",
+          "sourceMutationDirectoryName": "🟫️create-slab-type",
+          "mutationDirectoryName": "🟫️create-slab-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-slab-type",
+          "sourceMutationDirectoryName": "🟥️delete-slab-type",
+          "mutationDirectoryName": "🟥️delete-slab-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-slabs",
+              "directoryName": "🚫️used-by-slabs"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-slab-type",
+          "sourceMutationDirectoryName": "🟧️set-slab-type",
+          "mutationDirectoryName": "🟧️set-slab-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "👻️material-missing"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "📭️empty-patch"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "both-fields",
+              "directoryName": "🧩️both-fields"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "restacks",
+              "directoryName": "🧲️restacks"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-roof-type",
+          "sourceMutationDirectoryName": "🛖️create-roof-type",
+          "mutationDirectoryName": "🛖️create-roof-type",
+          "scenarios": [
+            {
+              "id": "material-missing",
+              "directoryName": "⛔️material-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-roof-type",
+          "sourceMutationDirectoryName": "⛺️delete-roof-type",
+          "mutationDirectoryName": "⛺️delete-roof-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "used-by-roofs",
+              "directoryName": "🚫️used-by-roofs"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-roof-type",
+          "sourceMutationDirectoryName": "🏕️set-roof-type",
+          "mutationDirectoryName": "🏕️set-roof-type",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames",
+              "directoryName": "✅️renames"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "👻️material-missing"
+            },
+            {
+              "id": "thin-layer",
+              "directoryName": "📉️thin-layer"
+            },
+            {
+              "id": "empty-patch",
+              "directoryName": "📭️empty-patch"
+            },
+            {
+              "id": "empty-layers",
+              "directoryName": "🕳️empty-layers"
+            },
+            {
+              "id": "both-fields",
+              "directoryName": "🧩️both-fields"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "restacks",
+              "directoryName": "🧲️restacks"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-column",
+          "sourceMutationDirectoryName": "🏛️create-column",
+          "mutationDirectoryName": "🏛️create-column",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-to-the-storey-top",
+              "directoryName": "✅️adds-to-the-storey-top"
+            },
+            {
+              "id": "spans-into-the-storey-above",
+              "directoryName": "✨️spans-into-the-storey-above"
+            },
+            {
+              "id": "top-below-base",
+              "directoryName": "🔻️top-below-base"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "zero-height",
+              "directoryName": "🛑️zero-height"
+            },
+            {
+              "id": "top-storey-other-building",
+              "directoryName": "🧩️top-storey-other-building"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "🧭️top-storey-missing"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧮️id-taken-by-another-kind"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🧲️type-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-column",
+          "sourceMutationDirectoryName": "🪦️delete-column",
+          "mutationDirectoryName": "🪦️delete-column",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-column",
+          "sourceMutationDirectoryName": "🎛️set-column",
+          "mutationDirectoryName": "🎛️set-column",
+          "scenarios": [
+            {
+              "id": "keeps-equal-fields-out-of-the-diff",
+              "directoryName": "⚖️keeps-equal-fields-out-of-the-diff"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "⚠️nothing-to-change"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "retypes-moves-and-renames",
+              "directoryName": "✅️retypes-moves-and-renames"
+            },
+            {
+              "id": "constrains-the-top",
+              "directoryName": "✨️constrains-the-top"
+            },
+            {
+              "id": "top-below-base",
+              "directoryName": "🔻️top-below-base"
+            },
+            {
+              "id": "base-above-top",
+              "directoryName": "🛑️base-above-top"
+            },
+            {
+              "id": "top-storey-other-building",
+              "directoryName": "🧩️top-storey-other-building"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "🧭️top-storey-missing"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🧲️type-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-beam",
+          "sourceMutationDirectoryName": "➖️create-beam",
+          "mutationDirectoryName": "➖️create-beam",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-below-the-storey-top",
+              "directoryName": "✅️adds-below-the-storey-top"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "🛑️zero-length"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🧲️type-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-beam",
+          "sourceMutationDirectoryName": "✂️delete-beam",
+          "mutationDirectoryName": "✂️delete-beam",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-beam",
+          "sourceMutationDirectoryName": "📐️set-beam",
+          "mutationDirectoryName": "📐️set-beam",
+          "scenarios": [
+            {
+              "id": "keeps-equal-fields-out-of-the-diff",
+              "directoryName": "⚖️keeps-equal-fields-out-of-the-diff"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "⚠️nothing-to-change"
+            },
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "retypes-and-stretches",
+              "directoryName": "✅️retypes-and-stretches"
+            },
+            {
+              "id": "lowers-the-beam",
+              "directoryName": "✨️lowers-the-beam"
+            },
+            {
+              "id": "zero-length",
+              "directoryName": "🛑️zero-length"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🧲️type-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-railing",
+          "sourceMutationDirectoryName": "🛤️create-railing",
+          "mutationDirectoryName": "🛤️create-railing",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds",
+              "directoryName": "✅️adds"
+            },
+            {
+              "id": "non-positive-height",
+              "directoryName": "💥️non-positive-height"
+            },
+            {
+              "id": "path-too-short",
+              "directoryName": "📏️path-too-short"
+            },
+            {
+              "id": "non-positive-post-spacing",
+              "directoryName": "🚧️non-positive-post-spacing"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-balusters-and-a-glass-infill",
+              "directoryName": "🧮️adds-balusters-and-a-glass-infill"
+            },
+            {
+              "id": "baluster-spacing-not-positive",
+              "directoryName": "🧯️baluster-spacing-not-positive"
+            },
+            {
+              "id": "infill-thickness-not-positive",
+              "directoryName": "🧰️infill-thickness-not-positive"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🧱️material-missing"
+            },
+            {
+              "id": "rail-profile-degenerate",
+              "directoryName": "🧲️rail-profile-degenerate"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-railing",
+          "sourceMutationDirectoryName": "🪚️delete-railing",
+          "mutationDirectoryName": "🪚️delete-railing",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-railing",
+          "sourceMutationDirectoryName": "🔧️set-railing",
+          "mutationDirectoryName": "🔧️set-railing",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "reshapes",
+              "directoryName": "✅️reshapes"
+            },
+            {
+              "id": "renames-only",
+              "directoryName": "🏷️renames-only"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "non-positive-height",
+              "directoryName": "💥️non-positive-height"
+            },
+            {
+              "id": "path-too-short",
+              "directoryName": "📏️path-too-short"
+            },
+            {
+              "id": "non-positive-post-spacing",
+              "directoryName": "🚧️non-positive-post-spacing"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            },
+            {
+              "id": "adds-balusters-and-glass",
+              "directoryName": "🧮️adds-balusters-and-glass"
+            },
+            {
+              "id": "removes-the-balusters",
+              "directoryName": "🧯️removes-the-balusters"
+            },
+            {
+              "id": "post-profile-degenerate",
+              "directoryName": "🧰️post-profile-degenerate"
+            },
+            {
+              "id": "material-missing",
+              "directoryName": "🧱️material-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-space",
+          "sourceMutationDirectoryName": "🛋️create-space",
+          "mutationDirectoryName": "🛋️create-space",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-bounded-space",
+              "directoryName": "✅️adds-a-bounded-space"
+            },
+            {
+              "id": "outline-degenerate",
+              "directoryName": "💥️outline-degenerate"
+            },
+            {
+              "id": "adds-an-explicit-space",
+              "directoryName": "📐️adds-an-explicit-space"
+            },
+            {
+              "id": "reuses-a-number-on-another-storey",
+              "directoryName": "🔁️reuses-a-number-on-another-storey"
+            },
+            {
+              "id": "number-taken",
+              "directoryName": "🔢️number-taken"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-space",
+          "sourceMutationDirectoryName": "🧽️delete-space",
+          "mutationDirectoryName": "🧽️delete-space",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-space",
+          "sourceMutationDirectoryName": "🪑️set-space",
+          "mutationDirectoryName": "🪑️set-space",
+          "scenarios": [
+            {
+              "id": "missing",
+              "directoryName": "⛔️missing"
+            },
+            {
+              "id": "renames-and-retypes",
+              "directoryName": "✅️renames-and-retypes"
+            },
+            {
+              "id": "nothing-to-change",
+              "directoryName": "💤️nothing-to-change"
+            },
+            {
+              "id": "outline-degenerate",
+              "directoryName": "💥️outline-degenerate"
+            },
+            {
+              "id": "redraws-the-boundary",
+              "directoryName": "📐️redraws-the-boundary"
+            },
+            {
+              "id": "renumbers",
+              "directoryName": "🔢️renumbers"
+            },
+            {
+              "id": "number-taken",
+              "directoryName": "🚫️number-taken"
+            },
+            {
+              "id": "restates-an-unchanged-field",
+              "directoryName": "🧭️restates-an-unchanged-field"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-slab",
+          "sourceMutationDirectoryName": "⬜️create-slab",
+          "mutationDirectoryName": "⬜️create-slab",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-slab-with-a-hole",
+              "directoryName": "✅️adds-a-slab-with-a-hole"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "❌️type-missing"
+            },
+            {
+              "id": "adds-a-sloped-curved-slab",
+              "directoryName": "➕️adds-a-sloped-curved-slab"
+            },
+            {
+              "id": "clockwise",
+              "directoryName": "📛️clockwise"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "🙅️self-intersecting"
+            },
+            {
+              "id": "hole-outside",
+              "directoryName": "🚧️hole-outside"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "zero-area",
+              "directoryName": "🚷️zero-area"
+            },
+            {
+              "id": "too-few-vertices",
+              "directoryName": "🛑️too-few-vertices"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-slab",
+          "sourceMutationDirectoryName": "🔻️delete-slab",
+          "mutationDirectoryName": "🔻️delete-slab",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-slab-boundary",
+          "sourceMutationDirectoryName": "🔷️set-slab-boundary",
+          "mutationDirectoryName": "🔷️set-slab-boundary",
+          "scenarios": [
+            {
+              "id": "hole-outside",
+              "directoryName": "⛔️hole-outside"
+            },
+            {
+              "id": "reshapes",
+              "directoryName": "✅️reshapes"
+            },
+            {
+              "id": "overlapping-holes",
+              "directoryName": "❌️overlapping-holes"
+            },
+            {
+              "id": "drops-the-hole",
+              "directoryName": "➕️drops-the-hole"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "🛑️self-intersecting"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-slab",
+          "sourceMutationDirectoryName": "🔸️set-slab",
+          "mutationDirectoryName": "🔸️set-slab",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "retypes-and-offsets",
+              "directoryName": "✅️retypes-and-offsets"
+            },
+            {
+              "id": "clears-the-slope",
+              "directoryName": "✨️clears-the-slope"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "❌️type-missing"
+            },
+            {
+              "id": "slopes",
+              "directoryName": "➕️slopes"
+            },
+            {
+              "id": "renames",
+              "directoryName": "👍️renames"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "slope-too-steep",
+              "directoryName": "🛑️slope-too-steep"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-roof",
+          "sourceMutationDirectoryName": "🏠️create-roof",
+          "mutationDirectoryName": "🏠️create-roof",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-gable",
+              "directoryName": "✅️adds-a-gable"
+            },
+            {
+              "id": "adds-a-mansard",
+              "directoryName": "✨️adds-a-mansard"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "❌️type-missing"
+            },
+            {
+              "id": "adds-a-flat-roof",
+              "directoryName": "➕️adds-a-flat-roof"
+            },
+            {
+              "id": "negative-overhang",
+              "directoryName": "📛️negative-overhang"
+            },
+            {
+              "id": "pitch-too-steep",
+              "directoryName": "🙅️pitch-too-steep"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "pitch-zero",
+              "directoryName": "🚷️pitch-zero"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "🛑️self-intersecting"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-roof",
+          "sourceMutationDirectoryName": "🏘️delete-roof",
+          "mutationDirectoryName": "🏘️delete-roof",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-roof-footprint",
+          "sourceMutationDirectoryName": "👣️set-roof-footprint",
+          "mutationDirectoryName": "👣️set-roof-footprint",
+          "scenarios": [
+            {
+              "id": "too-few-vertices",
+              "directoryName": "⛔️too-few-vertices"
+            },
+            {
+              "id": "reshapes",
+              "directoryName": "✅️reshapes"
+            },
+            {
+              "id": "self-intersecting",
+              "directoryName": "❌️self-intersecting"
+            },
+            {
+              "id": "curves-an-edge",
+              "directoryName": "➕️curves-an-edge"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🛑️missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-roof-shape",
+          "sourceMutationDirectoryName": "🏔️set-roof-shape",
+          "mutationDirectoryName": "🏔️set-roof-shape",
+          "scenarios": [
+            {
+              "id": "names-no-field",
+              "directoryName": "⛔️names-no-field"
+            },
+            {
+              "id": "hips-the-roof",
+              "directoryName": "✅️hips-the-roof"
+            },
+            {
+              "id": "pitch-too-flat",
+              "directoryName": "❌️pitch-too-flat"
+            },
+            {
+              "id": "overhangs-and-lifts",
+              "directoryName": "➕️overhangs-and-lifts"
+            },
+            {
+              "id": "unchanged",
+              "directoryName": "🚫️unchanged"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚷️missing"
+            },
+            {
+              "id": "negative-overhang",
+              "directoryName": "🛑️negative-overhang"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-opening",
+          "sourceMutationDirectoryName": "🕳️create-opening",
+          "mutationDirectoryName": "🕳️create-opening",
+          "scenarios": [
+            {
+              "id": "host-missing",
+              "directoryName": "⛔️host-missing"
+            },
+            {
+              "id": "adds-a-window",
+              "directoryName": "✅️adds-a-window"
+            },
+            {
+              "id": "negative-sill",
+              "directoryName": "❌️negative-sill"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "❗️non-positive-width"
+            },
+            {
+              "id": "adds-a-door-to-a-curtain-wall",
+              "directoryName": "➕️adds-a-door-to-a-curtain-wall"
+            },
+            {
+              "id": "beyond-the-host-end",
+              "directoryName": "📛️beyond-the-host-end"
+            },
+            {
+              "id": "overlaps-a-neighbour",
+              "directoryName": "🔴️overlaps-a-neighbour"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "type-missing",
+              "directoryName": "🛑️type-missing"
+            },
+            {
+              "id": "adds-a-void",
+              "directoryName": "🟢️adds-a-void"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-a-window-with-a-raised-sill",
+              "directoryName": "🧮️adds-a-window-with-a-raised-sill"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-opening",
+          "sourceMutationDirectoryName": "🪓️delete-opening",
+          "mutationDirectoryName": "🪓️delete-opening",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-opening",
+          "sourceMutationDirectoryName": "🛷️move-opening",
+          "mutationDirectoryName": "🛷️move-opening",
+          "scenarios": [
+            {
+              "id": "host-missing",
+              "directoryName": "⛔️host-missing"
+            },
+            {
+              "id": "slides-along-the-host",
+              "directoryName": "✅️slides-along-the-host"
+            },
+            {
+              "id": "overlaps-a-neighbour",
+              "directoryName": "❌️overlaps-a-neighbour"
+            },
+            {
+              "id": "already-there",
+              "directoryName": "❗️already-there"
+            },
+            {
+              "id": "rehosts-to-another-wall",
+              "directoryName": "➕️rehosts-to-another-wall"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "beyond-the-host-end",
+              "directoryName": "🛑️beyond-the-host-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-opening",
+          "sourceMutationDirectoryName": "🕹️set-opening",
+          "mutationDirectoryName": "🕹️set-opening",
+          "scenarios": [
+            {
+              "id": "type-missing",
+              "directoryName": "⛔️type-missing"
+            },
+            {
+              "id": "resizes",
+              "directoryName": "✅️resizes"
+            },
+            {
+              "id": "non-positive-height",
+              "directoryName": "❌️non-positive-height"
+            },
+            {
+              "id": "too-wide-for-the-host",
+              "directoryName": "❗️too-wide-for-the-host"
+            },
+            {
+              "id": "clears-the-width-override",
+              "directoryName": "➕️clears-the-width-override"
+            },
+            {
+              "id": "overlaps-a-neighbour",
+              "directoryName": "📛️overlaps-a-neighbour"
+            },
+            {
+              "id": "already-set",
+              "directoryName": "🔴️already-set"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "negative-sill",
+              "directoryName": "🛑️negative-sill"
+            },
+            {
+              "id": "retypes-and-flips",
+              "directoryName": "🟢️retypes-and-flips"
+            },
+            {
+              "id": "sets-a-sill-override",
+              "directoryName": "🧭️sets-a-sill-override"
+            },
+            {
+              "id": "restores-the-type-sill",
+              "directoryName": "🧮️restores-the-type-sill"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-stair",
+          "sourceMutationDirectoryName": "🧗️create-stair",
+          "mutationDirectoryName": "🧗️create-stair",
+          "scenarios": [
+            {
+              "id": "storey-missing",
+              "directoryName": "⛔️storey-missing"
+            },
+            {
+              "id": "adds-a-straight-flight",
+              "directoryName": "✅️adds-a-straight-flight"
+            },
+            {
+              "id": "invalid-riser",
+              "directoryName": "❌️invalid-riser"
+            },
+            {
+              "id": "invalid-tread",
+              "directoryName": "❗️invalid-tread"
+            },
+            {
+              "id": "adds-a-u-run-to-the-first-storey",
+              "directoryName": "➕️adds-a-u-run-to-the-first-storey"
+            },
+            {
+              "id": "broken-flight",
+              "directoryName": "📛️broken-flight"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "🔴️top-storey-missing"
+            },
+            {
+              "id": "duplicate",
+              "directoryName": "🚫️duplicate"
+            },
+            {
+              "id": "non-positive-width",
+              "directoryName": "🛑️non-positive-width"
+            },
+            {
+              "id": "id-taken-by-another-kind",
+              "directoryName": "🧭️id-taken-by-another-kind"
+            },
+            {
+              "id": "adds-an-open-stair-with-cut-stringers",
+              "directoryName": "🧮️adds-an-open-stair-with-cut-stringers"
+            },
+            {
+              "id": "stringer-without-size",
+              "directoryName": "🧯️stringer-without-size"
+            },
+            {
+              "id": "nosing-longer-than-the-tread",
+              "directoryName": "🧰️nosing-longer-than-the-tread"
+            },
+            {
+              "id": "non-positive-tread-thickness",
+              "directoryName": "🧲️non-positive-tread-thickness"
+            },
+            {
+              "id": "non-positive-landing-depth",
+              "directoryName": "🧳️non-positive-landing-depth"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-stair",
+          "sourceMutationDirectoryName": "🧨️delete-stair",
+          "mutationDirectoryName": "🧨️delete-stair",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "removes-its-data",
+              "directoryName": "🧭️removes-its-data"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-stair",
+          "sourceMutationDirectoryName": "🧮️set-stair",
+          "mutationDirectoryName": "🧮️set-stair",
+          "scenarios": [
+            {
+              "id": "non-positive-width",
+              "directoryName": "⛔️non-positive-width"
+            },
+            {
+              "id": "moves-and-widens",
+              "directoryName": "✅️moves-and-widens"
+            },
+            {
+              "id": "top-storey-missing",
+              "directoryName": "❌️top-storey-missing"
+            },
+            {
+              "id": "already-set",
+              "directoryName": "❗️already-set"
+            },
+            {
+              "id": "turns-into-an-l-run",
+              "directoryName": "➕️turns-into-an-l-run"
+            },
+            {
+              "id": "missing",
+              "directoryName": "🚫️missing"
+            },
+            {
+              "id": "invalid-riser",
+              "directoryName": "🛑️invalid-riser"
+            },
+            {
+              "id": "renames-and-flattens",
+              "directoryName": "🟢️renames-and-flattens"
+            },
+            {
+              "id": "builds-open-risers-and-a-mono-stringer",
+              "directoryName": "🧭️builds-open-risers-and-a-mono-stringer"
+            },
+            {
+              "id": "nosing-longer-than-the-tread",
+              "directoryName": "🧮️nosing-longer-than-the-tread"
+            },
+            {
+              "id": "stringer-without-size",
+              "directoryName": "🧯️stringer-without-size"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-elements",
+          "sourceMutationDirectoryName": "🚚️move-elements",
+          "mutationDirectoryName": "🚚️move-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "moves-a-wall-and-its-opening",
+              "directoryName": "✅️moves-a-wall-and-its-opening"
+            },
+            {
+              "id": "moves-every-placed-kind",
+              "directoryName": "🚛️moves-every-placed-kind"
+            },
+            {
+              "id": "storey-has-no-placement",
+              "directoryName": "🚧️storey-has-no-placement"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "zero-vector",
+              "directoryName": "🛑️zero-vector"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-elements",
+          "sourceMutationDirectoryName": "🎡️rotate-elements",
+          "mutationDirectoryName": "🎡️rotate-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "turns-a-wall-and-a-column",
+              "directoryName": "✅️turns-a-wall-and-a-column"
+            },
+            {
+              "id": "turns-by-thirty-degrees",
+              "directoryName": "🌀️turns-by-thirty-degrees"
+            },
+            {
+              "id": "turns-every-placed-kind",
+              "directoryName": "🚛️turns-every-placed-kind"
+            },
+            {
+              "id": "storey-has-no-placement",
+              "directoryName": "🚧️storey-has-no-placement"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "zero-angle",
+              "directoryName": "🛑️zero-angle"
+            }
+          ]
+        },
+        {
+          "mutationId": "place-elements",
+          "sourceMutationDirectoryName": "🪧️place-elements",
+          "mutationDirectoryName": "🪧️place-elements",
+          "scenarios": [
+            {
+              "id": "empty-map",
+              "directoryName": "⛔️empty-map"
+            },
+            {
+              "id": "sets-absolute-placements",
+              "directoryName": "✅️sets-absolute-placements"
+            },
+            {
+              "id": "kind-mismatch",
+              "directoryName": "🚧️kind-mismatch"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "same-placement",
+              "directoryName": "🛑️same-placement"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-elements",
+          "sourceMutationDirectoryName": "💣️delete-elements",
+          "mutationDirectoryName": "💣️delete-elements",
+          "scenarios": [
+            {
+              "id": "empty-selection",
+              "directoryName": "⛔️empty-selection"
+            },
+            {
+              "id": "cascades-openings-and-data",
+              "directoryName": "✅️cascades-openings-and-data"
+            },
+            {
+              "id": "removes-a-storey-with-everything-on-it",
+              "directoryName": "🌀️removes-a-storey-with-everything-on-it"
+            },
+            {
+              "id": "removes-furnishing-kinds",
+              "directoryName": "🚛️removes-furnishing-kinds"
+            },
+            {
+              "id": "pinned-storey",
+              "directoryName": "🚧️pinned-storey"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-element",
+          "sourceMutationDirectoryName": "🪪️rename-element",
+          "mutationDirectoryName": "🪪️rename-element",
+          "scenarios": [
+            {
+              "id": "renames-a-wall",
+              "directoryName": "✅️renames-a-wall"
+            },
+            {
+              "id": "relabels-a-grid-line",
+              "directoryName": "🚛️relabels-a-grid-line"
+            },
+            {
+              "id": "unknown-id",
+              "directoryName": "🚫️unknown-id"
+            },
+            {
+              "id": "same-name",
+              "directoryName": "🛑️same-name"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-element-property",
+          "sourceMutationDirectoryName": "🧾️set-element-property",
+          "mutationDirectoryName": "🧾️set-element-property",
+          "scenarios": [
+            {
+              "id": "adds-the-first-property",
+              "directoryName": "✅️adds-the-first-property"
+            },
+            {
+              "id": "replaces-a-value",
+              "directoryName": "🌀️replaces-a-value"
+            },
+            {
+              "id": "adds-to-an-existing-set",
+              "directoryName": "🚛️adds-to-an-existing-set"
+            },
+            {
+              "id": "unknown-element",
+              "directoryName": "🚫️unknown-element"
+            },
+            {
+              "id": "same-value",
+              "directoryName": "🛑️same-value"
+            },
+            {
+              "id": "blank-property",
+              "directoryName": "🧭️blank-property"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-element-property",
+          "sourceMutationDirectoryName": "🫧️remove-element-property",
+          "mutationDirectoryName": "🫧️remove-element-property",
+          "scenarios": [
+            {
+              "id": "unknown-element",
+              "directoryName": "⛔️unknown-element"
+            },
+            {
+              "id": "removes-one-of-two",
+              "directoryName": "✅️removes-one-of-two"
+            },
+            {
+              "id": "removes-the-last-property",
+              "directoryName": "🚛️removes-the-last-property"
+            },
+            {
+              "id": "missing-property",
+              "directoryName": "🚫️missing-property"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-element-classification",
+          "sourceMutationDirectoryName": "🗂️set-element-classification",
+          "mutationDirectoryName": "🗂️set-element-classification",
+          "scenarios": [
+            {
+              "id": "classifies-an-element",
+              "directoryName": "✅️classifies-an-element"
+            },
+            {
+              "id": "reclassifies",
+              "directoryName": "🚛️reclassifies"
+            },
+            {
+              "id": "empty-code",
+              "directoryName": "🚧️empty-code"
+            },
+            {
+              "id": "unknown-element",
+              "directoryName": "🚫️unknown-element"
+            },
+            {
+              "id": "same-classification",
+              "directoryName": "🛑️same-classification"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-element-classification",
+          "sourceMutationDirectoryName": "🗄️remove-element-classification",
+          "mutationDirectoryName": "🗄️remove-element-classification",
+          "scenarios": [
+            {
+              "id": "unknown-element",
+              "directoryName": "⛔️unknown-element"
+            },
+            {
+              "id": "removes",
+              "directoryName": "✅️removes"
+            },
+            {
+              "id": "not-classified",
+              "directoryName": "🚫️not-classified"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-curtain-wall",
+        "delete-curtain-wall",
+        "create-curtain-wall",
+        "split-wall",
+        "flip-wall",
+        "set-wall-location",
+        "set-wall-type-of",
+        "set-wall-base-offset",
+        "set-wall-axis",
+        "create-site",
+        "delete-site",
+        "create-building",
+        "delete-building",
+        "create-storey",
+        "rename-storey",
+        "set-storey-height",
+        "set-storey-cut-height",
+        "set-storey-level",
+        "delete-storey",
+        "create-wall",
+        "delete-wall",
+        "set-wall-top",
+        "set-project-info",
+        "set-site",
+        "set-building",
+        "create-grid-line",
+        "delete-grid-line",
+        "set-grid-line",
+        "create-column-type",
+        "delete-column-type",
+        "set-column-type",
+        "create-beam-type",
+        "delete-beam-type",
+        "set-beam-type",
+        "create-window-type",
+        "delete-window-type",
+        "set-window-type",
+        "create-door-type",
+        "delete-door-type",
+        "set-door-type",
+        "create-material",
+        "delete-material",
+        "set-material",
+        "create-wall-type",
+        "delete-wall-type",
+        "set-wall-type",
+        "create-slab-type",
+        "delete-slab-type",
+        "set-slab-type",
+        "create-roof-type",
+        "delete-roof-type",
+        "set-roof-type",
+        "create-column",
+        "delete-column",
+        "set-column",
+        "create-beam",
+        "delete-beam",
+        "set-beam",
+        "create-railing",
+        "delete-railing",
+        "set-railing",
+        "create-space",
+        "delete-space",
+        "set-space",
+        "create-slab",
+        "delete-slab",
+        "set-slab-boundary",
+        "set-slab",
+        "create-roof",
+        "delete-roof",
+        "set-roof-footprint",
+        "set-roof-shape",
+        "create-opening",
+        "delete-opening",
+        "move-opening",
+        "set-opening",
+        "create-stair",
+        "delete-stair",
+        "set-stair",
+        "move-elements",
+        "rotate-elements",
+        "place-elements",
+        "delete-elements",
+        "rename-element",
+        "set-element-property",
+        "remove-element-property",
+        "set-element-classification",
+        "remove-element-classification"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.bim.model",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "set-curtain-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-curtain-wall",
+            "bridgeVersion": 1,
+            "variant": "SetCurtainWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-curtain-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-curtain-wall",
+            "bridgeVersion": 1,
+            "variant": "DeleteCurtainWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-curtain-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-curtain-wall",
+            "bridgeVersion": 1,
+            "variant": "CreateCurtainWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "split-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "split-wall",
+            "bridgeVersion": 1,
+            "variant": "SplitWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "flip-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "flip-wall",
+            "bridgeVersion": 1,
+            "variant": "FlipWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-location",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-location",
+            "bridgeVersion": 1,
+            "variant": "SetWallLocation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-type-of",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-type-of",
+            "bridgeVersion": 1,
+            "variant": "SetWallTypeOf"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-base-offset",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-base-offset",
+            "bridgeVersion": 1,
+            "variant": "SetWallBaseOffset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-axis",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-axis",
+            "bridgeVersion": 1,
+            "variant": "SetWallAxis"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-site",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-site",
+            "bridgeVersion": 1,
+            "variant": "CreateSite"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-site",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-site",
+            "bridgeVersion": 1,
+            "variant": "DeleteSite"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-building",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-building",
+            "bridgeVersion": 1,
+            "variant": "CreateBuilding"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-building",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-building",
+            "bridgeVersion": 1,
+            "variant": "DeleteBuilding"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-storey",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-storey",
+            "bridgeVersion": 1,
+            "variant": "CreateStorey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-storey",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-storey",
+            "bridgeVersion": 1,
+            "variant": "RenameStorey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-storey-height",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-storey-height",
+            "bridgeVersion": 1,
+            "variant": "SetStoreyHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-storey-cut-height",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-storey-cut-height",
+            "bridgeVersion": 1,
+            "variant": "SetStoreyCutHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-storey-level",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-storey-level",
+            "bridgeVersion": 1,
+            "variant": "SetStoreyLevel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-storey",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-storey",
+            "bridgeVersion": 1,
+            "variant": "DeleteStorey"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-wall",
+            "bridgeVersion": 1,
+            "variant": "CreateWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-wall",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-wall",
+            "bridgeVersion": 1,
+            "variant": "DeleteWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-top",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-top",
+            "bridgeVersion": 1,
+            "variant": "SetWallTop"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-project-info",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-project-info",
+            "bridgeVersion": 1,
+            "variant": "SetProjectInfo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-site",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-site",
+            "bridgeVersion": 1,
+            "variant": "SetSite"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-building",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-building",
+            "bridgeVersion": 1,
+            "variant": "SetBuilding"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-grid-line",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-grid-line",
+            "bridgeVersion": 1,
+            "variant": "CreateGridLine"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-grid-line",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-grid-line",
+            "bridgeVersion": 1,
+            "variant": "DeleteGridLine"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-grid-line",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-grid-line",
+            "bridgeVersion": 1,
+            "variant": "SetGridLine"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-column-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-column-type",
+            "bridgeVersion": 1,
+            "variant": "CreateColumnType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-column-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-column-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteColumnType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-column-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-column-type",
+            "bridgeVersion": 1,
+            "variant": "SetColumnType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-beam-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-beam-type",
+            "bridgeVersion": 1,
+            "variant": "CreateBeamType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-beam-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-beam-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteBeamType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-beam-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-beam-type",
+            "bridgeVersion": 1,
+            "variant": "SetBeamType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-window-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-window-type",
+            "bridgeVersion": 1,
+            "variant": "CreateWindowType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-window-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-window-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteWindowType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-window-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-window-type",
+            "bridgeVersion": 1,
+            "variant": "SetWindowType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-door-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-door-type",
+            "bridgeVersion": 1,
+            "variant": "CreateDoorType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-door-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-door-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteDoorType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-door-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-door-type",
+            "bridgeVersion": 1,
+            "variant": "SetDoorType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-material",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-material",
+            "bridgeVersion": 1,
+            "variant": "CreateMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-material",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-material",
+            "bridgeVersion": 1,
+            "variant": "DeleteMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-material",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-material",
+            "bridgeVersion": 1,
+            "variant": "SetMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-wall-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-wall-type",
+            "bridgeVersion": 1,
+            "variant": "CreateWallType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-wall-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-wall-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteWallType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-wall-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-wall-type",
+            "bridgeVersion": 1,
+            "variant": "SetWallType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-slab-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-slab-type",
+            "bridgeVersion": 1,
+            "variant": "CreateSlabType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-slab-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-slab-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteSlabType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-slab-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-slab-type",
+            "bridgeVersion": 1,
+            "variant": "SetSlabType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-roof-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-roof-type",
+            "bridgeVersion": 1,
+            "variant": "CreateRoofType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-roof-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-roof-type",
+            "bridgeVersion": 1,
+            "variant": "DeleteRoofType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-roof-type",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-roof-type",
+            "bridgeVersion": 1,
+            "variant": "SetRoofType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-column",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-column",
+            "bridgeVersion": 1,
+            "variant": "CreateColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-column",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-column",
+            "bridgeVersion": 1,
+            "variant": "DeleteColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-column",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-column",
+            "bridgeVersion": 1,
+            "variant": "SetColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-beam",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-beam",
+            "bridgeVersion": 1,
+            "variant": "CreateBeam"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-beam",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-beam",
+            "bridgeVersion": 1,
+            "variant": "DeleteBeam"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-beam",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-beam",
+            "bridgeVersion": 1,
+            "variant": "SetBeam"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-railing",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-railing",
+            "bridgeVersion": 1,
+            "variant": "CreateRailing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-railing",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-railing",
+            "bridgeVersion": 1,
+            "variant": "DeleteRailing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-railing",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-railing",
+            "bridgeVersion": 1,
+            "variant": "SetRailing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-space",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-space",
+            "bridgeVersion": 1,
+            "variant": "CreateSpace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-space",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-space",
+            "bridgeVersion": 1,
+            "variant": "DeleteSpace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-space",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-space",
+            "bridgeVersion": 1,
+            "variant": "SetSpace"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-slab",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-slab",
+            "bridgeVersion": 1,
+            "variant": "CreateSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-slab",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-slab",
+            "bridgeVersion": 1,
+            "variant": "DeleteSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-slab-boundary",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-slab-boundary",
+            "bridgeVersion": 1,
+            "variant": "SetSlabBoundary"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-slab",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-slab",
+            "bridgeVersion": 1,
+            "variant": "SetSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-roof",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-roof",
+            "bridgeVersion": 1,
+            "variant": "CreateRoof"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-roof",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-roof",
+            "bridgeVersion": 1,
+            "variant": "DeleteRoof"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-roof-footprint",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-roof-footprint",
+            "bridgeVersion": 1,
+            "variant": "SetRoofFootprint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-roof-shape",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-roof-shape",
+            "bridgeVersion": 1,
+            "variant": "SetRoofShape"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-opening",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-opening",
+            "bridgeVersion": 1,
+            "variant": "CreateOpening"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-opening",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-opening",
+            "bridgeVersion": 1,
+            "variant": "DeleteOpening"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-opening",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-opening",
+            "bridgeVersion": 1,
+            "variant": "MoveOpening"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-opening",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-opening",
+            "bridgeVersion": 1,
+            "variant": "SetOpening"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-stair",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-stair",
+            "bridgeVersion": 1,
+            "variant": "CreateStair"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-stair",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-stair",
+            "bridgeVersion": 1,
+            "variant": "DeleteStair"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-stair",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-stair",
+            "bridgeVersion": 1,
+            "variant": "SetStair"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-elements",
+            "bridgeVersion": 1,
+            "variant": "MoveElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rotate-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-elements",
+            "bridgeVersion": 1,
+            "variant": "RotateElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "place-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "place-elements",
+            "bridgeVersion": 1,
+            "variant": "PlaceElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-elements",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-elements",
+            "bridgeVersion": 1,
+            "variant": "DeleteElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-element",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-element",
+            "bridgeVersion": 1,
+            "variant": "RenameElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element-property",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-element-property",
+            "bridgeVersion": 1,
+            "variant": "SetElementProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-element-property",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element-property",
+            "bridgeVersion": 1,
+            "variant": "RemoveElementProperty"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-element-classification",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-element-classification",
+            "bridgeVersion": 1,
+            "variant": "SetElementClassification"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-element-classification",
+          "capability": "bim-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element-classification",
+            "bridgeVersion": 1,
+            "variant": "RemoveElementClassification"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bim-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "testEvidence": []
+}

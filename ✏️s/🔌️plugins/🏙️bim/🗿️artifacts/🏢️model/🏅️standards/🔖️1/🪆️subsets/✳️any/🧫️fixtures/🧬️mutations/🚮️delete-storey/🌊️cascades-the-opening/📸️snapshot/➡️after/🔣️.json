@@ -1,0 +1,96 @@
+{
+  "beam_types": {},
+  "beams": {},
+  "buildings": {
+    "bldg-1": {
+      "elevation": 0.0,
+      "name": "House",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "site": "site-1"
+    }
+  },
+  "classifications": {},
+  "column_types": {},
+  "columns": {},
+  "curtain_walls": {},
+  "door_types": {},
+  "grids": {},
+  "materials": {
+    "m-brick": {
+      "category": "Masonry",
+      "color": {
+        "b": 0.25,
+        "g": 0.35,
+        "r": 0.7
+      },
+      "conductivity": 0.8,
+      "density": 1800.0,
+      "name": "Brick",
+      "specific_heat": 900.0
+    }
+  },
+  "openings": {},
+  "project": {
+    "author": "",
+    "description": "",
+    "name": "Model",
+    "organization": "",
+    "phase_names": []
+  },
+  "properties": {},
+  "railings": {},
+  "roof_types": {},
+  "roofs": {},
+  "schema": "s.bim.model@1",
+  "sites": {
+    "site-1": {
+      "boundary": [],
+      "elevation": 100.0,
+      "latitude": 47.0,
+      "longitude": 8.0,
+      "name": "Plot",
+      "true_north": 0.0
+    }
+  },
+  "slab_types": {},
+  "slabs": {},
+  "spaces": {},
+  "stairs": {},
+  "storeys": {
+    "st-first": {
+      "building": "bldg-1",
+      "height": 2.8,
+      "level": 1,
+      "name": "First"
+    }
+  },
+  "wall_types": {
+    "wt-300": {
+      "layers": [
+        {
+          "function": "Structure",
+          "material": "m-brick",
+          "thickness": 0.3
+        }
+      ],
+      "name": "Brick 300"
+    }
+  },
+  "walls": {},
+  "window_types": {
+    "win-1": {
+      "frame_depth": 0.12,
+      "frame_width": 0.07,
+      "height": 1.2,
+      "material": "m-brick",
+      "name": "Window",
+      "panes": 2,
+      "sill": 0.9,
+      "width": 1.2
+    }
+  }
+}

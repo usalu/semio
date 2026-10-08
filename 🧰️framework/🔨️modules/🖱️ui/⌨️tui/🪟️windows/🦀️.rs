@@ -1,6 +1,6 @@
 //! 🪟️ Private first-party Win32 ABI used by the native terminal and ConPTY targets.
 
-#![allow(non_camel_case_types, non_snake_case)]
+#![allow(non_camel_case_types, non_snake_case, clippy::upper_case_acronyms)]
 
 use core::ffi::c_void;
 use core::mem::size_of;
@@ -11,13 +11,23 @@ pub(crate) type HPCON = isize;
 pub(crate) const CREATE_UNICODE_ENVIRONMENT: u32 = 0x0000_0400;
 pub(crate) const DISABLE_NEWLINE_AUTO_RETURN: u32 = 0x0000_0008;
 pub(crate) const ENABLE_ECHO_INPUT: u32 = 0x0000_0004;
+pub(crate) const ENABLE_EXTENDED_FLAGS: u32 = 0x0000_0080;
 pub(crate) const ENABLE_LINE_INPUT: u32 = 0x0000_0002;
 pub(crate) const ENABLE_PROCESSED_INPUT: u32 = 0x0000_0001;
+pub(crate) const ENABLE_QUICK_EDIT_MODE: u32 = 0x0000_0040;
 pub(crate) const ENABLE_VIRTUAL_TERMINAL_INPUT: u32 = 0x0000_0200;
 pub(crate) const ENABLE_VIRTUAL_TERMINAL_PROCESSING: u32 = 0x0000_0004;
+pub(crate) const ENABLE_WINDOW_INPUT: u32 = 0x0000_0008;
 pub(crate) const EXTENDED_STARTUPINFO_PRESENT: u32 = 0x0008_0000;
 pub(crate) const HANDLE_FLAG_INHERIT: u32 = 0x0000_0001;
+pub(crate) const INFINITE: u32 = 0xFFFF_FFFF;
 pub(crate) const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
+pub(crate) const KEY_EVENT: u16 = 0x0001;
+pub(crate) const WINDOW_BUFFER_SIZE_EVENT: u16 = 0x0004;
+pub(crate) const CTRL_BREAK_EVENT: u32 = 1;
+pub(crate) const CTRL_CLOSE_EVENT: u32 = 2;
+pub(crate) const CTRL_LOGOFF_EVENT: u32 = 5;
+pub(crate) const CTRL_SHUTDOWN_EVENT: u32 = 6;
 pub(crate) const PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE: usize = 0x0002_0016;
 pub(crate) const STILL_ACTIVE: i32 = 259;
 pub(crate) const WAIT_OBJECT_0: u32 = 0;
@@ -47,6 +57,54 @@ pub(crate) struct CONSOLE_SCREEN_BUFFER_INFO {
     pub(crate) wAttributes: u16,
     pub(crate) srWindow: SMALL_RECT,
     pub(crate) dwMaximumWindowSize: COORD,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct KEY_EVENT_RECORD {
+    pub(crate) bKeyDown: i32,
+    pub(crate) wRepeatCount: u16,
+    pub(crate) wVirtualKeyCode: u16,
+    pub(crate) wVirtualScanCode: u16,
+    pub(crate) uChar: u16,
+    pub(crate) dwControlKeyState: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct MOUSE_EVENT_RECORD {
+    pub(crate) dwMousePosition: COORD,
+    pub(crate) dwButtonState: u32,
+    pub(crate) dwControlKeyState: u32,
+    pub(crate) dwEventFlags: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct WINDOW_BUFFER_SIZE_RECORD {
+    pub(crate) dwSize: COORD,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) union INPUT_RECORD_0 {
+    pub(crate) KeyEvent: KEY_EVENT_RECORD,
+    pub(crate) MouseEvent: MOUSE_EVENT_RECORD,
+    pub(crate) WindowBufferSizeEvent: WINDOW_BUFFER_SIZE_RECORD,
+    pub(crate) Raw: [u32; 4],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct INPUT_RECORD {
+    pub(crate) EventType: u16,
+    pub(crate) Event: INPUT_RECORD_0,
+}
+
+impl Default for INPUT_RECORD {
+    fn default() -> Self {
+        unsafe { core::mem::zeroed() }
+    }
 }
 
 #[repr(C)]
@@ -165,7 +223,6 @@ extern "system" {
     pub(crate) fn ResizePseudoConsole(hpcon: HPCON, size: COORD) -> i32;
     pub(crate) fn SetConsoleMode(console: HANDLE, mode: u32) -> i32;
     pub(crate) fn CreatePipe(read_pipe: *mut HANDLE, write_pipe: *mut HANDLE, attributes: *const SECURITY_ATTRIBUTES, size: u32) -> i32;
-    pub(crate) fn PeekNamedPipe(pipe: HANDLE, buffer: *mut c_void, buffer_size: u32, bytes_read: *mut u32, total_available: *mut u32, bytes_left: *mut u32) -> i32;
     pub(crate) fn CreateProcessW(
         application_name: *const u16,
         command_line: *mut u16,
@@ -185,6 +242,12 @@ extern "system" {
     pub(crate) fn TerminateProcess(process: HANDLE, exit_code: u32) -> i32;
     pub(crate) fn UpdateProcThreadAttribute(attribute_list: *mut c_void, flags: u32, attribute: usize, value: *const c_void, size: usize, previous_value: *mut c_void, return_size: *const usize) -> i32;
     pub(crate) fn WaitForSingleObject(handle: HANDLE, milliseconds: u32) -> u32;
+    pub(crate) fn WaitForMultipleObjects(count: u32, handles: *const HANDLE, wait_all: i32, milliseconds: u32) -> u32;
+    pub(crate) fn CreateEventW(attributes: *const SECURITY_ATTRIBUTES, manual_reset: i32, initial_state: i32, name: *const u16) -> HANDLE;
+    pub(crate) fn SetEvent(event: HANDLE) -> i32;
+    pub(crate) fn GetNumberOfConsoleInputEvents(console: HANDLE, count: *mut u32) -> i32;
+    pub(crate) fn ReadConsoleInputW(console: HANDLE, buffer: *mut INPUT_RECORD, length: u32, read: *mut u32) -> i32;
+    pub(crate) fn SetConsoleCtrlHandler(handler: Option<unsafe extern "system" fn(u32) -> i32>, add: i32) -> i32;
 }
 
 /// 🌳 The native job limit layout; closing the last job handle terminates its process tree.
@@ -235,7 +298,7 @@ impl Drop for OwnedHandle {
     }
 }
 
-/// 🔒 An owning pseudo-console handle that closes exactly once.
+/// 🫧 An owning pseudo-console handle that closes exactly once.
 #[repr(transparent)]
 pub(crate) struct OwnedPseudoConsole(HPCON);
 

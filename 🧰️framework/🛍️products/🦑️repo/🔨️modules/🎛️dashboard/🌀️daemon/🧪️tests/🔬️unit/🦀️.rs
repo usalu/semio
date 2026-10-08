@@ -1,5 +1,32 @@
 use super::*;
-use std::collections::HashMap;
+use crate::registry::{Launch, LaunchProcess, Stop};
+use ipc::{ClientMsg, Ready, ServerMsg, SessionInfo, SessionStatus, SpawnGroup, TaskLabel};
+use serde_json::Value;
+use std::collections::{BTreeSet, HashMap};
+
+fn control_plane() -> Value {
+    serde_json::from_str(include_str!("../../../🧫️fixtures/🌀️control-plane/🔣️.json")).unwrap()
+}
+
+fn schema() -> Value {
+    serde_json::from_str(include_str!("../../../🧬️schema/🌀️daemon/🔣️.json")).unwrap()
+}
+
+fn reencode(value: &Value) -> Option<Value> {
+    if let Ok(message) = serde_json::from_value::<ClientMsg>(value.clone()) {
+        return message.validate().ok().and_then(|()| serde_json::to_value(&message).ok());
+    }
+    let message = serde_json::from_value::<ServerMsg>(value.clone()).ok()?;
+    message.validate().ok()?;
+    serde_json::to_value(&message).ok()
+}
+
+fn temporary(name: &str) -> PathBuf {
+    let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let directory = std::env::temp_dir().join(format!("semio-daemon-{name}-{}-{nonce}", std::process::id()));
+    std::fs::create_dir_all(&directory).unwrap();
+    directory
+}
 
 #[test]
 fn unknown_subcommand_returns_usage_without_side_effects() {
@@ -7,623 +34,580 @@ fn unknown_subcommand_returns_usage_without_side_effects() {
     assert_eq!(run(Path::new("."), &parsed), 1);
 }
 
+// #region 🔖️Protocol
 #[test]
-fn control_plane_protocol_matches_shared_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🌀️control-plane/🔣️.json")).unwrap();
-    let accepts = |value: &serde_json::Value| {
-        serde_json::from_value::<ipc::ClientMsg>(value.clone()).is_ok_and(|msg| msg.validate().is_ok())
-            || serde_json::from_value::<ipc::ServerMsg>(value.clone()).is_ok_and(|msg| msg.validate().is_ok())
-    };
-    for value in vectors["valid"].as_array().unwrap() {
-        assert!(accepts(value), "valid protocol vector: {value}");
+fn every_valid_protocol_vector_survives_the_rust_codec_unchanged() {
+    for value in control_plane()["valid"].as_array().unwrap() {
+        assert_eq!(reencode(value).as_ref(), Some(value), "valid protocol vector must round trip exactly: {value}");
     }
-    for value in vectors["invalid"].as_array().unwrap() {
-        assert!(!accepts(value), "invalid protocol vector: {value}");
-    }
-}
-
-#[cfg(any(unix, windows))]
-mod quick {
-use super::*;
-
-#[test]
-#[ignore = "Requires the Nx-built CLI executable"]
-fn actual_cli_view_auto_starts_daemon_and_detaches_without_stopping_tasks() {
-    run_native_view(false);
-    run_native_view(true);
 }
 
 #[test]
-#[ignore = "Requires the installed native CLI executable"]
-fn actual_cli_launcher_receives_keys_and_runs_a_launch_configuration() {
-    use ui_tui::tui::pty::{Pty, PtySize};
-    use std::time::{Duration, Instant};
-    let root = control_root("native-launcher");
-    let executable = std::env::var("SEMIO_TEST_CLI").expect("installed native CLI executable");
-    std::fs::create_dir_all(root.join(".vscode")).unwrap();
-    std::fs::write(root.join(".vscode/launch.json"), r#"{ // registered commands
-  "configurations": [
-    { "name": "📦️build-report", "type": "node-terminal", "request": "launch", "command": "echo launched-$DASHBOARD_TEST_VALUE", "cwd": "${workspaceFolder}", "env": { "DASHBOARD_TEST_VALUE": "build-report" }, "presentation": { "group": "4_build" } },
-    { "name": "🚀️publish-report", "type": "node-terminal", "request": "launch", "command": "echo unrelated", "cwd": "${workspaceFolder}" },
-  ],
-}"#).unwrap();
-    let root_text = root.display().to_string();
-    let config = root.join("preferences.jsonl").display().to_string();
-    let bindings = [("SEMIO_LOCALE", ""), ("SEMIO_APPEARANCE", ""), ("SEMIO_LOCKED_TERMINOLOGY", "")];
-    let mut view = Pty::spawn(&executable, &["--root", &root_text, "--config", &config], &bindings, &[], Some(&root), PtySize { cols: 160, rows: 40 }).unwrap();
-    let mut screen = ui_tui::tui::vt::VtScreen::new(ui_tui::tui::geometry::Size { width: 160, height: 40 }, 0);
-    let mut page = [0u8; 16384];
-    let await_text = |view: &mut Pty, screen: &mut ui_tui::tui::vt::VtScreen, expected: &str| {
-        let deadline = Instant::now() + Duration::from_secs(10);
-        let mut page = [0u8; 16384];
-        while Instant::now() < deadline && !terminal_text(screen).contains(expected) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-        assert!(terminal_text(screen).contains(expected), "missing {expected}: {}", terminal_text(screen));
-    };
-    await_text(&mut view, &mut screen, "New task");
-    view.write_all(b"\r").unwrap();
-    await_text(&mut view, &mut screen, "publish / launch /");
-    view.write_all(b"build report").unwrap();
-    await_text(&mut view, &mut screen, "/ build report");
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while Instant::now() < deadline && terminal_text(&screen).contains("publish / launch /") { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-    assert!(!terminal_text(&screen).contains("publish / launch /"), "search must narrow the launcher: {}", terminal_text(&screen));
-    view.write_all(b"\r").unwrap();
-    await_text(&mut view, &mut screen, "launched-build-report");
-    await_text(&mut view, &mut screen, "exit 0");
-    println!("[DEBUG] actual launcher received keys, searched and ran a launch configuration to exit 0");
-    view.write_all(b"\x02Q").unwrap();
-    let deadline = Instant::now() + Duration::from_secs(10);
-    while view.try_wait().unwrap().is_none() && Instant::now() < deadline { let _ = view.try_read(&mut page); std::thread::sleep(Duration::from_millis(5)); }
-    assert_eq!(view.try_wait().unwrap(), Some(0));
-    drop(view);
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while client::Connection::connect(&root).is_ok() && Instant::now() < deadline { std::thread::sleep(Duration::from_millis(20)); }
-    assert!(client::Connection::connect(&root).is_err(), "Ctrl+B Q must shut the workspace daemon down");
-    remove_control_root(&root);
+fn every_invalid_protocol_vector_is_refused_by_the_rust_codec() {
+    for value in control_plane()["invalid"].as_array().unwrap() {
+        assert!(reencode(value).is_none(), "invalid protocol vector: {value}");
+    }
 }
 
 #[test]
-#[ignore = "Requires the installed native CLI executable"]
-fn actual_cli_first_frame_is_fast_and_settings_survive_reopening() {
-    use ui_tui::tui::pty::{Pty, PtySize};
-    use std::time::{Duration, Instant};
-    let root = control_root("native-startup");
-    let executable = std::env::var("SEMIO_TEST_CLI").expect("installed native CLI executable");
-    let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(7).unwrap();
-    let bun = std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into());
-    for index in 0..1000 {
-        let directory = root.join(format!("projects/{index}")); std::fs::create_dir_all(&directory).unwrap();
-        std::fs::write(directory.join("project.json"), format!(r#"{{"name":"noise-{index}","targets":{{"build":{{}},"test":{{}}}}}}"#)).unwrap();
+fn the_vectors_cover_every_message_status_and_error_code_of_the_schema() {
+    let (schema, vectors) = (schema(), control_plane());
+    let valid = vectors["valid"].as_array().unwrap();
+    let types = |name: &str| -> Vec<String> { schema["definitions"][name]["oneOf"].as_array().unwrap().iter().map(|variant| variant["properties"]["type"]["const"].as_str().unwrap().to_string()).collect() };
+    for kind in types("ClientMessage").into_iter().chain(types("ServerMessage")) {
+        assert!(valid.iter().any(|value| value["type"] == kind), "no valid vector for message type {kind}");
     }
-    std::fs::create_dir(root.join(".git")).unwrap();
-    let root_text = root.display().to_string();
-    let config = root.join("preferences.jsonl").display().to_string();
-    let mut env = nx_fixture_environment(&root);
-    env.extend([("PATH".into(), std::env::var("SEMIO_TEST_PATH").unwrap()), ("SEMIO_LOCALE".into(), "".into()), ("SEMIO_APPEARANCE".into(), "".into()), ("SEMIO_LOCKED_TERMINOLOGY".into(), "".into()), ("SEMIO_DASHBOARD_TRACE".into(), "1".into())]);
-    let bindings: Vec<_> = env.iter().map(|(key, value)| (key.as_str(), value.as_str())).collect();
-    for trial in 0..5 {
-        let wrapper = trial >= 3;
-        let actual_workspace = trial == 4;
-        let workspace_text = workspace.display().to_string();
-        let launch_root = if actual_workspace { &workspace_text } else { &root_text };
-        if trial == 3 { let status = std::process::Command::new(&executable).args(["daemon", "stop", "--root", &root_text]).status().unwrap(); assert!(status.success()); }
-        let started = Instant::now();
-        let native_args = ["--root", launch_root, "--config", &config];
-        let wrapper_args = ["run", "dashboard", "--", "--root", launch_root, "--config", &config];
-        let mut view = Pty::spawn(if wrapper { &bun } else { &executable }, if wrapper { &wrapper_args } else { &native_args }, &bindings, &[], Some(workspace), PtySize { cols: 180, rows: 48 }).unwrap();
-        let mut bytes = Vec::new(); let mut page = [0u8; 16384];
-        let mut screen = ui_tui::tui::vt::VtScreen::new(ui_tui::tui::geometry::Size { width: 180, height: 48 }, 0);
-        let deadline = Instant::now() + Duration::from_secs(5);
-        while Instant::now() < deadline && !String::from_utf8_lossy(&bytes).split("elapsed_us=").nth(1).is_some_and(|tail| tail.contains(['\r', '\n'])) {
-            let count = view.try_read(&mut page).unwrap_or(0); bytes.extend_from_slice(&page[..count]); screen.feed(&page[..count]);
-            assert_eq!(view.try_wait().unwrap(), None, "startup exited: {}", String::from_utf8_lossy(&bytes));
-            std::thread::sleep(Duration::from_millis(2));
-        }
-        let output = String::from_utf8_lossy(&bytes);
-        assert!(output.contains(if trial == 0 { "New task" } else { "Neue Aufgabe" }), "first frame must replay optional language settings: {output}");
-        assert!(!output.contains("Language / Sprache"), "startup must not ask questions");
-        let rendered = terminal_text(&screen);
-        let micros: u128 = rendered.split("elapsed_us=").nth(1).unwrap_or_else(|| panic!("missing rendered trace: {rendered}")).split(|character: char| !character.is_ascii_digit()).next().unwrap().parse().unwrap_or_else(|error| panic!("startup trace: {error}: {rendered}"));
-        assert!(output.contains('─') && !output.contains("Ôö"), "native terminal must preserve UTF-8 glyphs");
-        assert!(micros < 250_000, "native first frame exceeded 250ms: {micros}us");
-        assert!(started.elapsed() < Duration::from_secs(1), "installed front door exceeded 1s: {:?}", started.elapsed());
-        println!("[DEBUG] actual native first frame trial={trial} wrapper={wrapper} actual_workspace={actual_workspace} native_us={micros} host_ms={}", started.elapsed().as_millis());
-        let deadline = Instant::now() + Duration::from_secs(5);
-        let connection_root = if actual_workspace { workspace } else { &root };
-        let connection = loop { match client::Connection::connect(connection_root) { Ok(connection) => break connection, Err(_) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(10)), Err(error) => panic!("daemon connection: {error}") } };
-        if trial == 0 {
-            view.write_all(b"\x02p").unwrap();
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Instant::now() < deadline && !terminal_text(&screen).contains("Language: en") { let count = view.try_read(&mut page).unwrap_or(0); bytes.extend_from_slice(&page[..count]); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-            assert!(terminal_text(&screen).contains("Language: en"), "settings must be optional and accessible: {}", terminal_text(&screen));
-            view.write_all(b"\r").unwrap();
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Instant::now() < deadline && crate::preferences::replay(&root.join("preferences.jsonl"), &mut crate::preferences::Preferences::default()).ok() != Some(1) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(10)); }
-            let mut preferences = crate::preferences::Preferences::default();
-            assert_eq!(crate::preferences::replay(&root.join("preferences.jsonl"), &mut preferences).unwrap(), 1);
-            assert_eq!(preferences.language, "de");
-            println!("[DEBUG] actual settings committed German preference event revision 1");
-        }
-        if actual_workspace {
-            view.write_all(b"\x02p").unwrap();
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Instant::now() < deadline && !terminal_text(&screen).contains("Sprache: de") { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-            assert!(terminal_text(&screen).contains("Sprache: de"), "workspace discovery must keep settings responsive: {}", terminal_text(&screen));
-            println!("[DEBUG] actual workspace settings stayed responsive during background discovery");
-        }
-        view.write_all(b"\x02eq").unwrap();
-        let deadline = Instant::now() + Duration::from_secs(5);
-        while view.try_wait().unwrap().is_none() && Instant::now() < deadline { let _ = view.try_read(&mut page); std::thread::sleep(Duration::from_millis(5)); }
-        assert_eq!(view.try_wait().unwrap(), Some(0));
-        let daemon_pid = connection.daemon_pid(); drop(view); drop(connection);
-        let reattached = client::Connection::connect(connection_root).expect("daemon must survive destroying the native view");
-        assert_eq!(reattached.daemon_pid(), daemon_pid);
-        println!("[DEBUG] detached startup trial={trial} retained workspace daemon {daemon_pid}");
-    }
-    let status = std::process::Command::new(&executable).args(["daemon", "stop", "--root", &root_text]).status().unwrap(); assert!(status.success());
-    remove_control_root(&root);
+    let statuses = schema["definitions"]["Session"]["properties"]["status"]["enum"].as_array().unwrap();
+    let in_sessions = |status: &Value| valid.iter().any(|value| value["session"]["status"] == *status || value["sessions"].as_array().is_some_and(|sessions| sessions.iter().any(|session| session["status"] == *status)));
+    for status in statuses { assert!(in_sessions(status), "no valid vector for session status {status}"); }
+    let errors = schema["definitions"]["ServerMessage"]["oneOf"].as_array().unwrap().iter().find(|variant| variant["properties"]["type"]["const"] == "error").unwrap();
+    for code in errors["properties"]["code"]["enum"].as_array().unwrap() { assert!(valid.iter().any(|value| value["code"] == *code), "no valid vector for error code {code}"); }
 }
 
 #[test]
-#[ignore = "Requires the Nx-built CLI executable"]
-fn actual_cli_daemon_releases_parent_pipes_before_shutdown() {
-    let root = control_root("daemon-pipes");
-    let executable = std::env::var("SEMIO_TEST_CLI").expect("Nx-built CLI executable");
-    let bun = std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into());
-    let source = r#"const args=[process.env.SEMIO_TEST_CLI,'daemon'];let timer;
-try{const child=Bun.spawn([...args,'start','--root',process.env.DASHBOARD_TEST_ROOT],{stdout:'pipe',stderr:'pipe'});
-const result=await Promise.race([Promise.all([child.exited,new Response(child.stdout).text(),new Response(child.stderr).text()]),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('daemon retained parent pipes')),5000)})]);
-if(result[0]!==0)throw Error(result[2]);console.log('[DEBUG] daemon starter released output pipes while daemon remained alive');}
-finally{clearTimeout(timer);const child=Bun.spawn([...args,'stop','--root',process.env.DASHBOARD_TEST_ROOT],{stdout:'ignore',stderr:'inherit'});await child.exited;}"#;
-    let output = std::process::Command::new(bun).args(["-e", source]).env("SEMIO_TEST_CLI", executable).env("DASHBOARD_TEST_ROOT", &root).output().unwrap();
-    assert!(output.status.success(), "pipe lifecycle: {}{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
-    println!("{}", String::from_utf8_lossy(&output.stdout));
-    remove_control_root(&root);
+fn the_error_codes_of_the_rust_wire_are_the_codes_of_the_schema() {
+    let schema = schema();
+    let errors = schema["definitions"]["ServerMessage"]["oneOf"].as_array().unwrap().iter().find(|variant| variant["properties"]["type"]["const"] == "error").unwrap();
+    let listed: BTreeSet<&str> = errors["properties"]["code"]["enum"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
+    let named: BTreeSet<&str> = ipc::ErrorCode::ALL.into_iter().map(ipc::ErrorCode::as_str).collect();
+    assert_eq!(listed, named);
 }
 
-fn run_native_view(via_nx: bool) {
-    use ui_tui::tui::pty::{Pty, PtySize};
-    use std::time::{Duration, Instant};
-    let root = control_root(if via_nx { "native-nx-view" } else { "native-view" });
-    let executable = std::env::var("SEMIO_TEST_CLI").expect("Nx-built CLI executable");
-    let root_text = root.display().to_string();
-    nx_fixture(&root, &["view", "build"]);
-    std::fs::create_dir(root.join(".git")).unwrap();
-    let bun = std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into());
-    let search_path = std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo");
-    let mut env = nx_fixture_environment(&root);
-    env.extend([("SEMIO_TEST_CLI".into(), executable.clone()), ("PATH".into(), search_path), ("SEMIO_LOCALE".into(), "".into()), ("NX_DAEMON".into(), "false".into()), ("NX_TUI".into(), "false".into()), ("NX_NATIVE_COMMAND_RUNNER".into(), "true".into())]);
-    let env: Vec<_> = env.iter().map(|(key, value)| (key.as_str(), value.as_str())).collect();
-    let args: &[&str] = if via_nx { &["nx", "run", "dashboard-fixture:view", "--outputStyle=stream"] } else { &["./📜️script.ts", "view"] };
-    let mut view = Pty::spawn(&bun, args, &env, &[], Some(&root), PtySize { cols: 180, rows: 48 }).unwrap();
-    let mut output = Vec::new();
-    let mut page = [0u8; 8192];
-    let deadline = Instant::now() + Duration::from_secs(15);
-    while Instant::now() < deadline && !String::from_utf8_lossy(&output).contains("New task") {
-        let count = view.try_read(&mut page).unwrap_or(0);
-        output.extend_from_slice(&page[..count]);
-        assert_eq!(view.try_wait().unwrap(), None, "native view exited: {}", String::from_utf8_lossy(&output));
-        std::thread::sleep(Duration::from_millis(10));
+#[test]
+fn frames_match_the_shared_bytes() {
+    let hex = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).unwrap()).collect() };
+    for frame in control_plane()["frames"].as_array().unwrap() {
+        let (kind, session_id, data) = (frame["kind"].as_u64().unwrap() as u8, frame["session_id"].as_str().unwrap(), hex(frame["data_hex"].as_str().unwrap()));
+        let built = ipc::chunk_frame(kind, session_id, &data).unwrap();
+        assert_eq!(built, hex(frame["frame_hex"].as_str().unwrap()), "{}", frame["name"]);
+        let mut buffer = ipc::FrameBuffer::default();
+        buffer.extend(&built);
+        let (read_kind, payload) = buffer.next_frame().unwrap().unwrap();
+        assert_eq!(read_kind, kind);
+        assert_eq!(ipc::decode_chunk(payload).unwrap(), (session_id, &data[..]));
     }
-    assert!(String::from_utf8_lossy(&output).contains("New task"), "native UI must render task controls without questions: {}", String::from_utf8_lossy(&output));
-    let deadline = Instant::now() + Duration::from_secs(5);
-    let mut connection = loop { match client::Connection::connect(&root) { Ok(connection) => break connection, Err(_) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(10)), Err(error) => panic!("native daemon connection: {error}") } };
-    let daemon_pid = connection.daemon_pid();
-    println!("[DEBUG] native view via_nx={via_nx} attached to daemon {daemon_pid}");
-    let mut screen = ui_tui::tui::vt::VtScreen::new(ui_tui::tui::geometry::Size { width: 180, height: 48 }, 0); screen.feed(&output);
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while Instant::now() < deadline && !root.join(".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/commands.json").is_file() { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-    assert!(root.join(".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/commands.json").is_file(), "fixture inventory must finish: {}", terminal_text(&screen));
-    view.write_all(b"\x02nbuild workspace").unwrap();
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while Instant::now() < deadline && (!terminal_text(&screen).contains("/ build workspace") || terminal_text(&screen).contains("no matches")) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-    assert!(terminal_text(&screen).contains("/ build workspace") && !terminal_text(&screen).contains("no matches"), "search must select a current command: {}", terminal_text(&screen));
-    view.write_all(b"\r").unwrap();
-    let deadline = Instant::now() + Duration::from_secs(15); let mut completed = false;
-    while Instant::now() < deadline && !completed {
-        let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]);
-        connection.send(&ipc::ClientMsg::List {}).unwrap();
-        completed = connection.receive(Duration::from_millis(20)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) if sessions.iter().any(|session| session.command.args.iter().any(|argument| argument == "dashboard-fixture:build") && session.code == Some(0))));
-        std::thread::sleep(Duration::from_millis(5));
-    }
-    assert!(completed, "the native searchable launcher must run the selected Nx build: {}", terminal_text(&screen));
-    let deadline = Instant::now() + Duration::from_secs(2);
-    while Instant::now() < deadline && !terminal_text(&screen).contains("build completed") { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
-    assert!(terminal_text(&screen).contains("build completed"), "actual build output must render");
-    println!("[DEBUG] native searchable launcher via_nx={via_nx} completed the selected Nx build and rendered its actual output");
-    connection.send(&ipc::ClientMsg::Spawn { session_id: "persistent".into(), command: bun_command(&root, "console.log('native task');setInterval(()=>{},1000)") }).unwrap();
-    std::thread::sleep(Duration::from_millis(150));
-    view.write_all(b"\x02d").unwrap();
-    let deadline = Instant::now() + Duration::from_secs(5);
-    while Instant::now() < deadline && view.try_wait().unwrap().is_none() {
-        let _ = view.try_read(&mut page);
-        std::thread::sleep(Duration::from_millis(10));
-    }
-    assert_eq!(view.try_wait().unwrap(), Some(0));
-    println!("[DEBUG] native view process exited");
-    drop(view);
-    println!("[DEBUG] native view terminal owner closed");
-    let mut reattached = client::Connection::connect(&root).unwrap();
-    assert_eq!(reattached.daemon_pid(), daemon_pid);
-    reattached.send(&ipc::ClientMsg::List {}).unwrap();
-    let deadline = Instant::now() + Duration::from_secs(5);
-    let mut persistent = false;
-    while !persistent && Instant::now() < deadline {
-        persistent = reattached.receive(Duration::from_millis(100)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) if sessions.iter().any(|session| session.session_id == "persistent" && session.status == ipc::SessionStatus::Running)));
-    }
-    assert!(persistent, "task must survive destroying the view's process job");
-    let stopped = std::process::Command::new(&executable).args(["daemon", "stop", "--root", &root_text]).output().unwrap();
-    assert!(stopped.status.success(), "shutdown: {}", String::from_utf8_lossy(&stopped.stderr));
-    println!("[DEBUG] actual native CLI rendered task controls, auto-started daemon {daemon_pid}, detached with a live task and shut down cleanly");
-    drop(connection);
-    drop(reattached);
-    remove_control_root(&root);
 }
 
-fn terminal_text(screen: &ui_tui::tui::vt::VtScreen) -> String {
-    (0..screen.size.height).map(|y| (0..screen.size.width).filter_map(|x| screen.cell_at(x, y).map(|cell| cell.ch)).collect::<String>()).collect::<Vec<_>>().join("\n")
-}
-
-fn control_root(name: &str) -> PathBuf {
-    let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, PathBuf::from);
-    let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let root = base.join(format!("dashboard-{name}-{}-{nonce}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
-    root
-}
-
-fn remove_control_root(root: &Path) {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
-    loop {
-        match std::fs::remove_dir_all(root) {
-            Ok(()) => return,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return,
-            Err(error) if std::time::Instant::now() >= deadline => panic!("control-plane fixture still owned after shutdown: {error}"),
-            Err(_) => std::thread::sleep(std::time::Duration::from_millis(20)),
+#[test]
+fn control_messages_travel_in_frames_that_buffer_across_arbitrary_cuts() {
+    let mut encoded = Vec::new();
+    ipc::write_control(&mut encoded, &ClientMsg::Ping {}).unwrap();
+    ipc::write_control(&mut encoded, &ClientMsg::Detach {}).unwrap();
+    let mut buffer = ipc::FrameBuffer::default();
+    let mut decoded = Vec::new();
+    for byte in &encoded {
+        buffer.extend(&[*byte]);
+        while let Some((kind, payload)) = buffer.next_frame().unwrap() {
+            assert_eq!(kind, ipc::KIND_CONTROL);
+            decoded.push(ipc::decode_control::<ClientMsg>(payload).unwrap());
         }
     }
+    assert_eq!(decoded, vec![ClientMsg::Ping {}, ClientMsg::Detach {}]);
+    let mut bounded = ((ipc::MAX_FRAME_BYTES as u32) + 1).to_le_bytes().to_vec();
+    assert!(ipc::try_decode_frame(&mut bounded).is_err(), "an oversized frame must fail");
+    let mut buffer = ipc::FrameBuffer::default();
+    buffer.extend(&0u32.to_le_bytes());
+    assert!(buffer.next_frame().is_err(), "an empty frame must fail");
 }
 
-#[cfg(any(unix, windows))]
-fn bun_command(root: &Path, script: &str) -> ipc::SessionCommand {
-    ipc::SessionCommand { cmd: std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into()), args: vec!["-e".into(), script.into()], cwd: root.display().to_string(), env: vec![("DASHBOARD_TEST_VALUE".into(), "control-plane".into()), ("PATH".into(), std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo"))], cols: 80, rows: 24, ..Default::default() }
+#[test]
+fn endpoint_names_are_stable_across_runs_and_toolchains() {
+    let root = temporary("endpoint");
+    let key = ipc::workspace_key(&root);
+    assert_eq!(key.len(), 16);
+    assert_eq!(key, ipc::workspace_key(&root), "the name of a workspace must not change between calls");
+    assert_eq!(format!("{:016x}", ipc::stable_hash(b"")), "2d06800538d394c2", "XXH3-64 of the empty input is the published constant");
+    let _ = std::fs::remove_dir_all(root);
+}
+// #endregion 🔖️Protocol
+
+// #region 🔖️Ready
+#[test]
+fn the_ready_table_decides_every_case() {
+    let table = serde_json::from_str::<Value>(include_str!("../../../🧫️fixtures/🟢️ready/🔣️.json")).unwrap();
+    for case in table["cases"].as_array().unwrap() {
+        let ready: Ready = serde_json::from_value(case["ready"].clone()).unwrap();
+        let chunks: Vec<&str> = case["chunks"].as_array().unwrap().iter().map(|chunk| chunk.as_str().unwrap()).collect();
+        let expected = case["url"].as_str().map(str::to_string);
+        let whole = {
+            let mut tracker = replay::Tracker::new(Some(&ready));
+            let mut offset = 0u64;
+            for chunk in &chunks { tracker.feed(chunk.as_bytes(), offset); offset += chunk.len() as u64; }
+            tracker.settle_ready();
+            tracker.take_ready()
+        };
+        assert_eq!(whole, expected, "{}", case["name"]);
+        let bytewise = {
+            let mut tracker = replay::Tracker::new(Some(&ready));
+            for (offset, byte) in (0u64..).zip(chunks.concat().bytes()) { tracker.feed(&[byte], offset); }
+            tracker.settle_ready();
+            tracker.take_ready()
+        };
+        assert_eq!(bytewise, expected, "{} (one byte at a time)", case["name"]);
+    }
 }
 
-fn nx_fixture(root: &Path, commands: &[&str]) {
-    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(7).unwrap();
-    let modules = repo.join("node_modules");
-    #[cfg(windows)]
+#[test]
+fn an_address_that_ends_the_output_waits_for_the_byte_that_decides_it() {
+    let mut tracker = replay::Tracker::new(Some(&Ready { port: 6061, path: "/".into(), printed: false }));
+    tracker.feed(b"Local: http://localhost:6061", 0);
+    assert!(tracker.ready_undecided() && tracker.take_ready().is_none());
+    tracker.feed(b"/", 28);
+    assert_eq!(tracker.take_ready().as_deref(), Some("http://localhost:6061/"));
+    assert!(!tracker.ready_undecided());
+}
+
+#[test]
+fn a_restarted_task_announces_its_address_again() {
+    let ready = Ready { port: 7000, path: String::new(), printed: false };
+    let mut tracker = replay::Tracker::new(Some(&ready));
+    tracker.feed(b"http://localhost:7000\r\n", 0);
+    assert!(tracker.take_ready().is_some());
+    tracker.feed(b"http://localhost:7000\r\n", 23);
+    assert!(tracker.take_ready().is_none(), "an address is announced once per run");
+    tracker.await_ready(Some(&ready));
+    tracker.feed(b"http://localhost:7000\r\n", 46);
+    assert_eq!(tracker.take_ready().as_deref(), Some("http://localhost:7000"));
+}
+
+#[test]
+fn child_titles_are_read_from_both_title_sequences() {
+    let mut tracker = replay::Tracker::new(None);
+    tracker.feed(b"\x1b]0;first title\x07text\x1b]2;second\x1b\\", 0);
+    assert_eq!(tracker.title(), Some("second"));
+    assert!(tracker.take_title_change());
+    assert!(!tracker.take_title_change());
+}
+// #endregion 🔖️Ready
+
+// #region 🔖️Replay
+fn lines(count: usize) -> Vec<u8> {
+    (0..count).flat_map(|index| format!("line {index:07} of the output of a very talkative task\r\n").into_bytes()).collect()
+}
+
+#[test]
+fn a_replay_starts_at_a_line_and_ends_at_the_present() {
+    let directory = temporary("replay");
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    let output = lines(120_000);
+    log.append(&output);
+    assert_eq!(log.end(), output.len() as u64);
+    let (start, preamble, truncated) = log.replay();
+    assert!(truncated && start > 0 && output.len() as u64 - start <= replay::RING_BYTES as u64 + replay::MARK_SPACING * 2);
+    assert!(preamble.is_empty());
+    assert!(start == 0 || output[start as usize - 1] == b'\n', "a replay never starts inside a line");
+    let mut replayed = Vec::new();
+    let mut at = start;
+    while at < log.end() {
+        let before = replayed.len();
+        assert_eq!(log.read(at, 32 * 1024, &mut replayed), replay::Fetch::Data);
+        at += (replayed.len() - before) as u64;
+    }
+    assert_eq!(replayed, output[start as usize..]);
+    assert_eq!(log.read(log.end(), 1024, &mut replayed), replay::Fetch::Current);
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn output_beyond_the_memory_ring_is_served_from_the_log_files() {
+    let directory = temporary("segments");
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    let output = lines(200_000);
+    log.append(&output);
+    assert!(output.len() > replay::RING_BYTES * 4 && output.len() as u64 > replay::SEGMENT_BYTES);
+    let mut early = Vec::new();
+    assert_eq!(log.read(0, 4096, &mut early), replay::Fetch::Data, "output older than the ring is still read from the files");
+    assert_eq!(early, output[..4096]);
+    log.flush();
+    let mut restored = replay::SessionLog::restore(&directory, "task");
+    assert_eq!(restored.end(), output.len() as u64, "an ended session's log survives its daemon");
+    let mut tail = Vec::new();
+    assert_eq!(restored.read(output.len() as u64 - 100, 4096, &mut tail), replay::Fetch::Data);
+    assert_eq!(tail, output[output.len() - 100..]);
+    let (start, _, truncated) = restored.replay();
+    assert!(truncated && start > 0, "a restored log replays its recent tail");
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn the_oldest_log_segments_are_retired_and_reads_of_them_are_lost() {
+    let directory = temporary("retire");
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    let output = lines(760_000);
+    log.append(&output);
+    log.flush();
+    assert!(log.oldest() >= replay::SEGMENT_BYTES * 2, "the log keeps the current segment and the one before it");
+    let mut gone = Vec::new();
+    assert_eq!(log.read(0, 16, &mut gone), replay::Fetch::Lost);
+    let (start, _, truncated) = log.replay();
+    assert!(truncated && start >= log.oldest());
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn a_replay_reproduces_the_terminal_modes_of_the_whole_stream() {
+    let directory = temporary("modes");
+    let mut stream = Vec::new();
+    stream.extend_from_slice(b"\x1b]2;build output\x07\x1b[?25l\x1b[?2004h\x1b[?1003h\x1b[38;2;10;200;30;1m");
+    stream.extend(lines(60_000));
+    stream.extend_from_slice(b"\x1b[48;5;17m\x1b[?1049h\x1b[?1049l\x1b[3;12r\x1b[?25h");
+    stream.extend(lines(10));
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    log.append(&stream);
+    let (start, preamble, _) = log.replay();
+    assert!(start > 0);
+    let mut replayed = replay::Tracker::new(None);
+    replayed.feed(&preamble, 0);
+    replayed.feed(&stream[start as usize..], preamble.len() as u64);
+    let mut whole = replay::Tracker::new(None);
+    whole.feed(&stream, 0);
+    assert_eq!(replayed.preamble(), whole.preamble(), "colours, modes, region and title after a replay equal those of the whole stream");
+    assert_eq!(replayed.title(), Some("build output"));
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn a_replay_restores_the_input_modes_the_child_is_in() {
+    let directory = temporary("input-modes");
+    let mut stream = b"\x1b[?1h\x1b[?2004h\x1b[?1000h\x1b[?1002h\x1b[?1006h\x1b[?1004h\x1b=".to_vec();
+    stream.extend(lines(60_000));
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    log.append(&stream);
+    let (start, preamble, _) = log.replay();
+    assert!(start > 0);
+    let text = String::from_utf8_lossy(&preamble).into_owned();
+    for mode in ["\x1b[?1h", "\x1b[?2004h", "\x1b[?1000h", "\x1b[?1002h", "\x1b[?1006h", "\x1b[?1004h", "\x1b="] { assert!(text.contains(mode), "{mode:?} missing from {text:?}"); }
+    let off = b"\x1b[?2004l\x1b[?1000l\x1b[?1l\x1b>";
+    log.append(off);
+    stream.extend_from_slice(off);
+    let (start, preamble, _) = log.replay();
+    let mut replayed = replay::Tracker::new(None);
+    replayed.feed(&preamble, 0);
+    replayed.feed(&stream[start as usize..], preamble.len() as u64);
+    let text = String::from_utf8_lossy(&replayed.preamble()).into_owned();
+    for mode in ["\x1b[?2004h", "\x1b[?1000h", "\x1b[?1h", "\x1b="] { assert!(!text.contains(mode), "{mode:?} was switched off: {text:?}"); }
+    assert!(text.contains("\x1b[?1002h") && text.contains("\x1b[?1006h") && text.contains("\x1b[?1004h"), "{text:?}");
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn a_full_screen_program_is_replayed_from_the_moment_it_took_the_screen() {
+    let directory = temporary("screen");
+    let mut stream = lines(40);
+    let entered = stream.len() as u64;
+    stream.extend_from_slice(b"\x1b[?1049h\x1b[2J\x1b[H");
+    for frame in 0..120_000 { stream.extend_from_slice(format!("\x1b[{};1Hframe {frame:06}\x1b[K", frame % 20 + 1).as_bytes()); }
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    log.append(&stream);
+    assert!(stream.len() > replay::RING_BYTES);
+    let (start, preamble, _) = log.replay();
+    assert_eq!(start, entered, "the screen is rebuilt from its first frame, not from the middle of a redraw");
+    assert!(preamble.is_empty(), "the modes before the program took the screen are the defaults");
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn a_second_run_of_a_session_continues_its_log_from_clean_terminal_modes() {
+    let directory = temporary("rerun");
+    let mut log = replay::SessionLog::create(&directory, "task", None);
+    log.append(b"first run\x1b[?25l\x1b[?1049h\x1b[31m");
+    let separator = log.separator();
+    let text = String::from_utf8_lossy(&separator).into_owned();
+    assert!(text.contains("\x1b[?1049l") && text.contains("\x1b[?25h") && text.ends_with("\r\n"), "the second run starts on a clean terminal: {text:?}");
+    log.append(&separator);
+    log.append(b"second run\r\n");
+    log.flush();
+    let mut restored = replay::SessionLog::restore(&directory, "task");
+    let mut bytes = Vec::new();
+    assert_eq!(restored.read(0, 1 << 20, &mut bytes), replay::Fetch::Data);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.starts_with("first run") && text.ends_with("second run\r\n"));
+    let _ = std::fs::remove_dir_all(directory);
+}
+
+#[test]
+fn log_files_of_forgotten_sessions_are_swept() {
+    let directory = temporary("sweep");
+    let mut kept = replay::SessionLog::create(&directory, "kept", None);
+    let mut dropped = replay::SessionLog::create(&directory, "dropped", None);
+    kept.append(b"kept\r\n");
+    dropped.append(b"dropped\r\n");
+    kept.flush();
+    dropped.flush();
+    replay::sweep_logs(&directory, &BTreeSet::from([replay::log_stem("kept")]));
+    assert_eq!(replay::SessionLog::restore(&directory, "kept").end(), 6);
+    assert_eq!(replay::SessionLog::restore(&directory, "dropped").end(), 0);
+    let _ = std::fs::remove_dir_all(directory);
+}
+// #endregion 🔖️Replay
+
+// #region 🔖️Journal
+fn session(id: &str, status: SessionStatus, started_ms: u64) -> SessionInfo {
+    SessionInfo { session_id: id.into(), command: ipc::SessionCommand { cmd: "x".into(), cols: 80, rows: 24, ..Default::default() }, status, started_ms, ..Default::default() }
+}
+
+#[test]
+fn the_journal_projects_sessions_survives_a_torn_line_and_compacts() {
+    let root = temporary("journal");
     {
-        let status = std::process::Command::new("cmd").args(["/C", "mklink", "/J"]).arg(root.join("node_modules")).arg(&modules).output().unwrap();
-        assert!(status.status.success(), "fixture dependency junction: {:?}", status);
-    }
-    #[cfg(unix)]
-    std::os::unix::fs::symlink(&modules, root.join("node_modules")).unwrap();
-    std::fs::write(root.join("nx.json"), r#"{"useInferencePlugins":false,"analytics":false}"#).unwrap();
-    let nx_package: serde_json::Value = serde_json::from_slice(&std::fs::read(modules.join("nx/package.json")).unwrap()).unwrap();
-    let nx_entry = nx_package["bin"]["nx"].as_str().unwrap();
-    std::fs::write(root.join("package.json"), serde_json::to_vec(&serde_json::json!({"name":"dashboard-fixture","private":true,"scripts":{"nx":format!("node ./node_modules/nx/{nx_entry}")}})).unwrap()).unwrap();
-    let targets: serde_json::Map<String, serde_json::Value> = commands.iter().map(|command| ((*command).into(), serde_json::json!({"executor":"nx:run-commands","cache":false,"options":{"command":format!("bun ./📜️script.ts {command}")}}))).collect();
-    std::fs::write(root.join("project.json"), serde_json::to_vec(&serde_json::json!({"name":"dashboard-fixture","targets":targets})).unwrap()).unwrap();
-    std::fs::write(root.join("📜️script.ts"), include_str!("../../../🧫️fixtures/🌀️control-plane/📜️script.ts")).unwrap();
-}
-
-fn nx_fixture_environment(root: &Path) -> Vec<(String, String)> {
-    [("NX_WORKSPACE_ROOT_PATH", root.to_path_buf()), ("NX_WORKSPACE_DATA_DIRECTORY", root.join(".nx/workspace-data")), ("NX_CACHE_DIRECTORY", root.join(".nx/cache")), ("NX_NATIVE_FILE_CACHE_DIRECTORY", root.join(".nx/native"))].into_iter().map(|(key, path)| (key.into(), path.display().to_string())).collect()
-}
-
-#[test]
-fn one_daemon_runs_discovered_nx_servers_builds_and_tests_concurrently() {
-    let root = control_root("nx");
-    nx_fixture(&root, &["dev", "build", "test"]);
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    drop(listener);
-    let tree = crate::command_tree::discover(&root);
-    fn find(node: &crate::command_tree::CommandNode, target: &str) -> Option<crate::command_tree::CommandSpec> {
-        if let Some(crate::command_tree::CommandLeaf::Process(command)) = &node.leaf {
-            if command.args.iter().any(|arg| arg == &format!("dashboard-fixture:{target}")) { return Some(command.clone()); }
+        let (mut journal, restored) = journal::Journal::open(&root).unwrap();
+        assert!(restored.is_empty());
+        for index in 0..300u64 {
+            journal.append(&ServerMsg::SessionChanged { session: Box::new(session("busy", if index % 2 == 0 { SessionStatus::Running } else { SessionStatus::Stopping }, index + 1)) }).unwrap();
         }
-        node.children.iter().find_map(|node| find(node, target))
+        journal.append(&ServerMsg::SessionChanged { session: Box::new(session("gone", SessionStatus::Exited, 5)) }).unwrap();
+        journal.append(&ServerMsg::SessionRemoved { session_id: "gone".into() }).unwrap();
     }
-    let mut supervisor = supervisor::Supervisor::<Vec<u8>>::new(&root).unwrap();
-    for target in ["dev", "build", "test"] {
-        let spec = find(&tree, target).expect("discovered Nx task");
-        let mut env = spec.env;
-        env.extend([("DASHBOARD_TEST_VALUE".into(), "control-plane".into()), ("DASHBOARD_TEST_PORT".into(), port.to_string()), ("PATH".into(), std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo")), ("NX_DAEMON".into(), "false".into()), ("NX_SKIP_PROJECT_GRAPH_CACHE".into(), "true".into())]);
-        env.extend(nx_fixture_environment(&root)); env.push(("NX_ISOLATE_PLUGINS".into(), "false".into()));
-        let command = ipc::SessionCommand { cmd: spec.cmd, args: spec.args, cwd: spec.cwd.display().to_string(), env, cols: 512, rows: 40, ..Default::default() };
-        supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: target.into(), command }).unwrap();
-    }
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
-    while std::time::Instant::now() < deadline {
-        supervisor.tick().unwrap();
-        let sessions = supervisor.snapshot();
-        if sessions.iter().filter(|session| session.code == Some(0)).count() == 2 && std::net::TcpStream::connect(("127.0.0.1", port)).is_ok() { break; }
-        if sessions.iter().any(|session| session.code.is_some_and(|code| code != 0)) { break; }
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    let sessions = supervisor.snapshot();
-    for session in &sessions { println!("[DEBUG] Nx {} output: {}", session.session_id, String::from_utf8_lossy(&supervisor.output(&session.session_id).unwrap())); }
-    assert_eq!(sessions.iter().filter(|session| session.code == Some(0)).count(), 2, "build and test must complete: {:?}", sessions.iter().map(|session| (&session.session_id, session.status, session.code)).collect::<Vec<_>>());
-    assert!(std::net::TcpStream::connect(("127.0.0.1", port)).is_ok(), "dev server must continue while build and test finish");
-    let previous_pid = sessions.iter().find(|session| session.session_id == "dev").unwrap().pid;
-    supervisor.handle_client_msg(ipc::ClientMsg::Restart { session_id: "dev".into() }).unwrap();
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
-    while std::time::Instant::now() < deadline {
-        supervisor.tick().unwrap();
-        if String::from_utf8_lossy(&supervisor.output("dev").unwrap()).contains("[DEBUG] dev listening") { break; }
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    assert!(String::from_utf8_lossy(&supervisor.output("dev").unwrap()).contains("[DEBUG] dev listening"), "restarted server must bind the same port: {}", String::from_utf8_lossy(&supervisor.output("dev").unwrap()));
-    assert_ne!(supervisor.snapshot().iter().find(|session| session.session_id == "dev").unwrap().pid, previous_pid);
-    assert!(std::net::TcpStream::connect(("127.0.0.1", port)).is_ok());
-    supervisor.handle_client_msg(ipc::ClientMsg::Ping {}).unwrap();
-    supervisor.handle_client_msg(ipc::ClientMsg::Shutdown {}).unwrap();
-    assert!(std::net::TcpListener::bind(("127.0.0.1", port)).is_ok());
-    println!("[DEBUG] one daemon ran discovered Nx dev/build/test concurrently, restarted server on the same port and released its port on shutdown");
-    drop(supervisor);
-    remove_control_root(&root);
+    let mut torn = std::fs::OpenOptions::new().append(true).open(ipc::event_log_path(&root)).unwrap();
+    std::io::Write::write_all(&mut torn, b"{\"type\":\"session_changed\",\"sess").unwrap();
+    drop(torn);
+    let (_, restored) = journal::Journal::open(&root).unwrap();
+    assert_eq!(restored.len(), 1);
+    assert_eq!(restored[0].session_id, "busy");
+    assert_eq!(restored[0].started_ms, 300);
+    assert_eq!(std::fs::read_to_string(ipc::event_log_path(&root)).unwrap().lines().count(), 1, "the journal is compacted to its projection");
+    let _ = std::fs::remove_dir_all(root);
 }
 
-#[cfg(any(unix, windows))]
 #[test]
-fn supervisor_keeps_sessions_across_views_and_matches_bun_output() {
-    use std::sync::{Arc, Mutex};
-    #[derive(Clone)]
-    struct Capture(Arc<Mutex<Vec<u8>>>);
-    impl std::io::Write for Capture {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> { self.0.lock().unwrap().extend_from_slice(bytes); Ok(bytes.len()) }
-        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
-    }
-    let root = control_root("replay");
-    let script = "console.log(process.env.DASHBOARD_TEST_VALUE); console.log(process.cwd()); console.log(require('child_process').execFileSync('bun',['--version'],{encoding:'utf8'}).trim());";
-    let mut command = bun_command(&root, script);
-    command.cwd = ipc::canonical_path(&root).display().to_string();
-    command.cols = 512;
-    let reference = std::process::Command::new(&command.cmd).args(&command.args).current_dir(&command.cwd).envs(command.env.iter().cloned()).output().unwrap();
-    assert!(reference.status.success());
-    let mut supervisor = supervisor::Supervisor::<Capture>::new(&root).unwrap();
-    supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "oracle".into(), command }).unwrap();
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-    while supervisor.snapshot()[0].status == ipc::SessionStatus::Running && std::time::Instant::now() < deadline {
-        supervisor.tick().unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    assert_eq!(supervisor.snapshot()[0].code, Some(0));
-    let bytes = Arc::new(Mutex::new(Vec::new()));
-    let id = supervisor.attach_client(Capture(bytes.clone())).unwrap();
-    supervisor.handle_for(id, ipc::ClientMsg::Attach { client_id: "new-view".into() }).unwrap();
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    let encoded = bytes.lock().unwrap().clone();
-    let mut frames = std::io::Cursor::new(encoded);
-    let mut output = Vec::new();
-    let mut restored = false;
-    while frames.position() < frames.get_ref().len() as u64 {
-        let (kind, payload) = ipc::read_frame(&mut frames).unwrap();
-        if kind == ipc::KIND_OUTPUT {
-            let (session, data) = ipc::decode_output(&payload).unwrap();
-            assert_eq!(session, "oracle");
-            output.extend(data);
-        } else if let ipc::ServerMsg::Sessions { sessions, .. } = ipc::decode_control(&payload).unwrap() {
-            restored = sessions.len() == 1 && sessions[0].code == Some(0);
+fn the_journal_retains_a_bounded_number_of_sessions_and_drops_the_longest_ended_first() {
+    let root = temporary("retention");
+    {
+        let (mut journal, _) = journal::Journal::open(&root).unwrap();
+        for index in 0..200u64 {
+            let mut ended = session(&format!("s{index:03}"), SessionStatus::Exited, 1000 + (199 - index));
+            ended.ended_ms = Some(5000 + index);
+            journal.append(&ServerMsg::SessionChanged { session: Box::new(ended) }).unwrap();
         }
     }
-    assert!(restored);
-    let output = String::from_utf8_lossy(&output);
-    for line in String::from_utf8(reference.stdout).unwrap().lines() { assert!(output.contains(line), "PTY output: {output}"); }
-    println!("[DEBUG] dashboard replay restored exit=0; PTY output matched Bun reference");
-    drop(supervisor);
-    remove_control_root(&root);
-}
-
-#[cfg(any(unix, windows))]
-#[test]
-fn duplicate_spawn_restart_failure_and_shutdown_preserve_control() {
-    let root = control_root("lifecycle");
-    let mut supervisor = supervisor::Supervisor::<Vec<u8>>::new(&root).unwrap();
-    let command = bun_command(&root, "setInterval(() => {}, 1000)");
-    supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "server".into(), command: command.clone() }).unwrap();
-    let first = supervisor.snapshot()[0].pid;
-    assert!(supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "server".into(), command: command.clone() }).is_err());
-    assert!(supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "duplicate".into(), command }).is_err());
-    assert_eq!(supervisor.snapshot().len(), 1);
-    assert_eq!(supervisor.snapshot()[0].pid, first);
-    supervisor.handle_client_msg(ipc::ClientMsg::Restart { session_id: "server".into() }).unwrap();
-    assert_ne!(supervisor.snapshot()[0].pid, first);
-    let mut missing = bun_command(&root, "");
-    missing.cmd = root.join("missing-executable").display().to_string();
-    assert!(supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "failure".into(), command: missing }).is_err());
-    assert!(supervisor.snapshot().iter().any(|s| s.session_id == "failure" && s.status == ipc::SessionStatus::Failed));
-    supervisor.handle_client_msg(ipc::ClientMsg::Ping {}).unwrap();
-    supervisor.handle_client_msg(ipc::ClientMsg::Shutdown {}).unwrap();
-    assert!(supervisor.is_shutdown());
-    assert!(supervisor.snapshot().iter().all(|s| s.status != ipc::SessionStatus::Running));
-    println!("[DEBUG] dashboard rejected duplicate processes, restarted task, survived spawn failure and shut down");
-    drop(supervisor);
-    remove_control_root(&root);
-}
-
-#[cfg(any(unix, windows))]
-#[test]
-fn cancellation_is_bounded_and_completed_sessions_replay_from_events() {
-    let root = control_root("cancel");
-    let mut supervisor = supervisor::Supervisor::<Vec<u8>>::new(&root).unwrap();
-    supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "cancel".into(), command: bun_command(&root, "process.on('SIGINT',()=>{});setInterval(()=>{},1000)") }).unwrap();
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    supervisor.handle_client_msg(ipc::ClientMsg::Stop { session_id: "cancel".into() }).unwrap();
-    assert_eq!(supervisor.snapshot()[0].status, ipc::SessionStatus::Stopping);
-    supervisor.handle_client_msg(ipc::ClientMsg::Ping {}).unwrap();
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    while supervisor.snapshot()[0].status == ipc::SessionStatus::Stopping && std::time::Instant::now() < deadline {
-        supervisor.tick().unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    let completed = supervisor.snapshot();
-    assert_eq!(completed[0].status, ipc::SessionStatus::Exited);
-    drop(supervisor);
-    let restored = supervisor::Supervisor::<Vec<u8>>::new(&root).unwrap();
-    assert_eq!(restored.snapshot(), completed);
-    println!("[DEBUG] cancellation completed within its grace bound and session projection replayed from persisted events");
-    drop(restored);
-    remove_control_root(&root);
-}
-
-#[cfg(any(unix, windows))]
-#[test]
-fn killing_a_task_releases_its_child_servers_port() {
-    let root = control_root("tree");
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    drop(listener);
-    let child = format!("require('net').createServer().listen({port},'127.0.0.1');setInterval(()=>{{}},1000)");
-    let script = format!("require('child_process').spawn(process.execPath,['-e',{}],{{stdio:'inherit',detached:process.platform!=='win32'}});setInterval(()=>{{}},1000)", serde_json::to_string(&child).unwrap());
-    let mut supervisor = supervisor::Supervisor::<Vec<u8>>::new(&root).unwrap();
-    let mut command = bun_command(&root, &script);
-    command.cmd = "node".into();
-    supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: "tree".into(), command }).unwrap();
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-    while std::net::TcpStream::connect(("127.0.0.1", port)).is_err() && std::time::Instant::now() < deadline {
-        supervisor.tick().unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    assert!(std::net::TcpStream::connect(("127.0.0.1", port)).is_ok(), "child server must actually bind: {:?}; output: {}", supervisor.snapshot(), String::from_utf8_lossy(&supervisor.output("tree").unwrap()));
-    supervisor.handle_client_msg(ipc::ClientMsg::Kill { session_id: "tree".into() }).unwrap();
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
-    while std::net::TcpListener::bind(("127.0.0.1", port)).is_err() && std::time::Instant::now() < deadline { std::thread::sleep(std::time::Duration::from_millis(10)); }
-    assert!(std::net::TcpListener::bind(("127.0.0.1", port)).is_ok(), "killing the parent must release its descendant server");
-    println!("[DEBUG] dashboard killed the process tree and released child server port {port}");
-    drop(supervisor);
-    remove_control_root(&root);
+    let (_, restored) = journal::Journal::open(&root).unwrap();
+    assert_eq!(restored.len(), journal::RETAINED_SESSIONS);
+    assert!(restored.iter().all(|session| session.ended_ms.unwrap() >= 5000 + 72), "the sessions that ended first are the ones that left: {:?}", restored.iter().map(|session| session.ended_ms).min());
+    let _ = std::fs::remove_dir_all(root);
 }
 
 #[test]
-fn one_workspace_instance_survives_views_and_rejects_a_second_daemon() {
-    use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-    use std::time::Duration;
-    let root = control_root("instance");
-    let running = Arc::new(AtomicBool::new(true));
-    let worker_running = running.clone();
-    let worker_root = root.clone();
-    let daemon = std::thread::spawn(move || supervisor::serve(&worker_root, worker_running));
-    let mut connection = (0..100).find_map(|_| match client::Connection::connect(&root) { Ok(connection) => Some(connection), Err(_) => { std::thread::sleep(Duration::from_millis(10)); None } }).expect("daemon connection");
-    assert!(supervisor::serve(&root, Arc::new(AtomicBool::new(false))).is_err(), "a second daemon must not replace the workspace endpoint");
-    connection.send(&ipc::ClientMsg::Spawn { session_id: "persistent".into(), command: bun_command(&root, "console.log('attached');setInterval(()=>{},1000)") }).unwrap();
-    let deadline = std::time::Instant::now() + Duration::from_secs(5);
-    let mut pid = None;
-    while pid.is_none() && std::time::Instant::now() < deadline {
-        for message in connection.receive(Duration::from_millis(100)).unwrap() {
-            if let client::Message::Control(ipc::ServerMsg::SessionChanged { session }) = message { pid = session.pid; }
+fn sessions_alive_when_no_daemon_runs_were_interrupted() {
+    let root = temporary("offline");
+    {
+        let (mut journal, _) = journal::Journal::open(&root).unwrap();
+        for (id, status) in [("run", SessionStatus::Running), ("stop", SessionStatus::Stopping), ("wait", SessionStatus::Pending), ("done", SessionStatus::Exited)] {
+            let mut info = session(id, status, 1);
+            info.pid = (status == SessionStatus::Running).then_some(7);
+            journal.append(&ServerMsg::SessionChanged { session: Box::new(info) }).unwrap();
         }
     }
-    assert!(pid.is_some());
-    drop(connection);
-    let mut reattached = client::Connection::connect(&root).unwrap();
-    reattached.send(&ipc::ClientMsg::Attach { client_id: "reattached".into() }).unwrap();
-    let deadline = std::time::Instant::now() + Duration::from_secs(5);
-    let mut restored = false;
-    while !restored && std::time::Instant::now() < deadline {
-        for message in reattached.receive(Duration::from_millis(100)).unwrap() {
-            if let client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) = message { restored = sessions.len() == 1 && sessions[0].pid == pid; }
+    let seen: HashMap<String, SessionStatus> = journal::offline(&root).into_iter().map(|session| (session.session_id, session.status)).collect();
+    assert_eq!(seen["run"], SessionStatus::Interrupted);
+    assert_eq!(seen["stop"], SessionStatus::Interrupted);
+    assert_eq!(seen["wait"], SessionStatus::Interrupted);
+    assert_eq!(seen["done"], SessionStatus::Exited);
+    let _ = std::fs::remove_dir_all(root);
+}
+// #endregion 🔖️Journal
+
+// #region 🔖️Launch
+fn process(command_id: &str, ready: Option<Ready>) -> LaunchProcess {
+    LaunchProcess { command_id: command_id.into(), cmd: "bun".into(), args: vec!["nx".into(), "run".into(), command_id.into()], cwd: PathBuf::from("."), env: vec![("A".into(), "1".into())], label: TaskLabel { verb: "dev".into(), owner: vec!["pkg".into()], subject: command_id.into(), qualifier: String::new(), parameters: vec![], members: 0 }, ready, long_running: true }
+}
+
+fn launch(command_id: &str, processes: Vec<LaunchProcess>, requires: Vec<Launch>, group: Option<&str>, stop: Stop) -> Launch {
+    Launch { command_id: command_id.into(), label: processes[0].label.clone(), processes, requires, group: group.map(str::to_string), stop }
+}
+
+#[test]
+fn a_launch_becomes_one_session_per_process_with_services_first() {
+    let hub = launch("hub:dev", vec![process("hub:dev", Some(Ready { port: 6070, ..Default::default() }))], vec![], None, Stop::Independent);
+    let compound = launch("compound:p/both", vec![process("a:dev", Some(Ready { port: 6061, path: "/admin".into(), printed: false })), process("b:dev", None)], vec![hub], Some("compound:p/both"), Stop::Together);
+    let group = SpawnGroup::from_launch(&compound, &[("A".into(), "2".into()), ("EXTRA".into(), "x".into())]);
+    assert_eq!(group.stop, ipc::GroupStop::Together);
+    assert_eq!(group.requires.len(), 1);
+    assert_eq!(group.requires[0].command.command_id, "hub:dev");
+    assert_eq!(group.requires[0].command.group, None, "a service is not a member of the group that needs it");
+    assert_eq!(group.members.iter().map(|member| member.command.command_id.as_str()).collect::<Vec<_>>(), ["a:dev", "b:dev"]);
+    assert!(group.members.iter().all(|member| member.command.group.as_deref() == Some(group.group_id.as_str())));
+    assert_eq!(group.members[0].command.ready, Some(Ready { port: 6061, path: "/admin".into(), printed: false }));
+    assert_eq!(group.members[0].command.label.subject, "a:dev");
+    assert_eq!(group.members[0].command.env, [("A".to_string(), "2".to_string()), ("EXTRA".to_string(), "x".to_string())], "extra environment of the launch wins over the launch's own");
+    let ids: BTreeSet<&str> = group.members.iter().chain(&group.requires).map(|member| member.session_id.as_str()).collect();
+    assert_eq!(ids.len(), 3, "every session of a group has an identifier of its own");
+    assert!(ClientMsg::SpawnGroup { group_id: group.group_id.clone(), stop: group.stop, members: group.members.clone(), requires: group.requires.clone() }.validate().is_ok());
+    assert_ne!(SpawnGroup::from_launch(&compound, &[]).group_id, group.group_id, "two starts of the same launch are two groups");
+}
+
+#[test]
+fn a_service_needed_twice_is_started_once() {
+    let hub = || launch("hub:dev", vec![process("hub:dev", None)], vec![], None, Stop::Independent);
+    let one = launch("one:dev", vec![process("one:dev", None)], vec![hub()], None, Stop::Independent);
+    let both = launch("both", vec![process("both", None)], vec![one, hub()], None, Stop::Independent);
+    let group = SpawnGroup::from_launch(&both, &[]);
+    assert_eq!(group.requires.iter().map(|member| member.command.command_id.as_str()).collect::<Vec<_>>(), ["hub:dev", "one:dev"]);
+}
+// #endregion 🔖️Launch
+
+// #region 🔖️Selection
+#[test]
+fn a_task_is_selected_by_what_a_developer_types() {
+    let mut sessions = vec![session("task-1", SessionStatus::Exited, 10), session("task-2", SessionStatus::Running, 30), session("other-3", SessionStatus::Exited, 20)];
+    sessions[0].command.command_id = "pkg:build".into();
+    sessions[1].command.command_id = "pkg:build".into();
+    sessions[2].command.command_id = "pkg:dev".into();
+    let chosen = |needle: &str| control::select(&sessions, needle).map(|session| session.session_id.clone());
+    assert_eq!(chosen("task-1").unwrap(), "task-1");
+    assert_eq!(chosen("3").unwrap(), "other-3");
+    assert_eq!(chosen("pkg:build").unwrap(), "task-2", "the live run of a command wins");
+    assert_eq!(chosen("pkg:d").unwrap(), "other-3");
+    assert_eq!(chosen("other").unwrap(), "other-3");
+    assert!(matches!(chosen("pkg"), Err(control::SelectError::Ambiguous(_, found)) if found == ["pkg:build", "pkg:dev"]));
+    assert!(matches!(chosen("nothing"), Err(control::SelectError::None(_))));
+}
+// #endregion 🔖️Selection
+
+// #region 🔖️Instances
+#[test]
+fn a_named_instance_has_its_own_endpoint_directory_and_key() {
+    let root = temporary("instances");
+    assert_eq!(ipc::instance_named(None), None);
+    assert_eq!(ipc::instance_named(Some("")), None);
+    assert_eq!(ipc::instance_named(Some("  ")), None);
+    assert_eq!(ipc::instance_named(Some("..")), None);
+    assert_eq!(ipc::instance_named(Some("smoke-1.a_b")).as_deref(), Some("smoke-1.a_b"));
+    assert_eq!(ipc::instance_named(Some("a/b\\c d")).as_deref(), Some("a_b_c_d"), "a name cannot leave its directory");
+    assert_eq!(ipc::instance_named(Some(&"x".repeat(80))).map(|name| name.len()), Some(32));
+    let default = ipc::workspace_key_of(&root, None);
+    let smoke = ipc::workspace_key_of(&root, Some("smoke"));
+    assert_ne!(default, smoke);
+    assert_ne!(smoke, ipc::workspace_key_of(&root, Some("other")));
+    assert_eq!(smoke, ipc::workspace_key_of(&root, Some("smoke")), "an instance key is stable");
+    let (plain, named) = (ipc::daemon_dir_of(&root, None), ipc::daemon_dir_of(&root, Some("smoke")));
+    assert_eq!(plain, ipc::dashboard_cache_dir(&root));
+    assert_eq!(named, ipc::dashboard_cache_dir(&root).join("instances").join("smoke"));
+    let _ = std::fs::remove_dir_all(root);
+}
+// #endregion 🔖️Instances
+
+// #region 🔖️Environment
+#[test]
+fn the_queued_byte_count_of_a_connection_is_the_sum_of_its_frames_through_partial_writes() {
+    let mut queue = client::Outbound::default();
+    let sizes = [1usize, 7, 4096, 65_536, 3, 0, 31_337, 5, 262_144, 11];
+    let mut expected = 0;
+    for (index, size) in sizes.iter().enumerate() {
+        queue.push(vec![index as u8; *size]);
+        expected += size;
+        assert_eq!(queue.queued_bytes(), expected);
+        if index % 3 == 2 {
+            let frame = queue.pop().unwrap();
+            let (mut sent, mut chunk) = (0, 1);
+            while sent < frame.len() { sent += chunk.min(frame.len() - sent); chunk = chunk * 3 + 1; }
+            expected -= frame.len();
+            assert_eq!(queue.queued_bytes(), expected, "a frame written in partial pieces leaves the count exact");
         }
     }
-    assert!(restored, "reattachment must restore the same running process");
-    reattached.send(&ipc::ClientMsg::Shutdown {}).unwrap();
-    daemon.join().unwrap().unwrap();
-    running.store(false, Ordering::SeqCst);
-    assert!(!ipc::pid_path(&root).exists());
-    println!("[DEBUG] one workspace daemon retained pid {pid:?} across views and rejected a competing instance");
-    drop(reattached);
-    remove_control_root(&root);
+    while let Some(frame) = queue.pop() { expected -= frame.len(); assert_eq!(queue.queued_bytes(), expected); }
+    assert_eq!((queue.queued_bytes(), expected), (0, 0));
+    assert!(queue.pop().is_none());
 }
 
-}
-
-/// 🪟 A control frame written by a client reaches the server half of a real named pipe unchanged,
-/// and the answer written back reaches the client — the transport `serve` is built on.
-#[cfg(windows)]
 #[test]
-fn a_named_pipe_round_trips_one_frame_each_way() {
-    use ipc::{ClientMsg, ServerMsg};
-    let name = format!(r"\\.\pipe\semio-dashboard-test-{}", std::process::id());
-    let listening = name.clone();
-    let server = std::thread::spawn(move || {
-        let mut stream = ipc::accept(&listening).expect("accept");
-        let (kind, payload) = ipc::read_frame(&mut stream).expect("server frame");
-        assert_eq!(kind, ipc::KIND_CONTROL);
-        let message: ClientMsg = ipc::decode_control(&payload).expect("client message");
-        assert_eq!(message, ClientMsg::Attach { client_id: "frame".into() });
-        ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).expect("server answer");
-    });
-    let mut client = None;
-    for _ in 0..100 {
-        match std::fs::OpenOptions::new().read(true).write(true).open(&name) {
-            Ok(handle) => {
-                client = Some(handle);
-                break;
-            }
-            Err(_) => std::thread::sleep(std::time::Duration::from_millis(20)),
-        }
-    }
-    let mut client = client.expect("client open");
-    ipc::write_control(&mut client, &ClientMsg::Attach { client_id: "frame".into() }).expect("client frame");
-    let (kind, payload) = ipc::read_frame(&mut client).expect("client answer");
-    assert_eq!(kind, ipc::KIND_CONTROL);
-    assert_eq!(ipc::decode_control::<ServerMsg>(&payload).expect("server message"), ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() });
-    server.join().expect("server thread");
+fn a_queue_refuses_frames_beyond_its_limit_without_losing_count() {
+    let mut queue = client::Outbound::default();
+    let big = vec![0u8; 8 * 1024 * 1024];
+    assert!(queue.fits(&big));
+    queue.push(big.clone());
+    queue.push(big.clone());
+    assert!(!queue.fits(&big) && queue.queued_bytes() == 16 * 1024 * 1024);
+    queue.pop();
+    assert!(queue.fits(&big));
+}
+#[test]
+fn a_task_starts_in_the_environment_of_the_client_with_a_terminal() {
+    let client = vec![("PATH".to_string(), "/client/bin".to_string()), ("TERM".to_string(), "dumb".to_string()), ("NX_INVOCATION_ROOT_PID".to_string(), "1".to_string()), ("TOKEN".to_string(), "t".to_string())];
+    let env = supervisor::child_environment(&client, &[("TOKEN".into(), "declared".into())]);
+    let value = |name: &str| env.iter().find(|(key, _)| key == name).map(|(_, value)| value.as_str());
+    assert_eq!(value("PATH"), Some("/client/bin"));
+    assert_eq!(value("TOKEN"), Some("declared"), "the command's declared environment wins over the client's");
+    assert_eq!(value("TERM"), Some("xterm-256color"));
+    assert_eq!(value("COLORTERM"), Some("truecolor"));
+    assert_eq!(value("NX_INVOCATION_ROOT_PID"), None);
+    let stated = supervisor::child_environment(&client, &[("TERM".into(), "vt100".into())]);
+    assert_eq!(stated.iter().find(|(key, _)| key == "TERM").map(|(_, value)| value.as_str()), Some("vt100"));
 }
 
-/// 🪟 The whole windows serve loop: a client that opens the daemon's named pipe is greeted, and a
-/// ping it sends over that pipe is answered — the transport `semio daemon attach` rides on.
-#[cfg(windows)]
 #[test]
-fn the_windows_serve_loop_greets_and_answers_a_client() {
-    use ipc::{ClientMsg, ServerMsg};
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
-    let root = std::env::temp_dir().join(format!("semio-daemon-{}", std::process::id()));
-    std::fs::create_dir_all(&root).expect("root");
-    let running = Arc::new(AtomicBool::new(true));
-    let serving = Arc::clone(&running);
-    let served_root = root.clone();
-    let daemon = std::thread::spawn(move || supervisor::serve(&served_root, serving));
-    let mut client = ipc::connect(&root).expect("connect");
-    let (kind, payload) = ipc::read_frame(&mut client).expect("greeting");
-    assert_eq!(kind, ipc::KIND_CONTROL);
-    assert!(matches!(ipc::decode_control::<ServerMsg>(&payload).expect("greeting message"), ServerMsg::Attached { .. }));
-    ipc::write_control(&mut client, &ClientMsg::Ping {}).expect("ping");
-    let (_, payload) = ipc::read_frame(&mut client).expect("pong");
-    assert_eq!(ipc::decode_control::<ServerMsg>(&payload).expect("pong message"), ServerMsg::Pong {});
-    running.store(false, Ordering::SeqCst);
-    daemon.join().expect("daemon thread").expect("serve");
-    let _ = std::fs::remove_dir_all(&root);
+fn the_hello_of_a_connection_carries_only_variables_a_task_can_receive() {
+    let environment = client::process_environment();
+    assert!(!environment.is_empty());
+    assert!(environment.iter().all(|(name, value)| !name.is_empty() && !name.contains(['=', '\0']) && !value.contains('\0')));
+    assert!(ClientMsg::Hello { client_id: "c".into(), protocol: ipc::PROTOCOL, build_id: ipc::build_id().into(), env: environment }.validate().is_ok());
 }
 
-#[cfg(windows)]
 #[test]
-fn connection_retries_a_temporary_gap_between_named_pipe_instances() {
-    use std::time::Duration;
-    let root = std::env::temp_dir().join(format!("semio-pipe-gap-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
-    let name = ipc::pipe_name(&root);
-    let (continue_server, continue_client) = std::sync::mpsc::channel();
-    let server = std::thread::spawn(move || {
-        let mut first = ipc::accept(&name).unwrap();
-        ipc::write_control(&mut first, &ipc::ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).unwrap();
-        continue_client.recv().unwrap();
-        drop(first);
-        std::thread::sleep(Duration::from_millis(200));
-        let mut second = ipc::accept(&name).unwrap();
-        ipc::write_control(&mut second, &ipc::ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).unwrap();
-        std::thread::sleep(Duration::from_millis(100));
-    });
-    let mut first = ipc::connect(&root).unwrap();
-    ipc::read_frame(&mut first).unwrap();
-    continue_server.send(()).unwrap();
-    drop(first);
-    let connection = client::Connection::connect(&root);
-    let fallback = if connection.is_err() { Some(ipc::connect(&root).unwrap()) } else { None };
-    server.join().unwrap();
-    drop(fallback);
-    assert_eq!(connection.expect("a listener gap must not start a competing daemon").daemon_pid(), 7);
-    println!("[DEBUG] dashboard connection retained daemon 7 across a named-pipe listener gap");
+fn skew_between_client_and_daemon_is_described() {
+    let compatible = client::Skew { client_protocol: 2, daemon_protocol: 2, client_build: "a".into(), daemon_build: "b".into() };
+    assert!(!compatible.incompatible() && compatible.describe().contains("build b") && compatible.describe().contains("build a"));
+    let incompatible = client::Skew { client_protocol: 3, daemon_protocol: 2, client_build: "a".into(), daemon_build: "a".into() };
+    assert!(incompatible.incompatible() && incompatible.describe().contains("protocol 2") && incompatible.describe().contains('3'));
+}
+// #endregion 🔖️Environment
+
+#[test]
+fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
+    let sources = [include_str!("🦀️.rs"), include_str!("../🧊️integration/🦀️.rs")];
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/✉️ipc/🥒️.feature"), &sources, &[
+        ("Every valid protocol vector survives the codec unchanged", &["every_valid_protocol_vector_survives_the_rust_codec_unchanged"]),
+        ("Every invalid protocol vector is refused", &["every_invalid_protocol_vector_is_refused_by_the_rust_codec"]),
+        ("The vectors cover the whole schema", &["the_vectors_cover_every_message_status_and_error_code_of_the_schema", "the_error_codes_of_the_rust_wire_are_the_codes_of_the_schema"]),
+        ("Frames carry the same bytes in every implementation", &["frames_match_the_shared_bytes", "control_messages_travel_in_frames_that_buffer_across_arbitrary_cuts"]),
+        ("A missing greeting, a foreign protocol and an unreadable message are refused loudly", &["a_start_without_hello_and_a_foreign_protocol_are_refused_loudly"]),
+        ("A difference between client and daemon is described", &["skew_between_client_and_daemon_is_described"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/🚚️transport/🥒️.feature"), &sources, &[
+        ("The endpoint name derives from the workspace path", &["endpoint_names_are_stable_across_runs_and_toolchains"]),
+        ("A second daemon cannot take over a running workspace", &["a_second_daemon_cannot_take_over_a_running_workspace"]),
+        ("A connection wakes its owner", &["a_connection_calls_its_notifier_when_a_message_arrives_and_when_its_sends_drain"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/📜️journal/🥒️.feature"), &sources, &[
+        ("The journal projects sessions, survives a torn line and compacts", &["the_journal_projects_sessions_survives_a_torn_line_and_compacts"]),
+        ("The journal retains a bounded number of sessions", &["the_journal_retains_a_bounded_number_of_sessions_and_drops_the_longest_ended_first"]),
+        ("Sessions that were alive when no daemon ran come back interrupted", &["sessions_alive_when_no_daemon_runs_were_interrupted", "sessions_that_were_alive_when_the_daemon_vanished_come_back_interrupted"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/🧠️supervisor/🥒️.feature"), &sources, &[
+        ("A task runs to its exit code and later views and a restarted daemon replay its output", &["a_task_runs_to_its_exit_code_and_later_views_and_a_restarted_daemon_replay_its_output"]),
+        ("A restart runs the task again into the same log", &["a_restart_runs_the_task_again_into_the_same_log"]),
+        ("A child title and a full-screen program reach every view", &["a_child_title_and_a_full_screen_program_reach_every_view", "child_titles_are_read_from_both_title_sequences"]),
+        ("A task starts in the environment of the view that asked for it", &["a_task_starts_in_the_environment_of_the_view_that_asked_for_it", "a_task_starts_in_the_environment_of_the_client_with_a_terminal", "the_hello_of_a_connection_carries_only_variables_a_task_can_receive"]),
+        ("Stopping escalates and killing reports the signal death", &["stopping_escalates_and_killing_reports_the_signal_death"]),
+        ("Terminal input is queued and delivered in full", &["terminal_input_is_queued_and_delivered_in_full"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/🕹️control/🥒️.feature"), &sources, &[
+        ("A launch starts services first and returns its ready address", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),
+        ("A member that ends before it is ready fails the run", &["a_member_that_ends_before_it_is_ready_fails_the_launch_and_the_members_after_it"]),
+        ("A cancelled run starts nothing more", &["a_cancelled_launch_never_starts_the_members_still_waiting"]),
+        ("The log files are read without a daemon", &["a_task_runs_to_its_exit_code_and_later_views_and_a_restarted_daemon_replay_its_output"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/📼️replay/🥒️.feature"), &sources, &[
+        ("Replay starts at a line and ends at the present", &["a_replay_starts_at_a_line_and_ends_at_the_present"]),
+        ("Replay restores the terminal modes", &["a_replay_reproduces_the_terminal_modes_of_the_whole_stream", "a_replay_restores_the_input_modes_the_child_is_in"]),
+        ("Rebuild a full-screen program from its first frame", &["a_full_screen_program_is_replayed_from_the_moment_it_took_the_screen", "a_child_title_and_a_full_screen_program_reach_every_view"]),
+        ("Keep scrollback in log files", &["output_beyond_the_memory_ring_is_served_from_the_log_files", "the_oldest_log_segments_are_retired_and_reads_of_them_are_lost", "log_files_of_forgotten_sessions_are_swept"]),
+        ("Never disconnect a stalled view", &["a_view_that_does_not_read_is_neither_disconnected_nor_allowed_to_slow_the_others"]),
+        ("List many sessions to a fresh view", &["a_hundred_retained_sessions_are_listed_to_a_fresh_view_beside_a_stalled_one"]),
+        ("Restart appends to the log from clean terminal modes", &["a_second_run_of_a_session_continues_its_log_from_clean_terminal_modes"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/🟢️ready/🥒️.feature"), &sources, &[
+        ("Decide every case of the shared table", &["the_ready_table_decides_every_case"]),
+        ("Decide the same way however the output is cut", &["the_ready_table_decides_every_case"]),
+        ("Wait for the byte that completes the port", &["an_address_that_ends_the_output_waits_for_the_byte_that_decides_it"]),
+        ("Announce an address once per run", &["a_restarted_task_announces_its_address_again"]),
+        ("Report the ready address on the session", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),
+    ]);
+    crate::tests::assert_proved(include_str!("../../../🧪️tests/🧩️groups/🥒️.feature"), &sources, &[
+        ("Start the services a command requires first", &["a_launch_becomes_one_session_per_process_with_services_first", "a_launch_starts_services_first_members_in_order_and_stops_together"]),
+        ("Reuse a running service", &["a_service_needed_twice_is_started_once"]),
+        ("Start the members of a compound in order", &["a_launch_starts_services_first_members_in_order_and_stops_together", "the_waiting_line_is_written_only_for_members_that_actually_wait"]),
+        ("Stop the members of a compound together", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),
+        ("Fail the launch when a member cannot become ready", &["a_member_that_ends_before_it_is_ready_fails_the_launch_and_the_members_after_it"]),
+        ("Cancel a launch that is still starting", &["a_cancelled_launch_never_starts_the_members_still_waiting"]),
+    ]);
 }

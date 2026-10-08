@@ -517,6 +517,7 @@
     "scoped-presence-browser-serve": {
       "executor": "nx:run-commands",
       "cache": false,
+      "continuous": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts scoped-presence-browser-serve"
@@ -1332,6 +1333,16 @@
       }
     },
     "local-hub-owner": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "path": "/admin"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "continuous": true,

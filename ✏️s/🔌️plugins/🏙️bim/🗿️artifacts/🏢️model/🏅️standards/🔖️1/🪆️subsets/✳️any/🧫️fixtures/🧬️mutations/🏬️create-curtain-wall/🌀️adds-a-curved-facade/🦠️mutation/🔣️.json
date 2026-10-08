@@ -1,0 +1,38 @@
+{
+  "mutation": "createCurtainWall",
+  "id": "cw-2",
+  "curtain_wall": {
+    "storey": "st-ground",
+    "axis": {
+      "Arc": {
+        "start": {
+          "x": 0,
+          "y": 8
+        },
+        "end": {
+          "x": 8,
+          "y": 8
+        },
+        "bulge": 0.3
+      }
+    },
+    "base_offset": 0,
+    "top": {
+      "Storey": {
+        "storey": "st-first",
+        "offset": 0
+      }
+    },
+    "u_spacing": 1.5,
+    "v_spacing": 1.2,
+    "mullion": {
+      "Rectangle": {
+        "width": 0.05,
+        "depth": 0.15
+      }
+    },
+    "panel_material": "m-glass",
+    "mullion_material": "m-alu",
+    "name": "Bow"
+  }
+}

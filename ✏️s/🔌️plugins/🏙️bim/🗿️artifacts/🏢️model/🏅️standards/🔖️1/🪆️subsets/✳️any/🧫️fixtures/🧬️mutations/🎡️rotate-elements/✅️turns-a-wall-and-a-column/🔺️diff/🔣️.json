@@ -1,0 +1,29 @@
+{
+  "columns": {
+    "c-1": {
+      "entry": "Patched",
+      "position": {
+        "x": -3.0,
+        "y": 4.0
+      },
+      "rotation": 1.820796326795
+    }
+  },
+  "walls": {
+    "w-south": {
+      "axis": {
+        "Line": {
+          "end": {
+            "x": 0.0,
+            "y": 8.0
+          },
+          "start": {
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      },
+      "entry": "Patched"
+    }
+  }
+}

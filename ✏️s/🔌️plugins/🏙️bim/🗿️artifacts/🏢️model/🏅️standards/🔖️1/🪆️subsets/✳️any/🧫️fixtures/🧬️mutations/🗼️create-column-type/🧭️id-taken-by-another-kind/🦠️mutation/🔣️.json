@@ -1,0 +1,13 @@
+{
+  "mutation": "createColumnType",
+  "id": "st-ground",
+  "column_type": {
+    "name": "Column",
+    "profile": {
+      "Circle": {
+        "diameter": 0.5
+      }
+    },
+    "material": "m-concrete"
+  }
+}

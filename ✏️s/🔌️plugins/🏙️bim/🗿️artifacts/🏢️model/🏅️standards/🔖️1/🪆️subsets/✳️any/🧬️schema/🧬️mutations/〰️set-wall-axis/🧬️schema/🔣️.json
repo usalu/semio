@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-wall-axis/schema.json",
+  "title": "SetWallAxis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "axis"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setWallAxis"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "axis": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/Axis",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Axis",
+          "de": "Achse"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

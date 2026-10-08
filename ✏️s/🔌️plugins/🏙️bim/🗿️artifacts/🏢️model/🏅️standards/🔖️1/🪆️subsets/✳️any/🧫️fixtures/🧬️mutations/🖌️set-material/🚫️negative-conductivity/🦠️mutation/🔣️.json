@@ -1,0 +1,5 @@
+{
+  "mutation": "setMaterial",
+  "id": "m-brick",
+  "conductivity": -0.5
+}

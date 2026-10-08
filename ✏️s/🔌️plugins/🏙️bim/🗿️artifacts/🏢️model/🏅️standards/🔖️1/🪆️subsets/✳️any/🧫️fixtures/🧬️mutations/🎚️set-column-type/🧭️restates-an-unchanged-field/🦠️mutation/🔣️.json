@@ -1,0 +1,11 @@
+{
+  "mutation": "setColumnType",
+  "id": "ct-400",
+  "name": "Renamed",
+  "profile": {
+    "Rectangle": {
+      "width": 0.4,
+      "depth": 0.4
+    }
+  }
+}

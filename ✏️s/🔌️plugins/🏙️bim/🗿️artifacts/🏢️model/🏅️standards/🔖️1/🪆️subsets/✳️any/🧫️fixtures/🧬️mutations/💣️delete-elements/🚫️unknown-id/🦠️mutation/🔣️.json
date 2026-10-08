@@ -1,0 +1,7 @@
+{
+  "mutation": "deleteElements",
+  "ids": [
+    "w-south",
+    "w-missing"
+  ]
+}

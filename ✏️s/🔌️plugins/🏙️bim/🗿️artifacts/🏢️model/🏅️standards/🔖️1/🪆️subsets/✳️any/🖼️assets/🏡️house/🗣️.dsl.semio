@@ -1,0 +1,1218 @@
+semio bim.model.dsl v1
+schema="s.bim.model@1"
+project {
+  name="Family House" description="Detached single-family house with basement, two storeys and a pitched attic roof." author=semio organization=semio phase-names=[ Design Permit Construction ]
+}
+materials={
+  m-brick={ name="Clay Block" category=masonry density=800 conductivity=0.14 specific-heat=1000
+  color {
+    r=0.7 g=0.35 b=0.25
+  }
+  } m-concrete={ name="Reinforced Concrete" category=concrete density=2400 conductivity=2.3 specific-heat=1000
+  color {
+    r=0.62 g=0.62 b=0.6
+  }
+  } m-glass={ name="Float Glass" category=glass density=2500 conductivity=1 specific-heat=750
+  color {
+    r=0.65 g=0.85 b=0.9
+  }
+  } m-insulation={ name="Mineral Wool" category=insulation density=40 conductivity=0.035 specific-heat=1030
+  color {
+    r=0.95 g=0.85 b=0.35
+  }
+  } m-membrane={ name="Bitumen Membrane" category=membrane density=1100 conductivity=0.17 specific-heat=1000
+  color {
+    r=0.15 g=0.15 b=0.15
+  }
+  } m-plaster={ name="Lime Gypsum Plaster" category=finish density=1400 conductivity=0.7 specific-heat=1000
+  color {
+    r=0.92 g=0.92 b=0.88
+  }
+  } m-screed={ name="Cement Screed" category=finish density=2000 conductivity=1.4 specific-heat=1000
+  color {
+    r=0.75 g=0.75 b=0.72
+  }
+  } m-steel={ name="Structural Steel" category=metal density=7850 conductivity=50 specific-heat=450
+  color {
+    r=0.55 g=0.58 b=0.62
+  }
+  } m-tile={ name="Clay Roof Tile" category=masonry density=1900 conductivity=1 specific-heat=900
+  color {
+    r=0.65 g=0.25 b=0.15
+  }
+  } m-timber={ name="Spruce Timber" category=wood density=450 conductivity=0.13 specific-heat=1600
+  color {
+    r=0.8 g=0.62 b=0.4
+  }
+  }
+}
+wall-types={
+  wt-attic-34={ name="Attic Knee Wall 34"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.016 finish
+    m-timber 0.1 structure
+    m-insulation 0.2 insulation
+    m-timber 0.024 finish
+  }
+  } wt-base-25={ name="Basement Bearing Wall 25"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-concrete 0.25 structure
+  }
+  } wt-base-37={ name="Basement Wall 37"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.02 finish
+    m-concrete 0.25 structure
+    m-insulation 0.1 insulation
+  }
+  } wt-ext-37={ name="Exterior Wall 37"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.015 finish
+    m-brick 0.175 structure
+    m-insulation 0.16 insulation
+    m-plaster 0.02 finish
+  }
+  } wt-int-145={ name="Partition 14.5"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.015 finish
+    m-brick 0.115 structure
+    m-plaster 0.015 finish
+  }
+  } wt-int-205={ name="Bearing Partition 20.5"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-plaster 0.015 finish
+    m-brick 0.175 structure
+    m-plaster 0.015 finish
+  }
+  }
+}
+slab-types={
+  st-floor-30={ name="Floor Slab 30"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-screed 0.07 finish
+    m-insulation 0.03 insulation
+    m-concrete 0.2 structure
+  }
+  } st-found-49={ name="Foundation Slab 49"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-screed 0.07 finish
+    m-insulation 0.12 insulation
+    m-concrete 0.3 structure
+  }
+  } st-timber-30={ name="Timber Floor 30"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-timber 0.024 finish
+    m-insulation 0.16 insulation
+    m-timber 0.116 structure
+  }
+  }
+}
+roof-types={
+  rt-flat={ name="Flat Roof 39"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-membrane 0.01 membrane
+    m-insulation 0.2 insulation
+    m-timber 0.18 structure
+  }
+  } rt-pitched={ name="Pitched Roof 34.8"
+  layers [material:TEXT thickness:NUM function:ENUM] {
+    m-tile 0.04 finish
+    m-timber 0.05 substrate
+    m-membrane 0.002 membrane
+    m-insulation 0.24 insulation
+    m-plaster 0.016 finish
+  }
+  }
+}
+column-types={
+  ct-chs-168={ name="Steel Tube 168" material=m-steel
+  profile {
+    circle diameter=0.168
+  }
+  }
+}
+beam-types={
+  bt-ipe-240={ name="IPE 240" material=m-steel
+  profile {
+    i-shape width=0.12 depth=0.24 web=0.0062 flange=0.0098
+  }
+  }
+}
+window-types={
+  wn-bay={ name="Bay Window" width=0.9 height=1.6 sill=0.6 frame-width=0.07 frame-depth=0.08 panes=3 material=m-timber } wn-casement={ name="Casement Window" width=1.2 height=1.35 sill=0.9 frame-width=0.07 frame-depth=0.08 panes=3 material=m-timber } wn-cellar={ name="Cellar Window" width=0.8 height=0.5 sill=1.75 frame-width=0.07 frame-depth=0.08 panes=2 material=m-timber } wn-picture={ name="Picture Window" width=1.8 height=1.4 sill=0.75 frame-width=0.07 frame-depth=0.08 panes=3 material=m-timber } wn-wc={ name="Small Window" width=0.6 height=0.6 sill=1.3 frame-width=0.07 frame-depth=0.08 panes=3 material=m-timber }
+}
+door-types={
+  dr-cellar={ name="Cellar Door" width=0.9 height=2 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-steel } dr-entry={ name="Front Door" width=1 height=2.15 frame-width=0.07 frame-depth=0.08 leaves=single swing=right material=m-timber } dr-int-80={ name="Interior Door 80" width=0.8 height=2.1 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-timber } dr-int-90={ name="Interior Door 90" width=0.9 height=2.1 frame-width=0.07 frame-depth=0.08 leaves=single swing=left material=m-timber } dr-patio={ name="Patio Door" width=1.6 height=2.25 frame-width=0.07 frame-depth=0.08 leaves=double swing=right material=m-timber }
+}
+sites={
+  site-1={ name="Plot Bern" latitude=46.948 longitude=7.4474 elevation=542 true-north=0.05
+  boundary [x:NUM y:NUM] {
+    0 0
+    22.5 0
+    24 29
+    1.5 30.5
+  }
+  }
+}
+buildings={
+  bldg-1={ site=site-1 name="Family House" rotation=0 elevation=0.3
+  origin {
+    x=6 y=9
+  }
+  }
+}
+storeys={
+  st-attic={ building=bldg-1 name=Attic level=2 height=2.4 cut-height=0.5 } st-basement={ building=bldg-1 name=Basement level=-1 height=2.6 } st-ground={ building=bldg-1 name="Ground Floor" level=0 height=2.8 } st-upper={ building=bldg-1 name="Upper Floor" level=1 height=2.7 }
+}
+grids={
+  g-1={ building=bldg-1 label="1"
+  start {
+    x=-1 y=0
+  }
+  end {
+    x=11 y=0
+  }
+  } g-2={ building=bldg-1 label="2"
+  start {
+    x=-1 y=5
+  }
+  end {
+    x=11 y=5
+  }
+  } g-3={ building=bldg-1 label="3"
+  start {
+    x=-1 y=8
+  }
+  end {
+    x=11 y=8
+  }
+  } g-a={ building=bldg-1 label=A
+  start {
+    x=0 y=-1
+  }
+  end {
+    x=0 y=9
+  }
+  } g-b={ building=bldg-1 label=B
+  start {
+    x=3.6 y=-1
+  }
+  end {
+    x=3.6 y=9
+  }
+  } g-c={ building=bldg-1 label=C
+  start {
+    x=10 y=-1
+  }
+  end {
+    x=10 y=9
+  }
+  }
+}
+walls={
+  w-a-east={ storey=st-attic wall-type=wt-attic-34 location=center base-offset=0 phase=new name="Attic East"
+  axis {
+    line
+    start {
+      x=10 y=0
+    }
+    end {
+      x=10 y=8
+    }
+  }
+  top {
+    unconnected height=0.9
+  }
+  } w-a-north={ storey=st-attic wall-type=wt-attic-34 location=center base-offset=0 phase=new name="Attic North"
+  axis {
+    line
+    start {
+      x=10 y=8
+    }
+    end {
+      x=0 y=8
+    }
+  }
+  top {
+    unconnected height=0.9
+  }
+  } w-a-south={ storey=st-attic wall-type=wt-attic-34 location=center base-offset=0 phase=new name="Attic South"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=10 y=0
+    }
+  }
+  top {
+    unconnected height=0.9
+  }
+  } w-a-west={ storey=st-attic wall-type=wt-attic-34 location=center base-offset=0 phase=new name="Attic West"
+  axis {
+    line
+    start {
+      x=0 y=8
+    }
+    end {
+      x=0 y=0
+    }
+  }
+  top {
+    unconnected height=0.9
+  }
+  } w-b-bay={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement Bay"
+  axis {
+    arc bulge=0.5
+    start {
+      x=10 y=1
+    }
+    end {
+      x=10 y=4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-east-1={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement East South"
+  axis {
+    line
+    start {
+      x=10 y=0
+    }
+    end {
+      x=10 y=1
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-east-2={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement East North"
+  axis {
+    line
+    start {
+      x=10 y=4
+    }
+    end {
+      x=10 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-north={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement North"
+  axis {
+    line
+    start {
+      x=10 y=8
+    }
+    end {
+      x=0 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-south={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement South"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=10 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-spine={ storey=st-basement wall-type=wt-base-25 location=center base-offset=0 phase=new name="Basement Spine"
+  axis {
+    line
+    start {
+      x=3.6 y=0
+    }
+    end {
+      x=3.6 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-b-west={ storey=st-basement wall-type=wt-base-37 location=center base-offset=0 phase=new name="Basement West"
+  axis {
+    line
+    start {
+      x=0 y=8
+    }
+    end {
+      x=0 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-bay={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground Bay"
+  axis {
+    arc bulge=0.5
+    start {
+      x=10 y=1
+    }
+    end {
+      x=10 y=4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-cross={ storey=st-ground wall-type=wt-int-205 location=center base-offset=0 phase=new name="Cross Wall"
+  axis {
+    line
+    start {
+      x=0 y=5
+    }
+    end {
+      x=10 y=5
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-east-1={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground East South"
+  axis {
+    line
+    start {
+      x=10 y=0
+    }
+    end {
+      x=10 y=1
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-east-2={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground East North"
+  axis {
+    line
+    start {
+      x=10 y=4
+    }
+    end {
+      x=10 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-north={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground North"
+  axis {
+    line
+    start {
+      x=10 y=8
+    }
+    end {
+      x=0 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-south={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground South"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=10 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-spine={ storey=st-ground wall-type=wt-int-205 location=center base-offset=0 phase=new name="Ground Spine"
+  axis {
+    line
+    start {
+      x=3.6 y=0
+    }
+    end {
+      x=3.6 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-wc={ storey=st-ground wall-type=wt-int-145 location=center base-offset=0 phase=new name="WC Partition"
+  axis {
+    line
+    start {
+      x=1.8 y=5
+    }
+    end {
+      x=1.8 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-g-west={ storey=st-ground wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Ground West"
+  axis {
+    line
+    start {
+      x=0 y=8
+    }
+    end {
+      x=0 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-bath={ storey=st-upper wall-type=wt-int-145 location=center base-offset=0 phase=new name="Bathroom South"
+  axis {
+    line
+    start {
+      x=0 y=5
+    }
+    end {
+      x=1.8 y=5
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-bath-east={ storey=st-upper wall-type=wt-int-145 location=center base-offset=0 phase=new name="Bathroom East"
+  axis {
+    line
+    start {
+      x=1.8 y=5
+    }
+    end {
+      x=1.8 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-bay={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper Bay"
+  axis {
+    arc bulge=0.5
+    start {
+      x=10 y=1
+    }
+    end {
+      x=10 y=4
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-bedrooms={ storey=st-upper wall-type=wt-int-145 location=center base-offset=0 phase=new name="Bedroom Partition"
+  axis {
+    line
+    start {
+      x=3.6 y=4.5
+    }
+    end {
+      x=10 y=4.5
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-east-1={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper East South"
+  axis {
+    line
+    start {
+      x=10 y=0
+    }
+    end {
+      x=10 y=1
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-east-2={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper East North"
+  axis {
+    line
+    start {
+      x=10 y=4
+    }
+    end {
+      x=10 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-north={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper North"
+  axis {
+    line
+    start {
+      x=10 y=8
+    }
+    end {
+      x=0 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-south={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper South"
+  axis {
+    line
+    start {
+      x=0 y=0
+    }
+    end {
+      x=10 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-spine={ storey=st-upper wall-type=wt-int-205 location=center base-offset=0 phase=new name="Upper Spine"
+  axis {
+    line
+    start {
+      x=3.6 y=0
+    }
+    end {
+      x=3.6 y=8
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  } w-u-west={ storey=st-upper wall-type=wt-ext-37 location=center base-offset=0 phase=new name="Upper West"
+  axis {
+    line
+    start {
+      x=0 y=8
+    }
+    end {
+      x=0 y=0
+    }
+  }
+  top {
+    storey-top offset=0
+  }
+  }
+}
+curtain-walls={
+}
+columns={
+  c-b-support={ storey=st-basement column-type=ct-chs-168 rotation=0 base-offset=0 name="Support Column"
+  position {
+    x=6.8 y=5
+  }
+  top {
+    storey-top offset=-0.54
+  }
+  }
+}
+beams={
+  bm-b-support={ storey=st-basement beam-type=bt-ipe-240 top-offset=-0.3 name="Kitchen Wall Support"
+  start {
+    x=3.6 y=5
+  }
+  end {
+    x=10 y=5
+  }
+  }
+}
+slabs={
+  sl-a={ storey=st-attic slab-type=st-timber-30 offset=0 name="Attic Floor" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0 y=0
+    }
+    0
+ {
+      x=10 y=0
+    }
+    0
+ {
+      x=10 y=8
+    }
+    0
+ {
+      x=0 y=8
+    }
+    0
+  }
+  } sl-b={ storey=st-basement slab-type=st-found-49 offset=0 name="Foundation Slab" holes=[ ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0 y=0
+    }
+    0
+ {
+      x=10 y=0
+    }
+    0
+ {
+      x=10 y=1
+    }
+    0.5
+ {
+      x=10 y=4
+    }
+    0
+ {
+      x=10 y=8
+    }
+    0
+ {
+      x=0 y=8
+    }
+    0
+  }
+  } sl-g={ storey=st-ground slab-type=st-floor-30 offset=0 name="Ground Floor Slab" holes=[ [ { bulge=0
+  point {
+    x=2.25 y=5.11
+  }
+  } { bulge=0
+  point {
+    x=3.15 y=5.11
+  }
+  } { bulge=0
+  point {
+    x=3.15 y=7.8
+  }
+  } { bulge=0
+  point {
+    x=2.25 y=7.8
+  }
+  } ] ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0 y=0
+    }
+    0
+ {
+      x=10 y=0
+    }
+    0
+ {
+      x=10 y=1
+    }
+    0.5
+ {
+      x=10 y=4
+    }
+    0
+ {
+      x=10 y=8
+    }
+    0
+ {
+      x=0 y=8
+    }
+    0
+  }
+  } sl-u={ storey=st-upper slab-type=st-floor-30 offset=0 name="Upper Floor Slab" holes=[ [ { bulge=0
+  point {
+    x=0.2 y=1.7
+  }
+  } { bulge=0
+  point {
+    x=2.1 y=1.7
+  }
+  } { bulge=0
+  point {
+    x=2.1 y=4.5
+  }
+  } { bulge=0
+  point {
+    x=0.2 y=4.5
+  }
+  } ] ]
+  boundary [point:BLOCK bulge:NUM] {
+ {
+      x=0 y=0
+    }
+    0
+ {
+      x=10 y=0
+    }
+    0
+ {
+      x=10 y=1
+    }
+    0.5
+ {
+      x=10 y=4
+    }
+    0
+ {
+      x=10 y=8
+    }
+    0
+ {
+      x=0 y=8
+    }
+    0
+  }
+  }
+}
+roofs={
+  rf-bay={ storey=st-attic roof-type=rt-flat overhang=0.1 base-offset=0 name="Bay Roof"
+  shape {
+    flat
+  }
+  footprint [point:BLOCK bulge:NUM] {
+ {
+      x=10 y=4
+    }
+    0
+ {
+      x=10 y=2.5
+    }
+    0
+ {
+      x=10 y=1
+    }
+    0.5
+  }
+  } rf-main={ storey=st-attic roof-type=rt-pitched overhang=0.5 base-offset=0.9 name="Main Roof"
+  shape {
+    gable pitch=0.6109 ridge-direction=0
+  }
+  footprint [point:BLOCK bulge:NUM] {
+ {
+      x=0 y=0
+    }
+    0
+ {
+      x=10 y=0
+    }
+    0
+ {
+      x=10 y=8
+    }
+    0
+ {
+      x=0 y=8
+    }
+    0
+  }
+  }
+}
+openings={
+  o-b-door={ host=w-b-spine offset=2 flip-hand=false flip-facing=true name="Cellar Door"
+  kind {
+    door door-type=dr-cellar
+  }
+  } o-b-light-n1={ host=w-b-north offset=3 flip-hand=false flip-facing=false name="Cellar Light North East"
+  kind {
+    window window-type=wn-cellar
+  }
+  } o-b-light-n2={ host=w-b-north offset=8.2 flip-hand=false flip-facing=false name="Cellar Light North West"
+  kind {
+    window window-type=wn-cellar
+  }
+  } o-b-light-s1={ host=w-b-south offset=1.8 flip-hand=false flip-facing=false name="Cellar Light South West"
+  kind {
+    window window-type=wn-cellar
+  }
+  } o-b-light-s2={ host=w-b-south offset=7 flip-hand=false flip-facing=false name="Cellar Light South East"
+  kind {
+    window window-type=wn-cellar
+  }
+  } o-b-light-w={ host=w-b-west offset=3 flip-hand=false flip-facing=false name="Cellar Light West"
+  kind {
+    window window-type=wn-cellar
+  }
+  } o-g-bay-1={ host=w-g-bay offset=0.75 flip-hand=false flip-facing=false name="Living Bay Window 1"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-g-bay-2={ host=w-g-bay offset=1.74 flip-hand=false flip-facing=false name="Living Bay Window 2"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-g-bay-3={ host=w-g-bay offset=2.73 flip-hand=false flip-facing=false name="Living Bay Window 3"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-g-cellar-door={ host=w-g-cross offset=2.7 flip-hand=false flip-facing=true name="Cellar Stair Door"
+  kind {
+    door door-type=dr-int-90
+  }
+  } o-g-cellar-north={ host=w-g-north offset=7.3 flip-hand=false flip-facing=false name="Cellar Stair Window"
+  kind {
+    window window-type=wn-wc
+  }
+  } o-g-entry={ host=w-g-south offset=2.9 flip-hand=false flip-facing=false name="Front Door"
+  kind {
+    door door-type=dr-entry
+  }
+  } o-g-hall-west={ host=w-g-west offset=5 width=1 flip-hand=false flip-facing=false name="Hall Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-g-kitchen-east={ host=w-g-east-2 offset=2 flip-hand=false flip-facing=false name="Kitchen East Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-g-kitchen-north={ host=w-g-north offset=3.2 width=1.8 flip-hand=false flip-facing=false name="Kitchen North Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-g-kitchen-void={ host=w-g-cross offset=6.8 flip-hand=false flip-facing=false name="Kitchen Passage"
+  kind {
+    void width=1.8 height=2.1
+  }
+  } o-g-living={ host=w-g-south offset=5.9 flip-hand=false flip-facing=false name="Living Room Window"
+  kind {
+    window window-type=wn-picture
+  }
+  } o-g-living-door={ host=w-g-spine offset=1.6 flip-hand=false flip-facing=false name="Living Room Door"
+  kind {
+    door door-type=dr-int-90
+  }
+  } o-g-patio={ host=w-g-south offset=8.4 flip-hand=true flip-facing=false name="Patio Door"
+  kind {
+    door door-type=dr-patio
+  }
+  } o-g-wc-door={ host=w-g-cross offset=0.9 flip-hand=true flip-facing=false name="WC Door"
+  kind {
+    door door-type=dr-int-80
+  }
+  } o-g-wc-north={ host=w-g-north offset=9.1 flip-hand=false flip-facing=false name="WC Window"
+  kind {
+    window window-type=wn-wc
+  }
+  } o-u-bath-door={ host=w-u-bath offset=0.75 flip-hand=false flip-facing=false name="Bathroom Door"
+  kind {
+    door door-type=dr-int-80
+  }
+  } o-u-bath-north={ host=w-u-north offset=9.1 flip-hand=false flip-facing=false name="Bathroom Window"
+  kind {
+    window window-type=wn-wc
+  }
+  } o-u-bay-1={ host=w-u-bay offset=0.75 flip-hand=false flip-facing=false name="Master Bay Window 1"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-u-bay-2={ host=w-u-bay offset=1.74 flip-hand=false flip-facing=false name="Master Bay Window 2"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-u-bay-3={ host=w-u-bay offset=2.73 flip-hand=false flip-facing=false name="Master Bay Window 3"
+  kind {
+    window window-type=wn-bay
+  }
+  } o-u-child-door={ host=w-u-spine offset=6.5 flip-hand=true flip-facing=false name="Child Room Door"
+  kind {
+    door door-type=dr-int-90
+  }
+  } o-u-child-east={ host=w-u-east-2 offset=2 flip-hand=false flip-facing=false name="Child Room East Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-child-north-1={ host=w-u-north offset=3.2 flip-hand=false flip-facing=false name="Child Room North Window 1"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-child-north-2={ host=w-u-north offset=5.4 flip-hand=false flip-facing=false name="Child Room North Window 2"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-landing-north={ host=w-u-north offset=7.4 width=0.9 flip-hand=false flip-facing=false name="Landing North Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-landing-south={ host=w-u-south offset=1.5 width=1 flip-hand=false flip-facing=false name="Landing South Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-landing-west={ host=w-u-west offset=5.4 width=1 flip-hand=false flip-facing=false name="Landing West Window"
+  kind {
+    window window-type=wn-casement
+  }
+  } o-u-master={ host=w-u-south offset=6 flip-hand=false flip-facing=false name="Master Bedroom Window"
+  kind {
+    window window-type=wn-picture
+  }
+  } o-u-master-door={ host=w-u-spine offset=1 flip-hand=false flip-facing=false name="Master Bedroom Door"
+  kind {
+    door door-type=dr-int-90
+  }
+  }
+}
+stairs={
+  sr-cellar={ storey=st-basement direction=-1.5707963267948966 width=0.9 max-riser=0.2 min-tread=0.22 nosing=0.02 tread-thickness=0.05 riser=open landing-depth=0.9 name="Cellar Stair"
+  start {
+    x=2.7 y=7.75
+  }
+  flight {
+    straight
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=open width=0.05 depth=0.2
+  }
+  } sr-main={ storey=st-ground direction=1.5707963267948966 width=0.9 max-riser=0.19 min-tread=0.26 nosing=0.03 tread-thickness=0.04 riser=closed landing-depth=0.9 name="Main Stair"
+  start {
+    x=1.65 y=1.7
+  }
+  flight {
+    u-turn gap=0.1
+  }
+  top {
+    storey-top offset=0
+  }
+  stringer {
+    kind=closed width=0.04 depth=0.26
+  }
+  }
+}
+railings={
+  rl-cellar={ storey=st-ground height=1 post-spacing=1.2 material=m-timber base-offset=0 name="Cellar Stair Railing"
+  profile {
+    rectangle width=0.06 depth=0.05
+  }
+  post-profile {
+    rectangle width=0.07 depth=0.07
+  }
+  infill {
+    panel thickness=0.02
+  }
+  path [x:NUM y:NUM] {
+    2.25 5.3
+    2.25 7.8
+    3.15 7.8
+    3.15 5.3
+  }
+  } rl-main={ storey=st-upper height=1 post-spacing=1.2 material=m-steel base-offset=0 name="Stair Opening Railing"
+  profile {
+    rectangle width=0.05 depth=0.04
+  }
+  post-profile {
+    rectangle width=0.05 depth=0.05
+  }
+  baluster {
+    spacing=0.12
+    profile {
+      rectangle width=0.02 depth=0.02
+    }
+  }
+  infill {
+    none
+  }
+  path [x:NUM y:NUM] {
+    2.1 1.7
+    2.1 4.5
+    0.2 4.5
+  }
+  }
+}
+spaces={
+  sp-a1={ storey=st-attic number="2.01" name="Roof Space" usage=Storage
+  boundary {
+    bounded
+    seed {
+      x=5 y=4
+    }
+  }
+  } sp-b1={ storey=st-basement number=B.01 name="Cellar Stair" usage=Circulation
+  boundary {
+    bounded
+    seed {
+      x=1.8 y=4
+    }
+  }
+  } sp-b2={ storey=st-basement number=B.02 name="Hobby and Storage" usage=Storage
+  boundary {
+    bounded
+    seed {
+      x=7 y=4
+    }
+  }
+  } sp-g1={ storey=st-ground number="0.01" name=Hall usage=Circulation
+  boundary {
+    bounded
+    seed {
+      x=3 y=3
+    }
+  }
+  } sp-g2={ storey=st-ground number="0.02" name=WC usage=Sanitary
+  boundary {
+    bounded
+    seed {
+      x=0.9 y=6.5
+    }
+  }
+  } sp-g3={ storey=st-ground number="0.03" name="Cellar Stair Room" usage=Circulation
+  boundary {
+    bounded
+    seed {
+      x=2.7 y=6.5
+    }
+  }
+  } sp-g4={ storey=st-ground number="0.04" name="Living Room" usage=Living
+  boundary {
+    bounded
+    seed {
+      x=7 y=2.5
+    }
+  }
+  } sp-g5={ storey=st-ground number="0.05" name="Kitchen and Dining" usage=Kitchen
+  boundary {
+    bounded
+    seed {
+      x=7 y=6.5
+    }
+  }
+  } sp-u1={ storey=st-upper number="1.01" name=Landing usage=Circulation
+  boundary {
+    bounded
+    seed {
+      x=3 y=3
+    }
+  }
+  } sp-u2={ storey=st-upper number="1.02" name=Bathroom usage=Sanitary
+  boundary {
+    bounded
+    seed {
+      x=0.9 y=6.5
+    }
+  }
+  } sp-u3={ storey=st-upper number="1.03" name="Master Bedroom" usage=Sleeping
+  boundary {
+    bounded
+    seed {
+      x=7 y=2
+    }
+  }
+  } sp-u4={ storey=st-upper number="1.04" name="Child Room" usage=Sleeping
+  boundary {
+    bounded
+    seed {
+      x=7 y=6.5
+    }
+  }
+  }
+}
+properties={
+  o-g-entry={
+    Pset_DoorCommon={
+      IsExternal={
+        Boolean={
+          value=true
+        }
+      }
+      SecurityRating={
+        Text={
+          value="RC2"
+        }
+      }
+    }
+  }
+  o-g-living={
+    Pset_WindowCommon={
+      GlazingAreaFraction={
+        Real={
+          value=0.78
+        }
+      }
+      ThermalTransmittance={
+        Real={
+          value=0.9
+        }
+      }
+    }
+  }
+  rf-main={
+    Pset_RoofCommon={
+      FireRating={
+        Text={
+          value="RF1"
+        }
+      }
+      ThermalTransmittance={
+        Real={
+          value=0.12
+        }
+      }
+    }
+  }
+  sp-g4={
+    Pset_SpaceCommon={
+      OccupancyType={
+        Text={
+          value="Living"
+        }
+      }
+      Reference={
+        Text={
+          value="0.04"
+        }
+      }
+    }
+    Semio_Energy={
+      HeatedZone={
+        Boolean={
+          value=true
+        }
+      }
+      TargetTemperature={
+        Real={
+          value=21.0
+        }
+      }
+    }
+  }
+  w-g-south={
+    Pset_WallCommon={
+      FireRating={
+        Text={
+          value="REI 60"
+        }
+      }
+      IsExternal={
+        Boolean={
+          value=true
+        }
+      }
+      LoadBearing={
+        Boolean={
+          value=true
+        }
+      }
+      ThermalTransmittance={
+        Real={
+          value=0.18
+        }
+      }
+    }
+  }
+  w-g-spine={
+    Pset_WallCommon={
+      FireRating={
+        Text={
+          value="REI 60"
+        }
+      }
+      IsExternal={
+        Boolean={
+          value=false
+        }
+      }
+      LoadBearing={
+        Boolean={
+          value=true
+        }
+      }
+    }
+  }
+}
+classifications={
+  o-g-entry={ system="DIN 276" code="334" title="Außentüren und -fenster" } o-g-living={ system="DIN 276" code="334" title="Außentüren und -fenster" } rf-main={ system="DIN 276" code="361" title=Dachkonstruktionen } sl-g={ system="DIN 276" code="351" title=Deckenkonstruktionen } w-g-south={ system="Uniclass 2015" code=EF_25_10 title=Walls } w-g-spine={ system="DIN 276" code="341" title="Tragende Innenwände" }
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.app.bim.model.section_window_config;
+import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🛰️.proto";
+message BimSectionWindowConfig {
+  double start_x = 1;
+  double start_y = 2;
+  double end_x = 3;
+  double end_y = 4;
+  double depth = 5;
+  bool framed = 6;
+  semio.framework.ui.viewport.Viewport2d viewport = 7;
+}

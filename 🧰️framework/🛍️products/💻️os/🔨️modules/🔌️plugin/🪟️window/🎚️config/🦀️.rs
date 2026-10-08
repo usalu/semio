@@ -564,6 +564,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         let partition = self.partitions.get_mut(&window_id).expect("selected window config partition remains owned");
         let disposer = partition.disposer.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.disposer"), "window config partition lost its exact disposer"))?;
         let step = disposer.close_step(&mut partition.store, maximum_items.min(1), maximum_bytes)?;
+        if matches!(step, PluginCloseStep::Pending { released_items: 0, .. }) { use std::sync::atomic::{AtomicUsize, Ordering}; static N: AtomicUsize = AtomicUsize::new(0); if N.fetch_add(1, Ordering::Relaxed) < 3 { eprintln!("[DEBUG] partition disposer {window_id} stalled items={maximum_items} bytes={maximum_bytes} demand? step={step:?}"); } }
+        { use std::sync::atomic::{AtomicU64, Ordering}; static N: AtomicU64 = AtomicU64::new(0); static LAST: std::sync::Mutex<String> = std::sync::Mutex::new(String::new()); let line = format!("window={window_id} step={step:?} bytes={maximum_bytes} owned_roots_empty={}", partition.store.owned_roots_terminal_is_empty()); let mut last = LAST.lock().unwrap(); if *last != line && N.fetch_add(1, Ordering::Relaxed) < 400 { eprintln!("[DEBUG] partition close {line}"); *last = line; } }
         if step != PluginCloseStep::Complete {
             return Ok(step);
         }
@@ -856,6 +858,7 @@ impl WindowConfigOwnerRegistry {
         let Some(kind) = self.owners.keys().next().copied() else { return close_window_actor(&mut self.actor, &mut self.actor_retirement, maximum_items, maximum_bytes) };
         let owner = self.owners.get_mut(kind).expect("selected window config owner remains registered");
         let step = owner.close_step(maximum_items, maximum_bytes)?;
+        if matches!(step, PluginCloseStep::Pending { released_items: 0, .. }) { use std::sync::atomic::{AtomicUsize, Ordering}; static N: AtomicUsize = AtomicUsize::new(0); if N.fetch_add(1, Ordering::Relaxed) < 3 { eprintln!("[DEBUG] window-config registry kind={kind} stalled items={maximum_items} bytes={maximum_bytes} step={step:?}"); } }
         if step == PluginCloseStep::Complete {
             if !owner.terminal_is_empty() {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner-terminal"), "window config owner reported complete without terminal emptiness"));

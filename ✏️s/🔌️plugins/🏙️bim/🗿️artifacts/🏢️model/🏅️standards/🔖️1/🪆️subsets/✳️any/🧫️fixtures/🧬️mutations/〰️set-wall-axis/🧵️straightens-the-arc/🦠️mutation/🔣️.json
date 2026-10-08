@@ -1,0 +1,16 @@
+{
+  "mutation": "setWallAxis",
+  "id": "w-arc",
+  "axis": {
+    "Line": {
+      "start": {
+        "x": 0,
+        "y": 6
+      },
+      "end": {
+        "x": 8,
+        "y": 6
+      }
+    }
+  }
+}

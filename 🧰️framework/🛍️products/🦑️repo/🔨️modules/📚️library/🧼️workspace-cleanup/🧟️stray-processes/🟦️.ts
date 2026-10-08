@@ -1,5 +1,6 @@
 import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
-import { basename } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 
 /**
  * 🧟Dev-tool executables whose leftovers accumulate across agent/terminal sessions and are safe to reap. Excludes
@@ -95,6 +96,43 @@ function ideHostedPids(rows: readonly ProcessRow[]): Set<number> {
   return hosted;
 }
 
+/** 🎛️ The installed dashboard executable (views and the daemon); its path is `…/tools/dashboard-cli/<sha256>/semio`. */
+const DASHBOARD_EXECUTABLE = /\/tools\/dashboard-cli\/[a-f0-9]{64}\/semio(?:\.exe)?(?:["']|\s|$)/;
+/** 🌀️ A workspace daemon of any dashboard build (`semio daemon serve`). */
+const DASHBOARD_DAEMON = /(?:^|[\\/\s"'])semio(?:\.exe)?["']?\s+daemon\s+serve\b/;
+
+/** 🌀️ The pid the dashboard daemon recorded in `daemon.pid` below the dashboard cache directory, if that file names a live number. */
+export function dashboardDaemonPid(dashboardCacheDirectory: string): number | undefined {
+  const file = join(dashboardCacheDirectory, "daemon.pid");
+  if (!existsSync(file)) return;
+  const pid = Number.parseInt(readFileSync(file, "utf8").trim(), 10);
+  return Number.isInteger(pid) && pid > 1 ? pid : undefined;
+}
+
+/**
+ * 🎛️ The dashboard control plane: the recorded daemon, every dashboard executable and daemon process, all their
+ * descendants (the supervised tasks) and the dev-tool launchers above them. `clean` must never take these down.
+ */
+export function dashboardPids(rows: readonly ProcessRow[], daemonPids: readonly number[]): Set<number> {
+  const byPid = new Map(rows.map((row) => [row.pid, row]));
+  const protectedPids = new Set<number>();
+  for (const row of rows) {
+    if (!daemonPids.includes(row.pid) && !DASHBOARD_EXECUTABLE.test(row.command) && !DASHBOARD_DAEMON.test(row.command)) continue;
+    protectedPids.add(row.pid);
+    for (let parent = byPid.get(row.ppid); parent && isDevLeftoverRow(parent); parent = byPid.get(parent.ppid)) protectedPids.add(parent.pid);
+  }
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const row of rows) {
+      if (!protectedPids.has(row.ppid) || protectedPids.has(row.pid)) continue;
+      protectedPids.add(row.pid);
+      changed = true;
+    }
+  }
+  return protectedPids;
+}
+
 function activeSemioTechBuildPids(rows: readonly ProcessRow[]): Set<number> {
   const byPid = new Map(rows.map((row) => [row.pid, row]));
   const protectedPids = new Set<number>();
@@ -128,9 +166,9 @@ function rowDevLeftoverLabel(row: ProcessRow, byPid: ReadonlyMap<number, Process
  * 🧟️Plans reaping of dev-tool leftovers from crashed or abandoned terminal/agent sessions. Zombies whose `comm` is
  * `<defunct>` match via their parent's executable name or command markers.
  */
-export function planStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number): StrayProcessRemoval[] {
+export function planStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number, daemonPids: readonly number[] = []): StrayProcessRemoval[] {
   const byPid = new Map(rows.map((row) => [row.pid, row]));
-  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows), ...activeSemioTechBuildPids(rows)]);
+  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows), ...activeSemioTechBuildPids(rows), ...dashboardPids(rows, daemonPids)]);
   const removals: StrayProcessRemoval[] = [];
   const killed = new Set<number>();
   const liveLeftovers = rows
@@ -155,8 +193,8 @@ export function planStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: n
   return removals;
 }
 
-function applyStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number, dry: boolean): StrayProcessRemoval[] {
-  const plan = planStrayProcessRemovals(rows, selfPid);
+function applyStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number, dry: boolean, daemonPids: readonly number[]): StrayProcessRemoval[] {
+  const plan = planStrayProcessRemovals(rows, selfPid, daemonPids);
   if (!dry) {
     for (const row of plan) {
       const target = row.action === "reaped-zombie" ? row.ppid : row.pid;
@@ -168,14 +206,16 @@ function applyStrayProcessRemovals(rows: readonly ProcessRow[], selfPid: number,
 
 /**
  * 🧟️Reaps dev leftovers from crashed or abandoned sessions: zombie (`Z` state) rows are reaped by killing their
- * still-live parent, and every other matching live row is killed directly. Never touches this script's own ancestry
- * or IDE-hosted trees.
+ * still-live parent, and every other matching live row is killed directly. Never touches this script's own ancestry,
+ * IDE-hosted trees or the dashboard control plane (the daemon recorded below `dashboardCacheDirectory`, the dashboard
+ * executables and every task they supervise).
  */
-export function cleanKillStrayProcesses(dry: boolean): StrayProcessRemoval[] {
+export function cleanKillStrayProcesses(dry: boolean, dashboardCacheDirectory: string): StrayProcessRemoval[] {
   if (process.platform === "win32") return [];
   const removals: StrayProcessRemoval[] = [];
   for (let pass = 0; pass < 32; pass++) {
-    const batch = applyStrayProcessRemovals(processRows(), process.pid, dry);
+    const daemon = dashboardDaemonPid(dashboardCacheDirectory);
+    const batch = applyStrayProcessRemovals(processRows(), process.pid, dry, daemon === undefined ? [] : [daemon]);
     removals.push(...batch);
     if (batch.length === 0 || dry) break;
   }
@@ -183,9 +223,8 @@ export function cleanKillStrayProcesses(dry: boolean): StrayProcessRemoval[] {
 }
 
 /** 🔎Lists live dev leftovers that would be killed (for audits after `clean`). */
-export function listDevLeftoverRows(rows: readonly ProcessRow[], selfPid: number): ProcessRow[] {
-  const byPid = new Map(rows.map((row) => [row.pid, row]));
-  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows)]);
+export function listDevLeftoverRows(rows: readonly ProcessRow[], selfPid: number, daemonPids: readonly number[] = []): ProcessRow[] {
+  const protectedPids = new Set([...ancestryPids(rows, selfPid), ...ideHostedPids(rows), ...dashboardPids(rows, daemonPids)]);
   return rows.filter((row) => isDevLeftoverRow(row) && !protectedPids.has(row.pid));
 }
 

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-door-type/schema.json",
+  "title": "CreateDoorType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "door_type"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createDoorType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "identity",
+        "label": {
+          "en": "Door type id",
+          "de": "Türtyp-Id"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "door_type": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/artifact.json#/$defs/DoorType",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "value",
+        "label": {
+          "en": "Door type",
+          "de": "Türtyp"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

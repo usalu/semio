@@ -35,6 +35,38 @@
         "command": "bun ./📜️script.ts test long"
       }
     },
+    "test-coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test coverage"
+      },
+      "cache": false
+    },
+    "test-journeys": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test journeys"
+      },
+      "cache": false
+    },
+    "test-load": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test load"
+      },
+      "cache": false
+    },
+    "test-smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test smoke"
+      },
+      "cache": false
+    },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
@@ -125,15 +157,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts daemon",
-        "forwardAllArgs": true
-      },
-      "cache": false
-    },
-    "workflow": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts workflow",
         "forwardAllArgs": true
       },
       "cache": false

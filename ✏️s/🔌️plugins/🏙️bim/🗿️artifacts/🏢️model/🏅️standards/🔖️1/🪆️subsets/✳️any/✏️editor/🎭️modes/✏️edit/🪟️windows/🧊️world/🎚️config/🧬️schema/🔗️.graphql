@@ -1,0 +1,28 @@
+type BimWorldProjection {
+  kind: String!
+  orthographicView: String!
+  axonometricVariant: String!
+  axonometricAngleA: Float!
+  axonometricAngleB: Float!
+  axonometricQuadrant: String!
+  obliqueVariant: String!
+  obliqueAngle: Float!
+  obliqueDepth: Float!
+  onePointAxis: String!
+  fov: Float!
+  twoPointShift: Float!
+  curvilinearFov: Float!
+  curvilinearStrength: Float!
+  curvilinearMapping: String!
+}
+
+type BimWorldWindowConfig {
+  camera: Viewport3dOrbit!
+  projection: BimWorldProjection!
+  isolatedStorey: String!
+  hiddenStoreys: [String!]!
+  sectionEnabled: Boolean!
+  sectionAxis: String!
+  sectionOffset: Float!
+  framed: Boolean!
+}

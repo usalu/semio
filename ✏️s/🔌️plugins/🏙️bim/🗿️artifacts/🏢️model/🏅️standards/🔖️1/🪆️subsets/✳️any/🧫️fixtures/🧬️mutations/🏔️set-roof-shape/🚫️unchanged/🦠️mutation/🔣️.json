@@ -1,0 +1,11 @@
+{
+  "mutation": "setRoofShape",
+  "id": "rf-main",
+  "shape": {
+    "Gable": {
+      "pitch": 0.6,
+      "ridge_direction": 0
+    }
+  },
+  "overhang": 0.4
+}

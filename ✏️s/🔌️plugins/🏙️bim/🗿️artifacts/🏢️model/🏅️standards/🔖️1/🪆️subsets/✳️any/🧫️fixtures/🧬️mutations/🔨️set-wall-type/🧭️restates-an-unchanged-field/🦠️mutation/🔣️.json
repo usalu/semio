@@ -1,0 +1,12 @@
+{
+  "mutation": "setWallType",
+  "id": "wt-300",
+  "name": "Brick 300 (renamed)",
+  "layers": [
+    {
+      "material": "m-brick",
+      "thickness": 0.3,
+      "function": "Structure"
+    }
+  ]
+}

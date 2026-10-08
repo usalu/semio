@@ -1,0 +1,5 @@
+{
+  "mutation": "setRailing",
+  "id": "rl-1",
+  "material": "m-glass"
+}

@@ -1,0 +1,3 @@
+(* ebnf bim.model.snapshot *)
+document = header, body ;
+header = 'schema', space, 'bim.model.snapshot', newline ;

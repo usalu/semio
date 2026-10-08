@@ -1,0 +1,3770 @@
+{
+ "provenance": {
+  "what": "Pointer events at pane-local cells, the child's reporting level and encoding, and the exact report bytes the child reads.",
+  "why": "The embedded terminal dropped every pointer event; a child that asked for mouse tracking (vim, htop, less, the dashboard of another dashboard) got nothing.",
+  "oracle": "prompt_toolkit.key_binding.bindings.mouse tables xterm_sgr_mouse_events, typical_mouse_events and urxvt_mouse_events decode each report back to button, event type and modifiers; the decoded event must equal the fixture event.",
+  "regenerate": "python r2-tc-oracle.py generate --libs <dir holding prompt_toolkit>"
+ },
+ "cases": [
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<0;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<0;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<0;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<4;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<4;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<4;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<8;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<8;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<8;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<16;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<16;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<16;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<28;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<28;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<28;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<1;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<1;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<1;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<5;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<5;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<5;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<9;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<9;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<9;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<17;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<17;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<17;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<29;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<29;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<29;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<2;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<2;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<2;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<6;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<6;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<6;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<10;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<10;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<10;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<18;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<18;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<18;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<30;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<30;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<30;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<0;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<0;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<0;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<4;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<4;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<4;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<8;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<8;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<8;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<16;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<16;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<16;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<28;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<28;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<28;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<2;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<2;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<2;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<6;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<6;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<6;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<10;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<10;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<10;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<18;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<18;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<18;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<30;1;1m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<30;5;3m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<30;80;24m"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<32;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<32;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<32;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<36;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<36;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<36;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<40;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<40;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<40;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<48;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<48;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<48;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<60;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<60;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<60;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<34;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<34;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<34;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<38;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<38;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<38;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<42;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<42;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<42;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<50;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<50;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<50;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<62;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<62;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<62;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<35;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<35;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<35;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<39;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<39;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<39;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<43;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<43;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<43;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<51;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<51;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<51;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<63;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<63;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<63;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<64;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<64;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<64;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<68;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<68;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<68;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<72;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<72;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<72;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<80;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<80;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<80;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<92;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<92;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<92;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<65;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<65;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<65;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<69;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<69;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<69;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<73;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<73;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<73;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<81;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<81;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<81;80;24M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[<93;1;1M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[<93;5;3M"
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[<93;80;24M"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M !!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M %#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M$!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M$%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M$p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M(!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M(%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M(p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M0!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M0%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M0p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M<!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M<%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M<p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M!!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M!%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M!p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M%!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M%%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M%p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M)!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M)%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M)p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M1!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M1%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M1p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M=!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M=%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "middle",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M=p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M\"!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M\"%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M\"p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M&!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M&%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M&p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M*!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M*%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M*p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M2!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M2%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M2p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M>!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M>%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M>p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M#!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M#%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M#p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M'!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M'%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M'p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M+!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M+%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M+p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M3!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M3%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M3p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M?!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M?%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M?p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M#!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M#%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M#p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M'!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M'%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M'p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M+!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M+%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M+p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M3!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M3%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M3p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M?!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M?%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M?p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M@!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M@%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M@p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MD!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MD%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MDp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MH!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MH%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MHp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MP!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MP%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MPp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M\\!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M\\%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "left",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M\\p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MB!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MB%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MBp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MF!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MF%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MFp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MJ!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MJ%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MJp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MR!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MR%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MRp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M^!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M^%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "drag",
+   "button": "right",
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M^p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MC!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MC%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MCp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MG!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MG%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MGp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MK!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MK%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MKp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[MS!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[MS%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[MSp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M_!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M_%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "move",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M_p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M`!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M`%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M`p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Md!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Md%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mdp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Mh!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Mh%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mhp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Mp!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Mp%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mpp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M|!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M|%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M|p8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Ma!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Ma%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Map8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Me!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Me%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mep8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Mi!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Mi%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "alt"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mip8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[Mq!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[Mq%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[Mqp8"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[M}!!"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[M}%#"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [
+    "shift",
+    "alt",
+    "ctrl"
+   ],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[M}p8"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[32;1;1M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[32;5;3M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[32;80;24M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[35;1;1M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[35;5;3M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[35;80;24M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[96;1;1M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[96;5;3M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_up",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[96;80;24M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 0,
+   "y": 0,
+   "bytes": "\u001b[97;1;1M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 4,
+   "y": 2,
+   "bytes": "\u001b[97;5;3M"
+  },
+  {
+   "encoding": "urxvt",
+   "reporting": "motion",
+   "kind": "wheel_down",
+   "button": null,
+   "mods": [],
+   "x": 79,
+   "y": 23,
+   "bytes": "\u001b[97;80;24M"
+  },
+  {
+   "encoding": "x10",
+   "reporting": "press",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 223,
+   "y": 0,
+   "bytes": ""
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "press",
+   "kind": "drag",
+   "button": "left",
+   "mods": [],
+   "x": 1,
+   "y": 1,
+   "bytes": ""
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "off",
+   "kind": "down",
+   "button": "left",
+   "mods": [],
+   "x": 1,
+   "y": 1,
+   "bytes": ""
+  },
+  {
+   "encoding": "sgr",
+   "reporting": "click",
+   "kind": "up",
+   "button": "left",
+   "mods": [],
+   "x": 1,
+   "y": 1,
+   "bytes": ""
+  }
+ ]
+}

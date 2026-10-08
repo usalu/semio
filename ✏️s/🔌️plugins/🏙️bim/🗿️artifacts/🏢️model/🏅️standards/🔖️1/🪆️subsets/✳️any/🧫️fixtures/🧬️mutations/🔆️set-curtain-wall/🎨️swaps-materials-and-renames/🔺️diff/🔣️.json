@@ -1,0 +1,14 @@
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Patched",
+      "mullion": {
+        "Circle": {
+          "diameter": 0.08
+        }
+      },
+      "name": "South Facade",
+      "panel_material": "m-alu"
+    }
+  }
+}

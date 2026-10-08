@@ -49144,6 +49144,7 @@ pub use app::{
     StandardId,
     SubsetId,
     ToolCommandCatalog,
+    TransientDiff,
     TransientView,
     TreeNode,
     TwoDSvgDocumentRenderer,

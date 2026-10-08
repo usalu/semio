@@ -1,0 +1,11 @@
+{
+  "mutation": "setCurtainWall",
+  "id": "cw-1",
+  "panel_material": "m-alu",
+  "mullion": {
+    "Circle": {
+      "diameter": 0.08
+    }
+  },
+  "name": "South Facade"
+}

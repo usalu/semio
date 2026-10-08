@@ -40,6 +40,7 @@ variant = "generation3d"
 app = "s.procedural.generation3d@1/*#editor"
 aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
+viewer_path = "/?plugin=generation3d&role=viewer"
 
 # 🎪️ The `generator` demonstrator row moved to
 # ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that

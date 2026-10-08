@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.bim.model.window_transient;
+message BimWindowTransient {
+  string engagement_input = 1;
+  uint64 pointer_generation = 2;
+}
