@@ -9,10 +9,9 @@ start op
 # keyword from its positional, comma-separated argument list). Every keyword/tag token below is
 # copied verbatim from the real `format!(...)` call sites in that file's `print_image_mutation`,
 # not invented.
-op = no-op | set-snapshot | set-dimensions | set-colorspace | set-bit-depth | set-icc | insert-frame | remove-frame | move-frame | set-frame-delay | set-frame-pixels | set-metadata-entry | remove-metadata-entry
+op = no-op |  set-dimensions | set-colorspace | set-bit-depth | set-icc | insert-frame | remove-frame | move-frame | set-frame-delay | set-frame-pixels | set-metadata-entry | remove-metadata-entry
 
 no-op = "no"
-set-snapshot = "setSnapshot" ":" snapshot
 set-dimensions = "setDimensions" ":" INT "," INT
 set-colorspace = "setColorspace" ":" colorspace
 set-bit-depth = "setBitDepth" ":" INT

@@ -59,7 +59,7 @@ fn base() -> DagSnapshot {
 }
 
 fn apply(base: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
-    mutation.diff(base).diff().apply(base).expect("valid direct Dag mutation")
+    crate::os_spr::apply_diff(mutation.diff(base).diff(), base).expect("valid direct Dag mutation")
 }
 
 fn assert_codecs(mutation: &DagMutation) {
@@ -211,7 +211,7 @@ fn direct_structural_absorb_is_associative_and_preserves_rejection() {
         for value in row["mutations"].as_array().expect("mutation sequence") {
             let mutation = from_pack_value::<DagMutation>(value).expect("sequence mutation");
             let (diff, _) = mutation.diff(&after).into_parts();
-            after = diff.apply(&after).expect("sequential diff");
+            after = crate::os_spr::apply_diff(&diff, &after).expect("sequential diff");
             diffs.push(diff);
         }
         let mut left = DagDiff::default();
@@ -224,7 +224,7 @@ fn direct_structural_absorb_is_associative_and_preserves_rejection() {
             right = diff;
         }
         assert_eq!(left, right, "{}", row["name"]);
-        assert_eq!(left.apply(&before).expect("absorbed diff"), after, "{}", row["name"]);
+        assert_eq!(crate::os_spr::apply_diff(&left, &before).expect("absorbed diff"), after, "{}", row["name"]);
         assert_eq!(to_pack_value(&after.nodes.iter().map(|node| node.id.clone()).collect::<Vec<_>>()), row["nodeOrder"]);
         assert_eq!(to_pack_value(&after.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()), row["edgeOrder"]);
         for (id, x) in row["x"].as_object().expect("expected positions") {
@@ -235,9 +235,9 @@ fn direct_structural_absorb_is_associative_and_preserves_rejection() {
     let before = base();
     let mut rejected = DagDiff::from(DagDelta { created_node: Some(node("x")), created_node_at: Some(u64::MAX), ..Default::default() });
     rejected.absorb(DagMutation::MoveNode(MoveNode { id: "a".into(), x: 3.0, y: 4.0 }).diff(&before).into_parts().0);
-    assert_eq!(rejected.apply(&before).expect_err("rejection survives composition").code, "mutation.apply.invalid-index");
+    assert_eq!(crate::os_spr::apply_diff(&rejected, &before).expect_err("rejection survives composition").code, "mutation.apply.invalid-index");
     assert_eq!(before, base());
-    assert_eq!(DagDiff::from(DagDelta { connected_edge: Some(before.edges[0].clone()), ..Default::default() }).apply(&before).expect_err("unpaired edge index").code, "mutation.apply.incomplete-diff");
+    assert_eq!(crate::os_spr::apply_diff(&DagDiff::from(DagDelta { connected_edge: Some(before.edges[0].clone()), ..Default::default() }), &before).expect_err("unpaired edge index").code, "mutation.apply.incomplete-diff");
 }
 
 #[test]
@@ -254,7 +254,7 @@ fn direct_wire_indices_are_exact_and_apply_rejects_out_of_range() {
         assert_codecs(&mutation);
         assert!(semio_framework_pack_json::to_json_string(&mutation).contains("18446744073709551615"));
         assert!(mutation.print_op().contains("18446744073709551615"));
-        assert_eq!(mutation.diff(&before).diff().apply(&before).expect_err("out of range").code, "mutation.apply.invalid-index");
+        assert_eq!(crate::os_spr::apply_diff(mutation.diff(&before).diff(), &before).expect_err("out of range").code, "mutation.apply.invalid-index");
         let json = semio_framework_pack_json::to_json_string(&mutation);
         for invalid in ["18446744073709551616", "-1", "0.5", "1e21", "null", "\"1\""] {
             assert!(semio_framework_pack_json::from_json_str::<DagMutation>(&json.replace("18446744073709551615", invalid), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{invalid}");

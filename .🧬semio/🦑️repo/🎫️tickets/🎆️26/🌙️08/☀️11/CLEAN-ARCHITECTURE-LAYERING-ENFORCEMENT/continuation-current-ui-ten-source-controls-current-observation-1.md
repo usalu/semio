@@ -1,0 +1,3 @@
+# UI Ten Actual Source Controls and Current Observation
+
+RegisteredGUI275002 actualNx0 readytrue receiptSHA256 `02aac5416d343a60a117e64838596cc303cddb303c8b990e17e0b483a9aa6fe1`,1191bindings/21own-JSON5+5own-AJVsource/schema outcomes. Currentlaterbindingdrift count 3. Nativeearlierimmediateall1191scanexact qualifiedatseparateobservation; no latercurrentapplicability inferred. Same166040descriptorfullpair/budgets/assertions conserved, physicalLayoutAcceptedfalse. Fullrawbeforeafter sourceauthoritytransitions retained.

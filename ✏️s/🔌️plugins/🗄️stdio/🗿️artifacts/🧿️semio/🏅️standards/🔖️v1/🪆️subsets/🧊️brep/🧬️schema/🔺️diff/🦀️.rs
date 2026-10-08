@@ -472,7 +472,7 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
-    fn apply(&self, base: &SemioBrepSnapshot) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
+    fn apply(&self, base: &SemioBrepSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.vertices {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |item| item.id.clone(), ["vertices"])?;

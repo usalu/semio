@@ -1973,6 +1973,7 @@ const ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES: usize = 4_096;
 /// 📬️ The document lane's one-item retained preparation. Without it every verb declaring
 /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
 /// stays dispatch-dead, whatever its classification.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct EnergyModelStorePreparationFactory;
 
 struct EnergyModelStorePreparation {
@@ -2032,7 +2033,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
         let base = self.base.as_ref().ok_or_else(|| "the energy model preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "the energy model preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "the energy model preparation lost its store authority".to_string())?;
         let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;

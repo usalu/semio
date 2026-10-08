@@ -255,6 +255,46 @@
       }
     },
     "program-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "roles",
+                "kind": "text",
+                "valueFlag": "--roles"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -264,6 +304,51 @@
       }
     },
     "hub-document-sweep": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6071/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -273,6 +358,41 @@
       }
     },
     "tool-run-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -282,6 +402,56 @@
       }
     },
     "two-human": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "required": true,
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "users",
+                "kind": "text",
+                "valueFlag": "--users"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -291,6 +461,24 @@
       }
     },
     "connection-budget": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -300,6 +488,24 @@
       }
     },
     "idle-budget": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -309,6 +515,24 @@
       }
     },
     "interaction-latency": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -318,6 +542,24 @@
       }
     },
     "memory-soak": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -349,6 +591,15 @@
       "outputs": []
     },
     "s-host-foreign-kind-s": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -359,6 +610,15 @@
       "outputs": []
     },
     "s-host-pinch-diagram-contrast-s": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "playground:s"
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -504,6 +764,41 @@
       }
     },
     "io-matrix": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "required": true,
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "args": [
+                      "--locale",
+                      "en"
+                    ]
+                  },
+                  {
+                    "id": "de",
+                    "args": [
+                      "--locale",
+                      "de"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -576,6 +871,35 @@
       }
     },
     "time-travel": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "renderer",
+                "kind": "choice",
+                "default": "react",
+                "values": [
+                  {
+                    "id": "react",
+                    "args": [
+                      "--renderer",
+                      "react"
+                    ]
+                  },
+                  {
+                    "id": "wgpu",
+                    "args": [
+                      "--renderer",
+                      "wgpu"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [],

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateWeeklySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch, WeeklySchedulePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -23,18 +23,13 @@ pub fn diff(payload: &super::CreateWeeklySchedule, base: &EnergyModelSnapshot) -
     if let Some(missing) = payload.daily_schedule_ids.iter().find(|candidate| !base.model.schedules.daily.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", missing.0), [missing.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.schedules.weekly.insert(
-        payload.index as usize,
-        crate::schedule::WeeklySchedule {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { weekly: Rows::inserting(payload.index as usize, crate::schedule::WeeklySchedule {
             id: payload.id,
             daily_schedule_ids: {
                 let mut ids = [crate::model::ScheduleId(0); 7];
                 ids.copy_from_slice(&payload.daily_schedule_ids);
                 ids
             },
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

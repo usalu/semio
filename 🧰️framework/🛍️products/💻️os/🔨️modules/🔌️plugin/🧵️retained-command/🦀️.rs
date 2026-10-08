@@ -458,7 +458,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         if cx.should_yield() || cx.fuel_remaining() == 0 {
             return StepOutcome::Yield;
         }
-        cx.consume_fuel(1);
+        if self.checkpoint_pending || self.phase != ArtifactRetainedCommandPhase::Work { cx.consume_fuel(1); }
         if self.checkpoint_pending {
             self.checkpoint_pending = false;
             return self.checkpoint(cx);
@@ -550,7 +550,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 else {
                     return self.fault(cx, b"retained command reducer owner is absent");
                 };
-                match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), config, history, interaction, hover, context: self.context.as_deref(), operation }, cx) {
+                let fuel_before = cx.fuel_remaining();
+                let step = work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), config, history, interaction, hover, context: self.context.as_deref(), operation }, cx);
+                if cx.fuel_remaining() == fuel_before { cx.consume_fuel(1); }
+                match step {
                     Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => {
                         cx.set_stage(stage);
                         self.checkpoint_pending = true;

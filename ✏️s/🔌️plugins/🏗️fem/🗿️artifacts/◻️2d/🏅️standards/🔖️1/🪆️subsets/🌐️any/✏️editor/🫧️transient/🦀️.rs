@@ -80,7 +80,7 @@ impl FemGumballTransient {
     /// instance paints, never history. An entry that does not decode or apply is skipped.
     pub fn preview<S: Clone, M: semio_framework_value::FromValue + protocol::Mutation<S>>(&self, document: &S) -> Option<S> {
         let entries: Vec<M> = self.gestures.values().flat_map(|gesture| &gesture.entries).filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).collect();
-        (!entries.is_empty()).then(|| entries.iter().fold(document.clone(), |state, mutation| protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
+        (!entries.is_empty()).then(|| entries.iter().fold(document.clone(), |state, mutation| protocol::apply_diff(protocol::Mutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
     }
 }
 //#endregion 🔖️State

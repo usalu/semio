@@ -1,0 +1,48 @@
+{
+  "oneOf": [
+    {
+      "const": {
+        "row": {
+          "path": "🧰️framework/control.rs",
+          "before": "before",
+          "after": "after",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8",
+          "forward": {
+            "start": 0,
+            "delete": "before",
+            "insert": "after"
+          },
+          "inverse": {
+            "start": 0,
+            "delete": "after",
+            "insert": "before"
+          }
+        },
+        "current": "before"
+      }
+    },
+    {
+      "const": {
+        "row": {
+          "path": "🧰️framework/control.rs",
+          "before": null,
+          "after": "after",
+          "beforeHash": null,
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8",
+          "forward": {
+            "start": 0,
+            "delete": null,
+            "insert": "after"
+          },
+          "inverse": {
+            "start": 0,
+            "delete": "after",
+            "insert": null
+          }
+        },
+        "current": null
+      }
+    }
+  ]
+}

@@ -6,6 +6,10 @@ while (!existsSync(join(root, "bun.lock"))) root = dirname(root);
 const ticket = dirname(import.meta.dir);
 const cwd = "${workspaceFolder}/" + relative(root, join(ticket, "📥️isolated-verification")).replaceAll("\\", "/");
 const profiles = [
+  ["🧫️fixtures-testing-only-root-service-current🧪️", "root-service-current", 900.728],
+  ["🧫️fixtures-testing-only-root-dev-mirror-source🧪️", "root-dev-mirror-source", 900.725],
+  ["🧫️fixtures-testing-only-root-dev-mirror-process🧪️", "root-dev-mirror-process", 900.726],
+  ["🧫️fixtures-testing-only-root-service-oracles🧪️", "root-service-oracles", 900.727],
   ["🧫️fixtures-testing-only-root-current-corpus-tests🧪️", "root-current-corpus-tests", 900.716],
   ["🧫️fixtures-testing-only-plugin-value-ghost-closure🧪️", "plugin-value-ghost-closure", 900.714],
   ["🧫️fixtures-testing-only-plugin-value-ghost-proof🧪️", "plugin-value-ghost-proof", 900.715],

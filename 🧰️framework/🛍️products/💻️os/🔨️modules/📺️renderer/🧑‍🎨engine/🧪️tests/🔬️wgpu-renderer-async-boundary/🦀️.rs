@@ -505,6 +505,129 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     assert!(authority.terminal_is_empty());
 }
 
+/// 🎯️ LAW: a GLB primitive that carries the `_FACE_ID` (one per triangle, read at the triangle's first corner) and `_VERTEX_ID`
+/// (one per vertex) custom attributes keeps them in the resident mesh table, so face and vertex picking on the native renderer
+/// resolves to the producer's own ids instead of anonymous triangle and vertex indices. A primitive without them still publishes
+/// no id table, and an id accessor of the wrong shape is refused before any mesh is begun.
+/// The attribute convention is `🧫️fixtures/📏️world3d-modelling/🔣️.json`'s `glbSubElementIds` row, pinned for both renderers.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json")).expect("modelling fixture");
+    let row = &fixture["glbSubElementIds"];
+    let attribute_names = (row["faceAttribute"].as_str().unwrap().to_string(), row["vertexAttribute"].as_str().unwrap().to_string());
+    let face_ids: Vec<u32> = row["faceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
+    let vertex_ids: Vec<u32> = row["vertexIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
+    let indices: Vec<u16> = row["indices"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u16).collect();
+
+    fn glb(attributes: &str, indices: &[u16], face: (&[u32], u32), vertex: (&[u32], u32)) -> Vec<u8> {
+        let mut bin = Vec::new();
+        for position in [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]] {
+            for component in position {
+                bin.extend_from_slice(&component.to_le_bytes());
+            }
+        }
+        let index_at = bin.len();
+        for index in indices {
+            bin.extend_from_slice(&index.to_le_bytes());
+        }
+        while bin.len() % 4 != 0 {
+            bin.push(0);
+        }
+        let face_at = bin.len();
+        for id in face.0 {
+            bin.extend_from_slice(&id.to_le_bytes());
+        }
+        let vertex_at = bin.len();
+        for id in vertex.0 {
+            bin.extend_from_slice(&id.to_le_bytes());
+        }
+        let json = format!(
+            r#"{{"scene":0,"scenes":[{{"nodes":[0]}}],"nodes":[{{"mesh":0}}],"buffers":[{{"byteLength":{total}}}],"accessors":[{{"bufferView":0,"componentType":5126,"count":4,"type":"VEC3"}},{{"bufferView":1,"componentType":5123,"count":{index_count},"type":"SCALAR"}},{{"bufferView":2,"componentType":{face_type},"count":{face_count},"type":"SCALAR"}},{{"bufferView":3,"componentType":{vertex_type},"count":{vertex_count},"type":"SCALAR"}}],"bufferViews":[{{"buffer":0,"byteOffset":0,"byteLength":48}},{{"buffer":0,"byteOffset":{index_at},"byteLength":{index_bytes}}},{{"buffer":0,"byteOffset":{face_at},"byteLength":{face_bytes}}},{{"buffer":0,"byteOffset":{vertex_at},"byteLength":{vertex_bytes}}}],"meshes":[{{"primitives":[{{"attributes":{{"POSITION":0{attributes}}},"indices":1,"mode":4}}]}}]}}"#,
+            total = bin.len(),
+            index_count = indices.len(),
+            index_bytes = indices.len() * 2,
+            face_type = face.1,
+            face_count = face.0.len(),
+            face_bytes = face.0.len() * 4,
+            vertex_type = vertex.1,
+            vertex_count = vertex.0.len(),
+            vertex_bytes = vertex.0.len() * 4,
+        );
+        let mut json = json.into_bytes();
+        while json.len() % 4 != 0 {
+            json.push(b' ');
+        }
+        let total = 12 + 8 + json.len() + 8 + bin.len();
+        let mut glb = Vec::with_capacity(total);
+        glb.extend_from_slice(b"glTF");
+        glb.extend_from_slice(&2u32.to_le_bytes());
+        glb.extend_from_slice(&(total as u32).to_le_bytes());
+        glb.extend_from_slice(&(json.len() as u32).to_le_bytes());
+        glb.extend_from_slice(b"JSON");
+        glb.extend_from_slice(&json);
+        glb.extend_from_slice(&(bin.len() as u32).to_le_bytes());
+        glb.extend_from_slice(b"BIN\0");
+        glb.extend_from_slice(&bin);
+        glb
+    }
+
+    fn run(glb: &[u8]) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
+        let mut authority = WorldAssetIoAuthority::default();
+        authority.reserve(1, 1, WorldAssetRequestKind::Glb, "ids.glb", glb.len()).unwrap();
+        let mut owner = authority.take_next().unwrap();
+        for page in glb.chunks(97) {
+            owner.push_page(WorldAssetResponsePage::try_from_owned(page.to_vec()).unwrap()).unwrap();
+        }
+        owner.seal().unwrap();
+        authority.return_owner(owner).unwrap();
+        let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed id probe owner");
+        let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+        for _ in 0..262_144 {
+            match probe.step() {
+                RendererAssetProbeStep::Pending => {}
+                terminal => return (authority, probe, terminal),
+            }
+        }
+        panic!("the GLB id probe never reached a terminal step");
+    }
+
+    fn close(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe) {
+        probe.begin_close();
+        for _ in 0..262_144 {
+            if probe.close_step() {
+                break;
+            }
+        }
+        let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("the exact response closes") else { panic!("shared probe") };
+        authority.finish(owner).unwrap();
+        assert!(authority.terminal_is_empty());
+    }
+
+    let attributes = format!(r#","{}":2,"{}":3"#, attribute_names.0, attribute_names.1);
+    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5125), (&vertex_ids, 5125)));
+    assert!(matches!(step, RendererAssetProbeStep::Ready), "a GLB with sub-element id attributes must materialize");
+    let lease = probe.glb_materialize.as_ref().expect("materializer").lease.expect("sealed mesh");
+    let schema = lease.schema().expect("the id tables seal with the mesh");
+    assert_eq!((schema.vertices, schema.indices), (4, 6));
+    assert_eq!((schema.face_ids, schema.vertex_ids), (2, 4), "one face id per triangle and one vertex id per vertex");
+    let triangle_ids: Vec<u32> = (0..schema.face_ids).map(|item| lease.u32(Mesh3dField::FaceIds, item).unwrap()).collect();
+    let point_ids: Vec<u32> = (0..schema.vertex_ids).map(|item| lease.u32(Mesh3dField::VertexIds, item).unwrap()).collect();
+    assert_eq!(triangle_ids, row["expectedTriangleFaceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect::<Vec<_>>(), "the face id of a triangle is the id of its first corner's vertex");
+    assert_eq!(point_ids, vertex_ids);
+    close(authority, probe);
+
+    let (authority, probe, step) = run(&glb("", &indices, (&face_ids, 5125), (&vertex_ids, 5125)));
+    assert!(matches!(step, RendererAssetProbeStep::Ready));
+    let schema = probe.glb_materialize.as_ref().unwrap().lease.unwrap().schema().unwrap();
+    assert_eq!((schema.face_ids, schema.vertex_ids), (0, 0), "a primitive without the attributes publishes no id table");
+    close(authority, probe);
+
+    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5126), (&vertex_ids, 5125)));
+    assert!(matches!(step, RendererAssetProbeStep::Reject(_) | RendererAssetProbeStep::Fault(_)), "a float id accessor is refused");
+    close(authority, probe);
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn owned_decoder_fixture() -> (WorldAssetIoAuthority, RendererAssetProbe) {
     let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
@@ -1332,7 +1455,7 @@ fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_
 #[test]
 fn native_binary_owns_exactly_one_entrypoint_driver() {
     assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
-    assert_eq!(BINARY_SOURCE.matches("drive_entrypoint(").count(), 3);
+    assert_eq!(BINARY_SOURCE.matches("drive_native_entrypoint(").count(), 3);
 }
 
 #[test]

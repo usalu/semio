@@ -16,7 +16,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use serde_json::Value;
 use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 
@@ -158,25 +158,23 @@ pub use super::scale_node::{scale_node, ScaleNode};
 pub use super::scale_selection::{scale_selection, ScaleSelection};
 
 //#region 🔖️SelectionTransform
-/// 🧭️ Shared diff of the three parametric selection leaves (`drag-`, `rotate-`, `scale-selection`).
-/// `targets` is classified by document membership against `base`: a node id goes through `node`, a
-/// target-region id through `region` (`None` when the transform has no meaning for an axis-aligned
-/// rectangle). An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
-/// `minItems`/`uniqueItems` forbid. Absent ids, locked members and inapplicable regions are skipped with one
-/// `mutation.partial` warning per reason (in that order, ids in payload order); nothing left is
-/// `mutation.target-missing`; an `identity` transform, or survivors that do not move, is
-/// `mutation.no-op`. Every moved record is patched whole from the base, in document order, so the leaf
-/// replays on any base.
-pub fn puzzle2d_selection_diff(
-    base: &Puzzle2dSnapshot,
-    targets: &PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    identity: bool,
-    node: impl Fn(&crate::Puzzle2dNode) -> crate::Puzzle2dNode,
-    region: Option<&dyn Fn(&crate::Puzzle2dTargetRegion) -> crate::Puzzle2dTargetRegion>,
-) -> protocol::MutationOutcome<Puzzle2dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionPatchEntry, Puzzle2dTargetRegionsDelta};
+/// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
+/// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`: a
+/// node id goes through `nodes`, a target-region id through `regions` (none when the transform has no meaning for an
+/// axis-aligned rectangle). An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
+/// `minItems`/`uniqueItems` forbid. Absent ids, locked members and inapplicable regions are skipped with one warning
+/// per reason (in that order, ids in payload order); nothing left is `mutation.target-missing`.
+pub struct Puzzle2dSelection<'a> {
+    pub nodes: Vec<&'a crate::Puzzle2dNode>,
+    pub regions: Vec<&'a crate::Puzzle2dTargetRegion>,
+    pub warnings: Vec<protocol::MutationMessage>,
+}
+
+/// 🗃️ Classifies a selection leaf's `targets` against `base`; `Err` is the leaf's final refusal outcome.
+pub fn puzzle2d_selection<'a>(base: &'a Puzzle2dSnapshot, targets: &PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>, regions_apply: bool) -> Result<Puzzle2dSelection<'a>, protocol::MutationOutcome<Puzzle2dDiff>> {
+    let owners = || targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>();
     if let Err(reason) = puzzle2d_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>());
+        return Err(protocol::MutationOutcome::fatal("mutation.invariant", reason, owners()));
     }
     let (mut missing, mut locked, mut fixed, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&PagedUtf8<{ usize::MAX }>>::new());
     for id in targets {
@@ -186,7 +184,7 @@ pub fn puzzle2d_selection_diff(
             }
             (Some(_), _) => locked.push(id.to_string_owner()),
             (None, Some(entry)) if entry.locked => locked.push(id.to_string_owner()),
-            (None, Some(_)) if region.is_none() => fixed.push(id.to_string_owner()),
+            (None, Some(_)) if !regions_apply => fixed.push(id.to_string_owner()),
             (None, Some(_)) => {
                 survivors.insert(id);
             }
@@ -194,68 +192,43 @@ pub fn puzzle2d_selection_diff(
         }
     }
     if survivors.is_empty() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked node or target region this transform applies to", targets.len()), targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>());
+        return Err(protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked node or target region this transform applies to", targets.len()), owners()));
     }
-    let partial: Vec<protocol::MutationMessage> = [(missing, "not on this board"), (locked, "locked"), (fixed, "axis-aligned target regions do not rotate")]
+    let warnings = [(missing, "not on this board"), (locked, "locked"), (fixed, "axis-aligned target regions do not rotate")]
         .into_iter()
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let nodes: Vec<Puzzle2dNodePatchEntry> = if identity {
-        Vec::new()
-    } else {
-        base.nodes.iter().filter(|entry| survivors.contains(&entry.id)).filter_map(|entry| Some(node(entry)).filter(|next| next != entry).map(|next| Puzzle2dNodePatchEntry { id: entry.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } })).collect()
-    };
-    let regions: Vec<Puzzle2dTargetRegionPatchEntry> = match region.filter(|_| !identity) {
-        Some(transform) => base
-            .target_regions
-            .iter()
-            .filter(|entry| survivors.contains(&entry.id))
-            .filter_map(|entry| Some(transform(entry)).filter(|next| next != entry).map(|next| Puzzle2dTargetRegionPatchEntry { id: entry.id.clone(), patch: Puzzle2dTargetRegionPatch { replacement: Some(next) } }))
-            .collect(),
-        None => Vec::new(),
-    };
+    Ok(Puzzle2dSelection {
+        nodes: base.nodes.iter().filter(|entry| survivors.contains(&entry.id)).collect(),
+        regions: base.target_regions.iter().filter(|entry| regions_apply && survivors.contains(&entry.id)).collect(),
+        warnings,
+    })
+}
+
+/// 📦️ The outcome of a selection leaf's per-member patches: the sparse diff plus the classification warnings, or the
+/// `mutation.no-op` warning (after them) when no surviving member changes.
+pub fn puzzle2d_selection_outcome(
+    selection: Puzzle2dSelection<'_>,
+    targets: &PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
+    nodes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatchEntry>,
+    regions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionPatchEntry>,
+) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dNodesDelta, Puzzle2dTargetRegionsDelta};
     if nodes.is_empty() && regions.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>())]));
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages(selection.warnings.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.iter().map(PagedUtf8::to_string_owner).collect::<Vec<_>>())]));
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: (!nodes.is_empty()).then(|| Puzzle2dNodesDelta { patched: nodes, ..Default::default() }),
         target_regions: (!regions.is_empty()).then(|| Puzzle2dTargetRegionsDelta { patched: regions, ..Default::default() }),
         ..Default::default()
     })
-    .absorb_messages(partial)
+    .absorb_messages(selection.warnings)
 }
 
-/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every record
-/// its forward `outcome` moves — a node's position and each turned handle, a target region's corner and
-/// extent — so an undo never accumulates the float error a negated offset, angle or factor would.
-pub fn puzzle2d_selection_inverse(base: &Puzzle2dSnapshot, outcome: protocol::MutationOutcome<Puzzle2dDiff>) -> Result<Vec<Puzzle2dMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let (diff, _) = outcome.into_parts();
-    let mut steps = Vec::new();
-    for entry in diff.nodes.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.nodes.iter().find(|node| node.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if (before.x, before.y) != (after.x, after.y) {
-            steps.push(move_node(before.id.clone(), before.x, before.y));
-        }
-        for handle in &before.handles {
-            if after.handles.iter().find(|turned| turned.id == handle.id) != Some(handle) {
-                steps.push(replace_node_handle(before.id.clone(), handle.id.clone(), handle.clone()));
-            }
-        }
-    }
-    for entry in diff.target_regions.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.target_regions.iter().find(|region| region.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if (before.x, before.y) != (after.x, after.y) {
-            steps.push(move_target_region(before.id.clone(), before.x, before.y));
-        }
-        if (before.width, before.height) != (after.width, after.height) {
-            steps.push(resize_target_region(before.id.clone(), before.width, before.height));
-        }
-    }
-    steps
-
-    })())
+/// 🔄️ A point turned by an angle (`sin`, `cos`) about a pivot.
+pub fn puzzle2d_rotated(point: (f64, f64), pivot: (f64, f64), sin: f64, cos: f64) -> (f64, f64) {
+    (pivot.0 + (point.0 - pivot.0) * cos - (point.1 - pivot.1) * sin, pivot.1 + (point.0 - pivot.0) * sin + (point.1 - pivot.1) * cos)
 }
 
 /// 🔢️ A selection label's number as `(en, de)`: at most two decimals, trailing zeros and a negative zero
@@ -360,7 +333,7 @@ pub fn puzzle2d_catalogs_invariant(catalogs: &crate::Puzzle2dKindCatalogs) -> Re
 /// (`puzzle2d_handle_world_position`) — a circle's east-zero angle on the node's radius, a rectangle's north-zero
 /// angle on its outline. `None` when no node carries the handle.
 pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &PagedUtf8<{ usize::MAX }>) -> Option<(f64, f64)> {
-    let (node, handle) = document.nodes.iter().find_map(|node| node.handles.iter().find(|handle| handle.id == handle_id).map(|handle| (node, handle)))?;
+    let (node, handle) = document.nodes.iter().find_map(|node| node.handles.iter().find(|handle| &handle.id == handle_id).map(|handle| (node, handle)))?;
     let centre = semio_framework_geometry::Point::new(node.x, node.y);
     let point = if node.shape.as_ref().is_some_and(|shape| shape.eq_str("rectangle")) {
         semio_framework_graph::drawing::routing::handle_position_on_rectangle(centre, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
@@ -446,42 +419,12 @@ pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSn
             mutations.push(disconnect_handles(edge.id.clone()));
         }
     }
-    for edge in &after.edges {
+    for (index, edge) in after.edges.iter().enumerate() {
         match before.edges.iter().find(|entry| entry.id == edge.id) {
-            None => mutations.push(connect_handles(
-                edge.id.clone(),
-                edge.source.clone(),
-                edge.target.clone(),
-                edge.edge_kind.clone(),
-                edge.gap,
-                edge.shift,
-                edge.rise,
-                edge.rotation,
-                edge.turn,
-                edge.tilt,
-                edge.x,
-                edge.y,
-                edge.source_tip.clone(),
-                edge.target_tip.clone(),
-            )),
+            None => super::connect_handles::restore_edge(edge, index, &mut mutations),
             Some(prior) if prior.source != edge.source || prior.target != edge.target => {
                 mutations.push(disconnect_handles(edge.id.clone()));
-                mutations.push(connect_handles(
-                    edge.id.clone(),
-                    edge.source.clone(),
-                    edge.target.clone(),
-                    edge.edge_kind.clone(),
-                    edge.gap,
-                    edge.shift,
-                    edge.rise,
-                    edge.rotation,
-                    edge.turn,
-                    edge.tilt,
-                    edge.x,
-                    edge.y,
-                    edge.source_tip.clone(),
-                    edge.target_tip.clone(),
-                ));
+                super::connect_handles::restore_edge(edge, index, &mut mutations);
             }
             Some(prior) => {
                 if prior.gap != edge.gap || prior.shift != edge.shift || prior.rise != edge.rise || prior.rotation != edge.rotation || prior.turn != edge.turn || prior.tilt != edge.tilt || prior.x != edge.x || prior.y != edge.y {
@@ -578,18 +521,33 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 // typed `Mutation<Puzzle2dSnapshot>`/`MutationDiff<Puzzle2dSnapshot>` impls stay the single source
 // of truth, so every one of this enum's 33 kinds gets `Value` support for free.
 impl MutationDiff<Value> for Puzzle2dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    fn apply(&self, projection: &Value, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
         // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
         // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
         // `serde_json::from_value`/`to_value` on `Puzzle2dSnapshot` directly — that type only
         // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
         // boundary type) is untouched.
         let base: Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
-        let next = MutationDiff::<Puzzle2dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        let next = MutationDiff::<Puzzle2dSnapshot>::apply(self, &base, capability).map_err(|error| error.under(["document"]))?;
         Ok(Value::from(semio_framework_value::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Value> for Puzzle2dDiff {
+    fn inverse(&self, base: &Value) -> Self {
+        let base: Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        DiffAlgebra::<Puzzle2dSnapshot>::inverse(self, &base)
+    }
+    fn between(base: &Value, other: &Value) -> Self {
+        let base: Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        let other: Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(other)).unwrap_or_default();
+        <Self as DiffAlgebra<Puzzle2dSnapshot>>::between(&base, &other)
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle2dSnapshot>::is_empty(self)
     }
 }
 
@@ -766,11 +724,23 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle2dP
 
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
-        MutationDiff::<Puzzle2dSnapshot>::apply(self, projection.typed()).map(Puzzle2dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
+    fn apply(&self, projection: &Puzzle2dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
+        MutationDiff::<Puzzle2dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle2dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
+    fn inverse(&self, base: &Puzzle2dPlaySnapshot) -> Self {
+        DiffAlgebra::<Puzzle2dSnapshot>::inverse(self, base.typed())
+    }
+    fn between(base: &Puzzle2dPlaySnapshot, other: &Puzzle2dPlaySnapshot) -> Self {
+        <Self as DiffAlgebra<Puzzle2dSnapshot>>::between(base.typed(), other.typed())
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle2dSnapshot>::is_empty(self)
     }
 }
 
@@ -852,3 +822,18 @@ impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🏷️literal-id-inverse/🦀️.rs"]
+pub mod literal_id_inverse;
+
+#[path = "⚑️flag/🎮️prepare/🦀️.rs"]
+pub mod flag_preparation;
+
+#[path = "🔤️text/🎮️prepare/🦀️.rs"]
+pub mod text_preparation;
+
+#[path = "🔤️text/↩️inverse/🦀️.rs"]
+pub mod text_inverse;
+
+#[path = "🎮️prepare/🧰️child/🦀️.rs"]
+pub(crate) mod native_preparation_child;

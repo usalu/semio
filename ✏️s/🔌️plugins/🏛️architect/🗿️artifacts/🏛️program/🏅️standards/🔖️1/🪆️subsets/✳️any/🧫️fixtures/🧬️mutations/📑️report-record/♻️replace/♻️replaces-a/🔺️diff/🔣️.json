@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -59,49 +58,46 @@
   "collaboration": null,
   "analyses": null,
   "reports": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "report-record-a",
-        "patch": {
-          "name": "Report Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "kind": "executiveSummary",
-          "title": "Replaced Report Record A",
-          "audience": [],
-          "sections": [],
-          "generatedAt": null,
-          "generatedBy": null,
-          "analysisIds": [],
-          "format": null,
-          "fileRef": null,
-          "distributionList": [],
-          "approvalStatus": "pending",
-          "approverId": null,
-          "version": "",
-          "templateId": null,
-          "parameters": [],
-          "confidentiality": null,
-          "expiryDate": null,
-          "relatedDecisionIds": []
-        }
+        "name": "Report Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "kind": "executiveSummary",
+        "title": "Replaced Report Record A",
+        "audience": [],
+        "sections": [],
+        "generatedAt": null,
+        "generatedBy": null,
+        "analysisIds": [],
+        "format": null,
+        "fileRef": null,
+        "distributionList": [],
+        "approvalStatus": "pending",
+        "approverId": null,
+        "version": "",
+        "templateId": null,
+        "parameters": [],
+        "confidentiality": null,
+        "expiryDate": null,
+        "relatedDecisionIds": []
       }
     ],
+    "removed": [
+      "report-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "searchFilters": null,
@@ -111,9 +107,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

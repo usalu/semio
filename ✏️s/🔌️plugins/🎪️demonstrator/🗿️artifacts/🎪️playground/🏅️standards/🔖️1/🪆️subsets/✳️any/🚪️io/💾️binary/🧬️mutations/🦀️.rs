@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use protocol::OpBinary;
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
-pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ChangeSchema", crate::standards::v1::subsets::any::schema::mutations::change_schema::BINARY_TAG)];
+pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ChangeSchema", change_schema::BINARY_TAG)];
 
 /// 📦️ Encodes a `PlaygroundMutation` to its binary state-patch form.
 pub fn encode_op(operation: &PlaygroundMutation) -> Result<Vec<u8>, protocol::ProtocolError> {

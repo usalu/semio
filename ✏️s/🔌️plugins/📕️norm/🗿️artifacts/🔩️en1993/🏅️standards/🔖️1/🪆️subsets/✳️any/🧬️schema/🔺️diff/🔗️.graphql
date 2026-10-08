@@ -1,156 +1,139 @@
-# 🧬️ En1993 diff schema — sparse field delta.
+# 🧬️ En1993 diff schema — sparse scalar fields and ordered per-collection row edits.
 
-type En1993Diff {
-  artifact: En1993Artifact @state(class: ARTIFACT)
-  annex: String @state(class: ARTIFACT)
-  nEdKn: Float @state(class: ARTIFACT)
-  mEdKnm: Float @state(class: ARTIFACT)
-  vEdKn: Float @state(class: ARTIFACT)
-  aMm2: Float @state(class: ARTIFACT)
-  aVMm2: Float @state(class: ARTIFACT)
-  wPlMm3: Float @state(class: ARTIFACT)
-  fYMpa: Float @state(class: ARTIFACT)
-  fUMpa: Float @state(class: ARTIFACT)
-  chi: Float @state(class: ARTIFACT)
-  aNetMm2: Float @state(class: ARTIFACT)
-  tensionNEdKn: Float @state(class: ARTIFACT)
-  fireThicknessMm: Float @state(class: ARTIFACT)
-  fireRating: String @state(class: ARTIFACT)
-  fireMassivity: Float @state(class: ARTIFACT)
-  fireMu0: Float @state(class: ARTIFACT)
-  fireDesignTemperatureC: Float @state(class: ARTIFACT)
-  cfBBarMm: Float @state(class: ARTIFACT)
-  cfTMm: Float @state(class: ARTIFACT)
-  cfKSigma: Float @state(class: ARTIFACT)
-  cfPsi: Float @state(class: ARTIFACT)
-  cfNEdKn: Float @state(class: ARTIFACT)
-  cfGrossResistanceKn: Float @state(class: ARTIFACT)
-  stainlessMEdKnm: Float @state(class: ARTIFACT)
-  stainlessWPlMm3: Float @state(class: ARTIFACT)
-  stainlessFYMpa: Float @state(class: ARTIFACT)
-  platedLambdaP: Float @state(class: ARTIFACT)
-  platedSigmaEdMpa: Float @state(class: ARTIFACT)
-  siloTMm: Float @state(class: ARTIFACT)
-  siloRMm: Float @state(class: ARTIFACT)
-  shellSigmaXEdMpa: Float @state(class: ARTIFACT)
-  siloK: Float @state(class: ARTIFACT)
-  siloGammaKnM3: Float @state(class: ARTIFACT)
-  siloDepthM: Float @state(class: ARTIFACT)
-  boltFEdKn: Float @state(class: ARTIFACT)
-  boltNBolts: Int @state(class: ARTIFACT)
-  boltASMm2: Float @state(class: ARTIFACT)
-  boltE1Mm: Float @state(class: ARTIFACT)
-  boltE2Mm: Float @state(class: ARTIFACT)
-  boltD0Mm: Float @state(class: ARTIFACT)
-  boltDMm: Float @state(class: ARTIFACT)
-  boltTMm: Float @state(class: ARTIFACT)
-  boltFUMpa: Float @state(class: ARTIFACT)
-  boltFUbMpa: Float @state(class: ARTIFACT)
-  weldAMm: Float @state(class: ARTIFACT)
-  weldLMm: Float @state(class: ARTIFACT)
-  weldFUMpa: Float @state(class: ARTIFACT)
-  weldSteelGrade: String @state(class: ARTIFACT)
-  weldFEdKn: Float @state(class: ARTIFACT)
-  deltaSigmaMpa: Float @state(class: ARTIFACT)
-  fatigueCategory: Int @state(class: ARTIFACT)
-  fatigueMethod: String @state(class: ARTIFACT)
-  t10SteelSubgrade: String @state(class: ARTIFACT)
-  t10ActualThicknessMm: Float @state(class: ARTIFACT)
-  t10TEdC: Float @state(class: ARTIFACT)
-  tensionComponentFUkKn: Float @state(class: ARTIFACT)
-  tensionComponentFKKn: Float @state(class: ARTIFACT)
-  tensionComponentNEdKn: Float @state(class: ARTIFACT)
-  hssWElMm3: Float @state(class: ARTIFACT)
-  hssFYMpa: Float @state(class: ARTIFACT)
-  hssSectionClass: Int @state(class: ARTIFACT)
-  hssMEdKnm: Float @state(class: ARTIFACT)
-  bridgeLambda: Float @state(class: ARTIFACT)
-  bridgePhi2: Float @state(class: ARTIFACT)
-  bridgeDeltaSigmaPMpa: Float @state(class: ARTIFACT)
-  towerWindFactor: Float @state(class: ARTIFACT)
-  towerNEdKn: Float @state(class: ARTIFACT)
-  pileSigmaMpa: Float @state(class: ARTIFACT)
-  pileKRed: Float @state(class: ARTIFACT)
-  pileNEdKn: Float @state(class: ARTIFACT)
-  craneFZEdKn: Float @state(class: ARTIFACT)
-  craneWheelContactLengthMm: Float @state(class: ARTIFACT)
-  craneDispersionMm: Float @state(class: ARTIFACT)
-  craneTWMm: Float @state(class: ARTIFACT)
+enum En1993RowOp {
+  INSERT
+  REMOVE
+  REPLACE
 }
 
-type En1993Artifact {
-  annex: String
-  nEdKn: Float
-  mEdKnm: Float
-  vEdKn: Float
-  aMm2: Float
-  aVMm2: Float
-  wPlMm3: Float
-  fYMpa: Float
-  fUMpa: Float
-  chi: Float
-  aNetMm2: Float
-  tensionNEdKn: Float
-  fireThicknessMm: Float
-  fireRating: String
-  fireMassivity: Float
-  fireMu0: Float
-  fireDesignTemperatureC: Float
-  cfBBarMm: Float
-  cfTMm: Float
-  cfKSigma: Float
-  cfPsi: Float
-  cfNEdKn: Float
-  cfGrossResistanceKn: Float
-  stainlessMEdKnm: Float
-  stainlessWPlMm3: Float
-  stainlessFYMpa: Float
-  platedLambdaP: Float
-  platedSigmaEdMpa: Float
-  siloTMm: Float
-  siloRMm: Float
-  shellSigmaXEdMpa: Float
-  siloK: Float
-  siloGammaKnM3: Float
-  siloDepthM: Float
-  boltFEdKn: Float
-  boltNBolts: Int
-  boltASMm2: Float
-  boltE1Mm: Float
-  boltE2Mm: Float
-  boltD0Mm: Float
-  boltDMm: Float
-  boltTMm: Float
-  boltFUMpa: Float
-  boltFUbMpa: Float
-  weldAMm: Float
-  weldLMm: Float
-  weldFUMpa: Float
-  weldSteelGrade: String
-  weldFEdKn: Float
-  deltaSigmaMpa: Float
-  fatigueCategory: Int
-  fatigueMethod: String
-  t10SteelSubgrade: String
-  t10ActualThicknessMm: Float
-  t10TEdC: Float
-  tensionComponentFUkKn: Float
-  tensionComponentFKKn: Float
-  tensionComponentNEdKn: Float
-  hssWElMm3: Float
-  hssFYMpa: Float
-  hssSectionClass: Int
-  hssMEdKnm: Float
-  bridgeLambda: Float
-  bridgePhi2: Float
-  bridgeDeltaSigmaPMpa: Float
-  towerWindFactor: Float
-  towerNEdKn: Float
-  pileSigmaMpa: Float
-  pileKRed: Float
-  pileNEdKn: Float
-  craneFZEdKn: Float
-  craneWheelContactLengthMm: Float
-  craneDispersionMm: Float
-  craneTWMm: Float
+type En1993Diff {
+  annex: String @state(class: ARTIFACT)
+  materials: [En1993MaterialEdit!]! @state(class: ARTIFACT)
+  sections: [En1993SectionEdit!]! @state(class: ARTIFACT)
+  members: [En1993MemberEdit!]! @state(class: ARTIFACT)
+  loadCases: [En1993LoadCaseEdit!]! @state(class: ARTIFACT)
+  memberActions: [En1993MemberActionEdit!]! @state(class: ARTIFACT)
+  joints: [En1993JointEdit!]! @state(class: ARTIFACT)
+  fatigueDetails: [En1993FatigueDetailEdit!]! @state(class: ARTIFACT)
+  fireExposures: [En1993FireExposureEdit!]! @state(class: ARTIFACT)
+  coldFormedMembers: [En1993ColdFormedMemberEdit!]! @state(class: ARTIFACT)
+  platedPanels: [En1993PlatedPanelEdit!]! @state(class: ARTIFACT)
+  siloShells: [En1993SiloShellEdit!]! @state(class: ARTIFACT)
+  tensionComponents: [En1993TensionComponentEdit!]! @state(class: ARTIFACT)
+  bridgeFatigue: [En1993BridgeFatigueEdit!]! @state(class: ARTIFACT)
+  towerLegs: [En1993TowerLegEdit!]! @state(class: ARTIFACT)
+  piles: [En1993PileEdit!]! @state(class: ARTIFACT)
+  craneRunways: [En1993CraneRunwayEdit!]! @state(class: ARTIFACT)
+}
+
+type En1993MaterialEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SteelMaterial
+}
+
+type En1993SectionEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SteelSection
+}
+
+type En1993MemberEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SteelMember
+}
+
+type En1993LoadCaseEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: LoadCase
+}
+
+type En1993MemberActionEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: MemberAction
+}
+
+type En1993JointEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SteelJoint
+}
+
+type En1993FatigueDetailEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: FatigueDetail
+}
+
+type En1993FireExposureEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: FireExposure
+}
+
+type En1993ColdFormedMemberEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: ColdFormedMember
+}
+
+type En1993PlatedPanelEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: PlatedPanel
+}
+
+type En1993SiloShellEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SiloShell
+}
+
+type En1993TensionComponentEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: TensionComponent
+}
+
+type En1993BridgeFatigueEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: BridgeFatigue
+}
+
+type En1993TowerLegEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: TowerLeg
+}
+
+type En1993PileEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: SteelPile
+}
+
+type En1993CraneRunwayEdit {
+  op: En1993RowOp!
+  index: Int!
+  id: String!
+  value: CraneRunway
 }

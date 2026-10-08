@@ -1,0 +1,7 @@
+# Mounted Group Output Return
+
+Root requires completed original output to remain owned when a common decision refuses before visibility flip. Schema-first four cases cover zero-item denial, untransferred/live owner refusal, resident backing refusal and empty transferred admission. Independent Node Buffer/Ajv/RFC6902 preserves every complete neutral causal row; actual source RED0/1/38 assertions failed only at the absent retain_output API before production.
+
+`retain_output(&mut self,&mut Option<MountedGroupReceiptOutput>,grant)->RetainedCloneStep` moves original vectors and invocation/remaining command string backing into the same transferred, intrinsically empty receipt owner. It admits one item and performs zero copy/allocation/free. Denial returns Progress0 and preserves the original Option; successful return starts funded cancellation. No borrowed metadata source is needed. Existing Group native law now checks original vector pointer after take→zero-item denial→retain→exact paid close for every neutral corpus case. Current source/native green proofs are pending. Source launch13.31 and existing Group family13.23 register the executable routes.
+
+Actual current source27330 completed exit0:1 passed/38 assertions. Current native21091 completed exit0:7/7 combined family,.192s including return denial/original pointer/noheap return and exact paid close. The new helper is ready for Root mounted consumer integration; whole mounted application acceptance remains pending.

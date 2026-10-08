@@ -1,0 +1,45 @@
+{
+  "hostSnapshot": {
+    "schema": "flow.hostSnapshot",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "node-a",
+        "text": "Base plate"
+      },
+      {
+        "kind": "inputNote",
+        "id": "node-b",
+        "text": "Column"
+      }
+    ],
+    "synapses": [],
+    "layout": {
+      "node-a": {
+        "x": 40.0,
+        "y": -12.5
+      },
+      "node-b": {
+        "x": 140.0,
+        "y": 37.5
+      }
+    }
+  },
+  "generation": {
+    "generations": [
+      {
+        "id": "gen-1",
+        "name": "Baseline",
+        "values": {
+          "storeys": 3
+        }
+      }
+    ],
+    "selectedGenerationId": "gen-1"
+  }
+}

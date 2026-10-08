@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteSetpointManager` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SetpointManagerPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeleteSetpointManager, base: &EnergyModelSnapshot) 
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.setpoint_managers.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { setpoint_managers: Rows::removing(&base.model.setpoint_managers, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

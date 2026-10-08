@@ -1,13 +1,13 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": {
-    "added": [],
-    "removed": [
-      "asset-prop"
+    "edits": [
+      {
+        "edit": "remove",
+        "id": "asset-prop"
+      }
     ],
-    "patched": [],
-    "reordered": null
+    "patched": []
   },
   "savedCameras": null,
   "scene": null,

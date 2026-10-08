@@ -41,10 +41,10 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(owner.join("🛰️.proto").is_file());
         }
         {
-            assert!(owner.join("📝️text/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         {
-            assert!(owner.join("💾️binary/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
     }
@@ -79,10 +79,10 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(owner.join("🛰️.proto").is_file());
         }
         {
-            assert!(owner.join("📝️text/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         {
-            assert!(owner.join("💾️binary/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
     }
@@ -117,10 +117,10 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
             assert!(owner.join("🛰️.proto").is_file());
         }
         {
-            assert!(owner.join("📝️text/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         {
-            assert!(owner.join("💾️binary/🦀️.rs").is_file());
+            assert!(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs").is_file());
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory));
     }

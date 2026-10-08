@@ -13,7 +13,7 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtu
   schemaVersion: number; selection: string; fallback: string;
   cases: { id: string; paths: string[]; language: "ts" | "tsx" | "js" | "jsx"; source: string; imports: string[] }[];
   invalid: { id: string; path: string; source: string }[]; liveRegression: string;
-  execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number };
+  execution: { target: string; command: string };
 };
 
 const dataRoot = join(import.meta.dir, "../../🧫️fixtures/🌐️registry-import-language/🧪️imported-data");
@@ -163,17 +163,11 @@ test("catalog closure propagates every physical leaf language", () => {
   expect(reads.sort()).toEqual([...content.keys()].sort());
 });
 
-test("registers the language-neutral compiler gate through Nx and both launch catalogs", () => {
+test("registers the language-neutral compiler gate through Nx", () => {
   expect(vector.schemaVersion).toBe(1);
   expect(vector.selection).toBe("physical-leaf-extension");
   expect(vector.fallback).toBe("none");
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(repoRoot, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
 });

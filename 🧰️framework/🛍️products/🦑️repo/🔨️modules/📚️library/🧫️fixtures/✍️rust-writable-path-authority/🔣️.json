@@ -223,14 +223,7 @@
     "command": "bun ./📜️script.ts test rust-writable-path-authority",
     "packageCommand": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
     "route": "rust-writable-path-authority",
-    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-writable-path-authority.ts",
-    "launchPaths": [
-      ".vscode/🧩️launch.seed.jsonc",
-      ".vscode/launch.json"
-    ],
-    "launchName": "🧹clean🧩️taxonomy✍️rust-writable-path-authority",
-    "launchOrder": 410.196,
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-writable-path-authority --skip-nx-cache"
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"
   },
   "retention": {
     "parentSegments": [

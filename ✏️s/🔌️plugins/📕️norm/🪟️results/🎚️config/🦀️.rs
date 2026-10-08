@@ -1,6 +1,7 @@
 //! 📊️ Shared persisted-local configuration for every concrete Norm Results window.
 
 pub use super::mutations::{change_selected_check_index::ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
+pub use super::diff::NormResultsWindowConfigDiff;
 pub use super::schema::NormResultsWindowConfig;
 
 //#region 🔖️Config
@@ -8,15 +9,6 @@ pub use super::schema::NormResultsWindowConfig;
 
 impl store::ConfigRecord for NormResultsWindowConfig {}
 
-/// 🧮️ Resolved one-field configuration projection produced by its semantic mutation.
-impl protocol::MutationDiff<NormResultsWindowConfig> for NormResultsWindowConfig {
-    fn apply(&self, _base: &NormResultsWindowConfig) -> protocol::MutationApplyResult<NormResultsWindowConfig> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 /// 🪟️ Declares one family's concrete Results-window owner without duplicating its shared schema.

@@ -326,8 +326,6 @@
   },
   "route": {
     "target": "test-root-clean-scaffold-source",
-    "command": "bun ./📜️script.ts test root-clean-scaffold-source",
-    "launchName": "🧹clean🧩️taxonomy🧪️root-clean-scaffold-source",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-clean-scaffold-source"
+    "command": "bun ./📜️script.ts test root-clean-scaffold-source"
   }
 }

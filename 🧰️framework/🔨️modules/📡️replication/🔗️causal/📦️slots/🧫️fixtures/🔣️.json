@@ -1,0 +1,27 @@
+{
+  "capacity": 8192,
+  "pageSlots": 64,
+  "admissionBytes": 262144,
+  "maximumItems": 1,
+  "cases": [
+    {
+      "name": "empty",
+      "occupied": 0
+    },
+    {
+      "name": "first-page",
+      "occupied": 1
+    },
+    {
+      "name": "next-page",
+      "occupied": 65
+    }
+  ],
+  "denied": [
+    "zero",
+    "one-below"
+  ],
+  "expectedRelease": "one-whole-allocation",
+  "preserveSlotIdentity": true,
+  "maximumCloseTurns": 1024
+}

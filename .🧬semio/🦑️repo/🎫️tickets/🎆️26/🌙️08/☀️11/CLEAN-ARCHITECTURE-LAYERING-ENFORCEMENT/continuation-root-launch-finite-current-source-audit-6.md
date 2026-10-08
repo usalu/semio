@@ -1,0 +1,11 @@
+# Root Launch Finite Current Source Audit 6
+
+Read-only source audit on 2026-10-08. No registration command or architecture test was invoked.
+
+The current root-launch-seed-inputs/📜️script.ts accepts register, an explicit numeric epoch, and an explicit input JSON path. It validates against the closed draft-07 schema in 📥️inputs/🔣️schema.json using Ajv. Desired names must be distinct and disjoint from retireNames. It prepares both launch endpoints, removes only named retired rows, updates matching desired rows, adds absent desired rows, compares JSON5 and jsonc-parser parses, and asserts exact desired multiplicity and preservation of other parsed configurations in their original order. It captures producer/input/schema bodies and both before/after file bodies and digests in a prepared/completed journal. It explicitly disclaims atomic batch publication and historical reconstruction.
+
+An independent bun read-only comparison inspected current-1, current-2 and current-3 against both .vscode/🧩️launch.seed.jsonc and .vscode/launch.json. Current-1 contains eight desired names and three retirements. All eight names currently occur exactly once and all three retirements are absent. Its five non-Interface rows remain exact. Its three Interface rows are superseded by current-2: each current-2 row occurs exactly once and is JSON.stringify-exact at both endpoints. The single current-3 core-stage row likewise occurs exactly once and is exact at both endpoints. The comparison process exited 0. This confirms finite current row contents only.
+
+The generated root-launch-seed directory is currently absent. Registration 124–126 execution, before/after custody, retained unrelated rows, and prior reported added/updated counts cannot be independently revalidated. They are not reconstructed or promoted to current proof. Current endpoint equality cannot establish those historical claims, and finite registration does not establish whole launch acceptance or runtime success.
+
+Source limitation: endpoint writes are sequential. The final exact read-before-write guards each file independently but there is no rollback after a later endpoint failure. Unrelated edits to an earlier endpoint after its write are not rechecked at the end. This is disclosed by atomicBatchClaimed:false; treat publication as two guarded writes rather than an atomic transaction.

@@ -889,6 +889,7 @@ impl ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct EquationStorePreparationFactory<P, M> {
     marker: std::marker::PhantomData<fn() -> (P, M)>,
 }

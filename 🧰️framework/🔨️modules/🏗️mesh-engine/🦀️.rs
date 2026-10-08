@@ -24,18 +24,27 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeDomain { Vertex, Corner, Face, Edge }
+impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeDomain {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(&[("vertex", 0), ("corner", 1), ("face", 2), ("edge", 3)]);
+}
 
 /// 🧭️ Authored channel meaning controls transforms and preview expansion.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeSemantic { Normal, Uv, Color, Material, Custom }
+impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeSemantic {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(&[("normal", 0), ("uv", 1), ("color", 2), ("material", 3), ("custom", 4)]);
+}
 
 /// 🧵️ New topology declares how source values combine rather than silently discarding them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeInterpolation { Linear, Nearest, Constant }
+impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeInterpolation {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Enum(&[("linear", 0), ("nearest", 1), ("constant", 2)]);
+}
 
 /// 📦️ First-party owned values permit numeric channels and structured custom metadata.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

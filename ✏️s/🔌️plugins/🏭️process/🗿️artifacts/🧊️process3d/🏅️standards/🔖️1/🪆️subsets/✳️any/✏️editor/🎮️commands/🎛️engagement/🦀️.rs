@@ -4,7 +4,8 @@
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
 use crate::editor::process3d::commands::cursor::{process3d_cursor, process3d_cursor_moves};
-use crate::{op::Process3dMutation, Process3dSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

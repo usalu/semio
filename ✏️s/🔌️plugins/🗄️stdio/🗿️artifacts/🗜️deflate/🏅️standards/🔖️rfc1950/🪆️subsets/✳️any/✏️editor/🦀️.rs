@@ -9,7 +9,7 @@
 
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
-use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
+use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary};
 use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -190,12 +190,9 @@ fn deflate_header_mutations(base: &DeflateSnapshot, method: u8, window_bits: u8,
     params.into_iter().chain(dictionary).collect()
 }
 
-/// 🧩️ The net leaves of one document-details edit: the header leaves it changed, then `set-payload` when the payload changed;
-/// another document schema is the one genuine whole-document replacement (`set-snapshot`).
+/// 🧩️ The net leaves of one document-details edit: the header leaves it changed, then `set-payload` when the payload changed.
+/// The snapshot `schema` is a constant of the artifact and never differs.
 fn deflate_net_mutations(base: &DeflateSnapshot, next: &DeflateSnapshot) -> Vec<DeflateMutation> {
-    if base.schema != next.schema {
-        return vec![DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() })];
-    }
     let payload = (base.payload != next.payload).then(|| DeflateMutation::SetPayload(set_payload::SetPayload { payload: next.payload.clone() }));
     deflate_header_mutations(base, next.compression_method, next.window_bits, next.compression_level_hint, next.dict_id).into_iter().chain(payload).collect()
 }

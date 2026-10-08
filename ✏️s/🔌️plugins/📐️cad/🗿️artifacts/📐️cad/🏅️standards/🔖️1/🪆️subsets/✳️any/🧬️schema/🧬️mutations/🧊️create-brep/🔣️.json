@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-brep",
+  "semanticKind": "create-brep",
+  "displayName": "Create Brep",
+  "emoji": "🧊️",
+  "aggregateVariant": "CreateBrep",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "create-brep",
+  "binaryTag": 19,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"],
+  "editable": false
+}

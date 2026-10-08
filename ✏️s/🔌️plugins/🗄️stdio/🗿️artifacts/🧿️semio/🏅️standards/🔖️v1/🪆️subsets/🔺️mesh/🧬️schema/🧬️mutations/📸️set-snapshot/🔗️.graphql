@@ -1,2 +1,0 @@
-# 📸️ Whole SemioMeshSnapshot replacement.
-input SetSnapshot { snapshot: SemioMeshSnapshot! }

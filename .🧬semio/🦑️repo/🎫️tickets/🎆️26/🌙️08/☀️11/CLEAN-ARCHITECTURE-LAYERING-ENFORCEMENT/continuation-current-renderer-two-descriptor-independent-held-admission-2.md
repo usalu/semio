@@ -1,0 +1,7 @@
+# Current Renderer Two Descriptor Held Admission
+
+Exact fresh green receipt SHA4f97ad530f7cbd3c166d2940613a9f8fe87efefa9f8e6e6093335dc403611ee2 independently matches. All forty-one current bindings have zero drift, including refreshed Store; nineteen retained full authority bodies agree. Twenty-seven normative/adversarial and five own/AJV schema outcomes agree with zero errors.
+
+One complete current fixture pair has exact live preimage, before/after hashes and forward/inverse splices. Independent endpoint comparison confirms only EngineSurfaceRegistry86544→90264 and AdmittedSurfaceMap<World3dState>28400→28440, with all six rows and other fields unchanged. Original three assertion bodies are full authorities and unchanged. Current World before and exact held model after match the bound coupled World receipt and captured full model body. Actual retained compiled diagnostic measurements support both descriptive values, without historical missing-field cause reconstruction.
+
+Admitted for joint twenty-one held-model fresh UI/Board/Product capture and original native verification only. No isolated fixture live application, production publication, current Root ABI success or bounded-stack runtime success is admitted. Source9 admission must recheck current Root-to-initial mapping. Full custody and all three original/new whole plus directpost and live applicability gates remain required before joint publication. Prior single-value green2 drift refusal remains intact.

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeEquipmentGainRadiantFraction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, EquipmentGainPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeEquipmentGainRadiantFraction, base: &EnergyMo
     if existing.radiant_fraction == payload.new_radiant_fraction {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Equipment Gain {} already carries this radiant fraction: {}.", payload.id.0, payload.new_radiant_fraction));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.equipment.iter_mut().find(|item| item.id == payload.id) {
-        item.radiant_fraction = payload.new_radiant_fraction;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { equipment: Rows::modifying(EquipmentGainPatch { radiant_fraction: Some(payload.new_radiant_fraction), ..EquipmentGainPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

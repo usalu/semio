@@ -1,0 +1,24 @@
+{
+  "sourceFixture": "🎯️component-selection-merges/🔣️.json",
+  "cases": [
+    {
+      "scenario": "view-revision",
+      "accepted": true
+    },
+    {
+      "scenario": "selection-replacement",
+      "accepted": true
+    },
+    {
+      "scenario": "surface-replacement",
+      "accepted": false
+    },
+    {
+      "scenario": "controller-replacement",
+      "accepted": false
+    }
+  ],
+  "replacementId": "replacement@source#0.face.0",
+  "replacementOwner": "replacement-owner",
+  "maximumTurns": 4096
+}

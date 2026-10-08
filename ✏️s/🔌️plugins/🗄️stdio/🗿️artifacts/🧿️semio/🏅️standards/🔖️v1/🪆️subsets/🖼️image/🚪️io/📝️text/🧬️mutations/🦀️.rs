@@ -101,8 +101,6 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_image_mutation(m: &SemioImageMutation) -> String {
     match m {
-        SemioImageMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("setSnapshot:{}", enc_snapshot(snapshot)),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) => format!("setDimensions:{width},{height}"),
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) => format!("setColorspace:{}", enc_colorspace(*colorspace)),
         SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }) => format!("setBitDepth:{bit_depth}"),
@@ -119,13 +117,8 @@ pub(crate) fn print_image_mutation(m: &SemioImageMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioImageMutation::PatchSnapshot(crate::standards::v1::subsets::image::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
     match tag {
-        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(rest)? })),
         "setDimensions" => {
             let parts = split_top_level(rest, ',');
             let [w, h] = parts.as_slice() else { return Err(format!("setDimensions: expected 2 fields, got {}", parts.len())) };

@@ -6,12 +6,9 @@ use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::UpdateLayerTraceParams, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_drawing_layer(base, &payload.layer_id) {
+    Ok(match find_drawing_layer(base, &payload.layer_id) {
         Some(DrawingLayerNode::Trace(trace)) => vec![super::mutation::update_layer_trace_params(payload.layer_id.clone(), trace.params.clone())],
         _ => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

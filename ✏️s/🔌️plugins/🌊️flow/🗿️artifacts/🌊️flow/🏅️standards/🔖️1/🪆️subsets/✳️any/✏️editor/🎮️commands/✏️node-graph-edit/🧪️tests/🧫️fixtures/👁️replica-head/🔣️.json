@@ -1,0 +1,10 @@
+{
+  "actors": ["actor-a", "actor-b"],
+  "instances": [73, 74],
+  "node": "add",
+  "drag": [284, 48],
+  "authorAfterFinalize": [100, 48],
+  "peerAfterFinalize": [284, 48],
+  "peerAlternative": null,
+  "authoredTransitions": ["commit", "branch", "supersede"]
+}

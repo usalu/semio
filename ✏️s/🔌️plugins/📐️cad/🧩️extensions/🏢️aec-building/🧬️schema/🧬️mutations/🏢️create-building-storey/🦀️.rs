@@ -1,6 +1,6 @@
 //! 🏢️ Building storey composite mutation source.
 
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
 use semio_s_artifact_cad_cad::{CadMutation, CadNode, CadSnapshot};
 

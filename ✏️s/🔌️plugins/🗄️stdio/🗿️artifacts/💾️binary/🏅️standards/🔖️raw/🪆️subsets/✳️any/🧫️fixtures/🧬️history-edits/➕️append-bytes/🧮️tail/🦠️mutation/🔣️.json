@@ -1,0 +1,29 @@
+{
+  "mutation": {
+    "mutation": "appendBytes",
+    "data": [
+      17,
+      255
+    ]
+  },
+  "before": {
+    "schema": "stdio.binary",
+    "bytes": [
+      0,
+      64,
+      128,
+      255
+    ]
+  },
+  "after": {
+    "schema": "stdio.binary",
+    "bytes": [
+      0,
+      64,
+      128,
+      255,
+      17,
+      255
+    ]
+  }
+}

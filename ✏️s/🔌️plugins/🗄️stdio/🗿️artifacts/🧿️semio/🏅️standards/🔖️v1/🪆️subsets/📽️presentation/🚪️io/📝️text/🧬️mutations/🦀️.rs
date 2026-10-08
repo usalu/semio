@@ -43,8 +43,6 @@ use protocol::{Mutation, OpBinary, OpText};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::io::text::snapshot::enc_presentation_snapshot(snapshot)),
-        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => format!("remove-slide index={index}"),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
@@ -65,17 +63,12 @@ pub(crate) fn print_presentation_mutation(m: &SemioPresentationMutation) -> Stri
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioPresentationMutation::PatchSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::io::text::snapshot::dec_presentation_snapshot(arg("snapshot")?)? })),
         "insert-slide" => Ok(SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? })),
         "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_arg("index")? })),
         "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? })),

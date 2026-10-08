@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeOutdoorAirSystemEconomizerEnabled` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, OutdoorAirSystemPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,10 +13,6 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemEconomizerEnabled, base: &Ene
     if existing.economizer_enabled == payload.new_economizer_enabled {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Outdoor air system {} already has that economizer setting.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.outdoor_air_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.economizer_enabled = payload.new_economizer_enabled;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { outdoor_air_systems: Rows::modifying(OutdoorAirSystemPatch { economizer_enabled: Some(payload.new_economizer_enabled), ..OutdoorAirSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

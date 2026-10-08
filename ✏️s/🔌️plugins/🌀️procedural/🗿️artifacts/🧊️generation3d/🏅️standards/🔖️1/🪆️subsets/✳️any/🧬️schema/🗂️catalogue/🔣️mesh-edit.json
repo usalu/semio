@@ -1,0 +1,1077 @@
+{
+  "category": {
+    "id": "mesh.edit",
+    "emoji": "✏️",
+    "order": 240,
+    "label": {
+      "en": "Mesh editing",
+      "de": "Netzbearbeitung"
+    },
+    "description": {
+      "en": "Modeling operations on selected edges, vertices and faces: bevel, cut, extrude, inset, subdivide, flip and delete.",
+      "de": "Modellieroperationen auf ausgewählten Kanten, Eckpunkten und Flächen: Abschrägen, Schneiden, Extrudieren, Einsetzen, Unterteilen, Umkehren und Löschen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.edit.bevel",
+      "category": "mesh.edit",
+      "emoji": "🔶️",
+      "label": {
+        "en": "Bevel edges",
+        "de": "Kanten abschrägen"
+      },
+      "description": {
+        "en": "Rounds the selected edges of a closed convex mesh with several profile segments.",
+        "de": "Rundet die ausgewählten Kanten eines geschlossenen konvexen Netzes mit mehreren Profilsegmenten ab."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The edges to bevel.",
+            "de": "Die abzuschrägenden Kanten."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "amount",
+          "label": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "description": {
+            "en": "Width of the bevel; it must not reach past neighbouring vertices.",
+            "de": "Breite der Abschrägung; sie darf nicht über benachbarte Eckpunkte hinausreichen."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "segments",
+          "label": {
+            "en": "Segments",
+            "de": "Segmente"
+          },
+          "description": {
+            "en": "Number of segments in the bevel profile.",
+            "de": "Anzahl der Segmente im Abschrägungsprofil."
+          },
+          "type": "integer",
+          "default": 1,
+          "min": 1,
+          "max": 64,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The bevelled mesh.",
+            "de": "Das abgeschrägte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.dissolveEdges",
+      "category": "mesh.edit",
+      "emoji": "🧹️",
+      "label": {
+        "en": "Dissolve edges",
+        "de": "Kanten auflösen"
+      },
+      "description": {
+        "en": "Removes the selected edges and joins the faces next to them.",
+        "de": "Entfernt die ausgewählten Kanten und verbindet die angrenzenden Flächen."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The edges to dissolve.",
+            "de": "Die aufzulösenden Kanten."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh without the dissolved edges.",
+            "de": "Das Netz ohne die aufgelösten Kanten."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.dissolveVertices",
+      "category": "mesh.edit",
+      "emoji": "🫧️",
+      "label": {
+        "en": "Dissolve vertices",
+        "de": "Eckpunkte auflösen"
+      },
+      "description": {
+        "en": "Removes selected vertices and joins their planar neighbourhood into one polygon.",
+        "de": "Entfernt ausgewählte Eckpunkte und verbindet ihre ebene Umgebung zu einem Polygon."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertices to dissolve.",
+            "de": "Die aufzulösenden Eckpunkte."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh without the dissolved vertices.",
+            "de": "Das Netz ohne die aufgelösten Eckpunkte."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertices"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.mergeVertices",
+      "category": "mesh.edit",
+      "emoji": "🧲️",
+      "label": {
+        "en": "Merge vertices",
+        "de": "Eckpunkte verschmelzen"
+      },
+      "description": {
+        "en": "Merges the selected vertices into one and cleans up collapsed polygons.",
+        "de": "Verschmilzt die ausgewählten Eckpunkte zu einem und bereinigt zusammengefallene Polygone."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertices to merge.",
+            "de": "Die zu verschmelzenden Eckpunkte."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "mode",
+          "label": {
+            "en": "Merge at",
+            "de": "Verschmelzen bei"
+          },
+          "description": {
+            "en": "Where the merged vertex ends up.",
+            "de": "Wohin der verschmolzene Eckpunkt gelegt wird."
+          },
+          "type": "enum",
+          "default": "center",
+          "options": [
+            {
+              "value": "first",
+              "label": {
+                "en": "First vertex",
+                "de": "Erster Eckpunkt"
+              }
+            },
+            {
+              "value": "center",
+              "label": {
+                "en": "Center",
+                "de": "Mitte"
+              }
+            },
+            {
+              "value": "distance",
+              "label": {
+                "en": "Within distance",
+                "de": "Innerhalb Abstand"
+              }
+            }
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Distance within which vertices merge when merging by distance.",
+            "de": "Abstand, innerhalb dessen Eckpunkte beim Verschmelzen nach Abstand zusammenfallen."
+          },
+          "type": "length",
+          "default": 0.0001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with merged vertices.",
+            "de": "Das Netz mit verschmolzenen Eckpunkten."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertices"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.loopCut",
+      "category": "mesh.edit",
+      "emoji": "🔪️",
+      "label": {
+        "en": "Cut edge loops",
+        "de": "Kantenschleifen schneiden"
+      },
+      "description": {
+        "en": "Cuts connected quad strips through the selected edges; crossing strips form grids.",
+        "de": "Schneidet zusammenhängende Vierecksstreifen durch die ausgewählten Kanten; sich kreuzende Streifen bilden Raster."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "Edges that mark the strips to cut.",
+            "de": "Kanten, die die zu schneidenden Streifen markieren."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "cuts",
+          "label": {
+            "en": "Cuts",
+            "de": "Schnitte"
+          },
+          "description": {
+            "en": "Number of parallel cuts per strip.",
+            "de": "Anzahl paralleler Schnitte je Streifen."
+          },
+          "type": "integer",
+          "default": 1,
+          "min": 1,
+          "max": 256,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with the new loops.",
+            "de": "Das Netz mit den neuen Schleifen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.knifeCut",
+      "category": "mesh.edit",
+      "emoji": "🗡️",
+      "label": {
+        "en": "Knife cut",
+        "de": "Messerschnitt"
+      },
+      "description": {
+        "en": "Splits one face along the line projected through two points.",
+        "de": "Teilt eine Fläche entlang der durch zwei Punkte projizierten Linie."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The face to cut.",
+            "de": "Die zu schneidende Fläche."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": false
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Start"
+          },
+          "description": {
+            "en": "First point of the cutting line.",
+            "de": "Erster Punkt der Schnittlinie."
+          },
+          "type": "point",
+          "default": [
+            0,
+            -1,
+            0
+          ]
+        },
+        {
+          "name": "end",
+          "label": {
+            "en": "End",
+            "de": "Ende"
+          },
+          "description": {
+            "en": "Second point of the cutting line.",
+            "de": "Zweiter Punkt der Schnittlinie."
+          },
+          "type": "point",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with the split face.",
+            "de": "Das Netz mit der geteilten Fläche."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.extrude",
+      "category": "mesh.edit",
+      "emoji": "⬆️",
+      "label": {
+        "en": "Extrude faces",
+        "de": "Flächen extrudieren"
+      },
+      "description": {
+        "en": "Pushes the selected faces out along their normals and connects them with side faces.",
+        "de": "Schiebt die ausgewählten Flächen entlang ihrer Normalen heraus und verbindet sie mit Seitenflächen."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to extrude.",
+            "de": "Die zu extrudierenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Extrusion length along the normals; negative values push inward.",
+            "de": "Extrusionslänge entlang der Normalen; negative Werte drücken nach innen."
+          },
+          "type": "length",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The extruded mesh.",
+            "de": "Das extrudierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "distance",
+            "along": "normal"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.inset",
+      "category": "mesh.edit",
+      "emoji": "🔳️",
+      "label": {
+        "en": "Inset faces",
+        "de": "Flächen einsetzen"
+      },
+      "description": {
+        "en": "Shrinks each selected face inward and keeps a border ring of faces around it.",
+        "de": "Verkleinert jede ausgewählte Fläche nach innen und behält einen Randring aus Flächen."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to inset.",
+            "de": "Die einzusetzenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "amount",
+          "label": {
+            "en": "Inset",
+            "de": "Einzug"
+          },
+          "description": {
+            "en": "Width of the border ring.",
+            "de": "Breite des Randrings."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with inset faces.",
+            "de": "Das Netz mit eingesetzten Flächen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.subdivide",
+      "category": "mesh.edit",
+      "emoji": "➗️",
+      "label": {
+        "en": "Subdivide faces",
+        "de": "Flächen unterteilen"
+      },
+      "description": {
+        "en": "Splits the selected faces into smaller triangles and keeps their boundary edges.",
+        "de": "Teilt die ausgewählten Flächen in kleinere Dreiecke und behält ihre Randkanten."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to subdivide.",
+            "de": "Die zu unterteilenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The subdivided mesh.",
+            "de": "Das unterteilte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.flip",
+      "category": "mesh.edit",
+      "emoji": "🙃️",
+      "label": {
+        "en": "Flip faces",
+        "de": "Flächen umkehren"
+      },
+      "description": {
+        "en": "Reverses the winding and normals of the selected faces.",
+        "de": "Kehrt Umlaufsinn und Normalen der ausgewählten Flächen um."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to flip.",
+            "de": "Die umzukehrenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with flipped faces.",
+            "de": "Das Netz mit umgekehrten Flächen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.deleteFaces",
+      "category": "mesh.edit",
+      "emoji": "🗑️",
+      "label": {
+        "en": "Delete faces",
+        "de": "Flächen löschen"
+      },
+      "description": {
+        "en": "Removes the selected faces and leaves open boundaries.",
+        "de": "Entfernt die ausgewählten Flächen und hinterlässt offene Ränder."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to delete.",
+            "de": "Die zu löschenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh without the deleted faces.",
+            "de": "Das Netz ohne die gelöschten Flächen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.triangulate",
+      "category": "mesh.edit",
+      "emoji": "🔺️",
+      "label": {
+        "en": "Triangulate",
+        "de": "Triangulieren"
+      },
+      "description": {
+        "en": "Splits every polygon into triangles, including concave planar polygons.",
+        "de": "Zerlegt jedes Polygon in Dreiecke, auch konkave ebene Polygone."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The triangulated mesh.",
+            "de": "Das triangulierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

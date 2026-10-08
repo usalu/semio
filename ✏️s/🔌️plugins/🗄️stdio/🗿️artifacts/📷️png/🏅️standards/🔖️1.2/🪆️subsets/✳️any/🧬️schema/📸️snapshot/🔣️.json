@@ -877,20 +877,20 @@
               "x-semio-ui": {
                 "options": {
                   "perceptual": {
-                    "en": "perceptual",
-                    "de": "perceptual"
+                    "en": "Perceptual",
+                    "de": "Wahrnehmungsorientiert"
                   },
                   "relativeColorimetric": {
-                    "en": "relativeColorimetric",
-                    "de": "relativeColorimetric"
+                    "en": "Relative colorimetric",
+                    "de": "Relativ farbmetrisch"
                   },
                   "saturation": {
-                    "en": "saturation",
-                    "de": "saturation"
+                    "en": "Saturation",
+                    "de": "Sättigung"
                   },
                   "absoluteColorimetric": {
-                    "en": "absoluteColorimetric",
-                    "de": "absoluteColorimetric"
+                    "en": "Absolute colorimetric",
+                    "de": "Absolut farbmetrisch"
                   }
                 }
               }

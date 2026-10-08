@@ -103,8 +103,6 @@
   ],
   "route": {
     "target": "test-root-schema-field-source",
-    "command": "bun ./📜️script.ts test root-schema-field-source",
-    "launchName": "🧹clean🧩️taxonomy🧪️root-schema-field-source",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-schema-field-source"
+    "command": "bun ./📜️script.ts test root-schema-field-source"
   }
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameSetpointManager` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SetpointManagerPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::RenameSetpointManager, base: &EnergyModelSnapshot) 
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Setpoint manager {} already has that name.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.setpoint_managers.iter_mut().find(|item| item.id == payload.id) {
-        item.name = payload.new_name.clone();
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { setpoint_managers: Rows::modifying(SetpointManagerPatch { name: Some(payload.new_name.clone()), ..SetpointManagerPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

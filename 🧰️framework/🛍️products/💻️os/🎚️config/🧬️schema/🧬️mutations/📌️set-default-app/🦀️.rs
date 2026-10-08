@@ -1,6 +1,6 @@
 //! 📌️ `SetDefaultApp` is the authoritative direct leaf for pinning one viewer/editor default.
 
-use super::super::{DefaultApp, OpeningPreferences};
+use super::super::{DefaultAppPin, OpeningDiff, OpeningPreferences};
 use super::clear_default_app::ClearDefaultApp;
 use super::OpeningConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -26,14 +26,12 @@ pub fn set_default_app(dialect: ArtifactDialect, role: AppRole, app: AppRef) -> 
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "default-app", kind: "set-default-app", record: "Set" };
 
-    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)));
+            return MutationOutcome::new(OpeningDiff::default()).warning("mutation.no-op", format!("\"{}\" is already the default {} for \"{}\".", self.app.app_id, role, format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset)));
         }
-        let mut defaults: Vec<DefaultApp> = base.defaults.iter().filter(|entry| !(entry.dialect == self.dialect && entry.role == self.role)).cloned().collect();
-        defaults.push(DefaultApp { dialect: self.dialect.clone(), role: self.role, app: self.app.clone() });
-        MutationOutcome::new(OpeningPreferences { defaults })
+        MutationOutcome::new(OpeningDiff { pins: vec![DefaultAppPin { dialect: self.dialect.clone(), role: self.role, app: Some(self.app.clone()) }] })
     }
 
     fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {

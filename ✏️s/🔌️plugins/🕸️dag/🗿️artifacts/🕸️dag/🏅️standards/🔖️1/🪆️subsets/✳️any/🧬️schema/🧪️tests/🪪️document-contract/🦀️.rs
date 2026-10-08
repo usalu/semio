@@ -1,6 +1,5 @@
 //! 🧪️ Dag neutral document and sparse-edit laws against independent JSON values.
 use crate::{DagSnapshot, DagDiff};
-use protocol::MutationDiff;
 use store::{ArtifactDsl, ArtifactPack};
 
 fn vectors() -> serde_json::Value {
@@ -25,7 +24,7 @@ fn dag_document_contract_exact_json_and_sparse_edits() {
         let before: DagSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff: DagDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), case["diff"]);
-        let after = diff.apply(&before).expect("valid sparse change");
+        let after = protocol::apply_diff(&diff, &before).expect("valid sparse change");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
 }
@@ -47,7 +46,7 @@ fn dag_document_contract_typed_child_refusal() {
     let mut child = before.content.clone();
     child.child_id = "foreign-child".into();
     let diff = DagDiff { content: Some(child), ..Default::default() };
-    assert!(diff.apply(&before).is_err());
+    assert!(protocol::apply_diff(&diff, &before).is_err());
     assert_eq!(before, DagSnapshot::default());
 }
 

@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::{Generation2dSnapshot,Generation2dSnapshotRead};
+use crate::standards::v1::subsets::any::schema::snapshot::{Generation2dSnapshot,Generation2dSnapshotRead};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::*};
 #[test]
 fn sqlite_snapshot_generation_intrinsic_text_preserves_numeric_variants(){

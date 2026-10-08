@@ -1,6 +1,6 @@
 /** 🧬️ SemioMutation — mirror of `🦀️.rs` and of the published JSON carrier `🔣️.json`. Adjacently
  * tagged (`mutation` + `payload`) so a wrapped arm mutation's own `mutation` discriminator never collides
- * with the envelope's: `setSnapshot` replaces the envelope, and each arm wrapper is tagged `apply<Arm>`
+ * with the envelope's: each arm wrapper is tagged `apply<Arm>`
  * and carries that arm's own mutation as `payload.mutation`. */
 import type { SemioSnapshot } from "../📸️snapshot/🟦️.ts";
 import type { SemioBrepMutation } from "../../../🧊️brep/🧬️schema/🧬️mutations/🟦️.ts";
@@ -21,11 +21,8 @@ import type { SemioTableMutation } from "../../../📊️table/🧬️schema/�
 import type { SemioGraphMutation } from "../../../🕸️graph/🧬️schema/🧬️mutations/🟦️.ts";
 import type { SemioObjectMutation } from "../../../📦️object/🧬️schema/🧬️mutations/🟦️.ts";
 import type { SemioKitMutation } from "../../../🧰️kit/🧬️schema/🧬️mutations/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioMutation =
-  | { mutation: "setSnapshot"; payload: { snapshot: SemioSnapshot } }
-  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } }
   | { mutation: "applyBrep"; payload: { mutation: SemioBrepMutation } }
   | { mutation: "applyMesh"; payload: { mutation: SemioMeshMutation } }
   | { mutation: "applyModel"; payload: { mutation: SemioModelMutation } }

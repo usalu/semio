@@ -4,7 +4,6 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import { parse as parseJsonc } from "jsonc-parser";
 
 const snapshot = fileURLToPath(new URL("../../", import.meta.url)), store = resolve(snapshot, "../../.."), root = resolve(store, "../../../../..");
 authoredSnapshotSqliteContract({sql:join(snapshot,"🪶️sqlite/🗄️.sql"),fixtures:join(snapshot,"🧫️fixtures/🪶️sqlite")});
@@ -86,10 +85,10 @@ test("actual owner literals and existing GUI source/native routes identify the s
   expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"', "]"])).toBe(true);
   expect(containsTokens(parsedOwner, ["standard", ":", "crate", "::", "os_io", "::", "StandardId", "(", '"1"', ")"])).toBe(true); expect(containsTokens(parsedOwner, ["subset", ":", "crate", "::", "os_io", "::", "SubsetId", "(", '"*"', ")"])).toBe(true);
   expect(containsTokens(parsedStore, ["pub", "const", "S_SPACE_HISTORY_SCHEMA", ":", "&", "str", "=", JSON.stringify(corpus.owner), ";"])).toBe(true);
-  const seed = parseJsonc(readFileSync(join(root, ".vscode/🧩️launch.seed.jsonc"), "utf8")), project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
+  const project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
   for (const command of ["test-space-history-sqlite-source", "test-space-history-sqlite-native"]) {
-    expect(seed.configurations.filter((row: any) => row.command === `bun nx run @semio-tech/framework-os-kernel:${command} --skip-nx-cache`).length).toBe(1);
     expect(project.targets[command].options.command).toBe(`bun ./📜️script.ts ${command}`);
+    expect(project.targets[command].cache).toBe(false);
   }
   console.log("[DEBUG] existing actual GUI/source/native gate routes and literal SpaceHistory mounts agree");
 });

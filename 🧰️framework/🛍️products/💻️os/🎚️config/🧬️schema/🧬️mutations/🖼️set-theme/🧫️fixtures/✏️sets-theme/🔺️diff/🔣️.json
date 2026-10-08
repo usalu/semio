@@ -1,12 +1,5 @@
 {
-  "appearance": null,
-  "layout": null,
-  "driverId": null,
-  "customDrivers": {},
-  "locale": null,
-  "terminology": null,
-  "themeId": "contrast",
-  "customThemes": {},
-  "keybindingOverrides": {},
-  "namedLayouts": {}
+  "themeId": {
+    "value": "contrast"
+  }
 }

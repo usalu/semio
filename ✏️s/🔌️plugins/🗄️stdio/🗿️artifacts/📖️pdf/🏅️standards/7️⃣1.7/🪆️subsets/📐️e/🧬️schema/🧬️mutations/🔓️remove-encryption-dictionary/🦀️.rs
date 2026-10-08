@@ -2,7 +2,7 @@
 
 use super::insert_encryption_dictionary::InsertEncryptionDictionary;
 use super::PdfEMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -18,11 +18,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveEncryptionDictionary {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "encryption-dictionary", kind: "remove-encryption-dictionary", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        if let Some(id) = support::encryption_dictionary_with(&next, self.version, self.revision) {
-            support::remove_object(&mut next, id);
-        }
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let rows = support::encryption_dictionary_with(base, self.version, self.revision).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {

@@ -4,7 +4,6 @@ op = set snapshot | insert node | remove node | set node kind | set node label
    | set node position | set node param | remove node param | insert edge | remove edge
    | set edge endpoints | set edge kind | drag nodes ;
 
-set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
 insert node = 'insert-node', 'node', '=', node ;
 remove node = 'remove-node', 'id', '=', hex ;
 set node kind = 'set-node-kind', 'id', '=', hex, 'kind', '=', hex ;

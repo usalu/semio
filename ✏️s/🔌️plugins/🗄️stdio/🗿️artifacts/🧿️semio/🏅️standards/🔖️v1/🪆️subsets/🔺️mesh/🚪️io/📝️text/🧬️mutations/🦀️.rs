@@ -62,7 +62,6 @@ use crate::standards::v1::subsets::mesh::schema::mutations::set_primitive_topolo
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
-use crate::standards::v1::subsets::mesh::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
@@ -80,8 +79,6 @@ pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
     match m {
-        SemioMeshMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioMeshMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioMeshMutation::CreateMesh(p) => format!("create-mesh mesh={}", enc_mesh(&p.mesh)),
         SemioMeshMutation::DeleteMesh(p) => format!("delete-mesh id={}", enc_str(&p.id)),
         SemioMeshMutation::CreatePrimitive(p) => format!("create-primitive mesh-id={} primitive={}", enc_str(&p.mesh_id), enc_primitive(&p.primitive)),
@@ -113,16 +110,11 @@ pub(crate) fn print_semio_mesh_mutation(m: &SemioMeshMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioMeshMutation::PatchSnapshot(crate::standards::v1::subsets::mesh::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioMeshMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =

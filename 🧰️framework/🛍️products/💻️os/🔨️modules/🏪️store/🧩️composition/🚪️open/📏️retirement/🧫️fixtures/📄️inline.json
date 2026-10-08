@@ -1,0 +1,24 @@
+{
+  "pageBytes": 4096,
+  "slotBytes": 4098,
+  "maximumItems": 1,
+  "maximumAdmissionBytes": 262144,
+  "cases": [
+    {
+      "id": "one-inline-byte",
+      "inputBytes": 1
+    },
+    {
+      "id": "full-inline-page",
+      "inputBytes": 4096
+    },
+    {
+      "id": "two-inline-pages",
+      "inputBytes": 4097
+    },
+    {
+      "id": "large-alias-input",
+      "inputBytes": 114695
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+[
+  {"catalogId":"wood","machineIds":["circularSaw","tableSaw","bandSaw","chainSaw","drillPress","cncRouter","dowelJig","screwGun"],"capabilityCounts":[1,1,1,1,1,2,1,1]},
+  {"catalogId":"metal","machineIds":["chopSaw","angleGrinder","pillarDrill","magDrill","plasmaCutter","migWelder","studWelder"],"capabilityCounts":[1,1,1,1,1,2,1]},
+  {"catalogId":"concrete","machineIds":["diamondSaw","wallSaw","wireSaw","coreDrill","rotaryHammer","anchorSetter","surfaceGrinder"],"capabilityCounts":[1,1,1,1,1,1,1]},
+  {"catalogId":"robotic","machineIds":["sixAxisMill","gantryCnc","waterjet","laserCutter","assembler"],"capabilityCounts":[2,2,1,1,1]}
+]

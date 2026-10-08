@@ -20,8 +20,8 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
         shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![crate::GradientStop {offset:0.0,color:[1.0,0.0,0.0,1.0]},crate::GradientStop {offset:1.0,color:[0.0,0.0,1.0,0.5]}].into() });
     }
     let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
-    let mut assets = std::collections::BTreeMap::new();
-    assets.insert("img".to_string(), DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(4), height: Some(4) });
+    let mut assets = semio_framework_value::paged::PagedMap::default();
+    assets.insert("img".into(), DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(4), height: Some(4) });
     let image = create_drawing_image_layer("Image", "img");
 
     let mut doc = default_drawing_document("svg-test", None);

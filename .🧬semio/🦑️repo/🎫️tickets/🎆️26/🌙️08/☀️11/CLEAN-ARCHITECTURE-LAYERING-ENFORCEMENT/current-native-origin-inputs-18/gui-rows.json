@@ -1,0 +1,311 @@
+[
+  {
+    "name": "900.246000 Current Native Origin Eighteen Early Seed Red Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache",
+      "SEMIO_EARLY_SEED_CONTROL": "red"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246
+    }
+  },
+  {
+    "name": "900.2460005 Current Native Origin Eighteen Early Seed Current Red Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache",
+      "SEMIO_EARLY_SEED_CONTROL": "red",
+      "SEMIO_EARLY_SEED_RED_ATTEMPT": "2"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.2460005
+    }
+  },
+  {
+    "name": "900.246001 Current Native Origin Eighteen Source Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246001
+    }
+  },
+  {
+    "name": "900.246002 Current Native Origin Eighteen Runtime Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-runtime-custody-inputs-22/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246002
+    }
+  },
+  {
+    "name": "900.246003 Current Native Eighteen Dispatcher Twenty Source Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-dispatcher-inputs-20/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246003
+    }
+  },
+  {
+    "name": "900.246004 Current Native Origin Eighteen Product Capture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" capture product",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246004
+    }
+  },
+  {
+    "name": "900.246005 Current Native Origin Eighteen Product Metadata",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" metadata product",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246005
+    }
+  },
+  {
+    "name": "900.246006 Current Native Origin Eighteen Product Runtime",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-runtime-custody-inputs-22/📜️script.ts\" capture product",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246006
+    }
+  },
+  {
+    "name": "900.246007 Current Native Origin Eighteen Product Whole",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-dispatcher-inputs-20/📜️script.ts\" run product",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246007
+    }
+  },
+  {
+    "name": "900.246008 Current Native Origin Eighteen General UI Capture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" capture ui",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246008
+    }
+  },
+  {
+    "name": "900.246009 Current Native Origin Eighteen General UI Metadata",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" metadata ui",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246009
+    }
+  },
+  {
+    "name": "900.246010 Current Native Origin Eighteen General UI Runtime",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-runtime-custody-inputs-22/📜️script.ts\" capture ui",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.24601
+    }
+  },
+  {
+    "name": "900.246011 Current Native Origin Eighteen General UI Whole",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-dispatcher-inputs-20/📜️script.ts\" run ui",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246011
+    }
+  },
+  {
+    "name": "900.246012 Current Native Origin Eighteen Canonical Board Capture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" capture board",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246012
+    }
+  },
+  {
+    "name": "900.246013 Current Native Origin Eighteen Canonical Board Metadata",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18/📜️script.ts\" metadata board",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246013
+    }
+  },
+  {
+    "name": "900.246014 Current Native Origin Eighteen Canonical Board Runtime",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-runtime-custody-inputs-22/📜️script.ts\" capture board",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246014
+    }
+  },
+  {
+    "name": "900.246015 Current Native Origin Eighteen Canonical Board Whole",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-18 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-dispatcher-inputs-20/📜️script.ts\" run board",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-18",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-data",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-18/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.246015
+    }
+  }
+]

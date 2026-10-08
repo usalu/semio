@@ -106,10 +106,15 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn flow_app_with_registry() -> FlowAppFixture {
+        flow_app_with_actor(semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await
+    }
+
+    /// 🎭️ Constructs a registered fixture whose retained sessions belong to the explicit actor.
+    pub async fn flow_app_with_actor(actor: semio_framework_os_kernel::ActorId) -> FlowAppFixture {
         install_first_party_light_flow_extensions_for_tests();
         let definition = create_flow_app();
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, actor).await;
         app.bind_instance_id(meta("local").instance_id).await;
         FlowAppFixture(app)
     }
@@ -139,10 +144,9 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("retained Flow command publication");
     }
 
-    /// 🚫️ Settles a retained command its handler refuses and returns the handler's own fault message — a verb that
-    /// cannot act says so by name instead of settling as a silent success.
-    pub async fn settle_refusal(app: &mut FlowApp) -> String {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.err().expect("the handler refuses by name").message
+    /// 🚫️ Settles a refused retained command while preserving its typed code and message.
+    pub async fn settle_refusal(app: &mut FlowApp) -> semio_framework_plugin::Fault {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.err().expect("the handler refuses by name")
     }
 
     /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —

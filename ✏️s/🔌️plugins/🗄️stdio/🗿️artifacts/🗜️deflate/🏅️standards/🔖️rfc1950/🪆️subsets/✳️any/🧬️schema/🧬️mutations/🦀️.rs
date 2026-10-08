@@ -1,6 +1,6 @@
 //! 🧬️ DeflateMutation — document mutation dispatch over the typed RFC1950 container fields.
 
-use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot, DeflateDiff};
+use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, DeflateDiff};
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
 use protocol::Mutation;
@@ -13,12 +13,6 @@ pub mod set_compression_params;
 pub mod set_payload;
 #[path = "📖set-preset-dictionary/🦀️.rs"]
 pub mod set_preset_dictionary;
-/// 📐️ Typed content mutation for `stdio.deflate`.
-//#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-//#endregion 🔖️Leaves
-
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
@@ -34,7 +28,6 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = DeflateSnapshot, diff = DeflateDiff, schema = "DeflateMutation")]
 pub enum DeflateMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     /// 🧮️ Sets CMF's compression method/window bits and FLG's compression-level hint together
     /// (they're written to the same two-byte header, so one mutation covers all three).
     SetCompressionParams(set_compression_params::SetCompressionParams),
@@ -50,7 +43,7 @@ pub enum DeflateMutation {
 /// subset's `🔣️oracle.json` mutation catalog (`deflate-rfc1950-any`). The completeness
 /// gate reads that JSON catalog, never this enum, so `kinds_match_enum_variants_and_catalog` below
 /// is what keeps the two lists honest.
-pub const KINDS: &[&str] = &["set-snapshot", "set-compression-params", "set-preset-dictionary", "set-payload"];
+pub const KINDS: &[&str] = &["set-compression-params", "set-preset-dictionary", "set-payload"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Apply
@@ -59,7 +52,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-compression-params", "set-pres
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
     let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -68,33 +61,6 @@ pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &Deflate
     }
 }
 //#endregion 🔖️Apply
-
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &DeflateMutation, base: &DeflateSnapshot) -> protocol::MutationOutcome<DeflateDiff> {
-    protocol::MutationOutcome::new(match this {
-        DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }) => diff_set_compression_params(*method, *window_bits, *level_hint),
-        DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id }) => diff_set_preset_dictionary(*dict_id),
-        DeflateMutation::SetPayload(set_payload::SetPayload { payload }) => diff_set_payload(payload.clone()),
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        DeflateMutation::SetSnapshot(_) => vec![DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        DeflateMutation::SetCompressionParams(_) => vec![DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: base.compression_method, window_bits: base.window_bits, level_hint: base.compression_level_hint })],
-        DeflateMutation::SetPresetDictionary(_) => {
-            vec![DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: base.dict_id })]
-        }
-        DeflateMutation::SetPayload(_) => vec![DeflateMutation::SetPayload(set_payload::SetPayload { payload: base.payload.clone() })],
-    }
-
-    })())
-}
-//#endregion 🔖️MutationTrait
 
 //#region OpCodecs
 
@@ -112,11 +78,7 @@ pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Res
 pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
     use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    let snapshot =
-        DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: Some(0x1234_5678), payload: b"demo-mutation-snapshot-payload".to_vec() };
     vec![
-        DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() }),
-        DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DeflateSnapshot { dict_id: None, compression_level_hint: DeflateLevelHint::Fastest, ..snapshot } }),
         DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Maximum }),
         DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: Some(7) }),
         DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: None }),
@@ -131,15 +93,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<DeflateMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/📈️raises/🦀️.rs"]
-mod set_snapshot_raises_the_flevel_hint_and_extends_the_payload;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

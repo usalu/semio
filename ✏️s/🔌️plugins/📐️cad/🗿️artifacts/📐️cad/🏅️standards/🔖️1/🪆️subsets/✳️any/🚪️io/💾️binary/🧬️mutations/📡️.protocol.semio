@@ -71,6 +71,12 @@ record replace-references tag=18
 field model-definition-id utf8
 field references bytes
 field new-model-definition-id utf8
+record create-brep tag=19
+field child-id utf8
+field target bytes
+field index varint
+record delete-brep tag=20
+field child-id utf8
 
 # target owns a nested record body with four UTF-8 fields in canonical order:
 # artifact-id, artifact-kind, standard, subset. URI text is not a target payload.

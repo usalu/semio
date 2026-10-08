@@ -5,7 +5,7 @@ use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 #[test]
 fn shared_response_fixture_renders_original_labels_and_values() {
-    let input: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧬️schema/📨️response/📤️export/🧫️fixtures/🔣️.json")).unwrap();
+    let input: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = FormsSnapshot::default();
     snapshot.responses = semio_framework_pack_json::from_json_str(&input["cases"][1]["responses"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let view = ViewModel { tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };

@@ -2,12 +2,11 @@
 
 use crate::mutations::*;
 use crate::{Din16798Mutation, Din16798Snapshot};
-use protocol::MutationDiff;
 
 fn apply(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Din16798Snapshot {
     let outcome = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
     assert_eq!(outcome.worst_level(), None, "mutation should apply cleanly: {mutation:?}");
-    MutationDiff::apply(outcome.diff(), base).expect("applies")
+    protocol::apply_diff(outcome.diff(), base).expect("applies")
 }
 
 fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: Din16798Mutation) {

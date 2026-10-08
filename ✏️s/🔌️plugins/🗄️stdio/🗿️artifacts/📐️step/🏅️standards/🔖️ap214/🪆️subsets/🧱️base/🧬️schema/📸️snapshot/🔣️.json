@@ -63,7 +63,18 @@
           "properties": {
             "reference": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "x-semio-ui": {
+                "widget": "reference",
+                "role": "target",
+                "ref": {
+                  "kind": "entity"
+                },
+                "label": {
+                  "en": "Referenced entity",
+                  "de": "Referenzierte Entität"
+                }
+              }
             }
           }
         },
@@ -203,7 +214,18 @@
       "properties": {
         "id": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "ref": {
+              "kind": "entity"
+            },
+            "label": {
+              "en": "Entity instance",
+              "de": "Entitätsinstanz"
+            }
+          }
         },
         "name": {
           "type": "string"

@@ -1,9 +1,12 @@
 //! 🔺️ Diff for `EditCell`.
 
-use crate::standards::v1::subsets::table::schema::diff::{SemioTableDiff, SemioTableRowList};
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::table::schema::diff::{SemioTableColumnDiff, SemioTableDiff, SemioTableRowDiff};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
+/// 🧮️ Replaces one cell: the row's `cells` triple names exactly that cell's new value.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::EditCell, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let Some(col_index) = base.columns.iter().position(|c| c.name == payload.column_name) else {
@@ -18,8 +21,7 @@ pub fn diff(payload: &super::EditCell, base: &SemioTableSnapshot) -> protocol::M
     if *current == payload.new_value {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell #{} {} already has this value.", payload.row_index, payload.column_name));
     }
-    let mut rows = base.rows.clone();
-    rows[payload.row_index].cells[col_index] = payload.new_value.clone();
-    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) })
+    let cells = IndexedTripleDiff { modified: vec![IndexModified { index: col_index, diff: Replace { value: payload.new_value.clone() } }], ..Default::default() };
+    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(IndexedTripleDiff { modified: vec![IndexModified { index: payload.row_index, diff: SemioTableRowDiff { cells: Some(cells) } }], ..Default::default() }) })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "root",
+    "snapshot",
+    "ticket",
+    "capturedManifests",
+    "requiredAliases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ticket": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capturedManifests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "requiredAliases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

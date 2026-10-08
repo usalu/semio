@@ -166,6 +166,7 @@ impl ErasedSnapshotRetirement for MapRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct MapRetirementFactory;
 impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
     fn retire_owned(&self, mut value: MapMutation) -> Box<dyn ErasedSnapshotRetirement> {

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "900.202003 Current Native Ten Dispatcher Twelve Source Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-10 --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-dispatcher-inputs-12/📜️script.ts\" laws",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-10",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-10",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-10/nx-data",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-10/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.202003
+    }
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "title": "Fill Zwischenbericht Cover Page and Maximize Arbeitsprobe Window",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "zwischenbericht mit bestand: The first page is not properly filled. e.g. the arbeitsprobe can take more space must properly cover the window",
+  "summary": "The cover column under-filled the page because WindowColumn over-reserved per-item chrome and both covers carried a -1.2cm fudge; the Arbeitsprobe was a hand-sized includegraphics in a padded minipage. WindowColumn now floors tab heights, measures its real chrome from reference windows and renders as one box of exactly the declared height; generic Window honours image-fit=cover; the cover-fit target height is the true body. Covers use \\textheight and the Arbeitsprobe uses image-fit=cover. Verified: Zwischenbericht, Forschungsbericht, Kompaktbericht and PhD covers all measure ink 42.5 to 799.0 pt (page 842, margins 42.5); full Zwischenbericht rebuilt (193 pages). Manual bookkeeping (ticket_open and ticket_close returned malformed results). Report: 📓️report.md.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "⚪bfd4a90c46d146eba3c2737f5a39705c"
+  ]
+}

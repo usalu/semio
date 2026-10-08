@@ -1,0 +1,9 @@
+{
+  "ordinaryGrantBytes": 32768,
+  "maximumAdmissionBytes": 262144,
+  "maximumItems": 1,
+  "allocationBytes": [32769, 65536, 262144],
+  "refusedAllocationBytes": 262145,
+  "refusedWorkItems": 0,
+  "reportedPhysicalEqualsActual": true
+}

@@ -1,9 +1,8 @@
 //! 🧪️ `set-driver` fixture — `🟰️keeps-driver`.
 //!
-//! Setting the driver to the value the preferences already hold is the leaf's `mutation.no-op` guard: a `no-op` outcome whose whole-record diff restates the unchanged record.
+//! Setting the driver to the value the preferences already hold is the leaf's `mutation.no-op` guard: a `no-op` outcome whose diff is empty.
 //!
-//! 🎚️ `UiPreferencesDiff` is a whole-record diff whose `apply` ignores `base`, so the committed
-//! `🔺️diff` is the full post-op preferences record. Source of truth is the committed JSON quintet in
+//! 🎚️ `UiPreferencesDiff` is a sparse diff: the committed `🔺️diff` names only the preference this leaf touches. Source of truth is the committed JSON quintet in
 //! `../../🧫️fixtures/🟰️keeps-driver/`.
 
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
@@ -33,7 +32,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 fn applies_to_committed_after() {
     let base = before();
     let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
-    let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("set-driver applies to its committed before-preferences");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("set-driver applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "set-driver/keeps-driver: the applied preferences differ from the committed after-snapshot");
 }
 
@@ -45,17 +44,17 @@ fn declared_outcome_holds() {
     let produced = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "set-driver/keeps-driver: an unchanged preference is a warned no-op, never a refusal");
     assert_eq!(produced.messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>(), vec!["mutation.no-op".to_string()], "set-driver/keeps-driver: the only diagnostic is mutation.no-op");
-    assert_eq!(protocol::MutationDiff::apply(produced.diff(), &before()).expect("no-op applies"), before(), "set-driver/keeps-driver: a no-op leaves the preferences untouched");
+    assert_eq!(protocol::apply_diff(produced.diff(), &before()).expect("no-op applies"), before(), "set-driver/keeps-driver: a no-op leaves the preferences untouched");
 }
 
-/// 🔺️ The produced whole-record diff is the committed `🔺️diff`.
+/// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "set-driver/keeps-driver: produced diff differs from the committed 🔺️diff");
     let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
-    assert_eq!(protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-driver/keeps-driver: the committed diff does not carry before to after");
+    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-driver/keeps-driver: the committed diff does not carry before to after");
 }
 
 /// ↩️ The inverse restores the committed before-preferences.
@@ -63,10 +62,10 @@ fn produces_committed_diff() {
 fn inverse_restores_before() {
     let base = before();
     let forward = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward set-driver applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward set-driver applies");
     for step in <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
         let undo = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("set-driver inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("set-driver inverse step applies");
     }
     assert_eq!(snapshot, base, "set-driver/keeps-driver: the inverse did not restore the before-preferences");
 }

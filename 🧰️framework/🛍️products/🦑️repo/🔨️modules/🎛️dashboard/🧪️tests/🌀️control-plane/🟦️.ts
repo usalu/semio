@@ -52,3 +52,29 @@ test("Nx independently schedules every configured renderer language selection", 
     expect(tasks[Object.keys(tasks)[0]!].overrides).toEqual(expected);
   }
 });
+
+test("jsonc-parser independently resolves every launch configuration the dashboard offers", async () => {
+  const {parse}=await import("jsonc-parser");
+  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚀️launch-configurations/🔣️.json",import.meta.url),"utf8"));
+  const errors:unknown[]=[],document=parse(fixture.launch,errors,{allowTrailingComma:true});expect(errors).toEqual([]);
+  const defaults=new Map<string,string>(document.inputs.filter((input:{default?:string})=>typeof input.default==="string").map((input:{id:string,default:string})=>[input.id,input.default]));
+  const resolve=(value:string,workspace:string):string|undefined=>{let failed=false;const text=value.replace(/\$\{([^}]+)\}/g,(_,variable:string)=>{if(variable==="workspaceFolder")return workspace;const id=variable.startsWith("input:")?variable.slice(6):undefined,found=id===undefined?undefined:defaults.get(id);if(found===undefined){failed=true;return"";}return found;});return failed?undefined:text;};
+  const relative=(value:string)=>resolve(value,"\u0000")?.replaceAll("\u0000/","").replaceAll("\u0000","");
+  const processes=new Map<string,object>(),labels=new Map<string,string>();
+  for(const row of document.configurations){
+    if(row.type!=="node-terminal"||typeof row.command!=="string")continue;
+    const command=relative(row.command),cwd=relative(row.cwd??"${workspaceFolder}"),env=Object.entries(row.env??{}).map(([key,value])=>[key,relative(String(value))]);
+    if(command===undefined||cwd===undefined||env.some(([,value])=>value===undefined))continue;
+    const plain=!/["'$`&|;<>()*?~#!%^{}[\]\\]/.test(command)&&!command.trim().split(/\s+/)[0]!.includes("="),words=command.trim().split(/\s+/);
+    processes.set(row.name,plain?{cmd:words[0],args:words.slice(1),cwd,env:Object.fromEntries(env)}:{shell:command,cwd,env:Object.fromEntries(env)});
+    labels.set(row.name,`${row.name} — ${resolve(row.command,".")}`);
+  }
+  for(const row of document.compounds){
+    const members=row.configurations.map((name:string)=>processes.get(name));
+    if(members.every(Boolean)){processes.set(row.name,members);labels.set(row.name,`${row.name} — ${row.configurations.join(" + ")}`);}
+  }
+  const offered=fixture.launched.map((row:{label:string})=>row.label.split(" / ").slice(2).join(" / "));
+  expect(offered.toSorted()).toEqual([...labels.values()].toSorted());
+  for(const row of fixture.launched){const name=[...labels].find(([,label])=>row.label.endsWith(` / ${label}`))![0],expected=processes.get(name);expect(row.processes).toEqual(Array.isArray(expected)?expected:[expected]);}
+  for(const name of fixture.omitted)expect(labels.has(name)).toBe(false);
+});

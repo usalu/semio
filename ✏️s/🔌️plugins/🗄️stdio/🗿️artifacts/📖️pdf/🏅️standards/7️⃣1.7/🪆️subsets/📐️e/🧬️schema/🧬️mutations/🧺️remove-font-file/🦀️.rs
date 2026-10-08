@@ -2,7 +2,7 @@
 
 use super::embed_font_file::EmbedFontFile;
 use super::PdfEMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,13 +17,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveFontFile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "font-file", kind: "remove-font-file", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        if let Some(id) = support::font_descriptors(&next).get(self.descriptor_ordinal).copied() {
-            if let Some((key, _)) = support::font_program(&next, id) {
-                support::remove_entry(&mut next, id, &key);
-            }
-        }
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let rows = support::font_descriptors(base).get(self.descriptor_ordinal).copied().and_then(|id| support::font_program(base, id).map(|(key, _)| support::remove_entry_rows(base, id, &key))).unwrap_or_default();
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {

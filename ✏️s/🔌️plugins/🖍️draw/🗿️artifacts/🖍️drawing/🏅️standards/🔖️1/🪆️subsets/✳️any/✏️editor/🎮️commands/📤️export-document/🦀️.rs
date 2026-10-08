@@ -20,8 +20,8 @@ pub struct ExportDocument {
 
 /// 📎️ A filename-safe stem from the document id (or title), so `semio` exports as `semio.pdf`.
 fn export_stem(document: &DrawingSnapshot) -> String {
-    let source = if document.id.trim().is_empty() { document.title.as_deref().unwrap_or("drawing") } else { document.id.as_str() };
-    let stem: String = source.chars().map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect();
+    let source = if document.id.chars().all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
+    let stem: String = source.map(|source| source.chars().map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
     let stem = stem.trim_matches(['-', '.']).to_owned();
     if stem.is_empty() { "drawing".into() } else { stem }
 }

@@ -1,6 +1,14 @@
 //! 🗣️ History editing labels indexed by locale and explanation tier.
 
 pub(super) fn label(key: &str, german: bool, beginner: bool) -> Option<&'static str> {
+    let canonical = match key {
+        "ui.timeTravel.processed" => Some(semio_framework_time_travel::TimeTravelLabel::Processed),
+        "ui.timeTravel.progress" => Some(semio_framework_time_travel::TimeTravelLabel::ReplayProgressValueText),
+        _ => None,
+    };
+    if let Some(label) = canonical {
+        return Some(if german { label.de() } else { label.en() });
+    }
     let variants = match key {
         "ui.timeTravel.refusal.unchanged" => ["Change an input before accepting", "Vor dem Übernehmen eine Eingabe ändern", "Change an input before accepting", "Vor dem Übernehmen eine Eingabe ändern"],
         "ui.timeTravel.preparationProgress" => ["Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten", "Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"],
@@ -8,7 +16,6 @@ pub(super) fn label(key: &str, german: bool, beginner: bool) -> Option<&'static 
         "ui.timeTravel.indicator" => ["History editing", "Verlaufsbearbeitung", "History editing", "Verlaufsbearbeitung"],
         "ui.timeTravel.indicatorTarget" => ["History editing: document before {target}", "Verlaufsbearbeitung: Dokument vor {target}", "History editing: this window shows the document before {target}", "Verlaufsbearbeitung: Dieses Fenster zeigt das Dokument vor {target}"],
         "ui.timeTravel.target" => ["Editing: {target}", "Bearbeitet: {target}", "Edited mutation: {target}", "Bearbeitete Mutation: {target}"],
-        "ui.timeTravel.progress" => ["Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet", "Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet"],
         "ui.timeTravel.worst" => ["Worst outcome: {level}", "Schwerstes Ergebnis: {level}", "Worst outcome of the replayed mutations: {level}", "Schwerstes Ergebnis der neu angewendeten Mutationen: {level}"],
         "ui.timeTravel.accepted" => ["Accepted changes: {count}", "Übernommene Änderungen: {count}", "Accepted changes: {count}", "Übernommene Änderungen: {count}"],
         "ui.timeTravel.accept" => ["Accept draft", "Entwurf übernehmen", "Accept the draft and replay later mutations", "Entwurf übernehmen und spätere Mutationen neu anwenden"],

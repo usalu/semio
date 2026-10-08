@@ -1,6 +1,7 @@
 //! 🎯️ Snapshot-bound point references for framework-owned node selection.
 use crate::{PathSegment, schema::geometry::editing::PathPoint};
 use semio_framework_hash::Hasher;
+use semio_framework_value::paged::Utf8Text;
 
 #[derive(Clone,Debug,PartialEq)]
 pub(crate) struct PointSelectionRef<'a> {
@@ -34,10 +35,14 @@ pub(crate) fn parse_point_id(id:&str)->Option<PointSelectionRef<'_>> {
     Some(PointSelectionRef {layer_id,geometry,index:usize::try_from(index).ok()?,point})
 }
 
-pub(crate) fn point_id(layer_id:&str,geometry:&str,index:usize,point:PathPoint)->Option<String> {
-    let id=format!("{layer_id}:{geometry}:{index}:{}",point_name(point));
+pub(crate) fn point_id(layer_id:&(impl Utf8Text+?Sized),geometry:&str,index:usize,point:PathPoint)->Option<String> {
+    let mut id=String::with_capacity(layer_id.text_bytes()+geometry.len()+32);
+    for chunk in 0..layer_id.text_chunk_count() {id.push_str(layer_id.text_chunk(chunk)?);}
+    let prefix=id.len();
+    use std::fmt::Write;
+    write!(&mut id,":{geometry}:{index}:{}",point_name(point)).ok()?;
     let parsed=parse_point_id(&id)?;
-    if parsed.layer_id!=layer_id || parsed.geometry!=geometry || parsed.index!=index || parsed.point!=point {return None;}
+    if parsed.layer_id!=&id[..prefix] || parsed.geometry!=geometry || parsed.index!=index || parsed.point!=point {return None;}
     Some(id)
 }
 
@@ -61,7 +66,7 @@ pub(crate) fn hash_segment(hasher:&mut Hasher,segment:&PathSegment)->Option<()> 
     Some(())
 }
 
-pub(crate) fn geometry_id(segments:&[PathSegment])->Option<String> {
+pub(crate) fn geometry_id<'a>(segments:impl IntoIterator<Item=&'a PathSegment>)->Option<String> {
     let mut hasher=geometry_hasher();
     for segment in segments {hash_segment(&mut hasher,segment)?;}
     Some(hasher.finalize().to_hex())

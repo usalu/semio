@@ -18,9 +18,6 @@ use semio_framework_value::ToValue;
         pub operations_json: String,
     }
 
-    #[cfg(test)]
-    #[path = "🧪️tests/🦀️.rs"]
-    mod tests;
 
     /// 🛠️ A graph batch uses the framework's closed row vocabulary and one-step transaction; every invalid row
     /// refuses the batch before any mutation is published, and linked nodes disconnect each adjacency once.
@@ -97,3 +94,7 @@ use semio_framework_value::ToValue;
         Ok(Emit::default())
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

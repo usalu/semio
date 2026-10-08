@@ -1,0 +1,169 @@
+{
+  "scene": {
+    "stock": {
+      "id": "beam",
+      "label": "Timber Beam",
+      "solid": {
+        "kind": "box",
+        "width": 3,
+        "depth": 0.2,
+        "height": 0.3
+      },
+      "pose": {
+        "position": [
+          0,
+          0,
+          0.15
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle": 0
+      }
+    },
+    "steps": [
+      {
+        "id": "crosscut",
+        "label": "Crosscut To Length",
+        "enabled": true,
+        "origin": {
+          "machineId": "circularSaw",
+          "capabilityId": "crosscut"
+        },
+        "measure": {
+          "measure": "cut",
+          "tool": {
+            "kind": "box",
+            "width": 0.02,
+            "depth": 0.3,
+            "height": 0.4
+          },
+          "pose": {
+            "position": [
+              1.35,
+              0,
+              0.15
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "angle": 0
+          }
+        }
+      },
+      {
+        "id": "lap-joint-cut",
+        "label": "Cut Lap Joint",
+        "enabled": true,
+        "origin": {
+          "machineId": "cncRouter",
+          "capabilityId": "pocket"
+        },
+        "measure": {
+          "measure": "cut",
+          "tool": {
+            "kind": "box",
+            "width": 0.3,
+            "depth": 0.2,
+            "height": 0.08
+          },
+          "pose": {
+            "position": [
+              0.6,
+              0,
+              0.26
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "angle": 0
+          }
+        }
+      },
+      {
+        "id": "dowel-drill",
+        "label": "Drill Dowel Hole",
+        "enabled": true,
+        "origin": {
+          "machineId": "drillPress",
+          "capabilityId": "bore"
+        },
+        "measure": {
+          "measure": "drill",
+          "radius": 0.004,
+          "depth": 0.08,
+          "pose": {
+            "position": [
+              0.6,
+              0.05,
+              0.19999999999999998
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "angle": 0
+          }
+        }
+      },
+      {
+        "id": "dowel-attach",
+        "label": "Insert Dowel",
+        "enabled": true,
+        "origin": {
+          "machineId": "dowelJig",
+          "capabilityId": "dowel"
+        },
+        "measure": {
+          "measure": "attach",
+          "component": {
+            "kind": "cylinder",
+            "radius": 0.004,
+            "height": 0.12
+          },
+          "pose": {
+            "position": [
+              0.6,
+              0.05,
+              0.21999999999999997
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "angle": 0
+          }
+        }
+      }
+    ]
+  },
+  "volumes": [
+    0.18,
+    0.1788,
+    0.174,
+    0.17399698407105255,
+    0.17400301592894743
+  ],
+  "volumeTolerance": 1e-9,
+  "circularSegments": 512,
+  "poseScalarBits": [
+    {
+      "step": 2,
+      "coordinate": 2,
+      "bits": "3fc9999999999999"
+    },
+    {
+      "step": 3,
+      "coordinate": 2,
+      "bits": "3fcc28f5c28f5c28"
+    }
+  ]
+}

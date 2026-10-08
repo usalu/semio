@@ -1,0 +1,353 @@
+{
+  "category": {
+    "id": "mesh.interchange",
+    "emoji": "💾️",
+    "order": 270,
+    "label": {
+      "en": "Mesh import and export",
+      "de": "Netz-Import und -Export"
+    },
+    "description": {
+      "en": "Read and write meshes as OBJ, STL, GLB or editable JSON.",
+      "de": "Netze als OBJ, STL, GLB oder bearbeitbares JSON lesen und schreiben."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.interchange.exportObj",
+      "category": "mesh.interchange",
+      "emoji": "🗒️",
+      "label": {
+        "en": "Export OBJ",
+        "de": "OBJ exportieren"
+      },
+      "description": {
+        "en": "Writes the mesh vertices and polygon faces as OBJ text.",
+        "de": "Schreibt Eckpunkte und Polygonflächen des Netzes als OBJ-Text."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "label": {
+            "en": "OBJ",
+            "de": "OBJ"
+          },
+          "description": {
+            "en": "The OBJ file content.",
+            "de": "Der Inhalt der OBJ-Datei."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.interchange.exportJson",
+      "category": "mesh.interchange",
+      "emoji": "🧾️",
+      "label": {
+        "en": "Export JSON",
+        "de": "JSON exportieren"
+      },
+      "description": {
+        "en": "Writes the editable indexed vertices and polygon faces as JSON text.",
+        "de": "Schreibt die bearbeitbaren indizierten Eckpunkte und Polygonflächen als JSON-Text."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "label": {
+            "en": "JSON",
+            "de": "JSON"
+          },
+          "description": {
+            "en": "The mesh as JSON text.",
+            "de": "Das Netz als JSON-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.interchange.exportStl",
+      "category": "mesh.interchange",
+      "emoji": "🧊️",
+      "label": {
+        "en": "Export STL",
+        "de": "STL exportieren"
+      },
+      "description": {
+        "en": "Writes the mesh as binary STL, encoded as base64 text.",
+        "de": "Schreibt das Netz als binäres STL, als Base64-Text kodiert."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "stl",
+          "label": {
+            "en": "STL",
+            "de": "STL"
+          },
+          "description": {
+            "en": "The STL file content as base64 text.",
+            "de": "Der STL-Dateiinhalt als Base64-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.interchange.exportGlb",
+      "category": "mesh.interchange",
+      "emoji": "📦️",
+      "label": {
+        "en": "Export GLB",
+        "de": "GLB exportieren"
+      },
+      "description": {
+        "en": "Writes the mesh as a binary glTF file, encoded as base64 text.",
+        "de": "Schreibt das Netz als binäre glTF-Datei, als Base64-Text kodiert."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "glb",
+          "label": {
+            "en": "GLB",
+            "de": "GLB"
+          },
+          "description": {
+            "en": "The GLB file content as base64 text.",
+            "de": "Der GLB-Dateiinhalt als Base64-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.interchange.importObj",
+      "category": "mesh.interchange",
+      "emoji": "🗂️",
+      "label": {
+        "en": "Import OBJ",
+        "de": "OBJ importieren"
+      },
+      "description": {
+        "en": "Reads OBJ text into an editable polygon mesh.",
+        "de": "Liest OBJ-Text in ein bearbeitbares Polygonnetz."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The OBJ file content.",
+            "de": "Der Inhalt der OBJ-Datei."
+          },
+          "type": "text",
+          "default": ""
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The imported mesh.",
+            "de": "Das importierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.interchange.importStl",
+      "category": "mesh.interchange",
+      "emoji": "📥️",
+      "label": {
+        "en": "Import STL",
+        "de": "STL importieren"
+      },
+      "description": {
+        "en": "Reads base64 STL text into a polygon mesh.",
+        "de": "Liest Base64-STL-Text in ein Polygonnetz."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The STL file content as base64 text.",
+            "de": "Der STL-Dateiinhalt als Base64-Text."
+          },
+          "type": "text",
+          "default": ""
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The imported mesh.",
+            "de": "Das importierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.interchange.importGlb",
+      "category": "mesh.interchange",
+      "emoji": "📂️",
+      "label": {
+        "en": "Import GLB",
+        "de": "GLB importieren"
+      },
+      "description": {
+        "en": "Reads a base64 GLB file into a polygon mesh.",
+        "de": "Liest eine Base64-GLB-Datei in ein Polygonnetz."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The GLB file content as base64 text.",
+            "de": "Der GLB-Dateiinhalt als Base64-Text."
+          },
+          "type": "text",
+          "default": ""
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The imported mesh.",
+            "de": "Das importierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    }
+  ]
+}

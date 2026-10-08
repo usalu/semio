@@ -1,0 +1,32 @@
+# Original Owned Dispatch Admission
+
+The direct dispatch tail currently destructures an original owned child emission and asserts that its vector has zero length and capacity. Clipboard and media import can reach this tail through the real ChildEmissionPreviewJob with wire_mode=false; the typed child owner remains an owner and cannot be silently converted, dropped or applied through the raw child API.
+
+The new schema-first two-case law keeps the original parent/child operations and UTF8 labels. Ajv, Node UTF8 and RFC6902 reproduce its output independently. The native law enters actual test_dispatch_emit and requires a genuine pre-admitted operation identity, an empty admission mutation receipt and bounded owner cancellation through the existing fixture cleanup. This is a regression baseline; no passing receipt is claimed yet.
+
+Implementation must reuse the real fixed operation slot admission, keyed lease, generation/digest/child frontier and mounted publication ladder. It must retain the exact original emission and all declared lanes until the existing host continuation/acknowledgment protocol advances or cancels it. No synthetic IDs, widened physical grant or unbounded synchronous publication loop may replace that protocol.
+
+The actual source68391 baseline failed0/1 at10 assertions after both independent output cases completed; the real mount_original_emit_publication route does not yet exist. The native74789 baseline remains pending and is not a runtime passing receipt. The current exact compositeEdit proof already declares Artifact+Child. Framework reserved import/cut/paste currently declare HostOnly, so their emitted child ownership requires explicit route contract repair before borrowing those declarations into the real mounted ladder.
+
+Native74789 completed compiler-only with eight missing exact factory-interface implementations; publication owns and repaired these shared compiler gaps. Root's coherent native37331 retry is pending. No semantic panic or runtime acceptance is attributed to the compiler-only result.
+
+Coherent native37331 actually ran the direct original dispatch law:0/1 failed in.276s with1119 other cases outside selection. It panicked at the real owned-child empty-vector assertion in dispatch_emit_inner. This is the required actual missing-route witness; it is independent of the earlier compiler-only result.
+
+Admission saturation must also retain ownership: a dispatch API returning only a Fault cannot safely receive an original typed child owner and then discover that all64 output slots are occupied. Reserved producer routes need to pre-admit their genuine operation slot before taking a completed original emission, retain their lease until transfer, and release that slot on ordinary completion. The mounted helper should adopt that genuine permit rather than invent a second operation or synchronously await host acknowledgments. Direct test admission exercises the normal vacant slot first; capacity and cancellation cases remain required before global readiness.
+
+Root now authored the real included mounted helper with an optional genuine producer Operation/ToolCancellationLease authority. The normal vacant-slot route chooses the existing fixed residue class, captures the exact revision/generations/frontier, keeps original Emit owners and qualified publication lanes, and returns the actual operation admission receipt. Every original child preparation is driven later by the existing bounded publication ladder. Inline interaction verbs move into the same operation's existing delayed lane. Builder owns reserved producer pre-admission, permit transfer/release and the exact cut/paste/import-media lane declarations; these must complete before production saturation acceptance. Current source/native reruns remain pending.
+
+Current source97941 actually passed1/1 with11 assertions in631ms after the same independently reproduced original output cases. Its source census follows the included mounted owner and the optional genuine authority argument. Native5563 remains active; this source result is not a runtime acceptance claim.
+
+Native5563 encountered the same shared Store open-operation888 compiler error as mounted readiness84344. Publication repaired that exact receiver query. A coherent direct-dispatch retry is now pending; no runtime result is inferred from the source or compiler-only receipt.
+
+### Retain Before Fallible Capture
+
+- Actual source semantic baseline 35320: 1 pass / 1 fail / 17 assertions; original output was installed after qualified proof and window authority captures.
+- Root helper now inserts the exact original Emit, Operation, and keyed lease into its admitted fixed slot before fallible app/proof/window captures. Successful captures attach only the exact proven lanes. Refusal leaves the original output owned, stores its bounded terminal fault, and cancels the original lease; the result retains its actual operation identity.
+- Supplied reserved-operation authority remains unchanged. Driver still validates original Operation revision/generation plus the complete canonical digest before every private publication turn. Builder handoff preserves any earlier capture fault.
+- Actual combined uncached source60825: **3 pass / 0 fail / 31 assertions**. Native35485 was compiler-only 15 fixture privacy errors; Builder moved test observations into cfg(test) app-scoped helpers. Native retry40713 remains pending, so native admission/refusal is not yet accepted.
+
+### Actual Refusal Witness Authored
+
+New `direct_owned_child_dispatch_retains_original_output_when_authority_capture_refuses` runs the actual production dispatch twice: proven `compositeEdit` and an unregistered verb. A cfg(test) app-scoped borrowed observation checks the exact original owned-child Vec pointer, parent/child cardinality, retained bounded fault and original keyed cancellation, with System query allocations and releases both zero. It uses the unchanged neutral two-operation UTF-8 corpus, admission bounds and real composed-fixture close. Native is not yet run. Existing actual direct test name is `direct_owned_child_dispatch_retains_original_parent_and_children`; the earlier 40713 requested `direct_original_owned_child_dispatch`, which does not select it. That run is valid only for its selected catalog/original-constructor laws; next coherent native retry will select `test(direct_owned_child_dispatch_)`. No direct native success is inferred from an empty selector.

@@ -221,12 +221,49 @@ pub(crate) struct FaceCopy {
     pub vertices: HashMap<VertexId, VertexId>,
 }
 
+/// 🧩️ Copies faces one at a time while sharing copied edges and vertices between adjacent faces —
+/// the unit-by-unit form of [`copy_faces`], which is this walk driven over a whole slice.
+#[derive(Default)]
+pub(crate) struct FaceCopier {
+    ctx: CopyCtx,
+    faces: Vec<FaceId>,
+}
+
+impl FaceCopier {
+    /// 🧩️ Copies `face` as the next member of the shared copy.
+    pub(crate) fn copy(&mut self, body: &mut Body, face: FaceId, rec: &mut OpRecorder) -> Result<(), KernelError> {
+        require_face(body, face)?;
+        self.faces.push(copy_face(body, &mut self.ctx, face, &Affine3::IDENTITY, 1.0, rec));
+        Ok(())
+    }
+
+    /// 🧩️ The copies made so far, in copy order.
+    pub(crate) fn faces(&self) -> &[FaceId] {
+        &self.faces
+    }
+
+    /// 🪪️ The copy of source `edge`, if a copied face used it.
+    pub(crate) fn edge(&self, edge: EdgeId) -> Option<EdgeId> {
+        self.ctx.edges.get(&edge).copied()
+    }
+
+    /// 🪪️ The copy of source `vertex`, if a copied face used it.
+    pub(crate) fn vertex(&self, vertex: VertexId) -> Option<VertexId> {
+        self.ctx.vertices.get(&vertex).copied()
+    }
+
+    /// 🪪️ The finished correspondence.
+    pub(crate) fn finish(self) -> FaceCopy {
+        FaceCopy { faces: self.faces, edges: self.ctx.edges, vertices: self.ctx.vertices }
+    }
+}
+
 /// 🧩️ Copies kept faces together so adjacent faces share copied edges and vertices.
 pub(crate) fn copy_faces(body: &mut Body, faces: &[FaceId], rec: &mut OpRecorder) -> Result<FaceCopy, KernelError> {
     for &face in faces { require_face(body, face)?; }
-    let mut ctx = CopyCtx::default();
-    let faces = faces.iter().map(|&face| copy_face(body, &mut ctx, face, &Affine3::IDENTITY, 1.0, rec)).collect();
-    Ok(FaceCopy { faces, edges: ctx.edges, vertices: ctx.vertices })
+    let mut copier = FaceCopier::default();
+    for &face in faces { copier.copy(body, face, rec)?; }
+    Ok(copier.finish())
 }
 
 /// 🔁 Produces a NEW, detached face (not attached to any shell/solid) — the same deep-copy-and-

@@ -1,0 +1,639 @@
+{
+  "category": {
+    "id": "brep.surface",
+    "emoji": "🏳️",
+    "order": 30,
+    "label": {
+      "en": "Surfaces and faces",
+      "de": "Flächen"
+    },
+    "description": {
+      "en": "Planes, faces from points or wires, free-form patches and face offsets.",
+      "de": "Ebenen, Flächen aus Punkten oder Kantenzügen, Freiformflächen und Flächenversatz."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.surface.plane",
+      "category": "brep.surface",
+      "emoji": "▫️",
+      "label": {
+        "en": "Plane surface",
+        "de": "Ebene"
+      },
+      "description": {
+        "en": "Creates an unbounded plane surface from an origin and a normal.",
+        "de": "Erzeugt eine unbegrenzte Ebene aus Ursprung und Normale."
+      },
+      "inputs": [
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane given by an origin and a normal.",
+            "de": "Die Ebene aus Ursprung und Normale."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The plane as a surface.",
+            "de": "Die Ebene als Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "plane"
+          },
+          {
+            "motion": "rotate",
+            "port": "plane"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.surface.planarFace",
+      "category": "brep.surface",
+      "emoji": "🔲️",
+      "label": {
+        "en": "Face from points",
+        "de": "Fläche aus Punkten"
+      },
+      "description": {
+        "en": "Creates a planar face bounded by a polygon through the points.",
+        "de": "Erzeugt eine ebene Fläche, die von einem Polygon durch die Punkte begrenzt wird."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The corner points in order; at least three, all in one plane.",
+            "de": "Die Eckpunkte in Reihenfolge; mindestens drei, alle in einer Ebene."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 3,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The planar face.",
+            "de": "Die ebene Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.surface.planarFaceFromWire",
+      "category": "brep.surface",
+      "emoji": "🖼️",
+      "label": {
+        "en": "Planar face from wire",
+        "de": "Ebene Fläche aus Kantenzug"
+      },
+      "description": {
+        "en": "Fills a closed wire that lies in a plane parallel to the XY plane with a planar face.",
+        "de": "Füllt einen geschlossenen Kantenzug, der in einer zur XY-Ebene parallelen Ebene liegt, mit einer ebenen Fläche."
+      },
+      "inputs": [
+        {
+          "name": "wire",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The closed wire to fill.",
+            "de": "Der zu füllende geschlossene Kantenzug."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The planar face bounded by the wire.",
+            "de": "Die vom Kantenzug begrenzte ebene Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "wire"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.surface.faceFromWire",
+      "category": "brep.surface",
+      "emoji": "🧾️",
+      "label": {
+        "en": "Face from wire",
+        "de": "Fläche aus Kantenzug"
+      },
+      "description": {
+        "en": "Creates a face bounded by a closed wire.",
+        "de": "Erzeugt eine Fläche, die von einem geschlossenen Kantenzug begrenzt wird."
+      },
+      "inputs": [
+        {
+          "name": "wire",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The closed wire that bounds the face.",
+            "de": "Der geschlossene Kantenzug, der die Fläche begrenzt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The face bounded by the wire.",
+            "de": "Die vom Kantenzug begrenzte Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "wire"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.surface.nurbsGrid",
+      "category": "brep.surface",
+      "emoji": "🕸️",
+      "label": {
+        "en": "NURBS surface from grid",
+        "de": "NURBS-Fläche aus Punktgitter"
+      },
+      "description": {
+        "en": "Fits a smooth NURBS surface through a rectangular grid of points.",
+        "de": "Legt eine glatte NURBS-Fläche durch ein rechteckiges Punktgitter."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "All grid points row by row.",
+            "de": "Alle Gitterpunkte Zeile für Zeile."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 4,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              1,
+              0.5
+            ],
+            [
+              2,
+              1,
+              0
+            ],
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              1,
+              2,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "rows",
+          "label": {
+            "en": "Rows",
+            "de": "Zeilen"
+          },
+          "description": {
+            "en": "Number of rows; the point count must be a multiple of it.",
+            "de": "Anzahl der Zeilen; die Punktzahl muss ein Vielfaches davon sein."
+          },
+          "type": "integer",
+          "default": 3,
+          "min": 2,
+          "step": 1
+        },
+        {
+          "name": "degreeU",
+          "label": {
+            "en": "Degree U",
+            "de": "Grad U"
+          },
+          "description": {
+            "en": "Polynomial degree along the rows.",
+            "de": "Polynomgrad entlang der Zeilen."
+          },
+          "type": "integer",
+          "default": 2,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "name": "degreeV",
+          "label": {
+            "en": "Degree V",
+            "de": "Grad V"
+          },
+          "description": {
+            "en": "Polynomial degree along the columns.",
+            "de": "Polynomgrad entlang der Spalten."
+          },
+          "type": "integer",
+          "default": 2,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The fitted surface.",
+            "de": "Die angepasste Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface"
+          ]
+        }
+      ],
+      "quality": "approximate",
+      "preview": true
+    },
+    {
+      "id": "brep.surface.coons",
+      "category": "brep.surface",
+      "emoji": "🧩️",
+      "label": {
+        "en": "Coons patch",
+        "de": "Coons-Fläche"
+      },
+      "description": {
+        "en": "Spans a smooth surface between four boundary curves.",
+        "de": "Spannt eine glatte Fläche zwischen vier Randkurven auf."
+      },
+      "inputs": [
+        {
+          "name": "bottom",
+          "label": {
+            "en": "Bottom",
+            "de": "Untere"
+          },
+          "description": {
+            "en": "The bottom boundary curve as ordered points; it must meet the neighbouring boundaries at its ends.",
+            "de": "Die untere Randkurve als geordnete Punkte; sie muss an ihren Enden auf die Nachbarränder treffen."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0.5,
+              0,
+              0.3
+            ],
+            [
+              1,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "right",
+          "label": {
+            "en": "Right",
+            "de": "Rechte"
+          },
+          "description": {
+            "en": "The right boundary curve as ordered points; it must meet the neighbouring boundaries at its ends.",
+            "de": "Die rechte Randkurve als geordnete Punkte; sie muss an ihren Enden auf die Nachbarränder treffen."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "top",
+          "label": {
+            "en": "Top",
+            "de": "Obere"
+          },
+          "description": {
+            "en": "The top boundary curve as ordered points; it must meet the neighbouring boundaries at its ends.",
+            "de": "Die obere Randkurve als geordnete Punkte; sie muss an ihren Enden auf die Nachbarränder treffen."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0.5,
+              1,
+              0.3
+            ],
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "left",
+          "label": {
+            "en": "Left",
+            "de": "Linke"
+          },
+          "description": {
+            "en": "The left boundary curve as ordered points; it must meet the neighbouring boundaries at its ends.",
+            "de": "Die linke Randkurve als geordnete Punkte; sie muss an ihren Enden auf die Nachbarränder treffen."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The Coons patch.",
+            "de": "Die Coons-Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface"
+          ]
+        }
+      ],
+      "quality": "approximate",
+      "preview": true
+    },
+    {
+      "id": "brep.surface.offset",
+      "category": "brep.surface",
+      "emoji": "↔️",
+      "label": {
+        "en": "Offset face",
+        "de": "Fläche versetzen"
+      },
+      "description": {
+        "en": "Moves a face along its normal by a distance.",
+        "de": "Versetzt eine Fläche um einen Abstand entlang ihrer Normalen."
+      },
+      "inputs": [
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The planar or curved face to operate on.",
+            "de": "Die ebene oder gekrümmte Fläche, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Offset along the face normal; negative values move against it.",
+            "de": "Versatz entlang der Flächennormale; negative Werte verschieben entgegen."
+          },
+          "type": "length",
+          "default": 0.1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The offset face.",
+            "de": "Die versetzte Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "distance",
+            "along": "normal"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

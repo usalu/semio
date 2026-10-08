@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::{gis_map_descriptor_json};
+use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;

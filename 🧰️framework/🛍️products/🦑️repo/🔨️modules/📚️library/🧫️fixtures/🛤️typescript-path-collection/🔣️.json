@@ -498,12 +498,9 @@
   "execution": {
     "target": "test-typescript-path-collection",
     "command": "bun ./📜️script.ts test typescript-path-collection",
+    "cache": false,
     "route": "typescript-path-collection",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts",
-    "launchName": "🧹clean🧩️taxonomy🛤️typescript-path-collection",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.17
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛤️typescript-path-collection/🟦️.ts"
   },
   "exampleInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🛤️typescript-path-collection/🔬️mixed-template/🟦️.ts"
 }

@@ -1,0 +1,65 @@
+{
+  "variants": {
+    "measureRecipe": [
+      "disc-cut",
+      "blade-cut",
+      "pocket-cut",
+      "bore-drill",
+      "cylinder-attach",
+      "box-attach"
+    ],
+    "workingSolid": [
+      "box",
+      "cylinder",
+      "sphere",
+      "imported-mesh",
+      "imported-solid",
+      "reference"
+    ],
+    "processMeasure": [
+      "cut",
+      "drill",
+      "attach"
+    ]
+  },
+  "deleteSteps": [
+    {
+      "id": "",
+      "hex": "020100"
+    },
+    {
+      "id": "cad",
+      "hex": "020103636164"
+    },
+    {
+      "id": "🧪️",
+      "hex": "020107f09fa7aaefb88f"
+    }
+  ],
+  "cursorInsertions": [
+    {
+      "stepCount": 0,
+      "cursor": 0,
+      "index": 0,
+      "next": 1
+    },
+    {
+      "stepCount": 3,
+      "cursor": 1,
+      "index": 1,
+      "next": 2
+    },
+    {
+      "stepCount": 3,
+      "cursor": 9,
+      "index": 3,
+      "next": 4
+    },
+    {
+      "stepCount": 3,
+      "cursor": null,
+      "index": 3,
+      "next": null
+    }
+  ]
+}

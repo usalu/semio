@@ -32,7 +32,7 @@ impl Connection {
             }
         }
         let (_, payload) = ipc::read_frame(&mut stream)?;
-        let ServerMsg::Attached { daemon_pid } = ipc::decode_control(&payload)? else { return Err(std::io::Error::other("invalid daemon greeting")) };
+        let ServerMsg::Attached { daemon_pid, .. } = ipc::decode_control(&payload)? else { return Err(std::io::Error::other("invalid daemon greeting")) };
         #[cfg(unix)]
         stream.set_nonblocking(true)?;
         let (sender, commands) = mpsc::sync_channel::<ClientMsg>(64);

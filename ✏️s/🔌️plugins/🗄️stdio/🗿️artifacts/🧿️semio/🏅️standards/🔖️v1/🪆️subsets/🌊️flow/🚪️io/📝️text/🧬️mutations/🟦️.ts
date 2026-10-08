@@ -31,7 +31,6 @@ export interface SemioFlowSnapshot {
   edges: FlowEdge[];
 }
 export type SemioFlowMutation =
-  | { mutation: "setSnapshot"; snapshot: SemioFlowSnapshot }
   | { mutation: "insertNode"; node: FlowNode }
   | { mutation: "removeNode"; id: string }
   | { mutation: "setNodeKind"; id: string; kind: string }

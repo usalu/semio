@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation};
 
 fn every_mutation() -> Vec<En1998Mutation> {
     crate::standards::v1::subsets::any::io::text::mutations::demo_mutation_cases()
@@ -22,6 +22,6 @@ async fn update_site_applies_seismic_zone_enum() {
     site.seismic_zone = DeSeismicZone::Zone3;
     let mutation = En1998Mutation::UpdateSite(update_site::UpdateSite { site: site.clone() });
     let outcome = mutation.diff(&base);
-    let applied = outcome.diff().apply(&base).expect("apply");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("apply");
     assert_eq!(applied.site.seismic_zone, DeSeismicZone::Zone3);
 }

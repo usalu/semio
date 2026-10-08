@@ -2,9 +2,7 @@
 
 use super::remove_trim_box::RemoveTrimBox;
 use super::PdfXMutation;
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -20,11 +18,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for SetTrimBox {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trim-box", kind: "set-trim-box", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        if let Some(page) = support::page_objects(&next).get(self.page_index).copied() {
-            support::set_entry(&mut next, page, "TrimBox", support::box_object(self.trim_box));
-        }
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let rows = support::page_objects(base).get(self.page_index).copied().map_or_else(PdfDiff::default, |page| support::set_entry_rows(base, page, "TrimBox", support::box_object(self.trim_box)));
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {

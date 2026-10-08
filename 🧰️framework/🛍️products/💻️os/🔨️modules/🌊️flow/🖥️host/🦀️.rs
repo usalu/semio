@@ -952,6 +952,12 @@ impl FlowHost {
         if !widget_has_input(to_id, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoInputPort(to_id.to_string()));
         }
+        if !widget_has_declared_port(from_id, from_port, PortSide::Output, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos) {
+            return Err(FlowCoreError::UnknownOutputPort(from_port.to_string()));
+        }
+        if !widget_has_declared_port(to_id, to_port, PortSide::Input, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos) {
+            return Err(FlowCoreError::UnknownInputPort(to_port.to_string()));
+        }
         let existing: Vec<(String, String)> = self.host_snapshot.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
             return Err(FlowCoreError::CycleWouldBeCreated);
@@ -4786,7 +4792,7 @@ pub enum PortSide {
 }
 
 /// 🔤️ The value schemas one endpoint declares, read straight off the port the operator catalogue
-/// published — an undeclared port answers with an empty list, which stays connectable.
+/// published — an untyped declared port answers with an empty list; connection admission separately checks exact endpoint identity.
 pub fn widget_port_value_types(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
     let Some(widget) = widgets.iter().find(|widget| widget_id_for(widget) == widget_id) else {
         return Vec::new();
@@ -4806,6 +4812,13 @@ pub fn port_value_types_compatible(source: &[String], target: &[String]) -> bool
         return true;
     }
     source.iter().any(|provided| target.iter().any(|accepted| accepted == provided))
+}
+
+fn widget_has_declared_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
+    widgets.iter().find(|widget| widget_id_for(widget) == widget_id).is_some_and(|widget| {
+        let (inputs, outputs, _, _) = widget_io_ports(widget, synapses, kind_infos);
+        (if side == PortSide::Output { outputs } else { inputs }).iter().any(|port| port.id == port_id)
+    })
 }
 
 fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {

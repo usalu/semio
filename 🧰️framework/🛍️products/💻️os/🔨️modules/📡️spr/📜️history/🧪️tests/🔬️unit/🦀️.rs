@@ -953,8 +953,8 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
             let mut completed = 0;
             let mut reached = false;
             for _ in 0..100000 {
-                match job.step(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
-                    crate::os_spr::HistoryFoldJobStep::Pending { completed: next } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); completed = next; },
+                match job.step(work.as_u64().unwrap() as usize, job.next_step_byte_demand(bytes.as_u64().unwrap() as usize), &mut || false).unwrap() {
+                    crate::os_spr::HistoryFoldJobStep::Pending { completed: next, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); completed = next; },
                     crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts)) => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
                         if !conflicts.is_empty() {
@@ -973,11 +973,11 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
     }
     for stop in law["cancelAt"].as_array().unwrap() {
         let mut job = HistoryLog::fold_job(source.clone(), crate::os_spr::HistoryShape::Document);
-        for _ in 0..stop.as_u64().unwrap() { let _ = job.step(1, 7, &mut || false).unwrap(); }
+        for _ in 0..stop.as_u64().unwrap() { let _ = job.step(1, job.next_step_byte_demand(7), &mut || false).unwrap(); }
         let completed = job.completed();
         job.request_cancel();
         let mut closed = false;
-        for _ in 0..100000 { if job.close_step(1, 7).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
+        for _ in 0..100000 { if job.close_step(1, job.next_close_byte_demand()).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), completed);
         assert_eq!(source.fold().unwrap(), expected);

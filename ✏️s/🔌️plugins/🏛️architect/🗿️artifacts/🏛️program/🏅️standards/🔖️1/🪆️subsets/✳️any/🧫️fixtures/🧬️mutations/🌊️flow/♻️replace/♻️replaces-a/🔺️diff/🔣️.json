@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -13,54 +12,51 @@
   "adjacencies": null,
   "processes": null,
   "flows": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "flow-requirement-a",
-        "patch": {
-          "name": "Flow Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "fromElementId": "",
-          "toElementId": "",
-          "kind": "people",
-          "flowType": "Replaced Flow Requirement A",
-          "direction": "oneWay",
-          "volume": {
-            "unit": ""
-          },
-          "peakRate": null,
-          "clearWidthM": null,
-          "clearHeightM": null,
-          "separationRequirements": [],
-          "accessLevel": "public",
-          "timeWindows": [],
-          "equipmentClearance": null,
-          "signageRequired": false,
-          "escortRequired": false,
-          "emergencyRoute": false,
-          "barrierFree": false,
-          "monitoringRequired": false,
-          "processId": null,
-          "conflictIds": [],
-          "verificationMethod": null
-        }
+        "name": "Flow Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "fromElementId": "",
+        "toElementId": "",
+        "kind": "people",
+        "flowType": "Replaced Flow Requirement A",
+        "direction": "oneWay",
+        "volume": {
+          "unit": ""
+        },
+        "peakRate": null,
+        "clearWidthM": null,
+        "clearHeightM": null,
+        "separationRequirements": [],
+        "accessLevel": "public",
+        "timeWindows": [],
+        "equipmentClearance": null,
+        "signageRequired": false,
+        "escortRequired": false,
+        "emergencyRoute": false,
+        "barrierFree": false,
+        "monitoringRequired": false,
+        "processId": null,
+        "conflictIds": [],
+        "verificationMethod": null
       }
     ],
+    "removed": [
+      "flow-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "accessRules": null,
@@ -116,9 +112,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

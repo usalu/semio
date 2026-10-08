@@ -115,8 +115,8 @@ fn drawing_manifest_action(action: &str) -> ActionDescriptor {
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+pub fn ui_value_text(value: impl std::fmt::Display) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_format(format_args!("{value}")).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -1372,6 +1372,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
 
 //#region 📬️StorePreparation
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DrawingArtifactStorePreparationFactory;
 
 struct DrawingArtifactStorePreparation {
@@ -1882,7 +1883,7 @@ impl ArtifactEditor for DrawingPlayApp {
 /// (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
 pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <DrawingSnapshot as ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, DRAWING_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id.to_string_owner(), DRAWING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 

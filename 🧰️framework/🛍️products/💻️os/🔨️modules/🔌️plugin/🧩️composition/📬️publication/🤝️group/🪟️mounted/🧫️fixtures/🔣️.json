@@ -1,0 +1,14 @@
+{
+  "schema": "semio.mounted.private-child-group/v1",
+  "workBytes": 4096,
+  "copyBytes": 64,
+  "cases": [
+    { "id": "existing-child", "before": [1, 10], "after": [2, 11], "prepared": [true, true], "cancelled": false, "fresh": true, "commitItems": 1, "commitBytes": 4096, "published": true },
+    { "id": "new-child-and-existing-child", "before": [1, 10, null], "after": [2, 11, 20], "prepared": [true, true, true], "cancelled": false, "fresh": true, "commitItems": 1, "commitBytes": 4096, "published": true },
+    { "id": "unprepared-last-child", "before": [1, 10, null], "after": [2, 11, 20], "prepared": [true, true, false], "cancelled": false, "fresh": true, "commitItems": 1, "commitBytes": 4096, "published": false },
+    { "id": "cancelled-after-preparation", "before": [1, 10], "after": [2, 11], "prepared": [true, true], "cancelled": true, "fresh": true, "commitItems": 1, "commitBytes": 4096, "published": false },
+    { "id": "stale-parent-after-preparation", "before": [1, 10], "after": [2, 11], "prepared": [true, true], "cancelled": false, "fresh": false, "commitItems": 1, "commitBytes": 4096, "published": false },
+    { "id": "zero-item-decision", "before": [1, 10], "after": [2, 11], "prepared": [true, true], "cancelled": false, "fresh": true, "commitItems": 0, "commitBytes": 4096, "published": false },
+    { "id": "one-byte-under-decision", "before": [1, 10], "after": [2, 11], "prepared": [true, true], "cancelled": false, "fresh": true, "commitItems": 1, "commitBytes": 4095, "published": false }
+  ]
+}

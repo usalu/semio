@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::parameter;
+use store::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::plate_document;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use super::*;

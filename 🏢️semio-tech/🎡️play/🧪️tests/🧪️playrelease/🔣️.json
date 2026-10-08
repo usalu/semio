@@ -1,0 +1,33 @@
+{
+  "paths": [
+    { "request": "/", "file": "index.html" },
+    { "request": "/assets/app.js?cache=fresh", "file": "assets/app.js" },
+    { "request": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/cad/bridge.js", "file": "🔌️plugin-modules/cad/bridge.js" },
+    { "request": "/%2e%2e/secret", "file": null },
+    { "request": "/assets/%2e%2e/secret", "file": null },
+    { "request": "/assets/%2fsecret", "file": null },
+    { "request": "/assets/%5csecret", "file": null },
+    { "request": "/assets/%00secret", "file": null },
+    { "request": "/assets/%zz", "file": null }
+  ],
+  "files": [
+    { "page": "play", "path": "index.html", "body": "<html>Published Play</html>" },
+    { "page": "play", "path": "assets/app.js", "body": "export const release = true;" },
+    { "page": "play", "path": "_headers", "body": "/*\n  Cache-Control: no-cache\n" },
+    { "page": "modules", "path": "_headers", "body": "/*\n  Cache-Control: no-cache\n  Access-Control-Allow-Origin: *\n" },
+    { "page": "modules", "path": "🔌️plugin-modules/probe/module.wasm", "body": "wasm" }
+  ],
+  "requests": [
+    { "page": "play", "path": "/", "status": 200, "mime": "text/html", "cors": null, "cacheControl": "no-cache" },
+    { "page": "play", "path": "/assets/app.js", "status": 200, "mime": "text/javascript", "cors": null, "cacheControl": "no-cache" },
+    { "page": "play", "path": "/missing.js", "status": 404, "mime": "text/plain", "cors": null, "cacheControl": "no-cache" },
+    { "page": "modules", "path": "/🔌️plugin-modules/probe/module.wasm", "status": 200, "mime": "application/wasm", "cors": "*", "cacheControl": "no-cache" },
+    { "page": "modules", "path": "/missing.wasm", "status": 404, "mime": "text/plain", "cors": "*", "cacheControl": "no-cache" },
+    { "page": "map", "path": "/missing.wasm", "status": 404, "mime": "text/plain", "cors": "*", "cacheControl": "no-store" }
+  ],
+  "origins": [
+    { "request": "https://modules.assets.semio-tech.com/bridge.js?q=1", "expected": "http://127.0.0.1:1234/bridge.js?q=1" },
+    { "request": "https://other.example/bridge.js", "expected": null },
+    { "request": "https://modules.assets.semio-tech.com.evil.example/bridge.js", "expected": null }
+  ]
+}

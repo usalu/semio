@@ -1,26 +1,63 @@
-//! 🔺️ SemioTextDiff — sparse per-field diff over `SemioTextSnapshot`. `text` has exactly one
-//! mutable field (`runs`, an intrinsically ordered, anonymous collection with no stable id per
-//! `📓️taxonomy.md`'s addressing rule #3), so the diff carries a single `runs: Option<…>` slot: a
-//! whole-list-wrapper rebuilt POSITIONALLY from `base` by each mutation triad's own `🔺️diff` leaf
-//! (never a generic `between()` re-derivation) — the same shape
-//! `SEMANTIC-MUTATIONS-OVERHAUL`'s `din4108` facet (this ticket's binding reference,
-//! `📌️important.md`'s "Authoring a 🧬️mutations facet" section) uses for its own id-less `layers`
-//! collection. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-
-//! document replace is `ArtifactStore::reset`, outside history.
+//! 🔺️ SemioTextDiff — sparse per-run diff over `SemioTextSnapshot`. `text` has exactly one mutable field (`runs`, an
+//! intrinsically ordered, anonymous collection with no stable id per `📓️taxonomy.md`'s addressing rule #3), so the diff
+//! carries a single index-keyed `runs` triple: removed base indices, modified rows (a sparse [`SemioTextRunDiff`] per run) and
+//! added rows with their final position. Every row-local change (content, language, one mark) is its own sparse field, never a
+//! rebuilt list. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-document replace is
+//! `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_rows, absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
-//#region 🔖️RunList
-/// 📋 Whole-list wrapper for the `runs` field diff — every mutation triad rebuilds the full
-/// ordered `values` vec from `base` and wraps it here (`din4108::Din4108LayerList`'s own shape).
+//#region 🔖️RunDiff
+/// 🏃️ Sparse diff of one run: each present field is the new value; `marks` nests an index-keyed triple of whole-mark rows.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioTextRunList {
-    pub values: Vec<SemioTextRun>,
+#[value(rename_all = "camelCase")]
+pub struct SemioTextRunDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub marks: Option<IndexedTripleDiff<Replace<SemioTextMark>, SemioTextMark>>,
 }
-//#endregion 🔖️RunList
+
+impl IndexedRow<SemioTextRun> for SemioTextRunDiff {
+    fn apply_row(&self, base: &SemioTextRun) -> SemioTextRun {
+        let mut next = base.clone();
+        if let Some(language) = &self.language {
+            next.language = language.clone();
+        }
+        if let Some(content) = &self.content {
+            next.content = content.clone();
+        }
+        if let Some(marks) = &self.marks {
+            next.marks = apply_indexed_rows(marks, &base.marks);
+        }
+        next
+    }
+    fn inverse_row(&self, base: &SemioTextRun) -> Self {
+        Self { language: self.language.as_ref().map(|_| base.language.clone()), content: self.content.as_ref().map(|_| base.content.clone()), marks: self.marks.as_ref().map(|marks| inverse_indexed_rows(marks, &base.marks)) }
+    }
+    fn absorb_row(&mut self, other: Self) {
+        if other.language.is_some() {
+            self.language = other.language;
+        }
+        if other.content.is_some() {
+            self.content = other.content;
+        }
+        absorb_indexed_slot(&mut self.marks, other.marks);
+    }
+    fn row_is_empty(&self) -> bool {
+        self.language.is_none() && self.content.is_none() && self.marks.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
+    }
+    fn between_row(base: &SemioTextRun, other: &SemioTextRun) -> Self {
+        let marks = between_indexed_rows(&base.marks, &other.marks);
+        Self { language: (base.language != other.language).then(|| other.language.clone()), content: (base.content != other.content).then(|| other.content.clone()), marks: (!marks.is_unchanged()).then_some(marks) }
+    }
+}
+//#endregion 🔖️RunDiff
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -29,43 +66,46 @@ pub struct SemioTextRunList {
 pub struct SemioTextDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub runs: Option<SemioTextRunList>,
+    pub runs: Option<IndexedTripleDiff<SemioTextRunDiff, SemioTextRun>>,
 }
 
 impl SemioTextDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.runs.is_none()
+        self.runs.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
     }
 }
 
 impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
-    fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
+    fn apply(&self, base: &SemioTextSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioTextSnapshot> {
         let mut next = base.clone();
-        if let Some(list) = &self.runs {
-            next.runs = list.values.clone();
+        if let Some(runs) = &self.runs {
+            validate_indexed_triple(runs, base.runs.len(), ["runs"])?;
+            for modified in &runs.modified {
+                let run = &base.runs[modified.index];
+                if let Some(marks) = &modified.diff.marks {
+                    validate_indexed_triple(marks, run.marks.len(), ["runs".to_string(), modified.index.to_string(), "marks".to_string()])?;
+                }
+            }
+            next.runs = apply_indexed_rows(runs, &base.runs);
         }
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.runs.is_some() {
-            self.runs = other.runs;
-        }
+        absorb_indexed_slot(&mut self.runs, other.runs);
     }
 }
 
-/// 🧮️ `text`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch (`SemioDiff`
-/// delegates `between`/`inverse`/`is_empty` straight through to every wrapped subset's own impl).
-/// Whole-list `between`/`inverse` are honest here (not apply-then-capture): `text` has exactly one
-/// mutable field, so a change is fully described by "the new/old `runs` value", same shape every
-/// mutation triad's own `🔺️diff` leaf already produces.
+/// 🧮️ `text`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of
+/// the keyed rows; `between` is the positional sync/import delta, never used by mutation leaves.
 impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
     fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
-        SemioTextDiff { runs: (base.runs != other.runs).then(|| SemioTextRunList { values: other.runs.clone() }) }
+        let runs = between_indexed_rows(&base.runs, &other.runs);
+        SemioTextDiff { runs: (!runs.is_unchanged()).then_some(runs) }
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Self {
-        SemioTextDiff { runs: self.runs.as_ref().map(|_| SemioTextRunList { values: base.runs.clone() }) }
+        SemioTextDiff { runs: self.runs.as_ref().map(|runs| inverse_indexed_rows(runs, &base.runs)) }
     }
     fn is_empty(&self) -> bool {
         self.is_empty_diff()
@@ -81,7 +121,6 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 
 
 
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 
 
@@ -104,11 +143,19 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
+    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
     use crate::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
+    let bold = SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() };
     vec![
         SemioTextDiff::default(),
-        SemioTextDiff { runs: Some(SemioTextRunList { values: demo_text_snapshot().runs }) },
-        SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "fr".into(), content: "bonjour".into(), marks: vec![SemioTextMark { kind: SemioTextMarkKind::Italic, href: String::new() }] }] }) },
+        SemioTextDiff { runs: Some(IndexedTripleDiff { added: demo_text_snapshot().runs.into_iter().enumerate().map(|(index, item)| IndexAdded { index, item }).collect(), ..Default::default() }) },
+        SemioTextDiff { runs: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) },
+        SemioTextDiff {
+            runs: Some(IndexedTripleDiff {
+                modified: vec![IndexModified { index: 1, diff: SemioTextRunDiff { language: Some("fr".into()), content: Some("bonjour".into()), marks: Some(IndexedTripleDiff { removed: vec![0], added: vec![IndexAdded { index: 0, item: bold }], ..Default::default() }) } }],
+                ..Default::default()
+            }),
+        },
     ]
 }
 //#endregion 🔖️Demo

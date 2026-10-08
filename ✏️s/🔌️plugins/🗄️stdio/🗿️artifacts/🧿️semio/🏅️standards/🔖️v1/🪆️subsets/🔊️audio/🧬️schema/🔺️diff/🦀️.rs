@@ -326,7 +326,7 @@ impl SemioAudioDiff {
 }
 
 impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
-    fn apply(&self, base: &SemioAudioSnapshot) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
+    fn apply(&self, base: &SemioAudioSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.sample_rate {
             next.sample_rate = v;

@@ -1,0 +1,888 @@
+{
+  "category": {
+    "id": "brep.curve",
+    "emoji": "〰️",
+    "order": 20,
+    "label": {
+      "en": "Curves and wires",
+      "de": "Kurven und Kantenzüge"
+    },
+    "description": {
+      "en": "Lines, arcs, circles, ellipses, splines, polygons and helices as building blocks for profiles and paths.",
+      "de": "Linien, Bögen, Kreise, Ellipsen, Splines, Vielecke und Schraubenlinien als Bausteine für Profile und Pfade."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.curve.line",
+      "category": "brep.curve",
+      "emoji": "📏️",
+      "label": {
+        "en": "Line",
+        "de": "Linie"
+      },
+      "description": {
+        "en": "Creates a straight line segment between two points.",
+        "de": "Erzeugt eine gerade Strecke zwischen zwei Punkten."
+      },
+      "inputs": [
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Start"
+          },
+          "description": {
+            "en": "First end of the line.",
+            "de": "Erstes Ende der Linie."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "end",
+          "label": {
+            "en": "End",
+            "de": "Ende"
+          },
+          "description": {
+            "en": "Second end of the line.",
+            "de": "Zweites Ende der Linie."
+          },
+          "type": "point",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The line as a curve.",
+            "de": "Die Linie als Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.circle",
+      "category": "brep.curve",
+      "emoji": "⭕️",
+      "label": {
+        "en": "Circle",
+        "de": "Kreis"
+      },
+      "description": {
+        "en": "Creates a full circle around a center in the plane given by its normal.",
+        "de": "Erzeugt einen Vollkreis um einen Mittelpunkt in der durch die Normale gegebenen Ebene."
+      },
+      "inputs": [
+        {
+          "name": "center",
+          "label": {
+            "en": "Center",
+            "de": "Mittelpunkt"
+          },
+          "description": {
+            "en": "Center point.",
+            "de": "Mittelpunkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "Normal of the plane that contains the shape.",
+            "de": "Normale der Ebene, in der die Form liegt."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The circle as a closed curve.",
+            "de": "Der Kreis als geschlossene Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.arc",
+      "category": "brep.curve",
+      "emoji": "🌙️",
+      "label": {
+        "en": "Arc",
+        "de": "Kreisbogen"
+      },
+      "description": {
+        "en": "Creates a circular arc between a start and an end angle.",
+        "de": "Erzeugt einen Kreisbogen zwischen einem Start- und einem Endwinkel."
+      },
+      "inputs": [
+        {
+          "name": "center",
+          "label": {
+            "en": "Center",
+            "de": "Mittelpunkt"
+          },
+          "description": {
+            "en": "Center point.",
+            "de": "Mittelpunkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "Normal of the plane that contains the shape.",
+            "de": "Normale der Ebene, in der die Form liegt."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "startAngle",
+          "label": {
+            "en": "Start angle",
+            "de": "Startwinkel"
+          },
+          "description": {
+            "en": "Angle at which the arc begins, measured from the local X axis.",
+            "de": "Winkel, bei dem der Bogen beginnt, gemessen von der lokalen X-Achse."
+          },
+          "type": "angle",
+          "default": 0,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        },
+        {
+          "name": "endAngle",
+          "label": {
+            "en": "End angle",
+            "de": "Endwinkel"
+          },
+          "description": {
+            "en": "Angle at which the arc ends; must differ from the start angle.",
+            "de": "Winkel, bei dem der Bogen endet; muss vom Startwinkel abweichen."
+          },
+          "type": "angle",
+          "default": 1.5707963267948966,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The arc as a curve.",
+            "de": "Der Kreisbogen als Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.ellipse",
+      "category": "brep.curve",
+      "emoji": "🥚️",
+      "label": {
+        "en": "Ellipse",
+        "de": "Ellipse"
+      },
+      "description": {
+        "en": "Creates a full ellipse around a center; elliptical edges cannot be extruded or revolved yet.",
+        "de": "Erzeugt eine vollständige Ellipse um einen Mittelpunkt; elliptische Kanten lassen sich noch nicht extrudieren oder rotieren."
+      },
+      "inputs": [
+        {
+          "name": "center",
+          "label": {
+            "en": "Center",
+            "de": "Mittelpunkt"
+          },
+          "description": {
+            "en": "Center point.",
+            "de": "Mittelpunkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "Normal of the plane that contains the shape.",
+            "de": "Normale der Ebene, in der die Form liegt."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "semiMajor",
+          "label": {
+            "en": "Major radius",
+            "de": "Große Halbachse"
+          },
+          "description": {
+            "en": "Half of the longer diameter.",
+            "de": "Hälfte des längeren Durchmessers."
+          },
+          "type": "length",
+          "default": 2,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "semiMinor",
+          "label": {
+            "en": "Minor radius",
+            "de": "Kleine Halbachse"
+          },
+          "description": {
+            "en": "Half of the shorter diameter.",
+            "de": "Hälfte des kürzeren Durchmessers."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The ellipse as a closed curve.",
+            "de": "Die Ellipse als geschlossene Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.polyline",
+      "category": "brep.curve",
+      "emoji": "📈️",
+      "label": {
+        "en": "Polyline",
+        "de": "Polylinie"
+      },
+      "description": {
+        "en": "Connects the points with straight segments into an open wire.",
+        "de": "Verbindet die Punkte mit geraden Strecken zu einem offenen Kantenzug."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The corner points in order; at least two.",
+            "de": "Die Eckpunkte in Reihenfolge; mindestens zwei."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The open polyline.",
+            "de": "Die offene Polylinie."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.rectangle",
+      "category": "brep.curve",
+      "emoji": "⬜️",
+      "label": {
+        "en": "Rectangle",
+        "de": "Rechteck"
+      },
+      "description": {
+        "en": "Creates a closed rectangle in the XY plane with its corner at the origin.",
+        "de": "Erzeugt ein geschlossenes Rechteck in der XY-Ebene mit einer Ecke im Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "width",
+          "label": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "description": {
+            "en": "Size along the X axis.",
+            "de": "Ausdehnung entlang der X-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Size along the Y axis.",
+            "de": "Ausdehnung entlang der Y-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The closed rectangle.",
+            "de": "Das geschlossene Rechteck."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.polygon",
+      "category": "brep.curve",
+      "emoji": "⬡️",
+      "label": {
+        "en": "Regular polygon",
+        "de": "Regelmäßiges Vieleck"
+      },
+      "description": {
+        "en": "Creates a closed regular polygon in the XY plane around the origin.",
+        "de": "Erzeugt ein geschlossenes regelmäßiges Vieleck in der XY-Ebene um den Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to each corner.",
+            "de": "Abstand vom Mittelpunkt zu jeder Ecke."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "sides",
+          "label": {
+            "en": "Sides",
+            "de": "Seiten"
+          },
+          "description": {
+            "en": "Number of sides; at least three.",
+            "de": "Anzahl der Seiten; mindestens drei."
+          },
+          "type": "integer",
+          "default": 6,
+          "min": 3,
+          "max": 256,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The closed polygon.",
+            "de": "Das geschlossene Vieleck."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.interpolate",
+      "category": "brep.curve",
+      "emoji": "🪢️",
+      "label": {
+        "en": "Interpolated curve",
+        "de": "Interpolierte Kurve"
+      },
+      "description": {
+        "en": "Fits a smooth spline that passes exactly through every point.",
+        "de": "Legt einen glatten Spline, der genau durch jeden Punkt verläuft."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The points the curve must pass through; at least two.",
+            "de": "Die Punkte, durch die die Kurve verlaufen muss; mindestens zwei."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              3,
+              1,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "degree",
+          "label": {
+            "en": "Degree",
+            "de": "Grad"
+          },
+          "description": {
+            "en": "Polynomial degree of the spline; 3 gives a smooth cubic curve.",
+            "de": "Polynomgrad des Splines; 3 ergibt eine glatte kubische Kurve."
+          },
+          "type": "integer",
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The interpolating spline.",
+            "de": "Der interpolierende Spline."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "approximate",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.approximate",
+      "category": "brep.curve",
+      "emoji": "🎢️",
+      "label": {
+        "en": "Approximated curve",
+        "de": "Approximierte Kurve"
+      },
+      "description": {
+        "en": "Fits a smooth spline with a limited number of control points close to the points.",
+        "de": "Legt einen glatten Spline mit begrenzter Kontrollpunktzahl nahe an die Punkte."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The points to approximate; at least two.",
+            "de": "Die zu approximierenden Punkte; mindestens zwei."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 2,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              3,
+              1,
+              0
+            ],
+            [
+              4,
+              0,
+              0
+            ]
+          ]
+        },
+        {
+          "name": "degree",
+          "label": {
+            "en": "Degree",
+            "de": "Grad"
+          },
+          "description": {
+            "en": "Polynomial degree of the spline.",
+            "de": "Polynomgrad des Splines."
+          },
+          "type": "integer",
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "name": "controlPoints",
+          "label": {
+            "en": "Control points",
+            "de": "Kontrollpunkte"
+          },
+          "description": {
+            "en": "Number of control points of the result; fewer gives a smoother curve.",
+            "de": "Anzahl der Kontrollpunkte des Ergebnisses; weniger ergibt eine glattere Kurve."
+          },
+          "type": "integer",
+          "default": 4,
+          "min": 2,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The approximating spline.",
+            "de": "Der approximierende Spline."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve"
+          ]
+        }
+      ],
+      "quality": "approximate",
+      "preview": true
+    },
+    {
+      "id": "brep.curve.helix",
+      "category": "brep.curve",
+      "emoji": "🌀️",
+      "label": {
+        "en": "Helix",
+        "de": "Schraubenlinie"
+      },
+      "description": {
+        "en": "Creates a helix around an axis, built as a polyline with 32 segments per turn.",
+        "de": "Erzeugt eine Schraubenlinie um eine Achse, aufgebaut als Polylinie mit 32 Segmenten je Windung."
+      },
+      "inputs": [
+        {
+          "name": "origin",
+          "label": {
+            "en": "Origin",
+            "de": "Ursprung"
+          },
+          "description": {
+            "en": "Start point of the axis.",
+            "de": "Startpunkt der Achse."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the helix axis.",
+            "de": "Richtung der Schraubenachse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "pitch",
+          "label": {
+            "en": "Pitch",
+            "de": "Steigung"
+          },
+          "description": {
+            "en": "Distance travelled along the axis per full turn.",
+            "de": "Weg entlang der Achse pro voller Windung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "turns",
+          "label": {
+            "en": "Turns",
+            "de": "Windungen"
+          },
+          "description": {
+            "en": "Number of full turns; fractions are allowed.",
+            "de": "Anzahl voller Windungen; Bruchteile sind erlaubt."
+          },
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The helix as an open wire.",
+            "de": "Die Schraubenlinie als offener Kantenzug."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "quality": "approximate",
+      "preview": true
+    }
+  ]
+}

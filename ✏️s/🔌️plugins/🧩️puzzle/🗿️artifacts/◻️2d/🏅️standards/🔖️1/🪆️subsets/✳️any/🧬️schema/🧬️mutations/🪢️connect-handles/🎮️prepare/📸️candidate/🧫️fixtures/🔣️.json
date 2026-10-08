@@ -1,0 +1,130 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128
+  },
+  "cases": [
+    {
+      "name": "unconditional",
+      "preparationCase": "unconditional-missing-handles",
+      "edges": [
+        "keep",
+        "last"
+      ],
+      "index": null,
+      "after": [
+        "keep",
+        "last",
+        "e"
+      ]
+    },
+    {
+      "name": "middle",
+      "preparationCase": "unconditional-missing-handles",
+      "edges": [
+        "first",
+        "middle",
+        "last"
+      ],
+      "index": 1,
+      "after": [
+        "first",
+        "e",
+        "middle",
+        "last"
+      ]
+    },
+    {
+      "name": "front",
+      "preparationCase": "unconditional-missing-handles",
+      "edges": [
+        "first",
+        "last"
+      ],
+      "index": 0,
+      "after": [
+        "e",
+        "first",
+        "last"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "preparationCase": "duplicate-before-drift",
+      "edges": [
+        "keep",
+        "e"
+      ],
+      "index": 0,
+      "after": [
+        "keep",
+        "e"
+      ]
+    },
+    {
+      "name": "negative",
+      "preparationCase": "negative-before-duplicate",
+      "edges": [
+        "e"
+      ],
+      "index": 0,
+      "after": [
+        "e"
+      ]
+    },
+    {
+      "name": "nonfinite",
+      "preparationCase": "nonfinite-before-duplicate",
+      "edges": [
+        "e"
+      ],
+      "index": 0,
+      "after": [
+        "e"
+      ]
+    },
+    {
+      "name": "drifted",
+      "preparationCase": "drifted",
+      "edges": [
+        "first",
+        "last"
+      ],
+      "index": 1,
+      "after": [
+        "first",
+        "e",
+        "last"
+      ]
+    },
+    {
+      "name": "clamped",
+      "preparationCase": "ordered-clamp",
+      "edges": [
+        "keep",
+        "last"
+      ],
+      "index": 500,
+      "after": [
+        "keep",
+        "last",
+        "e"
+      ]
+    },
+    {
+      "name": "large-native",
+      "preparationCase": "large-prefix",
+      "edges": [
+        "first",
+        "last"
+      ],
+      "index": 0,
+      "after": [
+        "e",
+        "first",
+        "last"
+      ]
+    }
+  ]
+}

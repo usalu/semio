@@ -8,30 +8,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "PatchSnapshot"
-      ],
-      "properties": {
-        "PatchSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/mutation/patch-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "MoveObject"
       ],
       "properties": {

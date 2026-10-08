@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌅️change-scene-sun/🌅️raises/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌅️change-scene-sun/🌅️raises/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-scene-sun-elevation diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-scene-sun-elevation diff applies")
 }
 
 /// ▶️ `change-scene-sun-elevation` raises the sun above the horizon, in degrees, within a CLOSED
@@ -93,9 +93,9 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["scene"]["sun"]["elevation"], 60.0, "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the edited field inside the cloned scene");
-    assert_eq!(committed["scene"]["sun"]["azimuth"], 45.0, "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the compass bearing rides along at its BASE value");
-    assert_eq!(committed["scene"]["material"]["roughness"], 1.0, "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the material block is cloned verbatim, not re-derived");
+    assert_eq!(committed["scene"]["sunElevation"], 60.0, "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the edited field inside the cloned scene");
+    assert!(committed["scene"]["sunAzimuth"].is_null(), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the sunAzimuth slot stays null — the delta names only the edited field");
+    assert!(committed["scene"]["materialRoughness"].is_null(), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: the materialRoughness slot stays null — the delta names only the edited field");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed whole-scene block round-trips through `ShootingDiff` unchanged.
@@ -111,6 +111,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-scene-sun-elevation/raises-scene-sun-to-60-degrees: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

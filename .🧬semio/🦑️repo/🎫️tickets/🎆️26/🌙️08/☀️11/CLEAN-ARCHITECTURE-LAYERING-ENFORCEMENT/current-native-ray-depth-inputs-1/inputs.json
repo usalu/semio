@@ -1,0 +1,73 @@
+{
+  "schema": "ticket.current-native-ray-depth-inputs/v1",
+  "root": "/Users/ueli/Documents/semio",
+  "ticket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT",
+  "fixture": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json",
+  "bindings": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json",
+      "sha256": "56ae04d699207d5648467a02cb19b6ab9a4ce0f74587474edfdcf2cccdf6463f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs",
+      "sha256": "a6ddf65548737c98d125ac4318e64aa72d352b9382ab70d6d51652e6d734f1e6"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "f43c0d3a97047f7f64c37f3d93d4c1ffb18535df13dfc87673902f750e875c7d"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs",
+      "sha256": "03c806c4ecb0d0120fe3a3a8d1cc68e841ff56b815d89fa93628d8a2a6b68bc3"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+      "sha256": "bda624f34cd004179be8d03ac5a95d6bcbb5dd30b59d241adda954ab13e2e56e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json",
+      "sha256": "56ae04d699207d5648467a02cb19b6ab9a4ce0f74587474edfdcf2cccdf6463f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs",
+      "sha256": "a6ddf65548737c98d125ac4318e64aa72d352b9382ab70d6d51652e6d734f1e6"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "2a58ad3c24802238ffde605670c09875e295718aa0e1a3ae60d39e74f6827731"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs",
+      "sha256": "03c806c4ecb0d0120fe3a3a8d1cc68e841ff56b815d89fa93628d8a2a6b68bc3"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+      "sha256": "bda624f34cd004179be8d03ac5a95d6bcbb5dd30b59d241adda954ab13e2e56e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/terminal.json",
+      "sha256": "1fde3e47d52bec4933528e0f3d218d81bfa0f8d5e1eb320532654b896fe79852"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/dispatcher11-terminal.json",
+      "sha256": "24ffb2a7709473a352ebc5a5879bb205bb16b971b09217c13179aa409523bce9"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/node_modules/three/build/three.module.js",
+      "sha256": "d835eab0b3bca3fdfd51e2ce7d06911f4a089b08db73cc3cd70fe5e3005a623f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/node_modules/three/src/math/Ray.js",
+      "sha256": "602318aea40bf007a542fb6562d12d21a41d2e4cbb0aec5b86edd757e32ddd69"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/node_modules/three/src/objects/Line.js",
+      "sha256": "575a141e6c5c6933172082ab2584473240864488cc9c708f7f0bf67e6c06ce7d"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/node_modules/three/package.json",
+      "sha256": "e234d004910abe90f3451486d7ca9feaf7b9f4247b24d5a00233ff6e14bb67a0"
+    }
+  ],
+  "scope": "Source fixture camera mathematics and independent Three only; no attached native runtime acceptance"
+}

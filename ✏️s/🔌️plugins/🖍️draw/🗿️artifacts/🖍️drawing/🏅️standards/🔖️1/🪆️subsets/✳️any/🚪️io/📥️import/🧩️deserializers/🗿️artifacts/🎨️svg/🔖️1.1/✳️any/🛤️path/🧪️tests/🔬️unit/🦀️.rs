@@ -5,6 +5,9 @@ fn editable_svg_paths_match_neutral_geometry() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {
         let actual=parse_editable_svg_path(row["source"].as_str().unwrap());
+        let commands=parse_path_data(row["source"].as_str().unwrap());
+        if let Ok(commands)=commands {assert_eq!(actual,editable_svg_path_commands(&commands));}
         if row["after"].is_null() {assert!(actual.is_err(),"{}",row["name"]);} else {assert_eq!(actual.unwrap(),serde_json::from_value::<Vec<PathSegment>>(row["after"].clone()).unwrap(),"{}",row["name"]);}
     }
+    eprintln!("[DEBUG] native SVG decoded path commands and text grammar share exact neutral normalization");
 }

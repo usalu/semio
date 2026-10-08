@@ -60,6 +60,28 @@
       }
     },
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "portEnv": "PETS_STORIES_PORT"
+            },
+            "parameters": [
+              {
+                "id": "port",
+                "kind": "text",
+                "default": "6069",
+                "valueEnv": "PETS_STORIES_PORT"
+              },
+              {
+                "id": "menagerie",
+                "kind": "text",
+                "valueEnv": "PETS_MENAGERIE"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",

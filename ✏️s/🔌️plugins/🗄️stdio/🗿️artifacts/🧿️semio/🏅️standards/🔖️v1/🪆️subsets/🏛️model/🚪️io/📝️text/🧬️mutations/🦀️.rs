@@ -89,8 +89,6 @@ pub(crate) fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, St
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
     match m {
-        SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_model_snapshot(snapshot)),
-        SemioModelMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => format!("insert-spatial-node node={}", enc_spatial_node(node)),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => format!("remove-spatial-node id={}", enc_str(id)),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => format!(
@@ -125,16 +123,11 @@ pub(crate) fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioModelMutation::PatchSnapshot(crate::standards::v1::subsets::model::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("model mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?)? })),
         "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: dec_spatial_node(arg("node")?)? })),
         "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: dec_str(arg("id")?)? })),
         "set-spatial-node" => Ok(SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode {

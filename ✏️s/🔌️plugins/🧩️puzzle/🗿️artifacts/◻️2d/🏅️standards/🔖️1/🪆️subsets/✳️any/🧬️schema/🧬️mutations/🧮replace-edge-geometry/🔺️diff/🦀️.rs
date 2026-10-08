@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceEdgeGeometry` — patches the one addressed edge's connection
 //! pose.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgePatchEntry, Puzzle2dEdgesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgesDelta};
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_finite;
 
@@ -12,20 +12,22 @@ pub fn diff(payload: &super::ReplaceEdgeGeometry, base: &Puzzle2dSnapshot) -> pr
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "edge", payload.id), vec![payload.id.to_string_owner()]);
     };
-    let mut next = edge.clone();
-    next.gap = payload.new_gap;
-    next.shift = payload.new_shift;
-    next.rise = payload.new_rise;
-    next.rotation = payload.new_rotation;
-    next.turn = payload.new_turn;
-    next.tilt = payload.new_tilt;
-    next.x = payload.new_x;
-    next.y = payload.new_y;
-    if next == *edge {
+    let patch = Puzzle2dEdgePatch {
+        gap: (payload.new_gap != edge.gap).then_some(payload.new_gap),
+        shift: (payload.new_shift != edge.shift).then_some(payload.new_shift),
+        rise: (payload.new_rise != edge.rise).then_some(payload.new_rise),
+        rotation: (payload.new_rotation != edge.rotation).then_some(payload.new_rotation),
+        turn: (payload.new_turn != edge.turn).then_some(payload.new_turn),
+        tilt: (payload.new_tilt != edge.tilt).then_some(payload.new_tilt),
+        x: (payload.new_x != edge.x).then_some(payload.new_x),
+        y: (payload.new_y != edge.y).then_some(payload.new_y),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        edges: Some(Puzzle2dEdgesDelta { patched: vec![Puzzle2dEdgePatchEntry { id: payload.id.clone(), patch: Puzzle2dEdgePatch { replacement: Some(next) } }], ..Default::default() }),
+        edges: Some(Puzzle2dEdgesDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

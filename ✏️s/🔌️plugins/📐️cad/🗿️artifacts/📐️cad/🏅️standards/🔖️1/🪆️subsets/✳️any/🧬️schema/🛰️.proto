@@ -9,8 +9,9 @@ message CadArtifact {
   optional semio.os.store.ArtifactChild energy_model = 5;
   optional semio.os.store.ArtifactChild structure_classic_model = 6;
   repeated semio.os.store.ArtifactChild drawings = 7;
-  map<string, CadReferenceList> references_by_model_definition_id = 8;
-  repeated CadNode nodes = 9;
+  repeated semio.os.store.ArtifactChild breps = 8;
+  map<string, CadReferenceList> references_by_model_definition_id = 9;
+  repeated CadNode nodes = 10;
 }
 message CadNode { string id = 1; string label = 2; string kind = 3; }
 message CadReference {

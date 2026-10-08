@@ -418,7 +418,21 @@
     }
   }
 }
-\cs_new_protected:Npn \semio_graph_spread_end: { \clearpage \restoregeometry }
+% 📏 \restoregeometry assigns \@colht / \@colroom / \vsize LOCALLY, inside the
+% environment group, while the output routine set \@colht GLOBALLY to the
+% spread's taller \textheight on every spread page. Leaving the group therefore
+% reverts to that stale global spread height. The standard output routine
+% heals it on its next shipout, but longtable's \LT@output reads \@colht
+% without ever resetting it, so a long table opening on the page right after a
+% spread ran every one of its pages past the frame into the footer. Re-seat
+% the three column-height registers globally from the restored \textheight.
+\cs_new_protected:Npn \semio_graph_spread_end: {
+  \clearpage
+  \restoregeometry
+  \dim_gset_eq:cN { @colht } \textheight
+  \dim_gset_eq:cN { @colroom } \textheight
+  \dim_gset_eq:NN \tex_vsize:D \textheight
+}
 
 \NewDocumentEnvironment { GraphSpread } { O{} }
   { \semio_graph_spread_begin:n {#1} }

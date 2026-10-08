@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌐️change-asset-url/🌐️points/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌐️change-asset-url/🌐️points/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-asset-url diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-asset-url diff applies")
 }
 
 /// ▶️ `change-asset-url` repoints the mesh of "asset-prop" only. The asset's `format` is a separate
@@ -78,7 +78,7 @@ async fn declared_outcome_holds_and_repointing_at_the_same_url_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "change-asset-url/points-asset-prop-at-v2-mesh: repointing at the current url is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "change-asset-url/points-asset-prop-at-v2-mesh: the equality guard's frozen code");
-    let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "change-asset-url/points-asset-prop-at-v2-mesh: a no-op url change applies an empty diff");
 }
 
@@ -108,6 +108,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-asset-url/points-asset-prop-at-v2-mesh: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

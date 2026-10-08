@@ -1,7 +1,6 @@
 # SemioModelMutation union mirror -- named-variant vocabulary, discriminated on `mutation`.
 
 enum SemioModelMutationTag {
-  SET_SNAPSHOT
   INSERT_SPATIAL_NODE REMOVE_SPATIAL_NODE SET_SPATIAL_NODE
   INSERT_ELEMENT REMOVE_ELEMENT SET_ELEMENT
   INSERT_RELATION REMOVE_RELATION SET_RELATION
@@ -10,7 +9,6 @@ enum SemioModelMutationTag {
 
 type SemioModelMutation {
   mutation: SemioModelMutationTag!
-  snapshot: SemioModelSnapshot
   node: SpatialNode
   element: SemioModelElement
   relation: ModelRelation

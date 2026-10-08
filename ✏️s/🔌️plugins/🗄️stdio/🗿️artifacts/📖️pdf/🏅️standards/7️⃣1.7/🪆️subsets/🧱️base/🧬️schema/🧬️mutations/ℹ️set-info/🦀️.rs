@@ -18,8 +18,8 @@ pub struct SetInfo {
 impl MutationKind<PdfSnapshot, PdfMutation> for SetInfo {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info", kind: "set-info", record: "Set" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_info(self.info.clone()))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::diff_set_info(base, &self.info))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

@@ -8,6 +8,7 @@
     "schema",
     "id",
     "drawings",
+    "breps",
     "referencesByModelDefinitionId",
     "nodes"
   ],
@@ -44,6 +45,14 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/CadDrawingChild"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
+    "breps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CadBrepChild"
       },
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
@@ -308,6 +317,52 @@
           }
         }
       ]
+    },
+    "CadBrepChild": {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "brep"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CadBrepChildList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadBrepChild"
+          }
+        }
+      }
     }
   }
 }

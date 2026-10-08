@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the playbook artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookDiff {
     #[state(artifact)]

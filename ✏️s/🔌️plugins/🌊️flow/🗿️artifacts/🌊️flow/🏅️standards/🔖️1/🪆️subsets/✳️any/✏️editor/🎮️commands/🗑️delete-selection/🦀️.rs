@@ -33,7 +33,7 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, c
         sync_host_selection_domains(host, &nodes, &edges, &[]);
         Ok(host.has_selection() && host.delete_selection().is_ok())
     })?;
-    if emit.child_emits.is_empty() {
+    if emit.child_emits.is_empty() && emit.child_preparations.is_empty() {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
     }
     Ok(emit)

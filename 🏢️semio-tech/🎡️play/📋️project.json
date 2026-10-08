@@ -53,9 +53,9 @@
         "forwardAllArgs": false
       }
     },
-    "prepare-release": {
+    "catalog-release": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "inputs": [
         {
@@ -93,6 +93,23 @@
         "@semio-tech/framework-os-dev:prepare-vcs-react-release",
         "@semio-tech/framework-os-dev:prepare-home-react-release"
       ],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts catalog",
+        "forwardAllArgs": false
+      }
+    },
+    "prepare-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": ["catalog-release"],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare release",
@@ -149,6 +166,16 @@
       }
     },
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6033,
+              "portEnv": "SEMIO_TECH_PLAY_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "activate-dev"
@@ -171,6 +198,16 @@
       "outputs": []
     },
     "serve": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6033,
+              "portEnv": "SEMIO_TECH_PLAY_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
@@ -198,6 +235,17 @@
       "outputs": [
         "{projectRoot}/dist/pages"
       ]
+    },
+    "build-fresh": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts build-fresh",
+        "forwardAllArgs": false
+      }
     },
     "test": {
       "executor": "nx:run-commands",
@@ -239,6 +287,27 @@
         "semio": {
           "continuousSharing": false
         }
+      }
+    },
+    "test-release-routing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release-routing",
+        "forwardAllArgs": false
+      }
+    },
+    "test-release": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["workspace:deps-browsers"],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
+        "forwardAllArgs": true
       }
     },
     "test-e2e": {

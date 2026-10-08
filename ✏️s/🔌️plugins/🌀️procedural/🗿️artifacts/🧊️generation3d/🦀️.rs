@@ -202,6 +202,12 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    pub mod catalogue {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️catalogue/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
                     pub mod snapshot {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
@@ -230,110 +236,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "."]
-                        pub mod delete_widget_position {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/🧪️tests/🧹️unpins/🦀️.rs"]
-                            mod tests_unpins_the_node_a_position;
-                        }
-                        #[path = "."]
-                        pub mod disconnect_synapse {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts/🦀️.rs"]
-                            mod tests_cuts_wire_ab_leaving_both_nodes;
-                        }
-                        #[path = "."]
-                        pub mod delete_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/🚫️removes/🦀️.rs"]
-                            mod tests_removes_node_a_and_leaves_wire_ab_dangling;
-                        }
-                        #[path = "."]
-                        pub mod update_camera {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️update-camera/🧪️tests/🔍️frames/🦀️.rs"]
-                            mod tests_frames_the_graph_at_double_zoom;
-                        }
-                        #[path = "."]
-                        pub mod move_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/🧪️tests/📍️repositions/🦀️.rs"]
-                            mod tests_repositions_node_a_in_the_graph;
-                        }
-                        #[path = "."]
-                        pub mod change_schema {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-schema/🧪️tests/🏷️restamps/🦀️.rs"]
-                            mod tests_restamps_the_fixture_schema_id;
-                        }
-                        #[path = "."]
-                        pub mod update_synapse {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update/🧪️tests/📡️repoints/🦀️.rs"]
-                            mod tests_repoints_wire_ab_onto_the_cap_port;
-                        }
-                        #[path = "."]
-                        pub mod update_widget {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/🎚️retunes/🦀️.rs"]
-                            mod tests_retunes_the_knob_slider_value;
-                        }
                     }
                 }
                 #[path = "."]

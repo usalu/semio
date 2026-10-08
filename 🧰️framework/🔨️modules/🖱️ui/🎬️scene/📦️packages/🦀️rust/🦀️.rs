@@ -29,11 +29,14 @@ mod canvas2d_snapshot;
 mod surface;
 #[path = "../../🌍️world3d-snapshot/🦀️.rs"]
 mod world3d_snapshot;
+#[path = "../../📏️world3d-modelling/🦀️.rs"]
+mod world3d_modelling;
 
 pub use scenes::*;
 pub use canvas2d_snapshot::*;
 pub use surface::*;
 pub use world3d_snapshot::*;
+pub use world3d_modelling::*;
 
 #[path = "../../📷️framing/🦀️.rs"]
 mod framing;

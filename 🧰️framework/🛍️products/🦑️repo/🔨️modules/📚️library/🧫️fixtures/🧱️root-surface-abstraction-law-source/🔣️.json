@@ -158,8 +158,6 @@
   ],
   "route": {
     "target": "test-root-surface-abstraction-law-source",
-    "command": "bun ./📜️script.ts test root-surface-abstraction-law-source",
-    "launchName": "🧬schema🗺️surface🏛️abstraction🧪source-ownership",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-surface-abstraction-law-source"
+    "command": "bun ./📜️script.ts test root-surface-abstraction-law-source"
   }
 }

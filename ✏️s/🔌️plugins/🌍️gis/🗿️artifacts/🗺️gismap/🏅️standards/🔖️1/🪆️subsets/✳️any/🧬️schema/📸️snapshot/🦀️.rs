@@ -1,13 +1,8 @@
 //! 🧬️ GIS map snapshot schema — artifact-lane fields only.
 //!
-//! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
-//! `GisMapSnapshot` now carries real `store::ArtifactChild<…>` handles for its composed
-//! `drawing`/`image`/`value` slots, which `dsl::DslRecord`'s derive cannot represent (no `DslField`
-//! impl for `ArtifactChild<S>`) — same reason `🏔️gisterrain`/`💠️lowpoly`/`📐️cad` hand-roll their own
-//! codecs. Follows their exact hex/bracket convention; `positions`/`routes`/`regions` (still real
-//! `Vec<MapFeature>`, gis's own domain data, see `crate::🦀️.rs`'s
-//! `🔖️Composition` region) round-trip via JSON-then-hex, matching `📐️cad`'s `enc_json`/`dec_json`
-//! convention for its own structured (non-child) fields.
+//! Typed native records preserve intrinsic feature values and durable `drawing`/`image`/`value`
+//! child identities through the shared Text, Pack and SQLite projection in
+//! [`crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack`].
 
 use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
@@ -95,6 +90,5 @@ impl Default for GisMapSnapshot {
 //#region 🌉️IdentityBridge
 
 //#endregion 🌉️IdentityBridge
-
 
 

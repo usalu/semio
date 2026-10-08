@@ -67,7 +67,7 @@ fn selection_operation_fixtures() {
         let mut output = document.clone();
         for operation in operations { crate::mutations::apply_drawing_mutation(&mut output, &operation).unwrap(); }
         if let Some(count) = case["rootCount"].as_u64() { assert_eq!(output.layers.len(), count as usize, "{case}"); }
-        if let Some(order) = case["order"].as_array() { assert_eq!(output.layers.iter().map(|layer| layer_base(layer).id.as_str()).collect::<Vec<_>>(), order.iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "{case}"); }
+        if let Some(order) = case["order"].as_array() { assert_eq!(output.layers.iter().map(|layer| layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(), order.iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "{case}"); }
         if let Some(bounds) = case["bounds"].as_array() {
             for (layer, expected) in output.layers.iter().zip(bounds) {
                 let actual = crate::schema::drawing_layer_world_bounds(layer).unwrap();
@@ -86,7 +86,7 @@ fn repeated_duplication_preserves_unique_descendant_ids() {
     let id = layer_base(&group).id.clone();
     let mut document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
     for _ in 0..2 {
-        for mutation in plan(&document, &[id.clone()], "duplicate").unwrap() { crate::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
+        for mutation in plan(&document, &[id.to_string_owner()], "duplicate").unwrap() { crate::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
     }
     let ids = document.layers.iter().flat_map(|layer| match layer { DrawingLayerNode::Group(group) => vec![group.base.id.clone(), layer_base(&group.children[0]).id.clone()], _ => unreachable!() }).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(ids.len(), 6);
@@ -112,14 +112,14 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
         base.transform=crate::DrawingTransform {x:t["x"].as_f64().unwrap_or(0.0),y:t["y"].as_f64().unwrap_or(0.0),scale_x:t["scaleX"].as_f64().unwrap_or(1.0),scale_y:t["scaleY"].as_f64().unwrap_or(1.0),rotation:t["rotation"].as_f64().unwrap_or(0.0),shear:t["shear"].as_f64().unwrap_or(0.0)};
         layer
     }
-    fn visit(layers:&[DrawingLayerNode],parent:[f64;6],actual:&mut std::collections::BTreeMap<String,[f64;4]>) {
+    fn visit(layers:&semio_framework_value::list::PagedList<DrawingLayerNode,{usize::MAX}>,parent:[f64;6],actual:&mut std::collections::BTreeMap<String,[f64;4]>) {
         for layer in layers {
             let base=layer_base(layer);
             if let DrawingLayerNode::Group(group)=layer {
                 visit(&group.children,crate::schema::geometry::multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform)),actual);
             }else {
                 let (x,y,width,height)=crate::schema::drawing_layer_bounds_with_parent(layer,parent).unwrap();
-                actual.insert(base.id.clone(),[x,y,width,height]);
+                actual.insert(base.id.to_string_owner(),[x,y,width,height]);
             }
         }
     }
@@ -154,7 +154,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
             let DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};
             group.base.id="parent".into();group.children=layers.into();vec![layer]
         }else {layers};
-        let document=DrawingSnapshot {layers,..Default::default()};
+        let document=DrawingSnapshot {layers:layers.into_iter().collect(),..Default::default()};
         let saved=document.clone();
         let ids:Vec<String>=serde_json::from_value(case["ids"].clone()).unwrap();
         let mutations=plan(&document,&ids,case["operation"].as_str().unwrap()).unwrap();
@@ -163,7 +163,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
         let mut output=document.clone();
         for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let layers=if nested {let DrawingLayerNode::Group(group)=&output.layers[0] else {unreachable!()}; &group.children}else {&output.layers};
-        assert_eq!(layers.iter().map(|layer|layer_base(layer).id.as_str()).collect::<Vec<_>>(),case["after"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>(),"{}",case["name"]);
+        assert_eq!(layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["after"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>(),"{}",case["name"]);
     }}
 }
 
@@ -181,7 +181,7 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
         assert_eq!(selection,serde_json::from_value::<Vec<String>>(case["selection"].clone()).unwrap());
         let mut output=document.clone();
         for mutation in mutations {crate::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
-        assert_eq!(output.layers.iter().map(|layer|layer_base(layer).id.as_str()).collect::<Vec<_>>(),case["order"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>());
+        assert_eq!(output.layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["order"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>());
         for (id,expected) in case["matrices"].as_object().unwrap() {
             let base=layer_base(find_drawing_layer(&output,id).unwrap());
             let matrix=crate::schema::drawing_transform_to_matrix(&base.transform);

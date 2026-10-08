@@ -329,7 +329,7 @@ struct ScalarBytes {
 impl ScalarBytes {
     /// 🔓️ Every arm but `F32` is now serde-free: `null`/`bool`/plain-decimal integers have a
     /// single unambiguous JSON spelling (no shortest-round-trip question the way floats have), so
-    /// they are written directly; `F64` routes through `pack::json::format_f64`, proven
+    /// they are written directly; `F64` routes through the allocation-free `pack::json::write_float_to`, proven
     /// byte-identical to `serde_json`'s own `f64` writer for every value (`.🧬semio/🦑️repo/
     /// 🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
     /// 🔍️research/📓️float-format-parity.md`). `F32` stays on `serde_json` — that proof covers only
@@ -346,10 +346,19 @@ impl ScalarBytes {
             ArtifactCanonicalJsonNode::I128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
             ArtifactCanonicalJsonNode::U128(value) => write!(scalar, "{value}").map_err(|error| error.to_string()),
             ArtifactCanonicalJsonNode::F32(value) => serde_json::to_writer(&mut scalar, &value).map_err(|error| error.to_string()),
-            ArtifactCanonicalJsonNode::F64(value) => scalar.write_all(semio_framework_pack_json::format_f64(value).as_bytes()).map_err(|error| error.to_string()),
+            ArtifactCanonicalJsonNode::F64(value) => semio_framework_pack_json::write_float_to(value, &mut scalar).map_err(|error| error.to_string()),
             _ => return Err(invalid_path()),
         }?;
         Ok(scalar)
+    }
+}
+
+impl std::fmt::Write for ScalarBytes {
+    fn write_str(&mut self, text: &str) -> std::fmt::Result {
+        let end = self.length.checked_add(text.len()).filter(|end| *end <= self.bytes.len()).ok_or(std::fmt::Error)?;
+        self.bytes[self.length..end].copy_from_slice(text.as_bytes());
+        self.length = end;
+        Ok(())
     }
 }
 
@@ -560,47 +569,38 @@ impl ArtifactCanonicalJsonCursor {
 pub(super) struct ArtifactStoreOneItemAuthorityRetirement {
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     strings: [Option<String>; 4],
-    active: Option<ArtifactStoreStringRetirement>,
 }
 
 impl ArtifactStoreOneItemAuthorityRetirement {
     pub(super) fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>) -> Self {
-        Self { authority: Some(authority), strings: Default::default(), active: None }
+        Self { authority: Some(authority), strings: Default::default() }
     }
+    fn authority_bytes() -> usize { std::mem::size_of::<ArtifactStoreOneItemLiveAuthority>() + 2 * std::mem::size_of::<usize>() }
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(authority) = self.authority.as_ref() { return if Arc::strong_count(authority) == 1 { Self::authority_bytes() } else { 0 }; }
+        self.strings.iter().find_map(|value| value.as_ref().map(String::capacity)).unwrap_or(0)
+    }
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if items == 0 || bytes == 0 {
-            return Ok(SnapshotRetirementStep::Blocked);
-        }
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, bytes)? {
-                SnapshotRetirementStep::Complete => {
-                    assert!(active.terminal_is_empty());
-                    self.active = None;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                step => Ok(step),
-            };
+        if items == 0 || bytes < self.next_close_byte_demand() { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(authority) = self.authority.take() {
+            let released_bytes = if let Some(authority) = Arc::into_inner(authority) {
+                self.strings = [Some(authority.actor), authority.group_id, authority.stamped_edit_id, authority.line];
+                Self::authority_bytes()
+            } else { 0 };
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
         if let Some(value) = self.strings.iter_mut().find_map(Option::take) {
-            self.active = Some(ArtifactStoreStringRetirement::new(value));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.take() {
-            if let Some(authority) = Arc::into_inner(authority) {
-                self.strings = [Some(authority.actor), authority.group_id, authority.stamped_edit_id, authority.line];
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            let released_bytes = value.capacity();
+            drop(value);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
         Ok(SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool {
-        self.authority.is_none() && self.strings.iter().all(Option::is_none) && self.active.is_none()
-    }
+    fn terminal_is_empty(&self) -> bool { self.authority.is_none() && self.strings.iter().all(Option::is_none) }
 }
-
 impl Drop for ArtifactStoreOneItemAuthorityRetirement {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "Store live authority dropped before bounded string retirement completed");

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePlantLoopDesignFlow` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PlantLoopConfigPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangePlantLoopDesignFlow, base: &EnergyModelSnapsh
     if existing.design_flow_kg_s == payload.new_design_flow_kg_s {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Plant loop {} already has that design mass flow.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.plant_loops.iter_mut().find(|item| item.id == payload.id) {
-        item.design_flow_kg_s = payload.new_design_flow_kg_s;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::modifying(PlantLoopConfigPatch { design_flow_kg_s: Some(payload.new_design_flow_kg_s), ..PlantLoopConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

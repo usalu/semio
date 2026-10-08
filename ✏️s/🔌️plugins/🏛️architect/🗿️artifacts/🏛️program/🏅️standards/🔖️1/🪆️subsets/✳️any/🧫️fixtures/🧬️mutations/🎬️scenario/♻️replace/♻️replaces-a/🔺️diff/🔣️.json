@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -44,52 +43,49 @@
   "requirements": null,
   "priorities": null,
   "scenarios": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "scenario-a",
-        "patch": {
-          "name": "Scenario A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "code": "Replaced Scenario A",
-          "hypothesis": {
-            "text": ""
-          },
-          "assumptions": [],
-          "variables": [],
-          "elementIds": [],
-          "requirementIds": [],
-          "growthPlanId": null,
-          "probability": null,
-          "impactSummary": null,
-          "costDelta": null,
-          "areaDelta": null,
-          "headcountDelta": null,
-          "scheduleDelta": null,
-          "riskIds": [],
-          "optionIds": [],
-          "baseline": false,
-          "preferred": false,
-          "analysisIds": [],
-          "ownerId": null
-        }
+        "name": "Scenario A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "code": "Replaced Scenario A",
+        "hypothesis": {
+          "text": ""
+        },
+        "assumptions": [],
+        "variables": [],
+        "elementIds": [],
+        "requirementIds": [],
+        "growthPlanId": null,
+        "probability": null,
+        "impactSummary": null,
+        "costDelta": null,
+        "areaDelta": null,
+        "headcountDelta": null,
+        "scheduleDelta": null,
+        "riskIds": [],
+        "optionIds": [],
+        "baseline": false,
+        "preferred": false,
+        "analysisIds": [],
+        "ownerId": null
       }
     ],
+    "removed": [
+      "scenario-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "options": null,
@@ -114,9 +110,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

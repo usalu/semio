@@ -565,6 +565,7 @@ impl Drop for JackOwnedRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct JackSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<JackSnapshot> for JackSnapshotRetirementFactory {
@@ -618,11 +619,14 @@ impl Drop for JackSnapshotRootRetirement {
 }
 
 impl store::SnapshotRetirementFactory<JackSnapshot> for JackSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<JackSnapshot>) -> usize { std::mem::size_of::<JackSnapshotRootRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<JackSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(JackSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct JackMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<TrinityGraphMutation> for JackMutationRetirementFactory {
@@ -632,6 +636,7 @@ impl store::ArtifactOwnedValueRetirementFactory<TrinityGraphMutation> for JackMu
 }
 
 /// 🧮️ Retires a query effect's owned strings, nodes, edges and property values through the bounded Jack cursor.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct JackEffectRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<GraphEffect> for JackEffectRetirementFactory {
@@ -800,6 +805,10 @@ impl JackMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for JackMutationDecodeAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if matches!(self.state, JackMutationDecodeState::Decode(_)) { return Ok(JACK_OWNED_FIELD_BYTES); }
+        Ok(self.retirement.as_ref().map_or(0, store::artifact_retirement_box_byte_demand))
+    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -851,9 +860,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let JackMutationDecodeState::Decode(authority) = &mut self.state {
+            if maximum_bytes < JACK_OWNED_FIELD_BYTES { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
             authority.cancel();
             self.state = JackMutationDecodeState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: JACK_OWNED_FIELD_BYTES });
         }
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
@@ -865,16 +875,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
             return Ok(store::SnapshotRetirementStep::Complete);
         }
         let path = self.path;
-        let retirement = self.retirement.as_mut().expect("Jack mutation retirement remains retained");
-        match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path })? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = JackMutationDecodeState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(self.diagnostic("jack-envelope.mutation-retirement-false-terminal", 0)),
-            step => Ok(step),
-        }
+        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1431,6 +1432,10 @@ impl JackStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(JACK_OWNED_FIELD_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"jack-store.initializer-stale-authority");

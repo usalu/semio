@@ -3771,7 +3771,8 @@ function WorldCanvasChildren(props: { readonly slot: WorldCanvasChildrenSlotV1 }
 
 const WORLD_CANVAS_STYLE: CSSProperties = { height: "100%", width: "100%" };
 const WORLD_CANVAS_DEFAULT_DPR: [number, number] = [1, 2];
-const WORLD_CANVAS_DEFAULT_GL = { antialias: true };
+/** 🖨️ `stencil` is on because the world section cap (`World3dSection.cap`) closes a cut with a stencil pass. */
+const WORLD_CANVAS_DEFAULT_GL = { antialias: true, stencil: true };
 
 /** 🌍️ Generic infinite-world r3f canvas shell (`frameloop="demand"`).
  *

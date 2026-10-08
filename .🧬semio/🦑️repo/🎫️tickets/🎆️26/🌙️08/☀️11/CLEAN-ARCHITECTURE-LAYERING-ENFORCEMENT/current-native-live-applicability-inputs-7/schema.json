@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "parserCases",
+    "expectations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none-before",
+              "none-after",
+              "unrelated-root",
+              "selected-root",
+              "model-after-before",
+              "model-before-after",
+              "new-model-created-before",
+              "new-model-missing-after",
+              "immutable-change",
+              "immutable-missing",
+              "watch-add",
+              "watch-remove",
+              "watch-change",
+              "watch-kind",
+              "generated-change",
+              "external-change",
+              "external-add",
+              "helper-change",
+              "witness-change",
+              "missing-source",
+              "unknown-phase",
+              "extra-proof",
+              "missing-model",
+              "pair-hash",
+              "pair-forward",
+              "pair-inverse",
+              "model-absence-kind",
+              "binding-symlink",
+              "owner-duplicate",
+              "owner-missing",
+              "join-initial-hash",
+              "join-model-hash",
+              "join-prepared-hash",
+              "join-missing",
+              "plan-change",
+              "dependency-hash",
+              "dependency-missing",
+              "dependency-root-map",
+              "missing-compiled-dep",
+              "depfile-change",
+              "depfile-unlisted",
+              "declared-executed-overlap",
+              "watch-empty-directory",
+              "external-empty-directory",
+              "root-input-duplicate",
+              "model-relative-traversal",
+              "nonmodel-after-change",
+              "immutable-root-injection",
+              "cancel-before",
+              "cancel-during",
+              "negative-file",
+              "negative-file-after",
+              "negative-directory",
+              "negative-directory-after",
+              "negative-symlink",
+              "negative-symlink-after",
+              "negative-model-witness",
+              "negative-prepared-witness",
+              "model-noncanonical-order"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 59,
+      "maxItems": 59
+    },
+    "parserCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "paths",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "expectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelCount",
+        "ownerCount",
+        "scope"
+      ],
+      "properties": {
+        "modelCount": {
+          "const": 27
+        },
+        "ownerCount": {
+          "const": 3
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

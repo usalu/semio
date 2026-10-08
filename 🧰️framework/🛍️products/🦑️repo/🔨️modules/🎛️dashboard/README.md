@@ -6,9 +6,9 @@ process lifecycle and reconnect. It works without an editor.
 
 ## 🎛️ Developer Control Plane
 
-Install once with `bun run dashboard:install`, then start with `bun run dashboard` or the Dashboard
-launch entry. Installation builds and publishes an immutable executable with visible progress and
-cancellation. Ordinary startup reads its small installation record and starts the native executable
+Start with `bun run dashboard` or the Dashboard launch entry. The first start builds and installs
+the executable once; `bun run dashboard:install` republishes it after dashboard source changes.
+Installation builds and publishes an immutable executable with visible progress and cancellation. Ordinary startup reads its small installation record and starts the native executable
 directly, without provisioning tools, hashing the binary, computing an Nx graph or building.
 The installation command prints the executable path for direct native invocation.
 
@@ -18,8 +18,30 @@ and daemon connection run in the background. Choose New Task and type search ter
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
 `Ctrl+B c`; at most 128 starts can wait. The known catalog and full discovery run after the first frame.
-The launcher discovers every Nx project target and root Nx package script. Project targets execute
-through `bun nx run`; root scripts execute through `bun run` and their declared Nx command.
+The launcher offers every Nx project target, every root Nx package script and every terminal
+configuration and compound of `.vscode/launch.json`, each filed under the verb it performs:
+`setup`, `start`, `dev`, `serve`, `watch`, `activate`, `prepare`, `run`, `build`, `package`, `test`,
+`smoke`, `check`, `typecheck`, `verify`, `gate`, `lint`, `format`, `generate`, `publish`, `deploy`,
+`preview`, `bench`, `clean`, and `task` for any other name. A target reads
+`build / ♻️mit-bestand / 📋️bericht / 🟦️typescript / build-zwischenbericht`, a script
+`build / workspace scripts / mit-bestand / zwischenbericht / ▶ run` and a launch configuration
+`build / launch / <name> — <command>`, so typing `build mit bestand zwischenbericht` lists all three.
+Scripts and launch configurations are available on the first frame; project targets follow discovery.
+Project targets execute through `bun nx run`; root scripts execute through `bun run` and their
+declared Nx command. A launch configuration runs its declared command, working directory and
+environment with `${workspaceFolder}`, `${env:NAME}` and defaulted `${input:id}` substituted: a plain
+argument list runs directly, anything needing expansion runs through `sh -c` or `cmd.exe /d /s /c`.
+A compound starts each member in its own task. A configuration needing an input without a default,
+or of another debugger type, is not offered.
+A finite task (every verb except `start`, `dev`, `serve`, `watch`, `activate` and `preview`) starts
+from the project graph Nx last published instead of rebuilding it, by setting
+`NX_FORCE_REUSE_CACHED_GRAPH=true`; file hashes and the task cache still read the current sources.
+Rebuilding that graph is what Nx reports as "Waiting for graph construction in another process",
+and it takes minutes while many Nx processes run. The published graph is used only while it is at
+least as new as `nx.json`, the root `package.json` and every project manifest the last discovery
+found; otherwise the task rebuilds and republishes it. Manifests created since the last discovery
+(`Ctrl+B f`) and targets inferred from other files are not part of that check;
+`SEMIO_DASHBOARD_GRAPH=fresh` makes every task rebuild the graph.
 Dashboard tasks set `NX_NATIVE_COMMAND_RUNNER=false` and `NX_TUI=false` so the workspace daemon
 owns terminal rendering and process lifecycle throughout Nx execution.
 The dashboard entry streams Nx output so an outer Nx task view does not take over its terminal.
@@ -89,23 +111,36 @@ Daemon restart retains completed projections and marks interrupted sessions as e
 
 ## 📦️ Packages
 
-- `📦️packages/🦀️rust` — `semio-framework-repo-dashboard`
+- `📦️packages/🦀️rust` — `semio-framework-repo-dashboard` (binary `semio`, entry point in
+  `🚪️entrypoint`), Nx project `@semio-tech/repo-dashboard-rs` with the `build`, `install`, `run`,
+  `daemon`, `workflow` and `preferences` targets behind the root `dashboard` scripts
+- `📦️installation` — the installation record, the immutable executable publication and the
+  native launch the Nx bootstrap wrapper takes for `run`, `daemon`, `workflow` and `preferences`
+
+The repo command line and the repo MCP server (`⌨️cli`) do not depend on this crate, so a compile
+break in the dashboard or the terminal UI never reaches them.
 
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the
 `🧪️test` harness; the recorded no-oracle decisions live in `🔮️oracles/🔣️.json`.
 
-`🌳️command-tree-projection`.
+`🌳️command-tree-projection`. `🧫️fixtures/🚀️launch-configurations` pins launch-configuration
+resolution, verb filing and search results for Rust and for an independent `jsonc-parser` projection.
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
 Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
 termination, singleton enforcement and reattachment: `bun nx run @semio-tech/repo-dashboard-rs:test-quick`.
 
+`🧊️execution` pins the native launch vectors of `🧫️fixtures/🧊️execution`, the Nx scheduling of
+`run` and `install`, and the immutable installation that keeps a running executable's bytes while
+a new build is published: `bun ./📜️script.ts test execution` in `📦️packages/🦀️rust`.
+
 After installing, set `SEMIO_TEST_CLI` to the printed native executable and run the dashboard
-test target with `--args='-- --include-ignored --nocapture'` to include native startup and
-attach/detach tests. `SEMIO_TEST_BUN` selects the repository-pinned Bun executable;
+test target with `--args='-- --include-ignored --nocapture'` to include native startup,
+attach/detach and launcher tests. The launcher test types a search into an actual pseudo-terminal,
+runs the selected launch configuration to its exit code and shuts the daemon down with `Ctrl+B Q`. `SEMIO_TEST_BUN` selects the repository-pinned Bun executable;
 `SEMIO_TEST_ARTIFACT_DIR` keeps temporary fixture workspaces in the ticket's generated directory.
 The native regression covers both a wrapper with redirected output and the actual Nx native
 command runner. The test bridge captures its process search path before Cargo adds test DLL paths.

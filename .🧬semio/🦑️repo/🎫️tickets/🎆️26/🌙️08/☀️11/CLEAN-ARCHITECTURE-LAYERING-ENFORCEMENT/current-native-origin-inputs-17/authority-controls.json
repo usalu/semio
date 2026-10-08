@@ -1,0 +1,87 @@
+[
+  {
+    "id": "valid-admission",
+    "accepted": true,
+    "phase": "admission"
+  },
+  {
+    "id": "root-before-advance",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "captured-before-advance",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "missing-corpus",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "missing-source-endpoint",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "duplicate-source-endpoint",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "source-endpoint-mismapped",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "source-hash-mismatch",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "original-hash-mismatch",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "duplicate-original-authority",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "original-path-mismapped",
+    "accepted": false,
+    "phase": "admission"
+  },
+  {
+    "id": "valid-sealed",
+    "accepted": true,
+    "phase": "sealed"
+  },
+  {
+    "id": "root-after-advance",
+    "accepted": true,
+    "phase": "sealed"
+  },
+  {
+    "id": "captured-after-advance",
+    "accepted": false,
+    "phase": "sealed"
+  },
+  {
+    "id": "ticket-after-advance",
+    "accepted": false,
+    "phase": "sealed"
+  },
+  {
+    "id": "external-after-advance",
+    "accepted": false,
+    "phase": "sealed"
+  },
+  {
+    "id": "declared-mapping-advance",
+    "accepted": false,
+    "phase": "sealed"
+  }
+]

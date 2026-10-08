@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 use store::{ArtifactDsl, ArtifactPack};
 
 fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
@@ -14,8 +14,8 @@ fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<
     }
 }
 
-#[test]
-fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
+#[semio_framework_async_macros::async_test]
+async fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).expect("neutral Architect window fixture");
     let app_config = crate::editor::architect::config::ArchitectConfig::default();
     assert_eq!(<crate::editor::architect::config::ArchitectConfig as ArtifactDsl>::envelope_id(), "architect.config");
@@ -31,9 +31,10 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let register_base: ArchitectRegisterWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["register"]["left"]["config"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Register base");
     let register_expected: ArchitectRegisterWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedLeft"]["register"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Register expected");
     let register_mutation: ArchitectRegisterWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["register"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Register mutation");
-    let register_after = register_mutation.diff(&register_base).diff().apply(&register_base).expect("Register diff");
+    let register_after = protocol::apply_diff(register_mutation.diff(&register_base).diff(), &register_base).expect("Register diff");
     assert_eq!(register_after, register_expected);
-    assert_eq!(register_mutation.inverse(&register_base).expect("valid retained mutation inverse fixture")[0].diff(&register_after).diff().apply(&register_after).expect("Register inverse"), register_base);
+    assert_eq!(protocol::apply_diff(register_mutation.inverse(&register_base).expect("valid retained mutation inverse fixture")[0].diff(&register_after).diff(), &register_after).expect("Register inverse"), register_base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&register_mutation, &register_base).await;
     assert_eq!(ArchitectRegisterWindowConfig::parse_dsl(&register_after.print_dsl()).expect("Register DSL"), register_after);
     assert_eq!(ArchitectRegisterWindowConfig::decode_pack(&register_after.encode_pack()).expect("Register Pack"), register_after);
     assert_eq!(ArchitectRegisterWindowConfigMutation::parse_op(&register_mutation.print_op()).expect("Register text op"), register_mutation);
@@ -42,9 +43,10 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let adjacency_base: adjacency::config::ArchitectAdjacencyWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["adjacency"]["left"]["config"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Adjacency base");
     let adjacency_expected: adjacency::config::ArchitectAdjacencyWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedLeft"]["adjacency"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Adjacency expected");
     let adjacency_mutation: adjacency::config::ArchitectAdjacencyWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["adjacency"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Adjacency mutation");
-    let adjacency_after = adjacency_mutation.diff(&adjacency_base).diff().apply(&adjacency_base).expect("Adjacency diff");
+    let adjacency_after = protocol::apply_diff(adjacency_mutation.diff(&adjacency_base).diff(), &adjacency_base).expect("Adjacency diff");
     assert_eq!(adjacency_after, adjacency_expected);
-    assert_eq!(adjacency_mutation.inverse(&adjacency_base).expect("valid retained mutation inverse fixture")[0].diff(&adjacency_after).diff().apply(&adjacency_after).expect("Adjacency inverse"), adjacency_base);
+    assert_eq!(protocol::apply_diff(adjacency_mutation.inverse(&adjacency_base).expect("valid retained mutation inverse fixture")[0].diff(&adjacency_after).diff(), &adjacency_after).expect("Adjacency inverse"), adjacency_base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&adjacency_mutation, &adjacency_base).await;
     assert_eq!(adjacency::config::ArchitectAdjacencyWindowConfig::parse_dsl(&adjacency_after.print_dsl()).expect("Adjacency DSL"), adjacency_after);
     assert_eq!(adjacency::config::ArchitectAdjacencyWindowConfig::decode_pack(&adjacency_after.encode_pack()).expect("Adjacency Pack"), adjacency_after);
     assert_eq!(adjacency::config::ArchitectAdjacencyWindowConfigMutation::parse_op(&adjacency_mutation.print_op()).expect("Adjacency text op"), adjacency_mutation);
@@ -53,9 +55,10 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let graph_base: graph::config::ArchitectGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["graph"]["left"]["config"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Graph base");
     let graph_expected: graph::config::ArchitectGraphWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedLeft"]["graph"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Graph expected");
     let graph_mutation: graph::config::ArchitectGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["graph"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Graph mutation");
-    let graph_after = graph_mutation.diff(&graph_base).diff().apply(&graph_base).expect("Graph diff");
+    let graph_after = protocol::apply_diff(graph_mutation.diff(&graph_base).diff(), &graph_base).expect("Graph diff");
     assert_eq!(graph_after, graph_expected);
-    assert_eq!(graph_mutation.inverse(&graph_base).expect("valid retained mutation inverse fixture")[0].diff(&graph_after).diff().apply(&graph_after).expect("Graph inverse"), graph_base);
+    assert_eq!(protocol::apply_diff(graph_mutation.inverse(&graph_base).expect("valid retained mutation inverse fixture")[0].diff(&graph_after).diff(), &graph_after).expect("Graph inverse"), graph_base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&graph_mutation, &graph_base).await;
     assert_eq!(graph::config::ArchitectGraphWindowConfig::parse_dsl(&graph_after.print_dsl()).expect("Graph DSL"), graph_after);
     assert_eq!(graph::config::ArchitectGraphWindowConfig::decode_pack(&graph_after.encode_pack()).expect("Graph Pack"), graph_after);
     assert_eq!(graph::config::ArchitectGraphWindowConfigMutation::parse_op(&graph_mutation.print_op()).expect("Graph text op"), graph_mutation);
@@ -64,9 +67,10 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
     let report_base: report::config::ArchitectReportWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["report"]["left"]["config"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Report base");
     let report_expected: report::config::ArchitectReportWindowConfig = semio_framework_pack_json::from_json_str(&fixture["expectedLeft"]["report"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Report expected");
     let report_mutation: report::config::ArchitectReportWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["report"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Report mutation");
-    let report_after = report_mutation.diff(&report_base).diff().apply(&report_base).expect("Report diff");
+    let report_after = protocol::apply_diff(report_mutation.diff(&report_base).diff(), &report_base).expect("Report diff");
     assert_eq!(report_after, report_expected);
-    assert_eq!(report_mutation.inverse(&report_base).expect("valid retained mutation inverse fixture")[0].diff(&report_after).diff().apply(&report_after).expect("Report inverse"), report_base);
+    assert_eq!(protocol::apply_diff(report_mutation.inverse(&report_base).expect("valid retained mutation inverse fixture")[0].diff(&report_after).diff(), &report_after).expect("Report inverse"), report_base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&report_mutation, &report_base).await;
     assert_eq!(report::config::ArchitectReportWindowConfig::parse_dsl(&report_after.print_dsl()).expect("Report DSL"), report_after);
     assert_eq!(report::config::ArchitectReportWindowConfig::decode_pack(&report_after.encode_pack()).expect("Report Pack"), report_after);
     assert_eq!(report::config::ArchitectReportWindowConfigMutation::parse_op(&report_mutation.print_op()).expect("Report text op"), report_mutation);

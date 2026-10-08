@@ -59,7 +59,7 @@ async fn inverse_reinstalls_the_displaced_building_handle() {
     match &inverse[0] {
         CadMutation::CreateBuildingModel(step) => {
             assert_eq!(step.child_id, "cad-building-1", "the inverse must reinstall the handle create-building-model displaced");
-            assert_eq!(step.target, "cad-building-1!s.stdio.semio@v1/model", "the inverse must carry the displaced handle's target URI");
+            assert_eq!(step.target, semio_framework_artifact_reference::ArtifactRef { artifact_id: "cad-building-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }, "the inverse must carry the displaced handle's target URI");
         }
         other => panic!("create-building-model over an OCCUPIED slot must invert to create-building-model, got {other:?}"),
     }

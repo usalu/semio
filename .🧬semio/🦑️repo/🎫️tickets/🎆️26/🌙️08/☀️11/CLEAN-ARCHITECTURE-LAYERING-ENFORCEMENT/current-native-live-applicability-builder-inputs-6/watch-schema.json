@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "snapshot",
+    "manifest",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "body",
+          "accepted",
+          "paths"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

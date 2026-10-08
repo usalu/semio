@@ -1,6 +1,6 @@
-//! 🔺️ Sparse diff builder for `AddNodeHandle` — patches the owner node's `🐙️handles` list. No-op
+//! 🔺️ Sparse diff builder for `AddNodeHandle` — adds one handle to the owner node's `🐙️handles`. No-op
 //! when the handle id already exists on that node.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dHandlesDelta, Puzzle2dNodePatch, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_invariant;
 
@@ -15,15 +15,12 @@ pub fn diff(payload: &super::AddNodeHandle, base: &Puzzle2dSnapshot) -> protocol
     if node.handles.iter().any(|handle| handle.id == payload.handle.id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Handle \"{}\" already exists on node \"{}\".", payload.handle.id, payload.node_id));
     }
-    let mut next = node.clone();
-    let at = payload.index.unwrap_or(next.handles.len()).min(next.handles.len());
-    next.handles.insert(at, payload.handle.clone());
-    if next == *node {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.node_id.to_string_owner()])]);
-    }
-    protocol::MutationOutcome::new(Puzzle2dDiff {
-        nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
-        ..Default::default()
-    })
+    let reordered = payload.index.filter(|index| *index < node.handles.len()).map(|index| {
+        let mut order: Vec<_> = node.handles.iter().map(|handle| handle.id.clone()).collect();
+        order.insert(index, payload.handle.id.clone());
+        order
+    });
+    let patch = Puzzle2dNodePatch { handles: Some(Puzzle2dHandlesDelta::adding(payload.handle.clone(), reordered)), ..Default::default() };
+    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(Puzzle2dNodesDelta::patching(payload.node_id.clone(), patch)), ..Default::default() })
 }
 //#endregion 🔖️Diff

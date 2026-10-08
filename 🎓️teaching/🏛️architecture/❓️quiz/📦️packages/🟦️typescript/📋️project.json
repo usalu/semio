@@ -1,5 +1,26 @@
 {
   "name": "@teaching/architecture-quiz",
+  "metadata": {
+    "semio": {
+      "dashboard": {
+        "compounds": [
+          {
+            "id": "quiz-with-proctor",
+            "verb": "dev",
+            "stop": "together",
+            "members": [
+              {
+                "run": "@teaching/proctor:dev"
+              },
+              {
+                "run": "@teaching/architecture-quiz:dev"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
     "default": [
@@ -29,6 +50,16 @@
   },
   "targets": {
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6061,
+              "portEnv": "TEACHING_ARCHITECTURE_QUIZ_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
       "options": {
@@ -48,6 +79,16 @@
       "continuous": true
     },
     "dev-site": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6061,
+              "portEnv": "TEACHING_ARCHITECTURE_QUIZ_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": ["@semio-tech/assets:build", "@semio-tech/ui-styling-tokens:generate"],
       "options": {

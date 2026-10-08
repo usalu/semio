@@ -111,5 +111,6 @@
     { "windowId": "flow-compiled-1", "claimedWindowKindId": "flow-main", "code": "flow-main-window-kind-required" },
     { "windowId": "flow-main-left", "claimedWindowKindId": "flow-generations", "code": "flow-window-kind-mismatch" }
   ],
-  "hostContext": { "programContributions": [{ "id": "host.extension", "kind": "flow.extension" }] }
+  "hostContext": { "programContributions": [{ "id": "host.extension", "kind": "flow.extension" }] },
+  "ownedMembers": [{ "slot": "content", "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" }]
 }

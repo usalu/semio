@@ -1,0 +1,10 @@
+{
+  "pageBytes": 4096,
+  "pageSlotBytes": 4098,
+  "pageCount": 1,
+  "ordinaryGrantBytes": 4096,
+  "maximumAdmissionBytes": 262144,
+  "expectedCloseDemandBytes": 4098,
+  "deniedPhysicalReleaseBytes": 0,
+  "phase": "RetiringRejectedMembers"
+}

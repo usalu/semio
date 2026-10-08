@@ -51,10 +51,10 @@ fn paged_native_recursive_clone_uses_admitted_lazy_cursor_owners() {
     let source = RetainedCloneSource::from_authority(Arc::new(tree), ());
     let mut cursor = PagedTree::retained_clone_cursor();
     for turn in 0..100000 {
-        let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(4096, 64) } else { RetainedCloneGrant::one_payload_turn(4096, 64) };
+        let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
         let step = cursor.advance(source.borrow(), grant).unwrap();
         let progress = step.progress();
-        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
+        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     let output = cursor.take().unwrap();
@@ -83,10 +83,10 @@ fn paged_native_record_derives_preserve_neutral_serde_and_dsl_shapes() {
     let authority = RetainedCloneBorrowAuthority::new(());
     let mut cursor = PagedDocument::retained_clone_cursor();
     for turn in 0..10000 {
-        let grant = if turn % 2 == 0 { RetainedCloneGrant::one_capacity_turn(4096, 64) } else { RetainedCloneGrant::one_payload_turn(4096, 64) };
+        let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) };
         let step = cursor.advance(authority.borrow(&source), grant).unwrap();
         let progress = step.progress();
-        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes <= 4096);
+        assert!(progress.copied_items <= 1 && progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     let cloned = cursor.take().unwrap();
@@ -116,7 +116,7 @@ fn neutral_record_vectors_match_independent_serde() {
             assert_eq!(serde_json::Value::from(actual.to_value()), serde_json::to_value(&oracle).unwrap());
             let source = RetainedCloneSource::from_authority(Arc::new(actual), ());
             let turn = &corpus["grant"];
-            let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize };
+            let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
             let mut cursor = Record::retained_clone_cursor();
             let mut turns = 0;
             loop {
@@ -145,7 +145,7 @@ fn neutral_record_vectors_match_independent_serde() {
 fn borrowed_record_clone_matches_neutral_serde_and_exact_cancellation() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️neutral-owner/🔣️.json")).unwrap();
     let turn = &corpus["grant"];
-    let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize };
+    let grant = RetainedCloneGrant { maximum_items: turn["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_depth: turn["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: turn["maximumReleaseBytes"].as_u64().unwrap() as usize };
     for row in corpus["vectors"].as_array().unwrap().iter().filter(|row| row["accepted"] == true) {
         let source: Record = serde_json::from_value(row["input"].clone()).unwrap();
         let authority = RetainedCloneBorrowAuthority::new((7u64, [9u8; 32]));

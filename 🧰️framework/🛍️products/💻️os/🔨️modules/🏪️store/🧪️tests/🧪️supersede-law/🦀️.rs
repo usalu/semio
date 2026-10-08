@@ -92,6 +92,14 @@ impl Mutation<DemoSnapshot> for LawOp {
 impl MemberStoreOwner<LawOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
+    fn member_store_owners_birth_bytes() -> usize {
+        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, LawOp>>([
+            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
+        ])
+    }
+
     fn member_store_owners() -> DocumentStoreOwners<Self, LawOp> {
         DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, LawOp>::new()))
     }
@@ -310,7 +318,7 @@ async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairabl
     let ids = operation_ids(&store);
     let finished = |store: &LawStore, drafts: &BTreeMap<MutationId, protocol::InputReplacement>| {
         let mut replay = store.begin_report_replay(drafts, None).expect("the session replay");
-        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("a Report replay never aborts on a refused inverse"), ReplayStep::Finished(_)));
+        drive_test_report_replay(&mut replay, store.replay_edits());
         replay.finish().expect("a finished replay yields its result")
     };
     let codes = |outcomes: &[protocol::MutationReplayOutcome], target: &MutationId| outcomes.iter().find(|outcome| outcome.mutation_id == *target).map(|outcome| (outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect::<Vec<_>>())).expect("the mutation's outcome");

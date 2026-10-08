@@ -35,18 +35,7 @@
     "userUnit": {
       "anyOf": [
         {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         {
           "type": "null"

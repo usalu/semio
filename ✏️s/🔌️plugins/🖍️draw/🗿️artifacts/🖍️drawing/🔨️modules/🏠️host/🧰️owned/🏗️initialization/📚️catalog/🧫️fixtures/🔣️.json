@@ -1,0 +1,8 @@
+{
+  "schema": "drawing.initialization.catalog-close/v1",
+  "lanes": ["applied", "redo", "cursorApplied", "cursorRedo", "appliedRevision", "redoRevision"],
+  "grants": ["zero", "below", "exact"],
+  "maximumItems": 1,
+  "coldBirthCredited": false,
+  "terminalDropBytes": 0
+}

@@ -59,6 +59,12 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/replace-references/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-brep/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-brep/schema.json"
     }
   ]
 }

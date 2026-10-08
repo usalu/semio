@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `DeleteNode`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeList, SemioGraphNodeList};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
 
 //#region 🔖️Diff
 /// 🧮️ The incident edges ONE `delete-node` may sever: the inverse rows its payload schema declares
@@ -24,11 +25,9 @@ pub fn diff(payload: &super::DeleteNode, base: &SemioGraphSnapshot) -> protocol:
     if severed > maximum {
         return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetReferenced, format!("Node \"{}\" is still referenced by {severed} edges; one delete severs at most {maximum}.", payload.id.value), [payload.id.value.clone()]);
     }
-    let mut nodes = base.nodes.clone();
-    nodes.retain(|n| n.id != payload.id);
-    let mut edges = base.edges.clone();
-    edges.retain(|e| e.source != payload.id && e.target != payload.id);
-    let outcome = protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: Some(SemioGraphEdgeList { values: edges }) });
+    let incident: Vec<usize> = base.edges.iter().enumerate().filter(|(_, e)| e.source == payload.id || e.target == payload.id).map(|(index, _)| index).collect();
+    let at = base.nodes.iter().position(|n| n.id == payload.id).expect("checked above");
+    let outcome = protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(IndexedTripleDiff { removed: vec![at], ..Default::default() }), edges: (!incident.is_empty()).then(|| IndexedTripleDiff { removed: incident, ..Default::default() }) });
     if severed > 0 {
         outcome.info("mutation.cascade", format!("Deleting node \"{}\" also severed {severed} edge(s).", payload.id.value))
     } else {

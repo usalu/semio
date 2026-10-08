@@ -27,12 +27,10 @@ interface SourceConsumer {
   readonly owners: readonly string[];
 }
 
-/** 🚀️ One Nx target and the launch row generated from it. */
+/** 🛣️ One Nx target and the package script mirroring it. */
 interface SourceRoute {
   readonly target: string;
   readonly command: string;
-  readonly launchName: string;
-  readonly launchCommand: string;
   readonly inputs?: readonly string[];
 }
 
@@ -108,14 +106,9 @@ test("removes root field implementations and binds every direct consumer", () =>
   expect(visited.size).toBe(owners.size);
 });
 
-test("registers one Bun Nx and launch route", () => {
+test("registers one Bun and Nx route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const source = readFileSync(resolve(repoRoot, path), "utf8");
-    expect(source.split(fixture.route.launchName).length - 1).toBe(1);
-    expect(source).toContain(fixture.route.launchCommand);
-  }
 });

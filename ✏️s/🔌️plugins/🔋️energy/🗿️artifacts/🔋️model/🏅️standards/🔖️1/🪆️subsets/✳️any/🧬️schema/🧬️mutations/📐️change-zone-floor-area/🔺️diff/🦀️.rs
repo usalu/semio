@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeZoneFloorAreaParticipation` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZonePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::ChangeZoneFloorAreaParticipation, base: &EnergyMode
     if existing.part_of_total_floor_area == payload.new_part_of_total_floor_area {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} already has partOfTotalFloorArea={}.", payload.id.0, payload.new_part_of_total_floor_area));
     }
-    let mut model = base.model.clone();
-    if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
-        zone.part_of_total_floor_area = payload.new_part_of_total_floor_area;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zones: Rows::modifying(ZonePatch { part_of_total_floor_area: Some(payload.new_part_of_total_floor_area), ..ZonePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

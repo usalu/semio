@@ -43,6 +43,7 @@ semio-s-artifact-stdio-zip = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework = { workspace = true }
 calamine = { version = "0.36.1", default-features = false }
 quick-xml = "0.42"

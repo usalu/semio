@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "owner": "engine_canvas::EngineSurfaceRegistry",
+  "beforeBytes": 86544,
+  "afterBytes": 90264,
+  "cases": [
+    {
+      "id": "slot-control-01",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "slot-control-02",
+      "mutation": "stack",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-03",
+      "mutation": "worker",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-04",
+      "mutation": "threshold",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-05",
+      "mutation": "capacity",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-06",
+      "mutation": "owner-bytes",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-07",
+      "mutation": "owner-name",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-08",
+      "mutation": "other-row",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-09",
+      "mutation": "element",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-10",
+      "mutation": "extra-field",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-11",
+      "mutation": "missing-row",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-12",
+      "mutation": "before-hash",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-13",
+      "mutation": "after-hash",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-14",
+      "mutation": "inverse",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-15",
+      "mutation": "path",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-16",
+      "mutation": "binding",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-17",
+      "mutation": "missing-binding",
+      "accepted": false
+    },
+    {
+      "id": "slot-control-18",
+      "mutation": "assertion",
+      "accepted": false
+    }
+  ]
+}

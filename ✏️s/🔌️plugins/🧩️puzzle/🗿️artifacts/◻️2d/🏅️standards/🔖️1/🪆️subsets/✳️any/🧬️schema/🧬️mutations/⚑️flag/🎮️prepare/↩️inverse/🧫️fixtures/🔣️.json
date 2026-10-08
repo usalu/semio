@@ -1,0 +1,381 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "id": "node-locked/set",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "node-locked/clear",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": true
+        }
+      ]
+    },
+    {
+      "id": "node-locked/false-is-authored",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "node-locked/same-null",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "node-locked/same-false",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": false
+        }
+      ]
+    },
+    {
+      "id": "node-locked/missing",
+      "inverse": []
+    },
+    {
+      "id": "node-locked/first-duplicate",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "a",
+          "newLocked": false
+        }
+      ]
+    },
+    {
+      "id": "node-locked/empty",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "",
+          "newLocked": true
+        }
+      ]
+    },
+    {
+      "id": "node-locked/nul-unicode",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "Größe\u0000幅",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "node-locked/large-prefix",
+      "inverse": [
+        {
+          "mutation": "changeNodeLocked",
+          "id": "$large:b",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/set",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/clear",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": true
+        }
+      ]
+    },
+    {
+      "id": "node-visible/false-is-authored",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/same-null",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/same-false",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": false
+        }
+      ]
+    },
+    {
+      "id": "node-visible/missing",
+      "inverse": []
+    },
+    {
+      "id": "node-visible/first-duplicate",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "a",
+          "newVisible": false
+        }
+      ]
+    },
+    {
+      "id": "node-visible/empty",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "",
+          "newVisible": true
+        }
+      ]
+    },
+    {
+      "id": "node-visible/nul-unicode",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "Größe\u0000幅",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "node-visible/large-prefix",
+      "inverse": [
+        {
+          "mutation": "changeNodeVisible",
+          "id": "$large:b",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/set",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/clear",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": true
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/false-is-authored",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/same-null",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/same-false",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": false
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/missing",
+      "inverse": []
+    },
+    {
+      "id": "edge-locked/first-duplicate",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "a",
+          "newLocked": false
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/empty",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "",
+          "newLocked": true
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/nul-unicode",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "Größe\u0000幅",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "edge-locked/large-prefix",
+      "inverse": [
+        {
+          "mutation": "changeEdgeLocked",
+          "id": "$large:b",
+          "newLocked": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/set",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/clear",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": true
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/false-is-authored",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/same-null",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/same-false",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": false
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/missing",
+      "inverse": []
+    },
+    {
+      "id": "edge-visible/first-duplicate",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "a",
+          "newVisible": false
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/empty",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "",
+          "newVisible": true
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/nul-unicode",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "Größe\u0000幅",
+          "newVisible": null
+        }
+      ]
+    },
+    {
+      "id": "edge-visible/large-prefix",
+      "inverse": [
+        {
+          "mutation": "changeEdgeVisible",
+          "id": "$large:b",
+          "newVisible": null
+        }
+      ]
+    }
+  ]
+}

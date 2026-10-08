@@ -60,10 +60,6 @@ pub mod remove_spatial_node;
 pub mod set_element;
 #[path = "🔧️set-relation/🦀️.rs"]
 pub mod set_relation;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🧭set-spatial-node/🦀️.rs"]
 pub mod set_spatial_node;
 #[path = "✋️drag-elements/🦀️.rs"]
@@ -82,10 +78,6 @@ pub mod scale_elements;
 #[mutations(snapshot = SemioModelSnapshot, diff = SemioModelDiff, schema = "SemioModelMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioModelMutation {
-    /// 🧩 Sparse full-state replace -- `diff()` is `SemioModelDiff::between`, never a
-    /// `snapshot: Option<Snapshot>` full-replace slot (schema-design.md).
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     InsertSpatialNode(insert_spatial_node::InsertSpatialNode),
     RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode),
     SetSpatialNode(set_spatial_node::SetSpatialNode),
@@ -105,15 +97,15 @@ pub enum SemioModelMutation {
 /// (catalog `semio-v1-model` in `../../🔮️oracles/🔣️.json`). 
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
 /// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation", "patch-snapshot", "drag-elements", "rotate-elements", "scale-elements"];
+pub const KINDS: &[&str] = &["insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation", "drag-elements", "rotate-elements", "scale-elements"];
 
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
-/// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
-    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_model_mutation(mutation: &SemioModelMutation, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
+    <SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ `SemioModelMutation`'s own computed inverse, reachable from OUTSIDE this crate. `protocol` is
 /// a private `extern crate semio_framework_os_kernel as protocol` alias in `🦀️.rs`, so an
@@ -129,96 +121,9 @@ pub fn semio_model_mutation_inverse(mutation: &SemioModelMutation, base: &SemioM
 }
 //#endregion 🔖️Mutation
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioModelMutation, base: &SemioModelSnapshot) -> protocol::MutationOutcome<SemioModelDiff> {
-    protocol::MutationOutcome::new(match this {
-        SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        SemioModelMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::diff(patch, base),
-        SemioModelMutation::DragElements(drag) => return <drag_elements::DragElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::diff(drag, base),
-        SemioModelMutation::RotateElements(turn) => return <rotate_elements::RotateElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::diff(turn, base),
-        SemioModelMutation::ScaleElements(scale) => return <scale_elements::ScaleElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::diff(scale, base),
-        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => SemioModelDiff { spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => SemioModelDiff {
-            spatial: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: SpatialNodeDiff { kind: *kind, name: name.clone(), parent_id: parent_id.clone(), placement: *placement } }], ..Default::default() }),
-            ..Default::default()
-        },
-        SemioModelMutation::InsertElement(insert_element::InsertElement { element }) => SemioModelDiff { elements: Some(NamedTripleDiff { added: vec![element.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::RemoveElement(remove_element::RemoveElement { id }) => SemioModelDiff { elements: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::SetElement(set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => SemioModelDiff {
-            elements: Some(NamedTripleDiff {
-                modified: vec![NamedModified { key: id.clone(), diff: SemioModelElementDiff { class: class.clone(), placement: *placement, geometry: geometry.clone(), spatial_id: spatial_id.clone(), psets: psets.clone() } }],
-                ..Default::default()
-            }),
-            ..Default::default()
-        },
-        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation }) => SemioModelDiff { relations: Some(NamedTripleDiff { added: vec![relation.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id }) => SemioModelDiff { relations: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
-        SemioModelMutation::SetRelation(set_relation::SetRelation { id, kind, from, to }) => {
-            SemioModelDiff { relations: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }], ..Default::default() }), ..Default::default() }
-        }
-    })
-}
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioModelMutation, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        SemioModelMutation::SetSnapshot(_) => vec![SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        SemioModelMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::inverse(patch, base)?),
-        SemioModelMutation::DragElements(drag) => return <drag_elements::DragElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::inverse(drag, base),
-        SemioModelMutation::RotateElements(turn) => return <rotate_elements::RotateElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::inverse(turn, base),
-        SemioModelMutation::ScaleElements(scale) => return <scale_elements::ScaleElements as protocol::MutationKind<SemioModelSnapshot, SemioModelMutation>>::inverse(scale, base),
 
-        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => vec![SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: node.id.clone() })],
-        SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => match base.spatial.iter().find(|n| &n.id == id) {
-            Some(original) => vec![SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: original.clone() })],
-            None => Vec::new(),
-        },
-        SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => match base.spatial.iter().find(|n| &n.id == id) {
-            Some(original) => vec![SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode {
-                id: id.clone(),
-                kind: kind.as_ref().map(|_| original.kind),
-                name: name.as_ref().map(|_| original.name.clone()),
-                parent_id: parent_id.as_ref().map(|_| original.parent_id.clone()),
-                placement: placement.as_ref().map(|_| original.placement),
-            })],
-            None => Vec::new(),
-        },
 
-        SemioModelMutation::InsertElement(insert_element::InsertElement { element }) => vec![SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: element.id.clone() })],
-        SemioModelMutation::RemoveElement(remove_element::RemoveElement { id }) => match base.elements.iter().find(|e| &e.id == id) {
-            Some(original) => vec![SemioModelMutation::InsertElement(insert_element::InsertElement { element: original.clone() })],
-            None => Vec::new(),
-        },
-        SemioModelMutation::SetElement(set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => match base.elements.iter().find(|e| &e.id == id) {
-            Some(original) => vec![SemioModelMutation::SetElement(set_element::SetElement {
-                id: id.clone(),
-                class: class.as_ref().map(|_| original.class.clone()),
-                placement: placement.as_ref().map(|_| original.placement),
-                geometry: geometry.as_ref().map(|_| original.geometry.clone()),
-                spatial_id: spatial_id.as_ref().map(|_| original.spatial_id.clone()),
-                psets: psets.as_ref().map(|_| original.psets.clone()),
-            })],
-            None => Vec::new(),
-        },
-
-        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation }) => vec![SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: relation.id.clone() })],
-        SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id }) => match base.relations.iter().find(|r| &r.id == id) {
-            Some(original) => vec![SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: original.clone() })],
-            None => Vec::new(),
-        },
-        SemioModelMutation::SetRelation(set_relation::SetRelation { id, kind, from, to }) => match base.relations.iter().find(|r| &r.id == id) {
-            Some(original) => {
-                vec![SemioModelMutation::SetRelation(set_relation::SetRelation { id: id.clone(), kind: kind.as_ref().map(|_| original.kind.clone()), from: from.as_ref().map(|_| original.from.clone()), to: to.as_ref().map(|_| original.to.clone()) })]
-            }
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
 
 //#region 🔖️RelativePlacement
@@ -345,8 +250,6 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let base = fixture();
     vec![
-        SemioModelMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() } }),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id: "s1".into(), kind: Some(SpatialKind::Storey), name: None, parent_id: Some(Some("root".into())), placement: None }),
@@ -370,15 +273,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔥️slides/🦀️.rs"]
-mod set_snapshot_slides_the_wall_and_attaches_a_fire_rating_pset;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

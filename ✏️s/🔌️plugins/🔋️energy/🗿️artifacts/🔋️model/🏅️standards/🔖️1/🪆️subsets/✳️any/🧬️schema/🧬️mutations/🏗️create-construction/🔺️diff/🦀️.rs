@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateConstruction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ConstructionPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +15,6 @@ pub fn diff(payload: &super::CreateConstruction, base: &EnergyModelSnapshot) -> 
     if let Some(missing) = payload.layer_material_ids.iter().find(|id| !base.model.materials.iter().any(|material| material.id == **id)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", missing.0), [missing.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.constructions.insert(payload.index as usize, crate::model::Construction { id: payload.id, name: payload.name.clone(), layer_material_ids: payload.layer_material_ids.clone() });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { constructions: Rows::inserting(payload.index as usize, crate::model::Construction { id: payload.id, name: payload.name.clone(), layer_material_ids: payload.layer_material_ids.clone() }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

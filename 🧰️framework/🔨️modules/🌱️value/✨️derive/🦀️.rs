@@ -9,8 +9,18 @@ mod retained_clone;
 #[path = "🚪️io/📝️text/📸️snapshot/🦀️.rs"]
 mod owned_json;
 
+#[path = "🏭️factory/🦀️.rs"]
+mod factory;
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
+
+/// 🏭️ Proves that each concrete factory field is Copy before declaring its payload heap-empty.
+#[proc_macro_derive(FactoryPayloadRetirement, attributes(factory_child, factory_owned))]
+pub fn derive_factory_payload_retirement(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    factory::expand(&input).unwrap_or_else(|error| error.to_compile_error()).into()
+}
 
 /// 📚️ Compiles a package-relative source JSON asset into an owned intrinsic value.
 #[proc_macro]

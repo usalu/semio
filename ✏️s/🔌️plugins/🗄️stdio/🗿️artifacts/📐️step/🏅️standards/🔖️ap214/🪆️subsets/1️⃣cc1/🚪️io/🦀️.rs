@@ -102,7 +102,8 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     use crate::standards::v_ap214::subsets::cc1::io::check_cc1_conformance;
-    use crate::{StepDiff, StepMutation, StepSnapshot};
+    use crate::{StepDiff, StepSnapshot};
+    use crate::standards::v_ap214::subsets::cc1::schema::mutations::{StepCc1Mutation, apply_step_cc1_mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -116,7 +117,7 @@ use semio_framework_diagnostic::Severity;
 
     impl ArtifactBuilder for StepCc1BuilderConstruction {
         type Snapshot = StepSnapshot;
-        type Mutation = StepMutation;
+        type Mutation = StepCc1Mutation;
         type Diff = StepDiff;
 
         fn empty() -> Self {
@@ -136,7 +137,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_step_cc1_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -277,3 +278,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: StepCc1Analyzer,
     composer: StepCc1Composer,
 );
+
+#[path = "🧬️mutations/🦀️.rs"]
+pub mod mutations;

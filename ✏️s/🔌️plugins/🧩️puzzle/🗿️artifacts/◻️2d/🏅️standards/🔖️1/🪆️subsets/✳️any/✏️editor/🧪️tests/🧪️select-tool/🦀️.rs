@@ -61,9 +61,9 @@ fn a_drag_record_yields_its_leaf_then_the_connection_its_drop_lands() {
     let base = board();
     let yields = puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord::drag(ids(&["right"]), -948.0, 0.0)], 12.0);
     assert_eq!(yields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), vec!["selection:0", "connect:edge-left:v0-right:v0"]);
-    assert_eq!(yields[0].1, Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 }), "the leaf records the literal targets and the offset");
+    assert_eq!(yields[0].1, Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]).into_iter().map(Into::into).collect(), dx: -948.0, dy: 0.0 }), "the leaf records the literal targets and the offset");
     let Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, tolerance, .. }) = &yields[1].1 else { panic!("the drop lands a connection: {:?}", yields[1].1) };
-    assert_eq!((id.as_str(), source.as_str(), target.as_str()), ("edge-left:v0-right:v0", "left:v0", "right:v0"), "the stationary peer is the source");
+    assert!(id.eq_str("edge-left:v0-right:v0") && source.eq_str("left:v0") && target.eq_str("right:v0"), "the stationary peer is the source");
     assert_eq!(*tolerance, Some(12.0), "the connection states the radius its search found it within");
     let far = puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord::drag(ids(&["right"]), -500.0, 0.0)], 12.0);
     assert_eq!(far.len(), 1, "a drop outside the radius lands no connection");
@@ -81,7 +81,7 @@ fn recorded_pairs_connect_as_recorded_and_minted_ids_stay_unique() {
     let Puzzle2dMutation::ConnectHandles(ConnectHandles { tolerance, .. }) = &yields[1].1 else { panic!("the recorded pair lands a connection: {:?}", yields[1].1) };
     let mut dropped = base.clone();
     apply_puzzle2d_mutation(&mut dropped, &yields[0].1).expect("the drag applies");
-    assert_eq!(*tolerance, crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_distance(&dropped, "right:v0", "left:v0"), "a pair the board recorded from farther than the radius states its recorded distance");
+    assert_eq!(*tolerance, crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_distance(&dropped, &"right:v0".into(), &"left:v0".into()), "a pair the board recorded from farther than the radius states its recorded distance");
     assert!(yields[1].1.diff(&dropped).messages().is_empty(), "replayed where it was recorded, the connection reports nothing");
     assert_eq!(puzzle2d_minted_edge_id(&board(), "a", "b"), "edge-a-b");
 }
@@ -129,7 +129,7 @@ fn a_mixed_request_yields_whole_and_its_leaf_reports_the_locked_rest_partial() {
     let record = Puzzle2dSelectionRecord { connect: false, ..Puzzle2dSelectionRecord::drag(ids(&["left", "locked"]), 5.0, 0.0) };
     assert!(record.applies_to(&base) && !record.refused_as_locked(&base));
     let (_, mutations) = commit("seed", &base, 0.0, vec![record]).expect("a movable target commits the whole record");
-    assert_eq!(mutations, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["left", "locked"]), dx: 5.0, dy: 0.0 })], "the locked target stays a literal input");
+    assert_eq!(mutations, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["left", "locked"]).into_iter().map(Into::into).collect(), dx: 5.0, dy: 0.0 })], "the locked target stays a literal input");
     let outcome = mutations[0].diff(&base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.partial"), "the leaf reports the locked target: {:?}", outcome.messages());
 }
@@ -164,12 +164,12 @@ fn a_streamed_gesture_spans_dispatches_and_commits_one_transaction() {
     assert!(opened.committed.is_none() && !opened.continued, "the first tick opens a gesture and publishes nothing");
     let first = opened.next.flatten().expect("an open gesture is the window's next gesture");
     assert_eq!((first.states.as_slice(), first.verb.as_str(), first.base_revision.as_str(), &first.context), (&["root".to_string(), "streaming".to_string()][..], "translateSelection", "rev-1", &semio_framework_value::DslValue::Bool(true)));
-    assert_eq!(first.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -400.0, dy: 0.0 }))], "a stream holds ONE net leaf");
+    assert_eq!(first.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]).into_iter().map(Into::into).collect(), dx: -400.0, dy: 0.0 }))], "a stream holds ONE net leaf");
     let ticked = drive(Some(&first), GesturePhase::Stream, Some(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -548.0, 0.0)])), "rev-1");
     assert!(ticked.committed.is_none() && ticked.continued, "a second tick continues the held gesture");
     let second = ticked.next.flatten().expect("the gesture is still open");
     assert_eq!(second.transaction, first.transaction, "every tick of one gesture joins ONE transaction");
-    assert_eq!(second.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 }))], "the ticks add up into the one leaf");
+    assert_eq!(second.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]).into_iter().map(Into::into).collect(), dx: -948.0, dy: 0.0 }))], "the ticks add up into the one leaf");
     let finished = drive(Some(&second), GesturePhase::Commit, Some(request(&base, Vec::new())), "rev-1");
     let (transaction, mutations) = finished.committed.expect("the commit publishes the gesture");
     assert_eq!(transaction, first.transaction, "the commit publishes the ref minted at the first tick");
@@ -211,12 +211,12 @@ fn a_tampered_or_resting_gesture_never_resumes() {
 fn a_committed_leaf_states_its_inputs_at_their_declared_precision() {
     let base = board();
     let (_, dragged) = commit("seed-1", &base, 0.0, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), 59.99996, -0.004)]).expect("the drag commits");
-    assert_eq!(dragged, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: 60.0, dy: 0.0 })]);
+    assert_eq!(dragged, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]).into_iter().map(Into::into).collect(), dx: 60.0, dy: 0.0 })]);
     let scale = Puzzle2dSelectionRecord { targets: ids(&["right"]), motion: Puzzle2dSelectionMotion::Scale { pivot_x: 10.004999, pivot_y: -0.001, factor: 1.4999999 }, proximity: Vec::new(), connect: false };
     let (_, scaled) = commit("seed-1", &base, 0.0, vec![scale]).expect("the scaling commits");
     assert_eq!(Puzzle2dSelectionRecord::from_leaf(&scaled[0], false).map(|record| record.motion), Some(Puzzle2dSelectionMotion::Scale { pivot_x: 10.0, pivot_y: 0.0, factor: 1.5 }));
     assert_eq!(commit("seed-1", &base, 0.0, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), 0.004, -0.004)]), None, "a drag that rounds to nothing leaves zero trace");
-    let exact = Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: 12.25, dy: -7.5 });
+    let exact = Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]).into_iter().map(Into::into).collect(), dx: 12.25, dy: -7.5 });
     assert_eq!(puzzle2d_declared_precision(exact.clone()), exact, "an input already at its precision is untouched");
 }
 
@@ -224,7 +224,7 @@ fn a_committed_leaf_states_its_inputs_at_their_declared_precision() {
 fn repeated_targets_yield_one_leaf_over_unique_targets() {
     let base = board();
     let (_, mutations) = commit("seed", &base, 0.0, vec![Puzzle2dSelectionRecord { connect: false, ..Puzzle2dSelectionRecord::drag(ids(&["left", "left", "region-1", "left"]), 5.0, 0.0) }]).expect("a drag with repeats commits");
-    assert_eq!(mutations, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["left", "region-1"]), dx: 5.0, dy: 0.0 })], "each target once, in first-seen order");
+    assert_eq!(mutations, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["left", "region-1"]).into_iter().map(Into::into).collect(), dx: 5.0, dy: 0.0 })], "each target once, in first-seen order");
     assert!(mutations[0].diff(&base).is_applicable(protocol::MergePolicy::default()), "the leaf passes its own invariants: {:?}", mutations[0].diff(&base).messages());
     let rotate = Puzzle2dSelectionRecord { targets: ids(&["left", "right", "left"]), motion: Puzzle2dSelectionMotion::Rotate { pivot_x: 0.0, pivot_y: 0.0, angle: 1.0 }, proximity: Vec::new(), connect: false };
     assert_eq!(rotate.mutation(), rotate_selection(["left".into(), "right".into()].into_iter().collect(), 0.0, 0.0, 1.0), "a literal record's leaf is deduplicated too");

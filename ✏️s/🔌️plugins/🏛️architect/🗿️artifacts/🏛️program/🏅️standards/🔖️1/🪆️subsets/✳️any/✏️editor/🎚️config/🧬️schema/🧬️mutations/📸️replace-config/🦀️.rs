@@ -13,11 +13,17 @@ pub struct ReplaceConfig {
 
 impl protocol::MutationKind<ArchitectConfig, ArchitectConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
-    fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
+    fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfigDiff> {
         if &self.config == base {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Requested config already matches.");
+            return protocol::MutationOutcome::new(ArchitectConfigDiff::default()).warning("mutation.no-op", "Requested config already matches.");
         }
-        protocol::MutationOutcome::new(self.config.clone())
+        let differing = |current: &String, requested: &String| (current != requested).then(|| requested.clone());
+        protocol::MutationOutcome::new(ArchitectConfigDiff {
+            search_query: differing(&base.search_query, &self.config.search_query),
+            search_history_json: differing(&base.search_history_json, &self.config.search_history_json),
+            last_result_json: differing(&base.last_result_json, &self.config.last_result_json),
+            last_analysis_json: differing(&base.last_analysis_json, &self.config.last_analysis_json),
+        })
     }
     fn inverse(&self, base: &ArchitectConfig) -> Result<Vec<ArchitectConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {

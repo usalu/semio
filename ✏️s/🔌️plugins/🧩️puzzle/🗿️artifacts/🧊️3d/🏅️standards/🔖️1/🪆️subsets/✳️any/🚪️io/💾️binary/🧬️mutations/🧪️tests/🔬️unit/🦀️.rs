@@ -1,4 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
+use crate::host::owned::{close_puzzle3d_store, puzzle3d_store};
 
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_document_vcs_replays_granular_operations() {

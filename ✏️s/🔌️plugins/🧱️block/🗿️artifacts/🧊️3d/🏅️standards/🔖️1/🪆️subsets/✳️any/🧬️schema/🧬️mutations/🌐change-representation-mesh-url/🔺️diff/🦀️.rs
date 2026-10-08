@@ -1,21 +1,18 @@
 //! 🔺️ Diff for `ChangeRepresentationMeshUrl`.
 
-use crate::BlockRepresentation;
 use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_plugin_block::{BlockRepresentationsDelta, BlockRepresentationsPatchEntry, BlockRepresentationPatch};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRepresentationMeshUrl, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "representation", payload.id), vec![payload.id.clone()]);
     };
-    let replacement = BlockRepresentation { mesh_url: payload.new_mesh_url.clone(), ..existing.clone() };
-    if replacement == *existing {
+    if existing.mesh_url == payload.new_mesh_url {
         return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block3dDiff {
-        representations: Some(Block3dRepresentationsDelta { patched: vec![Block3dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block3dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }),
-        ..Default::default()
-    })
+    let patch = BlockRepresentationPatch { mesh_url: Some(semio_s_plugin_block::BlockOptionalText { value: payload.new_mesh_url.clone() }), ..Default::default() };
+    protocol::MutationOutcome::new(Block3dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

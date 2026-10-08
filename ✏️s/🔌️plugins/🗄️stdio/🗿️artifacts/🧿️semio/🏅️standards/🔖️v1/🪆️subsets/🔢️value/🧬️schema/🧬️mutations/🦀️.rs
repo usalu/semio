@@ -90,10 +90,6 @@ pub mod set_node;
 /// `DslField` impl, same structural reason `SemioValueTreeDiff`'s own doc comment cites — reusing
 /// `SemioValueTreeDiff`'s `pub(crate)` grammar primitives.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🔁set-value/🦀️.rs"]
 pub mod set_value;
 //#endregion 🔖️Leaves
@@ -104,8 +100,6 @@ pub mod set_value;
 #[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of
     /// its previous kind.
     SetValue(set_value::SetValue),
@@ -127,7 +121,7 @@ pub enum SemioValueMutation {
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-value` mutation catalog (`../../🔣️oracle.json`) declares and
 /// `🔢️mutate-semio-value`'s exhaustive test case measures itself against.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
+pub const KINDS: &[&str] = &["set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️DiffAtPath
@@ -155,14 +149,13 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 }
 //#endregion 🔖️DiffAtPath
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
-/// once from the pre-mutation state, applied to produce the new state, and returned.
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
-    let outcome = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> protocol::MutationOutcome<SemioValueTreeDiff> {
+    <SemioValueMutation as protocol::Mutation<SemioValueSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
 /// `protocol` is a private `extern crate semio_framework_os_kernel as protocol;` alias that nothing
@@ -179,141 +172,9 @@ pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioV
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioValueMutation, base: &SemioValueSnapshot) -> protocol::MutationOutcome<SemioValueTreeDiff> {
-    protocol::MutationOutcome::new(match this {
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        SemioValueMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioValueSnapshot, SemioValueMutation>>::diff(patch, base),
 
-        SemioValueMutation::SetValue(set_value::SetValue { path, value }) => match resolve(&base.root, path) {
-            Some(old) if old != value => diff_at_path(path, Some(SemioValueDiff::Replace { value: value.clone() })),
-            _ => SemioValueTreeDiff::default(),
-        },
 
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => match resolve(&base.root, path) {
-            Some(SemioValue::Map { entries }) => match entries.iter().find(|e| &e.key == key) {
-                Some(existing) => {
-                    let leaf = value_diff_between(&existing.value, value);
-                    diff_at_path(path, leaf.map(|diff| SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff }] } }))
-                }
-                None => diff_at_path(
-                    path,
-                    Some(SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: entries.len(), item: SemioValueEntry { key: key.clone(), value: value.clone() } }] } }),
-                ),
-            },
-            _ => SemioValueTreeDiff::default(),
-        },
 
-        SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }) => match resolve(&base.root, path) {
-            Some(SemioValue::Map { entries }) if entries.iter().any(|e| &e.key == key) => diff_at_path(path, Some(SemioValueDiff::Map { diff: NamedTripleDiff { removed: vec![key.clone()], modified: Vec::new(), added: Vec::new() } })),
-            _ => SemioValueTreeDiff::default(),
-        },
-
-        SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, value }) => match resolve(&base.root, path) {
-            Some(SemioValue::List { items }) => diff_at_path(
-                path,
-                Some(SemioValueDiff::List {
-                    diff: crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }] },
-                }),
-            ),
-            _ => SemioValueTreeDiff::default(),
-        },
-
-        SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }) => match resolve(&base.root, path) {
-            Some(SemioValue::List { items }) if *index < items.len() => {
-                diff_at_path(path, Some(SemioValueDiff::List { diff: crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() } }))
-            }
-            _ => SemioValueTreeDiff::default(),
-        },
-
-        SemioValueMutation::SetNode(set_node::SetNode { id, value }) => match base.nodes.iter().find(|n| &n.id == id) {
-            Some(existing) => match value_diff_between(&existing.value, value) {
-                Some(diff) => SemioValueTreeDiff { root: None, nodes: Some(NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: id.clone(), diff }] }) },
-                None => SemioValueTreeDiff::default(),
-            },
-            None => SemioValueTreeDiff { root: None, nodes: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.nodes.len(), item: SemioValueNode { id: id.clone(), value: value.clone() } }] }) },
-        },
-
-        SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }) => {
-            if base.nodes.iter().any(|n| &n.id == id) {
-                SemioValueTreeDiff { root: None, nodes: Some(NamedTripleDiff { removed: vec![id.clone()], modified: Vec::new(), added: Vec::new() }) }
-            } else {
-                SemioValueTreeDiff::default()
-            }
-        }
-    })
-}
-
-/// ↩️ Handcrafted mutation-level inverse, key/index/id-aware — reads the pre-mutation `base` state to
-/// recover the exact undo. `Vec::new()` where there is nothing to restore (the target was already
-/// absent), matching the convention every other migrated subset's `agg_inverse` uses.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioValueMutation, base: &SemioValueSnapshot) -> Result<Vec<SemioValueMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => vec![SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        SemioValueMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioValueSnapshot, SemioValueMutation>>::inverse(patch, base)?),
-
-        SemioValueMutation::SetValue(set_value::SetValue { path, .. }) => match resolve(&base.root, path) {
-            Some(old) => vec![SemioValueMutation::SetValue(set_value::SetValue { path: path.clone(), value: old.clone() })],
-            None => Vec::new(),
-        },
-
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, .. }) => match resolve(&base.root, path) {
-            Some(SemioValue::Map { entries }) => match entries.iter().find(|e| &e.key == key) {
-                Some(existing) => vec![SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: path.clone(), key: key.clone(), value: existing.value.clone() })],
-                None => vec![SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: path.clone(), key: key.clone() })],
-            },
-            _ => Vec::new(),
-        },
-
-        // ↩️ `SetMapEntry` on an absent key always APPENDS (see `agg_diff` above), so naively
-        // reinverting to a single `SetMapEntry` would restore the VALUE but lose the ORIGINAL
-        // POSITION whenever other entries follow it — restore exact position by first removing
-        // every entry that originally followed `key`, then re-adding `key` and each of them
-        // back in original order (every re-add is an append, landing them exactly where they
-        // started). Same shape `json`'s `RemoveMember` inverse documents.
-        SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }) => match resolve(&base.root, path) {
-            Some(SemioValue::Map { entries }) => match entries.iter().position(|e| &e.key == key) {
-                Some(pos) => {
-                    let tail: Vec<SemioValueEntry> = entries[pos + 1..].to_vec();
-                    let mut steps: Vec<SemioValueMutation> = tail.iter().rev().map(|e| SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: path.clone(), key: e.key.clone() })).collect();
-                    steps.push(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: path.clone(), key: key.clone(), value: entries[pos].value.clone() }));
-                    steps.extend(tail.into_iter().map(|e| SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: path.clone(), key: e.key, value: e.value })));
-                    steps
-                }
-                None => Vec::new(),
-            },
-            _ => Vec::new(),
-        },
-
-        SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, .. }) => match resolve(&base.root, path) {
-            Some(SemioValue::List { items }) => vec![SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: path.clone(), index: (*index).min(items.len()) })],
-            _ => Vec::new(),
-        },
-
-        SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }) => match resolve(&base.root, path) {
-            Some(SemioValue::List { items }) => match items.get(*index) {
-                Some(item) => vec![SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: path.clone(), index: *index, value: item.clone() })],
-                None => Vec::new(),
-            },
-            _ => Vec::new(),
-        },
-
-        SemioValueMutation::SetNode(set_node::SetNode { id, .. }) => match base.nodes.iter().find(|n| &n.id == id) {
-            Some(existing) => vec![SemioValueMutation::SetNode(set_node::SetNode { id: id.clone(), value: existing.value.clone() })],
-            None => vec![SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: id.clone() })],
-        },
-
-        SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }) => match base.nodes.iter().find(|n| &n.id == id) {
-            Some(existing) => vec![SemioValueMutation::SetNode(set_node::SetNode { id: id.clone(), value: existing.value.clone() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -378,10 +239,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
 
     let mixed_path = vec![SemioValuePathSegment::Key { key: "outer".into() }, SemioValuePathSegment::Index { index: 2 }, SemioValuePathSegment::Key { key: "inner".into() }];
     vec![
-        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot {
-            snapshot: snap(mapv(vec![("a", intv("1")), ("b", listv(vec![strv("x"), SemioValue::Null, SemioValue::Bool { value: true }]))]), vec![node("n1", SemioValue::Bytes { value: vec![1, 2, 3] })]),
-        }),
         SemioValueMutation::SetValue(set_value::SetValue { path: vec![], value: SemioValue::Ref { id: ValueId::new("n1") } }),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } }),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) }),
@@ -400,15 +257,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔄️retypes/🦀️.rs"]
-mod set_snapshot_retypes_a_map_member_and_repoints_a_graph_node;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpText};

@@ -2,7 +2,7 @@
 
 use super::remove_launch_action::RemoveLaunchAction;
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +17,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for InsertLaunchAction {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "launch-action", kind: "insert-launch-action", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::insert_object(&mut next, support::action_object("Launch", "F", &self.target));
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let (_, rows) = support::insert_object_rows(base, support::action_object("Launch", "F", &self.target));
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {

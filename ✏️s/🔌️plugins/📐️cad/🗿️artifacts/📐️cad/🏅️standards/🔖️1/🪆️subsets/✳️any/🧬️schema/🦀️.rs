@@ -1,6 +1,6 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
-use crate::{CadDrawingChild, CadModelChild, CadSnapshot};
+use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[path = "📎️references/🦀️.rs"]
@@ -18,7 +18,7 @@ mod document_contract_tests;
 /// (`objects`, `shapeGeometry`, `activeModelDefinitionId` — replaced by the composed child slots and
 /// by window config) must FAIL to decode instead of being silently dropped, which is the law
 /// `🧫️fixtures/🪪️document`'s `invalidDocuments` rows state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadArtifact {
@@ -47,6 +47,10 @@ pub struct CadArtifact {
     #[value(default)]
     pub drawings: Vec<CadDrawingChild>,
     #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default)]
+    pub breps: Vec<CadBrepChild>,
+    #[state(artifact)]
     #[value(default)]
     pub references_by_model_definition_id: CadReferenceIndex,
     #[state(artifact)]
@@ -73,6 +77,7 @@ impl CadArtifact {
             energy_model: self.energy_model.clone(),
             structure_classic_model: self.structure_classic_model.clone(),
             drawings: self.drawings.clone(),
+            breps: self.breps.clone(),
             references_by_model_definition_id: self.references_by_model_definition_id.clone(),
             nodes: self.nodes.clone(),
         }
@@ -88,6 +93,7 @@ impl CadArtifact {
             energy_model: snapshot.energy_model,
             structure_classic_model: snapshot.structure_classic_model,
             drawings: snapshot.drawings,
+            breps: snapshot.breps,
             references_by_model_definition_id: snapshot.references_by_model_definition_id,
             nodes: snapshot.nodes,
         }
@@ -102,6 +108,7 @@ impl CadArtifact {
         self.energy_model = snapshot.energy_model;
         self.structure_classic_model = snapshot.structure_classic_model;
         self.drawings = snapshot.drawings;
+        self.breps = snapshot.breps;
         self.references_by_model_definition_id = snapshot.references_by_model_definition_id;
         self.nodes = snapshot.nodes;
     }

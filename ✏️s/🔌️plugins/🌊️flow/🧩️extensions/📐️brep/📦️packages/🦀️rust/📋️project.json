@@ -60,6 +60,21 @@
       ]
     },
     "canonical-architecture": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "oracle-only",
+                "kind": "flag",
+                "args": [
+                  "--oracle-only"
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {

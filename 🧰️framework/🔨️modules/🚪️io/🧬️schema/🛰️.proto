@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.framework.io;
-import "framework/schema/artifact-reference.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🛰️.proto";
 enum IoFidelity { IO_FIDELITY_EXACT = 0; IO_FIDELITY_CANONICAL = 1; IO_FIDELITY_SEMANTIC = 2; IO_FIDELITY_LOSSY = 3; }
 message IoEntryDescriptor { semio.framework.schema.artifact_reference.ArtifactDialect from = 1; semio.framework.schema.artifact_reference.ArtifactDialect into = 2; IoFidelity fidelity = 3; bool sniffs = 4; }
 message IoRoute { repeated IoEntryDescriptor hops = 1; IoFidelity fidelity = 2; }

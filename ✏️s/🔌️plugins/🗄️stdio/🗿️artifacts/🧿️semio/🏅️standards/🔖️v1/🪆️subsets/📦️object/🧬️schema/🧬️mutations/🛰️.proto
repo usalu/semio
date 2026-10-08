@@ -1,7 +1,6 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.object.mutations;
 import "framework/schema/artifact-reference.proto";
-import "📸️set-snapshot/🛰️.proto";
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
 import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
 
@@ -25,6 +24,5 @@ message SemioObjectMutation {
     DeleteMesh deleteMesh = 7 [json_name = "DeleteMesh"];
     CreateProperties createProperties = 8 [json_name = "CreateProperties"];
     DeleteProperties deleteProperties = 9 [json_name = "DeleteProperties"];
-      SetSnapshot set_snapshot = 1;
   }
 }

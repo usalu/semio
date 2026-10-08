@@ -12,11 +12,11 @@ pub fn plan(document:&DrawingSnapshot,ids:&[String])->Result<(Vec<DrawingMutatio
         if drawing_layer_is_locked(document,&group.base.id) {return Err(Fault::from("Unlock selected groups before ungrouping"));}
         if group.isolation || group.base.opacity!=1.0 || group.base.blend_mode!="normal" {return Err(Fault::from("Group compositing must be resolved before ungrouping"));}
     }
-    let wanted=selected.iter().map(|layer|layer_base(layer).id.as_str()).collect::<std::collections::BTreeSet<_>>();
-    fn select(layer:&DrawingLayerNode,wanted:&std::collections::BTreeSet<&str>,seen:&mut std::collections::BTreeSet<String>,selection:&mut Vec<String>) {
-        if wanted.contains(layer_base(layer).id.as_str()) {
+    let wanted=selected.iter().map(|layer|&layer_base(layer).id).collect::<std::collections::BTreeSet<_>>();
+    fn select(layer:&DrawingLayerNode,wanted:&std::collections::BTreeSet<&semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,seen:&mut std::collections::BTreeSet<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,selection:&mut Vec<String>) {
+        if wanted.contains(&layer_base(layer).id) {
             if let DrawingLayerNode::Group(group)=layer {for child in &group.children {select(child,wanted,seen,selection);}}
-        }else if seen.insert(layer_base(layer).id.clone()) {selection.push(layer_base(layer).id.clone());}
+        }else if seen.insert(layer_base(layer).id.clone()) {selection.push(layer_base(layer).id.to_string_owner());}
     }
     let mut selection=Vec::new();
     let mut seen=std::collections::BTreeSet::new();

@@ -377,52 +377,6 @@
       "package": "semio-framework-ui-backend-webgpu"
     }
   ],
-  "launch": [
-    {
-      "name": "⚖️gate🖱️ui🖥️host🔣️source",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/ui-host-rs:test-source --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.35
-      }
-    },
-    {
-      "name": "⚖️gate🖱️ui🖥️host🦀️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/ui-host-rs:test --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.36
-      }
-    },
-    {
-      "name": "⚖️gate🖱️ui🖥️host🦀️check",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/ui-host-rs:check --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.37
-      }
-    },
-    {
-      "name": "⚖️gate🖱️ui🖥️host🌐️wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/ui-host-rs:check-wasm --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.38
-      }
-    }
-  ],
   "prohibitedChanges": [
     "Cargo.toml",
     "Cargo.lock",

@@ -1366,7 +1366,7 @@ mod tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🛬️controlled/🦀️.rs"]
-mod controlled_tests;
+pub(crate) mod controlled_tests;
 
 #[cfg(test)]
 #[path="🧪️tests/🛫️controlled/🦀️.rs"]

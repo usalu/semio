@@ -18,11 +18,11 @@ class OwnedVerifyScript extends BundleScript {
     }
 if (segments[0] === "curation-document-contract") {
   const schemaRoot = this.repoRoot + "/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
-  const { testCurationDocumentContractOracle } = await import(schemaRoot + "/🧪️tests/🪪️document/🟦️.ts");
+  const { testCurationDocumentContractOracle } = await import(schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts");
   testCurationDocumentContractOracle();
   const { runCmd } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts");
   const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-  runCmd("bun", [this.repoRoot + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", schemaRoot + "/🧪️tests/🪪️document/🟦️.ts"], { cwd: this.repoRoot });
+  runCmd("bun", [this.repoRoot + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts"], { cwd: this.repoRoot });
   if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sourcing-curation", "--lib", "curation_document_contract", "--", "--nocapture"], this.repoRoot);
       return;
     }

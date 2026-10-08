@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "manifest": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+  "packageName": "semio-framework-dsl-record",
+  "testName": "native_decoding",
+  "testPath": "../../🧪️tests/🛬️decoding/🦀️.rs",
+  "lawNames": [
+    "sqlite_snapshot_native_text_controls_schema_intrinsics",
+    "sqlite_snapshot_native_text_controls_wire_ownership",
+    "sqlite_snapshot_native_text_admits_quoted_semantic_keys",
+    "sqlite_snapshot_native_pack_controls_expression_materialization",
+    "sqlite_snapshot_native_text_controls_record_list_boundaries"
+  ],
+  "level": "long",
+  "maximumUnits": 1000000000,
+  "maximumOwnedBytes": 16777216,
+  "maximumCaptureBytes": 67108864,
+  "budgetMs": 600000
+}

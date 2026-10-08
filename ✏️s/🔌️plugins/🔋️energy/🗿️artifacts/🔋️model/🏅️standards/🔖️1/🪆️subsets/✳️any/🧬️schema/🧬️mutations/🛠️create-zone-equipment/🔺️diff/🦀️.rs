@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateZoneEquipment` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZoneEquipmentAssignmentPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -21,15 +21,13 @@ pub fn diff(payload: &super::CreateZoneEquipment, base: &EnergyModelSnapshot) ->
     if !payload.cooling_capacity_w.is_finite() || payload.cooling_capacity_w < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling capacity must be a non-negative finite number, got {}.", payload.cooling_capacity_w), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.zone_equipment.push(crate::model::ZoneEquipmentAssignment {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::inserting(base.model.zone_equipment.len(), crate::model::ZoneEquipmentAssignment {
         id: payload.id,
         zone_id: payload.zone_id,
         equipment_type: payload.equipment_type.clone(),
         priority: payload.priority,
         heating_capacity_w: payload.heating_capacity_w,
         cooling_capacity_w: payload.cooling_capacity_w,
-    });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

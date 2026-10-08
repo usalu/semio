@@ -74,7 +74,7 @@ impl Generation3dArtifact {
 }
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.procedural.generation3d` — twenty handcrafted schema leaves.
+/// 🧬️ Descriptor for `s.procedural.generation3d` — twenty-two handcrafted mutation leaves.
 pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
     ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.procedural.generation3d",
@@ -254,12 +254,205 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
     result
 }
 
-/// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
-/// that baseline.
+//#region 🧭️GraphEditor
+/// 🧭️ The explicit-intent recorder of every graph edit a command authors: each verb applies one `FlowHost` authoring
+/// operation — which validates it, mints its ids and measures its nodes — and records the declared mutation leaves
+/// that operation IS, cascades included, in the order they replay. No whole-snapshot diff stands between the host and
+/// the leaves: `remove_widget` records the `disconnect-synapse` and `delete-widget-position` leaves of the wires and
+/// the layout entry it takes with it, `connect_ports` records the `disconnect-synapse` of the wire it displaces, and a
+/// port insertion records the `update-widget` and the `update-synapse` leaves of the wires it renumbers.
+///
+/// 🧩️ The host is the validator and the measurer (its port, type and cycle rules, its widget factory, its layout
+/// algorithm); the leaves are the document edit. Replaying [`GraphEditor::finish`]'s leaves on the snapshot the host was
+/// opened on reaches the host's own snapshot (`graph_editor_replay_reaches_the_host_snapshot`).
 #[cfg(feature = "component-app-assembly")]
-pub fn commit_host_snapshot(before: &FlowHostSnapshot, target: &FlowHostSnapshot) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
-    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations(&host.host_snapshot, target))
+pub struct GraphEditor<'a> {
+    host: &'a mut FlowHost,
+    leaves: Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation>,
 }
+
+#[cfg(feature = "component-app-assembly")]
+impl<'a> GraphEditor<'a> {
+    /// 🧭️ Opens a recorder over `host`.
+    pub fn new(host: &'a mut FlowHost) -> Self {
+        Self { host, leaves: Vec::new() }
+    }
+
+    /// 👁️ The host's current graph, for the reads a command decides on.
+    pub fn snapshot(&self) -> &FlowHostSnapshot {
+        &self.host.host_snapshot
+    }
+
+    /// 👁️ The host itself, read-only, for the queries that need more than the graph (a widget's value form).
+    pub fn host(&self) -> &FlowHost {
+        self.host
+    }
+
+    /// 📐️ The rendered rectangles `[x, y, width, height]` of every node except `except` — what an automatic placement avoids.
+    pub fn occupied(&self, except: &str) -> Vec<[f64; 4]> {
+        self.host.dag.host_snapshot.nodes.iter().filter(|node| node.id != except).map(|node| [node.x, node.y, node.width, node.height]).collect()
+    }
+
+    /// 📐️ The rendered size `[width, height]` of node `id`.
+    pub fn size_of(&self, id: &str) -> Option<[f64; 2]> {
+        self.host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| [node.width, node.height])
+    }
+
+    /// 🧾️ The leaves recorded, in replay order. The caller owns them and retires them cold.
+    pub fn finish(mut self) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
+        std::mem::take(&mut self.leaves)
+    }
+
+    fn layout_leaf(&mut self, id: &str) {
+        use crate::standards::v1::subsets::any::schema::mutations::{move_widget::MoveWidget, Generation3dMutation};
+        let Some(layout) = self.host.host_snapshot.layout.get(id).cloned() else { return };
+        if let Some(Generation3dMutation::MoveWidget(last)) = self.leaves.last_mut() {
+            if last.id == id {
+                last.layout = layout;
+                return;
+            }
+        }
+        self.leaves.push(Generation3dMutation::MoveWidget(MoveWidget { id: id.to_string(), layout }));
+    }
+
+    fn widget_leaf(&mut self, id: &str) {
+        use crate::standards::v1::subsets::any::schema::mutations::{update_widget::UpdateWidget, Generation3dMutation};
+        if let Some(widget) = self.host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id) {
+            self.leaves.push(Generation3dMutation::UpdateWidget(UpdateWidget { widget: widget.clone() }));
+        }
+    }
+
+    fn synapse_leaves(&mut self, before: &[semio_framework_artifact_flow_flow::SynapseSpec]) {
+        use crate::standards::v1::subsets::any::schema::mutations::{connect_synapse::ConnectSynapse, disconnect_synapse::DisconnectSynapse, update_synapse::UpdateSynapse, Generation3dMutation};
+        let after = &self.host.host_snapshot.synapses;
+        let mut leaves: Vec<Generation3dMutation> = before.iter().filter(|old| !after.iter().any(|new| new.id == old.id)).map(|old| Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: old.id.clone() })).collect();
+        leaves.extend(after.iter().filter(|new| before.iter().any(|old| old.id == new.id && old != *new)).map(|new| Generation3dMutation::UpdateSynapse(UpdateSynapse { synapse: new.clone() })));
+        leaves.extend(after.iter().enumerate().filter(|(_, new)| !before.iter().any(|old| old.id == new.id)).map(|(index, new)| Generation3dMutation::ConnectSynapse(ConnectSynapse { index, synapse: new.clone() })));
+        self.leaves.extend(leaves);
+    }
+
+    /// 🧩️ Creates the widget `descriptor_json` describes at `(x, y)`: a `create-widget` at the end of the list and the
+    /// `move-widget` that places it. Answers the new widget's id.
+    pub fn add_widget(&mut self, descriptor_json: &str, x: f64, y: f64) -> Result<String, String> {
+        use crate::standards::v1::subsets::any::schema::mutations::{create_widget::CreateWidget, Generation3dMutation};
+        let index = self.host.host_snapshot.widgets.len();
+        let id = self.host.add_widget(descriptor_json, x, y).map_err(|error| error.to_string())?;
+        let widget = self.host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id).cloned().ok_or_else(|| format!("created widget {id} is missing"))?;
+        self.leaves.push(Generation3dMutation::CreateWidget(CreateWidget { index, widget }));
+        self.layout_leaf(&id);
+        Ok(id)
+    }
+
+    /// 📍️ Places widget `id` at `(x, y)`: one `move-widget`.
+    pub fn move_widget(&mut self, id: &str, x: f64, y: f64) -> Result<(), String> {
+        self.host.move_widget(id, x, y).map_err(|error| error.to_string())?;
+        self.layout_leaf(id);
+        Ok(())
+    }
+
+    /// ➖️ Removes widget `id` with everything that hangs on it, as `generation3d_widget_removal` spells the cascade.
+    pub fn remove_widget(&mut self, id: &str) -> Result<(), String> {
+        let leaves = crate::standards::v1::subsets::any::schema::mutations::generation3d_widget_removal(&self.host.host_snapshot, id);
+        self.host.remove_widget(id).map_err(|error| error.to_string())?;
+        self.leaves.extend(leaves);
+        Ok(())
+    }
+
+    /// 🔗️ Wires an output to an input: the `disconnect-synapse` of the wire the input drops (an input takes one wire) and
+    /// the `connect-synapse` at the end of the list. Answers the new wire's id.
+    pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, String> {
+        let before = self.host.host_snapshot.synapses.clone();
+        let id = self.host.connect_ports(from_id, from_port, to_id, to_port).map_err(|error| error.to_string())?;
+        self.synapse_leaves(&before);
+        Ok(id)
+    }
+
+    /// ✂️ Cuts wire `id`: one `disconnect-synapse`.
+    pub fn disconnect(&mut self, id: &str) -> Result<(), String> {
+        use crate::standards::v1::subsets::any::schema::mutations::{disconnect_synapse::DisconnectSynapse, Generation3dMutation};
+        self.host.disconnect(id).map_err(|error| error.to_string())?;
+        self.leaves.push(Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: id.to_string() }));
+        Ok(())
+    }
+
+    /// 🔀️ Splices `mid_id` between `anchor_id` and the consumers of its `anchor_out_port`: the `update-synapse` of every
+    /// consumer wire it re-sources and the `connect-synapse` of the wire that feeds it.
+    pub fn insert_between(&mut self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), String> {
+        let before = self.host.host_snapshot.synapses.clone();
+        self.host.insert_between(anchor_id, anchor_out_port, mid_id, mid_in_port, mid_out_port).map_err(|error| error.to_string())?;
+        self.synapse_leaves(&before);
+        Ok(())
+    }
+
+    /// ➕️ Opens an input port of variadic operator `id` at `index`: the `update-widget` of its new port list and the
+    /// `update-synapse` of every wire the insertion renumbers.
+    pub fn add_input_port(&mut self, id: &str, index: usize) -> Result<(), String> {
+        let before = self.host.host_snapshot.synapses.clone();
+        self.host.add_input_port(id, index).map_err(|error| error.to_string())?;
+        self.widget_leaf(id);
+        self.synapse_leaves(&before);
+        Ok(())
+    }
+
+    /// ➕️ Opens an output port of variadic operator `id` at `index`; see [`GraphEditor::add_input_port`].
+    pub fn add_output_port(&mut self, id: &str, index: usize) -> Result<(), String> {
+        let before = self.host.host_snapshot.synapses.clone();
+        self.host.add_output_port(id, index).map_err(|error| error.to_string())?;
+        self.widget_leaf(id);
+        self.synapse_leaves(&before);
+        Ok(())
+    }
+
+    /// 👁️ Sets operator `id`'s preview flag: one `update-widget` when it flips. Answers whether it did.
+    pub fn set_preview(&mut self, id: &str, shown: bool) -> bool {
+        let mut flipped = false;
+        for widget in &mut self.host.host_snapshot.widgets {
+            if let Widget::Neuron { id: widget_id, preview, .. } = widget {
+                if widget_id == id && *preview != shown {
+                    *preview = shown;
+                    flipped = true;
+                }
+            }
+        }
+        if flipped {
+            self.widget_leaf(id);
+        }
+        flipped
+    }
+
+    /// 🗺️ Lays the graph out again with the host's layered layout: one `move-widget` per widget that moves.
+    pub fn reorganize(&mut self, options_json: &str) -> Result<(), String> {
+        let before = self.host.host_snapshot.layout.clone();
+        let reorganized = self.host.reorganize(options_json).map_err(|error| error.to_string());
+        let moved: Vec<String> = self.host.host_snapshot.layout.iter().filter(|(id, layout)| before.get(id) != Some(*layout)).map(|(id, _)| id.clone()).collect();
+        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
+        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(before));
+        retirement.retire_cold();
+        reorganized?;
+        for id in moved {
+            self.layout_leaf(&id);
+        }
+        Ok(())
+    }
+}
+
+/// 🧊️ A recorder dropped with leaves still in hand — a command refused after it recorded — retires them cold: a recorded
+/// `create-widget` owns a widget whose neural dictionary rejects a bare drop.
+#[cfg(feature = "component-app-assembly")]
+impl Drop for GraphEditor<'_> {
+    fn drop(&mut self) {
+        for leaf in self.leaves.drain(..) {
+            leaf.retire_cold();
+        }
+    }
+}
+//#endregion 🧭️GraphEditor
+
+//#region 🧪️Tests
+#[cfg(all(test, feature = "component-app-assembly"))]
+#[path = "🧪️tests/🧭️graph-editor/🦀️.rs"]
+mod graph_editor_tests;
+//#endregion 🧪️Tests
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))

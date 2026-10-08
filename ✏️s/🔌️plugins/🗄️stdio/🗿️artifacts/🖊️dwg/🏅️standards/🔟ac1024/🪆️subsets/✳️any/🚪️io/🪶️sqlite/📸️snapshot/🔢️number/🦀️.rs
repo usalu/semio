@@ -61,7 +61,7 @@ impl<'c,'p> Projection<'c,'p>{
         for(index,value)in values.iter().copied().enumerate(){
             let numeric=positions.binary_search(&(index+1)).is_ok();
             if numeric{match value{N=>{},R(value)=>{let encoded=cells(value);for value in encoded{bytes=bytes.checked_add(match value{T(value)=>value.len(),R(_)|I(_)=>8,_=>0}).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG numeric byte count overflow"))?;}},_=>return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG authored numeric cell must be REAL or NULL"))}}
-            else{bytes=bytes.checked_add(match value{N=>0,Cell::Integer(_)=>8,T(value)=>value.len(),Cell::Blob(value)=>value.len(),R(_)|Cell::Float32(_)=>return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG REAL has no authored numeric columns"))}).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG numeric byte count overflow"))?;}
+            else{bytes=bytes.checked_add(match value{N=>0,Cell::Integer(_)=>8,T(value)=>value.len(),Cell::PagedText(value)=>value.text_bytes(),Cell::Blob(value)=>value.len(),R(_)|Cell::Float32(_)=>return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG REAL has no authored numeric columns"))}).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG numeric byte count overflow"))?;}
         }
         let rows=self.rows.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG numeric row count overflow"))?;
         match &self.target{Target::Database(physical)=>{physical.check_rows(rows)?;physical.check_value_bytes(bytes)?},Target::Admission{control,..}=>{control.check_rows(rows)?;control.check_value_bytes(bytes)?}}

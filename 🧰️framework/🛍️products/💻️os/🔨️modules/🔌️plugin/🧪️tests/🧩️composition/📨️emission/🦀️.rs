@@ -1,9 +1,204 @@
 use super::*;
 
-#[derive(Clone, ToValue, FromValue)]
+#[test]
+fn child_emission_private_input_request_retains_whole_page_backing_undergrant() {
+    let fixture:Value=serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
+    let reference=&fixture["source"]["reference"];
+    let expected=semio_framework_artifact_reference::ArtifactRef{
+        artifact_id:reference["artifactId"].as_str().unwrap().into(),
+        dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:reference["dialect"]["artifactKind"].as_str().unwrap().into(),standard:reference["dialect"]["standard"].as_str().unwrap().into(),subset:reference["dialect"]["subset"].as_str().unwrap().into()},
+    };
+    let source=serde_json::to_vec(&fixture["source"]).unwrap();
+    let(mut pages,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits{maximum_pages:1,maximum_bytes:store::OWNED_SCHEMA_DECODE_PAGE_BYTES}).unwrap());
+    let backing=pages.allocation_byte_demand();assert_eq!(birth.requested_bytes,backing);
+    pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(&source).unwrap()).unwrap();pages.seal().unwrap();
+    let mut request=store::MemberOpenRequest::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),1000,expected,None,pages,store::os_spr::ActorId(fixture["source"]["actor"].as_str().unwrap().into()));
+    request.close_step(1,1).unwrap();request.close_step(1,source.len()).unwrap();request.close_step(1,1).unwrap();
+    let(step,denied)=semio_framework_trace::observe_heap_allocations_on_this_thread(||request.close_step(1,backing-1).unwrap());
+    assert_eq!(denied.released_bytes,0,"whole original page allocation must remain retained under one-below grant");
+    assert_eq!(step,store::SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});
+    assert_eq!(request.next_close_byte_demand(),backing);
+    let(step,accepted)=semio_framework_trace::observe_heap_allocations_on_this_thread(||request.close_step(1,backing).unwrap());
+    assert_eq!(accepted.released_bytes,backing);
+    assert_eq!(step,store::SnapshotRetirementStep::Pending{released_items:1,released_bytes:backing});
+    for _ in 0..1024{if request.terminal_is_empty(){break;}let grant=request.next_close_byte_demand().max(4096);request.close_step(1,grant).unwrap();}
+    assert!(request.terminal_is_empty());
+    println!("[DEBUG] private genesis input request logical bytes={} physical slots={} one-below retained and exact release matched native allocator",source.len(),backing);
+}
+
+#[test]
+fn child_emission_owned_preview_preserves_exact_wire_prefix() {
+    use crate::app::{ChildEmitPreparation,ChildEmitPreparationStep,Emit};
+    let fixture:Value=serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let operations=fixture["values"].as_array().unwrap().iter().map(|value|TestMutation::SetCount(SetCount{value:value.as_i64().unwrap()as i32})).collect::<Vec<_>>();
+    let expected=operations.iter().map(::protocol::OpBinary::encode_op).collect::<Result<Vec<_>,_>>().unwrap();
+    let labels=operations.iter().map(protocol::SemanticMutation::<TestSnapshot>::label).collect::<Vec<_>>();
+    let mut emit=Emit::<TestMutation>::default();
+    emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot,_>("fixture","child",operations));
+    let mut ready=false;
+    for _ in 0..1000{if matches!(emit.prepare_child_preview_one(1,4096).unwrap(),ChildEmitPreparationStep::Ready){ready=true;break;}}
+    assert!(ready&&emit.owned_child_emits.is_empty());
+    assert_eq!(emit.child_emits.len(),1);
+    assert_eq!(emit.child_emits[0].ops,expected);
+    assert_eq!(emit.child_emits[0].labels,labels);
+    assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&emit.child_emits[0])),serde_json::to_value(&emit.child_emits[0]).unwrap());
+    for _ in 0..4096{if emit.close_child_one(1,4096).is_none(){break;}}
+    assert!(emit.close_child_one(1,4096).is_none());
+    println!("[DEBUG] original owned preview converted only the retained source cursor, encoded all3 ordered operations and labels, matched serde and returned every allocation");
+}
+
+#[test]
+fn child_emission_emit_retains_applying_source_without_wire_handoff() {
+    use crate::app::{ChildEmitPreparation, ChildEmitPreparationStep, Emit};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
+    let pointer=operations.as_ptr();
+    let mut emit = Emit::<TestMutation>::default();
+    emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations));
+    let mut ready = false;
+    for _ in 0..1000 {
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||emit.prepare_child_one(1,4096).unwrap());
+        assert!(!heap.overflowed);assert!(heap.requested_bytes+heap.released_bytes<=4096);
+        if matches!(step, ChildEmitPreparationStep::Ready) { ready = true; break; }
+    }
+    assert!(ready);
+    assert!(emit.child_emits.is_empty(), "applying owned source cannot become an unused wire group");
+    assert_eq!(emit.owned_child_emits.len(),1);
+    let retained=&emit.owned_child_emits[0];
+    let mutations=retained.mutations::<RefusingChildOperation>().unwrap();
+    assert_eq!(mutations.as_ptr(),pointer);
+    for(index,mutation)in mutations.iter().enumerate(){match &mutation.inner{TestMutation::SetCount(value)=>assert_eq!(value.value as i64,fixture["values"][index].as_i64().unwrap()),_=>panic!("applying source variant changed")};assert!(mutation.refuse);}
+    let metadata=retained.metadata().unwrap();
+    assert_eq!(Value::from(semio_framework_value::ToValue::to_value(metadata)),serde_json::to_value(metadata).unwrap());
+    assert!(metadata.ops.is_empty()&&metadata.labels.is_empty());
+    assert_eq!(emit.close_child_one(0,4096),Some(crate::app::PluginCloseStep::Pending{released_items:0,released_bytes:0}));
+    assert_eq!(emit.owned_child_emits[0].mutations::<RefusingChildOperation>().unwrap().as_ptr(),pointer);
+    let mut last=None;
+    for _ in 0..4096 {
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||emit.close_child_one(1,4096));
+        assert!(!heap.overflowed);assert!(heap.requested_bytes+heap.released_bytes<=4096);
+        if let Some(crate::app::PluginCloseStep::Pending{released_bytes,..})=step{assert_eq!(heap.released_bytes,released_bytes);}
+        last=step;
+        if step.is_none(){break;}
+    }
+    if last.is_some(){println!("[DEBUG] applying Emit retained close phase={last:?} preparation-count={} preparation-capacity={} applying-count={} applying-capacity={} next-applying-demand={:?}",emit.child_preparations.len(),emit.child_preparations.capacity(),emit.owned_child_emits.len(),emit.owned_child_emits.capacity(),emit.owned_child_emits.last().map(|child|child.next_close_byte_demand()));}
+    assert!(emit.close_child_one(1, 4096).is_none());
+    assert!(emit.owned_child_emits.is_empty());
+    assert_eq!(emit.owned_child_emits.capacity(),0);
+    println!("[DEBUG] Emit applying handoff retained original typed source without invoking refused wire codec and returned every owner on cancellation");
+}
+
+#[test]
+fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decoding() {
+    use crate::app::{ChildEmitPreparation, ChildEmitPreparationStep, PluginCloseStep};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let operations = fixture["values"].as_array().unwrap().iter().map(|value| TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
+    let pointer = operations.as_ptr();
+    let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+    assert!(matches!(preparation.step(0, 4096).unwrap(), ChildEmitPreparationStep::Pending));
+    let mut ready = false;
+    for _ in 0..100 {
+        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready) { ready = true; break; }
+    }
+    assert!(ready);
+    assert_eq!(preparation.retained_operation_count(), 3);
+    assert!(preparation.take_ready().is_none());
+    assert!(preparation.take_ready_owned(RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }).unwrap().is_none());
+    assert_eq!(preparation.retained_operation_count(), 3);
+    let (mut wire, mut batch, birth) = preparation.take_ready_owned(grant).unwrap().unwrap();
+    assert!(birth.fits(grant));
+    assert_eq!(batch.mutations::<TestMutation>().unwrap().as_ptr(), pointer);
+    assert_eq!(batch.mutations::<TestMutation>().unwrap().len(), 3);
+    for (index, operation) in batch.mutations::<TestMutation>().unwrap().iter().enumerate() {
+        match operation { TestMutation::SetCount(value) => assert_eq!(value.value as i64, fixture["values"][index].as_i64().unwrap()), _ => panic!("original typed source variant changed") }
+    }
+    assert!(wire.ops.is_empty() && wire.labels.is_empty());
+    assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&wire)), serde_json::to_value(&wire).unwrap());
+    assert!(preparation.terminal_is_empty());
+    for _ in 0..1000 {
+        if batch.terminal_is_empty() { break; }
+        assert!(batch.close_granted(grant).unwrap().progress().fits(grant));
+    }
+    assert!(batch.terminal_is_empty());
+    for _ in 0..1000 {
+        let bytes = wire.next_close_byte_demand();
+        if wire.close_one(1, bytes) == PluginCloseStep::Complete { break; }
+    }
+    assert_eq!(wire.next_close_byte_demand(), 0);
+    println!("[DEBUG] Child emission Ready retained original typed vector, exact order and separate funded batch owner; operations=3");
+}
+
+#[test]
+fn child_emission_preview_retains_exact_encoded_operations_and_semantic_labels() {
+    use crate::app::{ChildEmitPreparation, ChildEmitPreparationStep, PluginCloseStep};
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let operations = fixture["values"].as_array().unwrap().iter().map(|value| TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
+    let expected_ops = operations.iter().map(|operation| ::protocol::OpBinary::encode_op(operation).unwrap()).collect::<Vec<_>>();
+    let expected_labels = operations.iter().map(|operation| protocol::SemanticMutation::<TestSnapshot>::label(operation)).collect::<Vec<_>>();
+    let mut preparation = ChildEmitPreparation::of::<TestSnapshot, _>("fixture", "child", operations);
+    let mut ready = false;
+    for _ in 0..1000 {
+        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready) { ready = true; break; }
+    }
+    assert!(ready);
+    let mut wire = preparation.take_ready().unwrap();
+    assert_eq!(wire.ops, expected_ops);
+    assert_eq!(wire.labels, expected_labels);
+    assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&wire)), serde_json::to_value(&wire).unwrap());
+    assert!(preparation.terminal_is_empty());
+    for _ in 0..1000 {
+        let demand = wire.next_close_byte_demand();
+        if wire.close_one(1, demand) == PluginCloseStep::Complete { break; }
+    }
+    assert_eq!(wire.next_close_byte_demand(), 0);
+    println!("[DEBUG] preview wire preserves all3 exact encoded operations and semantic labels with independent serde projection and terminal close");
+}
+
+#[derive(Clone, ToValue, FromValue, semio_framework_value::RetireOwned)]
 struct RefusingChildOperation {
     inner: TestMutation,
     refuse: bool,
+}
+
+#[test]
+fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec() {
+    use crate::app::{ChildEmitPreparation, ChildEmitPreparationStep, PluginCloseStep};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
+    let operations = fixture["values"].as_array().unwrap().iter().map(|value| RefusingChildOperation { inner: TestMutation::SetCount(SetCount { value: value.as_i64().unwrap() as i32 }), refuse: true }).collect::<Vec<_>>();
+    let pointer = operations.as_ptr();
+    let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
+    let mut ready = false;
+    for _ in 0..100 {
+        match preparation.step(1, 4096).unwrap() {
+            ChildEmitPreparationStep::Ready => { ready = true; break; },
+            ChildEmitPreparationStep::Pending => {},
+            ChildEmitPreparationStep::Refused(fault) => panic!("applying typed admission must never request unused wire codec: {}", fault.message),
+        }
+    }
+    assert!(ready);
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+    let (mut metadata, mut batch, progress) = preparation.take_ready_owned(grant).unwrap().unwrap();
+    assert!(progress.fits(grant));
+    let retained = batch.mutations::<RefusingChildOperation>().unwrap();
+    assert_eq!(retained.as_ptr(), pointer);
+    assert_eq!(retained.len(), fixture["values"].as_array().unwrap().len());
+    assert!(retained.iter().all(|operation| operation.refuse));
+    assert!(metadata.ops.is_empty());
+    assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&metadata)), serde_json::to_value(&metadata).unwrap());
+    for _ in 0..1000 {
+        if batch.terminal_is_empty() { break; }
+        assert!(batch.close_granted(grant).unwrap().progress().fits(grant));
+    }
+    assert!(batch.terminal_is_empty() && preparation.terminal_is_empty());
+    for _ in 0..1000 {
+        let demand = metadata.next_close_byte_demand();
+        if metadata.close_one(1, demand) == PluginCloseStep::Complete { break; }
+    }
+    assert_eq!(metadata.next_close_byte_demand(), 0);
+    println!("[DEBUG] owned apply source retains all3 ordered typed operations without calling a refusing wire codec; separate metadata/typed owners close exactly");
 }
 
 impl protocol::Mutation<TestSnapshot> for RefusingChildOperation {
@@ -100,10 +295,12 @@ impl store::ErasedSnapshotRetirement for TrackedChildRetirement{
     fn terminal_is_empty(&self)->bool{self.operation.is_none()}
     fn next_close_byte_demand(&self)->usize{self.operation.as_ref().map_or(0,|operation|operation.payload.capacity().max(1))}
 }
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct TrackedChildRetirementFactory;
 impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for TrackedChildRetirementFactory{
     fn retire_owned(&self,operation:TrackedChildOperation)->Box<dyn store::ErasedSnapshotRetirement>{Box::new(TrackedChildRetirement{operation:Some(operation),refuse_once:false})}
 }
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RefusingTrackedChildRetirementFactory;
 impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for RefusingTrackedChildRetirementFactory{
     fn retire_owned(&self,operation:TrackedChildOperation)->Box<dyn store::ErasedSnapshotRetirement>{Box::new(TrackedChildRetirement{operation:Some(operation),refuse_once:true})}

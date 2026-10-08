@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteZoneEquipment` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZoneEquipmentAssignmentPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeleteZoneEquipment, base: &EnergyModelSnapshot) ->
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.zone_equipment.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::removing(&base.model.zone_equipment, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

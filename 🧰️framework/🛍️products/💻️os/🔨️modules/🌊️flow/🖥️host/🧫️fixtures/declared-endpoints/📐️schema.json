@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contractId",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contractId": {
+      "const": "flow-declared-endpoint-admission"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "sourcePort",
+          "target",
+          "targetPort",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourcePort": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "targetPort": {
+            "type": "string"
+          },
+          "expected": {
+            "enum": [
+              "accepted",
+              "unknownOutput",
+              "unknownInput"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

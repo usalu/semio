@@ -829,3 +829,6 @@ fn controlled_record_dynamic_unicode_matches_serde_json_restoration_contract() {
 
 #[path = "../🪆️optional-field/🦀️.rs"]
 mod optional_field_tests;
+
+#[path = "../🏷️required-inline/🦀️.rs"]
+mod required_inline_statement_tests;

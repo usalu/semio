@@ -16,7 +16,7 @@ async fn imperative_diff_absorb_whole_artifact_wins() {
 async fn flow_handle_replace_round_trips_via_apply() {
     let base = default_snapshot();
     let handle = crate::procedure_flow_child_handle(&crate::Path::new());
-    let next = ProcedureDiff { flow: Some(handle.clone()), ..Default::default() }.apply(&base).expect("valid mutation diff");
+    let next = protocol::apply_diff(&ProcedureDiff { flow: Some(handle.clone()), ..Default::default() }, &base).expect("valid mutation diff");
     assert_eq!(next.flow, handle);
     assert_eq!(next.text, base.text);
 }

@@ -40,7 +40,7 @@ impl store::ArtifactPack for WiresCanvasWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(WiresCanvasWindowConfig);
+impl store::ConfigRecord for WiresCanvasWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

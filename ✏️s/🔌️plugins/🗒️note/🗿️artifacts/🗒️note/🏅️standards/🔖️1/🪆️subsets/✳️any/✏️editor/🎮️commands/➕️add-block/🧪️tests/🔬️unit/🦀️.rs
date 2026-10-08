@@ -56,7 +56,7 @@ async fn duplicate_selection_clones_with_offset() {
     let mut ids = crate::schema::NoteIdOwner::new("duplicate-test", 0);
     let source = crate::schema::create_block_by_kind(&mut ids, "text", 10.0, 10.0);
     let source_id = block_id(&source).to_string();
-    let document = crate::NoteSnapshot { blocks: vec![source], ..crate::schema::empty_note_snapshot() };
+    let document = crate::NoteSnapshot { blocks: vec![source], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let history = semio_framework_plugin::HistoryView::empty();
     let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![source_id.clone()], id_owner: crate::schema::NoteIdOwner::new("duplicate-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = crate::editor::note::commands::duplicate_selection::handle(

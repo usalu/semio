@@ -20,8 +20,11 @@ import { resolve } from "node:path";
 export function pluginTestInvocation(segments: string[]): { mode: "inventory" | "budgeted"; args: string[] } {
   const { rest } = resolveTestLevel(segments);
   const boundary = rest.indexOf("--");
-  const inventory = rest.slice(0, boundary < 0 ? rest.length : boundary).includes("--no-run");
-  return inventory ? { mode: "inventory", args: ["test", "--manifest-path", "Cargo.toml", "--lib", ...rest] } : { mode: "budgeted", args: ["--lib", ...rest] };
+  const options = rest.slice(0, boundary < 0 ? rest.length : boundary);
+  const inventory = options.includes("--no-run");
+  const targets = ["--lib", "--bins", "--bin", "--examples", "--example", "--tests", "--test", "--benches", "--bench", "--all-targets"];
+  const args = options.some(option => targets.includes(option.split("=")[0])) ? rest : ["--lib", ...rest];
+  return inventory ? { mode: "inventory", args: ["test", "--manifest-path", "Cargo.toml", ...args] } : { mode: "budgeted", args };
 }
 //#endregion 🧪️RunnerSelection
 
@@ -93,6 +96,15 @@ class TestScript extends BundleScript {
     const invocation = pluginTestInvocation(segments);
     if (invocation.mode === "inventory") await runCargo(invocation.args, this.root);
     else await runRepositoryCargoTests([], this.root, invocation.args);
+  }
+}
+
+/** 🧩️ Checks composed child history labels against the independent neutral fixture twin. */
+class ComposedChildHistorySourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-composed-child-history-source accepts no arguments");
+    const { composedChildHistoryOracle } = await import("../../🧪️tests/🧪️composed-child-history/🟦️.ts");
+    console.log(`[DEBUG] composed-child-history-oracle cases=${composedChildHistoryOracle(this.repoRoot)}`);
   }
 }
 
@@ -407,6 +419,7 @@ const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite-
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-composed-child-history-source", ComposedChildHistorySourceScript)
   .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript)

@@ -120,7 +120,7 @@ async fn the_drag_leaf_replays_its_edited_offset_relative_to_any_base() {
     let semio_framework_value::DslValue::Object(entries) = &mut value else { panic!("a leaf payload is an object") };
     entries.iter_mut().find(|(key, _)| key == "dx").expect("dx input").1 = semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0));
     let edited = Mutation::<ShootingSnapshot>::with_payload_value(&mutations[0], value).expect("the edited payload decodes");
-    let apply = |snapshot: &ShootingSnapshot, operation: &ShootingMutation| operation.diff(snapshot).into_parts().0.apply(snapshot).expect("the leaf applies");
+    let apply = |snapshot: &ShootingSnapshot, operation: &ShootingMutation| protocol::apply_diff(&operation.diff(snapshot).into_parts().0, snapshot).expect("the leaf applies");
     let start = base.assets[0].origin;
     assert_eq!(apply(&base, &edited).assets[0].origin, [start[0] + 5.0, start[1], start[2]], "the edited offset replays on the committed base");
     let moved = apply(&base, &ShootingMutation::DragAssets(crate::mutations::drag_assets::DragAssets { asset_ids: vec![asset_id], dx: 0.0, dy: 7.0, dz: 0.0 }));

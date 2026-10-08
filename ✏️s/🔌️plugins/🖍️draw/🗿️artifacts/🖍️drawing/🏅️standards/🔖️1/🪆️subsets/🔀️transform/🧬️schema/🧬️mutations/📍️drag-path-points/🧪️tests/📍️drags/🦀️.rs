@@ -71,3 +71,10 @@ fn label_reads_the_drag() {
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 path points by (20, 10)");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Pfadpunkte um (20; 10) ziehen");
 }
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
+}

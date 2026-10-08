@@ -16,7 +16,7 @@ async fn the_inspector_always_summarises_the_schema_and_visible_count() {
 /// feature's id and its document kind, and an empty domain renders the summary alone.
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_detail_section_follows_the_features_selection() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = MapWindowConfig::default();
     let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🧩️ A `BuiltNode` carries retained page children, so it is projected through the fixture
@@ -55,7 +55,7 @@ async fn the_inspector_summary_projects_each_document_collection_extent() {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
     };
 
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let before = json(&document);
     for row in ["gis2d-play-inspector.positions-count", "gis2d-play-inspector.routes-count", "gis2d-play-inspector.regions-count"] {
         assert!(before.contains(row), "the summary must carry {row}: {before}");

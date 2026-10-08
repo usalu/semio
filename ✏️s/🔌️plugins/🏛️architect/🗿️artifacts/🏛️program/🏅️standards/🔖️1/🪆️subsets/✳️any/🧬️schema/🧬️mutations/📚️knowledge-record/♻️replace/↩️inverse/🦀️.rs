@@ -8,8 +8,7 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::ReplaceKnowledgeRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let records = crate::program_knowledge(base);
-    match records.iter().find(|row| row.header.id == payload.knowledge_record.header.id) {
+    match base.knowledge_payload.iter().find(|row| row.header.id == payload.knowledge_record.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceKnowledgeRecord(super::ReplaceKnowledgeRecord { knowledge_record: existing.clone() })],
         None => Vec::new(),
     }

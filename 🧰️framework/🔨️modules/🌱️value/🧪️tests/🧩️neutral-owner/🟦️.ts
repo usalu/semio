@@ -4,7 +4,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync
 import { resolve, join, dirname, isAbsolute } from "node:path";
 import { spawnSync } from "node:child_process";
 import * as toml from "@iarna/toml";
-import { applyPatch } from "fast-json-patch";
+import { applyPatch, getValueByPointer } from "fast-json-patch";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../..");
@@ -49,6 +49,7 @@ test("paged native ownership follows semantic JSON and independent UTF-8 orderin
     expect(Math.sign(Buffer.compare(Buffer.from(prefix + row.left), Buffer.from(prefix + row.right)))).toBe(row.ordering);
     expect(JSON.parse(JSON.stringify({ text: prefix + row.left }))).toEqual({ text: prefix + row.left });
   }
+  for (const row of law.emptyComparisons) expect(Math.sign(Buffer.compare(Buffer.from(row.left), Buffer.from(row.right)))).toBe(row.ordering);
   for (const row of law.listEdits) {
     const operation = row.kind === "insert" ? {op:"add" as const,path:`/${row.index}`,value:row.value} : {op:"remove" as const,path:`/${row.index}`};
     expect(applyPatch(structuredClone(row.initial), [operation], true, false).newDocument).toEqual(row.expected);
@@ -127,4 +128,33 @@ test("retirement source capacity agrees with independent decimal arithmetic",asy
   }
   expect(observations.length).toBe(24);
   console.log(`[DEBUG] retirement source capacity 24 portable word-width vectors agree with decimal.js`);
+});
+
+test("owned projected fields preserve native value paths and exact alias closure",()=>{
+ const law=JSON.parse(readFileSync(join(root,owner,"📦️paged/🧫️fixtures/🎮️native-owner/🔣️.json"),"utf8")).ownedProjection;
+ expect(validValue(law.input)).toBe(true);const before=JSON.stringify(law.input);
+ for(const row of law.paths){const own=row.pointer.split("/").slice(1).reduce((value:any,key:string)=>value[key],law.input);expect(own).toBe(getValueByPointer(law.input,row.pointer));expect(own).toBe(row.value);}
+ let aliases=["parent","child"];for(const action of law.closeSequence){if(action==="parent"||action==="child"){const index=aliases.indexOf(action);aliases=applyPatch({aliases},[{op:"remove",path:"/aliases/"+index}],true,false).newDocument.aliases;}if(action==="complete")expect(aliases).toEqual([]);}
+ expect(JSON.stringify(law.input)).toBe(before);expect(law.constructorAllocationBytes).toBe(0);expect(law.maximumItems).toBe(1);expect(law.maximumBytes).toBe(0);
+ expect(readFileSync(join(root,owner,"🧬️retained-clone/🦀️.rs"),"utf8").includes("pub fn project_owned")).toBe(true);
+ console.log("[DEBUG] owned projection native value paths agree with independent RFC6902 pointer and exact alias closure");
+});
+
+test("recursive structural depth counts field and box owners independently", () => {
+  const directory=join(root,owner,"🧬️retained-clone/🧫️fixtures/🌳️structural-depth");
+  const law=JSON.parse(readFileSync(join(directory,"🔣️.json"),"utf8"));
+  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(directory,"📐️schema.json"),"utf8")))(law)).toBe(true);
+  for(const row of law.cases){
+    let chain={text:"leaf",next:null} as {text:string,next:unknown};
+    for(let index=0;index<row.boxes;index++) chain={text:`node-${index}-β`,next:chain};
+    const copy=applyPatch({},[{op:"add",path:"/chain",value:chain}],true,false).newDocument.chain;
+    expect(JSON.parse(JSON.stringify(copy))).toEqual(chain);
+    let boxes=0,current=copy;
+    while(current.next!==null){expect(current.text).toBe(`node-${row.boxes-1-boxes}-β`);boxes++;current=current.next;}
+    expect(current.text).toBe("leaf");expect(boxes).toBe(row.boxes);
+    expect(boxes*(law.fieldLevelsPerBox+law.boxLevelsPerBox)+law.terminalFieldLevels).toBe(row.requiredDepth);
+    expect(row.requiredDepth<=row.maximumDepth).toBe(row.accepted);
+  }
+  expect(law.close).toEqual({maximumItems:1,maximumCopyBytes:2,maximumReleaseBytes:65536});
+  console.log("[DEBUG] Recursive field/box depth oracle preserves zero, one, 31/32 and 255/256 ordered chain boundaries with separate two-byte copy and exact physical close authority");
 });

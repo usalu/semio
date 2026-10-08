@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreatePlantLoop` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PlantLoopConfigPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -30,8 +30,7 @@ pub fn diff(payload: &super::CreatePlantLoop, base: &EnergyModelSnapshot) -> pro
     if payload.equipment_ids.iter().any(|entry| entry.0 == 0) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A plant equipment list carries no unset id.".to_string(), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.plant_loops.push(crate::model::PlantLoopConfig {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::inserting(base.model.plant_loops.len(), crate::model::PlantLoopConfig {
         id: payload.id,
         name: payload.name.clone(),
         loop_type: payload.loop_type,
@@ -39,7 +38,6 @@ pub fn diff(payload: &super::CreatePlantLoop, base: &EnergyModelSnapshot) -> pro
         return_temperature_c: payload.return_temperature_c,
         design_flow_kg_s: payload.design_flow_kg_s,
         equipment_ids: payload.equipment_ids.clone(),
-    });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

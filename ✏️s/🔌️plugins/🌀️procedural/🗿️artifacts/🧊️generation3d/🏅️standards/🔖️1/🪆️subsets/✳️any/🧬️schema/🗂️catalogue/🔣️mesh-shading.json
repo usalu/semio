@@ -1,0 +1,157 @@
+{
+  "category": {
+    "id": "mesh.shading",
+    "emoji": "💡️",
+    "order": 280,
+    "label": {
+      "en": "Mesh shading",
+      "de": "Netzschattierung"
+    },
+    "description": {
+      "en": "Switch faces between flat and smooth shading and rebuild vertex normals.",
+      "de": "Flächen zwischen flacher und glatter Schattierung umschalten und Eckpunktnormalen neu berechnen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.shading.setShading",
+      "category": "mesh.shading",
+      "emoji": "🌗️",
+      "label": {
+        "en": "Set shading",
+        "de": "Schattierung setzen"
+      },
+      "description": {
+        "en": "Marks the selected faces as smooth or flat and rebuilds the normals.",
+        "de": "Markiert die ausgewählten Flächen als glatt oder flach und berechnet die Normalen neu."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to change.",
+            "de": "Die zu ändernden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "smooth",
+          "label": {
+            "en": "Smooth",
+            "de": "Glatt"
+          },
+          "description": {
+            "en": "Smooth shading on; off gives flat shading.",
+            "de": "Glatte Schattierung an; aus ergibt flache Schattierung."
+          },
+          "type": "boolean",
+          "default": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with updated shading.",
+            "de": "Das Netz mit aktualisierter Schattierung."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.shading.recomputeNormals",
+      "category": "mesh.shading",
+      "emoji": "🧭️",
+      "label": {
+        "en": "Recompute normals",
+        "de": "Normalen neu berechnen"
+      },
+      "description": {
+        "en": "Rebuilds all vertex normals from the current faces and their smooth or flat marks.",
+        "de": "Berechnet alle Eckpunktnormalen aus den aktuellen Flächen und ihren Glatt-Flach-Markierungen neu."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with fresh normals.",
+            "de": "Das Netz mit frischen Normalen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

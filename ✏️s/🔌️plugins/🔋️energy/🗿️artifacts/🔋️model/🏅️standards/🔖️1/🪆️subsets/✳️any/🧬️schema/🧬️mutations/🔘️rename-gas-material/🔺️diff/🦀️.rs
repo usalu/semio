@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameGasMaterial` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GasMaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::RenameGasMaterial, base: &EnergyModelSnapshot) -> p
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Gas material {} is already called {:?}.", payload.id.0, payload.new_name));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.gas_materials.iter_mut().find(|item| item.id == payload.id) {
-        item.name = payload.new_name.clone();
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { gas_materials: Rows::modifying(GasMaterialPatch { name: Some(payload.new_name.clone()), ..GasMaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

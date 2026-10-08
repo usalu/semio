@@ -20,7 +20,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "object", kind: "remove-object", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_object(self.id)))
+        if !base.objects.iter().any(|object| object.id == self.id) {
+            return MutationOutcome::error("mutation.target-missing", format!("Object {} {} does not exist.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
+        }
+        MutationOutcome::new(diff::graph_edit(diff::diff_remove_object(self.id)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

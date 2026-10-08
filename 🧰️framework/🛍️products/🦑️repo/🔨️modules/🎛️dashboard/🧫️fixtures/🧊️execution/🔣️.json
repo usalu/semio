@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"args":["run","@semio-tech/repo-dashboard-rs:run","--outputStyle=stream"],"expected":[]},
+    {"args":["run","@semio-tech/repo-dashboard-rs:run","--outputStyle=stream","--language","de"],"expected":["--language","de"]},
+    {"args":["run","@semio-tech/repo-dashboard-rs:run","--","--help"],"expected":["--help"]},
+    {"args":["run","@semio-tech/repo-dashboard-rs:daemon","--outputStyle=stream","--","status"],"expected":["daemon","status"]},
+    {"args":["run","@semio-tech/repo-dashboard-rs:preferences","set","--language","de"],"expected":["preferences","set","--language","de"]},
+    {"args":["run","@semio-tech/repo-dashboard-rs:run","--graph"],"expected":null},
+    {"args":["run","@semio-tech/repo-dashboard-rs:build"],"expected":null}
+  ]
+}

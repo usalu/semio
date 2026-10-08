@@ -1,15 +1,16 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::mutations::change_step_enabled::ChangeStepEnabled;
-use crate::mutations::change_step_origin::ChangeStepOrigin;
-use crate::mutations::rename_step::RenameStep;
-use crate::mutations::reorder_steps::ReorderSteps;
-use crate::mutations::replace_step_measure::ReplaceStepMeasure;
+use crate::standards::v1::subsets::any::schema::mutations::change_step_enabled::ChangeStepEnabled;
+use crate::standards::v1::subsets::any::schema::mutations::change_step_origin::ChangeStepOrigin;
+use crate::standards::v1::subsets::any::schema::mutations::rename_step::RenameStep;
+use crate::standards::v1::subsets::any::schema::mutations::reorder_steps::ReorderSteps;
+use crate::standards::v1::subsets::any::schema::mutations::replace_step_measure::ReplaceStepMeasure;
 use crate::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
 use crate::editor::process3d::commands::cursor::process3d_cursor_moves;
 use crate::schema::{insert_step_mutations, next_step_id, process3d_cursor_after_insert, process3d_cursor_after_remove, remove_step_mutations};
-use crate::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -57,7 +58,9 @@ pub mod add_step {
 /// ➕️ The emit that inserts `step` at the viewer's replay cursor and moves that cursor past it on the config lane.
 pub fn insert_step_emit(fixture: &Process3dSnapshot, config: &Process3dConfig, step: ProcessStep) -> Emit<Process3dMutation, Process3dConfigMutation> {
     let cursor = config.resolved_up_to;
-    Emit { artifact_mutations: insert_step_mutations(fixture, step, cursor), config_mutations: process3d_cursor_moves(fixture, config, process3d_cursor_after_insert(fixture, cursor)), ..Default::default() }
+    let next = process3d_cursor_after_insert(fixture, cursor);
+    let config_mutations = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor { value: next }] };
+    Emit { artifact_mutations: insert_step_mutations(fixture, step, cursor), config_mutations, ..Default::default() }
 }
 
 /// ➖️ The emit that removes the step `id` and pulls the viewer's replay cursor back when it sat past it; nothing when

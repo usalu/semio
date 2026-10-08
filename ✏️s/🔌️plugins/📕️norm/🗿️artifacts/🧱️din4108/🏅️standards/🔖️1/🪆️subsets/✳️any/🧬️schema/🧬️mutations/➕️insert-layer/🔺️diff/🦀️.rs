@@ -1,27 +1,15 @@
-//! 🔺️ `insert-layer` diff — whole-list rewrite via Din4108Diff list wrappers.
+//! ➕️ `insert-layer` diff — inserts the layer into the element's stack at its position, clamped to the end of the stack.
 
 use super::InsertLayer;
-use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108RowEdit as _;
+use crate::diff::{Din4108Diff, Din4108ElementEdit, Din4108ElementPatch, Din4108LayerEdit};
+use crate::Din4108Snapshot;
 
 pub fn diff(payload: &InsertLayer, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    let mut next = base.clone();
-    if let Err(msg) = apply_in_place(payload, &mut next) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", msg, Vec::<String>::new());
-    }
-    protocol::MutationOutcome::new(Din4108Diff {
-        zones: Some(Din4108ZoneList { values: next.zones }),
-        elements: Some(Din4108ElementList { values: next.elements }),
-        thermal_bridges: Some(Din4108ThermalBridgeList { values: next.thermal_bridges }),
-        ..Default::default()
-    })
-}
-
-fn apply_in_place(payload: &InsertLayer, snap: &mut Din4108Snapshot) -> Result<(), String> {
-    
-    let e = snap.elements.iter_mut().find(|e| e.id == payload.element_id).ok_or("element not found")?;
-    let i = payload.index.min(e.layers.len());
-    e.layers.insert(i, payload.layer.clone());
-
-    Ok(())
+    let Some((slot, element)) = base.elements.iter().enumerate().find(|(_, element)| element.id == payload.element_id) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "element not found", Vec::<String>::new());
+    };
+    let index = payload.index.min(element.layers.len());
+    let nested = vec![Din4108LayerEdit::insert(index, payload.layer.clone())];
+    protocol::MutationOutcome::new(Din4108Diff { elements: vec![Din4108ElementEdit::patch(slot, element.id.clone(), Din4108ElementPatch { layers: nested, ..Default::default() })], ..Default::default() })
 }

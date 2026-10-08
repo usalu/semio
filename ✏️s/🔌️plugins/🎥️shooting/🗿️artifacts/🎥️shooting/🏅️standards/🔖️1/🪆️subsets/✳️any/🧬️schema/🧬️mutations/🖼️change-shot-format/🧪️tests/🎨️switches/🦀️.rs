@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️change-shot-format/🎨️switches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️change-shot-format/🎨️switches/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-shot-format diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-shot-format diff applies")
 }
 
 /// ▶️ `change-shot-format` swaps the raster/vector target of one shot. The format string is stored
@@ -110,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-shot-format/switches-shot-wide-to-svg: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

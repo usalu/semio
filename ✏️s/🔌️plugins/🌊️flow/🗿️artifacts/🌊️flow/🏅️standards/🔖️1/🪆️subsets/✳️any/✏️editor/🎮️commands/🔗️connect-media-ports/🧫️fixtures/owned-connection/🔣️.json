@@ -1,0 +1,34 @@
+{
+  "contractId": "flow-connection-typed-emission-owner",
+  "sourceNode": "slider",
+  "sourcePort": "number",
+  "targetNode": "add",
+  "targetPort": "b",
+  "foreignPort": "absent-port",
+  "acceptedGroups": 1,
+  "closeGrant": 16384,
+  "closeSteps": 4096,
+  "refusalCode": "flow.connect-incompatible",
+  "acceptedOperations": 1,
+  "removals": [
+    {
+      "command": "removeWidget",
+      "target": "add",
+      "remainingWidgets": 2,
+      "remainingEdges": 0
+    },
+    {
+      "command": "disconnect",
+      "target": "s1",
+      "remainingWidgets": 3,
+      "remainingEdges": 1
+    },
+    {
+      "command": "deleteSelection",
+      "target": "slider",
+      "remainingWidgets": 2,
+      "remainingEdges": 1
+    }
+  ],
+  "seedSource": "publishedDemo"
+}

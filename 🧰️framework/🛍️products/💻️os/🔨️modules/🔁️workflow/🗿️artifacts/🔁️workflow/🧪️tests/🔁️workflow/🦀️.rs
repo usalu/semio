@@ -329,7 +329,7 @@ async fn workflow_diff_print_parse_and_encode_decode_round_trip() {
         WorkflowDiff::Empty,
     ];
     for diff in diffs {
-        let applied = MutationDiff::apply(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
+        let applied = protocol::apply_diff(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
         let _ = applied;
     }
 }
@@ -391,7 +391,7 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     let document = sample_workflow_snapshot().await;
     let mutation = WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
     let outcome = mutation.diff(&document);
-    let moved = outcome.diff().apply(&document).expect("the drag applies");
+    let moved = protocol::apply_diff(outcome.diff(), &document).expect("the drag applies");
     for id in ["a", "b"] {
         let (before, after) = (document.graph.nodes.iter().find(|node| node.id == id).expect("base"), moved.graph.nodes.iter().find(|node| node.id == id).expect("moved"));
         assert_eq!((after.x, after.y), (before.x + 40.0, before.y - 12.5));

@@ -2,7 +2,8 @@
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::terminology::process3d_labels;
-use crate::{op::Process3dMutation, process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

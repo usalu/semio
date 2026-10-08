@@ -14,7 +14,8 @@ use crate::Puzzle2dSnapshot;
 //#region 🔖️Mutation
 /// 🔗 `connect-handles` payload — edge `id`, both endpoint handle ids, and the full initial
 /// connection-parameter payload (`edge_kind`/`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`/`x`/`y`/
-/// `source_tip`/`target_tip`), and the proximity `tolerance` a drop recorded it under (`None`: no precondition).
+/// `source_tip`/`target_tip`), proximity `tolerance` (`None`: no precondition), and final-state
+/// insertion `index` (`None`: append; an index past the end clamps to append).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -41,6 +42,9 @@ pub struct ConnectHandles {
     #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub tolerance: Option<f64>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -60,14 +64,26 @@ pub fn connect_handles(
     y: f64,
     source_tip: Option<PagedUtf8<{ usize::MAX }>>,
     target_tip: Option<PagedUtf8<{ usize::MAX }>>,
+    index: Option<usize>,
 ) -> Puzzle2dMutation {
-    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip, tolerance: None })
+    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip, tolerance: None, index })
 }
 
 /// 🧲️ Builder — the connection a drop records from proximity: the default geometry and the `tolerance` its two
 /// handles lay within when it was recorded.
 pub fn connect_handles_in_proximity(id: PagedUtf8<{ usize::MAX }>, source: PagedUtf8<{ usize::MAX }>, target: PagedUtf8<{ usize::MAX }>, tolerance: f64) -> Puzzle2dMutation {
-    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, tolerance: Some(tolerance) })
+    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, tolerance: Some(tolerance), index: None })
+}
+
+/// 🧩️ Captures a cold inverse edge with its exact original ordinal and optional flags.
+pub(crate) fn restore_edge(edge: &crate::Puzzle2dEdge, index: usize, mutations: &mut Vec<Puzzle2dMutation>) {
+    mutations.push(connect_handles(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(), Some(index)));
+    if edge.visible.is_some() {
+        mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::change_edge_visible(edge.id.clone(), edge.visible));
+    }
+    if edge.locked.is_some() {
+        mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::change_edge_locked(edge.id.clone(), edge.locked));
+    }
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandles {
@@ -90,3 +106,10 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandl
     }
 }
 //#endregion 🔖️Mutation
+
+#[cfg(test)]
+#[path = "↩️inverse/📑️ordered-restoration/🧪️tests/🦀️.rs"]
+mod ordered_restoration_tests;
+
+#[path = "🎮️prepare/🦀️.rs"]
+pub mod prepare;

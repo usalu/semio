@@ -4,7 +4,7 @@ use crate::schema::{create_drawing_shape_layer_rect};
 use crate::standards::v1::subsets::any::schema::{default_drawing_document};
 use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 
 fn base_document() -> DrawingSnapshot {
     let mut doc = default_drawing_document("mutations-test", None);
@@ -15,7 +15,7 @@ fn base_document() -> DrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn set_layer_visible_inverse_law() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = set_layer_visible(layer_id.into(), false);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -23,7 +23,7 @@ async fn set_layer_visible_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn rename_layer_inverse_law() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = rename_layer(layer_id.into(), "Renamed".into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -38,7 +38,7 @@ async fn create_layer_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn delete_layer_inverse_law() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = delete_layer(layer_id.into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -46,7 +46,7 @@ async fn delete_layer_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn duplicate_layer_inverse_law() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = duplicate_layer(layer_id.into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -55,7 +55,7 @@ async fn duplicate_layer_inverse_law() {
 async fn reorder_layer_inverse_law() {
     let mut base = base_document();
     base.layers.push(create_drawing_path_layer("Second", Vec::new().into()));
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = reorder_layer(layer_id.into(), None, 1);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -63,9 +63,9 @@ async fn reorder_layer_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn set_layer_opacity_diff_absorb_law() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let d1 = set_layer_opacity(layer_id.clone().into(), 0.5).diff(&base).diff().clone();
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = set_layer_opacity(layer_id.into(), 0.25).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -103,21 +103,21 @@ async fn create_layer_duplicate_id_never_applies() {
 #[semio_framework_async_macros::async_test]
 async fn delete_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     assert_outcome_policy_matrix(&base, &delete_layer(layer_id.into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     assert_outcome_policy_matrix(&base, &rename_layer(layer_id.into(), "Renamed".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_layer_opacity_outcome_obeys_the_policy_matrix() {
     let base = base_document();
-    let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     assert_outcome_policy_matrix(&base, &set_layer_opacity(layer_id.into(), 0.5)).await;
 }
 
@@ -175,7 +175,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     }
     let stroke = crate::schema::layer_base(&document.layers[0]).attributes.stroke.as_ref().unwrap();
     assert_eq!((stroke.width, stroke.cap.as_str(), stroke.join.as_str()), (3.0, "round", "bevel"));
-    assert_eq!(stroke.dash, Some(vec![8.0]));
+    assert_eq!(stroke.dash, Some([8.0].into_iter().collect()));
     let scene = crate::schema::flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
     assert_eq!(parse_layer_field_input("name", "123"), semio_framework_value::DslValue::String("123".into()));
@@ -185,7 +185,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
 fn text_field_edits_preserve_numeric_strings_and_other_facets() {
     use protocol::Mutation;
     let layer = crate::schema::create_drawing_text_layer("Text");
-    let id = crate::schema::layer_id(&layer).to_string();
+    let id = crate::schema::layer_id(&layer).clone();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for (field, input) in [("textContent", "123"), ("textContent", "Grüße 🌍\nHello"), ("textSize", "36")] {
         let before = document.clone();
@@ -229,14 +229,14 @@ fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
     let mut base = base_document();
     base.layers.push(create_drawing_shape_layer_rect("Other"));
     base.layers.push(create_drawing_path_layer("Spine", vec![crate::PathSegment::Move { to: [0.0, 0.0] }, crate::PathSegment::Line { to: [10.0, 0.0] }].into()));
-    let [_, rect, other, spine] = [0, 1, 2, 3].map(|index| crate::schema::layer_id(&base.layers[index]).to_string());
+    let [_, rect, other, spine] = [0, 1, 2, 3].map(|index| crate::schema::layer_id(&base.layers[index]).clone());
     let anchor = DrawingPathPointTarget { layer_id: spine.clone().into(), index: 1, point: crate::schema::geometry::editing::PathPoint::Anchor };
     let log = vec![
-        drag_layers(vec![rect.clone()], 10.0, 0.0),
-        rotate_layers(vec![rect.clone(), other.clone()], 0.0, 0.0, std::f64::consts::FRAC_PI_2),
-        scale_layers(vec![other], 0.0, 0.0, 2.0, 2.0),
+        drag_layers([rect.clone()].into_iter().collect(), 10.0, 0.0),
+        rotate_layers([rect.clone(), other.clone()].into_iter().collect(), 0.0, 0.0, std::f64::consts::FRAC_PI_2),
+        scale_layers([other].into_iter().collect(), 0.0, 0.0, 2.0, 2.0),
         drag_path_points(vec![anchor].into(), 0.0, 5.0),
-        drag_layers(vec![rect, spine], 1.0, 1.0),
+        drag_layers([rect, spine].into_iter().collect(), 1.0, 1.0),
     ];
     (base, log)
 }
@@ -288,9 +288,9 @@ async fn every_selection_leaf_edited_in_history_replays_its_downstream() {
     let (base, log) = selection_history();
     let DrawingMutation::DragPathPoints(points) = &log[3] else { panic!("the fourth leaf drags path points") };
     let edits = [
-        (0, drag_layers(vec![crate::schema::layer_id(&base.layers[1]).into()].into(), -4.0, 3.0)),
-        (1, rotate_layers(vec![crate::schema::layer_id(&base.layers[1]).into(), crate::schema::layer_id(&base.layers[2]).into()].into(), 5.0, 5.0, std::f64::consts::PI)),
-        (2, scale_layers(vec![crate::schema::layer_id(&base.layers[2]).into()].into(), 1.0, 1.0, 0.5, 3.0)),
+        (0, drag_layers(vec![crate::schema::layer_id(&base.layers[1]).clone()].into(), -4.0, 3.0)),
+        (1, rotate_layers(vec![crate::schema::layer_id(&base.layers[1]).clone(), crate::schema::layer_id(&base.layers[2]).clone()].into(), 5.0, 5.0, std::f64::consts::PI)),
+        (2, scale_layers(vec![crate::schema::layer_id(&base.layers[2]).clone()].into(), 1.0, 1.0, 0.5, 3.0)),
         (3, drag_path_points(points.targets.clone(), 7.0, -2.0)),
     ];
     for (index, edited) in &edits {
@@ -316,7 +316,7 @@ async fn a_drag_retargeted_onto_a_missing_layer_blocks_finalizing() {
 fn layer_references_read_their_name_and_take_the_canvas_selection() {
     let mut base = base_document();
     crate::schema::layer_base_mut(&mut base.layers[0]).name="Rectangle <Name> & Ü".into();
-    let id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let id = crate::schema::layer_id(&base.layers[0]).to_string_owner();
     let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
     assert_eq!(names.get(&id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Rectangle <Name> & Ü"));
     fn references(value: &serde_json::Value, into: &mut Vec<serde_json::Value>) {

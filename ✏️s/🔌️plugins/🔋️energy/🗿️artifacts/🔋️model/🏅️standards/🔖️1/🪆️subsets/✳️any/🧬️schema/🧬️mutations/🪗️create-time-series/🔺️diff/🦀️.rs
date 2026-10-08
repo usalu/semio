@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateTimeSeriesSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch, TimeSeriesSchedulePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -26,8 +26,6 @@ pub fn diff(payload: &super::CreateTimeSeriesSchedule, base: &EnergyModelSnapsho
     if payload.timestep_seconds == 0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A time series schedule needs a timestep of at least one second.", [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.schedules.time_series.insert(payload.index as usize, crate::schedule::TimeSeriesSchedule { id: payload.id, values: payload.values.clone(), timestep_seconds: payload.timestep_seconds });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { time_series: Rows::inserting(payload.index as usize, crate::schedule::TimeSeriesSchedule { id: payload.id, values: payload.values.clone(), timestep_seconds: payload.timestep_seconds }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

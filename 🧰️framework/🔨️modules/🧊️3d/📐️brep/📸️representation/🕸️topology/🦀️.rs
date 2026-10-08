@@ -101,7 +101,7 @@ pub struct Solid {
 
 /// 🧱️ One B-Rep model: topology arenas + geometry pools + the label counter that stamps every
 /// newly-born entity with a [`PersistentLabel`].
-#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 pub struct Body {
     pub vertices: Store<Vertex, VertexId>,
@@ -432,7 +432,7 @@ pub mod history {
     pub struct PersistentLabel(pub u64);
 
     /// 📜️ Issues fresh, never-repeating labels for one `Body`.
-    #[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
     pub struct LabelSource {
         next: u64,
@@ -873,46 +873,60 @@ impl Body {
     /// lossy [`Body::from_seed`]/[`Body::to_seed`] round trip which drops pcurves.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn merge(&mut self, other: &Body) -> MergeMap {
+        self.merge_selected(other, None)
+    }
+
+    /// ♻️ [`Body::merge`] restricted to the entities of `other` inside `keep` (everything when
+    /// `None`) — the extraction primitive behind a minimal standalone shape value. Labels shift by
+    /// `self`'s high-water mark exactly like a full merge, so a fresh `self` preserves them verbatim.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn merge_selected(&mut self, other: &Body, keep: Option<&ReachSet>) -> MergeMap {
         let offset = self.labels.next();
         self.labels = LabelSource::from_next(offset + other.labels.next());
-        let relabel = |l: PersistentLabel| PersistentLabel(l.0 + offset);
+        self.copy_in(other, keep, |l: PersistentLabel| PersistentLabel(l.0 + offset))
+    }
 
+    /// ♻️ The one copy walk [`Body::merge_selected`], [`Body::extract`] and [`Body::absorb`] share:
+    /// copies the entities of `other` inside `keep` (all when `None`), each carrying `relabel` of its
+    /// label. Never touches `self`'s label counter — the caller owns that bookkeeping.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn copy_in(&mut self, other: &Body, keep: Option<&ReachSet>, mut relabel: impl FnMut(PersistentLabel) -> PersistentLabel) -> MergeMap {
         let mut curve3_map: HashMap<Curve3Id, Curve3Id> = HashMap::with_capacity(other.curves3.len());
-        for (id, c) in other.curves3.iter() {
+        for (id, c) in other.curves3.iter().filter(|(id, _)| keep.is_none_or(|set| set.curves3.contains(id))) {
             curve3_map.insert(id, self.curves3.insert(c.clone()));
         }
         let mut curve2_map: HashMap<Curve2Id, Curve2Id> = HashMap::with_capacity(other.curves2.len());
-        for (id, c) in other.curves2.iter() {
+        for (id, c) in other.curves2.iter().filter(|(id, _)| keep.is_none_or(|set| set.curves2.contains(id))) {
             curve2_map.insert(id, self.curves2.insert(c.clone()));
         }
         let mut surface_map: HashMap<SurfaceId, SurfaceId> = HashMap::with_capacity(other.surfaces.len());
-        for (id, s) in other.surfaces.iter() {
+        for (id, s) in other.surfaces.iter().filter(|(id, _)| keep.is_none_or(|set| set.surfaces.contains(id))) {
             surface_map.insert(id, self.surfaces.insert(s.clone()));
         }
 
         let mut vertex_map: HashMap<VertexId, VertexId> = HashMap::with_capacity(other.vertices.len());
-        for (id, v) in other.vertices.iter() {
+        for (id, v) in other.vertices.iter().filter(|(id, _)| keep.is_none_or(|set| set.vertices.contains(id))) {
             vertex_map.insert(id, self.vertices.insert(Vertex { position: v.position, tol: v.tol, label: relabel(v.label) }));
         }
 
         let mut edge_map: HashMap<EdgeId, EdgeId> = HashMap::with_capacity(other.edges.len());
-        for (id, e) in other.edges.iter() {
+        for (id, e) in other.edges.iter().filter(|(id, _)| keep.is_none_or(|set| set.edges.contains(id))) {
             edge_map.insert(id, self.edges.insert(Edge { curve: curve3_map[&e.curve], range: e.range, v0: vertex_map[&e.v0], v1: vertex_map[&e.v1], tol: e.tol, label: relabel(e.label) }));
         }
 
         let mut coedge_map: HashMap<CoedgeId, CoedgeId> = HashMap::with_capacity(other.coedges.len());
-        for (id, c) in other.coedges.iter() {
+        for (id, c) in other.coedges.iter().filter(|(id, _)| keep.is_none_or(|set| set.coedges.contains(id))) {
             let placeholder = Coedge { edge: edge_map[&c.edge], forward: c.forward, pcurve: c.pcurve.map(|p| curve2_map[&p]), prange: c.prange, loop_id: null_loop_for_merge(), next: null_coedge_for_merge(), prev: null_coedge_for_merge() };
             coedge_map.insert(id, self.coedges.insert(placeholder));
         }
 
         let mut loop_map: HashMap<LoopId, LoopId> = HashMap::with_capacity(other.loops.len());
-        for (id, l) in other.loops.iter() {
+        for (id, l) in other.loops.iter().filter(|(id, _)| keep.is_none_or(|set| set.loops.contains(id))) {
             let placeholder = Loop { first: coedge_map[&l.first], face: null_face_for_merge() };
             loop_map.insert(id, self.loops.insert(placeholder));
         }
 
-        for (id, c) in other.coedges.iter() {
+        for (id, c) in other.coedges.iter().filter(|(id, _)| keep.is_none_or(|set| set.coedges.contains(id))) {
             let new_id = coedge_map[&id];
             let patched = self.coedges.get_mut(new_id).expect("just inserted");
             patched.next = coedge_map[&c.next];
@@ -921,7 +935,7 @@ impl Body {
         }
 
         let mut face_map: HashMap<FaceId, FaceId> = HashMap::with_capacity(other.faces.len());
-        for (id, f) in other.faces.iter() {
+        for (id, f) in other.faces.iter().filter(|(id, _)| keep.is_none_or(|set| set.faces.contains(id))) {
             let outer = f.outer.map(|l| loop_map[&l]);
             let inners: Vec<LoopId> = f.inners.iter().map(|l| loop_map[l]).collect();
             let new_id = self.faces.insert(Face { surface: surface_map[&f.surface], outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: relabel(f.label) });
@@ -935,19 +949,58 @@ impl Body {
         }
 
         let mut shell_map: HashMap<ShellId, ShellId> = HashMap::with_capacity(other.shells.len());
-        for (id, s) in other.shells.iter() {
+        for (id, s) in other.shells.iter().filter(|(id, _)| keep.is_none_or(|set| set.shells.contains(id))) {
             let faces = s.faces.iter().map(|f| face_map[f]).collect();
             shell_map.insert(id, self.shells.insert(Shell { faces, label: relabel(s.label) }));
         }
 
         let mut solid_map: HashMap<SolidId, SolidId> = HashMap::with_capacity(other.solids.len());
-        for (id, s) in other.solids.iter() {
+        for (id, s) in other.solids.iter().filter(|(id, _)| keep.is_none_or(|set| set.solids.contains(id))) {
             let outer = shell_map[&s.outer];
             let inners = s.inners.iter().map(|sh| shell_map[sh]).collect();
             solid_map.insert(id, self.solids.insert(Solid { outer, inners, label: relabel(s.label) }));
         }
 
         MergeMap { vertices: vertex_map, edges: edge_map, faces: face_map, shells: shell_map, solids: solid_map }
+    }
+
+    /// ✂️ A private working copy of exactly what `roots` reach, with every label preserved and the
+    /// label counter continuing at `self`'s — the isolation an operation job runs in, so a cancelled
+    /// or failed job leaves `self` untouched by construction. The [`MergeMap`] translates this body's
+    /// ids into the copy's.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn extract(&self, roots: &[EntityRef]) -> (Body, MergeMap) {
+        let keep = self.reachable_from(roots);
+        let mut out = Body::new();
+        out.labels = LabelSource::from_next(self.labels.next());
+        let map = out.copy_in(self, Some(&keep), |label| label);
+        (out, map)
+    }
+
+    /// 📥️ Appends everything `roots` reach in `scratch` — a working copy [`Body::extract`] made when
+    /// this body's label counter stood at `scratch_base` — and leaves every entity already in `self`
+    /// (same ids, same labels) completely untouched. A label the working copy minted keeps its offset
+    /// from `scratch_base` above this body's counter *now* (identical to its own number when nothing
+    /// else was minted meanwhile); a label that was copied in from this body and survived into the
+    /// result gets a fresh one, so two live entities never share a label.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn absorb(&mut self, scratch: &Body, roots: &[EntityRef], scratch_base: u64) -> MergeMap {
+        let keep = scratch.reachable_from(roots);
+        let first = self.labels.next();
+        let minted = scratch.labels.next().saturating_sub(scratch_base);
+        let mut next_fresh = first + minted;
+        let mut fresh: HashMap<u64, u64> = HashMap::new();
+        let map = self.copy_in(scratch, Some(&keep), |label| {
+            if label.0 >= scratch_base {
+                return PersistentLabel(first + (label.0 - scratch_base));
+            }
+            PersistentLabel(*fresh.entry(label.0).or_insert_with(|| {
+                next_fresh += 1;
+                next_fresh - 1
+            }))
+        });
+        self.labels = LabelSource::from_next(next_fresh);
+        map
     }
 }
 

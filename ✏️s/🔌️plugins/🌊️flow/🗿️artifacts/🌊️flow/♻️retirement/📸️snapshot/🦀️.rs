@@ -7,9 +7,12 @@ use std::{mem::ManuallyDrop, sync::Arc};
 const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
 
 //#region 🧹️SnapshotOwnership
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SnapshotRetirementFactory;
 
 impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowSnapshot>) -> usize { std::mem::size_of::<SnapshotRetirement>() }
+
     fn retire(&self, snapshot: Arc<FlowSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(SnapshotRetirement { root: ManuallyDrop::new(Some(snapshot)), owned: ManuallyDrop::new(None), retirement: FlowRetirement::default(), debt: 0, phase: 0 })
     }

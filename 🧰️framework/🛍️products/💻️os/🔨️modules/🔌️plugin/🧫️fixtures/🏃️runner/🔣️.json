@@ -1,6 +1,10 @@
 {
   "version": 1,
   "cases": [
+    { "args": ["long", "--lib", "retained_command_work_receives_exact_one_unit_and_fallback_charges_once", "--", "--nocapture"], "mode": "budgeted", "forwarded": ["--lib", "retained_command_work_receives_exact_one_unit_and_fallback_charges_once", "--", "--nocapture"] },
+    { "args": ["quick", "--test", "neutral-owner", "--", "--exact"], "mode": "budgeted", "forwarded": ["--test", "neutral-owner", "--", "--exact"] },
+    { "args": ["long", "--no-run", "--lib"], "mode": "inventory", "forwarded": ["test", "--manifest-path", "Cargo.toml", "--no-run", "--lib"] },
+    { "args": ["long", "--all-targets", "--no-fail-fast"], "mode": "budgeted", "forwarded": ["--all-targets", "--no-fail-fast"] },
     {
       "args": [
         "mounted_output_admission_",

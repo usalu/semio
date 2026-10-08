@@ -110,14 +110,24 @@ async fn box_primitive_spans_from_local_origin_corner() {
 /// and the dowel itself) is a boolean the kernel answers, and each subtractive step reduces the volume.
 #[semio_framework_async_macros::async_test]
 async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
-    let snapshot = crate::schema::default_document();
+    let text = include_str!("../🧫️fixtures/🪵️timber-replay/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(text).expect("neutral timber scene");
+    let exact: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lossless neutral timber scene");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let scene = crate::process_working_scene_from_snapshot(&snapshot);
+    let expected = ProcessWorkingScene::from_value(exact["scene"].clone()).expect("neutral typed working scene");
+    assert_eq!(scene, expected, "the complete authored demo retains every neutral stock, pose, origin and measure");
+    for row in fixture["poseScalarBits"].as_array().unwrap() {
+        let position = match &scene.steps[row["step"].as_u64().unwrap() as usize].measure { ProcessMeasure::Cut { pose, .. } | ProcessMeasure::Drill { pose, .. } | ProcessMeasure::Attach { pose, .. } => &pose.position };
+        assert_eq!(format!("{:016x}", position[row["coordinate"].as_u64().unwrap() as usize].to_bits()), row["bits"].as_str().unwrap());
+    }
     assert_eq!(scene.steps.len(), 4, "timber fixture steps: {:?}", scene.steps.iter().map(|step| step.id.as_str()).collect::<Vec<_>>());
     let mut session = ProcessKernelReplay::new();
     let mut previous = session_volume(&mut session, &scene, Some(0));
     assert!((previous - 3.0 * 0.2 * 0.3).abs() < 1e-9, "stock volume {previous}");
     for limit in 1..=scene.steps.len() {
         let volume = session_volume(&mut session, &scene, Some(limit));
+        assert!((volume - fixture["volumes"][limit].as_f64().unwrap()).abs() < fixture["volumeTolerance"].as_f64().unwrap(), "{} exact prefix volume {volume}", scene.steps[limit - 1].id);
         let step = &scene.steps[limit - 1];
         match step.measure {
             ProcessMeasure::Attach { .. } => assert!(volume >= previous - 1e-12, "{} should not remove material: {previous} -> {volume}", step.id),
@@ -125,4 +135,5 @@ async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
         }
         previous = volume;
     }
+    eprintln!("[DEBUG] Process timber native replay matched all five independent volume prefixes");
 }

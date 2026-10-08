@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rootBody",
+    "snapshotBody",
+    "expected",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rootBody": {
+      "const": "import {fileURLToPath} from \"node:url\";export default {body:\"ROOT-BEFORE\",path:import.meta.path??fileURLToPath(import.meta.url)};\n"
+    },
+    "snapshotBody": {
+      "const": "import {fileURLToPath} from \"node:url\";export default {body:\"SNAPSHOT-AFTER\",path:import.meta.path??fileURLToPath(import.meta.url)};\n"
+    },
+    "expected": {
+      "const": "SNAPSHOT-AFTER"
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "alias-01",
+          "mutation": "none",
+          "accepted": true
+        },
+        {
+          "id": "alias-02",
+          "mutation": "root-advance",
+          "accepted": true
+        },
+        {
+          "id": "alias-03",
+          "mutation": "missing",
+          "accepted": false
+        },
+        {
+          "id": "alias-04",
+          "mutation": "wrong-link",
+          "accepted": false
+        },
+        {
+          "id": "alias-05",
+          "mutation": "added",
+          "accepted": false
+        },
+        {
+          "id": "alias-06",
+          "mutation": "removed",
+          "accepted": false
+        },
+        {
+          "id": "alias-07",
+          "mutation": "scope-type",
+          "accepted": false
+        },
+        {
+          "id": "alias-08",
+          "mutation": "duplicate",
+          "accepted": false
+        },
+        {
+          "id": "alias-09",
+          "mutation": "path",
+          "accepted": false
+        },
+        {
+          "id": "alias-10",
+          "mutation": "target",
+          "accepted": false
+        },
+        {
+          "id": "alias-11",
+          "mutation": "manifest",
+          "accepted": false
+        },
+        {
+          "id": "alias-12",
+          "mutation": "provider-hash",
+          "accepted": false
+        },
+        {
+          "id": "alias-13",
+          "mutation": "required-missing",
+          "accepted": false
+        },
+        {
+          "id": "alias-14",
+          "mutation": "null-fallback",
+          "accepted": false
+        },
+        {
+          "id": "alias-15",
+          "mutation": "cancel",
+          "accepted": false
+        },
+        {
+          "id": "alias-16",
+          "mutation": "external-fallback",
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

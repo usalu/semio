@@ -78,6 +78,7 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let label=<DrawingMutation as protocol::SemanticMutation<DrawingSnapshot>>::label(&first.artifact_mutations[0]);
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::En),"Drag 1 layer by (10, -5)");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Locale::De),"1 Ebene um (10; -5) ziehen");
+    eprintln!("[DEBUG] Drawing nudge emitted one relative leaf in one distinct tool transaction with exact EN/DE labels");
 }
 
 #[test]

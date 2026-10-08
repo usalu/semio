@@ -90,6 +90,18 @@
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
+    "breps": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadBrepChildList"
+        }
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.stdio.semio"
+    },
     "referencesByModelDefinitionId": {
       "oneOf": [
         {
@@ -170,6 +182,37 @@
                     },
                     "subset": {
                       "const": "drawing"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CadBrepChild": {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "object",
+              "properties": {
+                "dialect": {
+                  "type": "object",
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.stdio.semio"
+                    },
+                    "standard": {
+                      "const": "v1"
+                    },
+                    "subset": {
+                      "const": "brep"
                     }
                   }
                 }

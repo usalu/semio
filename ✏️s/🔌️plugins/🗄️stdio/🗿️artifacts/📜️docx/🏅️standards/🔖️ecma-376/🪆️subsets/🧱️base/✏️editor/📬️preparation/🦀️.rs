@@ -183,6 +183,7 @@ pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAdd
     Ok(prepared.changed.then_some(mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DocxPreparationFactory;
 
 impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutation> for DocxPreparationFactory {
@@ -264,7 +265,7 @@ impl DocxPreparation {
         }
         self.checkpoint.cursor = self.checkpoint.cursor.saturating_add(1);
         self.checkpoint.completed_items = self.checkpoint.completed_items.saturating_add(progress.copied_items as u32);
-        self.checkpoint.completed_bytes = self.checkpoint.completed_bytes.saturating_add(progress.copied_bytes.saturating_add(progress.retained_capacity_bytes) as u64);
+        self.checkpoint.completed_bytes = self.checkpoint.completed_bytes.saturating_add(progress.copied_bytes.saturating_add(progress.retained_capacity_bytes).saturating_add(progress.released_bytes) as u64);
         app_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)
     }
 }
@@ -296,7 +297,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
         match self.phase {
             0 => {
                 let source = self.source.as_ref().ok_or_else(|| format!("{PREFIX}.source"))?;
-                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH };
+                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH, maximum_release_bytes: grant.maximum_bytes };
                 let step = self.opc_cursor.advance(source.borrow().project(1, |snapshot| &snapshot.opc), retained_grant).map_err(|error| format!("{PREFIX}.opc-copy.{error}"))?;
                 let progress = step.progress();
                 if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -312,7 +313,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                 let step = self.opc_cursor.close_step(1, grant.maximum_bytes).map_err(|error| format!("{PREFIX}.opc-copy-close.{error}"))?;
                 match step {
                     app_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }))
+                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes }))
                     }
                     app_store::SnapshotRetirementStep::Blocked => Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked),
                     app_store::SnapshotRetirementStep::Complete => {
@@ -326,7 +327,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
             }
             2 => {
                 let source = self.source.as_ref().ok_or_else(|| format!("{PREFIX}.source"))?;
-                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH };
+                let retained_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: OWNER_DEPTH, maximum_release_bytes: grant.maximum_bytes };
                 let step = self.xml_parts_cursor.advance(source.borrow().project(2, |snapshot| &snapshot.xml_parts), retained_grant).map_err(|error| format!("{PREFIX}.xml-parts-copy.{error}"))?;
                 let progress = step.progress();
                 if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -342,7 +343,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                 let step = self.xml_parts_cursor.close_step(1, grant.maximum_bytes).map_err(|error| format!("{PREFIX}.xml-parts-copy-close.{error}"))?;
                 match step {
                     app_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }))
+                        Ok(self.retained_progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes }))
                     }
                     app_store::SnapshotRetirementStep::Blocked => Ok(app_store::ArtifactStoreOneItemPreparationStep::Blocked),
                     app_store::SnapshotRetirementStep::Complete => {
@@ -554,6 +555,7 @@ impl<T> Drop for AdmittedRetirement<T> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DocxMutationRetirementFactory;
 
 impl app_store::ArtifactOwnedValueRetirementFactory<DocxMutation> for DocxMutationRetirementFactory {
@@ -562,8 +564,10 @@ impl app_store::ArtifactOwnedValueRetirementFactory<DocxMutation> for DocxMutati
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DocxSnapshotRetirementFactory;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DocxOwnedSnapshotRetirementFactory;
 
 impl app_store::ArtifactOwnedValueRetirementFactory<DocxSnapshot> for DocxOwnedSnapshotRetirementFactory {
@@ -670,6 +674,8 @@ impl Drop for DocxSnapshotRetirement {
 }
 
 impl app_store::SnapshotRetirementFactory<DocxSnapshot> for DocxSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<DocxSnapshot>) -> usize { std::mem::size_of::<DocxSnapshotRetirement>() }
+
     fn retire(&self, snapshot: Arc<DocxSnapshot>) -> Box<dyn app_store::ErasedSnapshotRetirement> {
         Box::new(DocxSnapshotRetirement::new(snapshot))
     }

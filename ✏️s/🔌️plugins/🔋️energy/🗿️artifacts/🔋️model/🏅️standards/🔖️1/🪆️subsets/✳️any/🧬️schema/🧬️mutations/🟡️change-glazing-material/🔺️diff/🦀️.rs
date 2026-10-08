@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeGlazingMaterialSolarTransmittance` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GlazingMaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeGlazingMaterialSolarTransmittance, base: &Ene
     if existing.solar_transmittance == payload.new_solar_transmittance {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries this solar transmittance: {}.", payload.id.0, payload.new_solar_transmittance));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {
-        item.solar_transmittance = payload.new_solar_transmittance;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { glazing_materials: Rows::modifying(GlazingMaterialPatch { solar_transmittance: Some(payload.new_solar_transmittance), ..GlazingMaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Puzzle2d borrowed create preparation corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "control",
+    "cases",
+    "inverseOwnership",
+    "forwardOwnership"
+  ],
+  "properties": {
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "largePrefix",
+        "largeRepeats"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 32
+        },
+        "largePrefix": {
+          "type": "string"
+        },
+        "largeRepeats": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "nodes",
+          "mutation",
+          "status",
+          "position",
+          "after",
+          "inverse"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mutation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "index"
+            ],
+            "properties": {
+              "node": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "x",
+                  "y"
+                ]
+              },
+              "index": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          },
+          "status": {
+            "enum": [
+              "changed",
+              "duplicate-id",
+              "nonfinite-x",
+              "nonfinite-y",
+              "invalid-shape",
+              "invalid-radius",
+              "invalid-width",
+              "invalid-height",
+              "invalid-scale",
+              "invalid-handle-angle",
+              "invalid-handle-radius",
+              "invalid-handle-scale"
+            ]
+          },
+          "position": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inverse": {
+            "type": "object",
+            "required": [
+              "mutation",
+              "payload"
+            ],
+            "properties": {
+              "mutation": {
+                "const": "delete-node"
+              },
+              "payload": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "inverseOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumTurnBytes",
+        "cancelAfterBodyBytes",
+        "journeys"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumTurnBytes": {
+          "const": 4096
+        },
+        "cancelAfterBodyBytes": {
+          "const": 128
+        },
+        "journeys": {
+          "const": [
+            "inverseBeforeRefusal",
+            "duplicateInverseIntent",
+            "borrowedIdOnly",
+            "largeUtf8",
+            "zeroGrant",
+            "sourceSwap",
+            "cancelDuringIdCopy",
+            "takeOnce",
+            "controlledRetirement"
+          ]
+        }
+      }
+    },
+    "forwardOwnership": {
+      "const": {
+        "maximumItems": 1,
+        "maximumTurnBytes": 4096,
+        "cancelAfterBodyBytes": 128,
+        "changedOwner": "nativePagedSnapshot",
+        "unchangedOwner": "retainedOriginal",
+        "journeys": [
+          "append",
+          "indexedInsertion",
+          "clampedInsertion",
+          "refusalRetainsOriginal",
+          "borrowedNodeOnly",
+          "nestedHandles",
+          "allUntouchedOwners",
+          "zeroGrant",
+          "cancelDuringSnapshotCopy",
+          "cancelDuringNodeCopy",
+          "cancelDuringInsertion",
+          "takeOnce",
+          "controlledRetirement"
+        ]
+      }
+    }
+  }
+}

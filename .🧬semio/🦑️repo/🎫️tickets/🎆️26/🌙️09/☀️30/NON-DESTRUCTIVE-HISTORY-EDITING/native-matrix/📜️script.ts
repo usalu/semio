@@ -11,15 +11,30 @@ while (!existsSync(join(repository, "nx.json"))) {
 }
 if(process.argv[2]==="source-oracle"){
   const source=process.argv[3]==="sqlite"?"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts":process.argv[3]==="puzzle"?"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts":undefined;
-  if(!source)throw Error("source-oracle requires sqlite or puzzle");
+  const selectedSource=process.argv[3]==="step-history"?"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️tests/🎛️history-inputs/🟦️.ts":source;
+  const sources=process.argv[3]==="drawing-cold"?["✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"]:process.argv[3]==="step-references"?["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔗️references/🧪️tests/🟦️.ts"]:process.argv[3]==="acceptance-arrays"?["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🧪️tests/🔎️array-controls/🟦️.ts"]:process.argv[3]==="tool"?["🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts","🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️node-graph-row-ownership/🟦️.ts"]:selectedSource?[selectedSource]:[];
+  if(!sources.length)throw Error("source-oracle requires sqlite, puzzle, step-history, tool, drawing-cold, step-references or acceptance-arrays");
   const {runBudgetedTestCommand}=await import(join(repository,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
-  await runBudgetedTestCommand(process.execPath,["test",join(repository,source)],{cwd:repository,budgetMs:600000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",...sources.map(source=>join(repository,source))],{cwd:repository,budgetMs:600000,throwOnFailure:true});
   process.exit(0);
 }
 const { runRepositoryCargoTests, runRepositoryTestCommand } = await import(join(repository, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"));
 const { runRepositoryCommand } = await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"));
+if(process.argv[2]==="puzzle-domain-native"){
+  const {runArtifactRustTests}=await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts"));
+  await runArtifactRustTests("semio-s-artifact-puzzle-2d",repository,process.argv.slice(3),["component-app-assembly"]);
+  process.exit(0);
+}
+if(process.argv[2]==="step-history-oracle"){
+  await runRepositoryCargoTests(["semio-s-artifact-stdio-step-test-oracle"],repository,["--lib","--features","oracles","committed_history_intents_match_independent_part21_reader_and_class_edits","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  process.exit(0);
+}
+if(process.argv[2]==="architect-role-native"){
+  await runRepositoryCargoTests(["semio-s-artifact-architect-program"],repository,["--lib","architect_native_sparse_diff_preserves_declared_roles_and_exact_text","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  process.exit(0);
+}
 if(process.argv[2]==="sqlite-paged-native"){
-  await runRepositoryCargoTests(["semio-framework-io-sqlite-snapshot"],repository,["--lib","history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  await runRepositoryCargoTests(["semio-framework-io-sqlite-snapshot"],repository,["--lib","history_edit_sqlite_paged_text_cells_keep_borrowed_measurement_allocation_free_and_cancel_owned_copy","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
 const roots = join(repository, "✏️s/🔌️plugins");
@@ -59,8 +74,11 @@ const owners = readdirSync(roots).flatMap(plugin => {
 }).sort((a,b)=>a.root.localeCompare(b.root));
 const [command, selection = "all", featureSelection = "all"] = process.argv.slice(2);
 if (!["all","ungated","assembly"].includes(featureSelection)) throw Error("Feature selection must be all, ungated or assembly");
-if (!["all","stdio","non-stdio"].includes(selection)) throw Error("Selection must be all, stdio or non-stdio");
-const selected = owners.filter(owner=>(selection === "all" || owner.root.includes("🗄️stdio") === (selection === "stdio")) && (featureSelection === "all" || owner.assembly === (featureSelection === "assembly")));
+const crateSelection=selection.split(",");
+if (!["all","stdio","non-stdio"].includes(selection) && (new Set(crateSelection).size!==crateSelection.length || crateSelection.some(crate=>!owners.some(owner=>owner.crate===crate)))) throw Error("Selection must name all, stdio, non-stdio or distinct authored native crates");
+const selected = owners.filter(owner=>(selection === "all" || (selection === "stdio" || selection === "non-stdio" ? owner.root.includes("🗄️stdio") === (selection === "stdio") : crateSelection.includes(owner.crate))) && (featureSelection === "all" || owner.assembly === (featureSelection === "assembly")));
+if(!selected.length)throw Error("Selected native assertion cohort has no authored registration");
+const suffixes=new Set(["history_edits_end_to_end","history_edit_inputs_resolve","conflict_history_edits_end_to_end","child_history_edits_end_to_end"]);
 console.log(`[DEBUG] history acceptance owners=${selected.length} registrations=${selected.reduce((sum,owner)=>sum+owner.registrations.length,0)}`);
 if (command === "genesis-oracle") {
   await runRepositoryTestCommand(process.execPath,["test",join(import.meta.dir,"../deferred-genesis/🟦️.ts")],{cwd:repository});
@@ -69,7 +87,11 @@ if (command === "genesis-oracle") {
 } else if (command === "census") {
   for(const owner of selected) console.log(`${owner.project}	${owner.crate}	assembly=${owner.assembly}	registrations=${owner.registrations.length}`);
 } else if (command === "execute-group") {
-  await runRepositoryCargoTests(selected.map(owner=>owner.crate),repository,["--lib",...(featureSelection==="assembly"?["--features","component-app-assembly"]:[]),"history_edit","--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
+  const scope=process.argv[5]??"history";
+  if(!["history","named"].includes(scope))throw Error("Execution scope must be history or named");
+  const filter=scope==="named"?["-E",`test(/(^|::)(${[...suffixes].join("|")})$/)`]:["history_edit"];
+  console.log(`[DEBUG] history acceptance runtime scope=${scope}`);
+  await runRepositoryCargoTests(selected.map(owner=>owner.crate),repository,["--lib",...(featureSelection==="assembly"?["--features","component-app-assembly"]:[]),...filter,"--no-fail-fast","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
 } else if (command === "run") {
   let failed=false;
   for(const assembly of [false,true]){
@@ -78,11 +100,10 @@ if (command === "genesis-oracle") {
     const expected=group.map(owner=>({crate:owner.crate,registrations:owner.registrations.flatMap(path=>[...readFileSync(path,"utf8").matchAll(/(?:history_edit_acceptance_law|composed_child_history_law)!\s*\(\s*"([^"\n]+)"\s*,\s*([^,]+),/gu)].map(match=>({kind:match[0].startsWith("history_edit")?"direct":"child",plugin:match[1],editor:match[2]?.trim(),source:path}))),direct:owner.registrations.reduce((sum,path)=>sum+[...readFileSync(path,"utf8").matchAll(/history_edit_acceptance_law!\s*\(/gu)].length,0),child:owner.registrations.reduce((sum,path)=>sum+[...readFileSync(path,"utf8").matchAll(/composed_child_history_law!\s*\(/gu)].length,0)}));
     let complete=false;
     const passes=new Map<string,Set<string>>(),refused=new Set<string>();
-    const suffixes=new Set(["history_edits_end_to_end","history_edit_inputs_resolve","conflict_history_edits_end_to_end","child_history_edits_end_to_end"]);
-    const receipt=join(import.meta.dir,`../🗑️generated/tools-execution/assertions-${selection}-${assembly?"assembly":"ungated"}-${Date.now()}.json`);
+    const receipt=join(import.meta.dir,`../🗑️generated/tools-execution/assertions-${crateSelection.length>1?`selected-${Bun.hash(selection).toString(16)}`:selection}-${assembly?"assembly":"ungated"}-${Date.now()}.json`);
     console.log(`[DEBUG] history acceptance expected named assertions=${expected.reduce((sum,row)=>sum+row.direct*3+row.child,0)} crates=${group.length}`);
     try{
-      await runRepositoryCommand(process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated"],repository,"history-native-named-assertions",1800000,{onLine:line=>{
+      await runRepositoryCommand(process.execPath,[import.meta.filename,"execute-group",selection,assembly?"assembly":"ungated","named"],repository,"history-native-named-assertions",1800000,{onLine:line=>{
         const plain=line.replace(/\x1b\[[0-9;]*m/gu,""),match=plain.match(/\b(PASS|FAIL|SKIP)\s+\[[^\]]+\]\s+(?:\([^)]*\)\s+)?(\S+)\s+(\S+)\s*$/u);
         if(!match||!suffixes.has(match[3]!.split("::").at(-1)!))return;
         const [,status,crate,name]=match;if(status!=="PASS"){refused.add(`${crate}::${name}`);return;}

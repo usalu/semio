@@ -1,0 +1,45 @@
+{
+  "stops": [
+    0,
+    1,
+    2,
+    8,
+    16,
+    32,
+    64,
+    128
+  ],
+  "zeroReleaseBytes": 0,
+  "releaseBytes": 4096,
+  "maximumCloseSteps": 100000,
+  "expected": {
+    "stepLength": 0,
+    "stepCapacity": 0,
+    "toolLength": 0,
+    "toolCapacity": 0,
+    "flow": false,
+    "writer": false,
+    "output": false,
+    "jsonRetirement": false,
+    "payloadRetirement": false
+  },
+  "physicalBacking": {
+    "capacityItems": 1,
+    "underGrantOffset": 1,
+    "expectedUnderGrantReleasedItems": 0,
+    "expectedUnderGrantReleasedBytes": 0,
+    "expectedFullGrantReleasedItems": 1
+  },
+  "maximumAdmittedReleaseBytes": 262144,
+  "maximumWorkItems": 1,
+  "structuralWork": {
+    "nextByteDemand": 1,
+    "physicalReleaseBytes": 0
+  },
+  "decoderBacking": {
+    "capacityItems": 64,
+    "maximumAdvertisedTurns": 8,
+    "queryEachDemand": true,
+    "expectedTerminal": true
+  }
+}

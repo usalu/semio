@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
+use crate::standards::v1::subsets::any::schema::{with_host, GraphEditor};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
@@ -74,7 +74,8 @@ fn automatic_position(x: Option<f64>, y: Option<f64>, size: [f64; 2], occupied: 
     position
 }
 
-/// 🕹️ Creates one event-sourced widget; rejected descriptors produce a fault and no mutation.
+/// 🕹️ Creates one event-sourced widget as ONE edit — the `create-widget` and the `move-widget` that places it; rejected
+/// descriptors produce a fault and no mutation.
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
     let descriptor = payload.descriptor_json()?;
@@ -84,12 +85,13 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
         }
     }
     with_host(host_snapshot, |host| {
-        let id = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).map_err(|error| creation_fault(error.to_string()))?;
-        let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).ok_or_else(|| creation_fault("created widget has no rendered node"))?;
-        let occupied: Vec<[f64; 4]> = host.dag.host_snapshot.nodes.iter().filter(|node| node.id != id).map(|node| [node.x, node.y, node.width, node.height]).collect();
-        let [x, y] = automatic_position(payload.x, payload.y, [node.width, node.height], &occupied);
-        host.move_widget(&id, x, y).map_err(|error| creation_fault(error.to_string()))?;
-        Ok(Emit { artifact_mutations: commit_host_snapshot(host_snapshot, &host.host_snapshot), ..Default::default() })
+        let mut editor = GraphEditor::new(host);
+        let id = editor.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).map_err(creation_fault)?;
+        let size = editor.size_of(&id).ok_or_else(|| creation_fault("created widget has no rendered node"))?;
+        let occupied = editor.occupied(&id);
+        let [x, y] = automatic_position(payload.x, payload.y, size, &occupied);
+        editor.move_widget(&id, x, y).map_err(creation_fault)?;
+        Ok(Emit { artifact_mutations: editor.finish(), ..Default::default() })
     })
 }
 

@@ -44,6 +44,7 @@ struct BoundedWindowConfigPreparation<O: WindowConfigOwner> {
     closing: bool,
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct BoundedWindowConfigPreparationFactory<O: WindowConfigOwner>(std::marker::PhantomData<fn() -> O>);
 
 impl<O: WindowConfigOwner> Default for BoundedWindowConfigPreparationFactory<O> {
@@ -114,7 +115,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
         if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
             return Err("window config mutation was rejected against its captured base".into());
         }
-        let next = protocol::MutationDiff::apply(outcome.diff(), base.get()).map_err(|error| error.to_string())?;
+        let next = protocol::apply_diff(outcome.diff(), base.get()).map_err(|error| error.to_string())?;
         let inverse = protocol::Mutation::inverse(mutation, base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let encoded_bytes = store::ArtifactPack::encode_pack(&next)
             .len()

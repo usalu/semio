@@ -5,8 +5,8 @@ mod mutations_codec {
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::mutations::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::WriterMainWindowConfig;
-use set_camera::SetCamera;
-use set_editor_settings::SetEditorSettings;
+use crate::editor::writer::modes::edit::windows::main::config::SetCamera;
+use crate::editor::writer::modes::edit::windows::main::config::SetEditorSettings;
 
 impl protocol::OpBinary for WriterMainWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

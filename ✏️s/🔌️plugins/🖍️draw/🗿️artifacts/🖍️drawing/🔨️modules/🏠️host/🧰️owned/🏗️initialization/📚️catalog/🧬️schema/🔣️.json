@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.semio.tech/drawing/initialization/catalog-close/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "lanes", "grants", "maximumItems", "coldBirthCredited", "terminalDropBytes"],
+  "properties": {
+    "schema": {"const": "drawing.initialization.catalog-close/v1"},
+    "lanes": {"const": ["applied", "redo", "cursorApplied", "cursorRedo", "appliedRevision", "redoRevision"]},
+    "grants": {"const": ["zero", "below", "exact"]},
+    "maximumItems": {"const": 1},
+    "coldBirthCredited": {"const": false},
+    "terminalDropBytes": {"const": 0}
+  }
+}

@@ -1874,6 +1874,7 @@ pub struct MemberEditHistory {
     pub started_at: String,
     pub timestamp: Option<HybridLogicalTimestamp>,
     pub transaction: Option<protocol::TransactionRef>,
+    pub intent_label: Option<LocalizedLabel>,
     pub op_count: usize,
     pub op_lines: Vec<String>,
     pub mutations: Vec<MutationView>,
@@ -1887,6 +1888,7 @@ pub(crate) struct MemberHistoryVisitor<'a, 'b> {
     pub labelled: &'a HashMap<&'b str, &'b MutationView>,
     pub viewer: bool,
     pub wanted: Option<&'a HashSet<&'b str>>,
+    pub intent_kinds: fn(&str) -> &'static [&'static str],
 }
 
 impl store::MemberStoreVisitor for MemberHistoryVisitor<'_, '_> {
@@ -1904,15 +1906,19 @@ impl store::MemberStoreVisitor for MemberHistoryVisitor<'_, '_> {
             let outcomes: HashMap<&str, &protocol::MutationReplayOutcome> = durable.iter().map(|outcome| (outcome.mutation_id.0.as_str(), outcome)).collect();
             let ops: Vec<&store::AppliedMutation<'_, Mu>> = ops.iter().collect();
             let op_count = edit.forwards.len();
+            let transaction = edit.mutation_meta.first().and_then(|meta| meta.transaction.clone());
+            let mutations = history_mutation_views_of::<P, Mu>(&ops, &outcomes, self.labelled, |op| protocol::SemanticMutation::<P>::label(op), self.viewer, Some(&self.store));
+            let intent_label = transaction.as_ref().and_then(|reference| history_intent_label_of::<P, Mu>((self.intent_kinds)(&reference.tool), &ops, &mutations));
             MemberEditHistory {
                 store: self.store.clone(),
                 edit_id: edit.id.clone(),
                 started_at: edit.started_at.clone(),
                 timestamp: edit.mutation_meta.first().map(|meta| meta.timestamp),
-                transaction: edit.mutation_meta.first().and_then(|meta| meta.transaction.clone()),
+                transaction,
+                intent_label,
                 op_count,
                 op_lines: edit.forwards[op_count.saturating_sub(HISTORY_ROW_OPERATION_PREVIEW)..].iter().map(|op| op.print_op()).collect(),
-                mutations: history_mutation_views_of::<P, Mu>(&ops, &outcomes, self.labelled, |op| protocol::SemanticMutation::<P>::label(op), self.viewer, Some(&self.store)),
+                mutations,
             }
         };
         match self.wanted {
@@ -2001,7 +2007,7 @@ pub(crate) fn member_backfill(histories: impl IntoIterator<Item = MemberEditHist
             group.edit_ids.push(history.edit_id);
             continue;
         }
-        let label = history.mutations.first().map_or_else(|| LocalizedLabel::data(history.op_lines.first().cloned().unwrap_or_else(|| history.edit_id.clone())), |first| history_leaf_row_label(&first.label, history.op_count));
+        let label = history.intent_label.as_ref().or_else(|| history.mutations.first().map(|first| &first.label)).map_or_else(|| LocalizedLabel::data(history.op_lines.first().cloned().unwrap_or_else(|| history.edit_id.clone())), |leaf| history_leaf_row_label(leaf, history.op_count));
         backfill.groups.push(MemberBackfillGroup { at: history.timestamp, transaction, edit_ids: vec![history.edit_id], label, started_at: history.started_at });
     }
     backfill
@@ -2174,7 +2180,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             return histories;
         }
         for (store, entry) in self.children.addressed_entries() {
-            for history in entry.member.visit_member(MemberHistoryVisitor { store, labelled, viewer, wanted }) {
+            for history in entry.member.visit_member(MemberHistoryVisitor { store, labelled, viewer, wanted, intent_kinds: A::tool_intent_kinds }) {
                 histories.insert(history.edit_id.clone(), history);
             }
         }
@@ -2556,6 +2562,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.note_time_travel_changed(true, true);
             }
             Err(error) => {
+                #[cfg(debug_assertions)]
+                eprintln!("[DEBUG] deferred reprojection refused local={local} generation={generation} detail={error:?} message={error}");
                 let code = match local && matches!(error, vcs::VcsError::Rejected { .. }) {
                     true => HISTORY_STEP_BLOCKED_CODE.to_string(),
                     false => error.into_fault().code.0,
@@ -3125,6 +3133,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.flush_time_travel_ui_dirty();
         if let Some(step) = self.time_travel.retire_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
             if !matches!(step, PluginCloseStep::Blocked { .. }) {
+                #[cfg(debug_assertions)]
+                if self.store.reprojection_progress().is_some() {
+                    static TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+                    let turns = TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed).saturating_add(1);
+                    if turns >= 1024 && turns.is_power_of_two() {
+                        eprintln!("[DEBUG] reprojection driver cleanup turn={turns} step={step:?} progress={:?} documentRetirements={} documentDiscarded={}", self.store.reprojection_progress(), self.time_travel.document.retirements.len(), self.time_travel.document.discarded.len());
+                    }
+                }
                 return Ok(());
             }
         }
@@ -3472,17 +3488,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// lists exactly the loaded document's rows, which the next read backfills (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING
     /// follow-up 3). Rows naming neither — configuration and shell rows — stay.
     pub(crate) fn retire_displaced_document_rows(&mut self) {
-        self.refresh_supersede_ledger();
-        let held: HashSet<&str> = self.store.envelope().vcs.edits.iter().map(|edit| edit.id.as_str()).collect();
-        let supersedes = &self.supersedes;
-        let before = self.command_log.len();
-        self.command_log.retain(|entry| entry.edit_id.as_deref().is_none_or(|edit_id| held.contains(edit_id)) && entry.transition_id.as_deref().is_none_or(|transition_id| supersedes.record(transition_id).is_some()));
-        if self.command_log.len() == before {
-            return;
-        }
-        let kept: HashSet<u64> = self.command_log.iter().map(|entry| entry.seq).collect();
-        self.shell_undone.retain(|seq| kept.contains(seq));
-        self.history_dirty_sequences.retain(|seq| kept.contains(seq));
+        self.command_prune_generation = self.command_prune_generation.checked_add(1).expect("mounted command visibility generation remains representable");
         self.history_backfill = None;
         self.log_generation += 1;
     }

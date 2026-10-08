@@ -1,0 +1,38 @@
+[
+  {
+    "name": "900.193001 Current Native Origin Seven Model Publication Laws",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-7 --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-model-publication-inputs-5/\ud83d\udcdc\ufe0fscript.ts\" laws",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-7",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-7",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/nx-data",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.193001
+    }
+  },
+  {
+    "name": "900.193002 Current Native Origin Seven Model Publication Apply",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=current-native-origin-7 --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-model-publication-inputs-5/\ud83d\udcdc\ufe0fscript.ts\" apply",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-7",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-origin-inputs-7",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/nx-data",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/nx-cache"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.193002
+    }
+  }
+]

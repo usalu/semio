@@ -17,7 +17,7 @@ use crate::schema::{drawing_play_boolean_child_row_id, drawing_play_layers_tree_
 use crate::{DrawingLayerNode, DrawingSnapshot};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_with_action;
-use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::tree_window_indexed_item;
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
@@ -51,8 +51,8 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🏷️ Admits one short drawing tree key — an icon key or an interaction granularity id.
-fn ui_key(value: &str, stage: &'static str) -> UiAssemblyResult<UiText> {
-    UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", stage))
+fn ui_key(value: &(impl std::fmt::Display + ?Sized), stage: &'static str) -> UiAssemblyResult<UiText> {
+    UiText::try_format(format_args!("{value}")).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", stage))
 }
 
 fn layer_icon(layer: &DrawingLayerNode) -> &str {
@@ -110,7 +110,7 @@ fn layer_tree_item(windows: &TreeWindows<'_>, doc: &DrawingSnapshot, layer: &Dra
     let drag_key = ui_key("application/x-semio-drawing-layer-id", "fixed drag key admission failed")?;
     let drag_value = ui_key(&base.id, "fixed drag value admission failed")?;
     drag_data.try_push(drag_key, drag_value).map_err(|_| PluginAssemblyError::new("ui.layer.drag-data", "fixed drag-data admission failed"))?;
-    let label = semio_framework_ui_contract::Label::try_from(base.name.clone()).map_err(|_| PluginAssemblyError::new("ui.layer.label", "fixed layer label admission failed"))?;
+    let label = semio_framework_ui_contract::Label(ui_key(&base.name, "fixed layer label admission failed")?);
     let item = semio_framework_ui_contract::tree_item(label)
         .try_id(&row_id)
         .map_err(|_| PluginAssemblyError::new("ui.layer.id", "fixed layer id admission failed"))?
@@ -121,16 +121,16 @@ fn layer_tree_item(windows: &TreeWindows<'_>, doc: &DrawingSnapshot, layer: &Dra
         .drag_data(drag_data)
         .dimmed(!base.visible);
     match layer {
-        DrawingLayerNode::Group(group) => tree_window_item(windows, item, &row_id, true, &group.children, |child| layer_tree_item(windows, doc, child)),
-        DrawingLayerNode::Boolean(boolean) => tree_window_item(windows, item, &row_id, false, &boolean.children, |child_id| boolean_child_item(doc, &boolean.base.id, child_id)),
+        DrawingLayerNode::Group(group) => tree_window_indexed_item(windows, item, &row_id, true, group.children.len(), |index| layer_tree_item(windows, doc, &group.children[index])),
+        DrawingLayerNode::Boolean(boolean) => tree_window_indexed_item(windows, item, &row_id, false, boolean.children.len(), |index| boolean_child_item(doc, &boolean.base.id, &boolean.children[index])),
         _ => item.default_open(false).try_build().map_err(|_| PluginAssemblyError::new("ui.layer.build", "fixed layer admission failed")),
     }
 }
 
-fn boolean_child_item(doc: &DrawingSnapshot, boolean_id: &str, child_id: &str) -> UiAssemblyResult<BuiltNode> {
+fn boolean_child_item(doc: &DrawingSnapshot, boolean_id: &semio_framework_value::paged::PagedUtf8<{usize::MAX}>, child_id: &semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> UiAssemblyResult<BuiltNode> {
     let row_id = drawing_play_boolean_child_row_id(boolean_id, child_id);
     let mut item = match find_drawing_layer(doc, child_id) {
-        Some(child) => tree_item(row_id, layer_base(child).name.clone())?,
+        Some(child) => tree_item(row_id, semio_framework_ui_contract::Label(ui_key(&layer_base(child).name, "fixed child label admission failed")?))?,
         None => tree_item(row_id, format!("{child_id} (missing)"))?,
     };
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {

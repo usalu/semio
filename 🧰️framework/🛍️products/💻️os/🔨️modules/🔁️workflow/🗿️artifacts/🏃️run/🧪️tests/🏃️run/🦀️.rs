@@ -16,6 +16,10 @@ fn sqlite_snapshot_run_trigger_binds_literal_values_and_cancels_owned_utf8(){
  let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<RunTrigger as semio_framework_dsl_record::DslField>::from_value_controlled(&raw,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
 }
 use protocol::MutationDiff;
+
+fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
+    protocol::apply_diff(protocol::Mutation::diff(operation, document).diff(), document).expect("a valid run operation applies")
+}
 fn assert_run_native_status<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
  let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,semio_framework_dsl_record::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
  let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(0,&mut admitted);assert_eq!(&T::from_value_controlled(&native,&mut decoding).unwrap(),value);assert_eq!(decoding.owned_bytes(),0);assert!(T::from_value_controlled(&semio_framework_dsl_record::FieldValue::Enum(invalid),&mut semio_framework_value::NativeDecodeControl::new(0,&mut |_|true)).is_err());assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(0,&mut |_|false)).is_err());assert!(T::from_value_controlled(&native,&mut semio_framework_value::NativeDecodeControl::new(0,&mut |_|false)).is_err());
@@ -48,6 +52,10 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
         include_str!("../../🧫️fixtures/🧬️mutations/✅️finish-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutations/🪵️append-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutations/🔏️seal-run/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🧷️set-run-header/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🔓️set-run-seal/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🧽️retract-run-log/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutations/🫥️retract-run-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ] {
         store::os_store::test_support::assert_wire_witness::<RunMutation>(witness);
     }
@@ -124,6 +132,20 @@ async fn run_operation_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunHeader(SetRunHeader {
+        workflow_ref: "space.space".into(),
+        workflow_checkpoint_id: "ck-1".into(),
+        input_collection_ref: "collections/in".into(),
+        input_snapshot_id: "snap-1".into(),
+        parameter_values: Vec::new(),
+        output_collection_ref: "collections/out".into(),
+        trigger: RunTrigger::Manual { actor: "dev".into() },
+        status: RunStatus::Pending,
+        started_at: String::new(),
+    }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::SetRunSeal(SetRunSeal { sealed: true, status: RunStatus::Succeeded, finished_at: Some("2026-09-30T12:00:00Z".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RetractRunLog(RetractRunLog { count: 2 }));
+    store::os_store::test_support::assert_op_line_round_trip(&RunMutation::RetractRunNode(RetractRunNode { node_id: "a".into() }));
 }
 
 #[test]
@@ -153,11 +175,11 @@ async fn checked_run_admission_matches_the_typed_diff_rejection() {
     });
     let started = apply_run_operation_checked(&empty_run_document().await, start.clone()).await.expect("first start applies");
     let outcome = protocol::Mutation::diff(&start, &started);
-    let rejection = MutationDiff::apply(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
+    let rejection = protocol::apply_diff(outcome.diff(), &started).expect_err("the direct diff rejects a second start");
     let mut expected = outcome.messages().to_vec();
     expected.push(protocol::MutationMessage::fatal(rejection.code, rejection.message).at(rejection.target));
     let actual = apply_run_operation_checked(&started, start).await.expect_err("checked admission rejects the same second start");
-    assert_eq!(actual, expected, "the checked seam reports exactly what MutationOutcome::apply_to would persist");
+    assert_eq!(actual, expected, "the checked seam reports exactly what the store would persist");
     assert_eq!(actual.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.apply.conflicting-target", semio_framework_diagnostic::Severity::Fatal)]);
     assert_eq!(actual[0].target, vec!["status"]);
     assert!(actual.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{actual:?}");
@@ -193,11 +215,11 @@ async fn run_diff_absorb_preserves_each_append_in_order() {
     let document = empty_run_document().await;
     let first = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "first".into(), at: "1".into() });
     let first_diff = protocol::Mutation::diff(&first, &document).diff().clone();
-    let middle = MutationDiff::apply(&first_diff, &document).expect("first append applies");
+    let middle = protocol::apply_diff(&first_diff, &document).expect("first append applies");
     let second = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "second".into(), at: "2".into() });
     let mut combined = first_diff;
     combined.absorb(protocol::Mutation::diff(&second, &middle).diff().clone());
-    let after = MutationDiff::apply(&combined, &document).expect("combined appends apply");
+    let after = protocol::apply_diff(&combined, &document).expect("combined appends apply");
     assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["first", "second"]);
 }
 
@@ -214,11 +236,11 @@ async fn run_diff_absorb_preserves_start_before_later_log() {
         trigger: RunTrigger::Manual { actor: "operator".into() },
     });
     let start_diff = protocol::Mutation::diff(&start, &document).diff().clone();
-    let middle = MutationDiff::apply(&start_diff, &document).expect("start applies");
+    let middle = protocol::apply_diff(&start_diff, &document).expect("start applies");
     let append = RunMutation::AppendRunLog(AppendRunLog { node_id: String::new(), level: "info".into(), message: "started".into(), at: "1".into() });
     let mut combined = start_diff;
     combined.absorb(protocol::Mutation::diff(&append, &middle).diff().clone());
-    let after = MutationDiff::apply(&combined, &document).expect("combined start and append apply");
+    let after = protocol::apply_diff(&combined, &document).expect("combined start and append apply");
     assert_eq!(after.workflow_ref, "workflow-selected");
     assert_eq!(after.status, RunStatus::Running);
     assert_eq!(after.logs.iter().map(|line| line.message.as_str()).collect::<Vec<_>>(), vec!["started"]);
@@ -227,7 +249,7 @@ async fn run_diff_absorb_preserves_start_before_later_log() {
 #[semio_framework_async_macros::async_test]
 async fn run_diff_absorb_is_associative_with_empty_identity() {
     let document = empty_run_document().await;
-    let log = |message: &str| RunDiff::Log { node_id: String::new(), level: "info".into(), message: message.into(), at: message.into() };
+    let log = |message: &str| RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: String::new(), level: "info".into(), message: message.into(), at: message.into() }));
     let first = log("first");
     let second = log("second");
     let third = log("third");
@@ -238,27 +260,27 @@ async fn run_diff_absorb_is_associative_with_empty_identity() {
     suffix.absorb(third);
     let mut right = first.clone();
     right.absorb(suffix);
-    let mut leading_identity = RunDiff::Empty;
+    let mut leading_identity = RunDiff::default();
     leading_identity.absorb(first.clone());
     let mut trailing_identity = first.clone();
-    trailing_identity.absorb(RunDiff::Empty);
+    trailing_identity.absorb(RunDiff::default());
     assert_eq!(left, right);
     assert_eq!(leading_identity, first);
     assert_eq!(trailing_identity, first);
-    assert_eq!(MutationDiff::apply(&left, &document), MutationDiff::apply(&right, &document));
+    assert_eq!(protocol::apply_diff(&left, &document), protocol::apply_diff(&right, &document));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn run_diff_sequence_rejects_later_steps_without_mutating_the_base() {
     let document = empty_run_document().await;
-    let mut seal_then_log = RunDiff::Seal { status: RunStatus::Succeeded };
-    seal_then_log.absorb(RunDiff::Log { node_id: String::new(), level: "info".into(), message: "late".into(), at: "1".into() });
-    let sealed_error = MutationDiff::apply(&seal_then_log, &document).expect_err("log after a composed seal rejects");
+    let mut seal_then_log = RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: RunStatus::Succeeded, finished_at: Some("1".into()) }));
+    seal_then_log.absorb(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: String::new(), level: "info".into(), message: "late".into(), at: "1".into() })));
+    let sealed_error = protocol::apply_diff(&seal_then_log, &document).expect_err("log after a composed seal rejects");
     assert_eq!(sealed_error.code, "mutation.apply.sealed");
     assert_eq!(sealed_error.target, vec!["sealed"]);
     assert_eq!(document, empty_run_document().await);
 
-    let first_start = RunDiff::Start {
+    let first_start = RunDiff::step(RunStep::Header(RunHeaderEdit {
         workflow_ref: "workflow".into(),
         workflow_checkpoint_id: "checkpoint".into(),
         input_collection_ref: "inputs".into(),
@@ -266,10 +288,12 @@ async fn run_diff_sequence_rejects_later_steps_without_mutating_the_base() {
         parameter_values: Vec::new(),
         output_collection_ref: "outputs".into(),
         trigger: RunTrigger::Manual { actor: "operator".into() },
-    };
+        status: RunStatus::Running,
+        started_at: "1".into(),
+    }));
     let mut double_start = first_start.clone();
     double_start.absorb(first_start);
-    let start_error = MutationDiff::apply(&double_start, &document).expect_err("second composed start rejects");
+    let start_error = protocol::apply_diff(&double_start, &document).expect_err("second composed start rejects");
     assert_eq!(start_error.code, "mutation.apply.conflicting-target");
     assert_eq!(start_error.target, vec!["status"]);
     assert_eq!(document, empty_run_document().await);

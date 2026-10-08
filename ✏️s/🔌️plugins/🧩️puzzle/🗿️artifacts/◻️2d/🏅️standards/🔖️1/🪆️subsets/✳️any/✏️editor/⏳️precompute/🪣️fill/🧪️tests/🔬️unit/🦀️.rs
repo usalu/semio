@@ -225,7 +225,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let count = |wanted: ToolRunVerdict| log.finals.iter().filter(|(_, verdict, ..)| *verdict == wanted).count() as u64;
         assert_eq!((log.finals.len() as u64, count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (counters[0], counters[1], counters[2], counters[3]));
         assert!(log.finals.iter().all(|(key, ..)| log.testing.contains(key)), "every final verdict was announced as testing first");
-        let existing: HashSet<String> = document.value()["nodes"].as_array().into_iter().flatten().filter_map(|node| node["id"].as_str().map(str::to_string)).collect();
+        let existing: HashSet<_> = document.typed().nodes.iter().map(|node| &node.id).collect();
         for (placement, pair) in decoded(&log.ops).chunks(FILL_RUN_OPS_PER_PLACEMENT).enumerate() {
             let [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(_)] = pair else { panic!("placement {placement} is not create_node then connect_handles") };
             assert_eq!(log.entities[placement], fill_run_entity(&create.node.id));

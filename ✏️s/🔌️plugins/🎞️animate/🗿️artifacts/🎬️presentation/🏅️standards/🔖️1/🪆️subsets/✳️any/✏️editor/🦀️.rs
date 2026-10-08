@@ -469,6 +469,7 @@ impl ArtifactOwnedToolJobFactory for AnimatePresentationRetainedCommandJobFactor
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️ConfigStorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct AnimatePresentationConfigPreparationFactory;
 
 struct AnimatePresentationConfigPreparation {

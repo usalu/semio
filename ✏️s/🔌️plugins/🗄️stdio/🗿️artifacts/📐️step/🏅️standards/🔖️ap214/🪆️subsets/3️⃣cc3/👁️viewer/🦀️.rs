@@ -4,7 +4,7 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v_ap214::subsets::cc3::schema::mutations::StepMutation;
+use crate::standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation;
 use crate::standards::v_ap214::subsets::cc3::schema::snapshot::StepSnapshot;
 use crate::viewer::step_cc3::modes::view;
 use crate::viewer::step_cc3::modes::view::windows::main;
@@ -59,7 +59,7 @@ pub struct StepCc3Viewer;
 
 impl ArtifactViewer for StepCc3Viewer {
     type Snapshot = StepSnapshot;
-    type Mutation = StepMutation;
+    type Mutation = StepCc3Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

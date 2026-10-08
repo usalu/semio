@@ -597,11 +597,13 @@ fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapsh
 }
 
 impl MutationDiff<StepSnapshot> for StepDiff {
-    fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
+    fn apply(&self, base: &StepSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<StepSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }
-        Ok(apply_step_diff_unchecked(self, base))
+        let next = apply_step_diff_unchecked(self, base);
+        crate::schema::snapshot::references::validate_step_references(&next)?;
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {

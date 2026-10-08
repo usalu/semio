@@ -12,6 +12,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 mod modeling;
 pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep};
 
+#[path = "🔎️quality/🦀️.rs"]
+mod quality;
+pub use quality::{analyze_polygon_soup, MeshBounds, MeshMassProperties, MeshQualityReport, ScalarStats};
+
 /// 🌉️ `HashSet<u32>` has no `ToValue`/`FromValue` blanket impl (`🌱️value/🔁️codec` only covers
 /// `Vec`/`BTreeMap<String,_>`/`HashMap<K:ToString,_>`/`Option`/arrays) — `HalfedgeMesh::uv_seams`
 /// names this bridge via `#[value(with = "u32_hashset_bridge")]`. Encodes as a `DslValue::Array`,
@@ -385,6 +389,26 @@ impl HalfedgeMesh {
             positions.push(self.vertex_position(*v)?);
         }
         Ok(newell_normal(&positions).normalize())
+    }
+
+    /// 📍️ Every vertex position in id order.
+    pub fn positions(&self) -> Vec<[f32; 3]> {
+        self.vertices.iter().map(|vertex| vertex.position).collect()
+    }
+
+    /// 🔷️ Every face as its wound vertex-index loop in id order, flipped faces already reversed.
+    pub fn polygons(&self) -> Vec<Vec<u32>> {
+        (0..self.faces.len() as u32).filter_map(|face| self.face_vertex_ids(FaceId(face)).ok()).map(|loop_ids| loop_ids.into_iter().map(|vertex| vertex.0).collect()).collect()
+    }
+
+    /// 🔗️ One canonical id per undirected edge (the lower half-edge of a twin pair), in id order.
+    pub fn edge_ids(&self) -> Vec<EdgeId> {
+        self.halfedges.iter().enumerate().filter(|(index, edge)| edge.twin.is_none_or(|twin| *index < twin as usize)).map(|(index, _)| EdgeId(index as u32)).collect()
+    }
+
+    /// 🧭️ The stored unit normal of one vertex.
+    pub fn vertex_normal(&self, id: VertexId) -> MeshResult<Vec3> {
+        self.vertices.get(id.0 as usize).ok_or(MeshKernelError::InvalidHandle)?.normal.map(Vec3).ok_or(MeshKernelError::DegenerateOperation)
     }
 
     pub fn edge_endpoints(&self, edge: EdgeId) -> MeshResult<(VertexId, VertexId)> {

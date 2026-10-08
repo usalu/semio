@@ -1,25 +1,17 @@
-//! Diff for `change-zone-window-inclination-deg`.
+//! 📐 `change-zone-window-inclination-deg` diff — patches the window's `inclination_deg` inside its zone; a missing zone or window is a `mutation.invariant`.
 
 use super::ChangeZoneWindowInclinationDeg;
-use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108RowEdit as _;
+use crate::diff::{Din4108Diff, Din4108WindowEdit, Din4108WindowPatch, Din4108ZoneEdit, Din4108ZonePatch};
+use crate::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeZoneWindowInclinationDeg, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    let mut next = base.clone();
-    if let Err(msg) = apply_in_place(payload, &mut next) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", msg, Vec::<String>::new());
-    }
-    protocol::MutationOutcome::new(Din4108Diff {
-        zones: Some(Din4108ZoneList { values: next.zones }),
-        elements: Some(Din4108ElementList { values: next.elements }),
-        thermal_bridges: Some(Din4108ThermalBridgeList { values: next.thermal_bridges }),
-        ..Default::default()
-    })
-}
-
-fn apply_in_place(payload: &ChangeZoneWindowInclinationDeg, snap: &mut Din4108Snapshot) -> Result<(), String> {
-    let z = snap.zones.iter_mut().find(|z| z.id == payload.zone_id).ok_or("zone not found")?;
-    let w = z.windows.iter_mut().find(|w| w.id == payload.window_id).ok_or("window not found")?;
-    w.inclination_deg = payload.new_inclination_deg;
-    Ok(())
+    let Some((slot, zone)) = base.zones.iter().enumerate().find(|(_, zone)| zone.id == payload.zone_id) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "zone not found", Vec::<String>::new());
+    };
+    let Some((at, window)) = zone.windows.iter().enumerate().find(|(_, window)| window.id == payload.window_id) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "window not found", Vec::<String>::new());
+    };
+    let nested = vec![Din4108WindowEdit::patch(at, window.id.clone(), Din4108WindowPatch { inclination_deg: Some(payload.new_inclination_deg), ..Default::default() })];
+    protocol::MutationOutcome::new(Din4108Diff { zones: vec![Din4108ZoneEdit::patch(slot, zone.id.clone(), Din4108ZonePatch { windows: nested, ..Default::default() })], ..Default::default() })
 }

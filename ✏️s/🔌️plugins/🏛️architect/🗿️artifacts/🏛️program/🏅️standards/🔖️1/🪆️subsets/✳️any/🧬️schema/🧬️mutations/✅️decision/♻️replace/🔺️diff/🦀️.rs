@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `✅decisions` per Wave C.
 
 use super::ReplaceDecision;
-use crate::diff::{ProgramDecisionsDelta, ProgramDecisionsPatchEntry};
+use crate::diff::ProgramDecisionsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceDecision, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.decisions.iter().find(|row| row.header.id == payload.decision.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No decision exists with this id.", [payload.decision.header.id.0.clone()]);
+    let id = &payload.decision.header.id;
+    let Some(position) = base.decisions.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No decision exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.decision {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This decision already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.decisions[position] == payload.decision {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This decision already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.decision).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { decisions: Some(ProgramDecisionsDelta { patched: vec![ProgramDecisionsPatchEntry { id: payload.decision.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.decisions.len()).then(|| base.decisions.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { decisions: Some(ProgramDecisionsDelta { removed: vec![id.0.clone()], added: vec![payload.decision.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

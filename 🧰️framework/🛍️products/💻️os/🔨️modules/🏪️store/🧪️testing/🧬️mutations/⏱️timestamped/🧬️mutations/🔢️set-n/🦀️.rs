@@ -1,4 +1,4 @@
-use super::{DemoDiff, DemoSnapshot, RestoreN, TimestampedMutation};
+use super::{DemoDiff, DemoSnapshot, AssignN, TimestampedMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ impl crate::os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for SetN {
     }
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<TimestampedMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![TimestampedMutation::RestoreN(RestoreN { n: base.n, physical_ms: 0 })]
+        vec![TimestampedMutation::AssignN(AssignN { n: base.n, physical_ms: 0 })]
     
     })())
 }

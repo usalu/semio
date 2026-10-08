@@ -5,7 +5,7 @@ use family-scene
 start mutation
 
 mutation = op-line+
-op-line = create-shape-model | delete-shape-model | create-building-model | delete-building-model | create-energy-model | delete-energy-model | create-structure-classic-model | delete-structure-classic-model | create-drawing | delete-drawing | create-node | delete-node | rename-node | change-reference-hidden | change-reference-locked | change-reference-width | move-reference | replace-reference-media | replace-references
+op-line = create-shape-model | delete-shape-model | create-building-model | delete-building-model | create-energy-model | delete-energy-model | create-structure-classic-model | delete-structure-classic-model | create-drawing | delete-drawing | create-node | delete-node | rename-node | change-reference-hidden | change-reference-locked | change-reference-width | move-reference | replace-reference-media | replace-references | create-brep | delete-brep
 create-shape-model = "create-shape-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-shape-model = "delete-shape-model"
 create-building-model = "create-building-model" "child-id" "=" IDENT "target" "=" artifact-reference
@@ -25,6 +25,8 @@ change-reference-width = "change-reference-width" "model-definition-id" "=" IDEN
 move-reference = "move-reference" "model-definition-id" "=" IDENT "reference-id" "=" IDENT "new-origin" "=" coord-tuple
 replace-reference-media = "replace-reference-media" "model-definition-id" "=" IDENT "reference-id" "=" IDENT "new-source-url" "=" TEXT "new-media-kind" "=" IDENT new-orientation-field? new-scale-field? new-opacity-field?
 replace-references = "replace-references" "model-definition-id" "=" IDENT reference-list-block
+create-brep = "create-brep" "child-id" "=" IDENT "target" "=" artifact-reference "index" "=" INTEGER
+delete-brep = "delete-brep" "child-id" "=" IDENT
 node-block = "node" "id" "=" IDENT "label" "=" TEXT "kind" "=" IDENT
 new-orientation-field = "new-orientation" "=" orientation-tuple
 new-scale-field = "new-scale" "=" FLOAT

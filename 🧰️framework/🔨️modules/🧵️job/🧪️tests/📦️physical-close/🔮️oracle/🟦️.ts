@@ -1,7 +1,7 @@
 import { test } from "bun:test";
 import { testJobPayloadPhysicalClose } from "../🟦️.ts";
 
-test("retains every granted byte before physical page retirement using independent JSON Patch", () => {
+test("refuses sub-page release and retires the exact physical extent using independent JSON Patch", () => {
   testJobPayloadPhysicalClose();
-  console.log("[DEBUG] physical page retirement: four example lengths, staged grant charged before release");
+  console.log("[DEBUG] physical page retirement: four logical lengths, repeated short grants retain the exact page, full release costs16384");
 });

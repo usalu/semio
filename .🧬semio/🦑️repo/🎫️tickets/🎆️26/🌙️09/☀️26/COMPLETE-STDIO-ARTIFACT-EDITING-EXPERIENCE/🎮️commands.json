@@ -1,0 +1,74 @@
+{
+  "tools": [
+    {
+      "id": "test-stdio-avi-playback-export-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/stdio-avi-rs:test",
+        "--skip-nx-cache",
+        "--features",
+        "component-app-assembly",
+        "--lib",
+        "-E",
+        "test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/avi-live-export-route"
+      }
+    },
+    {
+      "id": "test-stdio-mp3-oracle-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "semio-s-artifact-stdio-mp3-test-oracle:test",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/mp3-independent-oracle"
+      }
+    },
+    {
+      "id": "test-stdio-mp4-oracle-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "semio-s-artifact-stdio-mp4-test-oracle:test",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/mp4-independent-oracle"
+      }
+    },
+    {
+      "id": "test-stdio-mp4-playback-export-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/stdio-mp4-rs:test",
+        "--skip-nx-cache",
+        "--features",
+        "component-app-assembly",
+        "--lib",
+        "-E",
+        "test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/mp4-live-export-route"
+      }
+    }
+  ]
+}

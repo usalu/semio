@@ -60,3 +60,36 @@ impl protocol::OpBinary for CadMutation {
     }
 }
 }
+
+/// 🫳️ Borrows the original concrete Cad leaf and its canonical protocol tag before publication.
+pub fn prepared_operation_wire_source(operation: &CadMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
+    fn source<T: semio_framework_dsl_record::DslField + semio_framework_dsl_record::BorrowedDslRecord>(value: &T) -> Option<store::ArtifactPreparedOperationSource<'_>> {
+        let spec=T::RECORD;
+        let keyword=spec.keyword?;
+        let tag=dsl::protocol_record::records(COMPONENT_PROTOCOL_SEMIO).find(|(kind,_)|*kind==keyword)?.1;
+        Some(store::ArtifactPreparedOperationSource::Pack {tag,body:value,spec})
+    }
+    match operation {
+        CadMutation::CreateShapeModel(value)=>source(value),
+        CadMutation::DeleteShapeModel(value)=>source(value),
+        CadMutation::CreateBuildingModel(value)=>source(value),
+        CadMutation::DeleteBuildingModel(value)=>source(value),
+        CadMutation::CreateEnergyModel(value)=>source(value),
+        CadMutation::DeleteEnergyModel(value)=>source(value),
+        CadMutation::CreateStructureClassicModel(value)=>source(value),
+        CadMutation::DeleteStructureClassicModel(value)=>source(value),
+        CadMutation::CreateDrawing(value)=>source(value),
+        CadMutation::DeleteDrawing(value)=>source(value),
+        CadMutation::CreateNode(value)=>source(value),
+        CadMutation::DeleteNode(value)=>source(value),
+        CadMutation::RenameNode(value)=>source(value),
+        CadMutation::ChangeReferenceHidden(value)=>source(value),
+        CadMutation::ChangeReferenceLocked(value)=>source(value),
+        CadMutation::ChangeReferenceWidth(value)=>source(value),
+        CadMutation::MoveReference(value)=>source(value),
+        CadMutation::ReplaceReferenceMedia(value)=>source(value),
+        CadMutation::ReplaceReferences(value)=>source(value),
+        CadMutation::CreateBrep(value)=>source(value),
+        CadMutation::DeleteBrep(value)=>source(value),
+    }
+}

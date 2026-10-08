@@ -1,33 +1,28 @@
 //! 🎨️ 🎨️ Generation3d play app commands command — `set-active-example`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
-
-use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation3d};
-
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_host_snapshot_operations};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_document_replacement, Generation3dMutation};
 
 use crate::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, is_generation3d_example_id};
 use crate::standards::v1::subsets::any::io::text::snapshot::{example_snapshot};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded document — a bundled example
 /// here, an imported file in `📥️import-document` — keeping every other display option (preview
-/// camera, LOD, show mode, and sun) unchanged. `graph`'s selection resets on its own — the framework
+/// camera, LOD, show mode, and sun) unchanged, and showing the generation the loaded document selects. `graph`'s selection resets on its own — the framework
 /// prunes it against the new fixture's `interaction_topology`
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 ///
 /// 📥️ Shared with `📥️import-document` rather than copied: loading an example and importing a file
 /// are the SAME whole-document replacement, and the repeated code must live in one place.
-pub fn config_after_document_load(previous: &Generation3dConfig, flow_camera: &CameraJson) -> Generation3dConfig {
+pub fn config_after_document_load(previous: &Generation3dConfig, flow_camera: &CameraJson, selected_generation_id: Option<String>) -> Generation3dConfig {
     Generation3dConfig {
         camera: flow_camera.clone(),
-        selected_generation_id: None,
+        selected_generation_id,
         preview_camera: previous.preview_camera.clone(),
         lod_mode: previous.lod_mode.clone(),
         show_mode: previous.show_mode.clone(),
@@ -42,7 +37,8 @@ pub struct SetActiveExample {
     pub example_id: String,
 }
 
-/// 🎨️ Loads the picked example — or, for the EMPTY id, clears the graph.
+/// 🎨️ Loads the picked example — or, for the EMPTY id, clears the graph — as the ordered unload/load of
+/// [`generation3d_document_replacement`] committed as ONE edit.
 ///
 /// 🕳️ The empty id is the picker's own `No example` row: `NavbarExampleSelect` normalizes its
 /// `__none__` sentinel to `""` before dispatching. It used to resolve to `default_snapshot()`, which
@@ -53,7 +49,6 @@ pub struct SetActiveExample {
 /// picker can only ever offer declared ids and a typo must not destroy a graph
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let host_snapshot = &doc.snapshot.host_snapshot;
     let target = if payload.example_id.is_empty() {
         empty_generation3d_snapshot()
     } else if is_generation3d_example_id(&payload.example_id) {
@@ -61,9 +56,8 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
     } else {
         return Ok(Emit::default());
     };
-    let mut operations: Vec<Generation3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
-    operations.extend(generation3d_host_snapshot_operations(host_snapshot, &target.host_snapshot));
-    let config = config_after_document_load(cfg.snapshot, &target.host_snapshot.camera);
+    let operations = generation3d_document_replacement(doc.snapshot, &target);
+    let config = config_after_document_load(cfg.snapshot, &target.host_snapshot.camera, target.generation.selected_generation_id.clone());
     // 🧹️ The loaded example projection is dead once its operations and camera are read — close it
     // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
     target.retire_cold();

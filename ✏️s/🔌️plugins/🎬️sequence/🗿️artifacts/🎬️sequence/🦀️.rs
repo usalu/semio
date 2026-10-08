@@ -102,6 +102,10 @@ impl std::ops::Deref for StepParams {
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for StepParams {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Text;
+}
+
 impl semio_framework_dsl_record::DslField for StepParams {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Text

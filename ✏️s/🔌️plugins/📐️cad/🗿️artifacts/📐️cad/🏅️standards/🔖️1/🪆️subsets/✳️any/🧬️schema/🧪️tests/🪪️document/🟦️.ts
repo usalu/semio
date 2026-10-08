@@ -38,7 +38,7 @@ export function testCadDocumentContractOracle(): void {
     validDocuments: [{ input: vectors.document, output: vectors.document }, { input: mismatchedChild, output: mismatchedChild }],
     invalidDocuments, invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
-    committed: { snapshots: 38, diffs: 19 },
+    committed: { snapshots: 42, diffs: 21 },
   });
   assert.deepEqual(parseCadSnapshot(mismatchedChild), mismatchedChild);
   assert.deepEqual(parseCadDiff(vectors.diff), vectors.diff);

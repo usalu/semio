@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔍search-filters` per Wave C.
 
 use super::ReplaceSearchFilter;
-use crate::diff::{ProgramSearchFiltersDelta, ProgramSearchFiltersPatchEntry};
+use crate::diff::ProgramSearchFiltersDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.search_filters.iter().find(|row| row.header.id == payload.search_filter.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No search filter exists with this id.", [payload.search_filter.header.id.0.clone()]);
+    let id = &payload.search_filter.header.id;
+    let Some(position) = base.search_filters.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No search filter exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.search_filter {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This search filter already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.search_filters[position] == payload.search_filter {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This search filter already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.search_filter).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { patched: vec![ProgramSearchFiltersPatchEntry { id: payload.search_filter.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.search_filters.len()).then(|| base.search_filters.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { search_filters: Some(ProgramSearchFiltersDelta { removed: vec![id.0.clone()], added: vec![payload.search_filter.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

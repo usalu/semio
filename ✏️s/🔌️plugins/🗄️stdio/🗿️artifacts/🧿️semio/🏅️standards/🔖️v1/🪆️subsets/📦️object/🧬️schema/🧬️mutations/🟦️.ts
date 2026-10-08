@@ -10,10 +10,8 @@
  * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
  * leaf's own field names are the literal Rust snake_case names verbatim; `ArtifactRef` itself is
  * declared with camelCase fields in the schema root and keeps that casing where embedded. */
-import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import type { SemioPoint3, SemioQuaternion } from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface MoveObject {
   translation: SemioPoint3;
@@ -58,5 +56,3 @@ export type SemioObjectMutation =
   | { DeleteMesh: DeleteMesh }
   | { CreateProperties: CreateProperties }
   | { DeleteProperties: DeleteProperties }
-  | { SetSnapshot: SetSnapshot }
-  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } };

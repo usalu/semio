@@ -2,23 +2,23 @@
 //! exist, Warning `partial` when some do not.
 
 use super::DragAssets;
-use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::diff::ShootingDiff;
 use crate::ShootingAssetPatch;
 use crate::ShootingSnapshot;
 
 pub fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
-    let patched: Vec<ShootingAssetPatchEntry> = base
+    let patched: Vec<(String, ShootingAssetPatch)> = base
         .assets
         .iter()
         .filter(|asset| payload.asset_ids.contains(&asset.id))
-        .map(|asset| ShootingAssetPatchEntry { id: asset.id.clone(), patch: ShootingAssetPatch { origin: Some([asset.origin[0] + payload.dx, asset.origin[1] + payload.dy, asset.origin[2] + payload.dz]), ..Default::default() } })
+        .map(|asset| (asset.id.clone(), ShootingAssetPatch { origin: Some([asset.origin[0] + payload.dx, asset.origin[1] + payload.dy, asset.origin[2] + payload.dz]), ..Default::default() }))
         .collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested asset(s) exist.", payload.asset_ids.len()), payload.asset_ids.clone());
     }
-    let found: Vec<String> = patched.iter().map(|entry| entry.id.clone()).collect();
+    let found: Vec<String> = patched.iter().map(|(id, _)| id.clone()).collect();
     let missing: Vec<String> = payload.asset_ids.iter().filter(|id| !found.contains(id)).cloned().collect();
-    let outcome = protocol::MutationOutcome::new(ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(ShootingDiff::asset_patches(patched));
     if missing.is_empty() {
         outcome
     } else {

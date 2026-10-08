@@ -182,7 +182,7 @@ pub struct TsvDiff {
 }
 
 impl MutationDiff<TsvSnapshot> for TsvDiff {
-    fn apply(&self, base: &TsvSnapshot) -> MutationApplyResult<TsvSnapshot> {
+    fn apply(&self, base: &TsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TsvSnapshot> {
         validate_tsv_diff(self, base)?;
         Ok(apply_tsv_diff_unchecked(self, base))
     }

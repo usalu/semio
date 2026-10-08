@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSurface` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SurfacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -30,11 +30,8 @@ pub fn diff(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> proto
     let Some(boundary) = crate::model::OutsideBoundary::from_parts(payload.boundary, payload.interzone_surface_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "An interzone boundary names exactly one partner surface, and every other boundary names none.", [payload.id.0.to_string()]);
     };
-    let mut model = base.model.clone();
-    let position = model.surfaces.iter().position(|item| item.id > payload.id).unwrap_or(model.surfaces.len());
-    model.surfaces.insert(
-        position,
-        crate::model::Surface {
+    let position = base.model.surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.surfaces.len());
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { surfaces: Rows::inserting(position, crate::model::Surface {
             id: payload.id,
             name: payload.name.clone(),
             zone_id: payload.zone_id,
@@ -45,8 +42,6 @@ pub fn diff(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> proto
             sun_exposed: payload.sun_exposed,
             wind_exposed: payload.wind_exposed,
             multiplier: payload.multiplier,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

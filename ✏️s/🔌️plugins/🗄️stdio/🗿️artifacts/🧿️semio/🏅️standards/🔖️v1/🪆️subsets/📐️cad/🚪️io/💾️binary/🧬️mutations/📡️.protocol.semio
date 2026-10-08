@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=0
-field payload bytes
 record add-layer tag=1
 field payload bytes
 record remove-layer tag=2
@@ -40,6 +38,4 @@ field payload bytes
 record set-block-entity-layer tag=13
 field payload bytes
 record set-block-entity-geometry tag=14
-field payload bytes
-record patch-snapshot tag=15
 field payload bytes

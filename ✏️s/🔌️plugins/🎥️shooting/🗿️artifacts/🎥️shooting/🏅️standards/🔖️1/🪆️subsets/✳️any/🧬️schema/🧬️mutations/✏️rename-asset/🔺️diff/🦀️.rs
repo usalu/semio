@@ -2,7 +2,7 @@
 //! already at that name.
 
 use super::RenameAsset;
-use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::diff::ShootingDiff;
 use crate::ShootingAssetPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &RenameAsset, base: &ShootingSnapshot) -> protocol::Mutatio
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" already has name \"{}\".", payload.id, payload.new_name));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        assets: Some(ShootingAssetsDelta { patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::asset_patches([(payload.id.clone(), ShootingAssetPatch { name: Some(payload.new_name.clone()), ..Default::default() })]))
 }

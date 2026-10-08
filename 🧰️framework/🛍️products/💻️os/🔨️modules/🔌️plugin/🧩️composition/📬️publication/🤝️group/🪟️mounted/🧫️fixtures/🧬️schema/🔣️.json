@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "workBytes", "copyBytes", "cases"],
+  "properties": {
+    "schema": { "const": "semio.mounted.private-child-group/v1" },
+    "workBytes": { "const": 4096 },
+    "copyBytes": { "const": 64 },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "before", "after", "prepared", "cancelled", "fresh", "commitItems", "commitBytes", "published"],
+        "properties": {
+          "id": { "enum": ["existing-child", "new-child-and-existing-child", "unprepared-last-child", "cancelled-after-preparation", "stale-parent-after-preparation", "zero-item-decision", "one-byte-under-decision"] },
+          "before": { "type": "array", "minItems": 2, "maxItems": 65, "items": { "type": ["integer", "null"] } },
+          "after": { "type": "array", "minItems": 2, "maxItems": 65, "items": { "type": "integer" } },
+          "prepared": { "type": "array", "minItems": 2, "maxItems": 65, "items": { "type": "boolean" } },
+          "cancelled": { "type": "boolean" },
+          "fresh": { "type": "boolean" },
+          "commitItems": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "commitBytes": { "type": "integer", "minimum": 0, "maximum": 4096 },
+          "published": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

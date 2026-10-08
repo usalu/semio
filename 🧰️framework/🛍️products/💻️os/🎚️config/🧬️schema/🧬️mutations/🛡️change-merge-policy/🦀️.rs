@@ -15,13 +15,37 @@ pub struct MergePolicySetting {
 /// 🪪️ The schema id for the merge-policy config facet.
 pub const MERGE_POLICY_CONFIG_SCHEMA: &str = "os.config.merge-policy";
 
-impl MutationDiff<MergePolicySetting> for MergePolicySetting {
-    fn apply(&self, _base: &MergePolicySetting) -> protocol::MutationApplyResult<MergePolicySetting> {
-        Ok(*self)
+/// 🔺️ Sparse diff of [`MergePolicySetting`]: the absolute new policy.
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct MergePolicyDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub policy: Option<protocol::MergePolicy>,
+}
+
+impl MutationDiff<MergePolicySetting> for MergePolicyDiff {
+    fn apply(&self, base: &MergePolicySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<MergePolicySetting> {
+        Ok(MergePolicySetting { policy: self.policy.unwrap_or(base.policy) })
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.policy.is_some() {
+            self.policy = other.policy;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<MergePolicySetting> for MergePolicyDiff {
+    fn inverse(&self, base: &MergePolicySetting) -> Self {
+        Self { policy: self.policy.map(|_| base.policy) }
+    }
+
+    fn between(base: &MergePolicySetting, other: &MergePolicySetting) -> Self {
+        Self { policy: (base.policy != other.policy).then_some(other.policy) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.policy.is_none()
     }
 }
 //#endregion 🔖️Schema
@@ -43,11 +67,11 @@ pub fn change_merge_policy(policy: protocol::MergePolicy) -> MergePolicyConfigMu
 impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMergePolicy {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "merge-policy", kind: "change-merge-policy", record: "Change" };
 
-    fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicySetting> {
+    fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicyDiff> {
         if base.policy == self.policy {
-            return MutationOutcome::new(*base).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
+            return MutationOutcome::new(MergePolicyDiff::default()).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));
         }
-        MutationOutcome::new(MergePolicySetting { policy: self.policy })
+        MutationOutcome::new(MergePolicyDiff { policy: Some(self.policy) })
     }
 
     fn inverse(&self, base: &MergePolicySetting) -> Result<Vec<MergePolicyConfigMutation>, semio_framework_value::ValueError> {
@@ -64,12 +88,6 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
     fn target(&self) -> Vec<String> {
         vec!["merge-policy".to_string()]
     }
-}
-
-/// 🧮️ Applies one merge-policy mutation through its whole-record diff.
-pub fn apply_merge_policy_config_mutation(snapshot: &mut MergePolicySetting, mutation: &MergePolicyConfigMutation) -> protocol::MutationApplyResult<()> {
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
-    Ok(())
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation setting.
@@ -93,12 +111,6 @@ pub fn encode_merge_policy_setting_json(snapshot: &MergePolicySetting) -> String
 /// 📥️ Decodes the canonical merge-policy setting JSON projection.
 pub fn decode_merge_policy_setting_json(text: &str) -> Result<MergePolicySetting, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Vec<(String, String)> {
-    let outcome = mutation.diff(snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.

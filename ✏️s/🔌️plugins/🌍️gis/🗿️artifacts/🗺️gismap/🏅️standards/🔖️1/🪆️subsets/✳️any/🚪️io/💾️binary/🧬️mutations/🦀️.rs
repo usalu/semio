@@ -13,6 +13,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::host::owned::{GisMapMutationRetirementFactory, GisMapSnapshotRetirementFactory, GIS_MAP_OWNED_FIELD_BYTES};
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{Mutation, MutationDiff, OpBinary};
 
@@ -96,7 +97,7 @@ macro_rules! gis_map_owned_field_authority {
             Complete,
         }
 
-        struct $authority {
+        pub(crate) struct $authority {
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
             path: store::OwnedSchemaPath,
@@ -106,7 +107,7 @@ macro_rules! gis_map_owned_field_authority {
         }
 
         impl $authority {
-            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+            pub(crate) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
                 Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
             }
 

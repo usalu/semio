@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `AddLoad` — clones the target case, pushes the load, patches it.
 use super::AddLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry, Fem3dLoadsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::resolve_load;
 use crate::{load_id, Fem3dSnapshot};
 
@@ -16,8 +16,10 @@ pub fn diff(payload: &AddLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcom
     if let Some(refusal) = resolve_load(base, &payload.load) {
         return refusal;
     }
-    let mut item = existing.clone();
-    item.loads.push((*payload.load).clone());
-    protocol::MutationOutcome::new(Fem3dDiff { load_cases: Some(Fem3dLoadCasesDelta { patched: vec![Fem3dLoadCasesPatchEntry { id: payload.case_id.clone(), item }], ..Default::default() }), ..Default::default() })
+    let loads = Fem3dLoadsDelta { added: vec![(*payload.load).clone()], ..Default::default() };
+    protocol::MutationOutcome::new(Fem3dDiff {
+        load_cases: Some(Fem3dLoadCasesDelta { patched: vec![Fem3dLoadCasesPatchEntry { id: payload.case_id.clone(), patch: Fem3dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

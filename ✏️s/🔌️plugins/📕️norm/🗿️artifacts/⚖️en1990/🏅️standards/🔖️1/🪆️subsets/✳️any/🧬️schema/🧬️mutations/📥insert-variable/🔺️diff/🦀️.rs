@@ -1,8 +1,9 @@
-//! 🔺️ `insert-variable` diff — inserts the variable action at its position; a position past the list's end inserts it last as a
-//! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
+//! 📥 `insert-variable` diff — inserts the row at its position; a position past the collection's end inserts it last as a
+//! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertVariable;
-use crate::diff::En1990Diff;
+use crate::diff::En1990RowEdit as _;
+use crate::diff::{En1990Diff, En1990VariableEdit};
 use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
@@ -11,10 +12,8 @@ pub fn diff(payload: &InsertVariable, base: &En1990Snapshot) -> MutationOutcome<
         let key = payload.item.id.clone();
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The variable action '{key}' already exists."), [key]);
     }
-    let mut next = base.variables.clone();
-    let index = payload.index.min(next.len());
-    next.insert(index, payload.item.clone());
-    let outcome = MutationOutcome::new(En1990Diff { variables: Some(next), ..En1990Diff::default() });
+    let index = payload.index.min(base.variables.len());
+    let outcome = MutationOutcome::new(En1990Diff { variables: vec![En1990VariableEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
     if index == payload.index {
         return outcome;
     }

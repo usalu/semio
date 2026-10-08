@@ -61,7 +61,7 @@ where
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 return Err("transient mutation was rejected against its captured base".into());
             }
-            let next_root = protocol::MutationDiff::apply(outcome.diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
+            let next_root = protocol::apply_diff(outcome.diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
             self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: Arc::new(next_root) });
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: [0; 32] };
         }
@@ -136,6 +136,7 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransi
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct BoundedTransientRootRetirementFactory<P>(std::marker::PhantomData<fn() -> P>);
 
 impl<P> Default for BoundedTransientRootRetirementFactory<P> {
@@ -148,6 +149,8 @@ impl<P> store::SnapshotRetirementFactory<P> for BoundedTransientRootRetirementFa
 where
     P: store::ArtifactDsl + Send + Sync + 'static,
 {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { std::mem::size_of::<BoundedTransientRootRetirement<P>>() }
+
     fn retire(&self, snapshot: Arc<P>) -> Box<dyn store::ErasedSnapshotRetirement> {
         let retained_bytes = store::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Box::new(BoundedTransientRootRetirement { root: Some(snapshot), retained_bytes })

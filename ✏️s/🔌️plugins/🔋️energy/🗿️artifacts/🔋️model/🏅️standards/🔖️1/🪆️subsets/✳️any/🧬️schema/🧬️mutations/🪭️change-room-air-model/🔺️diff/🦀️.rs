@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeRoomAirModel` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, RoomAirModelAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,10 +13,6 @@ pub fn diff(payload: &super::ChangeRoomAirModel, base: &EnergyModelSnapshot) -> 
     if existing.model == payload.new_model {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Room air model assignment for zone {} already has that room air model.", payload.zone_id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.room_air_models.iter_mut().find(|item| item.zone_id == payload.zone_id) {
-        item.model = payload.new_model;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { room_air_models: Rows::modifying(RoomAirModelAssignmentPatch { model: Some(payload.new_model), ..RoomAirModelAssignmentPatch::of(payload.zone_id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📋operations` per Wave C.
 
 use super::ReplaceOperationalRequirement;
-use crate::diff::{ProgramOperationsDelta, ProgramOperationsPatchEntry};
+use crate::diff::ProgramOperationsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceOperationalRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.operations.iter().find(|row| row.header.id == payload.operational_requirement.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No operational requirement exists with this id.", [payload.operational_requirement.header.id.0.clone()]);
+    let id = &payload.operational_requirement.header.id;
+    let Some(position) = base.operations.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No operational requirement exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.operational_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This operational requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.operations[position] == payload.operational_requirement {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This operational requirement already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.operational_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { operations: Some(ProgramOperationsDelta { patched: vec![ProgramOperationsPatchEntry { id: payload.operational_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.operations.len()).then(|| base.operations.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { operations: Some(ProgramOperationsDelta { removed: vec![id.0.clone()], added: vec![payload.operational_requirement.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

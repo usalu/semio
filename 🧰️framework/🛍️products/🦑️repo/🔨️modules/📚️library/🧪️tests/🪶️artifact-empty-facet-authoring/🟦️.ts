@@ -2,7 +2,6 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, parse as parsePath, relative, resolve, sep } from "node:path";
-import Ajv from "ajv";
 import fastGlob from "fast-glob";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
@@ -48,11 +47,8 @@ const identityPaths = [
   import.meta.filename,
   ...[
     "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json",
-    "../../🧬️schema/🪶️artifact-empty-facet-authoring/🔣️.json",
     "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json",
-    "../../🧬️schema/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json",
     "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json",
-    "../../🧬️schema/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json",
   ].map((path) => join(import.meta.dir, path)),
 ];
 const identities = (): Record<string, string> => Object.fromEntries(identityPaths.map((path) => [relative(repoRoot, path).replaceAll("\\", "/"), hash(readFileSync(path))]));
@@ -180,7 +176,7 @@ test("empty-facet authoring has a closed independent input and existing authored
   expect(semanticArtifactEmptyFacetProjectionAuthority({ sourcePath: marker, sourceFileKindId: "markdown" }, taxonomy).ownerForm).toBe("artifact-surface");
 });
 
-for (const row of vector.cases) {}
+for (const row of vector.cases)
   test(`actual empty-facet authoring ${row.id}`, async () => {
     const target = fixture(row),
       started = new Date().toISOString(),
@@ -329,7 +325,7 @@ test("public authoring requests have independent closed language-neutral authori
   expect(errors).toEqual([]);
 });
 
-for (const row of requestInput.cases) {}
+for (const row of requestInput.cases)
   test(`public artifact authoring request ${row.id}`, () => {
     const target = fixture({ id: `subset-${row.id}`, producer: "subset", setup: "valid", role: "viewer", expected: "rejected" });
     const sourcesBefore = identities(),
@@ -394,16 +390,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   const directory = join(import.meta.dir, "../../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration"),
     bytes = readFileSync(join(directory, "🔣️.json"), "utf8"),
     registration = JSON.parse(bytes);
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🪶️artifact-empty-facet-authoring/📋️registration/🔣️.json"), "utf8")));
-  expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [
-    { ...registration, source: "🟦️.ts" },
-    { ...registration, budget: 120000 },
-    { ...registration, budgetMs: 120000 },
-    { ...registration, runner: "other" },
-    { ...registration, launchOrder: 410.199 },
-  ])
-    expect(validate(changed)).toBe(false);
+  expect(registration).toEqual({ schemaVersion: 1, contractId: "artifact-empty-facet-authoring-registration-v1", command: "artifact-empty-facet-authoring", target: "test-artifact-empty-facet-authoring", cache: false, source: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts", runner: "runTestBudgeted", budget: "default" });
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);
@@ -412,7 +399,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   expect(join(repoRoot, registration.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[registration.target]).toBeDefined();
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
+  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"),
@@ -449,22 +436,5 @@ test("registers empty-facet authoring through its closed canonical route", async
     expect(invocations[0]!.args).toEqual(["test", join(repoRoot, registration.source)]);
     expect(invocations[0]!.options.cwd).toBe(repoRoot);
     expect(invocations[0]!.options.env.SEMIO_TEST_ARTIFACT_DIR).toBe(resolve(artifactRoot));
-  }
-  for (const filename of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const parseErrors: ParseError[] = [],
-      document = parse(readFileSync(join(repoRoot, filename), "utf8"), parseErrors);
-    expect(parseErrors).toEqual([]);
-    const entries = document.configurations.filter((row: { name: string }) => row.name === registration.launchName);
-    expect(entries).toEqual([
-      {
-        name: registration.launchName,
-        type: "node-terminal",
-        request: "launch",
-        command: `bun nx run @semio-tech/repo-lib:${registration.target} --skip-nx-cache`,
-        cwd: "${workspaceFolder}",
-        presentation: { group: registration.launchGroup, order: registration.launchOrder },
-      },
-    ]);
-    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === registration.launchGroup && row.presentation?.order === registration.launchOrder)).toHaveLength(1);
   }
 });

@@ -4,13 +4,13 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
 //! leaf's own `🔺️diff/🦀️.rs`, which reads the live `knowledge` rows off the working-scene cache — which a fresh test process has never populated — finds no `knowledge-record-a`, and rejects with `mutation.target-missing`.
 //!
-//! That leaf's own contract line reads: 🔁️ Whole-value swap of one row's non-identity content within the working-scene cache, then re-mint a fresh content-addressed `table` child handle. Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff).
+//! That leaf's own contract line reads: 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns: `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/♻️replace/🚫️absent-a/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn replace_knowledge_record_leaves_the_before_snapshot_untouched() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("replace-knowledge-record/rejects-replacing-absent-knowledge-record-a: the empty rejection diff still applies");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("replace-knowledge-record/rejects-replacing-absent-knowledge-record-a: the empty rejection diff still applies");
     assert_eq!(applied, expected_after(), "replace-knowledge-record/rejects-replacing-absent-knowledge-record-a: a rejected replace-knowledge-record must leave the snapshot exactly as committed");
 }
 

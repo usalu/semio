@@ -1,6 +1,5 @@
-//! 👻️ `set-frame-transparency` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 👻️ `set-frame-transparency` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +16,20 @@ pub struct SetFrameTransparency {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameTransparency {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-transparency", kind: "set-frame-transparency", record: "SetFrameTransparency" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetFrameTransparency(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index, transparent_index } = self;
+        protocol::MutationOutcome::new({
+            let d = GifFrameDiff { transparent_index: Some(*transparent_index), ..Default::default() };
+            GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetFrameTransparency(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(match base.frames.get(*index) {
+            Some(f) => vec![GifMutation::SetFrameTransparency(set_frame_transparency::SetFrameTransparency { index: *index, transparent_index: f.transparent_index })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frame transparency", "Transparenz des Einzelbilds setzen")
     }

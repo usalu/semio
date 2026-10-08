@@ -275,6 +275,7 @@ impl ArtifactOwnedToolJobFactory for Block2dRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Block2dStorePreparationFactory;
 
 struct Block2dStorePreparation {

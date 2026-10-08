@@ -28,6 +28,112 @@ pub(crate) struct SurfaceSnapshot {
     count: i32,
 }
 
+#[test]
+fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_original_batch() {
+    use crate::app::{ChildEmit, ChildEmitGenesis, OwnedChildEmit, PrivateChildPublicationInput};
+    use semio_framework_artifact_reference::{ArtifactRef, ArtifactDialect};
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    static DECLARATIONS: &[store::MemberOpenDeclaration] = &[
+        store::MemberOpenDeclaration { kind: "test", standard: "1", subset: "*", schema: "demo/v1" },
+        store::MemberOpenDeclaration { kind: "kind-δ", standard: "1", subset: "*", schema: "demo/v1" },
+    ];
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
+    let reference = |value: &serde_json::Value| ArtifactRef { artifact_id: value["artifact_id"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: value["dialect"]["artifact_kind"].as_str().unwrap().into(), standard: value["dialect"]["standard"].as_str().unwrap().into(), subset: value["dialect"]["subset"].as_str().unwrap().into() } };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 262144, maximum_release_bytes: 262144, maximum_depth: 64 };
+    for row in corpus["cases"].as_array().unwrap() {
+        let expected = reference(&row["expected"]);
+        let parent = reference(&row["owner"]["parent"]);
+        let slot = row["owner"]["slot"].as_str().unwrap();
+        let child = "local-private-α";
+        let pack_segment = row["initialPackHex"].as_str().unwrap().as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect::<Vec<_>>();
+        for stop in [Some(0usize), Some(1), Some(3), Some(17), Some(65), Some(257), None] {
+            let pack = pack_segment.repeat(row["packRepeats"].as_u64().unwrap() as usize);
+            let pack_pointer = pack.as_ptr();
+            let original = vec![17i32, 3, 9];
+            let mutation_pointer = original.as_ptr();
+            let (batch, _) = store::MemberStoreOwnedBatch::try_new(original, grant).unwrap();
+            let metadata = ChildEmit { genesis: Some(ChildEmitGenesis { reference: reference(&row["expected"]), initial_pack: pack }), owner: String::new(), slot: slot.into(), child_id: child.into(), ops: Vec::new(), op_schema: semio_framework::kernel::SchemaId("private.owned".into()), labels: Vec::new() };
+            let (mut input, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PrivateChildPublicationInput::new(OwnedChildEmit::new(metadata, batch)));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            for turn in 0..100000 {
+                if stop.is_some_and(|stop| turn >= stop) { break; }
+                let capacity = input.next_capacity_byte_demand(&parent.artifact_id, &parent.dialect, None, "actor:private-genesis", None, None).unwrap();
+                assert!(capacity <= grant.maximum_capacity_bytes);
+                let paused = RetainedCloneGrant { maximum_items: 0, ..grant };
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.advance(&parent.artifact_id, &parent.dialect, None, "actor:private-genesis", None, None, DECLARATIONS, semio_framework_job::OperationId(7311), semio_framework_job::Generation(3), 1_000_000, 1, paused).unwrap());
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                if capacity != 0 {
+                    let denied = RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..grant };
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.advance(&parent.artifact_id, &parent.dialect, None, "actor:private-genesis", None, None, DECLARATIONS, semio_framework_job::OperationId(7311), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
+                    assert_eq!(step.progress(), Default::default());
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                }
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.advance(&parent.artifact_id, &parent.dialect, None, "actor:private-genesis", None, None, DECLARATIONS, semio_framework_job::OperationId(7311), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
+                assert!(step.progress().fits(grant));
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+                assert_eq!(input.source().unwrap().genesis.as_ref().unwrap().initial_pack.as_ptr(), pack_pointer);
+                if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+            }
+            if stop.is_none() {
+                assert!(input.ready());
+                assert!(input.take_ready(RetainedCloneGrant { maximum_items: 0, ..grant }).is_none());
+                let (mut parts, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.take_ready(grant).unwrap());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert!(input.terminal_is_empty());
+                assert_eq!(parts.source.mutations::<i32>().unwrap().as_ptr(), mutation_pointer);
+                let identities = parts.metadata.parts().unwrap();
+                assert_eq!(identities.key.child_id, child);
+                assert_eq!(identities.prepared_identity.reference, expected);
+                assert_eq!(identities.registry_owner.child_id, child);
+                let request = parts.request.as_ref().unwrap();
+                assert_eq!(request.admitted_expected().unwrap(), &expected);
+                assert_eq!(request.owner().unwrap().parent, parent);
+                assert_eq!(request.owner().unwrap().child_id, child);
+                assert_eq!(request.actor().0, "actor:private-genesis");
+                for _ in 0..100000 {
+                    let request = parts.request.as_mut().unwrap();
+                    if request.terminal_is_empty() { break; }
+                    let demand = request.next_close_byte_demand().max(1);
+                    assert!(demand <= grant.maximum_release_bytes);
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| request.close_step(1, demand).unwrap());
+                    let bytes = match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+                    assert_eq!(heap.requested_bytes, 0);
+                    assert_eq!(heap.released_bytes, bytes);
+                }
+                assert!(parts.request.as_ref().unwrap().terminal_is_empty());
+                parts.request.take();
+                for _ in 0..100000 {
+                    if parts.metadata.terminal_is_empty() { break; }
+                    let demand = parts.metadata.next_close_byte_demand();
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parts.metadata.close_granted(RetainedCloneGrant { maximum_release_bytes: demand, ..grant }).unwrap());
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+                }
+                assert!(parts.metadata.terminal_is_empty());
+                for _ in 0..100000 {
+                    if parts.source.terminal_is_empty() { break; }
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parts.source.close_granted(grant).unwrap());
+                    assert!(step.progress().fits(grant));
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+                }
+                assert!(parts.source.terminal_is_empty());
+            } else {
+                for _ in 0..100000 {
+                    if input.terminal_is_empty() { break; }
+                    let demand = input.next_close_byte_demand().unwrap();
+                    assert!(demand <= grant.maximum_release_bytes);
+                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| input.close_granted(grant).unwrap());
+                    assert!(step.progress().fits(grant));
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+                }
+                assert!(input.terminal_is_empty());
+            }
+            println!("[DEBUG] private child input row case={} stop={stop:?} retained original pack/batch pointers, exact declared local/target/request owner and all whole physical releases", row["id"]);
+        }
+    }
+}
+
+
 impl store::ArtifactSqliteSnapshot for SurfaceSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
@@ -91,8 +197,20 @@ pub(crate) struct SurfaceDiff {
     count: Option<i32>,
 }
 
+impl protocol::DiffAlgebra<SurfaceSnapshot> for SurfaceDiff {
+    fn inverse(&self, base: &SurfaceSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
+    }
+    fn between(base: &SurfaceSnapshot, other: &SurfaceSnapshot) -> Self {
+        Self { count: (base.count != other.count).then_some(other.count) }
+    }
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
+}
+
 impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
-    fn apply(&self, snapshot: &SurfaceSnapshot) -> protocol::MutationApplyResult<SurfaceSnapshot> {
+    fn apply(&self, snapshot: &SurfaceSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SurfaceSnapshot> {
         Ok(SurfaceSnapshot { count: self.count.unwrap_or(snapshot.count) })
     }
     fn absorb(&mut self, other: Self) {
@@ -384,6 +502,8 @@ impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDeco
 }
 
 impl ArtifactEditor for SurfaceEditorFixture {
+    fn owned_mutation_batch_birth_bytes() -> Option<usize> { Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<Self::Mutation>()) }
+    fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::MemberStoreOwnedBatch::admit::<Self::Mutation>(values, grant) }
     const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
     type Snapshot = SurfaceSnapshot;
@@ -466,7 +586,7 @@ impl ArtifactEditor for SurfaceEditorFixture {
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>().with_one_item_preparation(Self::build_artifact_store_one_item_preparation_factory().expect("surface exact typed preparation authority")))
     }
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
@@ -525,6 +645,8 @@ impl ArtifactEditor for SurfaceEditorFixture {
 struct SurfaceViewerFixture;
 
 impl ArtifactViewer for SurfaceViewerFixture {
+    fn owned_mutation_batch_birth_bytes() -> Option<usize> { Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<Self::Mutation>()) }
+    fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::MemberStoreOwnedBatch::admit::<Self::Mutation>(values, grant) }
     const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
     type Snapshot = SurfaceSnapshot;
@@ -722,6 +844,7 @@ fn surface_natural_file_reserved_job(
         ui_axes: None,
         parent_document_id: "surface-natural-file-fixture".into(),
         canonical_base_revision: [0; 32],
+        authoring_seed: "surface-natural-file-fixture-admission".into(),
         snapshot: snapshot.clone(),
         config: std::sync::Arc::new(NoConfig::default()),
         history: history.clone(),
@@ -1015,4 +1138,279 @@ async fn viewer_rejects_every_contract_mutating_verb() {
     assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
     assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
     close_registered_fixture_app(&mut app);
+}
+
+#[test]
+fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
+    use crate::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+    use semio_framework_job::InteractiveJob;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/⛽️work-unit-authority.json")).unwrap();
+    struct Probe { observed: Option<std::sync::Arc<std::sync::atomic::AtomicU64>>, consumes: u64, closing: bool }
+    impl ArtifactCommandWork<EditorApp<SurfaceEditorFixture>> for Probe {
+        fn tool_id(&self) -> &'static str { SURFACE_TOOL_ID }
+        fn extent(&self, _: &SurfaceEditorCommand, _: &SurfaceSnapshot, _: &protocol::InteractionState, _: Option<&crate::app::ArtifactOwnedToolJobContext<EditorApp<SurfaceEditorFixture>>>) -> Option<usize> { Some(1) }
+        fn step(&mut self, _: &ArtifactCommandInputs<'_, EditorApp<SurfaceEditorFixture>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SurfaceEditorFixture>>, Fault> {
+            self.observed.as_ref().unwrap().store(cx.fuel_remaining(), std::sync::atomic::Ordering::SeqCst);
+            cx.consume_fuel(self.consumes);
+            Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
+        }
+        fn begin_close(&mut self) { self.closing = true; }
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            let bytes = std::mem::size_of::<std::sync::Arc<std::sync::atomic::AtomicU64>>();
+            if self.observed.is_none() { return semio_framework_job::InteractiveJobCloseStep::Complete; }
+            if !self.closing || maximum_items == 0 || maximum_bytes < bytes { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+            self.observed = None;
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes }
+        }
+        fn terminal_is_empty(&self) -> bool { self.closing && self.observed.is_none() }
+    }
+    for row in fixture["cases"].as_array().unwrap() {
+        let observed = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(u64::MAX));
+        let work = Probe { observed: Some(observed.clone()), consumes: row["domainConsumes"].as_u64().unwrap(), closing: false };
+        let completion = ArtifactToolCompletion::new();
+        let consumer = completion.clone();
+        let payload = ArtifactRetainedCommandPayload::try_new(ArtifactRetainedCommandInputs {
+            command: SurfaceEditorCommand::Increment,
+            snapshot: std::sync::Arc::new(SurfaceSnapshot::default()), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
+            interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
+            operation: crate::app::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], authoring_seed: "unit-authority".into() }, completion,
+        }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work)).unwrap();
+        let mut job = ArtifactRetainedCommandJob::new(payload);
+        let mut sequence = 0;
+        for _ in 0..32 {
+            let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantUnits"].as_u64().unwrap(), 100_000), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut outcome = job.step(&mut cx);
+            assert!(!matches!(outcome, semio_framework_job::StepOutcome::Fault(_)));
+            assert_eq!(cx.fuel_remaining(), row["remaining"].as_u64().unwrap());
+            for _ in 0..32 {
+                if outcome.terminal_is_empty() { break; }
+                let release = outcome.next_close_byte_demand();
+                match outcome.close_step(1,release) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= release); },
+                    semio_framework_job::JobPayloadCloseStep::Complete => assert!(outcome.terminal_is_empty()),
+                }
+            }
+            assert!(outcome.terminal_is_empty());
+            if observed.load(std::sync::atomic::Ordering::SeqCst) != u64::MAX { break; }
+        }
+        job.begin_close();
+        for _ in 0..100_000 {
+            match job.close_step(1,4096) {
+                semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= 4096); },
+                step => panic!("one-unit fixture blocks exact close: {step:?}"),
+            }
+        }
+        assert!(job.terminal_is_empty());
+        assert!(consumer.take_emit().unwrap().is_none());
+        assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst), row["domainObserves"].as_u64().unwrap());
+        println!("[DEBUG] Retained command one-unit work authority case={} observed=1 remaining=0", row["id"]);
+    }
+}
+
+#[test]
+fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_denied_original() {
+    use crate::app::{ArtifactApp, ViewerApp};
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    fn verify<A: ArtifactApp<Mutation = SurfaceMutation>>(count: usize) {
+        let birth = A::owned_mutation_batch_birth_bytes().expect("selected surface declares its exact borrowed admission");
+        let mut values = Some((0..count).map(|index| SetSurfaceCount { value: index as i32 }.into()).collect::<Vec<SurfaceMutation>>());
+        let pointer = values.as_ref().unwrap().as_ptr();
+        let capacity = values.as_ref().unwrap().capacity();
+        for (items, bytes) in [(0, birth), (1, birth - 1)] {
+            let (result, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| A::admit_owned_mutation_batch(&mut values, RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: 0, maximum_capacity_bytes: bytes, maximum_release_bytes: 0, maximum_depth: 8 }).unwrap());
+            assert!(result.is_none());
+            assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
+            assert_eq!(values.as_ref().unwrap().as_ptr(), pointer);
+            assert_eq!((values.as_ref().unwrap().len(), values.as_ref().unwrap().capacity()), (count, capacity));
+        }
+        let ((mut owner, admitted), events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| A::admit_owned_mutation_batch(&mut values, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: birth, maximum_release_bytes: 0, maximum_depth: 8 }).unwrap().expect("exact admitted surface authority"));
+        assert!(values.is_none());
+        assert_eq!(admitted.retained_capacity_bytes, birth);
+        assert_eq!((events.requested_bytes, events.released_bytes), (birth, 0));
+        assert_eq!(owner.mutations::<SurfaceMutation>().unwrap().as_ptr(), pointer);
+        let mut released = 0;
+        for _ in 0..count * 8 + 32 {
+            let (capacity_bytes, release_bytes) = owner.next_demands().unwrap();
+            let copy_bytes = owner.next_copy_byte_demand();
+            assert!(copy_bytes <= 64);
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: capacity_bytes, maximum_release_bytes: release_bytes, maximum_depth: 8 };
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_granted(grant).unwrap());
+            let progress = match step { RetainedCloneStep::Progress(progress) => progress, RetainedCloneStep::Complete(progress) => progress };
+            assert!(progress.fits(grant));
+            assert_eq!(events.requested_bytes, progress.retained_capacity_bytes);
+            assert_eq!(events.released_bytes, progress.released_bytes);
+            released += progress.released_bytes;
+            if owner.terminal_is_empty() { break; }
+        }
+        assert!(owner.terminal_is_empty());
+        println!("[DEBUG] surface borrowed original count={count} birth={birth} retained-pointer=true actual-paid-release={released}");
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let count = row["historyEntries"].as_u64().unwrap() as usize;
+        verify::<EditorApp<SurfaceEditorFixture>>(count);
+        verify::<ViewerApp<SurfaceViewerFixture>>(count);
+    }
+}
+
+struct SurfaceMutationRetirement { value: Option<SurfaceMutation> }
+impl semio_framework_value::retirement::RetirementCursor for SurfaceMutationRetirement {
+    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep { self.value.take(); semio_framework_value::retirement::RetirementStep::Complete }
+    fn terminal_is_empty(&self) -> bool { self.value.is_none() }
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
+    fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { Some(0) }
+    fn terminal_release_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self>()) }
+}
+impl semio_framework_value::retirement::RetireOwned for SurfaceMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(SurfaceMutationRetirement { value: Some(self) }) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<SurfaceMutationRetirement>()) }
+    fn controlled_retirement_supported() -> bool { true }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources() {
+    use crate::app::{ArtifactApp, PrivateOwnedPublicationLane};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use store::SpaceMember;
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
+    let mut stops: Vec<Option<usize>> = corpus["cancelBeforeCommit"].as_array().unwrap().iter().map(|stop| Some(stop.as_u64().unwrap() as usize)).collect();
+    stops.push(None);
+    for stop in stops {
+        let mut apps = Vec::new();
+        let mut lanes = Vec::new();
+        let mut owner = semio_framework_os_kernel::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility = owner.view();
+        for _ in 0..3 {
+            let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+            let (generation, revision) = app.store.one_item_publication_identity();
+            let mut original = Some(vec![SurfaceMutation::from(SetSurfaceCount { value: 1 })]);
+            let pointer = original.as_ref().unwrap().as_ptr();
+            let birth = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::owned_mutation_batch_birth_bytes().unwrap();
+            let (mutations, _) = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::admit_owned_mutation_batch(&mut original, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: birth, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap().unwrap();
+            let request = store::MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(7101), expected_generation: generation, expected_revision: revision, actor: crate::app::LOCAL_ACTOR_ID.into(), group_id: Some("private-neutral-three-lane".into()), transaction: None, mutations };
+            let mut lane = PrivateOwnedPublicationLane::new(request);
+            let admitted = lane.next_capacity_byte_demand(&app.store).unwrap();
+            for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
+                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::ArtifactStoreOneItemGrant { maximum_items: items, maximum_bytes: bytes }).unwrap());
+                assert_eq!(step, store::ArtifactStoreOneItemPreparationStep::Blocked);
+                assert_eq!(events.requested_bytes, 0);
+                assert_eq!(events.released_bytes, 0);
+                assert_eq!(lane.request().unwrap().mutations.mutations::<SurfaceMutation>().unwrap().as_ptr(), pointer);
+            }
+            apps.push(app);
+            lanes.push(lane);
+        }
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 262_144 };
+        let mut turns = 0;
+        let mut index = 0;
+        while index < lanes.len() && stop.is_none_or(|stop| turns < stop) {
+            lanes[index].advance(&mut apps[index].store, &visibility, grant).unwrap();
+            if lanes[index].prepared_for_staging() {
+                let identity = lanes[index].prepared_edit_id().unwrap();
+                assert!(!identity.is_empty());
+                let pointer = identity.as_ptr();
+                let prepared = lanes[index].prepared_publication().unwrap();
+                assert_eq!(prepared.prepared_operation_count(false), Some(1));
+                assert!(prepared.prepared_operation(false, 0).unwrap().is::<SurfaceMutation>());
+                assert!(prepared.prepared_operation(false, 1).is_none());
+                let operation_pointer = prepared.prepared_operation(false, 0).unwrap().downcast_ref::<SurfaceMutation>().unwrap() as *const SurfaceMutation;
+                let (same_operation, operation_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| prepared.prepared_operation(false, 0).unwrap().downcast_ref::<SurfaceMutation>().unwrap() as *const SurfaceMutation);
+                assert_eq!(same_operation, operation_pointer);
+                assert_eq!((operation_heap.requested_bytes, operation_heap.released_bytes), (0, 0));
+                let (same_pointer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lanes[index].prepared_edit_id().unwrap().as_ptr());
+                assert_eq!(same_pointer, pointer);
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                let paused = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: grant.maximum_bytes };
+                assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::ArtifactStoreOneItemPreparationStep::Blocked);
+                assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
+            }
+            assert_eq!(apps.iter().map(|app| app.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
+            turns += 1;
+            assert!(turns < 4096);
+            if lanes[index].staged() { index += 1; }
+        }
+        if stop.is_none() {
+            assert!(lanes.iter().all(PrivateOwnedPublicationLane::staged));
+            assert!(lanes.len() <= corpus["source"]["maximumDeclaredChildren"].as_u64().unwrap() as usize + 1);
+            let (_, decision_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                assert!(owner.commit());
+                for index in 0..3 {
+                    assert!(matches!(lanes[index].adopt(&mut apps[index].store, &visibility, grant).unwrap(), store::ArtifactStoreOneItemPreparationStep::Prepared(_)));
+                    assert_eq!(apps[index].store.generation_now(), 1);
+                    assert_eq!(apps[index].store.snapshot_ref().count, 1);
+                }
+            });
+            assert_eq!((decision_heap.requested_bytes, decision_heap.released_bytes), (0, 0));
+        } else { assert!(owner.abort()); }
+        for index in 0..3 {
+            for _ in 0..4096 {
+                let demand = lanes[index].next_close_byte_demand().unwrap().max(1);
+                assert!(demand <= grant.maximum_bytes);
+                let step = lanes[index].close_step(&mut apps[index].store, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: demand }).unwrap();
+                if step == PluginCloseStep::Complete { break; }
+            }
+            assert!(lanes[index].terminal_is_empty());
+            assert_eq!(apps[index].store.snapshot_ref().count, i32::from(stop.is_none()));
+        }
+        drop(lanes);
+        for mut app in apps { close_registered_fixture_app(&mut app); }
+        println!("[DEBUG] private typed publication three original lanes stop={stop:?} retained every denied pointer, staged under one common decision and closed all source/metadata/publication owners");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn child_emission_private_group_row_frames_preserve_original_sources_on_every_input_cancel() {
+    use crate::app::{ChildEmit, ChildEmitGenesis, OwnedChildEmit, PrivateChildGroupSource, PrivateChildPublicationGroup};
+    use semio_framework_artifact_reference::{ArtifactRef, ArtifactDialect};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
+    for parent_touched in corpus["receipts"]["parentTouched"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
+    for stop in corpus["ownerInput"]["cancelStops"].as_array().unwrap().iter().map(|stop| stop.as_u64().unwrap() as usize) {
+        let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let parent_values: Vec<i32> = if parent_touched { serde_json::from_value(corpus["ownerInput"]["parentMutations"].clone()).unwrap() } else { Vec::new() };
+        let child_values: Vec<i32> = serde_json::from_value(corpus["ownerInput"]["childMutations"].clone()).unwrap();
+        let (parent, _) = store::MemberStoreOwnedBatch::try_new(parent_values, grant).unwrap();
+        let (child, _) = store::MemberStoreOwnedBatch::try_new(child_values, grant).unwrap();
+        let target = &corpus["source"]["reference"];
+        let metadata = ChildEmit { genesis: Some(ChildEmitGenesis { reference: ArtifactRef { artifact_id: target["artifactId"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: target["dialect"]["artifactKind"].as_str().unwrap().into(), standard: target["dialect"]["standard"].as_str().unwrap().into(), subset: target["dialect"]["subset"].as_str().unwrap().into() } }, initial_pack: serde_json::to_vec(&corpus["ownerInput"]["initialPack"]).unwrap() }), owner: String::new(), slot: corpus["source"]["slot"].as_str().unwrap().into(), child_id: corpus["source"]["childId"].as_str().unwrap().into(), ops: Vec::new(), op_schema: semio_framework::kernel::SchemaId("private.owned".into()), labels: Vec::new() };
+        let sources = PrivateChildGroupSource { parent, parent_touched, children: vec![OwnedChildEmit::new(metadata, child)], transaction: Some(protocol::TransactionRef { id: "private-neutral-three-lane".into(), tool: "neutral-owner".into() }), group_id: corpus["receipts"]["groupId"].as_str().unwrap().into() };
+        let (mut group, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| match PrivateChildPublicationGroup::<store::NoMembers>::try_new(sources) { Ok(group) => group, Err(_) => panic!("one neutral original child is within the fixed bound") });
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(group.child_count(), 1);
+        assert_eq!(group.parent_touched(), parent_touched);
+        assert!(group.prepared_operation_schema_parts(0, 0).is_none());
+        assert!(group.prepared_operation_schema_parts(1, 0).is_none());
+        assert!(PrivateChildPublicationGroup::<store::NoMembers>::frame_birth_bytes() <= 262_144);
+        assert!(PrivateChildPublicationGroup::<store::NoMembers>::row_birth_bytes() <= 262_144);
+        let dialect = ArtifactDialect { artifact_kind: "neutral.parent".into(), standard: "1".into(), subset: "*".into() };
+        for _ in 0..stop {
+            let capacity = group.next_input_capacity_byte_demand(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis").unwrap();
+            assert!(capacity <= grant.maximum_capacity_bytes);
+            for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), capacity.checked_sub(1).map(|maximum_capacity_bytes| RetainedCloneGrant { maximum_capacity_bytes, ..grant })].into_iter().flatten() {
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis", semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            }
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis", semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+        }
+        let mut graph = app.composition.graph_mut().await;
+        for _ in 0..100_000 {
+            if group.terminal_is_empty() { break; }
+            let bytes = group.next_close_byte_demand().unwrap().max(1);
+            assert!(bytes <= 262_144);
+            let exact = RetainedCloneGrant { maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, ..grant };
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.close_step(&mut app.store, &mut app.children, &mut graph, &app.child_content_root, exact).unwrap());
+            assert!(step.progress().fits(exact));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+        }
+        assert!(group.terminal_is_empty());
+        drop(graph); drop(group);
+        close_registered_fixture_app(&mut app);
+        println!("[DEBUG] private group input cancellation parent_touched={parent_touched} stop={stop} original parent/child sources, row frames and queued backing matched exact same-turn allocator receipts");
+    }
+    }
 }

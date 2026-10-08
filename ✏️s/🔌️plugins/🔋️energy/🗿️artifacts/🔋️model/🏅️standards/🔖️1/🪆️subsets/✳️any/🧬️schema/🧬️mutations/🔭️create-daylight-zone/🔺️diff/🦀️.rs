@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateDaylightZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, DaylightZoneConfigPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -21,14 +21,12 @@ pub fn diff(payload: &super::CreateDaylightZone, base: &EnergyModelSnapshot) -> 
     if !payload.window_transmittance.is_finite() || !(0.0..=1.0).contains(&payload.window_transmittance) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A window transmittance must lie between 0.0 and 1.0, got {}.", payload.window_transmittance), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.daylight_zones.push(crate::model::DaylightZoneConfig {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { daylight_zones: Rows::inserting(base.model.daylight_zones.len(), crate::model::DaylightZoneConfig {
         id: payload.id,
         zone_id: payload.zone_id,
         illuminance_target_lux: payload.illuminance_target_lux,
         glare_limit: payload.glare_limit,
         window_transmittance: payload.window_transmittance,
-    });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

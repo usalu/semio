@@ -46,8 +46,6 @@ pub fn decode_semio_audio_mutation_json(text: &str) -> Result<SemioAudioMutation
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_audio_mutation(m: &SemioAudioMutation) -> String {
     match m {
-        SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot {}", enc_snapshot(snapshot)),
-        SemioAudioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate }) => format!("set-sample-rate {sample_rate}"),
         SemioAudioMutation::SetFormat(set_format::SetFormat { format }) => format!("set-format {}", enc_format(*format)),
         SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index, channel }) => format!("insert-channel {index} {}", enc_channel(channel)),
@@ -61,13 +59,8 @@ pub(crate) fn print_audio_mutation(m: &SemioAudioMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioAudioMutation::PatchSnapshot(crate::standards::v1::subsets::audio::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').ok_or_else(|| format!("audio mutation: missing payload in {line:?}"))?;
     match keyword {
-        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(rest)? })),
         "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: parse_u32(rest)? })),
         "set-format" => Ok(SemioAudioMutation::SetFormat(set_format::SetFormat { format: dec_format(rest)? })),
         "insert-channel" => {

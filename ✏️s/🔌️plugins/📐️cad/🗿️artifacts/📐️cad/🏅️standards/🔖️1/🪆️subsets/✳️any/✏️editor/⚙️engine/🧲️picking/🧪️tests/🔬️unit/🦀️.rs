@@ -51,6 +51,8 @@ fn box_geometry() -> CadGeometry {
     let wires: Vec<CadWire> = wire_edges.iter().enumerate().map(|(index, ids)| wire(&format!("w{index}"), &ids.iter().map(|id| format!("e{id}")).collect::<Vec<_>>().iter().map(String::as_str).collect::<Vec<_>>())).collect();
     let faces: Vec<CadFace> = (0..6).map(|index| face(&format!("f{index}"), &[&format!("w{index}")])).collect();
     CadGeometry {
+        owned_meshes: Default::default(),
+        owned_breps: Default::default(),
         anchors: Vec::new(),
         vertices,
         edges,

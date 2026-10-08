@@ -15,6 +15,19 @@ fn args_split_verb_segments_and_flags() {
 }
 
 #[test]
+fn dispatch_reads_bare_and_flag_first_invocations_as_the_dashboard() {
+    let invocation = |argv: &[&str]| crate::invocation(&argv.iter().map(|argument| argument.to_string()).collect::<Vec<_>>());
+    assert_eq!(invocation(&[]), parse(&["dashboard".to_string()]));
+    let flagged = invocation(&["--language", "de", "--help"]);
+    assert_eq!((flagged.verb.as_str(), flagged.flag("language"), flagged.has_flag("help")), ("dashboard", Some("de"), true));
+    assert!(flagged.segments.is_empty());
+    let daemon = invocation(&["daemon", "status", "--root", "workspace"]);
+    assert_eq!((daemon.verb.as_str(), daemon.segments.as_slice(), daemon.flag("root")), ("daemon", ["status".to_string()].as_slice(), Some("workspace")));
+    let registry = invocation(&["plugin", "registry", "check"]);
+    assert_eq!((registry.verb.as_str(), registry.segments.as_slice()), ("plugin", ["registry".to_string(), "check".to_string()].as_slice()));
+}
+
+#[test]
 fn env_contract_sets_locks_only_for_individual() {
     let row = PlaygroundEntry { variant: "puzzle2d".into(), plugin_id: "puzzle2d".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() };
     let opts = DevOptions {

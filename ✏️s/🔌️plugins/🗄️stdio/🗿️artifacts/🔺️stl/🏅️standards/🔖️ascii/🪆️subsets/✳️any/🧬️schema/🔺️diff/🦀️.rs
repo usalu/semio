@@ -337,7 +337,7 @@ pub struct StlDiff {
 }
 
 impl MutationDiff<StlSnapshot> for StlDiff {
-    fn apply(&self, base: &StlSnapshot) -> MutationApplyResult<StlSnapshot> {
+    fn apply(&self, base: &StlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<StlSnapshot> {
         if let Some(diff) = &self.triangles {
             validate_triangles_diff(base.triangles.len(), diff)?;
         }

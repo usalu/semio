@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ layout document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutArtifact {

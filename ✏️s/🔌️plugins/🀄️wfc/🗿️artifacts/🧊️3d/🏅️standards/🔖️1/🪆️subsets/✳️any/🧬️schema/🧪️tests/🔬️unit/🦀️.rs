@@ -1,6 +1,7 @@
 //! 🧪️ The artifact facet and its descriptor: twenty leaves, all present and all non-empty, plus the
 //! derived construction/analysis facets that `subset()` binds.
 
+use crate::{Wfc3dBuilderConstruction, Wfc3dAnalyzerAnalysis};
 use super::*;
 use crate::Wfc3dSnapshot;
 use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactBuilder};

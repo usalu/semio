@@ -37,8 +37,6 @@ use crate::standards::v1::subsets::document::io::text::mutations::{print_documen
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioDocumentMutation) -> u8 {
     match m {
-        SemioDocumentMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
-        SemioDocumentMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioDocumentMutation::InsertBlock(..) => TAG_INSERT_BLOCK,
         SemioDocumentMutation::RemoveBlock(..) => TAG_REMOVE_BLOCK,
         SemioDocumentMutation::SetBlockContent(..) => TAG_SET_BLOCK_CONTENT,
@@ -78,11 +76,6 @@ pub(crate) fn print_document_mutation_args(m: &SemioDocumentMutation) -> String 
 /// independent encoding.
 impl OpBinary for SemioDocumentMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_document_mutation_args(self).as_bytes());
@@ -95,9 +88,6 @@ impl OpBinary for SemioDocumentMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -112,8 +102,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioDocumentMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");

@@ -36,21 +36,8 @@
       "capability": "deflate-rfc1950-mutate",
       "standardDirectoryName": "🔖️rfc1950",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "raises-the-flevel-hint-and-extends-the-payload",
-              "directoryName": "📈️raises"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-compression-params",
         "set-preset-dictionary",
         "set-payload"
@@ -115,26 +102,6 @@
             "operation": "set-preset-dictionary",
             "bridgeVersion": 1,
             "variant": "SetPresetDictionary"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "deflate-rfc1950-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "deflate-rfc1950-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {

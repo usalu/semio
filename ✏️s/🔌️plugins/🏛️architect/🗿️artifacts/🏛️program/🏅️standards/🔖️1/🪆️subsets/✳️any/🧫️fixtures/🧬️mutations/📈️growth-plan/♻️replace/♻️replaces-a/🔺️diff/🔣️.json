@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -35,56 +34,53 @@
   "schedules": null,
   "flexibility": null,
   "growth": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "growth-plan-a",
-        "patch": {
-          "name": "Growth Plan A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "horizonYears": 0,
-          "growthRate": null,
-          "headcountGrowth": {
-            "unit": ""
-          },
-          "areaGrowth": {
-            "unit": ""
-          },
-          "phases": [
-            "replaced"
-          ],
-          "triggerEvents": [],
-          "expansionElementIds": [],
-          "reserveAreas": [],
-          "infrastructureHeadroom": [],
-          "budgetEnvelope": null,
-          "fundingSources": [],
-          "riskFactors": [],
-          "decisionPoints": [],
-          "scenarioIds": [],
-          "decommissionPlan": [],
-          "relocationStrategy": [],
-          "stakeholderImpact": [],
-          "regulatoryConsiderations": [],
-          "ownerId": null
-        }
+        "name": "Growth Plan A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "horizonYears": 0,
+        "growthRate": null,
+        "headcountGrowth": {
+          "unit": ""
+        },
+        "areaGrowth": {
+          "unit": ""
+        },
+        "phases": [
+          "replaced"
+        ],
+        "triggerEvents": [],
+        "expansionElementIds": [],
+        "reserveAreas": [],
+        "infrastructureHeadroom": [],
+        "budgetEnvelope": null,
+        "fundingSources": [],
+        "riskFactors": [],
+        "decisionPoints": [],
+        "scenarioIds": [],
+        "decommissionPlan": [],
+        "relocationStrategy": [],
+        "stakeholderImpact": [],
+        "regulatoryConsiderations": [],
+        "ownerId": null
       }
     ],
+    "removed": [
+      "growth-plan-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "sustainability": null,
@@ -118,9 +114,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

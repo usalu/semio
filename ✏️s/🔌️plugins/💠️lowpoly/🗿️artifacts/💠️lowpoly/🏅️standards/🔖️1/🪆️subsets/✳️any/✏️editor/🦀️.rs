@@ -9,6 +9,7 @@
 //! `🎚️config/🦀️.rs`, scratch (mid-gesture) state in `🖌️session/🦀️.rs`, shared
 //! read-view/selection helpers in `🧭️view/🦀️.rs`.
 
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText;
 pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
 use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, object, paint, patch_object, selection, sun, transform, utility, uv};
@@ -1300,6 +1301,7 @@ fn prepare_lowpoly_config(base: &LowpolyConfig, mutation: LowpolyConfigMutation)
     Ok((post, inverse, mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct LowpolyArtifactStorePreparationFactory;
 
 struct LowpolyArtifactStorePreparation {
@@ -1438,6 +1440,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct LowpolyConfigStorePreparationFactory;
 
 struct LowpolyConfigStorePreparation {

@@ -1280,6 +1280,7 @@ class NativeCodecProjectionScript extends BundleScript {
         const receipts: NativeCodecPublicationReceiptV1[] = [];
         console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
         await runRepositoryCommand(process.execPath, ["nx", "run", `@semio-tech/stdio-${artifact}-rs:test`, "--excludeTaskDependencies", "--skip-nx-cache", "--", "long", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"], this.repoRoot, "native-codec-publication", buildBudgetMs(), {
+          env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },
           signal: control.signal,
           onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); },
         });

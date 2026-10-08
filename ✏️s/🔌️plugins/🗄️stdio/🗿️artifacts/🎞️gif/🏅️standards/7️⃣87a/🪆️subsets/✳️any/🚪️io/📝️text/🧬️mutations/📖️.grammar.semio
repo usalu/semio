@@ -22,24 +22,8 @@ start op
 # QUOTED, matching `Terminal(TEXT)`.
 comment none
 
-op = set-snapshot-op | patch-snapshot-op | set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | insert-image-op | remove-image-op | move-image-op | set-image-geometry-op | set-image-pixels-op | set-image-interlace-op
+op = set-screen-size-op | set-global-color-table-op | set-background-color-index-op | set-pixel-aspect-ratio-op | insert-image-op | remove-image-op | move-image-op | set-image-geometry-op | set-image-pixels-op | set-image-interlace-op
 
-patch-snapshot-op = "patch-snapshot" "patch" "{" "{" patch-fields "}" "}"
-patch-fields = patch-set | patch-insert | patch-remove | patch-move | patch-rename | patch-splice
-patch-set = "operation" "=" "set" "path" "=" TEXT "value" "=" patch-value
-patch-insert = {"index" "=" U64}? "operation" "=" "insert" "path" "=" TEXT "value" "=" patch-value
-patch-remove = "operation" "=" "remove" "path" "=" TEXT
-patch-move = "from" "=" TEXT {"index" "=" U64}? "operation" "=" "move" "path" "=" TEXT
-patch-rename = "key" "=" TEXT "operation" "=" "rename" "path" "=" TEXT
-patch-splice = {"continued" "=" BOOL}? "offset" "=" U64 "operation" "=" "splice" "path" "=" TEXT "remove" "=" U64 "value" "=" patch-value
-patch-value = TEXT | BOOL | "null" | patch-number | patch-bytes | patch-array | patch-object
-patch-number = INT | FLOAT | IDENT | "-" IDENT
-patch-bytes = "bytes64" "(" TEXT ")"
-patch-array = "[" {patch-value}* "]"
-patch-object = "{" {patch-member}* "}"
-patch-member = patch-key "=" patch-value
-patch-key = IDENT | TEXT
-set-snapshot-op = "set-snapshot" "snapshot" "{" snapshot-fields "}"
 set-screen-size-op = "set-screen-size" "width" "=" INT "height" "=" INT
 set-global-color-table-op = "set-global-color-table" gct-clause?
 set-background-color-index-op = "set-background-color-index" "index" "=" INT
@@ -51,12 +35,6 @@ set-image-geometry-op = "set-image-geometry" "index" "=" INT "left" "=" INT "top
 set-image-pixels-op = "set-image-pixels" "index" "=" INT "indices" "=" TEXT
 set-image-interlace-op = "set-image-interlace" "index" "=" INT "interlace" "=" BOOL
 
-# `GifSnapshot`'s own derived record shape — non-block scalar fields FIRST (declaration
-# order), block/`Vec`-of-struct fields LAST (declaration order among those): `schema` is the
-# document's real hand-rolled envelope-id string, `gct` an optional Global Color Table block,
-# `images` the flattened image list.
-snapshot-fields = "schema" "=" IDENT "width" "=" INT "height" "=" INT "background-color-index" "=" INT "pixel-aspect-ratio" "=" INT gct-clause? "images" "=" "[" image-item* "]"
-
 gct-clause = "gct" "{" color-table-fields "}"
 lct-clause = "lct" "{" color-table-fields "}"
 color-table-fields = "sorted" "=" BOOL "colors" "=" "[" rgb-item* "]"
@@ -64,9 +42,7 @@ rgb-item = "{" "r" "=" INT "g" "=" INT "b" "=" INT "}"
 
 # `GifImage`'s own derived record shape — scalar fields (`left`/`top`/`width`/`height`/
 # `interlace`/`indices`, the last a base64-quoted `#[dsl(base64)]` byte vector) first, the one
-# block field (`lct`, `Option<GifColorTable>`) last, omitted entirely when `None`. Reused both
-# for `insert-image`'s mandatory `image { ... }` payload and for each flattened item inside a
-# snapshot's `images=[ ... ]` list.
+# block field (`lct`, `Option<GifColorTable>`) last, omitted entirely when `None`. Used by
+# `insert-image`'s mandatory `image { ... }` payload.
 image-fields = "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT "interlace" "=" BOOL "indices" "=" TEXT lct-clause?
 
-image-item = "{" image-fields "}"

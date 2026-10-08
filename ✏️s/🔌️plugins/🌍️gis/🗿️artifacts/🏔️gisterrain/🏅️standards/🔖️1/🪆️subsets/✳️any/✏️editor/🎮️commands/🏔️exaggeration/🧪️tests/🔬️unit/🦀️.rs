@@ -74,8 +74,8 @@ async fn a_slider_press_is_one_transaction_one_edit_and_one_row() {
     let transaction = row.transaction.as_ref().expect("the row is the press's tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#setExaggeration"), "{transaction:?}");
     assert_eq!(row.mutations.len(), 1, "one absolute leaf: the net value");
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Change terrain exaggeration to 3");
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Geländeüberhöhung auf 3 ändern");
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Change terrain exaggeration to 3");
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Geländeüberhöhung auf 3 ändern");
     history_verb(&mut app, "undo").await;
     assert_eq!(exaggeration(&app), 1.5, "one undo restores the value before the press");
     close(&mut app);
@@ -157,7 +157,7 @@ async fn a_committed_press_edited_in_history_replays_deterministically() {
     history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(exaggeration(&app), 2.0, "the overwrite folds the edited value");
-    let mut fresh = app().await;
+    let mut fresh = crate::editor::gis3d::unit_tests::context::app().await;
     release(&mut fresh, "terrain.exaggeration:6", 2.0).await;
     assert_eq!(app.snapshot().expect("edited head"), fresh.snapshot().expect("fresh head"), "the edited log equals a fresh run of the edited press");
     close(&mut app);

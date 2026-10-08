@@ -17,7 +17,7 @@ fn ordinal(value: usize) -> Result<Cell<'static>, ValueError> { i64::try_from(va
 fn optional(value: Option<f64>) -> Cell<'static> { value.map(Cell::Real).unwrap_or(Cell::Null) }
 fn validate_child<S>(value: &store::ArtifactChild<S>, subset: &str) -> Result<(), ValueError> {
     let dialect = &value.target.dialect;
-    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != subset { return Err(invalid("CAD composed child has another model/drawing domain")); }
+    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != subset { return Err(invalid("CAD composed child has another model/drawing/topology domain")); }
     Ok(())
 }
 fn child_cells<S>(value: &store::ArtifactChild<S>) -> [Cell<'_>; 5] {
@@ -27,7 +27,7 @@ fn child_cells<S>(value: &store::ArtifactChild<S>) -> [Cell<'_>; 5] {
 }
 fn forecast(value: &CadSnapshot, mut checkpoint: impl FnMut(usize) -> Result<(), ValueError>) -> Result<usize, ValueError> {
     let mut count = 1usize;
-    for size in [value.drawings.len(), value.nodes.len(), slots(value).iter().filter(|(_, child)| child.is_some()).count(), value.references_by_model_definition_id.len()] {
+    for size in [value.drawings.len(), value.breps.len(), value.nodes.len(), slots(value).iter().filter(|(_, child)| child.is_some()).count(), value.references_by_model_definition_id.len()] {
         count = count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "CAD semantic row count overflow"))?;
     }
     checkpoint(count)?;
@@ -53,7 +53,7 @@ struct Census<'c,'p>{control:&'c mut SqliteSnapshotControl<'p>,count:usize,bytes
 impl Census<'_,'_>{
     fn row(&mut self,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{
         let mut bytes=8usize;
-        for cell in cells{let size=match cell{Cell::Null=>0,Cell::Integer(_)|Cell::Real(_)|Cell::Float32(_)=>8,Cell::Text(value)=>value.len(),Cell::Blob(value)=>value.len()};bytes=bytes.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD semantic cell byte count overflow"))?;}
+        for cell in cells{let size=match cell{Cell::Null=>0,Cell::Integer(_)|Cell::Real(_)|Cell::Float32(_)=>8,Cell::Text(value)=>value.len(),Cell::PagedText(value)=>value.text_bytes(),Cell::Blob(value)=>value.len()};bytes=bytes.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD semantic cell byte count overflow"))?;}
         for column in columns{let index=match column{FloatColumn::Binary64(index)|FloatColumn::Binary32(index)=>*index};let cell=cells.get(index.checked_sub(1).ok_or_else(||invalid("CAD IEEE identity column is invalid"))?).ok_or_else(||invalid("CAD IEEE field is missing"))?;let value=match cell{Cell::Null=>continue,Cell::Real(value)=>*value,_=>return Err(invalid("CAD IEEE field has an invalid storage class"))};let class=if value.is_nan(){bytes-=8;"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"};bytes=bytes.checked_add(8+class.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD IEEE semantic byte count overflow"))?;}
         let total=self.bytes.checked_add(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD semantic byte count overflow"))?;self.control.check_value_bytes(total)?;let count=self.count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"CAD row count overflow"))?;self.control.check_rows(count)?;self.bytes=total;self.count=count;i64::try_from(count).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"CAD row identity exceeds i64"))
     }
@@ -83,6 +83,12 @@ fn write_rows(value:&CadSnapshot,output:&mut impl Rows)->Result<(),ValueError>{
         validate_child(child, "drawing")?;
         let cells = child_cells(child);
         output.insert("cad_drawing_child", &[Cell::Integer(1), ordinal(index)?, cells[0], cells[1], cells[2], cells[3], cells[4]])?;
+        output.checkpoint_total(total)?;
+    }
+    for (index, child) in value.breps.iter().enumerate() {
+        validate_child(child, "brep")?;
+        let cells = child_cells(child);
+        output.insert("cad_brep_child", &[Cell::Integer(1), ordinal(index)?, cells[0], cells[1], cells[2], cells[3], cells[4]])?;
         output.checkpoint_total(total)?;
     }
     for (key, rows) in &value.references_by_model_definition_id {
@@ -144,13 +150,14 @@ fn reconstruct(database: &SqliteDatabase, control: &mut NativeDecodeControl<'_>)
     if documents.len() != 1 || documents[0].rowid != 1 { return Err(invalid("CAD requires one document")); }
     let models = frontiers::keyed(&database.table("cad_model_child")?.rows, 8, Some(1), control)?;
     let drawings = frontiers::keyed(&database.table("cad_drawing_child")?.rows, 8, Some(1), control)?;
+    let breps = frontiers::keyed(&database.table("cad_brep_child")?.rows, 8, Some(1), control)?;
     let groups = frontiers::keyed(&database.table("cad_reference_group")?.rows, 3, Some(1), control)?;
     let references = frontiers::keyed(&database.table("cad_reference")?.rows, 39, None, control)?;
     let nodes = frontiers::keyed(&database.table("cad_node")?.rows, 6, Some(1), control)?;
     let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadSnapshot {
         schema: String::new(), id: String::new(),
         shape_model: None, building_model: None, energy_model: None, structure_classic_model: None,
-        drawings: Vec::new(), references_by_model_definition_id: CadReferenceIndex::new(), nodes: Vec::new(),
+        drawings: Vec::new(), breps: Vec::new(), references_by_model_definition_id: CadReferenceIndex::new(), nodes: Vec::new(),
     }, close::<CadSnapshot>);
     value.as_mut().schema = control.copy_text(documents[0].text(1)?)?;
     value.as_mut().id = control.copy_text(documents[0].text(2)?)?;
@@ -165,6 +172,8 @@ fn reconstruct(database: &SqliteDatabase, control: &mut NativeDecodeControl<'_>)
     }
     let drawings = frontiers::dense(&drawings, control)?;
     value.as_mut().drawings = semantic_frontiers::collect(drawings.len(), control, |index, control| child(drawings[index], 3, "drawing", control))?;
+    let breps = frontiers::dense(&breps, control)?;
+    value.as_mut().breps = semantic_frontiers::collect(breps.len(), control, |index, control| child(breps[index], 3, "brep", control))?;
     let references = frontiers::references(&references, &groups, control)?;
     let mut index = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CadReferenceIndex::owned_slots(groups.len(), control)?, close::<CadReferenceIndex>);
     let mut position = 0;
@@ -211,8 +220,9 @@ fn native_rows(record: &semio_framework_dsl_record::RecordValue, native: &mut Na
     };
     for id in [2, 3, 4, 5] { if !matches!(record.fields.get(&id), None | Some(semio_framework_dsl_record::FieldValue::Absent)) { add(1)?; } }
     add(native_list(record.fields.get(&6))?.len())?;
-    add(native_list(record.fields.get(&8))?.len())?;
-    let groups = match record.fields.get(&7) { None | Some(semio_framework_dsl_record::FieldValue::Absent) => &[][..], Some(semio_framework_dsl_record::FieldValue::Map(groups)) => groups.as_slice(), _ => return Err(invalid("CAD requires its literal native reference map")) };
+    add(native_list(record.fields.get(&7))?.len())?;
+    add(native_list(record.fields.get(&9))?.len())?;
+    let groups = match record.fields.get(&8) { None | Some(semio_framework_dsl_record::FieldValue::Absent) => &[][..], Some(semio_framework_dsl_record::FieldValue::Map(groups)) => groups.as_slice(), _ => return Err(invalid("CAD requires its literal native reference map")) };
     add(groups.len())?;
     native.scoped_stage(|native| {
         native.begin_stage(groups.len())?;
@@ -224,6 +234,7 @@ fn validate_owned(value: &CadSnapshot, mut checkpoint: impl FnMut() -> Result<()
     checkpoint()?;
     for (_, child) in slots(value) { if let Some(child) = child { validate_child(child, "model")?; } }
     for child in &value.drawings { checkpoint()?; validate_child(child, "drawing")?; }
+    for child in &value.breps { checkpoint()?; validate_child(child, "brep")?; }
     checkpoint()
 }
 impl ArtifactSqliteSnapshot for CadSnapshot {
@@ -253,13 +264,13 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
     }
 }
 semio_framework_value::artifact_retire_struct!(crate::CadNode { id, label, kind });
-semio_framework_value::artifact_retire_struct!(crate::CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, references_by_model_definition_id, nodes });
-semio_framework_value::artifact_retire_struct!(crate::schema::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, references_by_model_definition_id, nodes });
+semio_framework_value::artifact_retire_struct!(crate::CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
+semio_framework_value::artifact_retire_struct!(crate::schema::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
 
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 
 #[path="🚦️frontiers/🦀️.rs"]

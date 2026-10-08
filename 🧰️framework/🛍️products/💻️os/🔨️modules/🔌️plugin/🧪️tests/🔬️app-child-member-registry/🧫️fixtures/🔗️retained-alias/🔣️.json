@@ -1,0 +1,91 @@
+{
+  "views": {
+    "live": {
+      "root": "root-live",
+      "pages": [
+        "page-live"
+      ],
+      "entries": [
+        "old-model"
+      ]
+    },
+    "future": {
+      "root": "root-future",
+      "pages": [
+        "page-future"
+      ],
+      "entries": [
+        "new-brep",
+        "new-model"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "scope": "root",
+      "identity": "root-live",
+      "retainers": [
+        "live",
+        "future"
+      ],
+      "items": 1,
+      "retained": true,
+      "releasedBytes": 0
+    },
+    {
+      "scope": "page",
+      "identity": "page-live",
+      "retainers": [
+        "future",
+        "live"
+      ],
+      "items": 1,
+      "retained": true,
+      "releasedBytes": 0
+    },
+    {
+      "scope": "entry",
+      "identity": "old-model",
+      "retainers": [
+        "future",
+        "live"
+      ],
+      "items": 1,
+      "retained": true,
+      "releasedBytes": 0
+    },
+    {
+      "scope": "entry",
+      "identity": "new-brep",
+      "retainers": [
+        "live",
+        "future"
+      ],
+      "items": 1,
+      "retained": true,
+      "releasedBytes": 0
+    },
+    {
+      "scope": "root",
+      "identity": "external-root",
+      "retainers": [
+        "live",
+        "future"
+      ],
+      "items": 1,
+      "retained": false,
+      "releasedBytes": 0
+    },
+    {
+      "scope": "root",
+      "identity": "root-live",
+      "retainers": [
+        "live",
+        "future"
+      ],
+      "items": 0,
+      "retained": true,
+      "releasedBytes": 0
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 //! 🧵️ Ordered Flow structural changes corresponding to the adjacent JSON schema.
-use super::{FlowCollectionDelta, FlowHostSnapshot, FlowLayoutEntry, FlowOwner, FlowRetirement, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
+use super::{ApplyCapability, DiffAlgebra, FlowCollectionDelta, FlowHostSnapshot, FlowLayoutEntry, FlowOwner, FlowRetirement, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Schema
@@ -56,8 +56,36 @@ impl FlowDelta {
 mod projection;
 use projection::FlowProjection;
 
+impl DiffAlgebra<FlowHostSnapshot> for FlowDiff {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Self {
+        let mut projection = FlowProjection::new(base);
+        let mut inverse = Vec::with_capacity(self.deltas.len());
+        for delta in &self.deltas {
+            inverse.push(projection.inverse_of(delta));
+            if projection.apply(delta).is_err() {
+                return Self::default();
+            }
+        }
+        inverse.reverse();
+        Self { deltas: inverse }
+    }
+
+    fn between(_base: &FlowHostSnapshot, other: &FlowHostSnapshot) -> Self {
+        Self::from(FlowDelta::HostSnapshot(other.clone()))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.deltas.iter().all(|delta| match delta {
+            FlowDelta::Widgets(delta) => delta.removed.is_empty() && delta.inserted.is_empty() && delta.replaced.is_empty(),
+            FlowDelta::Synapses(delta) => delta.removed.is_empty() && delta.inserted.is_empty() && delta.replaced.is_empty(),
+            FlowDelta::Layout(entries) => entries.is_empty(),
+            FlowDelta::HostSnapshot(_) => false,
+        })
+    }
+}
+
 impl MutationDiff<FlowHostSnapshot> for FlowDiff {
-    fn apply(&self, snapshot: &FlowHostSnapshot) -> MutationApplyResult<FlowHostSnapshot> {
+    fn apply(&self, snapshot: &FlowHostSnapshot, _capability: ApplyCapability) -> MutationApplyResult<FlowHostSnapshot> {
         let mut projection = FlowProjection::new(snapshot);
         for delta in &self.deltas {
             projection.apply(delta)?;

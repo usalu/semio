@@ -236,7 +236,7 @@ pub struct SemioModelDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
+    fn apply(&self, base: &SemioModelSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;

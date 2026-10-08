@@ -4,7 +4,7 @@ use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowC
 use crate::editor::writer::modes::edit::windows::main::options;
 use crate::editor::writer::modes::edit::windows::main::transient::WriterMainWindowTransient;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use crate::schema::inferences::{language_diagnostics_json, language_tokens_json};
+use crate::standards::v1::subsets::any::io::text::inferences::{language_diagnostics_json, language_tokens_json};
 use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::standards::v1::subsets::any::io::text::snapshot::{language_completions_json};
 use crate::{writer_text, WriterSnapshot};

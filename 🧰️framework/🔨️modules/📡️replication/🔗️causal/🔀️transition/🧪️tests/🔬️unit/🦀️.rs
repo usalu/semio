@@ -626,8 +626,8 @@ fn bounded_history_fold_obeys_the_neutral_law() {
         let mut done = 0;
         let mut result = None;
         for _ in 0..100000 {
-            match job.step(grant, bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
-                HistoryFoldJobStep::Pending { completed } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
+            match job.step(grant, job.next_step_byte_demand(bytes.as_u64().unwrap() as usize), &mut || false).unwrap() {
+                HistoryFoldJobStep::Pending { completed, .. } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
                 HistoryFoldJobStep::Ready(fold) => { result = Some(fold); break; },
                 HistoryFoldJobStep::Rejected(error) => panic!("bounded fold: {error:?}"),
             }
@@ -643,7 +643,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
         let done = job.completed();
         job.request_cancel();
         let mut closed = false;
-        for _ in 0..100000 { if job.close_step(1, 7).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
+        for _ in 0..100000 { if job.close_step(1, job.next_close_byte_demand()).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { closed = true; break; } }
         assert!(closed && job.terminal_is_empty());
         assert_eq!(job.completed(), done);
     }
@@ -670,7 +670,7 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(&input, &control).await });
             let mut actual = None;
             for _ in 0..100000 {
-                match job.step(1, grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                match job.step(1, job.next_step_byte_demand(grant.as_u64().unwrap() as usize), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready(value) => { actual = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected(error) => { actual = Some(Err(error)); break; },
@@ -707,7 +707,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
             let mut outcome = None;
             for _ in 0..100000 {
-                match job.step(1, grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                match job.step(1, job.next_step_byte_demand(grant.as_u64().unwrap() as usize), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
                     HistoryFoldJobStep::Ready(value) => { outcome = Some(Ok(value)); break; },
                     HistoryFoldJobStep::Rejected(error) => { outcome = Some(Err(error)); break; },
@@ -724,7 +724,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             for _ in 0..stop.as_u64().unwrap() { let _ = job.step(1, 1, &mut || false).unwrap(); }
             let completed = job.completed();
             job.request_cancel();
-            for _ in 0..100000 { if job.close_step(1, 1).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { break; } }
+            for _ in 0..100000 { if job.close_step(1, job.next_close_byte_demand()).unwrap() == semio_framework_value::SnapshotRetirementStep::Complete { break; } }
             assert!(job.terminal_is_empty());
             assert_eq!(job.completed(), completed);
         }

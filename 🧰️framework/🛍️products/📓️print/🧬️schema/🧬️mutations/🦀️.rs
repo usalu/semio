@@ -1,7 +1,7 @@
 //! 🧬️ Editable chart values use the existing event-sourced mutation protocol.
 use crate::{ChartSnapshot, ChartDiff, ChartEdit};
 use semio_framework_value::{DslValue,FromValue,ToValue};
-use protocol::{Mutation, MutationDiff, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
+use protocol::{Mutation, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
 
 
 #[derive(Clone, Debug, PartialEq,semio_framework_dsl_record_derive::DslRecord)]
@@ -36,20 +36,23 @@ impl Mutation<ChartSnapshot> for ChangeChartValue {
     const DESCRIPTORS: &'static [MutationLeafDescriptor] = &[CHANGE_CHART_VALUE];
     fn descriptor(&self) -> &'static MutationLeafDescriptor { &CHANGE_CHART_VALUE }
     fn diff(&self, base: &ChartSnapshot) -> MutationOutcome<ChartDiff> {
-        let before = crate::diff::read_path(&base.chart, &self.path).cloned();
-        if !crate::diff::valid_path(&self.path) { return MutationOutcome::error("print.chart.path", "invalid chart address", self.path.clone()); }
-        let diff = ChartDiff { edits: vec![ChartEdit { path: self.path.clone(), before: before.clone(), after: self.value.clone() }] };
-        match diff.apply(base) {
-            Ok(_) if match(&before,&self.value){(Some(a),Some(b))=>crate::diff::chart_values_equal(a,b),(None,None)=>true,_=>false} => MutationOutcome::empty(),
-            Ok(_) => MutationOutcome::new(diff),
+        match ChartEdit::authored(&base.chart, &self.path, self.value.as_ref()) {
+            Ok(Some(edit)) => MutationOutcome::new(ChartDiff { edits: vec![edit] }),
+            Ok(None) => MutationOutcome::empty(),
             Err(error) => MutationOutcome::error(error.code, error.message, error.target),
         }
     }
     fn inverse(&self, base: &ChartSnapshot) -> Result<Vec<Self>,semio_framework_value::ValueError> {
-        if self.diff(base).diff().edits.is_empty() { return Ok(Vec::new()); }
-        let array_parent = self.path.len() > 1 && matches!(crate::diff::read_path(&base.chart, &self.path[..self.path.len()-1]), Some(DslValue::Array(_)));
-        let path = if array_parent { self.path[..self.path.len()-1].to_vec() } else { self.path.clone() };
-        Ok(vec![Self { value: crate::diff::read_path(&base.chart, &path).cloned(), path }])
+        let before = crate::diff::read_path(&base.chart, &self.path).cloned();
+        if !crate::diff::valid_path(&self.path) || crate::diff::presence_equal(before.as_ref(), self.value.as_ref()) { return Ok(Vec::new()); }
+        let parent_path = &self.path[..self.path.len() - 1];
+        let index = self.path.last().and_then(|segment| crate::diff::array_index(segment));
+        if let (None, Some(DslValue::Array(items)), Some(index)) = (&self.value, crate::diff::read_path(&base.chart, parent_path), index) {
+            if index < items.len() {
+                return Ok((index..items.len()).map(|slot| Self { path: parent_path.iter().cloned().chain(std::iter::once(slot.to_string())).collect(), value: Some(items[slot].clone()) }).collect());
+            }
+        }
+        Ok(vec![Self { path: self.path.clone(), value: before }])
     }
     fn conflict_target(&self) -> Vec<String> { std::iter::once("chart".into()).chain(self.path.clone()).collect() }
 }

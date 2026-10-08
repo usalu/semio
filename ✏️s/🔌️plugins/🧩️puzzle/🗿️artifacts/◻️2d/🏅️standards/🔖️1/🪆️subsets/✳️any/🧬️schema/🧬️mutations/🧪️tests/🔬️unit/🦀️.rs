@@ -94,8 +94,8 @@ fn connect_disconnect_handles_inverse_law() {
     let mut projection = base.clone();
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None)));
-    let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None)));
+    let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_handles("e1".into())));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &replace_edge_geometry("e1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_kind("e1".into(), Some("core.link".into()))));
@@ -112,11 +112,11 @@ fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
     use crate::{Puzzle2dHandle, Puzzle2dNode};
     let node = |id: &str, x: f64, handle: &str, angle: f64| Puzzle2dNode { id: id.into(), x, radius: Some(24.0), handles: vec![Puzzle2dHandle { id: handle.into(), angle, ..Default::default() }].into(), ..Default::default() };
     let mut base = empty_puzzle2d_snapshot();
-    base.nodes = vec![node("a", 0.0, "ha", 0.0), node("b", 56.0, "hb", std::f64::consts::PI)];
-    assert_eq!(puzzle2d_handle_position(&base, "ha"), Some((24.0, 0.0)), "a circle's handle sits on the rim at its east-zero angle");
-    let apart = puzzle2d_handle_distance(&base, "ha", "hb").expect("both handles are on a node");
+    base.nodes = vec![node("a", 0.0, "ha", 0.0), node("b", 56.0, "hb", std::f64::consts::PI)].into();
+    assert_eq!(puzzle2d_handle_position(&base, &"ha".into()), Some((24.0, 0.0)), "a circle's handle sits on the rim at its east-zero angle");
+    let apart = puzzle2d_handle_distance(&base, &"ha".into(), &"hb".into()).expect("both handles are on a node");
     assert!((apart - 8.0).abs() < 1e-9, "{apart}");
-    assert_eq!(puzzle2d_handle_distance(&base, "ha", "ghost"), None);
+    assert_eq!(puzzle2d_handle_distance(&base, &"ha".into(), &"ghost".into()), None);
     let recorded = connect_handles_in_proximity("e1".into(), "ha".into(), "hb".into(), 12.0);
     let near = recorded.diff(&base);
     assert!(near.messages().is_empty(), "within the tolerance nothing is reported: {:?}", near.messages());
@@ -133,7 +133,7 @@ fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
         let connected = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), state).expect("a drifted connection still applies");
         assert!(connected.edges.iter().any(|edge| edge.id == "e1" && edge.source == "ha" && edge.target == "hb"), "{what}: the edge is there");
     }
-    let unconditional = connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
+    let unconditional = connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None);
     assert!(unconditional.diff(&moved).messages().is_empty(), "a connection that states no tolerance has no precondition");
     for forbidden in [-1.0, f64::NAN, f64::INFINITY] {
         let outcome = connect_handles_in_proximity("e1".into(), "ha".into(), "hb".into(), forbidden).diff(&base);
@@ -157,7 +157,7 @@ fn delete_node_severs_and_reconnects_edges() {
     let mut projection = base;
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     assert!(projection.edges.iter().any(|edge| edge.id == "e1"));
     let removed = delete_node("a".into());
     let after = MutationDiff::<Puzzle2dSnapshot>::apply(removed.diff(&projection).diff(), &projection).expect("valid mutation diff");
@@ -201,9 +201,9 @@ fn missing_target_is_error_per_verb_family() {
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into())))); // edit/replace
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &disconnect_handles("missing".into())));
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], 1.0, 1.0)));
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], 0.0, 0.0, 1.0)));
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], 0.0, 0.0, 2.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()].into(), 1.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()].into(), 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()].into(), 0.0, 0.0, 2.0)));
     // disconnect/unbind
 }
 
@@ -229,8 +229,8 @@ fn selection_board() -> Puzzle2dSnapshot {
     base.nodes = vec![
         Puzzle2dNode { id: "a".into(), x: 0.1, y: 0.2, handles: vec![Puzzle2dHandle { id: "ha".into(), angle: 0.3, ..Default::default() }].into(), ..Default::default() },
         Puzzle2dNode { id: "b".into(), x: 7.3, y: -2.9, locked: Some(true), ..Default::default() },
-    ];
-    base.target_regions = vec![Puzzle2dTargetRegion { id: "r".into(), x: 1.7, y: 2.3, width: 3.1, height: 4.9, ..Default::default() }];
+    ].into();
+    base.target_regions = vec![Puzzle2dTargetRegion { id: "r".into(), x: 1.7, y: 2.3, width: 3.1, height: 4.9, ..Default::default() }].into();
     base
 }
 
@@ -238,7 +238,7 @@ fn selection_board() -> Puzzle2dSnapshot {
 #[test]
 fn selection_transforms_invert_exactly_on_awkward_floats() {
     let base = selection_board();
-    for mutation in [drag_selection(vec!["a".into(), "r".into()], 0.7, -1.3), rotate_selection(vec!["a".into()], 0.3, 0.9, 0.61), scale_selection(vec!["a".into(), "r".into()], 0.3, 0.9, 1.7)] {
+    for mutation in [drag_selection(vec!["a".into(), "r".into()].into(), 0.7, -1.3), rotate_selection(vec!["a".into()].into(), 0.3, 0.9, 0.61), scale_selection(vec!["a".into(), "r".into()].into(), 0.3, 0.9, 1.7)] {
         ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &mutation));
     }
 }
@@ -249,14 +249,14 @@ fn selection_transforms_invert_exactly_on_awkward_floats() {
 fn selection_transforms_refuse_non_finite_and_collapsing_parameters() {
     let base = selection_board();
     for mutation in [
-        drag_selection(vec!["a".into()], f64::NAN, 0.0),
-        rotate_selection(vec!["a".into()], 0.0, f64::INFINITY, 1.0),
-        rotate_selection(vec!["a".into()], 0.0, 0.0, f64::NAN),
-        scale_selection(vec!["a".into()], 0.0, 0.0, 0.0),
-        scale_selection(vec!["a".into()], 0.0, 0.0, -2.0),
-        drag_selection(Vec::new(), 1.0, 1.0),
-        rotate_selection(vec!["a".into(), "r".into(), "a".into()], 0.0, 0.0, 1.0),
-        scale_selection(vec!["ghost".into(), "ghost".into()], 0.0, 0.0, 2.0),
+        drag_selection(vec!["a".into()].into(), f64::NAN, 0.0),
+        rotate_selection(vec!["a".into()].into(), 0.0, f64::INFINITY, 1.0),
+        rotate_selection(vec!["a".into()].into(), 0.0, 0.0, f64::NAN),
+        scale_selection(vec!["a".into()].into(), 0.0, 0.0, 0.0),
+        scale_selection(vec!["a".into()].into(), 0.0, 0.0, -2.0),
+        drag_selection(Default::default(), 1.0, 1.0),
+        rotate_selection(vec!["a".into(), "r".into(), "a".into()].into(), 0.0, 0.0, 1.0),
+        scale_selection(vec!["ghost".into(), "ghost".into()].into(), 0.0, 0.0, 2.0),
     ] {
         let outcome = mutation.diff(&base);
         ::semio_framework_async::poll::resolve_ready(assert_fatal_never_applies(&outcome));
@@ -270,7 +270,7 @@ fn selection_transforms_refuse_non_finite_and_collapsing_parameters() {
 #[test]
 fn selection_transforms_skip_missing_and_locked_members_as_partial() {
     let base = selection_board();
-    let outcome = drag_selection(vec!["b".into(), "ghost".into(), "a".into()], 1.0, 2.0).diff(&base);
+    let outcome = drag_selection(vec!["b".into(), "ghost".into(), "a".into()].into(), 1.0, 2.0).diff(&base);
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     let reported: Vec<(&str, Vec<String>)> = outcome.messages().iter().map(|message| (message.code.0.as_str(), message.target.clone())).collect();
     assert_eq!(reported, vec![("mutation.partial", vec!["ghost".to_string()]), ("mutation.partial", vec!["b".to_string()])]);
@@ -284,19 +284,19 @@ fn selection_transforms_skip_missing_and_locked_members_as_partial() {
 #[test]
 fn rotating_target_regions_is_partial_and_regions_alone_are_target_missing() {
     let base = selection_board();
-    let mixed = rotate_selection(vec!["a".into(), "r".into()], 0.0, 0.0, 1.0).diff(&base);
+    let mixed = rotate_selection(vec!["a".into(), "r".into()].into(), 0.0, 0.0, 1.0).diff(&base);
     assert_eq!(mixed.messages().len(), 1);
     assert_eq!((mixed.messages()[0].code.0.as_str(), mixed.messages()[0].target.clone()), ("mutation.partial", vec!["r".to_string()]));
     assert!(mixed.diff().target_regions.is_none(), "a rotation never patches a target region");
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["r".into()], 0.0, 0.0, 1.0)));
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["b".into()], 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["r".into()].into(), 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["b".into()].into(), 0.0, 0.0, 1.0)));
 }
 
 /// ⏸️ The identity parameters (zero offset, zero angle, unit factor) are warning-level no-ops.
 #[test]
 fn identity_selection_transforms_are_no_ops() {
     let base = selection_board();
-    for mutation in [drag_selection(vec!["a".into(), "r".into()], 0.0, 0.0), rotate_selection(vec!["a".into()], 0.3, 0.9, 0.0), scale_selection(vec!["a".into(), "r".into()], 0.3, 0.9, 1.0)] {
+    for mutation in [drag_selection(vec!["a".into(), "r".into()].into(), 0.0, 0.0), rotate_selection(vec!["a".into()].into(), 0.3, 0.9, 0.0), scale_selection(vec!["a".into(), "r".into()].into(), 0.3, 0.9, 1.0)] {
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.diff(), &Puzzle2dDiff::default(), "{mutation:?}");
         assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.no-op"], "{mutation:?}");
@@ -310,7 +310,7 @@ fn identity_selection_transforms_are_no_ops() {
 fn selection_diff_replays_on_a_moved_base() {
     let base = selection_board();
     let moved_base = MutationDiff::<Puzzle2dSnapshot>::apply(move_node("a".into(), 10.0, 20.0).diff(&base).diff(), &base).expect("move applies");
-    let replayed = MutationDiff::<Puzzle2dSnapshot>::apply(drag_selection(vec!["a".into()], 1.0, -1.0).diff(&moved_base).diff(), &moved_base).expect("drag applies");
+    let replayed = MutationDiff::<Puzzle2dSnapshot>::apply(drag_selection(vec!["a".into()].into(), 1.0, -1.0).diff(&moved_base).diff(), &moved_base).expect("drag applies");
     assert_eq!((replayed.nodes[0].x, replayed.nodes[0].y), (11.0, 19.0));
 }
 
@@ -318,11 +318,11 @@ fn selection_diff_replays_on_a_moved_base() {
 #[test]
 fn selection_labels_name_count_and_parameters() {
     let label = |mutation: Puzzle2dMutation| serde_json::to_string(&<Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::label(&mutation)).expect("label serializes");
-    let drag = label(drag_selection(vec!["a".into(), "r".into()], 5.0, -2.5));
+    let drag = label(drag_selection(vec!["a".into(), "r".into()].into(), 5.0, -2.5));
     assert!(drag.contains("Drag 2 items by (5, -2.5)") && drag.contains("2 Elemente um (5; -2,5) ziehen"), "{drag}");
-    let rotate = label(rotate_selection(vec!["a".into()], 0.0, 0.0, std::f64::consts::FRAC_PI_2));
+    let rotate = label(rotate_selection(vec!["a".into()].into(), 0.0, 0.0, std::f64::consts::FRAC_PI_2));
     assert!(rotate.contains("Rotate 1 item by 90°") && rotate.contains("1 Element um 90° drehen"), "{rotate}");
-    let scale = label(scale_selection(vec!["a".into()], 0.0, 0.0, 0.5));
+    let scale = label(scale_selection(vec!["a".into()].into(), 0.0, 0.0, 0.5));
     assert!(scale.contains("Scale 1 item by a factor of 0.5") && scale.contains("1 Element um den Faktor 0,5 skalieren"), "{scale}");
 }
 /// 🧱️ Schema-first: every value a leaf payload schema forbids through a hard bound is a Fatal
@@ -332,7 +332,7 @@ fn selection_labels_name_count_and_parameters() {
 fn every_bounded_leaf_refuses_what_its_schema_forbids() {
     use crate::{Puzzle2dCatalogHandleKind, Puzzle2dCatalogNodeKind, Puzzle2dHandle, Puzzle2dHandleTemplate, Puzzle2dKindCatalogs, Puzzle2dNode, Puzzle2dTargetRegion};
     let mut base = selection_board();
-    base.edges = vec![crate::Puzzle2dEdge { id: "e".into(), source: "ha".into(), target: "ha".into(), ..Default::default() }];
+    base.edges = vec![crate::Puzzle2dEdge { id: "e".into(), source: "ha".into(), target: "ha".into(), ..Default::default() }].into();
     let handle = |angle: f64, radius: Option<f64>, scale: Option<f64>| Puzzle2dHandle { id: "hn".into(), angle, radius, scale, ..Default::default() };
     let node = |edit: fn(&mut Puzzle2dNode)| {
         let mut node = Puzzle2dNode { id: "n".into(), ..Default::default() };
@@ -361,12 +361,12 @@ fn every_bounded_leaf_refuses_what_its_schema_forbids() {
         create_node(node(|node| node.radius = Some(0.0)), None),
         create_node(node(|node| node.width = Some(-1.0)), None),
         create_node(node(|node| node.scale = Some(0.0)), None),
-        create_node(node(|node| node.handles = vec![Puzzle2dHandle { id: "hx".into(), angle: f64::NAN, ..Default::default() }]), None),
+        create_node(node(|node| node.handles = vec![Puzzle2dHandle { id: "hx".into(), angle: f64::NAN, ..Default::default() }].into()), None),
         add_node_handle("a".into(), handle(f64::INFINITY, None, None), None),
         add_node_handle("a".into(), handle(0.0, Some(0.0), None), None),
         replace_node_handle("a".into(), "ha".into(), handle(0.0, None, Some(-1.0))),
-        connect_handles("e2".into(), "ha".into(), "ha".into(), None, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None),
-        connect_handles("e2".into(), "ha".into(), "ha".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, f64::INFINITY, None, None),
+        connect_handles("e2".into(), "ha".into(), "ha".into(), None, f64::NAN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None),
+        connect_handles("e2".into(), "ha".into(), "ha".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, f64::INFINITY, None, None, None),
         replace_edge_geometry("e".into(), 0.0, 0.0, 0.0, f64::NAN, 0.0, 0.0, 0.0, 0.0),
         create_target_region(region(f64::NAN, 1.0), None),
         create_target_region(region(0.0, f64::INFINITY), None),

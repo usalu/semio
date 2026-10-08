@@ -1,6 +1,6 @@
-import { terminateOwnedProcessTree } from "../🪓️termination/🟦️.ts";
+import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 
 
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
@@ -18,25 +18,12 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const child = spawn(command, args, { cwd, env: options.env ?? process.env, detached: process.platform !== "win32", stdio: ["inherit", options.stdout === "ignore" ? "ignore" : "pipe", "pipe"], windowsHide: true });
   child.stdout?.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });
-  let stopped = "",
-    forceKill: ReturnType<typeof setTimeout> | undefined;
+  let stopped = "";
   const terminate = (reason: string): void => {
     stopped ||= reason;
-    if (!child.pid) return;
-    if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore", windowsHide: true });
-    else {
-      try {
-        process.kill(-child.pid, "SIGTERM");
-      } catch {}
-      forceKill ??= setTimeout(() => {
-        try {
-          process.kill(-child.pid!, "SIGKILL");
-        } catch {}
-      }, 2_000);
-      forceKill.unref();
-    }
+    terminateOwnedChildTree(child);
   };
-  const abort = (): void => { stopped ||= "cancelled"; if (child.pid) terminateOwnedProcessTree(child.pid); };
+  const abort = (): void => terminate("cancelled");
   const observe = (stream: NodeJS.ReadableStream): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";
@@ -73,7 +60,6 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     options.signal?.removeEventListener("abort", abort);
     stopProgress();
     if (timeout) clearTimeout(timeout);
-    if (forceKill) clearTimeout(forceKill);
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", stop);
   }

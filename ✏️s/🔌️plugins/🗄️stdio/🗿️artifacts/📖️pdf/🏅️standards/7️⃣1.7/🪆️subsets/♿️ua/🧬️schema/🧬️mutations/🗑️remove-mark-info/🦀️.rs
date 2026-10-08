@@ -2,9 +2,7 @@
 
 use super::set_mark_info::SetMarkInfo;
 use super::PdfUaMutation;
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +15,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveMarkInfo {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "mark-info", kind: "remove-mark-info", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::remove_catalog_entry(&mut next, "MarkInfo");
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_rows(base, "MarkInfo")))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {

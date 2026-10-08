@@ -19,9 +19,9 @@ fn direct_leaf_descriptor_and_inverse_law() {
     assert!(protocol::validate_mutation_leaf_source(&AddValue::DESCRIPTOR, &provenance, &scope).is_ok());
     let base = WireTestSnapshot { value: 0 };
     let mutation = WireTestMutation::AddValue(AddValue { delta: i32::MIN });
-    let current = mutation.diff(&base).diff().apply(&base).expect("minimum applies");
+    let current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("minimum applies");
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![WireTestMutation::AddValue(AddValue { delta: 1 }), WireTestMutation::AddValue(AddValue { delta: i32::MAX })]);
-    let restored = inverse.iter().rev().try_fold(current, |snapshot, next| next.diff(&snapshot).diff().apply(&snapshot)).expect("stored reverse inverse");
+    let restored = inverse.iter().rev().try_fold(current, |snapshot, next| protocol::apply_diff(next.diff(&snapshot).diff(), &snapshot)).expect("stored reverse inverse");
     assert_eq!(restored, base);
 }

@@ -14,10 +14,11 @@ async fn imperative_config_dsl_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn config_operation_snapshot_diff_ignores_base() {
+async fn config_replace_diff_names_only_the_changed_fields() {
     let base = ImperativeConfig::default();
     let mut snapshot = base.clone();
     snapshot.run_output_json = r#"{"counter":1}"#.into();
     let operation = ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: snapshot.clone() });
-    assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &snapshot);
+    assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &ImperativeConfigDiff { run_output_json: Some(snapshot.run_output_json.clone()), contributions_json: None });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base);
 }

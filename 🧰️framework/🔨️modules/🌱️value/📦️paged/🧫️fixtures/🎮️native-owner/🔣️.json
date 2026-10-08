@@ -4,6 +4,38 @@
   "payloadChunkBytes": 1024,
   "treeDepth": 17,
   "maximumCursorBytes": 4096,
+  "controlledRetirement": {
+    "depth": 80,
+    "maximumItems": 1,
+    "maximumBytes": 4096,
+    "pauseAt": [
+      0,
+      1,
+      3,
+      17,
+      129
+    ],
+    "label": "Grundstück🧬"
+  },
+  "cloneClose": {
+    "maximumItems": 1,
+    "maximumBytes": 4096,
+    "zeroGrantInert": true,
+    "textRepeat": 80,
+    "optionalValues": [
+      7,
+      9,
+      11
+    ],
+    "objectValue": "Änderung🧬",
+    "pauseAt": [
+      0,
+      1,
+      3,
+      17,
+      129
+    ]
+  },
   "prefix": "Grundstück🧬",
   "prefixRepeat": 800,
   "cancelAt": [
@@ -340,5 +372,79 @@
         17
       ]
     }
-  ]
+  ],
+  "emptyComparisons": [
+    {
+      "left": "",
+      "right": "",
+      "ordering": 0
+    },
+    {
+      "left": "",
+      "right": "a",
+      "ordering": -1
+    },
+    {
+      "left": "a",
+      "right": "",
+      "ordering": 1
+    }
+  ],
+  "appendClose": {
+    "demand": {
+      "zeroHeapObservation": true,
+      "coldOwnerRefused": true,
+      "separateBirthRelease": true,
+      "nonemptyByteOwnerBodyGrant": 1,
+      "grants": [0, 1, 7, 4096]
+    },
+    "maximumItems": 1,
+    "maximumBytes": 4096,
+    "zeroGrantInert": true,
+    "constructorAllocationBytes": 0,
+    "cancelAt": [
+      0,
+      1,
+      3,
+      7,
+      17
+    ],
+    "destinationPrefix": "Änderung:"
+  },
+  "ownedProjection": {
+    "input": {
+      "rows": [
+        {
+          "label": "Grundstück🧬",
+          "choice": null
+        },
+        {
+          "label": "Aé",
+          "choice": "Änderung\u0000🧬"
+        }
+      ]
+    },
+    "paths": [
+      {
+        "pointer": "/rows/0/label",
+        "value": "Grundstück🧬"
+      },
+      {
+        "pointer": "/rows/1/choice",
+        "value": "Änderung\u0000🧬"
+      }
+    ],
+    "constructorAllocationBytes": 0,
+    "zeroGrantInert": true,
+    "maximumItems": 1,
+    "maximumBytes": 0,
+    "retainSourceUntilClosed": true,
+    "closeSequence": [
+      "zero",
+      "parent",
+      "zero",
+      "child",
+      "complete"
+    ]
+  }
 }

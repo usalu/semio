@@ -187,6 +187,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
 }
 impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
@@ -244,6 +245,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
@@ -278,6 +280,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDiction
     fn terminal_is_empty(&self) -> bool {
         self.owner.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.owner.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
@@ -324,6 +327,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistor
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) }
 }
 impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {

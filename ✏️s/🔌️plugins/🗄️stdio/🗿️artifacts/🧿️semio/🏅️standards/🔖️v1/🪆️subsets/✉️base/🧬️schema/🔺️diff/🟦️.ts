@@ -1,8 +1,5 @@
 /** 🔺️ SemioDiff schema — real mirror of `🦀️.rs`. The envelope union's own diff:
- * `NoChange`, 13 same-kind wrappers each nesting that subset's own REAL diff type unchanged, and
- * `Replace` (the escape hatch for a genuine cross-kind change or an explicit `SetSnapshot`
- * mutation — there is no sparse representation for "this artifact used to be a video, now it's a
- * flow"). Tag key is `kind` (`#[serde(tag = "kind", rename_all = "camelCase")]` — distinct
+ * `NoChange` and 13 same-kind wrappers each nesting that subset's own REAL diff type unchanged. Tag key is `kind` (`#[serde(tag = "kind", rename_all = "camelCase")]` — distinct
  * from the snapshot facet's own `subset` tag key). */
 import type { SemioSnapshot } from "../📸️snapshot/🟦️";
 import type { SemioBrepDiff } from "../../../🧊️brep/🧬️schema/🔺️diff/🟦️";
@@ -33,5 +30,4 @@ export type SemioDiff =
   | { kind: "audio"; audio: SemioAudioDiff }
   | { kind: "animation"; animation: SemioAnimationDiff }
   | { kind: "presentation"; presentation: SemioPresentationDiff }
-  | { kind: "flow"; flow: SemioFlowDiff }
-  | { kind: "replace"; snapshot: SemioSnapshot };
+  | { kind: "flow"; flow: SemioFlowDiff };

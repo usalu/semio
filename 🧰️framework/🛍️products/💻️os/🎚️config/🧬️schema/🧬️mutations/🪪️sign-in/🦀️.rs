@@ -1,5 +1,6 @@
 //! 🪪️ `SignIn` is the authoritative direct Rust leaf for establishing an OS identity session.
 
+use super::super::SettingEdit;
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
@@ -42,13 +43,40 @@ impl FromValue for IdentitySetting {
 /// 🪪️ The schema id for the identity config facet.
 pub const IDENTITY_CONFIG_SCHEMA: &str = "os.config.identity";
 
-impl MutationDiff<IdentitySetting> for IdentitySetting {
-    fn apply(&self, _base: &IdentitySetting) -> protocol::MutationApplyResult<IdentitySetting> {
-        Ok(self.clone())
+/// 🔺️ Sparse diff of [`IdentitySetting`]: the absolute new session, `value: None` signing out.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct IdentityDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub session: Option<SettingEdit<Identity>>,
+}
+
+impl MutationDiff<IdentitySetting> for IdentityDiff {
+    fn apply(&self, base: &IdentitySetting, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<IdentitySetting> {
+        Ok(match &self.session {
+            Some(edit) => IdentitySetting(edit.value.clone()),
+            None => base.clone(),
+        })
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.session.is_some() {
+            self.session = other.session;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<IdentitySetting> for IdentityDiff {
+    fn inverse(&self, base: &IdentitySetting) -> Self {
+        Self { session: self.session.as_ref().map(|_| SettingEdit::new(base.0.clone())) }
+    }
+
+    fn between(base: &IdentitySetting, other: &IdentitySetting) -> Self {
+        Self { session: (base != other).then(|| SettingEdit::new(other.0.clone())) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.session.is_none()
     }
 }
 //#endregion 🔖️Schema
@@ -87,8 +115,12 @@ impl From<&SignIn> for Identity {
 impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "identity", kind: "sign-in", record: "Set" };
 
-    fn diff(&self, _base: &IdentitySetting) -> MutationOutcome<IdentitySetting> {
-        MutationOutcome::new(IdentitySetting(Some(self.into())))
+    fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
+        let identity = Identity::from(self);
+        if base.0.as_ref() == Some(&identity) {
+            return MutationOutcome::empty();
+        }
+        MutationOutcome::new(IdentityDiff { session: Some(SettingEdit::new(Some(identity))) })
     }
 
     fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
@@ -112,13 +144,6 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
 //#endregion 🔖️Mutation
 
 //#region 🌉️MutationCodecBridge
-/// 🧮️ Applies one identity mutation through its whole-record diff.
-pub fn apply_identity_config_mutation(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::{Mutation as _, MutationDiff as _};
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
-    Ok(())
-}
-
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation session.
 pub fn inverse_identity_config_mutation(snapshot: &IdentitySetting, mutation: &IdentityConfigMutation) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -142,13 +167,6 @@ pub fn encode_identity_setting_json(snapshot: &IdentitySetting) -> String {
 /// 📥️ Decodes the canonical identity setting JSON projection.
 pub fn decode_identity_setting_json(text: &str) -> Result<IdentitySetting, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_identity_config_mutation_reporting(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.

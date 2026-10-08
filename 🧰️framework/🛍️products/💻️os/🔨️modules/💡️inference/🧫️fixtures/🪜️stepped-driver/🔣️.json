@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    { "key": "root", "weight": 1, "parents": [] },
+    { "key": "leaf_a", "weight": 2, "parents": ["root"] },
+    { "key": "leaf_b", "weight": 3, "parents": ["root"] },
+    { "key": "leaf_both", "weight": 4, "parents": ["leaf_a", "leaf_b"] }
+  ],
+  "expected": { "root": 1, "leaf_a": 3, "leaf_b": 4, "leaf_both": 11 },
+  "slices": 3,
+  "stepsByFuel": { "1": 12, "2": 6, "3": 4, "4": 3, "5": 3, "12": 1, "100": 1 },
+  "cancelAfterSteps": 4,
+  "cancelledValues": { "root": 1 },
+  "resumeComputes": 3
+}

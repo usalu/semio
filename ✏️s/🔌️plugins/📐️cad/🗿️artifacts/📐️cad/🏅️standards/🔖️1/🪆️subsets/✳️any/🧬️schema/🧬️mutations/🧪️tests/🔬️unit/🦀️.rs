@@ -22,6 +22,8 @@ pub fn every_mutation() -> Vec<CadMutation> {
         CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
         CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() }),
         CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
+        CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: "brep-fresh".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "topology-fresh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } }, index: 0 }),
+        CadMutation::DeleteBrep(crate::mutations::delete_brep::DeleteBrep { child_id: "brep-fresh".into() }),
         CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
         CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
         CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),

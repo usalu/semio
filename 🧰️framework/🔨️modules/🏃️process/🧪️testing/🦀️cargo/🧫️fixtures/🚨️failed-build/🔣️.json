@@ -1,0 +1,8 @@
+{
+  "schema": "cargo-failed-build-output.v1",
+  "cases": [
+    { "name": "Compiler Diagnostic", "exitCode": 101, "splitBytes": 20, "stdout": "{\"reason\":\"compiler-message\",\"message\":{\"level\":\"error\",\"code\":{\"code\":\"E0046\"},\"message\":\"missing next_close_byte_demand\"}}\n" },
+    { "name": "Split Unicode", "exitCode": 101, "splitBytes": 2, "stdout": "💧 é retained compiler output\n" },
+    { "name": "Nonzero Status", "exitCode": 7, "splitBytes": 3, "stdout": "bounded build refusal\n" }
+  ]
+}

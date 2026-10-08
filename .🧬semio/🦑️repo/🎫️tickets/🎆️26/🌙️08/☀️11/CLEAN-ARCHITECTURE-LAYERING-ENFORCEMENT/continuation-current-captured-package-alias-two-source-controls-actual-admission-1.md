@@ -1,0 +1,11 @@
+# Captured Package Alias Two Actual Controls
+
+Exact both-files GUI900.253005 closed actual Nx0 with22normative/adversarial outcomes and4closed own/AJV schema outcomes;13finite authority bindings matched before and after execution and on immediate independent read. Helper SHA256 `ccfd3995071f77201803e2dd9e4c0eefb26be5c1805190cb7eb0284f789d1259`; receipt SHA256 `39fb04e5d7bbd7f3a02f2ec9a365cdfbafc5b8d44327706fe7b81c3532d9eb60`; proofschema SHA256 `119626c2f6beecaef4c2361db2ad4a7d777194a4fbbd7a06c466fbf4ed26e0ae`.
+
+Actual Bun and Node imports at every positive control return Snapshotafter and exact captured physical module path. Norms include postmaterialization Root advance, actual nestedRoot snapshot, scoped namespace symlink and empty scope. The nestedRoot optionalmissing case has requiredAliases empty before import; all four bare and subpath imports fail in both engines. Its projected target is absent and its physical denial package contains only package.json with exact closed exports map dot:null/allsubpaths:null, no executable index or provider body. The method guards exact denial membership/type/bytes/hash and target/capturedmanifest absence. Required aliases also refuse denied entries.
+
+Actual source red3 Nx1 retained Rootbefore imports and failed every then-authored normative captured-body law; it preserves the physical Rootfallback diagnosis. Alias1 and all earlier source/portability negatives remain immutable. The Node importmeta portability correction uses fileURLToPath(import.meta.url) when import.meta.path is unavailable.
+
+Pure exports are materializeCapturedNodeAliasesV1(context,control?) and assertCapturedNodeAliasesV1(proof,control?). Closed context root/snapshot/ticket/capturedManifests/requiredAliases is conserved. Proof adds kind denied and denialHash; all external ordinary/scoped physical targets remain exact. Root directory aliases and disguised Rootworkspace external aliases refuse. No later Rootnamespace freeze is imposed. External package fullbody/runtime custody remains a separate owning guard.
+
+This is source-method admission only; no production or Rootnode_modules writes/compiler/native whole/applicability/publication acceptance. Current Source19 runtime23 Rootalias refusal remains retained. Future Source20 runtime and whole must both use this physical namespace.

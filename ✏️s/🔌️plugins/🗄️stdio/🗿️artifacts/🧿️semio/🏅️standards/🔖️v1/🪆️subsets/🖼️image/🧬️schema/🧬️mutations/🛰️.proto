@@ -3,7 +3,6 @@ syntax = "proto3";
 package semio.s_stdio_semio_image.mutations;
 
 enum SemioImageMutationTag {
-  SET_SNAPSHOT = 0;
   SET_DIMENSIONS = 2;
   SET_COLORSPACE = 3;
   SET_BIT_DEPTH = 4;

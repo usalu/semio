@@ -1,5 +1,6 @@
 //! 🧹️ Consumes complete scene plans one shallow owner or container entry per grant.
 use crate::{FillStyle,StrokeStyle,PathSegment,GradientStop};
+use semio_framework_value::list::PagedList;
 use crate::schema::DrawingSceneGroup;
 use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent,DocumentSceneError};
 use crate::schema::scene_raster::RasterSceneAsset;
@@ -7,7 +8,7 @@ use std::{sync::Arc,vec::IntoIter};
 enum Owner{
  Plan(DocumentScenePlan),Assets(IntoIter<RasterSceneAsset>),Asset(RasterSceneAsset),Nodes(IntoIter<DocumentSceneNode>),Node(DocumentSceneNode),
  Groups(IntoIter<DrawingSceneGroup>),Group(DrawingSceneGroup),Content(DocumentSceneContent),Strings(IntoIter<String>),String(String),Source(Arc<String>),
- Address(Vec<u16>),Segments(Vec<PathSegment>),Fill(FillStyle),Stroke(StrokeStyle),Stops(Vec<GradientStop>),Dash(Vec<f64>),
+ Address(Vec<u16>),Segments(Vec<PathSegment>),Fill(FillStyle),Stroke(StrokeStyle),Stops(PagedList<GradientStop,{usize::MAX}>),Dash(PagedList<f64,{usize::MAX}>),
 }
 #[derive(Clone,Copy,Debug)]
 pub struct ScenePlanCloseProgress{pub phase:&'static str,pub owners:u64,pub work:u64,pub done:bool}

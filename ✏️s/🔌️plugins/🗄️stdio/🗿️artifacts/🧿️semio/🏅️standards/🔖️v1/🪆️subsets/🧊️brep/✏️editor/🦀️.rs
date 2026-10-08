@@ -271,6 +271,8 @@ impl ArtifactEditor for SemioBrepEditor {
 }
 
 impl editing::SnapshotEditingEditor for SemioBrepEditor {
+    fn snapshot_operation_wire_source(mutation: &Self::Mutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> { crate::standards::v1::subsets::brep::io::binary::mutations::prepared_operation_wire_source(mutation) }
+
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command {
             editing::SnapshotEditingCommand::Edit(event) => Some(event),
@@ -281,6 +283,16 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         editing::snapshot_edit_patch(event, snapshot, |patch| SemioBrepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioBrepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
+}
+
+/// 🌱️ Prices the exact Brep wire, routed preparation and both original structural children.
+pub(crate) fn member_preparation_birth_bytes() -> usize {
+    store::operation_wire_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(
+        editing::routed_native_edit_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(
+            Some(preparation::route_birth_bytes()),
+            semio_framework_plugin::bounded_config_store_one_item_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(),
+        ),
+    )
 }
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {

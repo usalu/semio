@@ -1,0 +1,122 @@
+[
+  {
+    "id": "valid-capture",
+    "phase": "admission",
+    "accepted": true
+  },
+  {
+    "id": "missing-bindings",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "missing-pairs",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "duplicate-bindings",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "conflicting-source",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "undeclared-preimage",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "wrong-before-hash",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "root-before-advance",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "root-before-directory",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "negative-before-introduced",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "retained-destination-used",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "valid-sealed-root-advance",
+    "phase": "sealed",
+    "accepted": true
+  },
+  {
+    "id": "valid-sealed-negative-introduced",
+    "phase": "sealed",
+    "accepted": true
+  },
+  {
+    "id": "retained-positive-advance",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "retained-positive-missing",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "retained-negative-introduced",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "duplicate-seed",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "seed-order-advance",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "seed-endpoint-advance",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "seed-physical-advance",
+    "phase": "admission",
+    "accepted": false
+  },
+  {
+    "id": "seed-hash-advance",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "missing-expected-corpus",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "ticket-after-advance",
+    "phase": "sealed",
+    "accepted": false
+  },
+  {
+    "id": "external-after-advance",
+    "phase": "sealed",
+    "accepted": false
+  }
+]

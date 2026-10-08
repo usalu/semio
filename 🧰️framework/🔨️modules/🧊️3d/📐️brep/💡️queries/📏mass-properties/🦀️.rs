@@ -155,6 +155,13 @@ pub fn solid_bounding_box(body: &Body, solid: SolidId) -> Result<AxisAlignedBox,
 /// `error_estimate` is the adaptive refinement's own relative volume-error bound, not a guess.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn solid_mass_properties(body: &Body, solid: SolidId, tol: f64) -> Result<MassProperties, KernelError> {
+    solid_mass_with_area_centroid(body, solid, tol).map(|(mass, _)| mass)
+}
+
+/// 📏 [`solid_mass_properties`] plus the centroid of the solid's boundary surface (the area-weighted mean of
+/// every point on its faces), from the same single quadrature pass.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn solid_mass_with_area_centroid(body: &Body, solid: SolidId, tol: f64) -> Result<(MassProperties, Pnt3), KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity("solid".into()));
     }
@@ -162,24 +169,50 @@ pub fn solid_mass_properties(body: &Body, solid: SolidId, tol: f64) -> Result<Ma
         return Err(KernelError::InvalidInput("tolerance must be positive and finite".into()));
     }
     if let Some(mp) = try_analytic_sphere_mass(body, solid) {
-        return Ok(mp);
+        return Ok((mp, mp.centroid));
     }
     if let Some(mp) = try_analytic_box_properties(body, solid) {
-        return Ok(mp);
+        return Ok((mp, mp.centroid));
     }
     let faces = body.solid_faces(solid);
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
+    let (totals, err) = faces_moments(body, &faces, tol)?;
+    Ok((mass_from_moments(&totals, err)?, area_centroid_from_moments(&totals).unwrap_or(Pnt3::new(0.0, 0.0, 0.0))))
+}
+
+/// 📏 Summed trimmed surface-integral moments of `faces` and their propagated error estimate.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn faces_moments(body: &Body, faces: &[FaceId], tol: f64) -> Result<([f64; MOMENT_COMPONENTS], f64), KernelError> {
     let mut totals = [0.0; MOMENT_COMPONENTS];
     let mut err = 0.0;
-    for face in faces {
+    for &face in faces {
         let (m, e) = face_moments_general(body, face, tol)?;
         for i in 0..MOMENT_COMPONENTS {
             totals[i] += m[i];
         }
         err += e;
     }
+    Ok((totals, err))
+}
+
+/// 📏 Total boundary area held in `totals`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn area_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> f64 {
+    totals[IDX_AREA]
+}
+
+/// 📏 Area-weighted centroid of the surface held in `totals`, `None` for a zero area.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn area_centroid_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> Option<Pnt3> {
+    let area = totals[IDX_AREA];
+    (area.abs() > 1e-300).then(|| Pnt3::new(totals[IDX_AMX] / area, totals[IDX_AMY] / area, totals[IDX_AMZ] / area))
+}
+
+/// 📏 Volume, centroid and centroid inertia held in `totals`; a net-inward orientation is folded into a positive volume.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn mass_from_moments(totals: &[f64; MOMENT_COMPONENTS], err: f64) -> Result<MassProperties, KernelError> {
     let vol_raw = totals[IDX_VOL];
     if vol_raw.abs() < 1e-15 {
         return Err(KernelError::InvalidInput("solid has zero volume".into()));
@@ -218,7 +251,7 @@ fn face_moments_general(body: &Body, face: FaceId, tol: f64) -> Result<([f64; MO
     let mut total = [0.0; MOMENT_COMPONENTS];
     let mut err = 0.0;
     if let Some(outer) = face_ent.outer {
-        let poly = loop_uv_polygon(body, outer, surface, tol)?;
+        let poly = loop_uv_polygon_with(body, outer, surface, tol, true)?;
         let (m, e) = loop_moments(surface, flipped, &poly, tol);
         for i in 0..MOMENT_COMPONENTS {
             total[i] += m[i];
@@ -226,7 +259,7 @@ fn face_moments_general(body: &Body, face: FaceId, tol: f64) -> Result<([f64; MO
         err += e;
     }
     for &inner in &face_ent.inners {
-        let poly = loop_uv_polygon(body, inner, surface, tol)?;
+        let poly = loop_uv_polygon_with(body, inner, surface, tol, true)?;
         let (m, e) = loop_moments(surface, flipped, &poly, tol);
         for i in 0..MOMENT_COMPONENTS {
             total[i] -= m[i];
@@ -436,7 +469,7 @@ pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, 
 /// 📏 `true` when a sample point on either solid's boundary is genuinely `Inside` the other, per
 /// the one authoritative classifier — not a bounding-box or sample-distance proxy for overlap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
+pub(crate) fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
     use crate::brep::engine::PointClassification;
     use crate::brep::queries::classification::point_in_solid;
     for face in body.solid_faces(a) {
@@ -549,7 +582,7 @@ pub fn closest_point_on_solid(body: &Body, solid: SolidId, point: Pnt3) -> Resul
 /// and since `n dA = (du × dv) du dv` exactly (no need to normalize the cross product), each is
 /// just `f(p) · cross` at the sample point — the SAME per-sample machinery serves volume, first
 /// moments (centroid) and second moments (inertia) at once.
-const MOMENT_COMPONENTS: usize = 11;
+pub(crate) const MOMENT_COMPONENTS: usize = 14;
 const IDX_AREA: usize = 0;
 const IDX_VOL: usize = 1;
 const IDX_MX: usize = 2;
@@ -561,6 +594,9 @@ const IDX_JZZ2: usize = 7;
 const IDX_JXY: usize = 8;
 const IDX_JXZ: usize = 9;
 const IDX_JYZ: usize = 10;
+const IDX_AMX: usize = 11;
+const IDX_AMY: usize = 12;
+const IDX_AMZ: usize = 13;
 
 /// 📏 6-point symmetric (degree-4) triangle quadrature rule in barycentric coordinates — exact
 /// for the cubic integrands second moments need on a flat facet, and a stable adaptive-refinement
@@ -575,12 +611,18 @@ const TRI_BARY: [[f64; 3]; 6] = [
 ];
 const TRI_WEIGHT: [f64; 6] = [0.223_381_589_678_011, 0.223_381_589_678_011, 0.223_381_589_678_011, 0.109_951_743_655_322, 0.109_951_743_655_322, 0.109_951_743_655_322];
 
+/// 📏 A signed moment vector followed by the matching absolute-magnitude vector (`Σ w·|term|` per
+/// component) — the magnitudes are the yardstick each component's refinement is judged against, so a
+/// moment whose true value is zero (a symmetric solid's first moment) still converges relative to the
+/// size of its own terms instead of passing on the volume alone.
+const ACCUMULATOR: usize = 2 * MOMENT_COMPONENTS;
+
 /// 📏 Single (non-adaptive) 6-point quadrature pass over one UV triangle.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn quad_triangle_once(surface: &Surface, flipped: bool, tri: [Pnt2; 3]) -> [f64; MOMENT_COMPONENTS] {
+fn quad_triangle_once(surface: &Surface, flipped: bool, tri: [Pnt2; 3]) -> [f64; ACCUMULATOR] {
     let signed_area2 = (tri[1].x - tri[0].x) * (tri[2].y - tri[0].y) - (tri[1].y - tri[0].y) * (tri[2].x - tri[0].x);
     let tri_area = 0.5 * signed_area2.abs();
-    let mut acc = [0.0; MOMENT_COMPONENTS];
+    let mut acc = [0.0; ACCUMULATOR];
     if tri_area < 1e-15 {
         return acc;
     }
@@ -595,17 +637,26 @@ fn quad_triangle_once(surface: &Surface, flipped: bool, tri: [Pnt2; 3]) -> [f64;
             cross = -cross;
         }
         let w = TRI_WEIGHT[k] * tri_area;
-        acc[IDX_AREA] += w * cross.norm();
-        acc[IDX_VOL] += w * (p.x * cross.x + p.y * cross.y + p.z * cross.z) / 3.0;
-        acc[IDX_MX] += w * 0.5 * p.x * p.x * cross.x;
-        acc[IDX_MY] += w * 0.5 * p.y * p.y * cross.y;
-        acc[IDX_MZ] += w * 0.5 * p.z * p.z * cross.z;
-        acc[IDX_JXX2] += w * (p.x * p.x * p.x / 3.0) * cross.x;
-        acc[IDX_JYY2] += w * (p.y * p.y * p.y / 3.0) * cross.y;
-        acc[IDX_JZZ2] += w * (p.z * p.z * p.z / 3.0) * cross.z;
-        acc[IDX_JXY] += w * 0.5 * p.x * p.x * p.y * cross.x;
-        acc[IDX_JXZ] += w * 0.5 * p.x * p.x * p.z * cross.x;
-        acc[IDX_JYZ] += w * 0.5 * p.y * p.y * p.z * cross.y;
+        let area = cross.norm();
+        let mut terms = [0.0; MOMENT_COMPONENTS];
+        terms[IDX_AREA] = area;
+        terms[IDX_AMX] = area * p.x;
+        terms[IDX_AMY] = area * p.y;
+        terms[IDX_AMZ] = area * p.z;
+        terms[IDX_VOL] = (p.x * cross.x + p.y * cross.y + p.z * cross.z) / 3.0;
+        terms[IDX_MX] = 0.5 * p.x * p.x * cross.x;
+        terms[IDX_MY] = 0.5 * p.y * p.y * cross.y;
+        terms[IDX_MZ] = 0.5 * p.z * p.z * cross.z;
+        terms[IDX_JXX2] = (p.x * p.x * p.x / 3.0) * cross.x;
+        terms[IDX_JYY2] = (p.y * p.y * p.y / 3.0) * cross.y;
+        terms[IDX_JZZ2] = (p.z * p.z * p.z / 3.0) * cross.z;
+        terms[IDX_JXY] = 0.5 * p.x * p.x * p.y * cross.x;
+        terms[IDX_JXZ] = 0.5 * p.x * p.x * p.z * cross.x;
+        terms[IDX_JYZ] = 0.5 * p.y * p.y * p.z * cross.y;
+        for i in 0..MOMENT_COMPONENTS {
+            acc[i] += w * terms[i];
+            acc[MOMENT_COMPONENTS + i] += w * terms[i].abs();
+        }
     }
     acc
 }
@@ -618,18 +669,19 @@ fn split_triangle_4(tri: [Pnt2; 3]) -> [[Pnt2; 3]; 4] {
     [[tri[0], m01, m20], [m01, tri[1], m12], [m20, m12, tri[2]], [m01, m12, m20]]
 }
 
-/// 📏 Adaptively refines one UV triangle by quartering until the volume component's relative
-/// change between one refinement level and the next falls below `tol`, or `depth` is exhausted.
-/// Returns the accumulated moments plus a Richardson-style absolute error estimate for the volume
-/// component (the coarse/fine gap at whichever level accepted the result).
+/// 📏 Adaptively refines one UV triangle by quartering until EVERY moment component's change between
+/// one refinement level and the next falls within that component's `budget`, or `depth` is exhausted;
+/// a child inherits a quarter of its parent's budget since it covers a quarter of the area. Returns the
+/// accumulated moments plus a Richardson-style absolute error estimate for the volume component (the
+/// coarse/fine gap at whichever level accepted the result).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn integrate_triangle_adaptive(surface: &Surface, flipped: bool, tri: [Pnt2; 3], tol: f64, depth: u32) -> ([f64; MOMENT_COMPONENTS], f64) {
+fn integrate_triangle_adaptive(surface: &Surface, flipped: bool, tri: [Pnt2; 3], budget: &[f64; MOMENT_COMPONENTS], depth: u32) -> ([f64; ACCUMULATOR], f64) {
     let coarse = quad_triangle_once(surface, flipped, tri);
     let subs = split_triangle_4(tri);
-    let mut fine = [0.0; MOMENT_COMPONENTS];
+    let mut fine = [0.0; ACCUMULATOR];
     for s in &subs {
         let c = quad_triangle_once(surface, flipped, *s);
-        for i in 0..MOMENT_COMPONENTS {
+        for i in 0..ACCUMULATOR {
             fine[i] += c[i];
         }
     }
@@ -637,15 +689,15 @@ fn integrate_triangle_adaptive(surface: &Surface, flipped: bool, tri: [Pnt2; 3],
     if depth == 0 {
         return (fine, local_err);
     }
-    let rel = if fine[IDX_VOL].abs() > 1e-12 { local_err / fine[IDX_VOL].abs() } else { local_err };
-    if rel < tol {
+    if (0..MOMENT_COMPONENTS).all(|i| (fine[i] - coarse[i]).abs() <= budget[i]) {
         (fine, local_err)
     } else {
-        let mut total = [0.0; MOMENT_COMPONENTS];
+        let quarter = budget.map(|b| b / 4.0);
+        let mut total = [0.0; ACCUMULATOR];
         let mut err_sum = 0.0;
         for s in subs {
-            let (r, e) = integrate_triangle_adaptive(surface, flipped, s, tol, depth - 1);
-            for i in 0..MOMENT_COMPONENTS {
+            let (r, e) = integrate_triangle_adaptive(surface, flipped, s, &quarter, depth - 1);
+            for i in 0..ACCUMULATOR {
                 total[i] += r[i];
             }
             err_sum += e;
@@ -656,15 +708,36 @@ fn integrate_triangle_adaptive(surface: &Surface, flipped: bool, tri: [Pnt2; 3],
 
 const ADAPTIVE_MAX_DEPTH: u32 = 6;
 
+/// 📏 Parametric area of one UV triangle.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn uv_triangle_area(tri: &[Pnt2; 3]) -> f64 {
+    0.5 * ((tri[1].x - tri[0].x) * (tri[2].y - tri[0].y) - (tri[1].y - tri[0].y) * (tri[2].x - tri[0].x)).abs()
+}
+
 /// 📏 One loop's surface-integral moments over its ear-clipped UV triangulation — the caller adds
 /// this for the outer loop and subtracts it for each inner (hole) loop to get the face's trimmed
 /// total, exactly mirroring the existing planar `signed_tetra_sum` +outer/-inner pattern.
+///
+/// The loop's total refinement budget is `tol` of each component's summed absolute magnitude (one
+/// coarse pass), shared out between its triangles in proportion to their parametric area, so a sliver
+/// is not held to the relative accuracy of the whole face.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_moments(surface: &Surface, flipped: bool, poly: &[Pnt2], tol: f64) -> ([f64; MOMENT_COMPONENTS], f64) {
+    let triangles = ear_clip(poly);
+    let total_area: f64 = triangles.iter().map(uv_triangle_area).sum();
+    let mut scale = [0.0; MOMENT_COMPONENTS];
+    for tri in &triangles {
+        let coarse = quad_triangle_once(surface, flipped, *tri);
+        for i in 0..MOMENT_COMPONENTS {
+            scale[i] += coarse[MOMENT_COMPONENTS + i];
+        }
+    }
     let mut total = [0.0; MOMENT_COMPONENTS];
     let mut err = 0.0;
-    for tri in ear_clip(poly) {
-        let (m, e) = integrate_triangle_adaptive(surface, flipped, tri, tol, ADAPTIVE_MAX_DEPTH);
+    for tri in triangles {
+        let share = if total_area > 0.0 { uv_triangle_area(&tri) / total_area } else { 0.0 };
+        let budget = scale.map(|magnitude| tol * magnitude * share);
+        let (m, e) = integrate_triangle_adaptive(surface, flipped, tri, &budget, ADAPTIVE_MAX_DEPTH);
         for i in 0..MOMENT_COMPONENTS {
             total[i] += m[i];
         }
@@ -1015,13 +1088,21 @@ fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
 /// see [`coedge_uv_sample`]'s own doc); the 3D-curve fallback already reverses via `t`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_uv_polygon(body: &Body, loop_id: crate::brep::representation::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
+    loop_uv_polygon_with(body, loop_id, surface, chord_tol, false)
+}
+
+/// 📏 [`loop_uv_polygon`] with a choice of boundary sampling: `coarse_pcurves` samples a straight UV p-curve
+/// once per `π/4` of `u` instead of by the 3D chord deviation of its curve, which is exact (a straight UV
+/// segment needs no more) and keeps the mass quadrature's triangulation free of collinear slivers.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_uv_polygon_with(body: &Body, loop_id: crate::brep::representation::arena::LoopId, surface: &Surface, chord_tol: f64, coarse_pcurves: bool) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let mut prev_u: Option<f64> = None;
     let mut prev_was_pole = false;
     let coedges = body.loop_coedges(loop_id);
     for (ci, coedge_id) in coedges.iter().enumerate() {
         let co = body.coedges.get(*coedge_id).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
-        let n = coedge_sample_count(body, co, chord_tol).max(2);
+        let n = coedge_sample_count(body, co, chord_tol, coarse_pcurves).max(2);
         for i in 0..n {
             let s = i as f64 / (n - 1) as f64;
             let mut uv = coedge_uv_sample(body, co, surface, s)?;
@@ -1079,14 +1160,19 @@ fn loop_uv_polygon(body: &Body, loop_id: crate::brep::representation::arena::Loo
 /// two different p-curves can produce for the same shared vertex.
 const UV_WELD: f64 = 1e-12;
 
-/// 📏 Curvature-adaptive point count for one coedge's boundary contribution: exact 2 for a
-/// straight `Line`, chordal-deviation-derived for `Circle`/`Ellipse` (their own radius, or the
+/// 📏 Curvature-adaptive point count for one coedge's boundary contribution: with `coarse_pcurves` a
+/// straight UV p-curve needs a point per `π/4` of `u` (so periodic unwrapping never jumps a seam) and no
+/// more; exact 2 for a straight 3D `Line`, chordal-deviation-derived for `Circle`/`Ellipse` (their own radius, or the
 /// major radius as a conservative upper bound for an ellipse's tighter minor-axis curvature), a
 /// generously fine fixed count for `Nurbs` (no cheap closed-form curvature here; this file's
 /// quadrature is not performance-critical enough to warrant the recursive bisection tessellation's
 /// `sample_curve_adaptive` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_sample_count(body: &Body, co: &crate::brep::representation::topology::Coedge, chord_tol: f64) -> usize {
+fn coedge_sample_count(body: &Body, co: &crate::brep::representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
+    if let (true, Some(crate::brep::representation::curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
+        let turn = dir.x.abs() * (co.prange.1 - co.prange.0).abs();
+        return (turn / std::f64::consts::FRAC_PI_4).ceil().max(1.0) as usize + 1;
+    }
     let Some(edge) = body.edges.get(co.edge) else { return 8 };
     let Some(curve) = body.curves3.get(edge.curve) else { return 8 };
     let (t0, t1) = edge.range;
@@ -1185,7 +1271,7 @@ fn unwrap_u(prev: f64, u: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
+pub(crate) fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     match surface {
         Surface::Plane { frame } => {
             let l = frame.to_local(p);
@@ -1616,8 +1702,6 @@ pub mod oracle {
         Watertight,
         /// 🔮️ At least one boundary edge remains (open shell or non-manifold rim).
         HasBoundaryEdges { count: usize },
-        /// 🔮️ Topology not inspected yet (stub until sew/heal lanes wire real counts).
-        NotChecked,
     }
 
     /// 🔮️ Summary of a watertightness probe for differential tests.
@@ -1626,7 +1710,7 @@ pub mod oracle {
         pub verdict: WatertightnessVerdict,
     }
 
-    /// 🔮️ Stub API: derives a verdict from a pre-counted boundary-edge tally supplied by future topo tests.
+    /// 🔮️ Derives a verdict from a boundary-edge tally.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn watertightness_from_boundary_edge_count(boundary_edges: usize) -> WatertightnessReport {
         let verdict = if boundary_edges == 0 { WatertightnessVerdict::Watertight } else { WatertightnessVerdict::HasBoundaryEdges { count: boundary_edges } };
@@ -1650,12 +1734,6 @@ pub mod oracle {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn watertightness_of_body(body: &Body) -> WatertightnessReport {
         watertightness_from_boundary_edge_count(count_boundary_edges(body))
-    }
-
-    /// 🔮️ Compatibility alias retained for older call sites; prefer [`watertightness_of_body`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn watertightness_stub_unchecked() -> WatertightnessReport {
-        WatertightnessReport { verdict: WatertightnessVerdict::NotChecked }
     }
 
     // #endregion 🔖️Watertightness

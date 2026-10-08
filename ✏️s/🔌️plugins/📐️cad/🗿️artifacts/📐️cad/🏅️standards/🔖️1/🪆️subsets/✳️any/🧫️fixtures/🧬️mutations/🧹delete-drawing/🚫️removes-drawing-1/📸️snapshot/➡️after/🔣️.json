@@ -46,6 +46,7 @@
     }
   },
   "drawings": [],
+  "breps": [],
   "referencesByModelDefinitionId": {
     "spatial.shape": [
       {

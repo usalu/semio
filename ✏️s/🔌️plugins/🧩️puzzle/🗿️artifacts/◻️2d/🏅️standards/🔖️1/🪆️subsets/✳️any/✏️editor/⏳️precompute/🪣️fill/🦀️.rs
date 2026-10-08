@@ -335,7 +335,7 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
         handles,
         ..Default::default()
     };
-    let edge = connect_handles(placement.edge_id.as_str().into(), placement.source_handle_id.as_str().into(), placement.target_handle_id.as_str().into(), Some(placement.edge_kind.as_str().into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
+    let edge = connect_handles(placement.edge_id.as_str().into(), placement.source_handle_id.as_str().into(), placement.target_handle_id.as_str().into(), Some(placement.edge_kind.as_str().into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None);
     Ok([create_node(node, None), edge])
 }
 

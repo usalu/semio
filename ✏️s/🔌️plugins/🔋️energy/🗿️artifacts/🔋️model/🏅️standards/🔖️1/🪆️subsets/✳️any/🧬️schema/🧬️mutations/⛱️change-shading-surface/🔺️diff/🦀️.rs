@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeShadingSurfaceTransmittanceSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, OptionChange, Rows, ShadingSurfacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeShadingSurfaceTransmittanceSchedule, base: &E
     if existing.transmittance_schedule_id == payload.new_transmittance_schedule_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shading surface {} already has this transmittance schedule.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.shading_surfaces.iter_mut().find(|item| item.id == payload.id) {
-        item.transmittance_schedule_id = payload.new_transmittance_schedule_id;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { shading_surfaces: Rows::modifying(ShadingSurfacePatch { transmittance_schedule_id: OptionChange::assign(payload.new_transmittance_schedule_id), ..ShadingSurfacePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

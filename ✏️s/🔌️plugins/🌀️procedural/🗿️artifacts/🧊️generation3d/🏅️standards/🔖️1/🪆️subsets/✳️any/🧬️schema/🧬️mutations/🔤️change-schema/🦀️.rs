@@ -1,8 +1,5 @@
 //! 🔧 `change-schema` payload — document-level scalar: the fixture's own schema version string
 //! (`📓️derivation-rules.md` rule 1's `change-<field>` per remaining scalar).
-//!
-//! Directory kept at its pre-migration `🎛set-schema` path — see `➖remove-widget/🦠️mutation`'s
-//! docstring for why.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;

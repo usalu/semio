@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pairCount",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pairCount": {
+      "const": 33
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": false,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "dag"
+            },
+            "pairCount": {
+              "const": 15
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "world"
+            },
+            "pairCount": {
+              "const": 10
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "renderer"
+            },
+            "pairCount": {
+              "const": 1
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "smoke"
+            },
+            "pairCount": {
+              "const": 1
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "ui"
+            },
+            "pairCount": {
+              "const": 1
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "pairCount",
+            "receipt"
+          ],
+          "properties": {
+            "role": {
+              "const": "notice"
+            },
+            "pairCount": {
+              "const": 5
+            },
+            "receipt": {
+              "type": "string",
+              "pattern": "^🗑️generated/(?:[^./\\\\]+/)+admission\\.json$"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

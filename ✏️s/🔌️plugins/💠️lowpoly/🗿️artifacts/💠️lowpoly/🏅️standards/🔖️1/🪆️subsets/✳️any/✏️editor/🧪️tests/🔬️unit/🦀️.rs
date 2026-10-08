@@ -255,7 +255,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         uninterrupted
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                command: &command,
+                snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -276,7 +276,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         replayed
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                command: &command,
+                snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -291,7 +291,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         replayed
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                command: &command,
+                snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -306,12 +306,12 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
         .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-            command: &command,
+            snapshot_owner: None, command: &command,
             snapshot: &snapshot,
             config: &config,
             history: &history,
@@ -324,7 +324,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     assert!(matches!(
         rejected
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                command: &command,
+                snapshot_owner: None, command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,

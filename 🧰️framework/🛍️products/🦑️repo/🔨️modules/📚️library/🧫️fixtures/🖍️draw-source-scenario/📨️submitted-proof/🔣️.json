@@ -38,9 +38,7 @@
     "bunTimeoutMs": 120000,
     "testName": "rejects ignored and unplanned residual children in a projected source owner without following links",
     "runner": "runTestBudgeted",
-    "extraArguments": false,
-    "launchName": "🧹clean🧩️taxonomy🧪️artifact-source-residue",
-    "launchOrder": 410.194
+    "extraArguments": false
   },
   "unsignedPlan": {
     "schemaVersion": 2,

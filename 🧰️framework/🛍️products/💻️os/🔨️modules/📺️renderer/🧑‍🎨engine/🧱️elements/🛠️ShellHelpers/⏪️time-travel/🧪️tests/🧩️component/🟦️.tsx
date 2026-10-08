@@ -119,10 +119,11 @@ describe("⏪️ time-travel band corpus", () => {
       for (const locale of LOCALES) {
         const { session } = entry;
         const target = session.targetLabel === undefined ? null : session.targetLabel.native[locale];
+        const progress = (session.stage === "editing" || session.stage === "replaying") && session.total !== undefined ? corpusLabel(session.stage === "editing" ? "ui.timeTravel.preparationProgress" : "ui.timeTravel.progress", locale, { done: session.done ?? 0, total: session.total }) : null;
         expect(entry.text[locale], `${entry.name} (${locale}): every line is a label of the table`).toEqual({
           stage: corpusLabel(`ui.timeTravel.stage.${session.stage}`, locale),
           target: target === null ? null : corpusLabel("ui.timeTravel.target", locale, { target }),
-          progress: (session.stage === "editing" || session.stage === "replaying") && session.total !== undefined ? corpusLabel(session.stage === "editing" ? "ui.timeTravel.preparationProgress" : "ui.timeTravel.progress", locale, { done: session.done ?? 0, total: session.total }) : null,
+          progress: progress !== null && session.processed !== undefined ? `${progress} · ${corpusLabel("ui.timeTravel.processed", locale, { processed: session.processed })}` : progress,
           review: session.stage === "reviewing" && session.review !== undefined ? corpusLabel(`ui.timeTravel.review.${session.review}`, locale) : null,
           outcome: session.worst === undefined ? null : corpusLabel("ui.timeTravel.worst", locale, { level: corpusLabel(`ui.mutation.level.${session.worst}`, locale) }),
           fault: session.fault === undefined ? null : corpusLabel(HISTORY_REFUSAL_LABEL_KEYS[historyRefusalCodeV1(session.fault) ?? "timeTravel.replay-faulted"], locale),
@@ -162,6 +163,7 @@ describe("⏪️ time-travel band corpus", () => {
         expect(buttons.map((button) => [button.dataset.semioTimeTravelControl, button.id]), entry.name).toEqual(entry.controls.map((row) => [row.control, row.controlId]));
         expect(buttons.map((button) => [button.textContent, button.getAttribute("aria-disabled"), describedBy(button) || null, computeAccessibleDescription(button) || null]), `${entry.name} (${locale})`).toEqual(entry.controls.map((row) => { const reason = row.disabledBy === null ? null : String(shellLabel(row.disabledBy as Parameters<typeof shellLabel>[0])); return [String(shellLabel(`ui.timeTravel.${row.control}` as Parameters<typeof shellLabel>[0])), reason === null ? null : "true", reason, reason]; }));
         expect(buttons.map((button) => [button.disabled, button.hasAttribute("title"), button.tabIndex >= 0]), `${entry.name} (${locale}): a refused control stays reachable — never the disabled attribute, never a title`).toEqual(entry.controls.map(() => [false, false, true]));
+        if (entry.session.processed !== undefined) process.stdout.write(`[DEBUG] history processed React band locale=${locale} completed=${entry.session.processed} text=${status.textContent?.replace(/\s+/gu, " ").trim()}\n`);
         view.unmount();
       }
     }
@@ -1511,9 +1513,9 @@ describe("📡️ a history change replaying before adoption is announced outsid
   it("announces a replay when it starts, a pause or a refusal when it happens, and never every progress step", () => {
     const view = mountStatus({ done: 1, total: 240, kind: "step" }, "en");
     const announced = () => view.container.querySelector('[role="status"]')?.textContent;
-    expect(announced()).toBe("History step: Replaying history: 1 of 240 mutations");
+    expect(announced()).toBe("History step: Replaying history: 1 of 240 steps");
     view.rerender(createElement(HistoryReprojectionStatus, { reprojection: { done: 120, total: 240, kind: "step" }, locale: "en", sessionOpen: false, controllerId: controller, onAction: () => {} }));
-    expect([announced(), view.container.querySelector("[data-semio-history-reprojection-text]")?.textContent, view.container.querySelector("progress")?.getAttribute("aria-valuetext")]).toEqual(["History step: Replaying history: 1 of 240 mutations", "Replaying history: 120 of 240 mutations", "Replaying history: 120 of 240 mutations"]);
+    expect([announced(), view.container.querySelector("[data-semio-history-reprojection-text]")?.textContent, view.container.querySelector("progress")?.getAttribute("aria-valuetext")]).toEqual(["History step: Replaying history: 1 of 240 steps", "Replaying history: 120 of 240 steps", "Replaying history: 120 of 240 steps"]);
     view.rerender(createElement(HistoryReprojectionStatus, { reprojection: { done: 0, total: 0, kind: "step", fault: "history.step-blocked" }, locale: "en", sessionOpen: false, controllerId: controller, onAction: () => {} }));
     expect(announced()).toBe("History step: History step refused: Later mutations would end with errors — fix or withdraw them first.");
   });

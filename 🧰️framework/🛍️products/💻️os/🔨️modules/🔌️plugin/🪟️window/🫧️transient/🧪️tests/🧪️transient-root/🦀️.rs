@@ -46,7 +46,7 @@ fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
     assert_eq!(ProbeTransientMutation::parse_op(&text).expect("the text parses"), mutation);
     assert_eq!(ProbeTransientMutation::decode_op(&mutation.encode_op().expect("encodes")).expect("decodes"), mutation);
     let base = ProbeTransient { label: "base".into(), count: 1 };
-    assert_eq!(mutation.diff(&base).diff().apply(&base).expect("applies"), probe(), "the root is replaced whole");
+    assert_eq!(protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("applies"), probe(), "the root is replaced whole");
     assert_eq!(mutation.inverse(&base).expect("inverts"), vec![ProbeTransientMutation::Snapshot { transient: base }], "the inverse restores the base");
     assert_eq!(mutation.descriptor().semantic_kind, "set-window-transient");
     assert!(ProbeTransientMutation::parse_op(r#"{"kind":"snapshot","transient":{"label":"x","count":1,"count":2}}"#).is_err(), "a repeated member is refused");

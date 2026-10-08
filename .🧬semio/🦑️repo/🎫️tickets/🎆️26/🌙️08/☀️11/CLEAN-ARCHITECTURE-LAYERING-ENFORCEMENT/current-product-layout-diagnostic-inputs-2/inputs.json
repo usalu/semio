@@ -1,0 +1,9 @@
+{
+  "epochDirectory": "\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-14/product",
+  "binaryMetadata": "artifacts/semio-nextest-9TmLAG/binaries-metadata.json",
+  "caseSuffixes": [
+    "engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack",
+    "kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack",
+    "admitted_surface_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack"
+  ]
+}

@@ -4,16 +4,18 @@ use super::ScaleAssets;
 use crate::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
-pub fn inverse(payload: &ScaleAssets, _base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    fn reciprocal(value: f64) -> f64 {
-        if value.abs() < 1e-8 {
-            1.0
-        } else {
-            1.0 / value
-        }
+fn reciprocal(value: f64) -> f64 {
+    if value.abs() < 1e-8 {
+        1.0
+    } else {
+        1.0 / value
     }
-    vec![ShootingMutation::ScaleAssets(ScaleAssets { asset_ids: payload.asset_ids.clone(), sx: reciprocal(payload.sx), sy: reciprocal(payload.sy), sz: reciprocal(payload.sz) })]
+}
 
-    })())
+pub fn inverse(payload: &ScaleAssets, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    let asset_ids: Vec<String> = base.assets.iter().filter(|asset| payload.asset_ids.contains(&asset.id)).map(|asset| asset.id.clone()).collect();
+    Ok(match asset_ids.is_empty() {
+        true => Vec::new(),
+        false => vec![ShootingMutation::ScaleAssets(ScaleAssets { asset_ids, sx: reciprocal(payload.sx), sy: reciprocal(payload.sy), sz: reciprocal(payload.sz) })],
+    })
 }

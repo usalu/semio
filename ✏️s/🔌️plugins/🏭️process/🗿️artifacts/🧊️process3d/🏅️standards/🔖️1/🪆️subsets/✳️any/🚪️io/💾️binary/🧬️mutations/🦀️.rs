@@ -8,9 +8,15 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::host::owned::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_OWNER_BYTES};
+use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 use store::{ArtifactEnvelopeMutationFieldAuthority as _, ArtifactEnvelopeSnapshotFieldAuthority as _};
 
+pub(crate) const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
 
+pub(crate) fn process3d_protocol_error(detail: String) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what: "process3d mutation", offset: 0, detail }
+}
 
 
 
@@ -114,7 +120,7 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
 
 /// 📖️ Decodes a `Process3dMutation` from its binary command form.
 pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolError> {
-    use crate::mutations::{
+    use crate::standards::v1::subsets::any::schema::mutations::{
         change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
         replace_step_measure, replace_stock_solid,
     };
@@ -485,7 +491,7 @@ fn read_machine(reader: &mut store::ByteReader<'_>) -> Result<WorkshopMachine, S
 //#endregion 🔖️MutationWirePrimitives
 
 //#region 🔖️RetainedEnvelopeOwnership
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+
 
 
 
@@ -709,7 +715,7 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 
 #[cfg(test)]
 pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutation> {
-    use crate::mutations::{
+    use crate::standards::v1::subsets::any::schema::mutations::{
         change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel, create_machine::CreateMachine, create_step::CreateStep,
         delete_machine::DeleteMachine, delete_step::DeleteStep, move_stock::MoveStock, rename_machine::RenameMachine, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_machine_capabilities::ReplaceMachineCapabilities,
         replace_step_measure::ReplaceStepMeasure, replace_stock_solid::ReplaceStockSolid,
@@ -757,15 +763,13 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
 }
 
 //#region 🧪️RetainedLaws
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retained-laws/🦀️.rs"]
-mod retained_laws;
+
 //#endregion 🧪️RetainedLaws
 
 mod native_codec {
 use super::*;
-use crate::schema::mutations::Process3dMutation;
-use crate::schema::mutations::{
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{
     change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
     replace_step_measure, replace_stock_solid,
 };

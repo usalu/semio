@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-asset/🗑️removes/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("delete-asset diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("delete-asset diff applies")
 }
 
 /// ▶️ `delete-asset` drops "asset-prop" from `assets` and cascades nowhere: the shots, the saved
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_second_delete_is_target_missing() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Error), "delete-asset/removes-trailing-asset-prop: deleting an absent asset is an Error, not a warning");
     assert_eq!(second.messages()[0].code.0, "mutation.target-missing", "delete-asset/removes-trailing-asset-prop: the absence guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["asset-prop".to_string()], "delete-asset/removes-trailing-asset-prop: the missing target is named");
-    let unchanged = second.into_parts().0.apply(&expected_after()).expect("an Error outcome carries the default diff");
+    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("an Error outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "delete-asset/removes-trailing-asset-prop: a rejected delete must leave the snapshot untouched");
 }
 
@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-asset/removes-trailing-asset-prop: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["assets"]["removed"][0], "asset-prop", "delete-asset/removes-trailing-asset-prop: a delete is an id, never a record");
+    assert_eq!(committed["assets"]["edits"][0]["id"], "asset-prop", "delete-asset/removes-trailing-asset-prop: a delete is an id, never a record");
     assert!(committed["assets"]["patched"].as_array().expect("patched is an array").is_empty(), "delete-asset/removes-trailing-asset-prop: nothing is patched on the way out");
     assert!(committed["shots"].is_null() && committed["activeAssetId"].is_null(), "delete-asset/removes-trailing-asset-prop: the diff performs no referential cascade at all");
 }
@@ -110,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-asset/removes-trailing-asset-prop: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

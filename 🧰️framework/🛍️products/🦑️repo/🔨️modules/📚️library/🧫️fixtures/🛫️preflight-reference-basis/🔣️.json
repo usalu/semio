@@ -62,9 +62,6 @@
   "execution": {
     "target": "test-preflight-reference-basis",
     "command": "bun ./📜️script.ts test preflight-reference-basis",
-    "launchName": "🧹clean🧩️taxonomy🛫️preflight-reference-basis",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-preflight-reference-basis --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.16
+    "cache": false
   }
 }

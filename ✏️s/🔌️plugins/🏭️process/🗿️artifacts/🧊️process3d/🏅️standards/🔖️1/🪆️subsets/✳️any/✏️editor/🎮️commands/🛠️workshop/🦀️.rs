@@ -2,12 +2,13 @@
 
 use crate::editor::process3d::catalog_machine;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::mutations::change_machine_icon::ChangeMachineIcon;
-use crate::mutations::create_machine::CreateMachine;
-use crate::mutations::delete_machine::DeleteMachine;
-use crate::mutations::rename_machine::RenameMachine;
-use crate::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::{op::Process3dMutation, Process3dSnapshot, WorkshopMachine};
+use crate::standards::v1::subsets::any::schema::mutations::change_machine_icon::ChangeMachineIcon;
+use crate::standards::v1::subsets::any::schema::mutations::create_machine::CreateMachine;
+use crate::standards::v1::subsets::any::schema::mutations::delete_machine::DeleteMachine;
+use crate::standards::v1::subsets::any::schema::mutations::rename_machine::RenameMachine;
+use crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{Process3dSnapshot, WorkshopMachine};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

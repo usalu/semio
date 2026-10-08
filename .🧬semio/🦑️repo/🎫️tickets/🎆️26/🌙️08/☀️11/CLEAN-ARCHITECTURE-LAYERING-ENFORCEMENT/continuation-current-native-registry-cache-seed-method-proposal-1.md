@@ -1,0 +1,9 @@
+# Current Native Registry Compiler Cache Seed Proposal
+
+Fresh original whole commands still compile/fingerprint and execute their complete current suites. The proposed optimization only supplies ordinary Cargo registry package artifacts from the preserved epoch11 target to the new epoch12 target; no source model, Root-owned package, owner-command cache, test result or acceptance proof is copied.
+
+Admission would require complete current ordinary/locked metadata, unchanged prepared workspace/profile/control/toolchain and lock bodies, identical registry package identity/source/checksum/resolve feature records for eligible names, and refusal of every name also belonging to a source-null/Root-owned package. Copy only eligible `target/debug/build/<package>/...` slots and preserve exact file/directory timestamps, physical bytes and regular types. Unknown slot names and links refuse. Do not copy top-level owner cache, build locks, incremental Root code or native binaries. Cargo retains responsibility for current effective features, build-script/environment fingerprints and necessary rebuilds; metadata feature unions are not claimed to prove an actual compiled unit feature set.
+
+Actual source slot body hashes and destination readbacks are retained in a fresh immutable generated receipt, with chunked progress/cancellation. Existing artifacts remain unchanged. A new ticket-local script/Nx/GUI method and normative/adversarial classification/control tests must be authored and independently admitted before use. No seed command or cache write has occurred.
+
+Fresh whole execution and actual selected compiler depfile/output/input closure remain mandatory regardless of cache hits. External registry metadata/checksum graph is qualified separately from full registry source custody. This proposal does not substitute historical owning results or fabricate a successful current native run.

@@ -904,18 +904,7 @@
             "volume": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -1194,18 +1183,7 @@
         "rect": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -1307,18 +1285,7 @@
         "color": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         },
         "appearance": {
@@ -1519,18 +1486,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -1557,18 +1513,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1612,18 +1557,7 @@
             "points": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -1648,18 +1582,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1670,18 +1593,7 @@
             "leaderLength": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -1709,18 +1621,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1733,18 +1634,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1770,18 +1660,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1794,18 +1673,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1829,18 +1697,7 @@
             "vertices": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "interiorColor": {
@@ -1848,18 +1705,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1882,18 +1728,7 @@
             "vertices": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "lineEndings": {
@@ -1916,18 +1751,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -1950,18 +1774,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -1979,18 +1792,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2008,18 +1810,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2037,18 +1828,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -2089,18 +1869,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2136,18 +1905,7 @@
               "items": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               }
             }
@@ -2476,18 +2234,7 @@
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "interiorColor": {
@@ -2495,18 +2242,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -2681,18 +2417,7 @@
       "type": "object",
       "properties": {
         "width": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "style": {
           "anyOf": [
@@ -2709,18 +2434,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -2743,18 +2457,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 2,
               "maxItems": 2
@@ -2881,18 +2584,7 @@
           "$ref": "#/$defs/PdfFontDescriptor"
         },
         "defaultWidth": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "widths": {
           "type": "array",
@@ -2905,18 +2597,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 2,
               "maxItems": 2
@@ -3082,18 +2763,7 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "minItems": 3,
             "maxItems": 3
@@ -3115,18 +2785,7 @@
         "widths": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         }
       },
@@ -3201,18 +2860,7 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3222,18 +2870,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3246,18 +2883,7 @@
             "gamma": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3279,18 +2905,7 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3300,18 +2915,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3326,18 +2930,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3352,18 +2945,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 9,
                   "maxItems": 9
@@ -3388,18 +2970,7 @@
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3409,18 +2980,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3435,18 +2995,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -3494,18 +3043,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -3826,18 +3364,7 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3847,18 +3374,7 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3868,18 +3384,7 @@
             "zoom": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3911,18 +3416,7 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3943,18 +3437,7 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -3975,18 +3458,7 @@
             "rect": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -4017,18 +3489,7 @@
             "top": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4049,18 +3510,7 @@
             "left": {
               "anyOf": [
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 },
                 {
                   "type": "null"
@@ -4356,18 +3806,7 @@
         "lineWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4450,18 +3889,7 @@
         "miterLimit": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4483,33 +3911,11 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               ],
               "minItems": 2,
@@ -4612,18 +4018,7 @@
                   "type": "string"
                 },
                 {
-                  "type": "object",
-                  "semioPrimitive": "binary64",
-                  "properties": {
-                    "bits": {
-                      "type": "string",
-                      "pattern": "^[0-9a-f]{16}$"
-                    }
-                  },
-                  "required": [
-                    "bits"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                 }
               ],
               "minItems": 2,
@@ -4686,18 +4081,7 @@
         "strokeAlpha": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4718,18 +4102,7 @@
         "fillAlpha": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4788,18 +4161,7 @@
         "flatness": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4820,18 +4182,7 @@
         "smoothness": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4985,107 +4336,30 @@
         "fontBbox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4
         },
         "italicAngle": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "ascent": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "descent": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "capHeight": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "stemV": {
-          "type": "object",
-          "semioPrimitive": "binary64",
-          "properties": {
-            "bits": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{16}$"
-            }
-          },
-          "required": [
-            "bits"
-          ],
-          "additionalProperties": false
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
         },
         "stemH": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5095,18 +4369,7 @@
         "xHeight": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5116,18 +4379,7 @@
         "leading": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5137,18 +4389,7 @@
         "avgWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5158,18 +4399,7 @@
         "maxWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5179,18 +4409,7 @@
         "missingWidth": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5220,18 +4439,7 @@
         "fontWeight": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5280,18 +4488,7 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "descriptor": {
@@ -5342,18 +4539,7 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "descriptor": {
@@ -5394,18 +4580,7 @@
             "fontMatrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -5413,18 +4588,7 @@
             "fontBbox": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -5439,18 +4603,7 @@
             "widths": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "charProcs": {
@@ -5987,18 +5140,7 @@
         "bbox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -6017,18 +5159,7 @@
         "matrix": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 6,
           "maxItems": 6,
@@ -6141,35 +5272,13 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "size": {
@@ -6199,18 +5308,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -6223,18 +5321,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -6268,18 +5355,7 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
@@ -6287,18 +5363,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -6309,50 +5374,17 @@
             "c0": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "n": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -6372,18 +5404,7 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
@@ -6391,18 +5412,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -6419,35 +5429,13 @@
             "bounds": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "encode": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -6468,35 +5456,13 @@
             "domain": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "code": {
@@ -6589,18 +5555,7 @@
         "decode": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "x-semio-ui": {
             "label": {
@@ -6703,18 +5658,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -7158,18 +6102,7 @@
         "decode": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           }
         },
         "interpolate": {
@@ -7300,18 +6233,7 @@
         "opacity": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -7734,18 +6656,7 @@
               "const": "setLineWidth"
             },
             "width": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -7790,18 +6701,7 @@
               "const": "setMiterLimit"
             },
             "limit": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -7818,33 +6718,11 @@
             "array": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "phase": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -7875,18 +6753,7 @@
               "const": "setFlatness"
             },
             "flatness": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -7940,18 +6807,7 @@
             "matrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -7969,32 +6825,10 @@
               "const": "moveTo"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8010,32 +6844,10 @@
               "const": "lineTo"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8051,88 +6863,22 @@
               "const": "curveTo"
             },
             "x1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8152,60 +6898,16 @@
               "const": "curveToInitial"
             },
             "x2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y2": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8223,60 +6925,16 @@
               "const": "curveToFinal"
             },
             "x1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y1": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "x3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y3": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8305,60 +6963,16 @@
               "const": "rectangle"
             },
             "x": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "width": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "height": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8519,18 +7133,7 @@
               "const": "setCharSpacing"
             },
             "spacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8545,18 +7148,7 @@
               "const": "setWordSpacing"
             },
             "spacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8571,18 +7163,7 @@
               "const": "setHorizontalScale"
             },
             "scale": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8597,18 +7178,7 @@
               "const": "setLeading"
             },
             "leading": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8626,18 +7196,7 @@
               "type": "string"
             },
             "size": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8669,18 +7228,7 @@
               "const": "setTextRise"
             },
             "rise": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8695,32 +7243,10 @@
               "const": "moveText"
             },
             "tx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ty": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8736,32 +7262,10 @@
               "const": "moveTextSetLeading"
             },
             "tx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ty": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8779,18 +7283,7 @@
             "matrix": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -8867,32 +7360,10 @@
               "const": "nextLineShowTextSpaced"
             },
             "wordSpacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "charSpacing": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "text": {
               "$ref": "#/$defs/PdfTextString"
@@ -8912,32 +7383,10 @@
               "const": "setGlyphWidth"
             },
             "wx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "wy": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -8953,88 +7402,22 @@
               "const": "setGlyphWidthAndBox"
             },
             "wx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "wy": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "llx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "lly": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "urx": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "ury": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9086,18 +7469,7 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -9115,18 +7487,7 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "pattern": {
@@ -9154,18 +7515,7 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             }
           },
@@ -9183,18 +7533,7 @@
             "components": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "pattern": {
@@ -9220,18 +7559,7 @@
               "const": "setStrokeGray"
             },
             "gray": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9246,18 +7574,7 @@
               "const": "setFillGray"
             },
             "gray": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9272,46 +7589,13 @@
               "const": "setStrokeRgb"
             },
             "r": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "g": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "b": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9328,46 +7612,13 @@
               "const": "setFillRgb"
             },
             "r": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "g": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "b": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9384,60 +7635,16 @@
               "const": "setStrokeCmyk"
             },
             "c": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "m": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "k": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9455,60 +7662,16 @@
               "const": "setFillCmyk"
             },
             "c": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "m": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "y": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "k": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [
@@ -9890,18 +8053,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 3,
               "maxItems": 3
@@ -10085,18 +8237,7 @@
         "mediaBox": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 4,
           "maxItems": 4,
@@ -10118,18 +8259,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10156,18 +8286,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10194,18 +8313,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10232,18 +8340,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10284,18 +8381,7 @@
         "userUnit": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10408,18 +8494,7 @@
         "duration": {
           "anyOf": [
             {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10622,18 +8697,7 @@
         "matrix": {
           "type": "array",
           "items": {
-            "type": "object",
-            "semioPrimitive": "binary64",
-            "properties": {
-              "bits": {
-                "type": "string",
-                "pattern": "^[0-9a-f]{16}$"
-              }
-            },
-            "required": [
-              "bits"
-            ],
-            "additionalProperties": false
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
           },
           "minItems": 6,
           "maxItems": 6,
@@ -10692,49 +8756,16 @@
             "bbox": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
             },
             "xStep": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "yStep": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             },
             "content": {
               "type": "array",
@@ -10867,18 +8898,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             {
@@ -10901,18 +8921,7 @@
             {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -10979,18 +8988,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -11005,18 +9003,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 6,
                   "maxItems": 6
@@ -11044,18 +9031,7 @@
             "coords": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 4,
               "maxItems": 4
@@ -11065,18 +9041,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -11114,18 +9079,7 @@
             "coords": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               },
               "minItems": 6,
               "maxItems": 6
@@ -11135,18 +9089,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -11218,18 +9161,7 @@
             "decode": {
               "type": "array",
               "items": {
-                "type": "object",
-                "semioPrimitive": "binary64",
-                "properties": {
-                  "bits": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{16}$"
-                  }
-                },
-                "required": [
-                  "bits"
-                ],
-                "additionalProperties": false
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
               }
             },
             "function": {
@@ -11334,18 +9266,7 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "semioPrimitive": "binary64",
-                    "properties": {
-                      "bits": {
-                        "type": "string",
-                        "pattern": "^[0-9a-f]{16}$"
-                      }
-                    },
-                    "required": [
-                      "bits"
-                    ],
-                    "additionalProperties": false
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
                   }
                 },
                 {
@@ -11592,18 +9513,7 @@
               "const": "adjust"
             },
             "amount": {
-              "type": "object",
-              "semioPrimitive": "binary64",
-              "properties": {
-                "bits": {
-                  "type": "string",
-                  "pattern": "^[0-9a-f]{16}$"
-                }
-              },
-              "required": [
-                "bits"
-              ],
-              "additionalProperties": false
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
             }
           },
           "required": [

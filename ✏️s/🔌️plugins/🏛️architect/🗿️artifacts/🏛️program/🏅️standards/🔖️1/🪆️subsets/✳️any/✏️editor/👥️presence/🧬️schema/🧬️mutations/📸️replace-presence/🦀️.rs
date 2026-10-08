@@ -13,11 +13,18 @@ pub struct ReplacePresence {
 
 impl protocol::MutationKind<ArchitectPresence, ArchitectPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
-    fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresence> {
+    fn diff(&self, base: &ArchitectPresence) -> protocol::MutationOutcome<ArchitectPresenceDiff> {
         if &self.presence == base {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Requested presence already matches.");
+            return protocol::MutationOutcome::new(ArchitectPresenceDiff::default()).warning("mutation.no-op", "Requested presence already matches.");
         }
-        protocol::MutationOutcome::new(self.presence.clone())
+        let requested = &self.presence;
+        protocol::MutationOutcome::new(ArchitectPresenceDiff {
+            active_register: (base.active_register != requested.active_register).then(|| requested.active_register.clone()),
+            adjacency_kind_filter: (base.adjacency_kind_filter != requested.adjacency_kind_filter).then(|| AdjacencyKindFilterSet { value: requested.adjacency_kind_filter.clone() }),
+            graph_camera_x: (base.graph_camera_x != requested.graph_camera_x).then_some(requested.graph_camera_x),
+            graph_camera_y: (base.graph_camera_y != requested.graph_camera_y).then_some(requested.graph_camera_y),
+            graph_camera_zoom: (base.graph_camera_zoom != requested.graph_camera_zoom).then_some(requested.graph_camera_zoom),
+        })
     }
     fn inverse(&self, base: &ArchitectPresence) -> Result<Vec<ArchitectPresenceMutation>, semio_framework_value::ValueError> {
     Ok((|| {

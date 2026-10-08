@@ -13,6 +13,7 @@
 //! glue-mounted siblings.
 
 use crate::{LayoutDiff, LayoutSnapshot};
+use crate::standards::v1::subsets::any::io::text::mutations::{bridge_decode_pair, bridge_render};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "root": "/Users/ueli/Documents/semio",
+  "ticket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT",
+  "owners": [
+    {
+      "epoch": 14,
+      "planPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-14/ui/plan.json",
+      "planHash": "f98a1a1b4aec40b9e0f01ebb3b4d0ead2d84f003ffdb565f520c9d139ac35689",
+      "metadataPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-14/ui/artifacts/semio-nextest-f901sQ/binaries-metadata.json",
+      "metadataHash": "25f16a7ceba2bf1760145450708ac680a75ad5a4e085d70bddcc64db612ed121",
+      "binary": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-14/ui/target/debug/build/semio-framework-ui/2e3f97b221188c93/out/semio_framework_ui-2e3f97b221188c93",
+      "binaryHash": "31bed992138537ba4f16050f27e2ae2d392a8992e6b348a41ef1cbf27c9d965b",
+      "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-14/ui/snapshot",
+      "initialSnapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-14/ui/initial-captured-input"
+    },
+    {
+      "epoch": 11,
+      "planPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/plan.json",
+      "planHash": "4055b485fb3b3005296a8109b1839a4b68e5daf52b6b5a4a9d3f94e2a58d18a9",
+      "metadataPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/artifacts/semio-nextest-oPViqL/binaries-metadata.json",
+      "metadataHash": "da6cf8c048d2ed31c914a65679cf14aaea80f456541e6de3df532472d7695461",
+      "binary": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/target/debug/build/semio-framework-ui/2e3f97b221188c93/out/semio_framework_ui-2e3f97b221188c93",
+      "binaryHash": "71652302816e4b139f5e045341e880d5d45a22e321476c7586b2669f2959124d",
+      "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/snapshot",
+      "initialSnapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/initial-captured-input"
+    }
+  ],
+  "types": [
+    "UiSurfaceSlot",
+    "UiSurfaceRegistry",
+    "UiWindow",
+    "RetainedCloneGrant",
+    "RetainedCloneProgress",
+    "UiDocumentIngress",
+    "UiDocumentReconcileCursor",
+    "MountedLayoutJob",
+    "MountedLayoutResult",
+    "RetainedPaintFrame"
+  ]
+}

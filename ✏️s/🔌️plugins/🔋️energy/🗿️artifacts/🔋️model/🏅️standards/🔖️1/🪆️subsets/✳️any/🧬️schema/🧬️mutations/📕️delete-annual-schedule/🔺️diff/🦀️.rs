@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteAnnualSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, AnnualSchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -28,8 +28,6 @@ pub fn diff(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot) -
     {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Schedule {} is still referenced by the document.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.schedules.annual.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { annual: Rows::removing(&base.model.schedules.annual, &payload.id), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

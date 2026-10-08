@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "required": [
+    "blockingCalls",
+    "driverCalls",
+    "driverDefinitions",
+    "canonicalBlockingCalls"
+  ],
+  "properties": {
+    "blockingCalls": {
+      "const": 1
+    },
+    "driverCalls": {
+      "const": 3
+    },
+    "driverDefinitions": {
+      "const": 1
+    },
+    "canonicalBlockingCalls": {
+      "const": 1
+    }
+  },
+  "additionalProperties": false
+}

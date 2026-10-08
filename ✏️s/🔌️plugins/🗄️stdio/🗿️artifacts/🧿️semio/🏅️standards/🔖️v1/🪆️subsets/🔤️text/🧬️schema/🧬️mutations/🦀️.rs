@@ -35,13 +35,10 @@ use super::reorder_runs;
 /// (`extern crate semio_framework_os_kernel as dsl;`), the same spelling every other stdio subset's
 /// eventual `dsl::Mutations` derive uses (confirmed against `din4108`'s already-compiling facet,
 /// this ticket's binding reference).
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text")]
 pub enum SemioTextMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     InsertRun(insert_run::InsertRun),
     RemoveRun(remove_run::RemoveRun),
     EditRun(edit_run::EditRun),
@@ -56,24 +53,22 @@ pub enum SemioTextMutation {
 /// `🔤️mutate-semio-text`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
+pub const KINDS: &[&str] = &["insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioTextBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_text_mutation(snapshot: &mut SemioTextSnapshot, mutation: &SemioTextMutation) -> protocol::MutationOutcome<SemioTextDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
+    <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🔤️mutate-semio-text` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_text_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
     Ok({

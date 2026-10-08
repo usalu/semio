@@ -97,7 +97,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
         _ => unreachable!("retained Drawing fixture group remains exact"),
     };
     snapshot.layers.push(group);
-    snapshot.assets.insert("image-a".into(), crate::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
+    snapshot.assets.insert(semio_framework_value::paged::PagedUtf8::from("image-a"), crate::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let mutation = DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone().into(), new_name: "Retained Path".into() });
@@ -832,13 +832,13 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     assert_eq!(second_layer_count, before + 2, "two retained-owner gestures publish two layers; first=[{first_observation}] second=[{second_observation}]");
     assert!(third_reset, "identical-geometry PointerUp returns its exact drawing-composite utility to Direct Select: {third_observation}");
     assert_eq!(projection.layers.len(), before + 3, "a separate identical-geometry creation still publishes a third layer; second=[{second_observation}] third=[{third_observation}]");
-    let [DrawingLayerNode::Shape(first), DrawingLayerNode::Shape(second), DrawingLayerNode::Shape(third)] = &projection.layers[before..] else {
+    let [DrawingLayerNode::Shape(first), DrawingLayerNode::Shape(second), DrawingLayerNode::Shape(third)] = [projection.layers.get(before).unwrap(),projection.layers.get(before+1).unwrap(),projection.layers.get(before+2).unwrap()] else {
         panic!("all retained-owner additions are shape layers; first=[{first_observation}] second=[{second_observation}] third=[{third_observation}]")
     };
     let first_rect = first.rect.as_ref().expect("first rectangle geometry");
     let second_rect = second.rect.as_ref().expect("second rectangle geometry");
     let third_rect = third.rect.as_ref().expect("identical rectangle geometry");
-    assert_eq!((first.shape_kind.as_str(), second.shape_kind.as_str(), third.shape_kind.as_str()), ("rect", "rect", "rect"));
+    assert_eq!((first.shape_kind.eq_str("rect"), second.shape_kind.eq_str("rect"), third.shape_kind.eq_str("rect")), (true, true, true));
     assert_ne!(first.base.id, second.base.id, "two commits own distinct layer identities; first=[{first_observation}] second=[{second_observation}]");
     assert!(first_rect.x + first_rect.width < second_rect.x, "the two physical coordinate ranges remain non-overlapping; first={first_rect:?} second={second_rect:?}");
     assert_eq!(second_rect, third_rect, "the third creation intentionally repeats the second geometry");
@@ -952,7 +952,7 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
         artifact_laws::assert_undo_redo_round_trip(&mut *app,command,|app| {
             let snapshot=app.snapshot().unwrap();
             let DrawingLayerNode::Path(path)=&snapshot.layers[0] else { panic!("Expected path") };
-            path.segments.clone()
+            path.segments.iter().cloned().collect::<Vec<_>>()
         },before,after).await;
     }
 }
@@ -1192,7 +1192,7 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
                 let (mut app,mut meta)=inline_selection_app().await;
                 let view=meta.view_state.as_mut().unwrap();view.locale=locale;view.terminology=terminology;
                 let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=crate::schema::create_drawing_shape_layer_rect("Status");crate::schema::layer_base_mut(&mut layer).id=format!("layer-{index}").into();layer}).collect::<Vec<_>>();
-                let snapshot=DrawingSnapshot{id:"selection-status".into(),layers,..Default::default()};load_drawing_fixture(&mut app,&snapshot);
+                let snapshot=DrawingSnapshot{id:"selection-status".into(),layers:layers.into_iter().collect(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);
                 for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
                     let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
                     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":serde_json::to_string(&targets).unwrap(),"merge":"replace","method":"pick"}));
@@ -1558,7 +1558,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(<DrawingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), routes.len());
     assert!(<DrawingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the artifact lane needs its one-item preparation authority");
     assert!(<DrawingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_none(), "NoConfig owns no document-config publication lane");
-    let mut window_config_owners = semio_framework_plugin::WindowConfigOwnerRegistry::default();
+    let mut window_config_owners = semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("drawing-contract-owner".into()));
     <DrawingPlayApp as ArtifactEditor>::register_window_config_owners(&mut window_config_owners).expect("register canvas window config owner");
     assert!(!window_config_owners.is_empty(), "the canvas window config owns its own retained publication authority");
 
@@ -2043,7 +2043,7 @@ async fn layer_stack_steps_undo_as_one_history_entry() {
             let mut layer=crate::schema::create_drawing_shape_layer_rect(id);
             crate::schema::layer_base_mut(&mut layer).id=id.into();layer
         }).collect::<Vec<_>>();
-        let before=DrawingSnapshot {id:"stack-history".into(),layers,..Default::default()};
+        let before=DrawingSnapshot {id:"stack-history".into(),layers:layers.into_iter().collect(),..Default::default()};
         let after=DrawingSnapshot {layers:order.into_iter().map(|id|before.layers.iter().find(|layer|crate::schema::layer_id(layer)==id).unwrap().clone()).collect(),..before.clone()};
         load_drawing_fixture(&mut app,&before);
         artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection {ids:vec!["c".into(),"b".into()],operation:operation.into()}),|app|app.snapshot().unwrap(),before,after).await;
@@ -2137,7 +2137,7 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect("Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"]==layer_id(&snapshot.layers[0])));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}
+async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect("Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"].as_str().is_some_and(|id|layer_id(&snapshot.layers[0]).eq_str(id))));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}
 
 #[semio_framework_async_macros::async_test]
 async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_selects_once(){

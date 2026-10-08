@@ -1,0 +1,263 @@
+{
+  "tools": [
+    {
+      "id": "browser-dock-acceptance-react",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+        "--",
+        "run",
+        "react",
+        "{wgpu-dock-react-serve}",
+        "--output",
+        "{workspace}/{wgpu-dock-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-dock-react-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7300/"
+        },
+        {
+          "id": "wgpu-dock-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/dock-browser"
+        }
+      ]
+    },
+    {
+      "id": "browser-dock-acceptance-wgpu",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+        "--",
+        "run",
+        "wgpu",
+        "{wgpu-dock-serve}",
+        "--output",
+        "{workspace}/{wgpu-dock-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-dock-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7301/?plugin=puzzle3d"
+        },
+        {
+          "id": "wgpu-dock-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/dock-browser"
+        }
+      ]
+    },
+    {
+      "id": "browser-dock-widgets-react",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+        "--",
+        "run",
+        "react",
+        "{wgpu-dock-react-serve}",
+        "--suite",
+        "widgets",
+        "--output",
+        "{workspace}/{wgpu-dock-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-dock-react-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7300/"
+        },
+        {
+          "id": "wgpu-dock-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/dock-browser"
+        }
+      ]
+    },
+    {
+      "id": "browser-dock-widgets-wgpu",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+        "--",
+        "run",
+        "wgpu",
+        "{wgpu-dock-serve}",
+        "--suite",
+        "widgets",
+        "--output",
+        "{workspace}/{wgpu-dock-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-dock-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7301/?plugin=puzzle3d"
+        },
+        {
+          "id": "wgpu-dock-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/dock-browser"
+        }
+      ]
+    },
+    {
+      "id": "browser-embedded-acceptance-wgpu",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+        "--",
+        "--configuration",
+        "{workspace}/{wgpu-embedded-configuration}",
+        "--output",
+        "{workspace}/{wgpu-embedded-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-embedded-configuration",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🔬️embedded-browser/🧊️wgpu.json"
+        },
+        {
+          "id": "wgpu-embedded-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/embedded-browser"
+        }
+      ]
+    },
+    {
+      "id": "browser-media-acceptance-wgpu",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+        "--",
+        "--serve",
+        "{wgpu-media-serve}",
+        "--locale",
+        "{wgpu-media-locale}",
+        "--output",
+        "{workspace}/{wgpu-media-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "wgpu-media-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7303/?plugin=stdio-wav"
+        },
+        {
+          "id": "wgpu-media-locale",
+          "kind": "choice",
+          "default": "en",
+          "values": [
+            {
+              "id": "en"
+            },
+            {
+              "id": "de"
+            }
+          ]
+        },
+        {
+          "id": "wgpu-media-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/media-browser"
+        }
+      ]
+    },
+    {
+      "id": "parity-journey-dev",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:parity-journey",
+        "--",
+        "--renderer",
+        "{renderer-parity-renderer}",
+        "--react-serve",
+        "{wgpu-dock-react-serve}",
+        "--wgpu-serve",
+        "{wgpu-dock-serve}",
+        "--locale",
+        "{wgpu-media-locale}",
+        "--output",
+        "{workspace}/{renderer-parity-journey-artifacts}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "renderer-parity-renderer",
+          "kind": "choice",
+          "default": "paired",
+          "values": [
+            {
+              "id": "paired"
+            },
+            {
+              "id": "react"
+            },
+            {
+              "id": "wgpu"
+            }
+          ]
+        },
+        {
+          "id": "wgpu-dock-react-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7300/"
+        },
+        {
+          "id": "wgpu-dock-serve",
+          "kind": "text",
+          "default": "http://127.0.0.1:7301/?plugin=puzzle3d"
+        },
+        {
+          "id": "wgpu-media-locale",
+          "kind": "choice",
+          "default": "en",
+          "values": [
+            {
+              "id": "en"
+            },
+            {
+              "id": "de"
+            }
+          ]
+        },
+        {
+          "id": "renderer-parity-journey-artifacts",
+          "kind": "text",
+          "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/shell-interaction"
+        }
+      ]
+    }
+  ]
+}

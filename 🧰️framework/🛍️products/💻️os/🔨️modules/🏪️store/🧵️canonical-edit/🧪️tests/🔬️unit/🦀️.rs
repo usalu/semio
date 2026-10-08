@@ -136,6 +136,7 @@ impl ErasedSnapshotRetirement for FixtureRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FixtureMutationRetirement;
 impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {
     fn retire_owned(&self, value: FixtureMutation) -> Box<dyn ErasedSnapshotRetirement> {
@@ -144,9 +145,12 @@ impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRet
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct FixtureSnapshotRetirement;
 struct FixtureRootRetirement(Option<Arc<u64>>);
 impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<u64>) -> usize { std::mem::size_of::<FixtureRootRetirement>() }
+
     fn retire(&self, snapshot: Arc<u64>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(FixtureRootRetirement(Some(snapshot)))
     }

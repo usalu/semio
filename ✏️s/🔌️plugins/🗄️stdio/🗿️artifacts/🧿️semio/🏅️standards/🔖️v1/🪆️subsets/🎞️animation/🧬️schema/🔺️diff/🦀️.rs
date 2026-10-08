@@ -433,7 +433,7 @@ impl SemioAnimationDiff {
 }
 
 impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
+    fn apply(&self, base: &SemioAnimationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
             crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;

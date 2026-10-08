@@ -6,9 +6,12 @@ use std::sync::Arc;
 use store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
 
 //#region 🧹️SnapshotRetirement
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct CadPresenceRetirementFactory;
 
 impl SnapshotRetirementFactory<CadPresence> for CadPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<CadPresence>) -> usize { std::mem::size_of::<CadPresenceRetirement>() }
+
     fn retire(&self, root: Arc<CadPresence>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(CadPresenceRetirement { root: ManuallyDrop::new(Some(root)), owned: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), field: 0 })
     }

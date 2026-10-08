@@ -62,7 +62,7 @@ impl ArtifactViewer for SourcingViewer {
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
     fn initial_snapshot() -> CurationSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {

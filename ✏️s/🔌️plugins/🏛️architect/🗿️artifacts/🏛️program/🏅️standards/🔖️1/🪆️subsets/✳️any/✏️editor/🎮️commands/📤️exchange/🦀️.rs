@@ -44,9 +44,8 @@ use semio_framework_value::ToValue;
             "upsert" => MergeStrategy::Upsert,
             other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("architect.import-strategy-unknown"), format!("importRegistersCsv has no merge strategy \"{other}\""))),
         };
-        let mut next_program = doc.snapshot.clone();
-        import_registers_csv(&mut next_program, &payload.payload, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
-        Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
+        let import = import_registers_csv(doc.snapshot, &payload.payload, strategy).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-csv-invalid"), format!("importRegistersCsv cannot read the CSV starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
+        Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&import.snapshot)], ..Default::default() })
     }
 }
 

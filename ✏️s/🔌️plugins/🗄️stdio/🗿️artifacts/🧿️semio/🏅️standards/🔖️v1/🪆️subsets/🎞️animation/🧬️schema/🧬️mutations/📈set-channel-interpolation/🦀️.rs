@@ -1,7 +1,4 @@
-//! 📈️ `set-channel-interpolation` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 📈️ `set-channel-interpolation` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -19,11 +16,11 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "channel-interpolation", kind: "set-channel-interpolation", record: "SetChannelInterpolation" };
 
     fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::Diff> {
-        agg_diff(&SemioAnimationMutation::SetChannelInterpolation(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Result<Vec<SemioAnimationMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioAnimationMutation::SetChannelInterpolation(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +32,10 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

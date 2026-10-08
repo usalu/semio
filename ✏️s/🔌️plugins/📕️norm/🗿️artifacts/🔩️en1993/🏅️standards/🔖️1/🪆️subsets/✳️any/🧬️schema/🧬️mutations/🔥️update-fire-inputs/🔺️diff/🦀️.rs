@@ -1,20 +1,15 @@
-//! 🔺️ `upsert-fire-exposure` — sparse diff construction.
+//! 🔥️ `update-fire-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
 use super::UpdateFireInputs;
-use crate::diff::En1993FireList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993FireExposureEdit};
+use crate::En1993Snapshot;
 
-//#region 🔖️Diff
 pub fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    let mut values = base.fire_exposures.clone();
-    if let Some(idx) = values.iter().position(|x| x.id == payload.fire_exposure.id) {
-        if values[idx] == payload.fire_exposure {
-            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
-        }
-        values[idx] = payload.fire_exposure.clone();
-    } else {
-        values.push(payload.fire_exposure.clone());
-    }
-    protocol::MutationOutcome::new(En1993Diff { fire_exposures: Some(En1993FireList { values }), ..Default::default() })
+    let edit = match base.fire_exposures.iter().position(|row| row.id == payload.fire_exposure.id) {
+        Some(index) if base.fire_exposures[index] == payload.fire_exposure => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
+        Some(index) => En1993FireExposureEdit::replace(index, payload.fire_exposure.id.clone(), payload.fire_exposure.clone()),
+        None => En1993FireExposureEdit::insert(base.fire_exposures.len(), payload.fire_exposure.clone()),
+    };
+    protocol::MutationOutcome::new(En1993Diff { fire_exposures: vec![edit], ..Default::default() })
 }
-//#endregion 🔖️Diff

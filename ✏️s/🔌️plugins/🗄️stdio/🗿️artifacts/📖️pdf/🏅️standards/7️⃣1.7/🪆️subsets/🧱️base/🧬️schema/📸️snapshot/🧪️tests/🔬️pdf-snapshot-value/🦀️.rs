@@ -69,13 +69,13 @@ fn fresh_ids_avoid_every_collection() {
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;
     let owner = <crate::editor::pdf17::Pdf17Editor as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
-    let original_spec = super::snapshot_text::spec();
-    let original_record = super::snapshot_text::to_record(&owner);
+    let original_spec = crate::standards::v1_7::subsets::base::io::text::snapshot::spec();
+    let original_record = crate::standards::v1_7::subsets::base::io::text::snapshot::to_record(&owner);
     let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
-    let paid_spec = super::snapshot_text::spec_producer().encode(&mut native).unwrap();
-    let paid_record = super::snapshot_text::to_record_controlled(&owner, &mut native).unwrap();
+    let paid_spec = crate::standards::v1_7::subsets::base::io::text::snapshot::spec_producer().encode(&mut native).unwrap();
+    let paid_record = crate::standards::v1_7::subsets::base::io::text::snapshot::to_record_controlled(&owner, &mut native).unwrap();
     let options = pack_rt::EncodeOptions::default();
     let original = pack_rt::encode_document(&original_spec, &original_record, &options).unwrap();
     let record_join = pack_rt::encode_document(&original_spec, &paid_record, &options).unwrap();

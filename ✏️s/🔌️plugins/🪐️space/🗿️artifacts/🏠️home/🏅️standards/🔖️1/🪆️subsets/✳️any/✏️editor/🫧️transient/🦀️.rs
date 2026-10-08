@@ -409,6 +409,7 @@ impl store::ArtifactPack for HomeTransient {
 /// 🧹️ Retires a displaced or disposed Home transient root in byte grants measured by
 /// [`HomeDirectoryProjection::retained_bytes`] — never by encoding the projection, which would build one contiguous copy
 /// of the whole directory for every page the lane publishes.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct HomeTransientRetirementFactory;
 
 struct HomeTransientRootRetirement {
@@ -437,6 +438,8 @@ impl store::ErasedSnapshotRetirement for HomeTransientRootRetirement {
 }
 
 impl store::SnapshotRetirementFactory<HomeTransient> for HomeTransientRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<HomeTransient>) -> usize { std::mem::size_of::<HomeTransientRootRetirement>() }
+
     fn retire(&self, snapshot: Arc<HomeTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
         let retained_bytes = snapshot.directory().retained_bytes();
         Box::new(HomeTransientRootRetirement { root: Some(snapshot), retained_bytes })

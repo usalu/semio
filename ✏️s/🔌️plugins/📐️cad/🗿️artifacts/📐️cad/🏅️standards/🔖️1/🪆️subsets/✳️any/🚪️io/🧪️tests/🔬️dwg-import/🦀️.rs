@@ -20,11 +20,13 @@ async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
+async fn cad_document_from_empty_dwg_preserves_the_empty_shape_model_child() {
     let drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();
     let working = cad_working_scene_from_dwg(&drawing);
     assert!(working.objects.is_empty());
     let value = cad_document_from_dwg(&drawing).expect("cad document from empty dwg");
     let scene: CadSnapshot = semio_framework_value::FromValue::from_value(value).expect("valid cad scene");
-    assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
+    assert_eq!(scene.shape_model, Some(crate::cad_empty_pane_child(crate::CadPaneId::Shape)));
+    let empty = crate::cad_bundled_pane_scene("cad-shape-model").expect("canonical empty pane genesis");
+    assert!(empty.objects.is_empty());
 }

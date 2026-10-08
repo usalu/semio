@@ -1,0 +1,183 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128,
+    "largePrefix": "😀é",
+    "largeRepeats": 20000
+  },
+  "cases": [
+    {
+      "name": "literal",
+      "mutation": {
+        "id": "edge",
+        "source": "source",
+        "target": "target",
+        "edgeKind": null,
+        "sourceTip": null,
+        "targetTip": null,
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "toleranceBits": "7ff8000000000042",
+        "index": "18446744073709551615"
+      },
+      "edge": {
+        "id": "edge",
+        "source": "source",
+        "target": "target",
+        "edgeKind": null,
+        "sourceTip": null,
+        "targetTip": null,
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "visible": null,
+        "locked": null
+      }
+    },
+    {
+      "name": "present-empty",
+      "mutation": {
+        "id": "",
+        "source": "",
+        "target": "",
+        "edgeKind": "",
+        "sourceTip": "",
+        "targetTip": "",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "toleranceBits": "7ff8000000000042",
+        "index": "18446744073709551615"
+      },
+      "edge": {
+        "id": "",
+        "source": "",
+        "target": "",
+        "edgeKind": "",
+        "sourceTip": "",
+        "targetTip": "",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "visible": null,
+        "locked": null
+      }
+    },
+    {
+      "name": "unicode",
+      "mutation": {
+        "id": "😀é\u0000edge",
+        "source": "世界\u0000source",
+        "target": "target🧬️",
+        "edgeKind": "road",
+        "sourceTip": "start😀",
+        "targetTip": "end\u0000",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "toleranceBits": "7ff8000000000042",
+        "index": "18446744073709551615"
+      },
+      "edge": {
+        "id": "😀é\u0000edge",
+        "source": "世界\u0000source",
+        "target": "target🧬️",
+        "edgeKind": "road",
+        "sourceTip": "start😀",
+        "targetTip": "end\u0000",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "visible": null,
+        "locked": null
+      }
+    },
+    {
+      "name": "large-native",
+      "mutation": {
+        "id": "$large:id",
+        "source": "$large:source",
+        "target": "$large:target",
+        "edgeKind": "$large:kind",
+        "sourceTip": "$large:sourceTip",
+        "targetTip": "$large:targetTip",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "toleranceBits": "7ff8000000000042",
+        "index": "18446744073709551615"
+      },
+      "edge": {
+        "id": "$large:id",
+        "source": "$large:source",
+        "target": "$large:target",
+        "edgeKind": "$large:kind",
+        "sourceTip": "$large:sourceTip",
+        "targetTip": "$large:targetTip",
+        "scalarBits": [
+          "8000000000000000",
+          "0000000000000001",
+          "fff0000000000000",
+          "7ff8000000000042",
+          "3ff0000000000000",
+          "bff0000000000000",
+          "4000000000000000",
+          "c000000000000000"
+        ],
+        "visible": null,
+        "locked": null
+      }
+    }
+  ]
+}

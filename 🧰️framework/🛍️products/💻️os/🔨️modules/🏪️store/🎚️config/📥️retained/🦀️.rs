@@ -207,7 +207,7 @@ where
     /// retained record's own admission; zero once no turn gates on bytes.
     pub fn demand_bytes(&self) -> usize {
         match self.phase {
-            Phase::Fold => 1,
+            Phase::Fold => self.fold_job.as_ref().map_or(1, |job| job.next_step_byte_demand(1)),
             Phase::BeginEdit => self.source_edits.as_ref().and_then(|edits| edits.as_slice().first()).map_or(0, |edit| edit.id.len().saturating_mul(2)),
             Phase::DecodeForward | Phase::DecodeInverse => self.pending_payload.as_ref().map_or(0, Self::payload_bytes).max(size_of::<M>()),
             Phase::DecodeMetadata => size_of::<crate::os_spr::MutationMeta>().max(self.pending_metadata.as_ref().map_or(0, Self::metadata_retained_bytes)),
@@ -243,10 +243,11 @@ where
             }
             Phase::Fold => {
                 let job = self.fold_job.as_mut().expect("config fold job remains retained");
+                if job.next_step_byte_demand(1) > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return self.reject(ConfigStoreHydrationDiagnostic::Capacity); }
                 let result = job.step(1, maximum_bytes, &mut || false);
                 self.fold_completed = job.completed();
                 match result {
-                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {}
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { released_bytes, .. }) if released_bytes <= maximum_bytes => {}
                     Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
                         self.fold_job.take();
                         assert!(conflicts.is_empty(), "config histories do not admit conflict owners");
@@ -574,6 +575,14 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
+    fn next_close_byte_demand(&self) -> usize {
+        if self.terminal { return 0; }
+        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
+        if let Some(job) = self.fold_job.as_ref() { return job.next_close_byte_demand(); }
+        if let Some(runtime) = self.runtime.as_ref() { return runtime.next_close_byte_demand(); }
+        self.owners.as_ref().map_or(1, DocumentStoreOwners::next_close_byte_demand)
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.request_cancel();
         if self.terminal {
@@ -690,8 +699,8 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         let owners = self.owners.as_mut().expect("config hydration owner catalog remains retained");
-        match owners.store_disposer.close_uninstalled_step(1)? {
-            SnapshotRetirementStep::Complete if owners.store_disposer.uninstalled_terminal_is_empty() => {
+        match owners.close_uninstalled_owners_step(1, maximum_bytes)? {
+            SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
                 self.owners.take();
                 self.terminal = true;
                 Ok(SnapshotRetirementStep::Complete)

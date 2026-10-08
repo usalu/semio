@@ -160,7 +160,7 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
 
 //#region 🔖️Algebra
 impl MutationDiff<ZipSnapshot> for ZipDiff {
-    fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
+    fn apply(&self, base: &ZipSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ZipSnapshot> {
         if let Some(entries) = &self.entries {
             validate_zip_entries(&base.entries, entries)?;
         }

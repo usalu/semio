@@ -45,7 +45,7 @@ fn drafts(entries: &[(&MutationId, Option<DemoMutation>)]) -> BTreeMap<MutationI
 }
 
 fn finish(store: &ArtifactStore<DemoSnapshot, DemoMutation>, mut replay: EditReplay<DemoSnapshot, DemoMutation>) -> EditReplayResult<DemoSnapshot, DemoMutation> {
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+    drive_test_report_replay(&mut replay, store.replay_edits());
     replay.finish().expect("a finished replay yields its result")
 }
 
@@ -186,7 +186,7 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
 #[semio_framework_async_macros::async_test]
 async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let mut store = demo_store("check-in", None).await;
-    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
     apply(&mut store, vec![add(1)]).await;
     let ids = operation_ids(&store);
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
@@ -203,7 +203,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(None, 0), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     assert!(refused.unwrap_err().to_string().contains("rejected by merge policy Normal"));
-    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::RestoreN(RestoreN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
+    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::AssignN(AssignN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
         .await
         .expect("a clean supersession checks in");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr).await.expect("checked-in pair parses");
@@ -227,7 +227,7 @@ async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation()
         (ids[2].clone(), severity_draft(SeverityMutation::SetFatalN(SetFatalN { n: 7 }))),
     ]);
     let mut replay = store.begin_report_replay(&entries, None).expect("preview replay");
-    replay.step(store.replay_edits(), &mut || false).expect("steps");
+    drive_test_report_replay(&mut replay, store.replay_edits());
     let result = replay.finish().expect("finished");
     let report = store.replay_report(&result).expect("report");
     let levels: Vec<Option<semio_framework_diagnostic::Severity>> = report.outcomes.iter().map(|outcome| outcome.worst).collect();
@@ -657,7 +657,8 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
                 match hydration.step(&mut cx) {
                     PersistedDocumentHydrationStep::Pending(_) => {}
                     PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(store)) => { hydrated = Some(*store); break; }
-                    _ => panic!("original member actor hydration refused"),
+                    PersistedDocumentHydrationStep::Rejected(diagnostic) => panic!("original member actor hydration refused: {diagnostic:?}"),
+                    _ => panic!("original member actor hydration returned another output"),
                 }
             }
             assert!(hydration.terminal_is_empty());
@@ -757,17 +758,17 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
         summary.message.strip_suffix(" more messages").expect("the summary counts what it drops").parse().expect("a count")
     };
     let mut store = demo_store("bounded", None).await;
-    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
     apply(&mut store, (0..OPERATIONS).map(|_| add(1)).collect()).await;
     let ids = operation_ids(&store);
     let bulk = store.applied_edit_ids()[1].clone();
     let applied = store.messages_for_edit(&bulk).to_vec();
     assert!(bytes(&applied, &bulk) <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES);
     assert_eq!(applied.len() - 1 + dropped(&applied), OPERATIONS, "kept and summarized messages account for every operation");
-    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(7) })))] }).await.expect("an oversize but clean replay installs");
+    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(DemoMutation::AssignN(AssignN { n: Some(7) })))] }).await.expect("an oversize but clean replay installs");
     assert_eq!(store.snapshot_ref().n, Some(207));
     assert_eq!(store.messages_for_edit(&bulk), applied.as_slice(), "the replayed entry bounds exactly like the applied one");
-    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "bounded-variant".into(), inputs: vec![input(&ids[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(9) })))] }).await.expect("an oversize replay branches");
+    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "bounded-variant".into(), inputs: vec![input(&ids[0], Some(DemoMutation::AssignN(AssignN { n: Some(9) })))] }).await.expect("an oversize replay branches");
     assert_eq!(store.envelope().vcs.alternatives.iter().filter(|alternative| alternative.name == "bounded-variant").count(), 1);
     assert_eq!(store.snapshot_ref().n, Some(209));
     let withdraw = remote_supersession("bounded", &ids[0], protocol::InputReplacement::Withdrawn, 0);
@@ -791,12 +792,12 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
 #[semio_framework_async_macros::async_test]
 async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
     let mut store = demo_store("intermediate", None).await;
-    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
     apply(&mut store, vec![add(1)]).await;
     let ids = operation_ids(&store);
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let breaking = remote_supersession("intermediate", &ids[0], protocol::InputReplacement::Withdrawn, 0);
-    let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::RestoreN(RestoreN { n: Some(7) }))), 1);
+    let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::AssignN(AssignN { n: Some(7) }))), 1);
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&breaking)), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(&[breaking, healing]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
@@ -815,7 +816,7 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
     if early_exit {
         store.enable_convergence_early_exit();
     }
-    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
     apply(&mut store, vec![DemoMutation::DeleteN(DeleteN {})]).await;
     let peer = crate::os_spr::MutationEnvelope {
         mutation_id: MutationId("peer-add".into()),
@@ -850,7 +851,7 @@ async fn an_interior_revert_keeps_the_early_exit_equal_to_the_full_replay() {
         let ids = operation_ids(store);
         assert_eq!(outcomes_by_mutation(&store.mutation_outcomes().unwrap())[&ids[1]].1, vec!["mutation.cascade".to_string()], "the reverted interior refreshed the downstream outcome");
     }
-    let restate = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| drafts(&[(&operation_ids(store)[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(5) })))]);
+    let restate = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| drafts(&[(&operation_ids(store)[0], Some(DemoMutation::AssignN(AssignN { n: Some(5) })))]);
     let converged = finish(&early, early.begin_report_replay(&restate(&early), None).expect("early replay"));
     assert!(converged.converged_at().is_some(), "an equal prefix state converges");
     let replayed = finish(&full, full.begin_report_replay(&restate(&full), None).expect("full replay"));
@@ -1257,6 +1258,10 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
 async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).unwrap();
     let law = &corpus["boundedHistoryRead"];
+    let close_items = law["closeGrant"]["maximumItems"].as_u64().unwrap() as usize;
+    let release_bytes = law["closeGrant"]["maximumReleaseBytes"].as_u64().unwrap() as usize;
+    assert_eq!(close_items, 1);
+    assert_eq!(release_bytes, 4096);
     let mut store = demo_store("bounded-history-read", Some(law["initial"]["n"].as_i64().unwrap() as i32)).await;
     for edit in law["edits"].as_array().unwrap() {
         apply(&mut store, edit.as_array().unwrap().iter().map(|op| DemoMutation::from_value(op.clone().into()).unwrap()).collect()).await;
@@ -1306,17 +1311,40 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let mut retirement = store.retire_finished_history_replay(&mut result).unwrap().unwrap();
     assert!(result.is_none());
     let mut turns = 0;
+    let head_identity = Arc::as_ptr(head.snapshot_owner());
+    let head_value = head.snapshot().n;
+    let mut held_head = Some(head);
+    let mut physical_page_seen = false;
+    let mut physical_demands = std::collections::BTreeSet::new();
+    let mut physical_releases = std::collections::BTreeSet::new();
+    let mut blocked_on_head = false;
     loop {
         turns += 1;
         assert!(turns < 100_000);
-        match retirement.close_step(1, 1).unwrap() {
+        let physical_demand = retirement.next_close_byte_demand();
+        physical_demands.insert(physical_demand);
+        if physical_demand == law["physicalInversePageBytes"].as_u64().unwrap() as usize { physical_page_seen = true; }
+        assert!(physical_demand <= release_bytes, "neutral physical release grant admits the exact owner extent");
+        if let Some(head) = held_head.as_ref() { assert_eq!(Arc::as_ptr(head.snapshot_owner()), head_identity); assert_eq!(head.snapshot().n, head_value); }
+        match retirement.close_step(close_items, release_bytes).unwrap() {
             SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
-            SnapshotRetirementStep::Blocked => panic!("finished review owns no outstanding read lease"),
+            SnapshotRetirementStep::Pending { released_items, released_bytes: released } => { physical_releases.insert(released); assert!(released_items <= close_items && released <= release_bytes); }
+            SnapshotRetirementStep::Blocked => {
+                let head = held_head.take().expect("only the exact captured review head may block retirement");
+                drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).unwrap());
+                blocked_on_head = true;
+            },
         }
     }
+    println!("[DEBUG] History reader exact physical census demands={physical_demands:?} releases={physical_releases:?} headBlocked={blocked_on_head} turns={turns}");
+    assert!(physical_page_seen, "actual retained inverse4096-byte allocation is observed before release");
+    println!("[DEBUG] History read physical inverse page4096 released under one-item/4096-byte authority with exact captured head preserved");
     assert!(turns > 1 && law["expected"]["cancelRetirementCompletes"].as_bool().unwrap());
-    drive_retirement_terminal(store.retire_snapshot_alias(head.into_snapshot_owner()).unwrap());
+    assert!(!blocked_on_head, "retiring this read cursor releases its own alias without consuming the independently captured head");
+    let held_head = held_head.take().expect("the external readable head remains owned after cursor retirement");
+    assert_eq!(Arc::as_ptr(held_head.snapshot_owner()), head_identity);
+    assert_eq!(held_head.snapshot().n, head_value);
+    drive_retirement_terminal(store.retire_snapshot_alias(held_head.into_snapshot_owner()).unwrap());
     for stop in law["cancelAfterSteps"].as_array().unwrap() {
         let mut cancelled = Some(store.begin_derived_history_preview(target.clone(), accepted.clone()).unwrap());
         for _ in 0..stop.as_u64().unwrap() {
@@ -1328,9 +1356,9 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         loop {
             turns += 1;
             assert!(turns < 100_000);
-            match retirement.close_step(1, 1).unwrap() {
+            match retirement.close_step(close_items, release_bytes).unwrap() {
                 SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
+                SnapshotRetirementStep::Pending { released_items, released_bytes: released } => { assert!(released_items <= close_items && released <= release_bytes); }
                 SnapshotRetirementStep::Blocked => panic!("unpublished preview owns no outstanding reads"),
             }
             assert_eq!(store.snapshot_ref().n, Some(99));
@@ -1346,9 +1374,9 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         loop {
             turns += 1;
             assert!(turns < 100_000);
-            match retirement.close_step(1, 1).unwrap() {
+            match retirement.close_step(close_items, release_bytes).unwrap() {
                 SnapshotRetirementStep::Complete => { assert!(retirement.terminal_is_empty()); break; }
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); }
+                SnapshotRetirementStep::Pending { released_items, released_bytes: released } => { assert!(released_items <= close_items && released <= release_bytes); }
                 SnapshotRetirementStep::Blocked => panic!("unpublished replay owns no outstanding reads"),
             }
             assert_eq!(store.snapshot_ref().n, Some(99));

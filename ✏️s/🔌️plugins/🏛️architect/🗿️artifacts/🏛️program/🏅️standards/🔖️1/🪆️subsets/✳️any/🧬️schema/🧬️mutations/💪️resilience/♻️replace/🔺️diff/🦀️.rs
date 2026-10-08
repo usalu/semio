@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💪resilience` per Wave C.
 
 use super::ReplaceResilienceRequirement;
-use crate::diff::{ProgramResilienceDelta, ProgramResiliencePatchEntry};
+use crate::diff::ProgramResilienceDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceResilienceRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.resilience.iter().find(|row| row.header.id == payload.resilience_requirement.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No resilience requirement exists with this id.", [payload.resilience_requirement.header.id.0.clone()]);
+    let id = &payload.resilience_requirement.header.id;
+    let Some(position) = base.resilience.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No resilience requirement exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.resilience_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This resilience requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.resilience[position] == payload.resilience_requirement {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This resilience requirement already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.resilience_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { resilience: Some(ProgramResilienceDelta { patched: vec![ProgramResiliencePatchEntry { id: payload.resilience_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.resilience.len()).then(|| base.resilience.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { resilience: Some(ProgramResilienceDelta { removed: vec![id.0.clone()], added: vec![payload.resilience_requirement.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

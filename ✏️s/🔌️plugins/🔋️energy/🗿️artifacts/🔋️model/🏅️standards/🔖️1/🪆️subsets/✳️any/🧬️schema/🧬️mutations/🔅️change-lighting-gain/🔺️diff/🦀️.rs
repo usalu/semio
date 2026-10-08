@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeLightingGainVisibleFraction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, LightingGainPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeLightingGainVisibleFraction, base: &EnergyMod
     if existing.visible_fraction == payload.new_visible_fraction {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Lighting Gain {} already carries this visible fraction: {}.", payload.id.0, payload.new_visible_fraction));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.lighting.iter_mut().find(|item| item.id == payload.id) {
-        item.visible_fraction = payload.new_visible_fraction;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { lighting: Rows::modifying(LightingGainPatch { visible_fraction: Some(payload.new_visible_fraction), ..LightingGainPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

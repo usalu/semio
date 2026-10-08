@@ -1,4 +1,3 @@
-use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 //! 🌍️ gismap ← GeoJSON (RFC 7946, and GJ2008 files under stdio's CRS policy: CRS84/EPSG:4326 read as
 //! lon/lat, spherical Web Mercator inverse projected, every other CRS refused) — `Point`s become
 //! positions (`lon`, `lat`, and `alt` from a third coordinate), `LineString`s routes (`points`),
@@ -11,6 +10,7 @@ use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::tex
 //! 🔖 `IoFidelity::Lossy`: features with `null` geometry carry no map feature and are dropped, as are
 //! foreign members, `bbox`, the type of numeric ids, multi-part grouping, and property members named
 //! like a geometry member.
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson::GEOMETRY_MEMBERS;
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};

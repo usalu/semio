@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
-import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
@@ -215,25 +214,22 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
 });
 
 
-test("exact finite consumer route and launch registration preserve the canonical semantic leaf", () => {
+test("exact finite consumer route preserves the canonical semantic leaf, its neutral artifact route and its cache refusal", () => {
   const registration = vector.registration, project = JSON.parse(readFileSync(join(root, registration.projectPath), "utf8"));
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", options: { cwd: dirname(registration.projectPath), command: registration.command } });
+  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", cache: registration.cache, options: { cwd: dirname(registration.projectPath), command: registration.command } });
   const routerText = readFileSync(join(root, registration.routerPath), "utf8"), router = ts.createSourceFile(registration.routerPath, routerText, ts.ScriptTarget.Latest, true);
   const branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node) => { if (ts.isIfStatement(node) && node.expression.getText(router) === 'segments[0] === "' + registration.route + '"') branches.push(node); ts.forEachChild(node, visit); };
   visit(router);
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(router)).toContain(JSON.stringify(registration.testPath));
-  expect(branches[0]!.thenStatement.getText(router)).toContain('runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
-  const launch = parseJsonc(readFileSync(join(root, ".vscode/launch.json"), "utf8")).configurations.filter((item: any) => item.name === registration.launchName);
-  expect(launch).toHaveLength(1);
-  expect(launch[0]).toEqual({ name: registration.launchName, type: "node-terminal", request: "launch", command: registration.launchCommand, cwd: "$" + "{workspaceFolder}", env: { SEMIO_TEST_ARTIFACT_DIR: "$" + "{workspaceFolder}/$" + "{input:processContractArtifacts}/rust-finite-target-consumption" }, presentation: { group: "4_gate", order: registration.launchOrder } });
+  expect(branches[0]!.thenStatement.getText(router)).toContain('runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, ' + JSON.stringify(registration.route) + ') })');
 });
 
 
 test("language-neutral finite consumer contract is closed and retains all physical proof obligations", () => {
   
-  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-finite-target-consumption-v1");expect(vector["semantics"]).toEqual({"authority":"candidate-only-never-editable","required":["complete-finite-expansion","exact-utf16-source-span","unique-cargo-owner","exact-hashed-source-chain","physically-present-admitted-targets","no-follow","non-opaque","coordinate-root-local","unshadowed-inherited-environment"],"failure":"retain-conservative-unsupported-interpretation","suppression":"same-start-end-value-only","writablePrecedence":"existing-immutable-join-authority","bound":256});expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","target":"test-rust-finite-target-consumption","command":"bun ./📜️script.ts test rust-finite-target-consumption","route":"rust-finite-target-consumption","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","launchName":"🧹clean🧩️taxonomy🥤️rust-finite-target-consumption","launchOrder":410.193,"launchCommand":"bun nx run @semio-tech/repo-lib:test-rust-finite-target-consumption --skip-nx-cache"});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️finite-target-consumption","🧾️runs"],"runPrefix":"🔖️"});
+  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-finite-target-consumption-v1");expect(vector["semantics"]).toEqual({"authority":"candidate-only-never-editable","required":["complete-finite-expansion","exact-utf16-source-span","unique-cargo-owner","exact-hashed-source-chain","physically-present-admitted-targets","no-follow","non-opaque","coordinate-root-local","unshadowed-inherited-environment"],"failure":"retain-conservative-unsupported-interpretation","suppression":"same-start-end-value-only","writablePrecedence":"existing-immutable-join-authority","bound":256});expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","target":"test-rust-finite-target-consumption","command":"bun ./📜️script.ts test rust-finite-target-consumption","route":"rust-finite-target-consumption","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","cache":false});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️finite-target-consumption","🧾️runs"],"runPrefix":"🔖️"});
   for (const changed of [{ ...vector, unknown: true }, { ...vector, semantics: { ...vector.semantics, failure: "empty-is-disjoint" } }, { ...vector, cases: [] }]) 
   expect(new Set(vector.cases.map((row: Row) => row.id)).size).toBe(vector.cases.length);
 });

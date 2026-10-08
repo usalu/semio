@@ -2,7 +2,7 @@
 //! already at that label.
 
 use super::RenameShot;
-use crate::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingShotPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &RenameShot, base: &ShootingSnapshot) -> protocol::Mutation
     if existing.label == payload.new_label {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has label \"{}\".", payload.id, payload.new_label));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { label: Some(payload.new_label.clone()), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::shot_patches([(payload.id.clone(), ShootingShotPatch { label: Some(payload.new_label.clone()), ..Default::default() })]))
 }

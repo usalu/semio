@@ -25,7 +25,7 @@
       "historyBytes": 255,
       "verifiedEnd": 255,
       "tailBytes": 0,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "error": null
     },
     {
@@ -34,7 +34,7 @@
       "historyBytes": 258,
       "verifiedEnd": 255,
       "tailBytes": 3,
-      "retiredBytes": 290,
+      "retiredBytes": 318,
       "error": null
     },
     {
@@ -43,7 +43,7 @@
       "historyBytes": 4499,
       "verifiedEnd": 255,
       "tailBytes": 4244,
-      "retiredBytes": 4531,
+      "retiredBytes": 4559,
       "error": null
     },
     {
@@ -52,7 +52,7 @@
       "historyBytes": 32,
       "verifiedEnd": null,
       "tailBytes": null,
-      "retiredBytes": 64,
+      "retiredBytes": 92,
       "error": "malformed"
     },
     {
@@ -61,7 +61,7 @@
       "historyBytes": 255,
       "verifiedEnd": null,
       "tailBytes": null,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "error": "malformed"
     }
   ],
@@ -72,7 +72,7 @@
       "event": "none",
       "error": null,
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 1
     },
     {
@@ -81,7 +81,7 @@
       "event": "cancel",
       "error": "cancelled",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -90,7 +90,7 @@
       "event": "cancel",
       "error": "cancelled",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -99,7 +99,7 @@
       "event": "cancel",
       "error": "cancelled",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -108,7 +108,7 @@
       "event": "cancel",
       "error": "cancelled",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 1
     },
     {
@@ -117,7 +117,7 @@
       "event": "operation",
       "error": "stale",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -126,7 +126,7 @@
       "event": "generation",
       "error": "stale",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -135,7 +135,7 @@
       "event": "operation",
       "error": "stale",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 1
     },
     {
@@ -144,7 +144,7 @@
       "event": "generation",
       "error": "stale",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 1
     },
     {
@@ -153,7 +153,7 @@
       "event": "expired",
       "error": "expired",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -162,7 +162,7 @@
       "event": "clock-absent",
       "error": "expired",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     },
     {
@@ -171,7 +171,7 @@
       "event": "expired",
       "error": "expired",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 1
     },
     {
@@ -180,7 +180,7 @@
       "event": "operation",
       "error": "stale",
       "retainedBytes": 257,
-      "retiredBytes": 287,
+      "retiredBytes": 315,
       "handoffs": 0
     }
   ],

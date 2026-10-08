@@ -63,8 +63,7 @@ fn flat_retained_xml_copy_materialize_and_retire_preserve_shared_vocabulary() {
         maximum_items: grant_value["maximumItems"].as_u64().unwrap() as usize,
         maximum_copy_bytes: grant_value["maximumCopyBytes"].as_u64().unwrap() as usize,
         maximum_capacity_bytes: grant_value["maximumCapacityBytes"].as_u64().unwrap() as usize,
-        maximum_depth: grant_value["maximumDepth"].as_u64().unwrap() as usize,
-    };
+        maximum_depth: grant_value["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: grant_value["maximumReleaseBytes"].as_u64().unwrap() as usize };
     let maximum_turns = grant_value["maximumTurns"].as_u64().unwrap() as usize;
     let source = RetainedCloneSource::from_authority(Arc::new(retained), ());
     let mut cursor = RetainedXmlDocument::retained_clone_cursor();

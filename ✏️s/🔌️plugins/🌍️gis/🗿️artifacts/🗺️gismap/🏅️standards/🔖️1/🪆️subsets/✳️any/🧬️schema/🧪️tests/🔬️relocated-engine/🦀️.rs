@@ -2,6 +2,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis2d_document_json_
 use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use super::*;
+use serde_json::Value;
 
 /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can
 /// resolve the `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge in a bare `cargo test`

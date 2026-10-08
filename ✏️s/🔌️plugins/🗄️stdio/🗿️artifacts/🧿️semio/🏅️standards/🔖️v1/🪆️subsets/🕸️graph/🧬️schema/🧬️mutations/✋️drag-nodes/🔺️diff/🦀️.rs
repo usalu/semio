@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `DragNodes`.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeList};
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeDiff};
 use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
@@ -25,10 +26,13 @@ pub fn diff(payload: &super::DragNodes, base: &SemioGraphSnapshot) -> protocol::
     if (payload.dx, payload.dy) == (0.0, 0.0) {
         return protocol::MutationOutcome::new(SemioGraphDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(ids)]));
     }
-    let mut nodes = base.nodes.clone();
-    for node in nodes.iter_mut().filter(|node| payload.targets.contains(&node.id)) {
-        node.position = SemioPoint2 { x: node.position.x + payload.dx, y: node.position.y + payload.dy };
-    }
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None }).absorb_messages(partial)
+    let moved: Vec<IndexModified<SemioGraphNodeDiff>> = base
+        .nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, node)| payload.targets.contains(&node.id))
+        .map(|(index, node)| IndexModified { index, diff: SemioGraphNodeDiff { position: Some(SemioPoint2 { x: node.position.x + payload.dx, y: node.position.y + payload.dy }), ..Default::default() } })
+        .collect();
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(IndexedTripleDiff { modified: moved, ..Default::default() }), edges: None }).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

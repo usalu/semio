@@ -16,8 +16,12 @@ All three exact paths identified by the user are absent at the current filesyste
 | Actual domain values and runtime assets retained | Real policies and per-value validators; native SQL, Three, JSON, XML, Pack and browser comparisons | Focused actual checks passed; unrelated compiler/schema debt qualified |
 | Runtime does not mount or execute fixture examples | Native cfg/include audit and actual Stdio preparation; production test factories retired | Authored audit clean within bounds; ignored actual distribution rebuild pending |
 | Current end-to-end routes exercised | Current parser/UI/HTTP/storage/plugin tests and selected native proofs | Stdio3/0 and Actor1/0 actual native passed; DSL6/Energy3/Pack5/Infinite1 and regenerated session/bundle gates pending |
-| Permanent neutral regression guard | Actual60 cases,4 tests/0failed/311 assertions, independent Ajv | Passed; parser-input carveout is placement-based, not dataflow |
+| Permanent neutral regression guard | Actual68 cases,4 tests/0failed/351 assertions, independent Ajv | Passed; parser-input carveout is placement-based, not dataflow |
 | Bun/Nx and cross-platform dev registration | Actual owner commands, launch+seed declarations, neutral ticket/cache scratch | Focused workflows passed |
 | Durable record and completion | Curated exact file union and retained reports/preimages | Final refresh, owned output cleanup and MCP close pending |
 
 Current broad repository schema and compiler checks are not all green. They are reported with actual observed counts, without asserting a clean baseline or treating unrelated findings as fixture boundary proof. Concrete fixture-related failures continue to be closed.
+
+## Oct8 Actual Continuation
+
+Current Dev source/process and exact three production-mounted service-composition law checks passed after computed/whole-corpus ghost removal. Fresh all-format audit and exact native6/5/1/3/newshared-join1→fourguest→registry/session/publication remain active. The actual scoped CLI exited0 after filtering only schema-fixture-defines-schema; the permanent workspace Nx gate still requires its actual native-owner prerequisite and terminal observation. Neither filtered CLI nor broad full-schema diagnostic exit1 is an overall schema pass. Latest actual schema generation3639scopes/9308diagnostics exited0; current docs and full check are sequential followups.

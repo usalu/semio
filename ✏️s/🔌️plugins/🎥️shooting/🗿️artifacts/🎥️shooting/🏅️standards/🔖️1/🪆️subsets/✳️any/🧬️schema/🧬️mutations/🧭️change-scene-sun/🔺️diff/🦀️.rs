@@ -11,7 +11,5 @@ pub fn diff(payload: &ChangeSceneSunAzimuth, base: &ShootingSnapshot) -> protoco
     if base.scene.sun.azimuth == payload.new_azimuth {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun azimuth is already {} degrees.", payload.new_azimuth));
     }
-    let mut scene = base.scene.clone();
-    scene.sun.azimuth = payload.new_azimuth;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { sun_azimuth: Some(payload.new_azimuth), ..Default::default() }), ..Default::default() })
 }

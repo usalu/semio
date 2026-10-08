@@ -1,2 +1,84 @@
+// 🧬️ Din16798 diff
 syntax = "proto3";
-message Din16798Diff { optional string annex = 1; }
+package semio.s.norm.din16798.diff;
+
+enum Din16798RowOp {
+  DIN16798_ROW_OP_INSERT = 0;
+  DIN16798_ROW_OP_REMOVE = 1;
+  DIN16798_ROW_OP_REPLACE = 2;
+  DIN16798_ROW_OP_PATCH = 3;
+}
+
+message Din16798ZoneEdit {
+  Din16798RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din16798ZonePatch patch = 5;
+}
+
+message Din16798VentSystemEdit {
+  Din16798RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din16798VentSystemPatch patch = 5;
+}
+
+message Din16798ZonePatch {
+  optional string usage_type = 1;
+  optional double floor_area_m2 = 2;
+  optional uint32 occupants = 3;
+  optional string comfort_category = 4;
+  optional string pollution_class = 5;
+  optional string comfort_model = 6;
+  optional double t_op_winter_c = 7;
+  optional double t_op_summer_c = 8;
+  optional double air_speed_m_s = 9;
+  optional double clothing_clo = 10;
+  optional double metabolic_rate_met = 11;
+  optional double rh_percent = 12;
+  optional double outdoor_air_supplied_m3_h = 13;
+  optional double co2_ppm = 14;
+  optional double illuminance_lx = 15;
+  optional double noise_db = 16;
+  optional double turbulence_intensity_percent = 17;
+  optional string vent_method = 18;
+  optional string vent_system_id = 19;
+}
+
+message Din16798VentSystemPatch {
+  optional string system_type = 1;
+  optional double sfp_w_m3_s = 2;
+  optional uint32 sfp_required_class = 3;
+  optional double heat_recovery_eta = 4;
+  optional string oda_class = 5;
+  optional string filter_sup_class = 6;
+  optional uint32 years_since_inspection = 7;
+  optional string duct_class = 8;
+  optional double duct_leakage_m3_s_m2 = 9;
+  optional double design_airflow_m3_h = 10;
+}
+
+message Din16798Diff {
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  optional double theta_rm_c = 2;
+  // @state artifact
+  optional double outdoor_co2_ppm = 3;
+  // @state artifact
+  optional double envelope_n50_h_inv = 4;
+  // @state artifact
+  optional double envelope_volume_m3 = 5;
+  // @state artifact
+  optional double cellar_area_m2 = 6;
+  // @state artifact
+  optional double cellar_ventilation_m3_h = 7;
+  // @state artifact
+  optional double night_setback_k = 8;
+  // @state artifact
+  repeated Din16798ZoneEdit zones = 9;
+  // @state artifact
+  repeated Din16798VentSystemEdit vent_systems = 10;
+}

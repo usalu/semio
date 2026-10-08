@@ -220,7 +220,8 @@ pub const MUTATION_DAG_CAPACITY: usize = 8_192;
 pub const MUTATION_DAG_IDENTIFIER_BYTES: usize = 256;
 
 struct MutationDagFixedSlots<T> {
-    slots: Box<[std::mem::MaybeUninit<T>]>,
+    slots: Box<[Option<Box<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>>]>,
+    close_page: usize,
     generations: Box<[u32]>,
     occupied: Box<[bool]>,
     next: Box<[u16]>,
@@ -233,6 +234,8 @@ struct MutationDagFixedSlots<T> {
 }
 
 const MUTATION_DAG_SLOT_NONE: u16 = u16::MAX;
+const MUTATION_DAG_PAGE_SLOTS: usize = 64;
+const MUTATION_DAG_PAGE_COUNT: usize = MUTATION_DAG_CAPACITY / MUTATION_DAG_PAGE_SLOTS;
 
 struct MutationDagFixedSlotsIter<'a, T> {
     owner: &'a MutationDagFixedSlots<T>,
@@ -248,7 +251,7 @@ impl<'a, T> Iterator for MutationDagFixedSlotsIter<'a, T> {
         }
         let slot = usize::from(self.next);
         self.next = self.owner.next[slot];
-        Some(unsafe { self.owner.slots[slot].assume_init_ref() })
+        Some(unsafe { self.owner.slot(slot).assume_init_ref() })
     }
 }
 
@@ -256,7 +259,8 @@ impl<T> MutationDagFixedSlots<T> {
     fn new() -> Self {
         let free = (0..MUTATION_DAG_CAPACITY).rev().map(|slot| slot as u16).collect::<Vec<_>>().into_boxed_slice();
         Self {
-            slots: Box::<[T]>::new_uninit_slice(MUTATION_DAG_CAPACITY),
+            slots: (0..MUTATION_DAG_PAGE_COUNT).map(|_| Some(Box::new([const { std::mem::MaybeUninit::<T>::uninit() }; MUTATION_DAG_PAGE_SLOTS]))).collect::<Vec<_>>().into_boxed_slice(),
+            close_page: 0,
             generations: vec![0; MUTATION_DAG_CAPACITY].into_boxed_slice(),
             occupied: vec![false; MUTATION_DAG_CAPACITY].into_boxed_slice(),
             next: vec![MUTATION_DAG_SLOT_NONE; MUTATION_DAG_CAPACITY].into_boxed_slice(),
@@ -267,6 +271,47 @@ impl<T> MutationDagFixedSlots<T> {
             tail: MUTATION_DAG_SLOT_NONE,
             len: 0,
         }
+    }
+
+    fn slot(&self, slot: usize) -> &std::mem::MaybeUninit<T> {
+        &self.slots[slot / MUTATION_DAG_PAGE_SLOTS].as_ref().expect("causal page remains retained")[slot % MUTATION_DAG_PAGE_SLOTS]
+    }
+
+    fn slot_mut(&mut self, slot: usize) -> &mut std::mem::MaybeUninit<T> {
+        &mut self.slots[slot / MUTATION_DAG_PAGE_SLOTS].as_mut().expect("causal page remains retained")[slot % MUTATION_DAG_PAGE_SLOTS]
+    }
+
+    fn backing_is_empty(&self) -> bool {
+        self.slots.is_empty() && self.generations.is_empty() && self.occupied.is_empty() && self.next.is_empty() && self.previous.is_empty() && self.free.is_empty()
+    }
+
+    fn next_backing_release_byte_demand(&self) -> usize {
+        if !self.is_empty() { return 0; }
+        if !self.slots.is_empty() {
+            return if self.close_page < self.slots.len() { std::mem::size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { std::mem::size_of_val(&*self.slots) };
+        }
+        if !self.generations.is_empty() { return std::mem::size_of_val(&*self.generations); }
+        if !self.occupied.is_empty() { return std::mem::size_of_val(&*self.occupied); }
+        if !self.next.is_empty() { return std::mem::size_of_val(&*self.next); }
+        if !self.previous.is_empty() { return std::mem::size_of_val(&*self.previous); }
+        std::mem::size_of_val(&*self.free)
+    }
+
+    fn close_backing_step(&mut self, maximum_items: usize, maximum_release_bytes: usize) -> (usize, usize, bool) {
+        if self.backing_is_empty() { return (0, 0, true); }
+        let demand = self.next_backing_release_byte_demand();
+        if !self.is_empty() || maximum_items == 0 || maximum_release_bytes < demand { return (0, 0, false); }
+        if !self.slots.is_empty() {
+            if self.close_page < self.slots.len() {
+                drop(self.slots[self.close_page].take());
+                self.close_page += 1;
+            } else { self.slots = Vec::new().into_boxed_slice(); }
+        } else if !self.generations.is_empty() { self.generations = Vec::new().into_boxed_slice(); }
+        else if !self.occupied.is_empty() { self.occupied = Vec::new().into_boxed_slice(); }
+        else if !self.next.is_empty() { self.next = Vec::new().into_boxed_slice(); }
+        else if !self.previous.is_empty() { self.previous = Vec::new().into_boxed_slice(); }
+        else { self.free = Vec::new().into_boxed_slice(); self.free_len = 0; }
+        (1, demand, self.backing_is_empty())
     }
 
     fn len(&self) -> usize {
@@ -298,7 +343,7 @@ impl<T> MutationDagFixedSlots<T> {
         assert!(self.free_len > 0, "fixed causal slot reservation was not established");
         self.free_len -= 1;
         let slot = usize::from(self.free[self.free_len]);
-        self.slots[slot].write(value);
+        self.slot_mut(slot).write(value);
         self.generations[slot] = self.generations[slot].wrapping_add(1).max(1);
         self.occupied[slot] = true;
         self.previous[slot] = self.tail;
@@ -349,7 +394,7 @@ impl<T> MutationDagFixedSlots<T> {
         self.free[self.free_len] = ticket;
         self.free_len += 1;
         self.len -= 1;
-        unsafe { self.slots[slot].assume_init_read() }
+        unsafe { self.slot_mut(slot).assume_init_read() }
     }
 }
 
@@ -488,9 +533,32 @@ impl MutationDag {
         Self::default()
     }
 
-    /// 🧹 Proves the causal owner shell contains no mutation, identity, or ordering allocation.
+    /// 🧹 Proves every original mutation and identity owner has been detached; backing remains separately retained.
     pub fn terminal_is_empty(&self) -> bool {
         self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
+    }
+
+    /// 🪹️ Proves all causal payload pages and fixed metadata allocations have been funded and released.
+    pub fn backing_is_empty(&self) -> bool {
+        self.envelopes.backing_is_empty() && self.applied.backing_is_empty() && self.pending.backing_is_empty()
+    }
+
+    /// 📏️ Queries the next indivisible original page or metadata allocation without work or ownership transfer.
+    pub fn next_backing_release_byte_demand(&self) -> usize {
+        if !self.terminal_is_empty() { return 0; }
+        if !self.envelopes.backing_is_empty() { self.envelopes.next_backing_release_byte_demand() }
+        else if !self.applied.backing_is_empty() { self.applied.next_backing_release_byte_demand() }
+        else { self.pending.next_backing_release_byte_demand() }
+    }
+
+    /// 🧱️ Releases at most one original backing allocation after every exact payload owner has detached.
+    pub fn close_backing_step(&mut self, maximum_items: usize, maximum_release_bytes: usize) -> (usize, usize, bool) {
+        if !self.terminal_is_empty() { return (0, 0, false); }
+        if self.backing_is_empty() { return (0, 0, true); }
+        let (items, bytes, _) = if !self.envelopes.backing_is_empty() { self.envelopes.close_backing_step(maximum_items, maximum_release_bytes) }
+        else if !self.applied.backing_is_empty() { self.applied.close_backing_step(maximum_items, maximum_release_bytes) }
+        else { self.pending.close_backing_step(maximum_items, maximum_release_bytes) };
+        (items, bytes, self.backing_is_empty())
     }
 
     /// ⏳️ No inserted envelope still waits on a dependency this dag has never seen.

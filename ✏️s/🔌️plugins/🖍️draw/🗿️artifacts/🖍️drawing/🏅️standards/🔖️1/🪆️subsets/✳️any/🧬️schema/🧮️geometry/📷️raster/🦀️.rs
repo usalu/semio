@@ -21,7 +21,7 @@ fn coordinate(v:f64)->bool {v.is_finite()&&v.abs()<=1e9}
 fn style(stroke:&StrokeStyle)->Result<StrokeGeometryStyle,PathRasterError> {
  PreparedFill::new(&FillStyle::Solid {color:stroke.color}).map_err(invalid)?;
  if !coordinate(stroke.width)||stroke.width<0.0||stroke.dash.as_ref().is_some_and(|d|d.len()>1024||d.iter().any(|v|!coordinate(*v)||*v<0.0)) {return Err(invalid("Invalid raster stroke"));}
- Ok(StrokeGeometryStyle {width:stroke.width,cap:match stroke.cap {StrokeCap::Butt=>StrokeGeometryCap::Butt,StrokeCap::Round=>StrokeGeometryCap::Round,StrokeCap::Square=>StrokeGeometryCap::Square},join:match stroke.join {StrokeJoin::Miter=>StrokeGeometryJoin::Miter,StrokeJoin::Round=>StrokeGeometryJoin::Round,StrokeJoin::Bevel=>StrokeGeometryJoin::Bevel},miter_limit:4.0,dash:stroke.dash.clone().unwrap_or_default(),dash_offset:0.0})
+ Ok(StrokeGeometryStyle {width:stroke.width,cap:match stroke.cap {StrokeCap::Butt=>StrokeGeometryCap::Butt,StrokeCap::Round=>StrokeGeometryCap::Round,StrokeCap::Square=>StrokeGeometryCap::Square},join:match stroke.join {StrokeJoin::Miter=>StrokeGeometryJoin::Miter,StrokeJoin::Round=>StrokeGeometryJoin::Round,StrokeJoin::Bevel=>StrokeGeometryJoin::Bevel},miter_limit:4.0,dash:stroke.dash.as_ref().map(|dash|dash.iter().copied().collect()).unwrap_or_default(),dash_offset:0.0})
 }
 /// 🧱️ Private raster candidate with per-segment/point conversion and bounded geometry/paint grants.
 pub struct PathRasterJob {

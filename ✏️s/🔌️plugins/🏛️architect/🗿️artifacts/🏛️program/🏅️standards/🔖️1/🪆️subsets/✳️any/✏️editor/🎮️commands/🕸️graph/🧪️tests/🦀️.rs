@@ -1,4 +1,7 @@
-use super::*;
+use super::node_graph_edit::{NodeGraphEdit, handle};
+use crate::editor::architect::{catalog::new_adjacency, config::ArchitectConfig};
+use crate::{EntityId, registers::AdjacencyKind, schema::mutations::ProgramMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView};
 
 #[test]
 fn graph_tools_follow_the_language_neutral_transaction_law() {
@@ -29,7 +32,8 @@ fn graph_tools_follow_the_language_neutral_transaction_law() {
         let expected = case.get("mutations").unwrap().as_array().unwrap().iter().map(|kind| kind.as_str().unwrap()).collect::<Vec<_>>();
         assert_eq!(kinds, expected, "{}", case.get("name").unwrap());
         for leaf in &emit.artifact_mutations {
-            let outcome = crate::schema::mutations::apply_program_mutation_outcome(&mut program, leaf);
+            let (next, outcome) = crate::schema::mutations::apply_program_mutation_outcome(&program, leaf);
+            program = next;
             assert!(!outcome.messages().iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal), "a graph tool leaf applies on its ordered base");
         }
         assert_eq!(emit.transaction.as_ref().map(|transaction| transaction.tool.as_str()), (!kinds.is_empty()).then_some("s.architect.program@1/*#editor#nodeGraphEdit"));

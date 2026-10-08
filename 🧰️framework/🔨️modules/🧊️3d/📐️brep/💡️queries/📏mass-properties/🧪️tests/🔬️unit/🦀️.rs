@@ -249,3 +249,23 @@ async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
     let coarse = solid_surface_area(&body, bore, 1e-2).unwrap();
     assert!(coarse > 0.9 * exact && coarse <= exact * 1.001, "coarse area {coarse} within the inscribed-octagon bound of {exact}");
 }
+
+/// 📏 Every moment component is refined, not only the volume: a cylinder's first moments and a torus's
+/// second moments used to stay at the error of the first quadrature level (the volume integrand of a
+/// surface of revolution is constant in `u`, so it converged immediately while `cos^3 u` did not).
+#[semio_framework_async_macros::async_test]
+async fn curved_solids_converge_in_centroid_and_inertia_not_only_in_volume() {
+    use crate::brep::operations::primitives::{make_cylinder, make_torus};
+    use crate::brep::representation::topology::history::OpRecorder;
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let cylinder = make_cylinder(&mut body, 1.0, 3.0, &mut rec).unwrap();
+    let torus = make_torus(&mut body, 3.0, 1.0, &mut rec).unwrap();
+    let cylinder_mass = solid_mass_properties(&body, cylinder, 1e-5).unwrap();
+    assert!(cylinder_mass.centroid.x.abs() < 1e-6 && cylinder_mass.centroid.y.abs() < 1e-6, "cylinder centroid off its axis: {:?}", cylinder_mass.centroid);
+    let torus_mass = solid_mass_properties(&body, torus, 1e-5).unwrap();
+    let volume = 2.0 * PI * PI * 3.0;
+    let axial = volume * (9.0 + 0.75);
+    assert!((torus_mass.inertia[2][2] - axial).abs() < 1e-5 * axial, "torus axial inertia {} vs {axial}", torus_mass.inertia[2][2]);
+    assert!(torus_mass.centroid.x.abs() < 1e-6 && torus_mass.centroid.y.abs() < 1e-6, "torus centroid off its centre: {:?}", torus_mass.centroid);
+}

@@ -60,13 +60,13 @@ where
         for value in row["values"].as_array().expect("values") {
             let mutation = operation(i32_value(value));
             stored.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
-            current = mutation.diff(&current).diff().apply(&current).expect("assignment");
+            current = protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("assignment");
         }
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");
         let expected: Vec<M> = row["inverse"].as_array().expect("inverse").iter().map(|value| operation(i32_value(value))).collect();
         assert_eq!(stored, expected, "{row}");
         for mutation in stored.iter().rev() {
-            current = mutation.diff(&current).diff().apply(&current).expect("Store reverse undo");
+            current = protocol::apply_diff(mutation.diff(&current).diff(), &current).expect("Store reverse undo");
         }
         assert_eq!(current, base, "{row}");
     }
@@ -76,11 +76,11 @@ where
         let mut combined = M::Diff::default();
         for value in row["steps"].as_array().expect("steps") {
             let diff = M::Diff::from_value(serde_json::json!({"value": value}).into()).expect("replacement diff");
-            current = diff.apply(&current).expect("sequential diff");
+            current = protocol::apply_diff(&diff, &current).expect("sequential diff");
             combined.absorb(diff);
         }
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");
-        assert_eq!(combined.apply(&base).expect("composed diff"), current, "{row}");
+        assert_eq!(protocol::apply_diff(&combined, &base).expect("composed diff"), current, "{row}");
         assert_eq!(serde_json::Value::from(combined.to_value()), serde_json::json!({"value":row["combined"]}));
     }
     for a in [None, Some(i32::MIN), Some(0), Some(i32::MAX)] {
@@ -179,7 +179,7 @@ fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };
         assert_eq!(check(&snapshot).is_empty(), row["accept"].as_bool().expect("accept"));
         let mutation = super::std1_strict::Std1StrictMutation::SetValue(super::std1_strict::SetValue { value: snapshot.value });
-        assert_eq!(mutation.diff(&snapshot).diff().apply(&snapshot).expect("negative mutation stays valid"), snapshot);
+        assert_eq!(protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("negative mutation stays valid"), snapshot);
     }
 }
 

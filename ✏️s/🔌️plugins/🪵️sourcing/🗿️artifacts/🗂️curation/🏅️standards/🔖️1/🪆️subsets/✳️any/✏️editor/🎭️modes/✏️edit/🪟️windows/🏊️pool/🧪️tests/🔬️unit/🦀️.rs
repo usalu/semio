@@ -56,7 +56,7 @@ fn demonstrator_contributions() -> String {
 
 #[semio_framework_async_macros::async_test]
 async fn pool_render_respects_query_filter() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = SourcingCurationConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
     let names: Vec<String> = pool_kinds(&document, &cfg).into_iter().map(|kind| kind.name).collect();
     assert!(names.iter().any(|name| name.contains("Glulam")));
@@ -65,7 +65,7 @@ async fn pool_render_respects_query_filter() {
 
 #[semio_framework_async_macros::async_test]
 async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
@@ -80,7 +80,7 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
 /// 🧺️ LAW: the pool row exposes curated count only through the bounded stepper — no duplicate row buttons.
 #[semio_framework_async_macros::async_test]
 async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let uncurated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
@@ -95,7 +95,7 @@ async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
 /// not have must leave the pool in document order rather than silently re-sorting it by name.
 #[semio_framework_async_macros::async_test]
 async fn pool_sort_applies_only_to_its_own_columns() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let unsorted: Vec<String> = pool_kinds(&document, &SourcingCurationConfig::default()).into_iter().map(|kind| kind.id).collect();
     let foreign = SourcingCurationConfig { filters: Filters { sort: Some(TableSort { column_id: "count".into(), direction: SortDirection::Asc }), ..Default::default() }, ..Default::default() };
     assert_eq!(pool_kinds(&document, &foreign).into_iter().map(|kind| kind.id).collect::<Vec<_>>(), unsorted, "the curated table's own column must not reorder the pool");
@@ -108,7 +108,7 @@ async fn pool_sort_applies_only_to_its_own_columns() {
 
 #[semio_framework_async_macros::async_test]
 async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
     let semio_framework_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
@@ -202,7 +202,7 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
     let cfg = SourcingCurationConfig { contributions_json: fake_contribution(), ..Default::default() };
     let toggles: Vec<String> = filter_bar(&cfg, labels).expect("bounded filter bar").children.iter().map(|child| child.key.as_str().to_string()).collect();
     assert!(toggles.iter().any(|id| id == "sourcing-filter-module-salvage"), "the contributed module gains its own filter toggle: {toggles:?}");
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let before: Vec<String> = pool_kinds(&document, &SourcingCurationConfig::default()).into_iter().map(|kind| kind.id).collect();
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID));
     let history = semio_framework_plugin::HistoryView::empty();
@@ -230,7 +230,7 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
 async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_lane() {
     let json = demonstrator_contributions();
     assert!(json.len() > crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES);
-    let installable = crate::schema::installable_contributions(&json, crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&json, crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert_eq!(installable, "[]", "the shipped extensions re-contribute authored modules, so nothing new is installable");
     let installed: Vec<String> = crate::schema::available_modules(&json).into_iter().map(|module| module.module_id).collect();
     assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string(), "reuse".to_string()], "a re-contributed module never duplicates the authored one");
@@ -241,7 +241,7 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
     // 🧺️ EXACTLY the authored stock — asserted against the authored demo document itself rather
     // than a copied row count, so adding an authored module (`reuse` was the last one) can never
     // leave this law asserting a stale number again.
-    let authored: Vec<String> = crate::schema::filtered_stock(&crate::schema::default_document(), &Filters::default()).into_iter().map(|kind| kind.id).collect();
+    let authored: Vec<String> = crate::schema::filtered_stock(&crate::standards::v1::subsets::any::io::text::snapshot::default_document(), &Filters::default()).into_iter().map(|kind| kind.id).collect();
     assert_eq!(row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await, authored, "the pool still renders every authored kind, and only those, after the real pack crosses");
 }
 
@@ -251,7 +251,7 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
 /// store really kept the pushed roster — the whole path the demonstrator depends on.
 #[semio_framework_async_macros::async_test]
 async fn dispatching_set_contributions_installs_the_module_into_the_live_catalogue() {
-    let installable = crate::schema::installable_contributions(&fake_contribution(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&fake_contribution(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(installable.contains("\"salvage\""), "a module id no authored module serves is installable: {installable}");
     assert!(installable.len() <= crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
     let mut app = new_app().await;

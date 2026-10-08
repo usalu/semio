@@ -269,6 +269,7 @@ pub fn home_retained_contract() -> ToolExecutionContract {
 //#region 📬️ConfigStorePreparation
 /// 📬️ The ONE retained one-item preparation of the Home config lane, shared by BOTH Home surfaces (they share `HomeConfig`):
 /// it seals one local-studio tombstone as one point-invertible edit.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct HomeConfigPreparationFactory;
 
 struct HomeConfigPreparation {

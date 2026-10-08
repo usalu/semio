@@ -1,0 +1,72 @@
+{
+  "mutation": {
+    "mutation": "patchSnapshot",
+    "patch": {
+      "operation": "set",
+      "path": "/movie/title",
+      "value": "Two"
+    }
+  },
+  "before": {
+    "schema": "stdio.mp4",
+    "ftyp": {
+      "majorBrand": "isom",
+      "minorVersion": 0,
+      "compatibleBrands": []
+    },
+    "movie": {
+      "creationTime": 0,
+      "modificationTime": 0,
+      "timescale": 1000,
+      "duration": 0,
+      "rate": 65536,
+      "volume": 256,
+      "matrix": [
+        65536,
+        0,
+        0,
+        0,
+        65536,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "nextTrackId": 1,
+      "title": "One",
+      "encoder": null
+    },
+    "tracks": []
+  },
+  "after": {
+    "schema": "stdio.mp4",
+    "ftyp": {
+      "majorBrand": "isom",
+      "minorVersion": 0,
+      "compatibleBrands": []
+    },
+    "movie": {
+      "creationTime": 0,
+      "modificationTime": 0,
+      "timescale": 1000,
+      "duration": 0,
+      "rate": 65536,
+      "volume": 256,
+      "matrix": [
+        65536,
+        0,
+        0,
+        0,
+        65536,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "nextTrackId": 1,
+      "title": "Two",
+      "encoder": null
+    },
+    "tracks": []
+  }
+}

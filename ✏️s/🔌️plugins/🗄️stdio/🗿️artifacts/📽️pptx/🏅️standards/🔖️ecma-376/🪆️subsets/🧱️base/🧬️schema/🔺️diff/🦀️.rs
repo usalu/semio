@@ -26,7 +26,7 @@ pub struct PptxDiff {
 }
 
 impl MutationDiff<PptxSnapshot> for PptxDiff {
-    fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
+    fn apply(&self, base: &PptxSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PptxSnapshot> {
         let mut next = base.clone();
         if let Some(schema) = &self.schema {
             next.schema = schema.clone();

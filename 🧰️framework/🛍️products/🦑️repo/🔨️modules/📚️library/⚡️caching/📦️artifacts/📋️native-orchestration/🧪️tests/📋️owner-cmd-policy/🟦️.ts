@@ -58,7 +58,7 @@ for (const row of corpus.cases) test(row.id, () => {
 }, 15000);
 
 test("interactive dashboard delegates its native owner progress", () => {
-  const project=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📋️project.json"),"utf8"));
+  const project=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📋️project.json"),"utf8"));
   expect(project.targets.run.options.env?.SEMIO_NATIVE_OWNER_PROGRESS).toBe("delegated");
   expect(project.targets.build.options.env?.SEMIO_NATIVE_OWNER_PROGRESS).toBeUndefined();
 });

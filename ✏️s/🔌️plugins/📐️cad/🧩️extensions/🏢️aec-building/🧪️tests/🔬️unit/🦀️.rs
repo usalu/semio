@@ -11,7 +11,7 @@ async fn bundle_contributes_building_import_profile() {
     assert_eq!(topic_contribution.topic, "cad.computer");
     assert_eq!(topic_contribution.payload["moduleId"].as_str(), Some(MODULE_ID));
     let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
-    let parsed = json::parse(computers_json).expect("parse");
+    let parsed = json::parse(computers_json, json::JsonMemberPolicy::Reject).expect("parse");
     let beam_typology = parsed.get("importProfiles").and_then(JsonValue::as_array).and_then(|profiles| profiles.first()).and_then(|profile| profile.get("layerTypology")).and_then(|typology| typology.get("beam"));
     assert!(beam_typology.and_then(JsonValue::as_str).is_some());
 }

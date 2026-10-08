@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::animate::config::component::mutations::*;
 use crate::editor::animate::config::component::*;
-use set_engagement_input::SetEngagementInput;
+use crate::editor::animate::config::SetEngagementInput;
 
 impl protocol::OpText for PresentationConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -32,7 +32,7 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::animate::config::component::mutations::*;
 use crate::editor::animate::config::component::*;
-use set_engagement_input::SetEngagementInput;
+use crate::editor::animate::config::SetEngagementInput;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `PresentationConfig`.

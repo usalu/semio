@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeFastenerKind` — patches the one addressed fastener in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenersDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -7,13 +7,15 @@ pub fn diff(payload: &super::ChangeFastenerKind, base: &Puzzle5dSnapshot) -> pro
     let Some(item) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "fastener", payload.id), vec![payload.id.clone()]);
     };
-    let mut next = item.clone();
-    next.fastener_kind = payload.new_fastener_kind.clone();
-    if next == *item {
+    let patch = Puzzle5dFastenerPatch {
+        fastener_kind: (payload.new_fastener_kind != item.fastener_kind).then(|| payload.new_fastener_kind.clone()),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
-        fasteners: Some(Puzzle5dFastenersDelta { patched: vec![Puzzle5dFastenerPatchEntry { id: payload.id.clone(), patch: Puzzle5dFastenerPatch { replacement: Some(next) } }], ..Default::default() }),
+        fasteners: Some(Puzzle5dFastenersDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

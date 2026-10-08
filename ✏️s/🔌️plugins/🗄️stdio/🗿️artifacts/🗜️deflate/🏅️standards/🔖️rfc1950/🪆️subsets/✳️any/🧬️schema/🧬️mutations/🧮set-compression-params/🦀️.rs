@@ -24,14 +24,12 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompression
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "compression-params", kind: "set-compression-params", record: "SetCompressionParams" };
 
     fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
-        agg_diff(&DeflateMutation::SetCompressionParams(self.clone()), base)
+        let Self { method, window_bits, level_hint } = self;
+        protocol::MutationOutcome::new( diff_set_compression_params(*method, *window_bits, *level_hint) )
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DeflateMutation::SetCompressionParams(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: base.compression_method, window_bits: base.window_bits, level_hint: base.compression_level_hint })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
     }

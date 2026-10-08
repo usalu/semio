@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "target": "@semio-tech/semio-tech-play:build",
+  "publicationOrder": ["catalog-release", "prepare-release", "build" ], "viteStorage": "nx/vite/semio-tech-play", "storage": { "NX_CACHE_DIRECTORY": "nx", "NX_WORKSPACE_DATA_DIRECTORY": "nx-data", "CARGO_TARGET_DIR": "cargo/target", "CARGO_BUILD_TARGET_DIR": "cargo/target", "CARGO_BUILD_BUILD_DIR": "cargo/build" }, "isolation": { "SEMIO_BUILD_MODE": "ship", "NX_DAEMON": "false", "NX_SKIP_NX_CACHE": "true", "NX_SKIP_REMOTE_CACHE": "true" }, "discard": [ "NX_TASK_HASH", "NX_TASK_TARGET_PROJECT", "NX_TASK_TARGET_TARGET", "NX_TASK_TARGET_CONFIGURATION", "NX_FORCE_REUSE_CACHED_GRAPH" ], "generations": [ "release-first", "release-second"],
+  "parallel": 4,
+  "catalogAdmission": "refuse"
+}

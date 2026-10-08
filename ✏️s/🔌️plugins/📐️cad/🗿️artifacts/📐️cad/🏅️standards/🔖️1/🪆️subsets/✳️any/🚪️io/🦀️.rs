@@ -339,49 +339,51 @@ pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<std::borrow::Cow
     }
 }
 
-/// 🧊️ Imports a STEP payload into the shared kernel, wrapping the first solid it contains
-/// (STEP files may hold more than one shape) as a `SemioModelElement` — id/typology/placement plus
-/// a `GeometryRef::Brep` naming the live kernel handle (the actual B-Rep geometry stays in the
-/// kernel session / gets bridged to a real `SemioBrepSnapshot` on export via `export_solids_as`,
-/// never re-duplicated here). Composing the returned element into a pane's `SemioModelSnapshot`
-/// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
-pub fn import_step_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+/// 🧊️ Imports actual STEP topology and transfers its owned snapshot with the model element.
+pub fn import_step_object(text: &str) -> Option<CadImportedObject> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = semio_s_artifact_stdio_step::geometry::import_step(&mut kernel, text).ok()?.into_iter().next()?;
-    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
+    Some(model_element_from_solid_handle(&kernel, "object-step", handle))
 }
 
 /// 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
-pub fn import_obj_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_obj_object(text: &str) -> Option<CadImportedObject> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_obj(text, 0.01).ok()?;
-    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
+    Some(model_element_from_solid_handle(&kernel, "object-obj", handle))
 }
 
 /// 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
-pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_stl_object(bytes: &[u8]) -> Option<CadImportedObject> {
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_stl(bytes, 0.01).ok()?;
-    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
+    Some(model_element_from_solid_handle(&kernel, "object-stl", handle))
 }
 
 /// 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
 /// `MeshImporter` codec) and re-importing that mesh into the kernel as a solid, matching the
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
-pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_glb_object(bytes: &[u8]) -> Option<CadImportedObject> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok())?;
-    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-glb"), handle_id))
+    Some(model_element_from_solid_handle(&kernel, "object-glb", handle_id))
 }
 
-/// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
-/// `GeometryRef::Brep{brep_id}` naming the handle. Shared by every native-geometry import path.
-fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
+/// 🌉️ Transfers actual topology out of the importer before its local kernel is dropped.
+fn model_element_from_solid_handle(kernel: &Brep, kind: &str, handle: GeometryHandle) -> CadImportedObject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
-    SemioModelElement { id, class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() }
+    let geometry = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(kernel.representation());
+    let element = SemioModelElement { id: kind.into(), class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() };
+    CadImportedObject { element, geometry }
+}
+
+/// 🧊️ Actual imported topology remains owned until its composed child publishes or cancels.
+pub struct CadImportedObject {
+    pub element: semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement,
+    pub geometry: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot,
 }
 
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
@@ -412,7 +414,7 @@ fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::Me
 /// 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
 /// picked file's extension; returns `None` for anything else so the caller can fall back to the
 /// spatial-JSON document path.
-pub fn import_cad_object_by_extension(name: &str, payload: &DslValue) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_cad_object_by_extension(name: &str, payload: &DslValue) -> Option<CadImportedObject> {
     if name.ends_with(".stp") || name.ends_with(".step") {
         return import_step_object(&cad_file_text_from_payload(payload)?);
     }
@@ -544,8 +546,8 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
 /// deterministic, content-addressed `shape_model` CHILD HANDLE (`cad_model_child_handle`) — the
 /// same "mint the child, dispatch create-<pane>-model against the result" two-step gesture
 /// `scene_from_spatial_payload` documents, done here for the ONE piece (the child's own content) a
-/// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
-/// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
+/// pure function CAN produce. An empty drawing retains the document's canonical empty-pane
+/// child; it contributes no imported object. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<DslValue, String> {
     use crate::standards::v1::subsets::any::schema::geometry::semio_model_snapshot_from_objects;
@@ -612,6 +614,7 @@ pub mod derived_construction {
             energy_model: None,
             structure_classic_model: None,
             drawings: Vec::new(),
+            breps: Vec::new(),
             references_by_model_definition_id: CadReferenceIndex::new(),
             nodes: Vec::new(),
         }

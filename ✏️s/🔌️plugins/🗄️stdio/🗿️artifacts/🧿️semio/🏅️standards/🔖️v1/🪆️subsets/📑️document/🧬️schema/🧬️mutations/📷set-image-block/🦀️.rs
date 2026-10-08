@@ -1,6 +1,4 @@
-//! 📷 `set-image-block` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📷 `set-image-block` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -19,11 +17,11 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "image-block", kind: "set-image-block", record: "SetImageBlock" };
 
     fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
-        agg_diff(&SemioDocumentMutation::SetImageBlock(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioDocumentMutation::SetImageBlock(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +33,10 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

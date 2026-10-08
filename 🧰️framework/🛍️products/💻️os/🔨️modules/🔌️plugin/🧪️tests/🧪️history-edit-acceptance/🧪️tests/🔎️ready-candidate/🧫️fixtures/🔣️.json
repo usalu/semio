@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "mode": "search",
+      "attempts": [
+        "blocked",
+        "ready"
+      ],
+      "expected": 1
+    },
+    {
+      "mode": "search",
+      "attempts": [
+        "blocked",
+        "blocked"
+      ],
+      "expected": null
+    },
+    {
+      "mode": "fixed",
+      "attempts": [
+        "blocked",
+        "ready"
+      ],
+      "expected": null
+    }
+  ]
+}

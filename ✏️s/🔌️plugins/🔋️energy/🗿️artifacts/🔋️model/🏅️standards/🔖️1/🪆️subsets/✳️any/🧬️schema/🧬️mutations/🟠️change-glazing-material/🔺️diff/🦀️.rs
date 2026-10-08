@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeGlazingMaterialConductivity` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GlazingMaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeGlazingMaterialConductivity, base: &EnergyMod
     if existing.conductivity_w_m_k == payload.new_conductivity_w_m_k {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries this conductivity (W/m·K): {}.", payload.id.0, payload.new_conductivity_w_m_k));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {
-        item.conductivity_w_m_k = payload.new_conductivity_w_m_k;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { glazing_materials: Rows::modifying(GlazingMaterialPatch { conductivity_w_m_k: Some(payload.new_conductivity_w_m_k), ..GlazingMaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

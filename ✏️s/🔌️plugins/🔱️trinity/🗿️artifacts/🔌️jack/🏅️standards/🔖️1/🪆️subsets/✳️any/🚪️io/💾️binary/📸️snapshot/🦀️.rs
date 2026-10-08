@@ -38,7 +38,7 @@ use store::ArtifactDsl;
 use store::PackDecodeOptions;
 use store::PackEncodeOptions;
 use store::PackError;
-pub(crate) use records::JackPackRecord;
+use crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord;
 
 impl store::ArtifactPack for JackSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {

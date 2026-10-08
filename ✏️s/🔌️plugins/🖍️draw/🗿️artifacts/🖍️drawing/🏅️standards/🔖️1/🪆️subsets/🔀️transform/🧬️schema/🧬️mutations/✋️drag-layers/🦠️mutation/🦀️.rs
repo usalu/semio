@@ -30,11 +30,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DragLayers {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (drawing_label_number(self.dx), drawing_label_number(self.dy));
         let (en, de) = drawing_label_layers(self.targets.len());

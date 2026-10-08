@@ -11,7 +11,5 @@ pub fn diff(payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> proto
     if base.scene.sun.intensity == payload.new_intensity {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun intensity is already {}.", payload.new_intensity));
     }
-    let mut scene = base.scene.clone();
-    scene.sun.intensity = payload.new_intensity;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { sun_intensity: Some(payload.new_intensity), ..Default::default() }), ..Default::default() })
 }

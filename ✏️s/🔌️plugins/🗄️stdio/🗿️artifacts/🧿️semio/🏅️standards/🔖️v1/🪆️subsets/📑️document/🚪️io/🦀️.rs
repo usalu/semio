@@ -241,7 +241,7 @@ pub mod derived_construction {
     use crate::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
     #[cfg(test)]
     use crate::standards::v1::subsets::document::schema::mutations::insert_style;
-    use crate::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, SemioDocumentMutation};
+    use crate::standards::v1::subsets::document::schema::mutations::{SemioDocumentMutation};
     use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -287,12 +287,15 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_semio_document_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => (Self { snapshot, ..self }, outcome),
+                Err(error) => (self, protocol::MutationOutcome::fatal(error.code, error.message, error.target)),
+            }
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {

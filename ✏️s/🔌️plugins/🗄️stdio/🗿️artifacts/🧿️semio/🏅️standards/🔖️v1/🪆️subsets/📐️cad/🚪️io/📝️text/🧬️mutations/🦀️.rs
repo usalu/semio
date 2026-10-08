@@ -60,8 +60,6 @@ pub(crate) fn dec_cad_snapshot(s: &str) -> Result<SemioCadSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_cad_mutation(m: &SemioCadMutation) -> String {
     match m {
-        SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_cad_snapshot(snapshot)),
-        SemioCadMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer }) => format!("add-layer layer={}", enc_layer(layer)),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => format!("remove-layer name={}", enc_str(name)),
         SemioCadMutation::SetLayer(set_layer::SetLayer { name, color_index, line_type, visible }) => format!(
@@ -89,15 +87,10 @@ pub(crate) fn print_cad_mutation(m: &SemioCadMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_cad_mutation(line: &str) -> Result<SemioCadMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioCadMutation::PatchSnapshot(crate::standards::v1::subsets::cad::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("cad mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("cad mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioCadMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_cad_snapshot(arg("snapshot")?)? })),
         "add-layer" => Ok(SemioCadMutation::AddLayer(add_layer::AddLayer { layer: dec_layer(arg("layer")?)? })),
         "remove-layer" => Ok(SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: dec_str(arg("name")?)? })),
         "set-layer" => Ok(SemioCadMutation::SetLayer(set_layer::SetLayer {

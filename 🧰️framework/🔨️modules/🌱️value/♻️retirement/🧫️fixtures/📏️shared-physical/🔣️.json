@@ -1,0 +1,32 @@
+{
+  "schema": "semio.value.shared-physical-retirement.v1",
+  "workBytes": [
+    1,
+    3,
+    5,
+    4096
+  ],
+  "maximumTurns": 100000,
+  "buffer": {
+    "bytes": 2097152,
+    "workBytes": 65536,
+    "maximumTurns": 36
+  },
+  "cases": [
+    {
+      "id": "empty-capacity",
+      "text": "",
+      "capacity": 8194
+    },
+    {
+      "id": "UTF8",
+      "text": "Mesh 😀",
+      "capacity": 9
+    },
+    {
+      "id": "large-backing",
+      "text": "x",
+      "capacity": 8194
+    }
+  ]
+}

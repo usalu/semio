@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "control",
+    "cases"
+  ],
+  "properties": {
+    "control": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "largePrefix",
+        "largeRepeats",
+        "advanceAllocation",
+        "closeAllocation"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 96
+        },
+        "largePrefix": {
+          "type": "string"
+        },
+        "largeRepeats": {
+          "const": 20000
+        },
+        "advanceAllocation": {
+          "const": 0
+        },
+        "closeAllocation": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "nodes",
+          "edges",
+          "mutation",
+          "status",
+          "warning",
+          "position",
+          "distance"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "x",
+                "y",
+                "handles"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "shape": {
+                  "type": "string"
+                },
+                "radius": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                },
+                "handles": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "angle"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "angle": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mutation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gap",
+              "shift",
+              "rise",
+              "rotation",
+              "turn",
+              "tilt",
+              "x",
+              "y",
+              "id",
+              "source",
+              "target",
+              "edgeKind",
+              "sourceTip",
+              "targetTip",
+              "tolerance",
+              "index"
+            ],
+            "properties": {
+              "gap": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "shift": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "rise": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "rotation": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "turn": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "tilt": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "x": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "y": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  }
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "edgeKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sourceTip": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "targetTip": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tolerance": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "enum": [
+                      "nan",
+                      "infinity"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "index": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            }
+          },
+          "status": {
+            "enum": [
+              "changed",
+              "duplicate-id",
+              "negative-tolerance",
+              "nonfinite-gap",
+              "nonfinite-shift",
+              "nonfinite-rise",
+              "nonfinite-rotation",
+              "nonfinite-turn",
+              "nonfinite-tilt",
+              "nonfinite-x",
+              "nonfinite-y",
+              "nonfinite-tolerance"
+            ]
+          },
+          "warning": {
+            "enum": [
+              "none",
+              "missing-handle",
+              "too-far"
+            ]
+          },
+          "position": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "distance": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

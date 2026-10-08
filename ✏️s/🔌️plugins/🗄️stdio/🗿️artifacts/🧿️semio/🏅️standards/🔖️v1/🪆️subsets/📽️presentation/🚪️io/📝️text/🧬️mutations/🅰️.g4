@@ -5,7 +5,7 @@ grammar Semio_semio_presentation_mutations;
 
 op: keywordOp EOF;
 keywordOp: KEYWORD arg*;
-KEYWORD: 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
+KEYWORD: 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
        | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-text-box-blocks' | 'insert-master'
        | 'remove-master' | 'insert-layout' | 'remove-layout' | 'set-layout-master';
 arg: IDENT '=' value;

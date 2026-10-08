@@ -1,0 +1,157 @@
+{
+  "category": {
+    "id": "mesh.uv",
+    "emoji": "🗺️",
+    "order": 290,
+    "label": {
+      "en": "Mesh UV mapping",
+      "de": "Netz-UV-Abwicklung"
+    },
+    "description": {
+      "en": "Mark seams and unwrap the surface into texture coordinates.",
+      "de": "Nähte markieren und die Oberfläche in Texturkoordinaten abwickeln."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.uv.markSeams",
+      "category": "mesh.uv",
+      "emoji": "✂️",
+      "label": {
+        "en": "Mark UV seams",
+        "de": "UV-Nähte markieren"
+      },
+      "description": {
+        "en": "Marks or clears the selected edges as seams along which the surface is cut open for unwrapping.",
+        "de": "Markiert die ausgewählten Kanten als Nähte, entlang derer die Oberfläche zum Abwickeln aufgeschnitten wird, oder hebt die Markierung auf."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The edges to mark.",
+            "de": "Die zu markierenden Kanten."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "seam",
+          "label": {
+            "en": "Seam",
+            "de": "Naht"
+          },
+          "description": {
+            "en": "On marks the edges as seams; off clears them.",
+            "de": "An markiert die Kanten als Nähte; aus hebt sie auf."
+          },
+          "type": "boolean",
+          "default": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with updated seams.",
+            "de": "Das Netz mit aktualisierten Nähten."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.uv.unwrap",
+      "category": "mesh.uv",
+      "emoji": "🧻️",
+      "label": {
+        "en": "Unwrap UVs",
+        "de": "UVs abwickeln"
+      },
+      "description": {
+        "en": "Unfolds the surface along the seams into packed texture coordinates.",
+        "de": "Faltet die Oberfläche entlang der Nähte in gepackte Texturkoordinaten auf."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with texture coordinates.",
+            "de": "Das Netz mit Texturkoordinaten."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

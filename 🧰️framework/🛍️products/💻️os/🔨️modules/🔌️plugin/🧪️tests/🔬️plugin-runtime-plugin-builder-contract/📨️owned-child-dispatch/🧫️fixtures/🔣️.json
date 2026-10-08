@@ -1,0 +1,9 @@
+{
+  "maximumItems": 1,
+  "maximumBytes": 262144,
+  "maximumTurns": 100000,
+  "cases": [
+    { "id": "child-only", "parentTouched": false, "parentLabel": "", "childCount": 5, "childLabel": "original 雪\u0000", "operations": 2, "members": 1 },
+    { "id": "parent-and-child", "parentTouched": true, "parentLabel": "parent 雪\u0000", "childCount": 9, "childLabel": "original 日本語", "operations": 3, "members": 2 }
+  ]
+}

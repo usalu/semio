@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveElectricalLoadCenterPv` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ElectricalLoadCenterPatch, ListEdit, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::RemoveElectricalLoadCenterPv, base: &EnergyModelSna
     if !existing.pv_ids.contains(&payload.pv_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("PV system {} is not a member of Electrical load center {}.", payload.pv_id.0, payload.id.0), [payload.pv_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.electrical_load_centers.iter_mut().find(|item| item.id == payload.id) {
-        item.pv_ids.retain(|candidate| *candidate != payload.pv_id);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { electrical_load_centers: Rows::modifying(ElectricalLoadCenterPatch { pv_ids: ListEdit::removing_where(&existing.pv_ids, |candidate| *candidate == payload.pv_id), ..ElectricalLoadCenterPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

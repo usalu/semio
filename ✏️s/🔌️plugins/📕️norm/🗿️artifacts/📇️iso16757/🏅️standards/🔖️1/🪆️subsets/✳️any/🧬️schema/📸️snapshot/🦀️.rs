@@ -65,3 +65,9 @@ impl Default for Iso16757Snapshot {
 
 
 
+
+/// ♻️ Releases decoded catalogue owners without recursive value destruction.
+pub(crate) fn retire_decoded_catalogue_value(value:crate::CatalogueValue){let mut pending=vec![value];while let Some(value)=pending.pop(){if let crate::CatalogueValue::List{items}=value{pending.extend(items);}}}
+
+/// ♻️ Releases decoded catalogue owners without recursive value destruction.
+pub(crate) fn retire_decoded_catalogue_geometry(node:crate::part_2::GeometryNode){use crate::part_2::GeometryNode as N;let mut pending=vec![node];while let Some(node)=pending.pop(){match node{N::Transform{child,..}=>pending.push(*child),N::Boolean{children,..}=>pending.extend(children),_=>{}}}}

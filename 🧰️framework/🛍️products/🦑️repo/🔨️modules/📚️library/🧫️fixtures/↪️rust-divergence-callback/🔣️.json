@@ -943,47 +943,34 @@
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-divergence-callback.ts",
-    "launchPaths": [
-      ".vscode/🧩️launch.seed.jsonc",
-      ".vscode/launch.json"
-    ],
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
     "execution": [
       {
         "phase": "source",
         "route": "rust-divergence-callback-source",
         "pattern": "^(closed divergence|shared callback|candidate-only callback)",
         "budgetMs": 15000,
-        "launchOrder": 410.201,
         "target": "test-rust-divergence-callback-source",
         "command": "bun ./📜️script.ts test rust-divergence-callback-source",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source",
-        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-source",
-        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-source --skip-nx-cache"
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source"
       },
       {
         "phase": "native",
         "route": "rust-divergence-callback-native",
         "pattern": "^actual rustc",
         "budgetMs": 15000,
-        "launchOrder": 410.202,
         "target": "test-rust-divergence-callback-native",
         "command": "bun ./📜️script.ts test rust-divergence-callback-native",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native",
-        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-native",
-        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-native --skip-nx-cache"
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native"
       },
       {
         "phase": "syn",
         "route": "rust-divergence-callback-syn",
         "pattern": "^independent syn callback",
         "budgetMs": 120000,
-        "launchOrder": 410.203,
         "target": "test-rust-divergence-callback-syn",
         "command": "bun ./📜️script.ts test rust-divergence-callback-syn",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn",
-        "launchName": "🧹clean🧩️taxonomy↪️rust-divergence-callback-syn",
-        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn --skip-nx-cache"
+        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
       }
     ]
   },

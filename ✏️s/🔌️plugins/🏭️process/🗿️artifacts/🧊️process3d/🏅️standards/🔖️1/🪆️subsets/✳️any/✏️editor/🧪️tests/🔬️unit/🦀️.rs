@@ -289,7 +289,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let mutations = crate::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
-    assert_eq!(mutations.len(), 16, "production ingress carries every Process3d mutation variant");
+    assert_eq!(mutations.len(), crate::standards::v1::subsets::any::schema::mutations::KINDS.len(), "production ingress carries every Process3d mutation variant");
     let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
     // 🪪️ Every workshop mutation addresses a machine by ID, so the expectation must locate the same
     // machine the replay does. It used to edit `machines.first_mut()` — the initial workshop already
@@ -322,6 +322,23 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     if let Process3dMutation::ReplaceStockSolid(value) = &mutations[14] {
         expected.stock_solid = value.new_solid.clone();
     }
+    let mut step = match &mutations[0] {
+        Process3dMutation::CreateStep(value) => value.step.clone(),
+        _ => unreachable!("fixed timeline fixture order"),
+    };
+    if let Process3dMutation::RenameStep(value) = &mutations[2] { step.label = value.new_label.clone(); }
+    if let Process3dMutation::ChangeStepEnabled(value) = &mutations[3] { step.enabled = value.new_enabled; }
+    if let Process3dMutation::ChangeStepOrigin(value) = &mutations[4] { step.origin = value.new_origin.clone(); }
+    if let Process3dMutation::ReplaceStepMeasure(value) = &mutations[5] { step.measure = value.new_measure.clone(); }
+    let solid = match &step.measure {
+        ProcessMeasure::Attach { component, .. } => component,
+        _ => unreachable!("production timeline ends with the authored attach measure"),
+    };
+    let tool = crate::working_solid_child_handle(&format!("tool-{}", step.id), solid);
+    let tool_ids = std::collections::BTreeMap::from([(step.id.clone(), tool.child_id.clone())]);
+    expected.steps = crate::flow_child_handle(&crate::flow_snapshot_for_steps(std::slice::from_ref(&step), &tool_ids));
+    expected.step_payloads = vec![step];
+    expected.tool_solids = vec![tool];
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": crate::PROCESS_3D_SCHEMA,
@@ -331,6 +348,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
             "edits": [{
                 "id": "process3d-production-deep-edit",
                 "actor": "process3d-production-law",
+                "line": null,
                 "forwards": mutation_hex,
                 "inverse": [],
                 "sequenceNumber": 1,
@@ -569,7 +587,7 @@ fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_gr
 
     assert_eq!(PROCESS3D_DOCUMENT_GRANT_BYTES, 4_096);
     assert!(PROCESS3D_DOCUMENT_MAXIMUM_BYTES > PROCESS3D_DOCUMENT_GRANT_BYTES, "the document maximum is a validation, never the per-turn grant");
-    let base = crate::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let step = ProcessStep { id: "step-retained".into(), label: "Retained Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() } };
     let (post, inverse, forward) = prepare_process3d_document(&base, Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() })).expect("create step prepares");
     assert!(matches!(forward, Process3dMutation::CreateStep(_)));
@@ -617,7 +635,7 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     for _ in 0..11 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
@@ -871,7 +889,7 @@ async fn registry_backed_example_action_emits_the_requested_document() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode example document");
-    assert_eq!(loaded, crate::schema::plate_document());
+    assert_eq!(loaded, crate::standards::v1::subsets::any::io::text::snapshot::plate_document());
 }
 
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick` (a pure selection-setting
@@ -1186,7 +1204,7 @@ async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
 #[semio_framework_async_macros::async_test]
 async fn export_brep_out_returns_step_text_structured_payload() {
     semio_framework::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
@@ -1203,7 +1221,7 @@ async fn export_brep_out_returns_step_text_structured_payload() {
 
 #[semio_framework_async_macros::async_test]
 async fn export_unknown_port_is_not_implemented() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
@@ -1211,7 +1229,7 @@ async fn export_unknown_port_is_not_implemented() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_geometry_in_rejects_unrecognized_schema() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
@@ -1495,7 +1513,7 @@ fn every_example_loads_through_the_member_less_archive_door() {
 /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Regenerate with `print_dsl` of the remint.
 #[test]
 fn every_example_fixture_carries_its_canonical_child_handles() {
-    for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, crate::schema::default_document()), (PROCESS3D_EXAMPLE_PLATE, crate::schema::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, crate::schema::concrete_forest_document())] {
+    for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, crate::standards::v1::subsets::any::io::text::snapshot::default_document()), (PROCESS3D_EXAMPLE_PLATE, crate::standards::v1::subsets::any::io::text::snapshot::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, crate::standards::v1::subsets::any::io::text::snapshot::concrete_forest_document())] {
         let reminted = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&document), document.workshop.clone());
         assert_eq!(document.stock_solid, reminted.stock_solid, "{example}: stale stockSolid handle");
         assert_eq!(document.steps, reminted.steps, "{example}: stale steps handle");

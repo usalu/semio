@@ -1,0 +1,246 @@
+{
+  "version": 3,
+  "measurements": [
+    {
+      "owner": "engine_canvas::EngineSurfaceRegistry",
+      "beforeBytes": 86544,
+      "afterBytes": 90264,
+      "capacity": 256,
+      "ownerBytes": 32
+    },
+    {
+      "owner": "scenes::AdmittedSurfaceMap<World3dState>",
+      "beforeBytes": 28400,
+      "afterBytes": 28440,
+      "capacity": 256,
+      "ownerBytes": 3136
+    }
+  ],
+  "cases": [
+    {
+      "id": "slot-successor-01",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "slot-successor-02",
+      "mutation": "stack",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-03",
+      "mutation": "worker",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-04",
+      "mutation": "threshold",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-05",
+      "mutation": "capacity",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-06",
+      "mutation": "owner-bytes",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-07",
+      "mutation": "owner-name",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-08",
+      "mutation": "other-row",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-09",
+      "mutation": "element",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-10",
+      "mutation": "scene-element",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-11",
+      "mutation": "scene-capacity",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-12",
+      "mutation": "scene-owner-bytes",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-13",
+      "mutation": "scene-owner-name",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-16",
+      "mutation": "missing-scene-correction",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-16",
+      "mutation": "missing-engine-correction",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-16",
+      "mutation": "extra-field",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-17",
+      "mutation": "missing-row",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-18",
+      "mutation": "before-hash",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-19",
+      "mutation": "after-hash",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-20",
+      "mutation": "inverse",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-21",
+      "mutation": "path",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-22",
+      "mutation": "binding",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-23",
+      "mutation": "missing-binding",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-24",
+      "mutation": "assertion",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-25",
+      "mutation": "scene-assertion",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-26",
+      "mutation": "kernel-assertion",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-27",
+      "mutation": "world-model",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-28",
+      "mutation": "world-recipe",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-29",
+      "mutation": "store-transition",
+      "accepted": false
+    },
+    {
+      "id": "slot-successor-30",
+      "mutation": "store-layout-acceptance",
+      "accepted": false
+    },
+    {
+      "id": "layout4-1",
+      "mutation": "retained-clone-transition",
+      "accepted": false
+    },
+    {
+      "id": "layout4-2",
+      "mutation": "retained-clone-layout-acceptance",
+      "accepted": false
+    },
+    {
+      "id": "layout4-3",
+      "mutation": "missing-retained-clone-transition",
+      "accepted": false
+    },
+    {
+      "id": "layout5-1",
+      "mutation": "authority-transitions",
+      "accepted": false
+    },
+    {
+      "id": "layout5-2",
+      "mutation": "authority-layout-acceptance",
+      "accepted": false
+    },
+    {
+      "id": "layout5-3",
+      "mutation": "missing-authority-transitions",
+      "accepted": false
+    },
+    {
+      "id": "layout5-4",
+      "mutation": "declared-field-delta",
+      "accepted": false
+    },
+    {
+      "id": "layout6-1",
+      "mutation": "current-measurement",
+      "accepted": false
+    },
+    {
+      "id": "layout6-2",
+      "mutation": "measurement-physical-acceptance",
+      "accepted": false
+    },
+    {
+      "id": "layout6-3",
+      "mutation": "missing-current-measurement",
+      "accepted": false
+    },
+    {
+      "id": "kernel-element",
+      "mutation": "kernel-element",
+      "accepted": false
+    },
+    {
+      "id": "kernel-capacity",
+      "mutation": "kernel-capacity",
+      "accepted": false
+    },
+    {
+      "id": "kernel-owner",
+      "mutation": "kernel-owner",
+      "accepted": false
+    },
+    {
+      "id": "missing-kernel-correction",
+      "mutation": "missing-kernel-correction",
+      "accepted": false
+    },
+    {
+      "id": "store-declaration",
+      "mutation": "store-declaration",
+      "accepted": false
+    }
+  ]
+}

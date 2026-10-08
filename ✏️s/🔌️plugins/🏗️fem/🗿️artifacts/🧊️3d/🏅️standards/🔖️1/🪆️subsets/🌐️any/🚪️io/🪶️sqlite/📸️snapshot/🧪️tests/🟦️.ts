@@ -1,3 +1,4 @@
+import * as snapshotSqlite from "../🟦️.ts";
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -33,8 +34,8 @@ function everyWord(s:snapshot.Fem3dSnapshot,word:string):void{
 function copy(d:SqliteDatabase):{tables:{name:string;sql:string;rows:{rowid:bigint;values:SqliteValue[]}[]}[]}{return{tables:d.tables.map(t=>({name:t.name,sql:t.sql,rows:t.rows.map(r=>({rowid:r.rowid,values:[...r.values]}))}))}}
 
 test("fem3d handwritten semantic SQLite capability is owned by its snapshot", () => {
- expect(Object.hasOwn(snapshot, "fem3dSnapshotToSqliteDatabase")).toBe(true);
- expect(Object.hasOwn(snapshot, "fem3dSnapshotFromSqliteDatabase")).toBe(true);
+ expect(Object.hasOwn(snapshotSqlite, "fem3dSnapshotToSqliteDatabase")).toBe(true);
+ expect(Object.hasOwn(snapshotSqlite, "fem3dSnapshotFromSqliteDatabase")).toBe(true);
 });
 
 test("fem3d complete independent file edits preserve literal references, empty holes and UTF-8 map order",async()=>{

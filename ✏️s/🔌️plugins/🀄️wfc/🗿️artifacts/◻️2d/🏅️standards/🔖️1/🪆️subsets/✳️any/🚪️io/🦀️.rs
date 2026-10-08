@@ -20,7 +20,6 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::standards::v1::subsets::any::io::{diff, mutations, snapshot};
     use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DOCUMENT_SCHEMA};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;

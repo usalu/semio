@@ -115,8 +115,20 @@ struct ComposedParentDiff {
     revision: Option<i32>,
 }
 
+impl protocol::DiffAlgebra<ComposedParentSnapshot> for ComposedParentDiff {
+    fn inverse(&self, base: &ComposedParentSnapshot) -> Self {
+        Self { revision: self.revision.map(|_| base.revision) }
+    }
+    fn between(base: &ComposedParentSnapshot, other: &ComposedParentSnapshot) -> Self {
+        Self { revision: (base.revision != other.revision).then_some(other.revision) }
+    }
+    fn is_empty(&self) -> bool {
+        self.revision.is_none()
+    }
+}
+
 impl protocol::MutationDiff<ComposedParentSnapshot> for ComposedParentDiff {
-    fn apply(&self, base: &ComposedParentSnapshot) -> protocol::MutationApplyResult<ComposedParentSnapshot> {
+    fn apply(&self, base: &ComposedParentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ComposedParentSnapshot> {
         Ok(ComposedParentSnapshot { slot: base.slot.clone(), revision: self.revision.unwrap_or(base.revision) })
     }
 
@@ -182,6 +194,7 @@ impl<T: Send + 'static> store::ErasedSnapshotRetirement for ComposedParentOwnedR
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ComposedParentOwnedRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
 impl<T> Default for ComposedParentOwnedRetirementFactory<T> {
@@ -362,6 +375,7 @@ struct ComposedParentRejectedFieldAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for ComposedParentRejectedFieldAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -610,8 +624,20 @@ struct RecursiveBranchDiff {
     count: Option<i32>,
 }
 
+impl protocol::DiffAlgebra<RecursiveBranchSnapshot> for RecursiveBranchDiff {
+    fn inverse(&self, base: &RecursiveBranchSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
+    }
+    fn between(base: &RecursiveBranchSnapshot, other: &RecursiveBranchSnapshot) -> Self {
+        Self { count: (base.count != other.count).then_some(other.count) }
+    }
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
+}
+
 impl protocol::MutationDiff<RecursiveBranchSnapshot> for RecursiveBranchDiff {
-    fn apply(&self, base: &RecursiveBranchSnapshot) -> protocol::MutationApplyResult<RecursiveBranchSnapshot> {
+    fn apply(&self, base: &RecursiveBranchSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RecursiveBranchSnapshot> {
         Ok(RecursiveBranchSnapshot {
             count: self.count.unwrap_or(base.count),
             label: base.label.clone(),
@@ -688,6 +714,7 @@ impl RecursiveBranchSnapshotOpen {
 
 impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
     type Snapshot = RecursiveBranchSnapshot;
+    fn begin_birth_bytes(request: &store::MemberOpenRequest) -> Result<usize, store::MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
 
     fn begin(request: store::MemberOpenRequest) -> Result<Self, store::MemberOpenAdmissionError> {
         if let Err(diagnostic) = request.admitted_expected() {
@@ -844,6 +871,7 @@ macro_rules! recursive_fixture_snapshot {
 
         impl store::MemberStoreOwner<RecursiveFixtureMutation> for $snapshot {
             type SnapshotOpen = RecursiveBranchSnapshotOpen;
+            fn member_store_owners_birth_bytes() -> usize { crate::app::bounded_document_store_owners_birth_bytes::<Self, RecursiveFixtureMutation>() + crate::app::bounded_config_store_one_item_preparation_factory_birth_bytes::<Self, RecursiveFixtureMutation>() }
             fn member_store_owners() -> store::DocumentStoreOwners<Self, RecursiveFixtureMutation> {
                 bounded_document_store_owners().with_one_item_preparation(bounded_config_store_one_item_preparation_factory("recursive-member", 4096))
             }
@@ -958,6 +986,10 @@ impl ReadyComposedParentInitialization {
 }
 
 impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, RecursiveFixtureMutation> for ReadyComposedParentInitialization {
+    fn next_close_byte_demand(&self) -> usize {
+        self.retirement.as_ref().map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if self.closing || cx.is_cancelled() {
             return semio_framework_job::StepOutcome::Cancelled;
@@ -1048,7 +1080,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                             return Self::fault(cx, b"recursive-parent-current-owner-missing");
                         };
                         let current = runtime.current_ref();
-                        let next = match protocol::MutationDiff::apply(operation.diff(current).diff(), current) {
+                        let next = match protocol::apply_diff(operation.diff(current).diff(), current) {
                             Ok(next) => next,
                             Err(_) => return Self::fault(cx, b"recursive-parent-replay-rejected"),
                         };
@@ -1677,6 +1709,87 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("cancel acknowledgement"));
         close_member_admission_app(&mut app);
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_composed_replacement_close_query_forwards_whole_member_page_extent() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-demand/🔣️.json")).expect("closed neutral replacement demand");
+    let ordinary = fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize;
+    let extent = fixture["expectedCloseDemandBytes"].as_u64().unwrap() as usize;
+    let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
+    let mut app = live_composed_replacement_app().await;
+    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 799, "exact-page-close", 31).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("member ingress registry"));
+    app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("exact member ingress"));
+    app.seal_owned_document_members(handle).expect("sealed member set");
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::OpeningMembers).await;
+    app.maintenance_stage = 14;
+    PluginApp::maintenance_step(&mut app, 1, ordinary).expect("begin retained member open");
+    app.cancel_artifact_store_replacement(handle).expect("cancel candidate");
+    for _ in 0..100_000 {
+        if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == crate::app::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_close_byte_demand(open) == extent)) { break; }
+        PluginApp::close_step(&mut app, 1, ordinary).expect("close prior owners and bounded logical request retirement");
+        semio_framework_async::yield_once().await;
+    }
+    let demand = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(store::MemberOpenOperation::next_close_byte_demand).expect("retained member operation");
+    let denied = PluginApp::close_step(&mut app, 1, ordinary).expect("physical undergrant retains owner");
+    let demand_after_denial = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(store::MemberOpenOperation::next_close_byte_demand).expect("denied owner remains retained");
+    let caller_demand = PluginApp::next_close_byte_demand(&app);
+    eprintln!("[DEBUG] retained replacement neutral before cleanup request={} caller={} denied={:?}", demand_after_denial, caller_demand, denied);
+    let mut terminal = false;
+    for _ in 0..100_000 {
+        let step = PluginApp::close_step(&mut app, 1, ceiling).expect("explicit admitted cleanup extent");
+        if step == PluginCloseStep::Complete { terminal = true; break; }
+        semio_framework_async::yield_once().await;
+    }
+    assert!(terminal && PluginApp::close_terminal_is_empty(&app));
+    eprintln!("[DEBUG] replacement member page physical={} ordinary={} caller={} denied={:?} fullAdmission={} terminal=true", demand, ordinary, caller_demand, denied, ceiling);
+    assert_eq!(demand, extent);
+    assert_eq!(demand_after_denial, extent);
+    assert!(matches!(denied, PluginCloseStep::Pending { released_bytes: 0, .. } | PluginCloseStep::Blocked { .. }));
+    assert_eq!(caller_demand, extent);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn retained_composed_replacement_terminal_store_box_requires_whole_physical_grant() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-terminal/🔣️.json")).expect("closed neutral terminal frame");
+    let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
+    let mut app = live_composed_replacement_app().await;
+    let handle = composed_replacement_candidate(&mut app, 798, "terminal-box-close", 0).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    app.cancel_artifact_store_replacement(handle).expect("cancel candidate before member ingress");
+    let mut extent = None;
+    for _ in 0..100_000 {
+        if let Some(active) = app.store_replacement_jobs.get(handle.operation.0) {
+            if let Some(bytes) = active.terminal_store_frame_bytes() {
+                extent = Some(bytes);
+                break;
+            }
+        }
+        PluginApp::close_step(&mut app, 1, ceiling).expect("close exact preceding candidate owners");
+        semio_framework_async::yield_once().await;
+    }
+    let extent = extent.expect("terminal candidate store frame remains retained");
+    assert!(extent > 0 && extent <= ceiling);
+    let before_demand = PluginApp::next_close_byte_demand(&app);
+    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PluginApp::close_step(&mut app, 1, extent - 1).expect("terminal frame one below"));
+    let retained = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.terminal_store_frame_bytes() == Some(extent));
+    let exact_demand = PluginApp::next_close_byte_demand(&app);
+    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PluginApp::close_step(&mut app, 1, extent).expect("terminal frame exact funding"));
+    let mut terminal = false;
+    for _ in 0..100_000 {
+        if PluginApp::close_step(&mut app, 1, ceiling).expect("complete separately admitted app cleanup") == PluginCloseStep::Complete { terminal = true; break; }
+        semio_framework_async::yield_once().await;
+    }
+    assert!(terminal && PluginApp::close_terminal_is_empty(&app));
+    eprintln!("[DEBUG] replacement terminal StoreBox extent={} query={} undergrant={:?} retained={} heap={:?} nextQuery={} exact={:?} heap={:?} terminal=true", extent, before_demand, denied, retained, denied_heap, exact_demand, funded, funded_heap);
+    assert_eq!(exact_demand, extent);
+    assert!(retained);
+    assert_eq!((denied_heap.requested_bytes, denied_heap.released_bytes), (0, 0));
+    assert!(matches!(denied, PluginCloseStep::Pending { released_items, released_bytes: 0 } if released_items <= 1));
+    assert_eq!((funded_heap.requested_bytes, funded_heap.released_bytes), (0, extent));
+    assert!(matches!(funded, PluginCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == extent));
 }
 
 /// 🧩️ A candidate parent's child projection is the APP's answer, never the structural one.

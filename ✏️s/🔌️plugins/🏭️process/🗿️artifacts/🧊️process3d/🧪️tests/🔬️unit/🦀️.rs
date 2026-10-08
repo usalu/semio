@@ -1,5 +1,74 @@
 use super::*;
 
+/// ⏩️ Insertion advances the viewer on the resulting timeline, preserving the unlimited cursor.
+#[test]
+fn inserted_step_cursor_matches_neutral_json_oracle() {
+    use crate::editor::process3d::{commands::step::insert_step_emit, config::{Process3dConfig, Process3dConfigMutation}};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["cursorInsertions"].as_array().unwrap() {
+        let count = case["stepCount"].as_u64().unwrap() as usize;
+        let cursor = case["cursor"].as_u64().map(|value| value as usize);
+        let next = case["next"].as_u64().map(|value| value as usize);
+        let step = |id: String| ProcessStep { id: id.clone(), label: id, enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.1, depth: 0.2, pose: Pose::default() } };
+        let mut snapshot = empty_process3d_snapshot();
+        snapshot.step_payloads = (0..count).map(|index| step(index.to_string())).collect();
+        let config = Process3dConfig { resolved_up_to: cursor, ..Process3dConfig::default() };
+        let emit = insert_step_emit(&snapshot, &config, step("inserted".into()));
+        assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(payload)] if payload.index == case["index"].as_u64().unwrap() as usize));
+        let expected = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor { value: next }] };
+        assert_eq!(emit.config_mutations, expected);
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&emit.config_mutations)).unwrap();
+        let oracle = if next == cursor { serde_json::json!([]) } else { serde_json::json!([{ "SetCursor": { "value": case["next"] } }]) };
+        assert_eq!(actual, oracle);
+        eprintln!("[DEBUG] Process cursor insertion count={count} cursor={cursor:?} next={next:?}");
+    }
+}
+
+/// 🧬️ Literal variant identities agree across lazy borrowed metadata, owned metadata, and neutral cases.
+#[test]
+fn tagged_field_borrowed_schema_matches_neutral_cases() {
+    use semio_framework_dsl_record::{BorrowedDslField, BorrowedShape, DslField, Shape};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral fixture");
+    let first_party = semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party fixture");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&first_party)).unwrap(), fixture);
+    for (key, borrowed, owned) in [
+        ("measureRecipe", <MeasureRecipe as BorrowedDslField>::SHAPE, <MeasureRecipe as DslField>::shape()),
+        ("workingSolid", <WorkingSolid as BorrowedDslField>::SHAPE, <WorkingSolid as DslField>::shape()),
+        ("processMeasure", <ProcessMeasure as BorrowedDslField>::SHAPE, <ProcessMeasure as DslField>::shape()),
+    ] {
+        let BorrowedShape::Statements(borrowed) = borrowed else { panic!("tagged borrowed field") };
+        let Shape::Statements(owned) = owned else { panic!("tagged owned field") };
+        let borrowed_names: Vec<_> = borrowed.iter().map(|(name, _)| *name).collect();
+        let owned_names: Vec<_> = owned.iter().map(|(name, _)| name.as_str()).collect();
+        let expected: Vec<_> = fixture["variants"][key].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+        assert_eq!(borrowed_names, expected);
+        assert_eq!(owned_names, expected);
+        eprintln!("[DEBUG] Process3D borrowed schema {key}: {} literal variants", expected.len());
+    }
+}
+
+/// 📦️ The current binary mutation frame agrees with independently encoded LEB128 UTF-8 lengths.
+#[test]
+fn delete_step_binary_matches_neutral_leb128_oracle() {
+    use crate::standards::v1::subsets::any::{io::binary::mutations::{decode_op, encode_op}, schema::mutations::delete_step::DeleteStep};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["deleteSteps"].as_array().unwrap() {
+        let id = case["id"].as_str().unwrap();
+        let mutation = Process3dMutation::DeleteStep(DeleteStep { id: id.into() });
+        let actual = encode_op(&mutation).expect("current binary mutation");
+        let mut oracle = vec![2, 1];
+        leb128::write::unsigned(&mut oracle, id.len() as u64).unwrap();
+        oracle.extend_from_slice(id.as_bytes());
+        assert_eq!(actual, oracle);
+        assert_eq!(actual.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), case["hex"].as_str().unwrap());
+        assert_eq!(decode_op(&actual).expect("current decode"), mutation);
+        let mut extra = actual.clone();
+        extra.push(0);
+        assert!(decode_op(&extra).is_err());
+        eprintln!("[DEBUG] Process3D binary delete-step {} UTF-8 bytes: {} frame bytes", id.len(), actual.len());
+    }
+}
+
 /// 🔤️ The legacy enum-typed `export_formats`/`import_formats` are retired in favor of the
 /// string-id `export_stdio_kinds`/`import_stdio_kinds` peers below — both stay empty.
 #[semio_framework_async_macros::async_test]

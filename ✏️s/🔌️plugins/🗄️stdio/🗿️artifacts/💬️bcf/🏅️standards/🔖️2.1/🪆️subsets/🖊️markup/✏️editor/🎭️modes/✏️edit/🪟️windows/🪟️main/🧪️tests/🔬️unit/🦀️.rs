@@ -11,7 +11,7 @@ async fn definition_declares_the_editable_table_window_kit() {
 async fn render_produces_a_table_node_for_the_default_document() {
     let document = BcfSnapshot::default();
     for locale in [Locale::En, Locale::De] {
-        render(&document, locale).expect("default document table renders");
+        render(&document, locale, semio_framework_plugin::UiPublicationRevision(23)).expect("default document table renders");
     }
 }
 

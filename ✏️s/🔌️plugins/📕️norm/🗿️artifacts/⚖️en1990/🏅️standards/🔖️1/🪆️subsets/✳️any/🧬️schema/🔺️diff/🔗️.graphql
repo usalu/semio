@@ -1,10 +1,79 @@
-# 🪪️ En1990Diff uses the canonical Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# 🧬️ En1990 diff schema — sparse scalar fields and ordered per-collection row edits.
+
+enum En1990RowOp {
+  INSERT
+  REMOVE
+  REPLACE
+}
+
 type En1990Diff {
-  gK: Float @state(class: ARTIFACT)
-  qK: ArtifactChild @state(class: ARTIFACT)
-  resistanceKn: Float @state(class: ARTIFACT)
-  consequenceClass: Int @state(class: ARTIFACT)
   annex: String @state(class: ARTIFACT)
-  seismicAEdKn: Float @state(class: ARTIFACT)
+  projectId: String @state(class: ARTIFACT)
+  structureKind: String @state(class: ARTIFACT)
+  altitudeM: Float @state(class: ARTIFACT)
+  consequenceClass: Int @state(class: ARTIFACT)
+  reliabilityClass: Int @state(class: ARTIFACT)
+  designWorkingLifeCategory: Int @state(class: ARTIFACT)
+  designWorkingLifeYears: Float @state(class: ARTIFACT)
+  referencePeriodYears: Float @state(class: ARTIFACT)
+  supervisionLevel: String @state(class: ARTIFACT)
+  inspectionLevel: String @state(class: ARTIFACT)
+  kFiDeclared: Float @state(class: ARTIFACT)
+  betaComputed: Float @state(class: ARTIFACT)
+  permanents: [En1990PermanentEdit!]! @state(class: ARTIFACT)
+  variables: [En1990VariableEdit!]! @state(class: ARTIFACT)
+  accidentals: [En1990AccidentalEdit!]! @state(class: ARTIFACT)
+  seismics: [En1990SeismicEdit!]! @state(class: ARTIFACT)
+  members: [En1990MemberEdit!]! @state(class: ARTIFACT)
+  bridgeSls: [En1990BridgeSlsEdit!]! @state(class: ARTIFACT)
+  effects: [En1990EffectEdit!]! @state(class: ARTIFACT)
+}
+
+type En1990PermanentEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990PermanentAction
+}
+
+type En1990VariableEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990VariableAction
+}
+
+type En1990AccidentalEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990AccidentalAction
+}
+
+type En1990SeismicEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990SeismicAction
+}
+
+type En1990MemberEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990Member
+}
+
+type En1990BridgeSlsEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990BridgeSls
+}
+
+type En1990EffectEdit {
+  op: En1990RowOp!
+  index: Int!
+  id: String!
+  value: En1990MemberEffect
 }

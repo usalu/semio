@@ -1,0 +1,723 @@
+{
+  "format": 1,
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 17,
+    "largePrefix": "幅🙂",
+    "largeRepeats": 5000
+  },
+  "cases": [
+    {
+      "id": "node-locked/set",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-locked/clear",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "node-locked/false-is-authored",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-locked/same-null",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-locked/same-false",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "node-locked/missing",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null
+    },
+    {
+      "id": "node-locked/first-duplicate",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "node-locked/empty",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "node-locked/nul-unicode",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "Größe\u0000幅",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "Größe\u0000幅",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-locked/large-prefix",
+      "kind": "node-locked",
+      "rows": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": null
+    },
+    {
+      "id": "node-visible/set",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-visible/clear",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "node-visible/false-is-authored",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-visible/same-null",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-visible/same-false",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "node-visible/missing",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null
+    },
+    {
+      "id": "node-visible/first-duplicate",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "node-visible/empty",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "node-visible/nul-unicode",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "Größe\u0000幅",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "Größe\u0000幅",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "node-visible/large-prefix",
+      "kind": "node-visible",
+      "rows": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/set",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/clear",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "edge-locked/false-is-authored",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/same-null",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/same-false",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "edge-locked/missing",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/first-duplicate",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "edge-locked/empty",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "edge-locked/nul-unicode",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "Größe\u0000幅",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "Größe\u0000幅",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-locked/large-prefix",
+      "kind": "edge-locked",
+      "rows": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/set",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/clear",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "edge-visible/false-is-authored",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/same-null",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": null
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/same-false",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "edge-visible/missing",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/first-duplicate",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "a",
+          "value": false
+        },
+        {
+          "id": "a",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false
+    },
+    {
+      "id": "edge-visible/empty",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true
+    },
+    {
+      "id": "edge-visible/nul-unicode",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "Größe\u0000幅",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "Größe\u0000幅",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": null
+    },
+    {
+      "id": "edge-visible/large-prefix",
+      "kind": "edge-visible",
+      "rows": [
+        {
+          "id": "$large:a",
+          "value": true
+        },
+        {
+          "id": "$large:b",
+          "value": null
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": null
+    }
+  ]
+}

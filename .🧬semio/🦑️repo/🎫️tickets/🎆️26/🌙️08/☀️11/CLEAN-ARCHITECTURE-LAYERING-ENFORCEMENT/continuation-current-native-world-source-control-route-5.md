@@ -1,0 +1,5 @@
+# Current World Source-Control Route 5
+
+Authored helper: `cargo-inputs/📥️current-native-world/📜️script.ts source-model 5`. Exact owned GUI row: `gui-source-model-5.json` in the same directory. Receipt: `🗑️generated/current-native-world/source-model-5/admission.json`. The helper must be registered in both launch authorities before invocation. No command invocation or readiness result is claimed by this authored route.
+
+The helper guards five full current pairs and sixteen complete authorities, exact original unit body conservation with three constructor binding adjustments, closed own/AJV schema outputs and full before/after Rust parsing through rustfmt stdin. It writes only inside the ticket; no compiler, source formatting write, live application or native execution. Source-model ready will remain separate from actual native owning-target outcomes. The sealed receipt uses Native's ready/pairs/bindings/forward/inverse contract and explicitly sourceWritesOutsideTicketfalse, nativeExecutedfalse, liveIdentityfalse, atomicityfalse and publicationReadyfalse.

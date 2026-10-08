@@ -23,7 +23,7 @@ pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 /// 🔣️ Container `rename_all` cases the variant names (`ellipse`, `nurbs`); `rename_all_fields` cases every
 /// struct-variant member (`radiusMajor`, `controlPoints`), exactly as the brep schema (`📸️snapshot/🔣️.json`)
 /// and serde state them (`🌱️value/✨️derive/🧪️tests/🐫️variant-field-casing`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepCurve {
     Line {
@@ -66,7 +66,7 @@ impl Default for BrepCurve {
 /// 2D twin of [`BrepCurve`], same variant vocabulary, matching the native kernel's `Curve2`
 /// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot`]
 /// (`📸️snapshot/🔁️body/🦀️.rs`) round-trip it exactly, never approximated.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepCurve2 {
     Line { origin: SemioPoint2, direction: SemioPoint2 },
@@ -88,7 +88,7 @@ impl Default for BrepCurve2 {
 /// 🗺️ A b-rep face's underlying surface. Owned by `brep`.
 ///
 /// 🔣️ Cased like [`BrepCurve`]: variant names by `rename_all`, members by `rename_all_fields`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepSurface {
     Plane {

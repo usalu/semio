@@ -1,6 +1,7 @@
 //! 📎️ `AttachLocalFolder` is the authoritative direct Rust leaf for remembering which local folder one program's document is
 //! attached to on this device.
 
+use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::detach_local_folder::DetachLocalFolder;
 use super::LocalFoldersConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
@@ -41,13 +42,50 @@ pub struct LocalFolderBindings {
 /// 📁️ The schema id for the local folder binding config facet.
 pub const LOCAL_FOLDERS_CONFIG_SCHEMA: &str = "os.config.local-folders";
 
-impl MutationDiff<LocalFolderBindings> for LocalFolderBindings {
-    fn apply(&self, _base: &LocalFolderBindings) -> protocol::MutationApplyResult<LocalFolderBindings> {
-        Ok(self.clone())
+/// 🔺️ Sparse diff of [`LocalFolderBindings`]: one absolute row per touched document id.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct LocalFoldersDiff {
+    #[value(skip_serializing_if = "Vec::is_empty")]
+    pub bindings: Vec<KeyedEdit<LocalFolderBinding>>,
+}
+
+impl MutationDiff<LocalFolderBindings> for LocalFoldersDiff {
+    fn apply(&self, base: &LocalFolderBindings, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LocalFolderBindings> {
+        let mut bindings = base.bindings.clone();
+        for row in &self.bindings {
+            bindings.retain(|entry| entry.document_id != row.key);
+            if let Some(binding) = &row.value {
+                bindings.push(binding.clone());
+            }
+        }
+        bindings.sort_by(|left, right| left.document_id.cmp(&right.document_id));
+        Ok(LocalFolderBindings { bindings })
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        absorb_keyed_rows(&mut self.bindings, other.bindings);
+    }
+}
+
+impl protocol::DiffAlgebra<LocalFolderBindings> for LocalFoldersDiff {
+    fn inverse(&self, base: &LocalFolderBindings) -> Self {
+        Self { bindings: self.bindings.iter().map(|row| KeyedEdit::new(row.key.clone(), base.bindings.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
+    }
+
+    fn between(base: &LocalFolderBindings, other: &LocalFolderBindings) -> Self {
+        let mut bindings: Vec<KeyedEdit<LocalFolderBinding>> = base
+            .bindings
+            .iter()
+            .filter(|entry| other.bindings.iter().find(|candidate| candidate.document_id == entry.document_id) != Some(*entry))
+            .map(|entry| KeyedEdit::new(entry.document_id.clone(), other.bindings.iter().find(|candidate| candidate.document_id == entry.document_id).cloned()))
+            .collect();
+        bindings.extend(other.bindings.iter().filter(|entry| !base.bindings.iter().any(|candidate| candidate.document_id == entry.document_id)).map(|entry| KeyedEdit::new(entry.document_id.clone(), Some(entry.clone()))));
+        Self { bindings }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.bindings.is_empty()
     }
 }
 //#endregion 🔖️Schema
@@ -85,15 +123,12 @@ impl From<&AttachLocalFolder> for LocalFolderBinding {
 impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLocalFolder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "local-folder", kind: "attach-local-folder", record: "Set" };
 
-    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFolderBindings> {
+    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         let attached = LocalFolderBinding::from(self);
         if base.bindings.iter().any(|entry| *entry == attached) {
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already attached to this folder.", self.document_id));
+            return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is already attached to this folder.", self.document_id));
         }
-        let mut bindings: Vec<LocalFolderBinding> = base.bindings.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect();
-        bindings.push(attached);
-        bindings.sort_by(|left, right| left.document_id.cmp(&right.document_id));
-        MutationOutcome::new(LocalFolderBindings { bindings })
+        MutationOutcome::new(LocalFoldersDiff { bindings: vec![KeyedEdit::new(self.document_id.clone(), Some(attached))] })
     }
 
     fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
@@ -117,13 +152,6 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
 //#endregion 🔖️Mutation
 
 //#region 🌉️MutationCodecBridge
-/// 🧮️ Applies one local-folders mutation through its whole-record diff.
-pub fn apply_local_folders_config_mutation(snapshot: &mut LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::{Mutation as _, MutationDiff as _};
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
-    Ok(())
-}
-
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation bindings.
 pub fn inverse_local_folders_config_mutation(snapshot: &LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -146,13 +174,6 @@ pub fn encode_local_folder_bindings_json(snapshot: &LocalFolderBindings) -> Stri
 /// 📥️ Decodes the canonical local folder bindings JSON projection.
 pub fn decode_local_folder_bindings_json(text: &str) -> Result<LocalFolderBindings, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.

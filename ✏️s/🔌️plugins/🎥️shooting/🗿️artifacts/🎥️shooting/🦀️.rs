@@ -595,17 +595,33 @@ impl Identified<String> for ShootingSavedCamera {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+/// 🎯️ An explicitly assigned optional value: wraps the value so assigning `None` stays distinct from leaving the field untouched on the wire (a bare nested `Option` collapses both to `null`).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+pub struct ShootingAssigned<T> {
+    pub value: T,
+}
+
+impl<T> ShootingAssigned<T> {
+    /// 🏗️ Wraps the assigned value.
+    pub fn new(value: T) -> Self {
+        Self { value }
+    }
+}
+
+/// 🩹 Sparse asset field patch; `orientation`/`scale` are assignable so an absent optional value is restorable.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingAssetPatch {
     pub name: Option<String>,
     pub url: Option<String>,
-    #[dsl(coord)]
+    pub format: Option<String>,
     pub origin: Option<[f64; 3]>,
-    pub orientation: Option<[f64; 4]>,
-    pub scale: Option<[f64; 3]>,
+    pub orientation: Option<ShootingAssigned<Option<[f64; 4]>>>,
+    pub scale: Option<ShootingAssigned<Option<[f64; 3]>>>,
 }
 
 impl Patchable<ShootingAssetPatch> for ShootingAsset {
@@ -616,14 +632,17 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
         if let Some(url) = &patch.url {
             self.url = url.clone();
         }
+        if let Some(format) = &patch.format {
+            self.format = format.clone();
+        }
         if let Some(origin) = patch.origin {
             self.origin = origin;
         }
-        if let Some(orientation) = patch.orientation {
-            self.orientation = Some(orientation);
+        if let Some(orientation) = &patch.orientation {
+            self.orientation = orientation.value;
         }
-        if let Some(scale) = patch.scale {
-            self.scale = Some(scale);
+        if let Some(scale) = &patch.scale {
+            self.scale = scale.value;
         }
     }
 
@@ -631,24 +650,28 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
         let patch = ShootingAssetPatch {
             name: (self.name != other.name).then(|| other.name.clone()),
             url: (self.url != other.url).then(|| other.url.clone()),
+            format: (self.format != other.format).then(|| other.format.clone()),
             origin: (self.origin != other.origin).then_some(other.origin),
-            orientation: (self.orientation != other.orientation).then(|| other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-            scale: (self.scale != other.scale).then(|| other.scale.unwrap_or([1.0, 1.0, 1.0])),
+            orientation: (self.orientation != other.orientation).then(|| ShootingAssigned::new(other.orientation)),
+            scale: (self.scale != other.scale).then(|| ShootingAssigned::new(other.scale)),
         };
         (patch != ShootingAssetPatch::default()).then_some(patch)
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+/// 🩹 Sparse shot field patch.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingShotPatch {
     pub label: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub format: Option<String>,
     pub shape: Option<String>,
+    pub background: Option<ShootingAssigned<Option<String>>>,
+    pub camera_id: Option<ShootingAssigned<Option<String>>>,
 }
 
 impl Patchable<ShootingShotPatch> for ShootingShot {
@@ -668,6 +691,12 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
         if let Some(shape) = &patch.shape {
             self.shape = shape.clone();
         }
+        if let Some(background) = &patch.background {
+            self.background = background.value.clone();
+        }
+        if let Some(camera_id) = &patch.camera_id {
+            self.camera_id = camera_id.value.clone();
+        }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<ShootingShotPatch> {
@@ -677,18 +706,20 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
             height: (self.height != other.height).then_some(other.height),
             format: (self.format != other.format).then(|| other.format.clone()),
             shape: (self.shape != other.shape).then(|| other.shape.clone()),
+            background: (self.background != other.background).then(|| ShootingAssigned::new(other.background.clone())),
+            camera_id: (self.camera_id != other.camera_id).then(|| ShootingAssigned::new(other.camera_id.clone())),
         };
         (patch != ShootingShotPatch::default()).then_some(patch)
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+/// 🩹 Sparse saved-camera field patch.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingSavedCameraPatch {
     pub label: Option<String>,
-    #[dsl(block)]
     pub camera: Option<ShootingCamera>,
 }
 
@@ -708,23 +739,29 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
     }
 }
 
-/// 🩹️ The scene-lighting patch — needed both by `op`'s `PatchScene` operation and by the DSL/OpText
-/// mirror in `op` (`ShootingMutationDsl::PatchScene`), so it lives here alongside the other `*Patch`
-/// records rather than in `op` itself.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+/// 🩹 Sparse scene-lighting patch: one optional field per scene scalar, so a scene kind names only the value it owns.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct ShootingScenePatch {
+    pub background: Option<String>,
     pub sun_enabled: Option<bool>,
-    #[dsl(angle = "deg")]
     pub sun_azimuth: Option<f64>,
-    #[dsl(angle = "deg")]
     pub sun_elevation: Option<f64>,
     pub sun_intensity: Option<f64>,
+    pub sun_color: Option<String>,
     pub ambient_intensity: Option<f64>,
+    pub ambient_color: Option<String>,
     pub shadow_enabled: Option<bool>,
+    pub shadow_opacity: Option<f64>,
+    pub shadow_softness: Option<f64>,
+    pub material_color: Option<String>,
+    pub material_metalness: Option<f64>,
     pub material_roughness: Option<f64>,
+    pub material_emissive: Option<String>,
+    pub material_emissive_intensity: Option<f64>,
+    pub material_stroke: Option<String>,
 }
 //#endregion 🔖️CollectionSupport
 

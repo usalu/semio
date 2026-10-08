@@ -114,43 +114,8 @@
     "../../🧪️.rs",
     "../../🧪️test/🦀️s.rs"
   ],
-  "launch": [
-    {
-      "name": "⚖️gate🌱️value💾️resident🦀️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/value-resident-rs:test --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.33
-      }
-    },
-    {
-      "name": "⚖️gate🌱️value💾️resident🌐️wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/value-resident-rs:check-wasm --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.34
-      }
-    }
-  ],
   "existingTs": {
-    "projectName": "@semio-tech/value-resident",
-    "launch": {
-      "name": "⚖️gate🌱️value💾️resident",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/value-resident:test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.32
-      }
-    }
+    "projectName": "@semio-tech/value-resident"
   },
   "moduleImports": [
     {

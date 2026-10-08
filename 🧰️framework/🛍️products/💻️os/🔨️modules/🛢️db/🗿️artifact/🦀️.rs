@@ -231,7 +231,7 @@ where
     Op: protocol::Mutation<P>,
 {
     let diff = op.diff(base);
-    let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
+    let post = protocol::apply_diff(diff.diff(), base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
     let forward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(&post))]);
     let backward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(base))]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());

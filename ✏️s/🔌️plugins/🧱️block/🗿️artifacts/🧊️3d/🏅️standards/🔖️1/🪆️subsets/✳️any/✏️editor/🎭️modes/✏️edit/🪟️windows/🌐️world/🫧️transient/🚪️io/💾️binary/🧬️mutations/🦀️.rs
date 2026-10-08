@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::Block3dWorldWindowTransient;
-use set_brush_preview::SetBrushPreview;
+use crate::editor::block3d::modes::edit::windows::world::transient::mutations::SetBrushPreview;
 
 impl protocol::OpBinary for Block3dWorldWindowTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

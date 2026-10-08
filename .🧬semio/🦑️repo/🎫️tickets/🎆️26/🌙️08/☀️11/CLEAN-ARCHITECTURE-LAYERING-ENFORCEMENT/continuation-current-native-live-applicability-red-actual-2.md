@@ -1,0 +1,3 @@
+# Current Applicability2 Actual Red Controls
+
+The exact registered red route closed Nx exit 1. All 50 finite source/phase controls executed; 43 disagreements demonstrate that the retained schema-only guard does not enforce source applicability. Eight depfile grammar and four schema controls are retained in the raw result. The full pre-green helper body is retained as `🗑️generated/current-native-live-applicability-2/laws-red/red-authority.ts.body`, together with started input hashes, actual `controls.json` and `outer.log`. No native execution or Root source writes occurred. Green has not yet been run.

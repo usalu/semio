@@ -10,7 +10,7 @@ use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DocumentHelpers
-pub(crate) fn resolve_reorder_target(document: &DrawingSnapshot, target_row_id: &str, drop_position: &str) -> Result<(Option<String>, usize), Fault> {
+pub(crate) fn resolve_reorder_target(document: &DrawingSnapshot, target_row_id: &str, drop_position: &str) -> Result<(Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, usize), Fault> {
     if !matches!(drop_position, "before" | "after" | "inside") { return Err(Fault::from("Unknown layer drop position")); }
     if target_row_id == "drawing-play-layers" || target_row_id == "drawing-play-layers.empty" { return Ok((None, document.layers.len())); }
     let selected = crate::schema::selected_drawing_layers(document, &[target_row_id.into()]);
@@ -40,7 +40,7 @@ pub fn plan(document: &DrawingSnapshot, payload: &MoveLayer) -> Result<DrawingMu
     let (parent_id, mut index) = resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position)?;
     let mut ancestor = parent_id.clone();
     while let Some(id) = ancestor {
-        if id == payload.layer_id { return Err(Fault::from("A group cannot contain itself")); }
+        if id.eq_str(&payload.layer_id) { return Err(Fault::from("A group cannot contain itself")); }
         ancestor = find_drawing_layer_location(document, &id).and_then(|location| location.parent_id);
     }
     if source.parent_id == parent_id && source.index < index { index -= 1; }

@@ -1,7 +1,9 @@
-use super::RemoveEffect; use crate::En1990Mutation; use crate::En1990Snapshot;
-pub fn inverse(_payload: &RemoveEffect, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    vec![En1990Mutation::ChangeEffects(crate::standards::v1::subsets::any::schema::mutations::change_effects::ChangeEffects { new_effects: base.effects.clone() })]
+//! ✂️ `remove-effect` inverse — inserts the removed row back at its position; an absent row leaves nothing to restore.
 
-    })())
+use super::RemoveEffect;
+use crate::mutations::insert_effect::InsertEffect;
+use crate::{En1990Mutation, En1990Snapshot};
+
+pub fn inverse(payload: &RemoveEffect, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    Ok(base.effects.get(payload.index).map(|item| vec![En1990Mutation::InsertEffect(InsertEffect { index: payload.index, item: item.clone() })]).unwrap_or_default())
 }

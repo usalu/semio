@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
-import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
@@ -41,7 +40,7 @@ function harness(compiler: typeof compilers[number], inspectors: Partial<{ inspe
   return { ...actual, reads };
 }
 
-test("exact writable route, package, and both launch registrations preserve the canonical semantic leaf", () => {
+test("exact writable route and package registrations preserve the canonical semantic leaf", () => {
   const registration = vector.registration, project = JSON.parse(readFileSync(join(root, registration.projectPath), "utf8"));
   expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", options: { cwd: dirname(registration.projectPath), command: registration.command } });
   const routerText = readFileSync(join(root, registration.routerPath), "utf8"), router = ts.createSourceFile(registration.routerPath, routerText, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
@@ -53,16 +52,11 @@ test("exact writable route, package, and both launch registrations preserve the 
   const manifest = JSON.parse(readFileSync(join(root, registration.packagePath), "utf8"));
   expect(manifest.name).toBe("@semio-tech/repo-lib");
   expect(manifest.scripts[registration.target]).toBe(registration.packageCommand);
-  for (const path of registration.launchPaths) {
-    const configurations = parseJsonc(readFileSync(join(root, path), "utf8")).configurations.filter((item: { name: string }) => item.name === registration.launchName);
-    expect(configurations).toHaveLength(1);
-    expect(configurations[0]).toEqual({ name: registration.launchName, type: "node-terminal", request: "launch", command: registration.launchCommand, cwd: "$" + "{workspaceFolder}", presentation: { group: "4_gate", order: registration.launchOrder } });
-  }
 });
 
 test("closed writable authority contract preserves the released finite checkpoint exactly", () => {
   
-  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-writable-path-authority-v1");expect(vector["semantics"]).toEqual({"authority":"immutable-editable-source-and-shared-complete-physical-proof","failure":"conservative-unsupported-never-writable-or-complete-empty","batch":"one-shared-source-proof-per-tokenization-call","required":["exact-current-source-bytes","one-cargo-owner","raw-no-follow-cargo-and-module-edges","unshadowed-inherited-environment","all-raw-target-steps-admitted-and-present","cancellation","unique-nonoverlapping-proof-spans"],"preservedFiniteCheckpoint":{"path":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","sha256":"949e9c2b3166f5d30cde120c3e93f473ca7b55c3b7cc4552d88155796cafb546","tests":74,"assertions":313}});expect(vector["spanIntegrity"]).toEqual(["duplicate-immutable-span","overlapping-immutable-span","same-span-finite-candidate","same-key-shorter-finite-candidate","covering-finite-candidate"]);expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","packagePath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json","target":"test-rust-writable-path-authority","command":"bun ./📜️script.ts test rust-writable-path-authority","packageCommand":"nx run @semio-tech/repo-lib:test-rust-writable-path-authority","route":"rust-writable-path-authority","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️rust-writable-path-authority.ts","launchPaths":[".vscode/🧩️launch.seed.jsonc",".vscode/launch.json"],"launchName":"🧹clean🧩️taxonomy✍️rust-writable-path-authority","launchOrder":410.196,"launchCommand":"bun nx run @semio-tech/repo-lib:test-rust-writable-path-authority --skip-nx-cache"});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️writable-path-authority","🧾️runs"],"runPrefix":"🔖️"});
+  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-writable-path-authority-v1");expect(vector["semantics"]).toEqual({"authority":"immutable-editable-source-and-shared-complete-physical-proof","failure":"conservative-unsupported-never-writable-or-complete-empty","batch":"one-shared-source-proof-per-tokenization-call","required":["exact-current-source-bytes","one-cargo-owner","raw-no-follow-cargo-and-module-edges","unshadowed-inherited-environment","all-raw-target-steps-admitted-and-present","cancellation","unique-nonoverlapping-proof-spans"],"preservedFiniteCheckpoint":{"path":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","sha256":"949e9c2b3166f5d30cde120c3e93f473ca7b55c3b7cc4552d88155796cafb546","tests":74,"assertions":313}});expect(vector["spanIntegrity"]).toEqual(["duplicate-immutable-span","overlapping-immutable-span","same-span-finite-candidate","same-key-shorter-finite-candidate","covering-finite-candidate"]);expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","packagePath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json","target":"test-rust-writable-path-authority","command":"bun ./📜️script.ts test rust-writable-path-authority","packageCommand":"nx run @semio-tech/repo-lib:test-rust-writable-path-authority","route":"rust-writable-path-authority","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️writable-path-authority","🧾️runs"],"runPrefix":"🔖️"});
   
   expect(createHash("sha256").update(prior).digest("hex")).toBe(vector.semantics.preservedFiniteCheckpoint.sha256);
   expect(new Set(vector.cases.map((row: Row) => row.id)).size).toBe(vector.cases.length);

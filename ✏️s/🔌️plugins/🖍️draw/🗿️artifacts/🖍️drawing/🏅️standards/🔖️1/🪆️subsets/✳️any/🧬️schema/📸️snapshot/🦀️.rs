@@ -3,6 +3,9 @@
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DRAWING_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
+#[path = "🔎️lookup/🦀️.rs"]
+pub mod lookup;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted drawing document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
@@ -58,5 +61,4 @@ pub fn retire_decoded_drawing_snapshot(value: DrawingSnapshot) {
     assert!(cursor.terminal_is_empty());
 }
 //#endregion 🔖️Snapshot
-
 

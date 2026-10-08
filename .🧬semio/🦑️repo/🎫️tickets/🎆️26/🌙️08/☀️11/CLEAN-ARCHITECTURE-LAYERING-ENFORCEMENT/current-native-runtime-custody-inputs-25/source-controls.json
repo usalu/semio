@@ -1,0 +1,44 @@
+[
+  {
+    "id": "captured-exact",
+    "base": "snapshot",
+    "path": "🧰️framework/provider.ts",
+    "hash": "same",
+    "reason": null
+  },
+  {
+    "id": "captured-advanced",
+    "base": "snapshot",
+    "path": "🧰️framework/provider.ts",
+    "hash": "other",
+    "reason": "Actual captured first-party body differs"
+  },
+  {
+    "id": "live-root-even-identical",
+    "base": "root",
+    "path": "🧰️framework/provider.ts",
+    "hash": "same",
+    "reason": "Actual live Root-owned import outside held source is refused"
+  },
+  {
+    "id": "live-root-other-owner",
+    "base": "root",
+    "path": "other/provider.ts",
+    "hash": "same",
+    "reason": "Actual live Root-owned import outside held source is refused"
+  },
+  {
+    "id": "ticket-helper",
+    "base": "ticket",
+    "path": "helper/📜️script.ts",
+    "hash": "same",
+    "reason": null
+  },
+  {
+    "id": "external-package",
+    "base": "root",
+    "path": "node_modules/external/index.js",
+    "hash": "same",
+    "reason": null
+  }
+]

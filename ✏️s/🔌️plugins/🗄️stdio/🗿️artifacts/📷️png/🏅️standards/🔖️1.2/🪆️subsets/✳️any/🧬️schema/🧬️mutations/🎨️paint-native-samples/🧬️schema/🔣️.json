@@ -7,8 +7,7 @@
   "required": [
     "revision",
     "region",
-    "paint",
-    "result"
+    "paint"
   ],
   "properties": {
     "revision": {
@@ -20,7 +19,8 @@
           "de": "Quellrevision"
         },
         "group": "target",
-        "order": 10
+        "order": 10,
+        "role": "discriminator"
       }
     },
     "region": {
@@ -147,7 +147,8 @@
                 "en": "RGBA",
                 "de": "RGBA"
               }
-            }
+            },
+            "role": "discriminator"
           }
         },
         "first": {
@@ -203,17 +204,7 @@
           }
         }
       }
-    },
-    "result": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json",
-      "x-semio-ui": {
-        "label": {
-          "en": "Completed PNG",
-          "de": "Fertiggestelltes PNG"
-        },
-        "group": "result",
-        "order": 40
-      }
     }
-  }
+  },
+  "description": "Revision-guarded paint intent. Prepared pixels are produced from the source snapshot and native samples during replay."
 }

@@ -22,8 +22,8 @@ fn a_mounted_sequence_of_edits_lands_on_a_document_that_still_round_trips() {
     }
     let pack = ArtifactPack::encode_pack(&document);
     assert_eq!(<Grid3dSnapshot as ArtifactPack>::decode_pack(&pack).expect("pack"), document);
-    let text = crate::io::text::snapshot::print_dsl(&document);
-    assert_eq!(crate::io::text::snapshot::parse_dsl(&text).expect("dsl"), document);
+    let text = crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&document);
+    assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(&text).expect("dsl"), document);
 }
 
 #[test]

@@ -33,7 +33,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
                 if !matches!(layer,DrawingLayerNode::Shape(_)) { return Err(Fault::from("Select geometric shapes to convert")); }
                 let segments=crate::schema::layer_to_path_segments(layer);
                 if segments.is_empty() || !segments.iter().all(crate::schema::valid_path_segment) { return Err(Fault::from("The shape has no valid path geometry")); }
-                let path=DrawingLayerNode::Path(crate::DrawingPathBody { base:layer_base(layer).clone(),segments });
+                let path=DrawingLayerNode::Path(crate::DrawingPathBody { base:layer_base(layer).clone(),segments:segments.into_iter().collect() });
                 operations.push(crate::mutations::delete_layer(layer_base(layer).id.clone()));
                 operations.push(crate::mutations::create_layer(location.parent_id.clone(),Some(location.index),path));
             }
@@ -57,7 +57,11 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
         }
         "group" => {
             let mut group = crate::schema::create_drawing_group_layer("Group");
-            let material = format!("{}:{}", document.id, selected.iter().map(|layer| layer_base(layer).id.as_str()).collect::<Vec<_>>().join("/"));
+            let mut material=format!("{}:",document.id);
+            for (index,layer) in selected.iter().enumerate() {
+                if index>0 {material.push('/');}
+                layer_base(layer).id.write_to(&mut material).map_err(|_|Fault::from("Cannot write group identity"))?;
+            }
             layer_base_mut(&mut group).id = crate::standards::v1::subsets::any::schema::create_drawing_id("group", material.as_bytes()).into();
             let group_id = layer_base(&group).id.clone();
             if find_drawing_layer(document, &group_id).is_some() { return Err(Fault::from("This group already exists")); }
@@ -65,7 +69,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
             for (index, layer) in selected.iter().enumerate() { operations.push(crate::mutations::reorder_layer(layer_base(layer).id.clone(), Some(group_id.clone()), index)); }
         }
         "bringToFront" | "sendToBack" | "bringForward" | "sendBackward" => {
-            let siblings=match parent.as_deref().and_then(|id|find_drawing_layer(document,id)) {
+            let siblings=match parent.as_ref().and_then(|id|find_drawing_layer(document,id)) {
                 Some(DrawingLayerNode::Group(group))=>&group.children,
                 _=>&document.layers,
             };
@@ -80,8 +84,8 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
 }
 
 fn plan_arrangement(document:&DrawingSnapshot,selected:&[&DrawingLayerNode],operation:&str)->Result<Vec<DrawingMutation>,Fault> {
-    let wanted=selected.iter().map(|layer|layer_base(layer).id.as_str()).collect::<std::collections::BTreeSet<_>>();
-    let mut stack=vec![(document.layers.as_slice(),0usize,[1.0,0.0,0.0,1.0,0.0,0.0],true,false)];
+    let wanted=selected.iter().map(|layer|&layer_base(layer).id).collect::<std::collections::BTreeSet<_>>();
+    let mut stack=vec![(&document.layers,0usize,[1.0,0.0,0.0,1.0,0.0,0.0],true,false)];
     let mut items=Vec::new();
     let mut remaining=4_096usize;
     while let Some((layers,index,parent,editable,ancestor_selected))=stack.last_mut() {
@@ -89,7 +93,7 @@ fn plan_arrangement(document:&DrawingSnapshot,selected:&[&DrawingLayerNode],oper
         *index+=1;
         remaining=remaining.checked_sub(1).ok_or_else(||Fault::from("Drawing exceeds arrangement capacity"))?;
         let base=layer_base(layer);
-        let chosen=wanted.contains(base.id.as_str());
+        let chosen=wanted.contains(&base.id);
         let editable=*editable && base.visible && !base.locked;
         let ancestor_selected=*ancestor_selected;
         let parent=*parent;
@@ -101,7 +105,7 @@ fn plan_arrangement(document:&DrawingSnapshot,selected:&[&DrawingLayerNode],oper
             }
         }
         let matrix=crate::schema::geometry::multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform));
-        if let DrawingLayerNode::Group(group)=layer {stack.push((group.children.as_slice(),0,matrix,editable,ancestor_selected || chosen));}
+        if let DrawingLayerNode::Group(group)=layer {stack.push((&group.children,0,matrix,editable,ancestor_selected || chosen));}
     }
     let bounds=items.iter().map(|(_,_,bounds)|*bounds).collect::<Vec<_>>();
     let deltas=crate::schema::geometry::arrangement::arrange(&bounds,operation).ok_or_else(||Fault::from(if operation.starts_with("distribute") {"Select at least three layers with finite bounds to distribute"}else {"Select at least two layers with finite bounds to align"}))?;

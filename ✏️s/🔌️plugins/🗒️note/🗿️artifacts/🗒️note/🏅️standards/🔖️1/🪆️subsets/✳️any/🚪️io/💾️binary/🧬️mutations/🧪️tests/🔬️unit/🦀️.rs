@@ -11,7 +11,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn note_document_text_round_trips_store_with_applied_operation() {
-    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::schema::empty_note_snapshot(), None);
+    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot(), None);
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
@@ -30,7 +30,7 @@ async fn note_document_text_round_trips_store_with_applied_operation() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
-    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::schema::empty_note_snapshot(), None);
+    let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot(), None);
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.

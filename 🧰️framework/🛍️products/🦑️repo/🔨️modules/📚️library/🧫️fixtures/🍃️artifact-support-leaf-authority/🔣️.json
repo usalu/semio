@@ -17,10 +17,6 @@
   "execution": {
     "target": "test-artifact-support",
     "command": "bun ./📜️script.ts test artifact-support long",
-    "launchName": "🧹clean🧩️taxonomy🧪️artifact-support",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-artifact-support --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.06,
     "generatorEnvironment": { "name": "SEMIO_TAXONOMY_GENERATOR_SENTINEL", "value": "current-process-environment" },
     "oracleRetention": { "rootPrefix": "🧪️energy-pointer-oracle-", "retainedInputs": ["Cargo.toml", "🦀️.rs"], "disposableOutputs": ["Cargo.lock", "🎯️target"], "retainOnFailure": true },
     "fixtureRetention": { "ownerPath": "📓️energy-support-acceptance/🧾️runs", "prefixes": { "support": "🧪️energy-support-current-", "oracle": "🧪️energy-pointer-oracle-", "unowned": "🧪️energy-oracle-unowned-" }, "rejectedChildren": ["../escape", "nested/child", "", "🧪️energy-pointer-oracle-foreign"] }

@@ -39,9 +39,11 @@ export class NativeScript extends BundleScript {
     const [tool, operation] = args;
     const index = args.indexOf("--manifest");
     const manifest = index >= 0 ? args[index + 1] : undefined;
-    if(tool==="owner-command"){
+    if(tool==="owner-command"||tool==="repository-test-body"){
       const request=nativeOwnerTestManifestRequestV1(args.slice(1)),path=resolve(this.repoRoot,request.manifest),cwd=resolve(this.repoRoot,request.cwd);
-      prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",path],cwd);
+      const consuming=tool==="repository-test-body";
+      if(consuming && (request.command!=="bun"&&request.command!==process.execPath || resolve(cwd,request.args[0]??"")!==resolve(cwd,"📜️script.ts") || request.args[1]!=="test"))throw Error("Repository test body requires its exact owned Bun script test route");
+      if(!consuming)prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",path],cwd);
       const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
       const env: Record<string,string|undefined>={...process.env,SEMIO_VITEST_POLICY:JSON.stringify(repositoryVitestPolicyV1(cwd)),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd)),SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd))};
@@ -49,7 +51,7 @@ export class NativeScript extends BundleScript {
       if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd)) });
       const policies=request.testManifests.map(manifest=>{
         const selected=resolve(this.repoRoot,manifest);
-        prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",selected],cwd);
+        if(!consuming)prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",selected],cwd);
         return repositoryCargoTestPolicyV1(selected,cwd);
       });
       if(new Set(policies.map(policy=>policy.manifestPath)).size!==policies.length)throw Error("Duplicate native test manifest authority");

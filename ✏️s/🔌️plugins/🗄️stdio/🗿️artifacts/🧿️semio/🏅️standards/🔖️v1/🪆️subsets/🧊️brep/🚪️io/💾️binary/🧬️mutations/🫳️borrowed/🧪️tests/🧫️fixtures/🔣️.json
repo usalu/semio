@@ -1,0 +1,517 @@
+{
+  "header": [
+    1,
+    13
+  ],
+  "prefix": "snapshot=",
+  "maximumDepth": 64,
+  "copyBytes": [
+    1,
+    3,
+    7,
+    64,
+    256
+  ],
+  "cancelStops": [
+    0,
+    1,
+    2,
+    17,
+    64
+  ],
+  "rootKeys": [
+    "schema",
+    "vertices",
+    "edges",
+    "loops",
+    "faces",
+    "shells",
+    "solids",
+    "coedges",
+    "nextLabel"
+  ],
+  "curveKinds": [
+    "line",
+    "circle",
+    "ellipse",
+    "nurbs"
+  ],
+  "curve2Kinds": [
+    "line",
+    "circle",
+    "ellipse",
+    "nurbs"
+  ],
+  "surfaceKinds": [
+    "plane",
+    "cylinder",
+    "cone",
+    "sphere",
+    "torus",
+    "nurbs"
+  ],
+  "snapshot": {
+    "schema": "stdio.semio.brep",
+    "vertices": [
+      {
+        "id": "δ😀\\\"\n\u0000",
+        "point": {
+          "x": 0.19999999999999998,
+          "y": -0.0,
+          "z": 1e-07
+        },
+        "tol": 1e-09
+      },
+      {
+        "id": "v1",
+        "point": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1.0
+        },
+        "tol": 0.0
+      }
+    ],
+    "edges": [
+      {
+        "id": "e0",
+        "startVertex": "δ😀\\\"\n\u0000",
+        "endVertex": "v1",
+        "curve": {
+          "kind": "line",
+          "origin": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "direction": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "tol": 1e-09
+      },
+      {
+        "id": "e1",
+        "startVertex": "δ😀\\\"\n\u0000",
+        "endVertex": "v1",
+        "curve": {
+          "kind": "circle",
+          "center": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "radius": 2.5
+        },
+        "tol": 1e-09
+      },
+      {
+        "id": "e2",
+        "startVertex": "δ😀\\\"\n\u0000",
+        "endVertex": "v1",
+        "curve": {
+          "kind": "ellipse",
+          "center": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "radiusMajor": 2.0,
+          "radiusMinor": 1.0
+        },
+        "tol": 1e-09
+      },
+      {
+        "id": "e3",
+        "startVertex": "δ😀\\\"\n\u0000",
+        "endVertex": "v1",
+        "curve": {
+          "kind": "nurbs",
+          "controlPoints": [
+            {
+              "x": 0.19999999999999998,
+              "y": -0.0,
+              "z": 1e-07
+            },
+            {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            }
+          ],
+          "weights": [
+            1.0,
+            0.5
+          ],
+          "degree": 1,
+          "knots": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "tol": 1e-09
+      }
+    ],
+    "loops": [
+      {
+        "id": "l0",
+        "edges": [
+          {
+            "edge": "e0",
+            "orientation": true
+          },
+          {
+            "edge": "e1",
+            "orientation": false
+          }
+        ]
+      }
+    ],
+    "faces": [
+      {
+        "id": "f0",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "plane",
+          "origin": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "normal": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "orientation": true,
+        "tol": 1e-09
+      },
+      {
+        "id": "f1",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "cylinder",
+          "origin": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "radius": 2.0
+        },
+        "orientation": false,
+        "tol": 1e-09
+      },
+      {
+        "id": "f2",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "cone",
+          "origin": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "radius": 2.0,
+          "halfAngle": 0.4
+        },
+        "orientation": true,
+        "tol": 1e-09
+      },
+      {
+        "id": "f3",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "sphere",
+          "center": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "radius": 2.0
+        },
+        "orientation": false,
+        "tol": 1e-09
+      },
+      {
+        "id": "f4",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "torus",
+          "center": {
+            "x": 0.19999999999999998,
+            "y": -0.0,
+            "z": 1e-07
+          },
+          "axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          },
+          "majorRadius": 2.0,
+          "minorRadius": 0.5
+        },
+        "orientation": true,
+        "tol": 1e-09
+      },
+      {
+        "id": "f5",
+        "outerLoop": "l0",
+        "innerLoops": [
+          "δ😀hole"
+        ],
+        "surface": {
+          "kind": "nurbs",
+          "controlPoints": [
+            {
+              "x": 0.19999999999999998,
+              "y": -0.0,
+              "z": 1e-07
+            },
+            {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            },
+            {
+              "x": 0.19999999999999998,
+              "y": -0.0,
+              "z": 1e-07
+            },
+            {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            }
+          ],
+          "weights": [
+            1.0,
+            0.5,
+            1.0,
+            0.5
+          ],
+          "uCount": 2,
+          "vCount": 2,
+          "degreeU": 1,
+          "degreeV": 1,
+          "knotsU": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "knotsV": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "orientation": false,
+        "tol": 1e-09
+      }
+    ],
+    "shells": [
+      {
+        "id": "sh0",
+        "faces": [
+          {
+            "face": "f0",
+            "orientation": true
+          },
+          {
+            "face": "f1",
+            "orientation": false
+          }
+        ]
+      }
+    ],
+    "solids": [
+      {
+        "id": "s0",
+        "shells": [
+          {
+            "shell": "sh0",
+            "isVoid": false
+          },
+          {
+            "shell": "sh0",
+            "isVoid": true
+          }
+        ]
+      }
+    ],
+    "coedges": [
+      {
+        "id": "c0",
+        "edge": "e0",
+        "forward": true,
+        "pcurve": {
+          "kind": "line",
+          "origin": {
+            "x": 0.25,
+            "y": -0.125
+          },
+          "direction": {
+            "x": 1.0,
+            "y": 0.0
+          }
+        },
+        "prange": [
+          0.0,
+          1.0
+        ],
+        "loopId": "l0",
+        "next": "c1",
+        "prev": "c4"
+      },
+      {
+        "id": "c1",
+        "edge": "e0",
+        "forward": false,
+        "pcurve": {
+          "kind": "circle",
+          "center": {
+            "x": 0.25,
+            "y": -0.125
+          },
+          "radius": 2.5
+        },
+        "prange": [
+          0.0,
+          1.0
+        ],
+        "loopId": "l0",
+        "next": "c2",
+        "prev": "c0"
+      },
+      {
+        "id": "c2",
+        "edge": "e0",
+        "forward": true,
+        "pcurve": {
+          "kind": "ellipse",
+          "center": {
+            "x": 0.25,
+            "y": -0.125
+          },
+          "xAxis": {
+            "x": 1.0,
+            "y": 0.0
+          },
+          "radiusMajor": 2.0,
+          "radiusMinor": 1.0
+        },
+        "prange": [
+          0.0,
+          1.0
+        ],
+        "loopId": "l0",
+        "next": "c3",
+        "prev": "c1"
+      },
+      {
+        "id": "c3",
+        "edge": "e0",
+        "forward": false,
+        "pcurve": {
+          "kind": "nurbs",
+          "controlPoints": [
+            {
+              "x": 0.25,
+              "y": -0.125
+            },
+            {
+              "x": 1.0,
+              "y": 0.0
+            }
+          ],
+          "weights": [
+            1.0,
+            0.5
+          ],
+          "degree": 1,
+          "knots": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "prange": [
+          0.0,
+          1.0
+        ],
+        "loopId": "l0",
+        "next": "c4",
+        "prev": "c2"
+      },
+      {
+        "id": "c4",
+        "edge": "e0",
+        "forward": true,
+        "pcurve": null,
+        "prange": [
+          0.0,
+          1.0
+        ],
+        "loopId": "l0",
+        "next": "c0",
+        "prev": "c3"
+      }
+    ],
+    "nextLabel": 4294967296
+  },
+  "importedObj": {
+    "text": "v 0 0 0\nv 1 0 0\nv 0 1 0\nv 0 0 1\nf 1 3 2\nf 1 2 4\nf 1 4 3\nf 2 3 4\n",
+    "tolerance": 1e-07,
+    "counts": {
+      "vertices": 4,
+      "edges": 6,
+      "loops": 4,
+      "faces": 4,
+      "shells": 1,
+      "solids": 1,
+      "coedges": 12
+    }
+  }
+}

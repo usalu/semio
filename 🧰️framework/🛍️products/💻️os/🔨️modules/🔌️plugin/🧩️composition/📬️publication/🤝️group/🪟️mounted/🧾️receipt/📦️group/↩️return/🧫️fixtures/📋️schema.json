@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.mounted-group.return/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "transferred",
+          "empty",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "transferred": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "birthBytes",
+        "releaseBytes",
+        "originalPointer"
+      ],
+      "properties": {
+        "birthBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "originalPointer": {
+          "const": true
+        }
+      }
+    }
+  }
+}

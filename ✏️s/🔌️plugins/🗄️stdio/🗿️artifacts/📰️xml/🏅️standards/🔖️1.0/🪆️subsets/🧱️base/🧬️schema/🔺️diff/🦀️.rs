@@ -194,7 +194,7 @@ pub fn diff_at_path(path: &[usize], leaf: XmlNodeDiff) -> XmlDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<XmlSnapshot> for XmlDiff {
-    fn apply(&self, base: &XmlSnapshot) -> MutationApplyResult<XmlSnapshot> {
+    fn apply(&self, base: &XmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<XmlSnapshot> {
         if let Some(root) = &self.root {
             validate_xml_node(base.doc.root.as_ref(), root)?;
         }

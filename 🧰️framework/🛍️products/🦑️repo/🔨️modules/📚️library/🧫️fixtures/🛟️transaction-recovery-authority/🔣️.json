@@ -2,9 +2,7 @@
   "schemaVersion": 1,
   "contract": "transaction-owned-recovery-versus-forward-inputs-v1",
   "registration": {
-    "id": "transaction-recovery-authority",
-    "name": "⚖️test-transaction-recovery-authority📚️library🟦️",
-    "order": 900.0422
+    "id": "transaction-recovery-authority"
   },
   "semantics": {
     "forward": "owned-write-proof-then-exact-generator-inputs",

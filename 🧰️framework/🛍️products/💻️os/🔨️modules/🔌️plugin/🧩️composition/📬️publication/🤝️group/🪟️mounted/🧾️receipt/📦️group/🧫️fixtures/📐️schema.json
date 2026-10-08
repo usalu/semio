@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumTurns",
+    "cancelStops",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.mounted.group-receipt.v1"
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 64
+    },
+    "maximumCapacityBytes": {
+      "const": 1048576
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "cancelStops": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "invocationId",
+          "parentEditId",
+          "childEditIds",
+          "lanes",
+          "members"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "invocationId": {
+            "type": "string"
+          },
+          "parentEditId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "childEditIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lanes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "document",
+                "mutationId",
+                "invocationId",
+                "schema",
+                "forward",
+                "inverse",
+                "dependencies",
+                "author",
+                "baseVersion",
+                "timestamp"
+              ],
+              "properties": {
+                "document": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "mutationId": {
+                  "type": "string"
+                },
+                "invocationId": {
+                  "type": "string"
+                },
+                "schema": {
+                  "type": "string"
+                },
+                "forward": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "inverse": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "dependencies": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "author": {
+                  "type": "string"
+                },
+                "baseVersion": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "timestamp": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "document",
+                "editId"
+              ],
+              "properties": {
+                "document": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "editId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -27,28 +27,22 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() {
     let host = demo_host_snapshot();
-    assert_eq!(crate::examples::demo::PRIMARY_TEXT, demo_text(&host), "demo asset drifted from demo_host_snapshot(); re-run `--ignored zzz_write_demo_example_asset`");
+    assert_eq!(crate::examples::demo::PRIMARY_TEXT, demo_text(&host), "handcrafted demo asset differs from its canonical host graph");
     host.retire_cold();
     let snapshot = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
     let scene = snapshot.to_host_snapshot();
     let ids: Vec<&str> = scene.widgets.iter().map(crate::schema::widget_id).collect();
-    assert_eq!(ids, ["slider", "add", "preview"]);
-    assert_eq!(scene.synapses.len(), 2);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral demo graph");
+    assert_eq!(crate::FLOW_DOCUMENT_SCHEMA, fixture["parentSchema"].as_str().unwrap());
+    assert_eq!(serde_json::to_value(&ids).expect("independent widget array"), fixture["widgetIds"]);
+    assert_eq!(scene.synapses.len() as u64, fixture["synapseCount"].as_u64().unwrap());
+    let actual_layout: serde_json::Value = scene.layout.iter().map(|(id, position)| (id.clone(), serde_json::json!({"x": position.x, "y": position.y}))).collect();
+    assert_eq!(actual_layout, fixture["layout"]);
     assert!(scene.synapses.iter().all(|synapse| ids.contains(&synapse.from.as_str()) && ids.contains(&synapse.to.as_str())));
     assert!(ids.iter().all(|id| scene.layout.get(*id).is_some()), "every demo widget carries its layout");
+    println!("[DEBUG] Flow handcrafted demo matches independent serde_json: widgets={} synapses={} layouts={}", ids.len(), scene.synapses.len(), scene.layout.len());
     scene.retire_cold();
     assert!(crate::flow_genesis_content_pack(&snapshot, "content", &snapshot.content.child_id).is_some(), "the demo's content child must have a genesis pack, or the canvas loads empty");
-}
-
-/// 🖊️ The ONLY way the demo asset is refreshed: `cargo test -p semio-s-artifact-flow-flow --lib --
-/// --ignored zzz_write_demo_example_asset`, then re-run the law above.
-#[semio_framework_async_macros::async_test]
-#[ignore]
-async fn zzz_write_demo_example_asset() {
-    let host = demo_host_snapshot();
-    let asset = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
-    std::fs::write(&asset, demo_text(&host)).expect("write demo asset");
-    host.retire_cold();
 }
 
 //#region 🧪️InferenceLaws

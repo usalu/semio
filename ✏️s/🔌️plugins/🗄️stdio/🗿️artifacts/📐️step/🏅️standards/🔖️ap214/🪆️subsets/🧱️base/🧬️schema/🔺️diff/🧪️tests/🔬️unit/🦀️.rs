@@ -37,7 +37,7 @@ fn base_snapshot() -> StepSnapshot {
         entities: vec![
             entity(1, "CARTESIAN_POINT", vec![StepValue::String("".into()), StepValue::Aggregate(vec![StepValue::Real(0.0), StepValue::Real(0.0), StepValue::Real(0.0)])]),
             entity(2, "CARTESIAN_POINT", vec![StepValue::String("".into()), StepValue::Aggregate(vec![StepValue::Real(1.0), StepValue::Real(0.0), StepValue::Real(0.0)])]),
-            entity(3, "DIRECTION", vec![StepValue::String("".into()), StepValue::Reference(99)]),
+            entity(3, "DIRECTION", vec![StepValue::String("".into()), StepValue::Reference(3)]),
         ],
     }
 }

@@ -20,7 +20,7 @@ type Fixture = Readonly<{
     required: readonly Readonly<{ from: string; to: string }>[];
     forbidden: readonly Readonly<{ from: string; to: string }>[];
   }>;
-  registration: Readonly<{ name: string; command: string; target: string }>;
+  registration: Readonly<{ target: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -113,7 +113,7 @@ describe("plugin publication source ownership", () => {
   test("closes every direct consumer on semantic owners", () => {
     const owners = new Set(fixture.owners.map(({ path }) => path));
     const routers = new Set(fixture.routers.map(({ path }) => path));
-    expect(fixture.consumers).toHaveLength(4);
+    expect(fixture.consumers).toHaveLength(3);
     for (const consumer of fixture.consumers) {
       const path = resolve(repoRoot, consumer.path);
       expect(existsSync(path), consumer.path).toBe(true);
@@ -162,7 +162,7 @@ describe("plugin publication source ownership", () => {
     expect(cycles).toEqual([]);
   });
 
-  test("registers the gate in package, Nx, and launch authorities", () => {
+  test("registers the gate in package and Nx authorities", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test plugin-publication-source-ownership");
@@ -170,9 +170,5 @@ describe("plugin publication source ownership", () => {
     expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "plugin-publication-source-ownership"');
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { readonly configurations: readonly Readonly<{ name?: string; command?: string }>[] };
-      expect(launch.configurations.filter(({ name, command }) => name === fixture.registration.name && command === fixture.registration.command), path).toHaveLength(1);
-    }
   });
 });

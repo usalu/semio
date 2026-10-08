@@ -1,0 +1,195 @@
+# Concurrent Mutation Diff Closure
+
+Actual native compiler-only inventory from hydration-store-entry-native-current.log. No production mutation semantics are accepted from compiler progress. Canonical source now requires ApplyCapability and DiffAlgebra; call sites must use apply_diff and implementations must meet current algebra requirements without legacy compatibility.
+
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:2119:14
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:2118:37
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:2134:14
+- E0277 | the trait bound `LossyDiff: protocol::DiffAlgebra<os_store::component::tests::DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:2133:37
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:118:14
+- E0277 | the trait bound `FailClosedDiff: protocol::DiffAlgebra<os_store::component::tests::DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:117:37
+- E0277 | the trait bound `FailClosedDiff: protocol::DiffAlgebra<os_store::component::tests::DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:138:17
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️supersede-law/🦀️.rs:58:17
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️deferred-reprojection/🦀️.rs:281:17
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4088:14
+- E0277 | the trait bound `RetainedTextDiff: protocol::DiffAlgebra<os_store::component::tests::RetainedTextSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4087:45
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️supersede-replay/🦀️.rs:1126:17
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs:15:45
+- E0277 | the trait bound `RetainedTextDiff: protocol::DiffAlgebra<os_store::component::tests::RetainedTextSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4114:17
+- E0277 | the trait bound `LossyDiff: protocol::DiffAlgebra<os_store::component::tests::DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🦀️.rs:12:45
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs:15:45
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs:24:45
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs:21:45
+- E0277 | the trait bound `SpaceHistoryDiff: DiffAlgebra<SpaceHistorySnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️schema/🧬️mutations/🦀️.rs:30:53
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:28218:14
+- E0277 | the trait bound `SpaceHistoryDiff: DiffAlgebra<SpaceHistorySnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:28217:45
+- E0277 | the trait bound `presence_retirement::tests::Value: protocol::DiffAlgebra<presence_retirement::tests::Value>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️testing/🧬️mutations/🦀️.rs:12:38
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:50:14
+- E0277 | the trait bound `presence_retirement::tests::Value: protocol::DiffAlgebra<presence_retirement::tests::Value>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:49:30
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:522:18
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:523:25
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:526:29
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:540:18
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:541:25
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:545:29
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:580:47
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:588:26
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:613:47
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:621:26
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:643:22
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:654:19
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:655:36
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:5961:58
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:6279:58
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:6650:58
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:23429:32
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧪️mutation-payload/🦀️.rs:66:17
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/🦀️.rs:15:14
+- E0277 | the trait bound `MiniDiff: protocol::DiffAlgebra<registry_fixture::MiniDoc>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/🦀️.rs:14:47
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/../../🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs:24:40
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:34:14
+- E0277 | the trait bound `MiniDiff: protocol::DiffAlgebra<registry_fixture::MiniDoc>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/../../🧪️testing/📔️registry/🧬️mutations/🦀️.rs:13:47
+- E0050 | method `apply` has 2 parameters but the declaration in trait `protocol::MutationDiff::apply` has 3 | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:14:14
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:13:32
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4618:41
+- E0061 | this function takes 3 arguments but 2 arguments were supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4618:21
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4623:40
+- E0061 | this function takes 3 arguments but 2 arguments were supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:4623:20
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3410:59
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3410:53
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3558:55
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3558:49
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:123:26
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:123:20
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../🧪️replay-retirement/🦀️.rs:128:9
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3918:38
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3918:32
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:137:29
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:137:23
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:139:35
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:139:29
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:145:57
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:145:51
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:227:55
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:227:49
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:229:123
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:229:117
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:241:33
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:241:27
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:242:13
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:246:35
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:246:29
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:248:37
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:248:31
+- E0277 | the trait bound `DemoDiff: DiffAlgebra<DemoSnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:250:55
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:250:49
+- E0599 | no method named `apply_to` found for struct `protocol::MutationOutcome<D>` in the current scope | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29562:44
+- E0599 | no method named `apply_to` found for struct `protocol::MutationOutcome<D>` in the current scope | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29567:56
+- E0277 | the trait bound `SpaceHistoryDiff: DiffAlgebra<SpaceHistorySnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs:15:56
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs:15:50
+- E0277 | the trait bound `SpaceHistoryDiff: DiffAlgebra<SpaceHistorySnapshot>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs:18:104
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️schema/🧬️mutations/🧹️remove-space-alternative/🧪️tests/🔬️unit/🦀️.rs:18:98
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:25203:24
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:25819:40
+- E0061 | this function takes 3 arguments but 2 arguments were supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:19053:39
+- E0061 | this function takes 3 arguments but 2 arguments were supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:19068:23
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:6128:73
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:6476:75
+- E0277 | the trait bound `presence_retirement::tests::Value: protocol::DiffAlgebra<presence_retirement::tests::Value>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:24:47
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:24:41
+- E0277 | the trait bound `presence_retirement::tests::Value: protocol::DiffAlgebra<presence_retirement::tests::Value>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:26:115
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:26:109
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️.rs:1916:24
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:109:35
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:121:38
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:123:52
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:125:38
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:132:29
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:133:44
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:147:25
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:154:51
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../🧬️mutation-laws/🦀️.rs:157:111
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../⚖️protocol-laws-unit/🦀️.rs:222:41
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/../⚖️protocol-laws-unit/🦀️.rs:225:43
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️.rs:741:26
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️.rs:853:24
+- E0277 | the trait bound `MiniDiff: protocol::DiffAlgebra<registry_fixture::MiniDoc>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:365:51
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:365:45
+- E0277 | the trait bound `MiniDiff: protocol::DiffAlgebra<registry_fixture::MiniDoc>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:369:53
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:369:47
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:785:48
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:84:59
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:84:53
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:87:63
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:87:57
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:115:37
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:115:31
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:122:199
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:122:193
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:124:115
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:124:109
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:127:17
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:785:42
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:789:48
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:138:73
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:138:67
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:150:63
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:150:57
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:789:42
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:856:34
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:856:28
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:175:9
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:176:31
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:176:25
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:178:9
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:179:9
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:181:9
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:183:9
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:185:33
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:185:27
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:186:69
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs:186:63
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:862:60
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:58:47
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:58:41
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:61:53
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:61:47
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:862:54
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:865:34
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:68:5
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:70:24
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:70:18
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:865:28
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:872:61
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:872:55
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:877:52
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:877:46
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:887:34
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:887:28
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:900:42
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:900:36
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:902:52
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:902:46
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:931:34
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:931:28
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:944:34
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:944:28
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:946:42
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:946:36
+- E0277 | the trait bound `mutation_laws_fixture::CounterDiff: protocol::DiffAlgebra<i64>` is not satisfied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:948:52
+- E0061 | this method takes 2 arguments but 1 argument was supplied | 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs:948:46
+
+## Current Fixture Closure Authorship
+
+Root authored current command CounterDiff ordered/wide inverse and state delta, MiniDiff inverse/state delta/emptiness, required capability arguments, all command-unit/fixture direct apply calls through the central applier, and remaining generic counter fixture capability/direct calls. Both fixture types have native laws using the existing language-neutral i64 MIN/MAX/equal corpus and independent serde wire parity; original assertions and rejection outcomes remain unchanged. Builder authored Store12 and generic SPR6 central application call changes plus current trait qualification. Other protocol-owner changes are preserved. No original grant/copy/turn/90-second limit changed. Native acceptance remains pending.
+
+## Current Source Census
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs`: direct_apply=0, apply_to=0, canonical_entries=12
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/📔️registry/🦀️.rs`: direct_apply=0, apply_to=0, canonical_entries=2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs`: direct_apply=0, apply_to=0, canonical_entries=19
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🧬️mutation-laws/🦀️.rs`: direct_apply=0, apply_to=0, canonical_entries=9
+
+This is a source census, not native acceptance. Root58275 failed before tests on captured Plugin fixture capability/algebra errors (164 distinct locations), now assigned to Editor.
+
+Root additionally aligned seven current generic inverse/state-delta protocol-law applications and two Store unit UFCS inverse applications with `apply_diff`. The law text, cold retirement, error messages, inverse ordering and original expected outcomes are preserved. Pub owns four co-located leaf and two generic-law-unit call updates; Editor owns twelve Plugin native fixture application files, while the concurrent protocol author supplied current fixture algebra/capability definitions. No compatibility API added.

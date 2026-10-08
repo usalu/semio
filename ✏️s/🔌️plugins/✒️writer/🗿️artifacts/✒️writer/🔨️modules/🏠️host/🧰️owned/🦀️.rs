@@ -35,6 +35,10 @@ struct WriterStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(WRITER_ENVELOPE_FIELD_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"writer-store.initializer-stale-authority");
@@ -367,6 +371,7 @@ fn writer_page_boundary(text: &str, limit: usize) -> usize {
     index
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct WriterSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<WriterSnapshot> for WriterSnapshotRetirementFactory {
@@ -376,11 +381,14 @@ impl store::ArtifactOwnedValueRetirementFactory<WriterSnapshot> for WriterSnapsh
 }
 
 impl store::SnapshotRetirementFactory<WriterSnapshot> for WriterSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<WriterSnapshot>) -> usize { std::mem::size_of::<WriterSnapshotRootRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<WriterSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(WriterSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct WriterMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<WriterMutation> for WriterMutationRetirementFactory {
@@ -1003,6 +1011,12 @@ impl WriterMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMutationDecodeAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if self.active.is_some() { return Ok(0); }
+        if let Some(retirement) = self.retirement.as_ref() { return Ok(store::artifact_retirement_box_byte_demand(retirement)); }
+        if self.value.is_some() { return Ok(0); }
+        Ok(self.splice.strings.iter().find_map(|value| value.as_ref().map(String::capacity)).or_else(|| self.payload.as_ref().map(String::capacity)).unwrap_or(0))
+    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -1065,23 +1079,13 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
             active.authority.cancel();
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path })? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.retirement.take());
-                    self.terminal = true;
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-                store::SnapshotRetirementStep::Complete => Err(self.diagnostic("writer-envelope.mutation-retirement-false-terminal", 0)),
-                step => Ok(step),
-            };
-        }
+        if self.retirement.is_some() { return store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path }); }
         if let Some(value) = self.value.take() {
             *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, value));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(index) = self.splice.strings.iter().position(Option::is_some) {
-            let released_bytes = self.splice.strings[index].as_ref().map_or(0, String::len);
+            let released_bytes = self.splice.strings[index].as_ref().map_or(0, String::capacity);
             if released_bytes > maximum_bytes {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -1089,10 +1093,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
         if let Some(payload) = self.payload.as_ref() {
-            if payload.len() > maximum_bytes {
+            if payload.capacity() > maximum_bytes {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            let released_bytes = payload.len();
+            let released_bytes = payload.capacity();
             drop(self.payload.take());
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
@@ -1247,3 +1251,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for WriterRejectedConflictAutho
 }
 
 pub struct WriterEnvelopeOwnedFieldCatalog;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

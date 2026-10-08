@@ -2,17 +2,14 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏁benchmarks` per Wave C.
 
 use super::DeleteBenchmarkRecord;
+use crate::diff::ProgramBenchmarksDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else removes the target
-/// row from the working-scene cache and re-mints a fresh content-addressed `table` child handle
-/// over the remaining rows.
+/// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else `removed = [id]` — `apply` re-derives the composed child handle from the remaining rows.
 pub fn diff(payload: &DeleteBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let mut records = crate::program_benchmarks(base);
-    if !records.iter().any(|row| row.header.id == payload.id) {
+    if !base.benchmarks_payload.iter().any(|row| row.header.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.id.0.clone()]);
     }
-    records.retain(|row| row.header.id != payload.id);
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(ProgramBenchmarksDelta { removed: vec![payload.id.0.clone()], ..Default::default() }), ..Default::default() })
 }

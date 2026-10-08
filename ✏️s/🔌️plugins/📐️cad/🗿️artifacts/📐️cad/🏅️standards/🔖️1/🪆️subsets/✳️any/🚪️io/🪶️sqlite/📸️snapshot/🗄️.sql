@@ -23,6 +23,16 @@ CREATE TABLE cad_drawing_child (
  standard TEXT NOT NULL,
  subset TEXT NOT NULL
 );
+CREATE TABLE cad_brep_child (
+ id INTEGER PRIMARY KEY CHECK(id > 0),
+ document_id INTEGER NOT NULL REFERENCES cad_document(id),
+ ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
+ child_id TEXT NOT NULL,
+ artifact_id TEXT NOT NULL,
+ artifact_kind TEXT NOT NULL,
+ standard TEXT NOT NULL,
+ subset TEXT NOT NULL
+);
 CREATE TABLE cad_reference_group (
  id INTEGER PRIMARY KEY CHECK(id > 0),
  document_id INTEGER NOT NULL REFERENCES cad_document(id),

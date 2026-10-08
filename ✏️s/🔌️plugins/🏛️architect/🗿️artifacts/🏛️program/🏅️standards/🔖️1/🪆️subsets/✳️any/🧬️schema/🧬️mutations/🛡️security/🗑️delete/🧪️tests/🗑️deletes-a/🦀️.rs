@@ -10,7 +10,7 @@
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🛡️security/🗑️delete/🗑️deletes-a/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🛡️security/🗑️delete/🗑️deletes-a/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn delete_security_requirement_applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("delete-security-requirement/deletes-security-requirement-a: delete-security-requirement applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("delete-security-requirement/deletes-security-requirement-a: delete-security-requirement applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-security-requirement/deletes-security-requirement-a: applied state differs from the committed after-snapshot");
 }
 
@@ -46,9 +46,9 @@ async fn delete_security_requirement_inverse_restores_before() {
     let forward = mutation();
     let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
-    let mut state = forward.diff(&base).diff().apply(&base).expect("delete-security-requirement/deletes-security-requirement-a: forward diff applies");
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("delete-security-requirement/deletes-security-requirement-a: forward diff applies");
     for step in &undo {
-        state = step.diff(&state).diff().apply(&state).expect("delete-security-requirement/deletes-security-requirement-a: inverse step applies");
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("delete-security-requirement/deletes-security-requirement-a: inverse step applies");
     }
     assert_eq!(state, base, "delete-security-requirement/deletes-security-requirement-a: create-security-requirement (this leaf's recorded inverse) did not restore the before-snapshot");
 }
@@ -76,7 +76,7 @@ async fn delete_security_requirement_declared_outcome_holds() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert!(outcome.messages().is_empty(), "delete-security-requirement/deletes-security-requirement-a: delete-security-requirement raised a diagnostic on a fixture that declares a clean apply");
-    assert!(outcome.diff().apply(&base).is_ok(), "delete-security-requirement/deletes-security-requirement-a: delete-security-requirement was rejected by apply on its own before-snapshot");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "delete-security-requirement/deletes-security-requirement-a: delete-security-requirement was rejected by apply on its own before-snapshot");
 }
 
 /// 🔺️ The sparse delta delete-security-requirement produces is exactly the committed diff — this pins WHICH collection
@@ -102,6 +102,12 @@ async fn delete_security_requirement_committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn delete_security_requirement_committed_diff_applies_to_after() {
     let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-security-requirement/deletes-security-requirement-a: committed diff decodes");
-    let produced = decoded.apply(&before()).expect("delete-security-requirement/deletes-security-requirement-a: committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("delete-security-requirement/deletes-security-requirement-a: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-security-requirement/deletes-security-requirement-a: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of delete-security-requirement's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn delete_security_requirement_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

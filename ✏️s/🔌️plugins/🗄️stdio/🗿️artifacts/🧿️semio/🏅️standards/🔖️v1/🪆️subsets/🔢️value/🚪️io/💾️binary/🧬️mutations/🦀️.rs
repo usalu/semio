@@ -101,8 +101,6 @@ pub(crate) fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -
 impl protocol::OpBinary for SemioValueMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
-            SemioValueMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             SemioValueMutation::SetValue(set_value::SetValue { .. }) => TAG_SET_VALUE,
             SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => TAG_SET_MAP_ENTRY,
             SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => TAG_REMOVE_MAP_ENTRY,
@@ -113,8 +111,6 @@ impl protocol::OpBinary for SemioValueMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_semio_value_snapshot_bin(snapshot, &mut out),
-            SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             SemioValueMutation::SetValue(set_value::SetValue { path, value }) => {
                 enc_semio_path_bin(path, &mut out);
                 enc_semio_value_bin(value, &mut out);
@@ -154,11 +150,6 @@ impl protocol::OpBinary for SemioValueMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_SET_VALUE => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
@@ -205,8 +196,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioValueMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-value");
 const TAG_SET_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-map-entry");
 const TAG_REMOVE_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-map-entry");

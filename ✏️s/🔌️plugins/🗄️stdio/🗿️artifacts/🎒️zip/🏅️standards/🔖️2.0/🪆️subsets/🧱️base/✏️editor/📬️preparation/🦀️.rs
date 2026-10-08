@@ -19,6 +19,7 @@ pub(super) fn route(prefix: &'static str) -> Option<NativeEditPreparationRoute<Z
     Some(NativeEditPreparationRoute::new(|mutation| matches!(mutation, ZipMutation::RenameEntry(_) | ZipMutation::SetArchiveComment(_)), Arc::new(ZipPreparationFactory { prefix })))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ZipPreparationFactory {
     prefix: &'static str,
 }
@@ -637,7 +638,9 @@ impl ZipPostCopy {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ZipMutationRetirementFactory;
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ZipSnapshotRetirementFactory;
 
 impl app_store::ArtifactOwnedValueRetirementFactory<ZipMutation> for ZipMutationRetirementFactory {
@@ -646,6 +649,8 @@ impl app_store::ArtifactOwnedValueRetirementFactory<ZipMutation> for ZipMutation
     }
 }
 impl app_store::SnapshotRetirementFactory<ZipSnapshot> for ZipSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<ZipSnapshot>) -> usize { semio_framework_value::retirement::shared_retirement_birth_bytes::<ZipSnapshot>() }
+
     fn retire(&self, value: Arc<ZipSnapshot>) -> Box<dyn app_store::ErasedSnapshotRetirement> {
         semio_framework_value::retirement::shared_retirement(value)
     }

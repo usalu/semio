@@ -1,5 +1,74 @@
 use semio_framework_pack_json::json;
 
+#[test]
+fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_close() {
+    use semio_framework_os_kernel::MemberStoreOwnedBatch;
+    use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::RetireOwned};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::{brep::schema::mutations::{SemioBrepMutation, set_snapshot::SetSnapshot}, model::schema::mutations::{SemioModelMutation, insert_element::InsertElement}};
+    fn close<M: RetireOwned + semio_framework_value::ToValue>(operations: Vec<M>) {
+        let pointer = operations.as_ptr();
+        let oracle = serde_json::to_value(semio_framework_value::ToValue::to_value(&operations)).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+        let (mut batch, birth) = MemberStoreOwnedBatch::try_new(operations, grant).unwrap_or_else(|(error, _)| panic!("exact imported typed owner authority: {error:?}"));
+        assert!(birth.fits(grant));
+        assert_eq!(batch.mutations::<M>().unwrap().as_ptr(), pointer);
+        assert_eq!(serde_json::to_value(semio_framework_value::ToValue::to_value(batch.mutations::<M>().unwrap())).unwrap(), oracle);
+        assert_eq!(batch.close_granted(RetainedCloneGrant::default()).unwrap().progress(), Default::default());
+        for _ in 0..100000 {
+            if batch.terminal_is_empty() { break; }
+            assert!(batch.close_granted(grant).unwrap().progress().fits(grant));
+        }
+        assert!(batch.terminal_is_empty());
+    }
+    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let imported = crate::standards::v1::subsets::any::io::import_obj_object(text).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let mesh = crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&imported.geometry).unwrap();
+    assert_eq!(mesh.indices.len() / 3, corpus["intrinsicGeometry"]["triangleCount"].as_u64().unwrap() as usize);
+    assert_eq!(imported.geometry.vertices.len(), corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap() as usize);
+    close(vec![SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot: imported.geometry })]);
+    close(vec![SemioModelMutation::InsertElement(InsertElement { element: imported.element })]);
+    println!("[DEBUG] imported OBJ Brep/Model batches retained exact pointer, value and ordered geometry, copy64/capacity4096/release4096 and terminal owners");
+}
+
+#[test]
+fn cad_imported_geometry_model_operation_wire_preserves_original_forward_inverse() {
+    use protocol::OpBinary;
+    use semio_framework_os_kernel::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::{schema::{snapshot::SemioModelElement, mutations::{SemioModelMutation, insert_element::InsertElement, remove_element::RemoveElement}}, io::binary::mutations::prepared_operation_wire_source};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["elements"].as_array().unwrap() {
+        let element: SemioModelElement = semio_framework_pack_json::from_json_str(&serde_json::to_string(row).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let inverse = SemioModelMutation::RemoveElement(RemoveElement { id: element.id.clone() });
+        for operation in [SemioModelMutation::InsertElement(InsertElement { element }), inverse] {
+            let expected = operation.encode_op().unwrap();
+            assert!(prepared_operation_wire_source(&operation).is_some(), "original imported Model operation requires exact borrowed receipt authority");
+            for maximum in [1, 3, 7, 64, 256] {
+                let mut cursor = ArtifactPreparedOperationCursor::default();
+                let mut actual = Vec::with_capacity(expected.len());
+                for _ in 0..expected.len() * 4 + 128 {
+                    let mut output = [0; 256];
+                    let (denied, heap) = crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure(|| cursor.advance(prepared_operation_wire_source(&operation).unwrap(), &mut output, RetainedCloneGrant::default()).unwrap());
+                    assert_eq!(denied, ArtifactPreparedOperationProgress::default());
+                    assert_eq!((heap.bytes, heap.released_bytes), (0, 0));
+                    let (progress, heap) = crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure(|| cursor.advance(prepared_operation_wire_source(&operation).unwrap(), &mut output, RetainedCloneGrant::one_payload_turn(maximum, 64)).unwrap());
+                    assert_eq!((heap.bytes, heap.released_bytes), (0, 0));
+                    assert!(progress.written_bytes <= maximum.min(64));
+                    actual.extend_from_slice(&output[..progress.written_bytes]);
+                    if progress.complete { break; }
+                }
+                assert_eq!(actual, expected);
+                assert_eq!(SemioModelMutation::decode_op(&actual).unwrap(), operation);
+                let (closed, heap) = crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure(|| cursor.close(RetainedCloneGrant { maximum_items: 1, ..Default::default() }).unwrap());
+                assert!(closed.complete);
+                assert_eq!((heap.bytes, heap.released_bytes), (0, 0));
+            }
+            println!("[DEBUG] imported Model original forward/inverse exact wire bytes={} copy<=64 tuple/order/UTF8/property identities retained heap0", expected.len());
+        }
+    }
+}
+
 pub(crate) mod context {
     //! 🧪️ The one cad-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
@@ -454,7 +523,7 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
     let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
     let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
-    let mut draft = store::DraftStore::new(envelope).await.unwrap();
+    let mut draft = store::DraftStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     draft.install_document_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
     let mut disposer = <CadPlayApp as ArtifactEditor>::build_draft_store_disposer().unwrap();
     for turn in 0..100_000 {
@@ -2218,6 +2287,7 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     window_only(&step("engagementInput", json!({ "pane": "shape", "value": "2" }), "height"), "the height keystroke");
     window_only(&step("engagementSubmit", json!({ "pane": "shape" }), "apply"), "applying the typed height");
     let mut emit = step("engagementSubmit", json!({ "pane": "shape" }), "commit");
+    drop(step);
     assert!(emit.transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.cad.cad@1/*#editor#primitive.box"), "the commit is its own stamped edit: {:?}", emit.transaction);
     assert!(emit.config_mutations.is_empty() && emit.artifact_mutations.is_empty(), "the commit edits neither the config nor the parent document");
     let mut ready = false;
@@ -2237,6 +2307,8 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     let runtime = cad_runtime_from(&config, &transient);
     assert!(runtime.engagement_session.is_none());
     assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
+    drop(emit);
+    drop(children);
     close(&mut mounted);
 }
 //#endregion 🔖️EngagementCommit
@@ -2310,28 +2382,75 @@ async fn current_pane_exports_its_real_solids() {
 }
 //#endregion 🔖️PaneSolidExport
 
-/// 🎞️ Actual CAD media import preserves the file owner while composed-child dispatch remains separate.
-#[test]
-fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
+/// 🎞️ Actual CAD media import publishes its exact composed child and retains the file's geometry.
+#[semio_framework_async_macros::async_test]
+async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
     use semio_framework_plugin::app::ArtifactEditor;
     use semio_framework_value::DslValue;
     let corpus: Value = semio_framework_pack_json::from_json_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert_eq!(corpus["intrinsicGeometry"]["childPublication"], "unavailable");
+    assert_eq!(corpus["intrinsicGeometry"]["childPublication"], "insertElement");
+    assert_eq!(corpus["intrinsicGeometry"]["geometryOwner"], "persistedArtifact");
     let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
-    let scene = default_document();
+    let mut mounted = new_app().await;
+    let scene = mounted.snapshot().expect("mounted snapshot");
+    let children = mounted.test_child_content_view();
     let history = empty_history();
-    let view = ArtifactView::new(&scene, &history);
     let media_type = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
-    for payload in [
+    let mut meshes = Vec::new();
+    for (index, payload) in [
         MediaPayload::Structured { schema: "obj.3.0.geometry".into(), json: text.into() },
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::String(text.into()) },
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::Bytes(text.as_bytes().to_vec()) },
-    ] {
+    ].into_iter().enumerate() {
+        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: scene.id.clone(), operation_id: index as u64 + 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: format!("cad-media-{index}") };
+        let view = ArtifactView::with_children(&scene, &history, children.clone()).bound_to_operation(operation);
         let media = Media { media_type: media_type.clone(), payload };
-        let emit = <CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).expect("actual valid owned geometry file");
-        assert!(emit.artifact_mutations.is_empty());
+        assert!(<CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &ArtifactView::new(&scene, &history)).is_err(), "an uncomposed view cannot publish a geometry child");
+        let mut cancelled = <CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).expect("cancellable owned geometry import");
+        assert!(matches!(cancelled.prepare_child_one(0, 65_536).unwrap(), semio_framework_plugin::app::ChildEmitPreparationStep::Pending));
+        assert_eq!(cancelled.close_child_one(0, 65_536), Some(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        let mut retired = false;
+        for _ in 0..4096 {
+            match cancelled.close_child_one(1, 65_536) {
+                None => { retired = true; break; },
+                Some(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => { assert!(released_items <= 1 && released_bytes <= 65_536); },
+                Some(step) => panic!("cancelled geometry child must reach its exact empty witness: {step:?}"),
+            }
+        }
+        assert!(retired && cancelled.child_preparations.is_empty() && cancelled.child_emits.is_empty());
+        assert_eq!(mounted.snapshot().unwrap(), scene, "cancellation publishes no parent or child prefix");
+        let mut emit = <CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).expect("actual valid owned geometry file");
+        assert_eq!(emit.artifact_mutations.len(), 1);
+        let CadMutation::CreateBrep(created) = &emit.artifact_mutations[0] else { panic!("exact parent topology creation") };
+        let created = created.clone();
+        assert_eq!(created.target.dialect.subset, corpus["intrinsicGeometry"]["geometrySubset"].as_str().unwrap());
+        assert!(emit.transaction.is_some());
         assert!(emit.config_mutations.is_empty());
         assert!(emit.effects.is_empty());
+        let mut ready = false;
+        for _ in 0..4096 {
+            match emit.prepare_child_one(1, 65_536).expect("bounded media child preparation") {
+                semio_framework_plugin::app::ChildEmitPreparationStep::Ready => { ready = true; break; },
+                semio_framework_plugin::app::ChildEmitPreparationStep::Pending => {},
+                semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("media child preparation: {}", fault.message),
+            }
+        }
+        assert!(ready);
+        assert_eq!(emit.child_emits.len(), corpus["intrinsicGeometry"]["atomicChildren"].as_u64().unwrap() as usize);
+        let geometry_child = &emit.child_emits[0];
+        assert_eq!(geometry_child.slot, corpus["intrinsicGeometry"]["geometrySlot"].as_str().unwrap());
+        assert_eq!(geometry_child.child_id, created.child_id);
+        assert_eq!(geometry_child.ops.len(), 1);
+        let geometry_mutation: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation = protocol::OpBinary::decode_op(&geometry_child.ops[0]).unwrap();
+        let semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation::SetSnapshot(geometry) = geometry_mutation else { panic!("actual retained topology") };
+        let child = &emit.child_emits[1];
+        assert_eq!(child.slot, corpus["intrinsicGeometry"]["childSlot"].as_str().unwrap());
+        assert_eq!(child.child_id, crate::cad_pane_model(&scene, CadPaneId::Shape).unwrap().child_id);
+        assert_eq!(child.ops.len(), 1);
+        let mutation: SemioModelMutation = protocol::OpBinary::decode_op(&child.ops[0]).expect("canonical child operation");
+        let SemioModelMutation::InsertElement(insert) = mutation else { panic!("exact insert-element media mutation") };
+        assert_eq!(insert.element.geometry, semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef::Brep { brep_id: created.child_id.clone() });
+        meshes.push(crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&geometry.snapshot).expect("retained topology projects after importer disposal"));
     }
     for payload in [
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::Null },
@@ -2339,6 +2458,252 @@ fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         MediaPayload::Binary { format_kind: "obj.3.0.geometry".into(), blob_hash: "addressed external owner".into() },
     ] {
         let media = Media { media_type: media_type.clone(), payload };
-        assert!(<CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).is_err());
+        assert!(<CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &ArtifactView::new(&scene, &history)).is_err());
+    }
+    drop(children);
+    close(&mut mounted);
+    for mesh in meshes {
+        assert_eq!(mesh.indices.len() / 3, corpus["intrinsicGeometry"]["triangleCount"].as_u64().unwrap() as usize);
+        assert_eq!(mesh.indices.iter().copied().collect::<std::collections::BTreeSet<_>>().len(), corpus["intrinsicGeometry"]["positionCount"].as_u64().unwrap() as usize);
+        assert_eq!(mesh.vertex_ids.iter().filter(|id| **id != u32::MAX).count(), corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap() as usize);
+        assert_eq!(mesh.positions.len() / 3, (corpus["intrinsicGeometry"]["positionCount"].as_u64().unwrap() + corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap()) as usize);
+        assert_eq!(mesh.face_ids.len(), mesh.indices.len() / 3);
+        mesh.validate_component_references().unwrap();
+        let bounds: Vec<Vec<f32>> = [false, true].into_iter().map(|maximum| (0..3).map(|axis| mesh.positions.chunks_exact(3).map(|point| point[axis]).reduce(|left, right| if maximum { left.max(right) } else { left.min(right) }).expect("owned imported positions")).collect()).collect();
+        let expected_bounds: Vec<Vec<f32>> = serde_json::from_str(&corpus["intrinsicGeometry"]["bounds"].to_string()).unwrap();
+        assert_eq!(bounds, expected_bounds, "geometry resolves after the import kernel is gone");
+        eprintln!("[DEBUG] Cad intrinsic geometry child retains its exact six-position OBJ bounds after importer disposal");
     }
 }
+
+/// 🧊️ The mounted import retains actual geometry as one undoable parent and two-child publication.
+#[semio_framework_async_macros::async_test]
+async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
+    use semio_framework_plugin::PluginApp;
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
+    let mut app = new_app().await;
+    let before = app.snapshot().unwrap();
+    let before_model = pane_model(&app, CadPaneId::Shape).await;
+    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let pricing: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🎞️media-pricing.json")).unwrap();
+    let large_source = format!("{}{}", pricing["prefix"].as_str().unwrap().repeat(pricing["repeat"].as_u64().unwrap() as usize), text);
+    assert!(large_source.len() > pricing["closeMaximumBytes"].as_u64().unwrap() as usize);
+    let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "obj.3.0.geometry".into(), json: large_source } };
+    let outcome: Result<(), String> = async {
+        PluginApp::import_media(&mut app, "geometry:in", media, &meta(semio_framework_os_kernel::LOCAL_ACTOR_ID)).await.map_err(|error| format!("{error:?}"))?;
+        settle(&mut app).await;
+        let after = app.snapshot().unwrap();
+        if after.breps.len() != before.breps.len() + 1 { return Err("import did not create exactly one retained geometry sibling".into()); }
+        let after_model = pane_model(&app, CadPaneId::Shape).await;
+        if after_model.elements.len() != before_model.elements.len() + 1 { return Err("import did not insert exactly one model element".into()); }
+        let geometry_id = after.breps.last().unwrap().child_id.clone();
+        let element = after_model.elements.last().unwrap();
+        if element.geometry != (semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef::Brep { brep_id: geometry_id.clone() }) { return Err("model geometry reference escaped its exact retained sibling".into()); }
+        let children = app.test_child_content_view();
+        let panes = crate::CadComposedPanes::compose(&after, &children);
+        let pane = panes.pane(CadPaneId::Shape);
+        let object = pane.objects.iter().find(|object| object.id == element.id).ok_or("imported object is absent from composed rendering")?;
+        let mesh = object_mesh_data(object, pane.geometry(CadPaneId::Shape));
+        let positions = mesh.positions.chunks_exact(3).collect::<Vec<_>>();
+        let bounds: Vec<Vec<f32>> = [false, true].into_iter().map(|maximum| (0..3).map(|axis| positions.iter().map(|point| point[axis]).reduce(|left, right| if maximum { left.max(right) } else { left.min(right) }).unwrap_or(f32::NAN)).collect()).collect();
+        if mesh.indices.iter().copied().collect::<std::collections::BTreeSet<_>>().len() != corpus["intrinsicGeometry"]["positionCount"].as_u64().unwrap() as usize || mesh.vertex_ids.iter().filter(|id| **id != u32::MAX).count() != corpus["intrinsicGeometry"]["analyticVertexCount"].as_u64().unwrap() as usize || serde_json::to_value(&bounds).unwrap() != corpus["intrinsicGeometry"]["bounds"] { return Err(format!("rendered actual imported geometry differs from the independent OBJ witness: {bounds:?}, positions={}", positions.len())); }
+        let mut kernel = cad_brep_kernel();
+        let solids = crate::standards::v1::subsets::any::schema::inferences::pane_world_solids(&mut kernel, std::slice::from_ref(object), pane.geometry(CadPaneId::Shape));
+        let export = export_solids_as(&mut kernel, &solids, crate::standards::v1::subsets::any::io::CAD_SOLID_EXPORT_DIALECT_OBJ, "owned-geometry").ok_or("owned topology did not export")?;
+        let exported = crate::standards::v1::subsets::any::io::import_obj_object(export.data.as_str().ok_or("OBJ export was not text")?).ok_or("owned OBJ export did not parse")?;
+        let exported_mesh = crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&exported.geometry)?;
+        let exported_bounds: Vec<Vec<f32>> = [false, true].into_iter().map(|maximum| (0..3).map(|axis| exported_mesh.positions.chunks_exact(3).map(|point| point[axis]).reduce(|left, right| if maximum { left.max(right) } else { left.min(right) }).unwrap_or(f32::NAN)).collect()).collect();
+        if exported_mesh.positions.len() / 3 != positions.len() || exported_bounds != bounds { return Err("OBJ export substituted geometry outside the exact retained topology child".into()); }
+        let mut unavailable = pane.geometry(CadPaneId::Shape).cloned().ok_or("owned pane geometry projection absent")?;
+        unavailable.owned_breps.clear();
+        unavailable.owned_meshes.insert(geometry_id.clone(), std::sync::Arc::new(semio_framework_plugin::MeshData::default()));
+        if !object_mesh_data(object, Some(&unavailable)).positions.is_empty() || !crate::standards::v1::subsets::any::schema::inferences::pane_world_solids(&mut kernel, std::slice::from_ref(object), Some(&unavailable)).is_empty() { return Err("unavailable declared topology was replaced by invented typology geometry".into()); }
+        drop(panes);
+        drop(children);
+        let rows = member_rows(&mut app).await;
+        if rows.len() != 1 || rows[0].mutations.len() != 3 { return Err(format!("import does not publish exactly one atomic three-lane history row: {rows:?}")); }
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", TEST_INSTANCE).await;
+        if app.snapshot().unwrap() != before || pane_model(&app, CadPaneId::Shape).await != before_model { return Err("undo did not restore the exact parent and model before geometry creation".into()); }
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", TEST_INSTANCE).await;
+        if app.snapshot().unwrap() != after || pane_model(&app, CadPaneId::Shape).await != after_model { return Err("redo did not restore the exact parent and model geometry ownership".into()); }
+        let heads = PluginApp::child_head_packs(&app).await.map_err(|fault| format!("{fault:?}"))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect::<Vec<_>>();
+        let archive = PluginApp::document_archive(&app).await.map_err(|fault| format!("{fault:?}"))?;
+        if !archive.members.iter().any(|member| member.owner.slot == "breps" && member.owner.child_id == geometry_id) { return Err("recursive archive omitted the exact geometry owner".into()); }
+        PluginApp::begin_document_archive_load(&mut app, 94, archive).map_err(|fault| format!("{fault:?}"))?;
+        let mut terminal = None;
+        for _ in 0..1_000_000 {
+            let status = PluginApp::poll_document_archive_load(&mut app, 94).await.map_err(|fault| format!("{fault:?}"))?;
+            if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) { terminal = Some(status); break; }
+            PluginApp::maintenance_step(&mut app, 1, 4_096).map_err(|fault| format!("{fault:?}"))?;
+            std::thread::yield_now();
+        }
+        let terminal = terminal.ok_or("geometry archive did not reach its bounded terminal witness")?;
+        if terminal.state != protocol::DocumentArchiveLoadState::Ready { return Err(format!("geometry archive failed: {}", String::from_utf8_lossy(&terminal.fault))); }
+        PluginApp::acknowledge_document_archive_load(&mut app, 94).map_err(|fault| format!("{fault:?}"))?;
+        let reloaded_heads = PluginApp::child_head_packs(&app).await.map_err(|fault| format!("{fault:?}"))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect::<Vec<_>>();
+        if app.snapshot().unwrap() != after || pane_model(&app, CadPaneId::Shape).await != after_model || reloaded_heads != heads { return Err("archive reload did not preserve exact parent, model, and topology child heads".into()); }
+        let children = app.test_child_content_view();
+        let panes = crate::CadComposedPanes::compose(&after, &children);
+        let pane = panes.pane(CadPaneId::Shape);
+        let object = pane.objects.iter().find(|object| object.id == element.id).ok_or("reloaded geometry is absent from the composed pane")?;
+        if object_mesh_data(object, pane.geometry(CadPaneId::Shape)) != mesh { return Err("archive reload altered actual rendered topology".into()); }
+        drop(panes);
+        drop(children);
+        eprintln!("[DEBUG] Cad geometry media publishes one parent/brep/model transaction, renders exact OBJ positions, and restores exact ownership through undo/redo/archive reload");
+        Ok(())
+    }.await;
+    close(&mut app);
+    outcome.expect("mounted retained geometry media contract");
+}
+
+#[test]
+fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🎞️media-pricing.json")).unwrap();
+    let source = format!("{}{}", fixture["prefix"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap() as usize), fixture["suffix"].as_str().unwrap());
+    let unit = fixture["maximumUnitBytes"].as_u64().unwrap() as usize;
+    let maximum = fixture["closeMaximumBytes"].as_u64().unwrap() as usize;
+    let expected_bytes = fixture["sourceBytes"].as_u64().unwrap() as usize;
+    let expected_checksum = fixture["sourceChecksum"].as_str().unwrap().parse::<u64>().unwrap();
+    assert_eq!(source.as_bytes().len(), expected_bytes);
+    assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap().into_bytes(), source.as_bytes());
+    for form in fixture["forms"].as_array().unwrap() {
+        for cancel_at in fixture["cancelAtBytes"].as_array().unwrap().iter().map(|row| row.as_u64().unwrap() as usize).chain(std::iter::once(expected_bytes)) {
+            let payload = match form.as_str().unwrap() {
+                "intrinsicText" => MediaPayload::Intrinsic { schema: "cad.pricing.test".into(), value: semio_framework_value::DslValue::String(source.clone()) },
+                "intrinsicBytes" => MediaPayload::Intrinsic { schema: "cad.pricing.test".into(), value: semio_framework_value::DslValue::Bytes(source.as_bytes().to_vec()) },
+                "structuredText" => MediaPayload::Structured { schema: "cad.pricing.test".into(), json: source.clone() },
+                _ => panic!("unknown declared media form"),
+            };
+            let mut work = CadMediaWork::new("geometry:in".into(), Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload }, None);
+            let pointer = work.borrowed_source().unwrap().as_ptr();
+            let cancel = semio_framework_job::root_cancel_token();
+            let mut sequence = 0;
+            let before = work.priced_bytes;
+            assert_eq!(work.price_source(0).unwrap(), 0);
+            assert_eq!(work.priced_bytes, before);
+            let mut zero = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(0,100_000), cancel.clone(), || Some(0), &mut sequence);
+            assert!(!work.price_step(&mut zero).unwrap());
+            assert_eq!(work.priced_bytes, before);
+            let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1,0), cancel.clone(), || Some(0), &mut sequence);
+            assert!(!work.price_step(&mut expired).unwrap());
+            assert_eq!(work.priced_bytes, before);
+            assert_eq!(expired.fuel_remaining(), 1);
+            for _ in 0..fixture["maximumPricingSteps"].as_u64().unwrap() {
+                if work.priced_bytes >= cancel_at { break; }
+                let before = work.priced_bytes;
+                let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantWorkUnits"].as_u64().unwrap(), 100_000), cancel.clone(), || Some(0), &mut sequence);
+                assert!(!work.price_step(&mut context).unwrap());
+                let charged = work.priced_bytes - before;
+                assert_eq!(context.fuel_remaining(), 0);
+                assert!(charged <= unit);
+                assert_eq!(work.priced_bytes - before, charged);
+                assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
+                assert!(!work.consumed);
+            }
+            assert_eq!(work.priced_bytes, cancel_at);
+            if cancel_at == expected_bytes {
+                assert!(work.pricing_complete);
+                assert_eq!(work.priced_bytes, expected_bytes);
+                assert_eq!(work.price_checksum, expected_checksum);
+            }
+            let mut checkpoint = [0u8; 24];
+            assert_eq!(work.checkpoint(&mut checkpoint).unwrap(), 24);
+            let price_before = (work.priced_bytes, work.price_checksum, work.pricing_complete);
+            work.restore(&checkpoint).unwrap();
+            assert_eq!((work.priced_bytes, work.price_checksum, work.pricing_complete), price_before);
+            semio_framework_async::poll::resolve_ready(cancel.cancel());
+            let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(99), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantWorkUnits"].as_u64().unwrap(), 100_000), cancel.clone(), || Some(0), &mut sequence);
+            assert_eq!(work.price_step(&mut context).unwrap_err().code.0, "interactive-job.cancelled");
+            assert_eq!((work.priced_bytes, work.price_checksum, work.pricing_complete), price_before);
+            assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
+            assert!(!work.consumed);
+            work.begin_close();
+            assert_eq!(work.close_step(0, maximum), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
+                match work.close_step(1, maximum) {
+                    semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= maximum); },
+                    step => panic!("priced source blocked exact bounded close: {step:?}"),
+                }
+            }
+            assert!(work.terminal_is_empty());
+        }
+    }
+    let mut work = CadMediaWork::new("geometry:in".into(), Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "cad.pricing.test".into(), json: "x".repeat(fixture["refusedBytes"].as_u64().unwrap() as usize) } }, None);
+    let pointer = work.borrowed_source().unwrap().as_ptr();
+    assert_eq!(work.price_source(unit).unwrap_err().code.0, "cad.media-input-capacity");
+    assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
+    assert_eq!(work.priced_bytes, 0);
+    work.begin_close();
+    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
+        match work.close_step(1, maximum) {
+            semio_framework_job::InteractiveJobCloseStep::Complete => break,
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= maximum); },
+            step => panic!("refused source blocked exact bounded close: {step:?}"),
+        }
+    }
+    assert!(work.terminal_is_empty());
+    println!("[DEBUG] Cad retained media price bytes={} checksum={} forms=3 cancellation-boundaries=4 exact-close-grant={}", expected_bytes, expected_checksum, maximum);
+}
+
+#[test]
+fn cad_imported_geometry_parent_operation_pack_keeps_exact_forward_inverse_owners() {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let factory=<CadPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().unwrap();
+    let input=[
+        (include_str!("../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/➕create-node/🌱️appends-node-3/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏛️create-structure-classic/🏛️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏢create-building-model/🏢️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🔤️relabels-the-root-node/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/👁️change-reference-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/💥delete-building-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📍move-reference/📍️moves/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📎replace-references/🔄️swaps/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📏change-reference-width/↔️widens/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/📐️create-drawing/📐️appends-drawing-2/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🔌delete-energy-model/🔌️vacates/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🔒change-reference-locked/🔓️unlocks/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🗑️delete-node/🚫️removes-node-2/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧨delete-shape-model/🕳️vacates-the-shape-slot/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧱create-shape-model/🧱️rehandles/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")),
+        (include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/🦠️mutation/🔣️.json"),include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-drawing/🚫️removes-drawing-1/📸️snapshot/⬅️before/🔣️.json")),
+    ];
+    assert_eq!(input.len(),21);
+    for (input,before) in input {
+        let operation:CadMutation=semio_framework_pack_json::from_json_str(input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&operation)).unwrap(),serde_json::from_str::<serde_json::Value>(input).unwrap());
+        let before:CadSnapshot=semio_framework_pack_json::from_json_str(before,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mut operations=protocol::Mutation::inverse(&operation,&before).unwrap();operations.push(operation);
+        for operation in operations {
+        let expected=crate::standards::v1::subsets::any::io::binary::mutations::encode_op(&operation).unwrap();
+        assert!(factory.operation_wire_source(&operation).is_some(),"original parent mutation requires exact borrowed installed Pack authority");
+        for maximum in [1,3,7,64,256] {
+            let mut cursor=store::ArtifactPreparedOperationCursor::default();let mut bytes=Vec::new();let mut complete=false;
+            for _ in 0..20000 {
+                let demand=cursor.next_capacity_byte_demand().unwrap();
+                let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand,maximum_release_bytes:0,maximum_depth:64};
+                let mut output=[0;256];
+                let (step,heap)=crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure(||cursor.advance(factory.operation_wire_source(&operation).unwrap(),&mut output[..maximum],grant).unwrap());
+                assert_eq!((heap.bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));assert!(step.copied_bytes<=64 && step.processed_items<=1);bytes.extend_from_slice(&output[..step.written_bytes]);
+                if step.complete{complete=true;break}
+            }
+            assert!(complete);assert_eq!(bytes,expected);
+            let mut closed=false;
+            for _ in 0..20000 {
+                let demand=cursor.next_close_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand,..Default::default()};
+                let (step,heap)=crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure(||cursor.close(grant).unwrap());assert_eq!((heap.bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));if step.complete{closed=true;break}
+            }
+            assert!(closed);
+            assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::decode_op(&bytes).unwrap(),operation);
+        }
+        eprintln!("[DEBUG] original Cad parent{}bytes exact canonical forward/inverse Pack; copy64/items1, actual retained symbol birth/free paid by queries",expected.len());
+        }
+    }
+}
+
+include!("../📦️member-authority/🦀️.rs");

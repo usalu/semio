@@ -7,6 +7,41 @@ use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
 
+fn hydration_fold_byte_grant(logical_bytes: usize, demand: usize) -> Option<usize> {
+    let grant = logical_bytes.max(demand);
+    (grant <= crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES).then_some(grant)
+}
+
+/// 📦️ One hydration work unit funds an exact physical release within its recorded allocation ceiling.
+fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {
+    if active.is_none() { return Ok(false); }
+    if cx.is_cancelled() || cx.should_yield() { return Ok(true); }
+    let demand = super::artifact_retirement_box_byte_demand(active.as_ref().unwrap());
+    if demand > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(MemberOpenDiagnostic::Capacity); }
+    let maximum_bytes = crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES.max(demand);
+    match super::artifact_retirement_box_close_step(active, 1, maximum_bytes) {
+        Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => {}
+        Ok(SnapshotRetirementStep::Complete) if active.is_none() => {}
+        Ok(SnapshotRetirementStep::Blocked) => {}
+        _ => return Err(MemberOpenDiagnostic::Initialization),
+    }
+    cx.consume_fuel(1);
+    Ok(true)
+}
+
+/// 🧾️ One envelope hydration turn closes its retained initialization runtime.
+fn drive_hydration_runtime<P>(runtime: &mut ArtifactStoreInitializationRuntime<P>, factory: &dyn crate::os_store::ArtifactOwnedValueRetirementFactory<P>, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {
+    if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
+    let demand = runtime.next_close_byte_demand();
+    if demand > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(MemberOpenDiagnostic::Capacity); }
+    let maximum_bytes = crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES.max(demand);
+    match runtime.close_step(factory, 1, maximum_bytes) {
+        Ok(SnapshotRetirementStep::Complete) if runtime.terminal_is_empty() => { cx.consume_fuel(1); Ok(true) }
+        Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => { cx.consume_fuel(1); Ok(false) }
+        _ => Err(MemberOpenDiagnostic::Initialization),
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PersistedDocumentHydrationTarget {
     Store { generation: u64 },
@@ -35,6 +70,17 @@ where
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(PersistedDocumentHydrationOutput<P, M>),
+    Rejected(MemberOpenDiagnostic),
+}
+
+/// 🏪️ A Store-only hydration handoff preserves its declared output authority.
+pub enum PersistedDocumentStoreHydrationStep<P, M>
+where
+    P: Clone + ToValue + FromValue,
+    M: Clone + ToValue + FromValue + Mutation<P>,
+{
+    Pending(PersistedDocumentHydrationProgress),
+    Ready(Box<ArtifactStore<P, M>>),
     Rejected(MemberOpenDiagnostic),
 }
 
@@ -143,6 +189,12 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
+    /// 🔬️ Temporary bounded archive-close owner census.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn close_phase_witness(&self) -> String {
+        format!("phase={:?}/active={:?}/runtime={:?}/fold={}/targetDecoder={}/pack={:?}/initial={}/history={}/envelope={}/replay={}/actor={}", self.phase, self.active.as_ref().map(|owner| (owner.terminal_is_empty(), super::artifact_retirement_box_byte_demand(owner))), self.runtime.as_ref().map(|owner| (owner.terminal_is_empty(), owner.next_close_byte_demand())), self.fold_job.is_some(), self.target_decoder.is_some(), self.pack.as_ref().map(|pack| (pack.len(), pack.capacity())), self.initial.is_some(), self.history.is_some(), self.envelope.is_some(), self.replay.is_some(), self.actor.0.capacity())
+    }
+
     pub fn from_decoded_pack(
         initial: P,
         pack: Vec<u8>,
@@ -279,23 +331,7 @@ where
     }
 
     fn drive_active(&mut self, cx: &mut StepContext<'_>) -> Result<bool, MemberOpenDiagnostic> {
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        if cx.should_yield() {
-            return Ok(true);
-        }
-        let maximum_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
-        match active.close_step(1, maximum_bytes) {
-            Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => {
-                cx.consume_fuel((released_items + released_bytes).max(1) as u64);
-                Ok(true)
-            }
-            Ok(SnapshotRetirementStep::Complete) if active.terminal_is_empty() => {
-                self.active.take();
-                cx.consume_fuel(1);
-                Ok(true)
-            }
-            _ => Err(MemberOpenDiagnostic::Initialization),
-        }
+        drive_hydration_retirement(&mut self.active, cx)
     }
 
     fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> super::ArtifactHistoryReadRetirement<P, M> {
@@ -304,6 +340,25 @@ where
 
     fn retire_edit(&mut self, edit: Edit<M>) {
         *self.active = Some(self.owners.as_ref().expect("hydration owner catalog remains retained").retire_decoded_edit(edit));
+    }
+
+    /// 🏪️ Refuses a foreign immutable target before consuming any retained hydration input.
+    pub fn step_store(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentStoreHydrationStep<P, M> {
+        if !matches!(self.target, PersistedDocumentHydrationTarget::Store { .. }) {
+            self.reject(MemberOpenDiagnostic::Initialization);
+            return PersistedDocumentStoreHydrationStep::Rejected(self.diagnostic.unwrap());
+        }
+        match self.step(cx) {
+            PersistedDocumentHydrationStep::Pending(progress) => PersistedDocumentStoreHydrationStep::Pending(progress),
+            PersistedDocumentHydrationStep::Rejected(diagnostic) => PersistedDocumentStoreHydrationStep::Rejected(diagnostic),
+            PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(store)) => PersistedDocumentStoreHydrationStep::Ready(store),
+            PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope)) => {
+                *self.envelope = Some(envelope);
+                self.terminal = false;
+                self.reject(MemberOpenDiagnostic::Initialization);
+                PersistedDocumentStoreHydrationStep::Rejected(self.diagnostic.unwrap())
+            }
+        }
     }
 
     pub fn step(&mut self, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
@@ -375,13 +430,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::Fold => {
-                let maximum_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                let logical_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
                 let job = self.fold_job.as_mut().expect("history fold job remains retained");
+                let Some(maximum_bytes) = hydration_fold_byte_grant(logical_bytes, job.next_step_byte_demand(logical_bytes)) else { return self.reject(MemberOpenDiagnostic::Capacity) };
                 let result = job.step(1, maximum_bytes, &mut || cx.should_yield());
                 self.fold_completed = job.completed();
                 cx.consume_fuel(1);
                 match result {
-                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {}
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { released_bytes, .. }) if released_bytes <= maximum_bytes => {}
                     Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
                         self.fold_job.take();
                         *self.replay_ids = Some(replay_order);
@@ -878,31 +934,30 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             Phase::CloseEnvelopeRuntime => {
                 let runtime = self.runtime.as_mut().expect("envelope hydration runtime remains retained");
                 let owners = self.owners.as_ref().expect("envelope hydration owner catalog remains retained");
-                let maximum_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes) {
-                    Ok(SnapshotRetirementStep::Complete) if runtime.terminal_is_empty() => {
+                match drive_hydration_runtime(runtime, owners.initial_snapshot_retirement.as_ref(), cx) {
+                    Ok(true) => {
                         self.runtime.take();
                         self.phase = Phase::CloseEnvelopeOwners;
-                        cx.consume_fuel(1);
                     }
-                    Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= maximum_bytes => {
-                        cx.consume_fuel((released_items + released_bytes).max(1) as u64);
-                    }
-                    _ => return self.reject(MemberOpenDiagnostic::Initialization),
+                    Ok(false) => {}
+                    Err(error) => return self.reject(error),
                 }
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::CloseEnvelopeOwners => {
                 let owners = self.owners.as_mut().expect("envelope hydration owner catalog remains retained");
-                match owners.store_disposer.close_uninstalled_step(1) {
-                    Ok(SnapshotRetirementStep::Complete) if owners.store_disposer.uninstalled_terminal_is_empty() => {
+                let demand = owners.next_close_byte_demand();
+                if demand > crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return self.reject(MemberOpenDiagnostic::Capacity); }
+                let physical_bytes = crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES.max(demand);
+                match owners.close_uninstalled_owners_step(1, physical_bytes) {
+                    Ok(SnapshotRetirementStep::Complete) if owners.uninstalled_owners_terminal_is_empty() => {
                         self.owners.take();
                         let envelope = self.envelope.take().expect("hydrated envelope remains retained until owner-catalog close");
                         assert!(self.runtime.is_none(), "envelope hydration runtime closes before handoff");
                         self.terminal = true;
                         return PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope));
                     }
-                    Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes == 0 => cx.consume_fuel(released_items.max(1) as u64),
+                    Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= physical_bytes => cx.consume_fuel(released_items.max(1) as u64),
                     _ => return self.reject(MemberOpenDiagnostic::Initialization),
                 }
                 PersistedDocumentHydrationStep::Pending(self.progress())
@@ -927,11 +982,26 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 }
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod release_tests;
+
 impl<P, M> ErasedSnapshotRetirement for RetainedPersistedDocumentHydration<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
+    fn next_close_byte_demand(&self) -> usize {
+        if self.terminal { return 0; }
+        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
+        if let Some(job) = self.fold_job.as_ref() { return job.next_close_byte_demand(); }
+        if self.normalized_conflicts.is_some() || self.normalized_transitions.is_some() { return 1; }
+        if let Some(job) = self.target_decoder.as_ref() { return job.next_close_byte_demand(); }
+        if self.pending_target.is_some() || self.target_address.is_some() || self.target_source.is_some() || self.replay_ids.is_some() || self.replay_order.is_some() { return 1; }
+        if let Some(runtime) = self.runtime.as_ref() { return runtime.next_close_byte_demand(); }
+        self.owners.as_ref().map_or(1, DocumentStoreOwners::next_close_byte_demand)
+    }
+
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
@@ -941,18 +1011,8 @@ where
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                    self.active.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration nested owner reported false terminal")),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
-                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "persisted hydration nested owner exceeded close grant"))
-                }
-                step => Ok(step),
-            };
+        if self.active.is_some() {
+            return super::artifact_retirement_box_close_step(&mut self.active, 1, maximum_bytes);
         }
         if let Some(job) = self.fold_job.as_mut() {
             match job.close_step(1, maximum_bytes)? {
@@ -1063,8 +1123,8 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         let owners = self.owners.as_mut().expect("persisted hydration owner catalog remains retained");
-        match owners.store_disposer.close_uninstalled_step(1)? {
-            SnapshotRetirementStep::Complete if owners.store_disposer.uninstalled_terminal_is_empty() => {
+        match owners.close_uninstalled_owners_step(1, maximum_bytes)? {
+            SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
                 self.owners.take();
                 self.terminal = true;
                 Ok(SnapshotRetirementStep::Complete)

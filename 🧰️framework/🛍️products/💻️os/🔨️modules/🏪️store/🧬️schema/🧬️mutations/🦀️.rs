@@ -11,8 +11,8 @@ pub mod create_space_alternative;
 pub mod remove_space_alternative;
 #[path = "🗑️remove-space-checkpoint/🦀️.rs"]
 pub mod remove_space_checkpoint;
-#[path = "🎯️restore-active-space-alternative/🦀️.rs"]
-pub mod restore_active_space_alternative;
+#[path = "🎯️set-active-space-alternative/🦀️.rs"]
+pub mod set_active_space_alternative;
 #[path = "🔀️switch-space-alternative/🦀️.rs"]
 pub mod switch_space_alternative;
 
@@ -20,7 +20,7 @@ pub use commit_space_checkpoint::CommitSpaceCheckpoint;
 pub use create_space_alternative::CreateSpaceAlternative;
 pub use remove_space_alternative::RemoveSpaceAlternative;
 pub use remove_space_checkpoint::RemoveSpaceCheckpoint;
-pub use restore_active_space_alternative::RestoreActiveSpaceAlternative;
+pub use set_active_space_alternative::SetActiveSpaceAlternative;
 pub use switch_space_alternative::SwitchSpaceAlternative;
 //#endregion 🔖️Leaves
 
@@ -34,7 +34,7 @@ pub enum SpaceHistoryMutation {
     SwitchSpaceAlternative(SwitchSpaceAlternative),
     RemoveSpaceCheckpoint(RemoveSpaceCheckpoint),
     RemoveSpaceAlternative(RemoveSpaceAlternative),
-    RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative),
+    SetActiveSpaceAlternative(SetActiveSpaceAlternative),
 }
 //#endregion 🔖️Aggregate
 

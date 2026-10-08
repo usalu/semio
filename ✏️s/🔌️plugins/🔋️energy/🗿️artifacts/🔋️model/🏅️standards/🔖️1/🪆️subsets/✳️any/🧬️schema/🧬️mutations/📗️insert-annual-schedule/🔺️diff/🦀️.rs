@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `InsertAnnualScheduleRule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, AnnualSchedulePatch, ListEdit, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,13 +18,6 @@ pub fn diff(payload: &super::InsertAnnualScheduleRule, base: &EnergyModelSnapsho
     if !base.model.schedules.daily.iter().any(|row| row.id == payload.daily_schedule_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", payload.daily_schedule_id.0), [payload.daily_schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.annual.iter_mut().find(|item| item.id == payload.id) {
-        item.rules.insert(
-            payload.index as usize,
-            crate::schedule::CompactScheduleRule { start_month: payload.start_month, start_day: payload.start_day, end_month: payload.end_month, end_day: payload.end_day, daily_schedule_id: payload.daily_schedule_id },
-        );
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { annual: Rows::modifying(AnnualSchedulePatch { rules: ListEdit::inserting(payload.index as usize, crate::schedule::CompactScheduleRule { start_month: payload.start_month, start_day: payload.start_day, end_month: payload.end_month, end_day: payload.end_day, daily_schedule_id: payload.daily_schedule_id }), ..AnnualSchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

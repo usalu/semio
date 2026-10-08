@@ -1,15 +1,14 @@
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+//! 🔺️ Diff for `RemoveMetadataEntry`.
 
-/// 🔺️ Diff helper for remove-metadata-entry — a `key` absent from `base.metadata` is
-/// `mutation.target-missing` (Error, empty diff).
+use super::super::*;
+
+//#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff(base: &SemioImageSnapshot, key: String) -> protocol::MutationOutcome<SemioImageDiff> {
-    if !base.metadata.iter().any(|e| e.key == key) {
+pub fn diff(payload: &super::RemoveMetadataEntry, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
+    let super::RemoveMetadataEntry { key } = payload;
+    if !base.metadata.iter().any(|e| &e.key == key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Metadata entry \"{key}\" does not exist."), [key.clone()]);
     }
-    Mutation::diff(&SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }), base)
+    protocol::MutationOutcome::new(SemioImageDiff { metadata: Some(SemioImageMetadataDiff { removed: vec![key.clone()], ..Default::default() }), ..Default::default() })
 }
+//#endregion 🔖️Diff

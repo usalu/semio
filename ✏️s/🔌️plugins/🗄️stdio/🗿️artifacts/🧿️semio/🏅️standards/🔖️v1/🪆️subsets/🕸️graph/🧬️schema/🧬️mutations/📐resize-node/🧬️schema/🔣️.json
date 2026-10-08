@@ -14,8 +14,6 @@
     "id": {
       "$ref": "#/$defs/GraphNodeId",
       "x-semio-ui": {
-        "widget": "reference",
-        "role": "target",
         "label": {
           "en": "Node",
           "de": "Knoten"
@@ -23,11 +21,6 @@
         "description": {
           "en": "Node that is resized.",
           "de": "Knoten, dessen Größe geändert wird."
-        },
-        "ref": {
-          "kind": "node",
-          "domain": "graph",
-          "granularity": "node"
         },
         "group": "target",
         "order": 10
@@ -85,7 +78,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node ID",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     }

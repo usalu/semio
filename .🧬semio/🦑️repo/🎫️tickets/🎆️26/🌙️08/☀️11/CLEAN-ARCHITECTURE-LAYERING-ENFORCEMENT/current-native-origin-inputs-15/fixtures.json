@@ -1,0 +1,482 @@
+[
+  {
+    "id": "board-complete",
+    "input": {
+      "id": "board",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "native",
+        "cargo",
+        "test",
+        "--manifest",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "semio-framework-os-infinite:test",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": true
+  },
+  {
+    "id": "board-reject-level",
+    "input": {
+      "id": "board",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "native",
+        "cargo",
+        "test",
+        "--manifest",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "semio-framework-os-infinite:test",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "quick",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "board-reject-extraArgs",
+    "input": {
+      "id": "board",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "native",
+        "cargo",
+        "test",
+        "--manifest",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "semio-framework-os-infinite:test",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--lib"
+      ],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "board-reject-packages",
+    "input": {
+      "id": "board",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "native",
+        "cargo",
+        "test",
+        "--manifest",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "semio-framework-os-infinite:test",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-ui"
+      ],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "board-reject-command",
+    "input": {
+      "id": "board",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "native",
+        "cargo",
+        "test",
+        "--manifest",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+        "one_test"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "semio-framework-os-infinite:test",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "ui-complete",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": true
+  },
+  {
+    "id": "ui-reject-level",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "quick",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "ui-reject-extraArgs",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "ui-reject-packages",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [
+        "semio-framework-ui"
+      ],
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "ui-reject-command",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long",
+        "one_test"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "product-complete",
+    "input": {
+      "id": "product",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test-native"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": true
+  },
+  {
+    "id": "product-reject-level",
+    "input": {
+      "id": "product",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test-native"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "quick",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "product-reject-extraArgs",
+    "input": {
+      "id": "product",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test-native"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [
+        "--lib"
+      ],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "product-reject-packages",
+    "input": {
+      "id": "product",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test-native"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-ui"
+      ],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "product-reject-command",
+    "input": {
+      "id": "product",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test-native",
+        "one_test"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "selectedFeatures": [],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  },
+  {
+    "id": "retired-general-board-feature",
+    "input": {
+      "id": "ui",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long",
+        "--features",
+        "board"
+      ],
+      "registeredArgv": [
+        "nx",
+        "run",
+        "@semio-tech/ui-rs:test-wgpu-engine",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--args=long"
+      ],
+      "packages": [],
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine",
+        "board"
+      ],
+      "level": "long",
+      "expectedHistoricalSelectedCount": null
+    },
+    "accepted": false
+  }
+]

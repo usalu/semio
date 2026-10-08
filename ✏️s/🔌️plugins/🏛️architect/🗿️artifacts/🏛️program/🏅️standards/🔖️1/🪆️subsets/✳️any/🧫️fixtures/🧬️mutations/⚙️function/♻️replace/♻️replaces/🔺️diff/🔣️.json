@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -7,57 +6,54 @@
   "users": null,
   "activities": null,
   "functions": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "function-a",
-        "patch": {
-          "name": "Function A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "code": "Replaced Function A",
-          "kind": "primary",
-          "purpose": {
-            "text": ""
-          },
-          "criticality": "preferred",
-          "performanceTargets": [],
-          "serviceLevel": null,
-          "operatingHours": null,
-          "staffing": {
-            "unit": ""
-          },
-          "equipmentIds": [],
-          "resourceIds": [],
-          "activityIds": [],
-          "elementIds": [],
-          "dependencies": [],
-          "interfaces": [],
-          "constraints": [],
-          "qualityCriteria": [],
-          "regulatoryRefs": [],
-          "futureChanges": [],
-          "ownerStakeholderId": null,
-          "successMetrics": [],
-          "hierarchyParentId": null,
-          "conflictIds": []
-        }
+        "name": "Function A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "code": "Replaced Function A",
+        "kind": "primary",
+        "purpose": {
+          "text": ""
+        },
+        "criticality": "preferred",
+        "performanceTargets": [],
+        "serviceLevel": null,
+        "operatingHours": null,
+        "staffing": {
+          "unit": ""
+        },
+        "equipmentIds": [],
+        "resourceIds": [],
+        "activityIds": [],
+        "elementIds": [],
+        "dependencies": [],
+        "interfaces": [],
+        "constraints": [],
+        "qualityCriteria": [],
+        "regulatoryRefs": [],
+        "futureChanges": [],
+        "ownerStakeholderId": null,
+        "successMetrics": [],
+        "hierarchyParentId": null,
+        "conflictIds": []
       }
     ],
+    "removed": [
+      "function-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "elements": null,
@@ -119,9 +115,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

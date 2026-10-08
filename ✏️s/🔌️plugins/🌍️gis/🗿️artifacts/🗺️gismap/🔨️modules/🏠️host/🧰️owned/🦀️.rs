@@ -1,6 +1,7 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::standards::v1::subsets::any::io::binary::mutations::{GisMapMutationDecodeAuthority, GisMapSnapshotDecodeAuthority};
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{Mutation, MutationDiff, OpBinary};
 pub fn gis_map_document_store_owners() -> store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation> {
@@ -31,6 +32,10 @@ struct GisMapStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(GIS_MAP_OWNED_FIELD_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"gis-map-store.initializer-stale-authority");
@@ -337,8 +342,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
     }
 }
 
-const GIS_MAP_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub(crate) const GIS_MAP_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct GisMapSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<GisMapSnapshot> for GisMapSnapshotRetirementFactory {
@@ -348,11 +354,14 @@ impl store::ArtifactOwnedValueRetirementFactory<GisMapSnapshot> for GisMapSnapsh
 }
 
 impl store::SnapshotRetirementFactory<GisMapSnapshot> for GisMapSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<GisMapSnapshot>) -> usize { std::mem::size_of::<GisMapSnapshotRootRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<GisMapSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(GisMapSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct GisMapMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<GisMapMutation> for GisMapMutationRetirementFactory {
@@ -1014,3 +1023,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for GisMapRejectedConflictAutho
 }
 
 pub struct GisMapEnvelopeOwnedFieldCatalog;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

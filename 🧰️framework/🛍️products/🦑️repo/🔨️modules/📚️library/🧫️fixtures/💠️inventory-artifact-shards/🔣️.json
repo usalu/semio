@@ -58,10 +58,6 @@
   "artifactRejections": ["missing-payload", "extra-payload", "changed-entry", "changed-metadata", "duplicate-source", "duplicate-descriptor", "wrong-count", "wrong-ledger", "noncanonical-manifest"],
   "execution": {
     "target": "test-inventory-artifact-shards",
-    "command": "bun ./📜️script.ts test inventory-artifact-shards",
-    "launchName": "🧹clean🧩️taxonomy💠️inventory-artifact-shards",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-inventory-artifact-shards --skip-nx-cache",
-    "group": "4_gate",
-    "order": 410.1
+    "command": "bun ./📜️script.ts test inventory-artifact-shards"
   }
 }

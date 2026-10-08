@@ -16,7 +16,6 @@ message SetBlockEntityGeometry { string block_name = 1; string handle = 2; semio
 message SemioCadMutation {
   oneof value {
     bool no_mutation = 1;
-    semio.s_stdio_semio_cad.snapshot.SemioCadSnapshot set_snapshot = 2;
     semio.s_stdio_semio_cad.snapshot.CadLayer add_layer = 3;
     string remove_layer = 4;
     SetLayer set_layer = 5;

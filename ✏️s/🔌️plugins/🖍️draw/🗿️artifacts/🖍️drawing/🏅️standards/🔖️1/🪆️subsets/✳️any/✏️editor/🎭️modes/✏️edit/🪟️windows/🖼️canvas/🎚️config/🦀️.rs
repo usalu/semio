@@ -18,21 +18,59 @@ impl Default for DrawingCanvasWindowConfig {
     }
 }
 
+/// 🔺️ Sparse delta of the persisted navigation: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct DrawingCanvasWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<store::Viewport2d>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub framed: Option<bool>,
+}
+
+impl store::ConfigRecord for DrawingCanvasWindowConfig {}
+
+impl protocol::MutationDiff<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
+    fn apply(&self, base: &DrawingCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DrawingCanvasWindowConfig> {
+        Ok(DrawingCanvasWindowConfig { viewport: self.viewport.clone().unwrap_or_else(|| base.viewport.clone()), framed: self.framed.unwrap_or(base.framed) })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.viewport.is_some() {
+            self.viewport = other.viewport;
+        }
+        if other.framed.is_some() {
+            self.framed = other.framed;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigDiff {
+    fn inverse(&self, base: &DrawingCanvasWindowConfig) -> Self {
+        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()), framed: self.framed.map(|_| base.framed) }
+    }
+    fn between(base: &DrawingCanvasWindowConfig, other: &DrawingCanvasWindowConfig) -> Self {
+        Self { viewport: (base.viewport != other.viewport).then(|| other.viewport.clone()), framed: (base.framed != other.framed).then_some(other.framed) }
+    }
+    fn is_empty(&self) -> bool {
+        self.viewport.is_none() && self.framed.is_none()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum DrawingCanvasWindowConfigMutation {
-    Snapshot { config: DrawingCanvasWindowConfig },
+    Set { viewport: store::Viewport2d, framed: bool },
 }
 
 impl protocol::Mutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigMutation {
-    type Diff = DrawingCanvasWindowConfig;
+    type Diff = DrawingCanvasWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config",
         semantic_kind: "set-window-config",
         display_name: "Set Drawing Canvas Window Configuration",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "Set",
         payload_schema: "drawing.canvas-window.config",
         text_opcode: None,
         binary_tag: None,
@@ -50,15 +88,14 @@ impl protocol::Mutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfig
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &DrawingCanvasWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
+    fn diff(&self, base: &DrawingCanvasWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::Set { viewport, framed } => protocol::MutationOutcome::new(DrawingCanvasWindowConfigDiff { viewport: (&base.viewport != viewport).then(|| viewport.clone()), framed: (base.framed != *framed).then_some(*framed) }),
+        }
     }
     fn inverse(&self, base: &DrawingCanvasWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::Set { viewport: base.viewport.clone(), framed: base.framed }])
+    }
 }
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
@@ -101,8 +138,6 @@ impl store::ArtifactPack for DrawingCanvasWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-
-store::impl_whole_record_config!(DrawingCanvasWindowConfig);
 
 impl protocol::OpText for DrawingCanvasWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
@@ -154,7 +189,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: DrawingCanvas
     if kind != super::DRAWING_PLAY_WINDOW_CANVAS {
         return Err(semio_framework_plugin::Fault::from("drawing-canvas-window-kind-required"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<DrawingCanvasWindowConfigOwner>(id, DrawingCanvasWindowConfigMutation::Snapshot { config }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<DrawingCanvasWindowConfigOwner>(id, DrawingCanvasWindowConfigMutation::Set { viewport: config.viewport, framed: config.framed }))
 }
 
 #[cfg(test)]

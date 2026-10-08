@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSizingObjectZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SizingObjectPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeSizingObjectZone, base: &EnergyModelSnapshot)
     if existing.zone_id == payload.new_zone_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sizing object {} already has that zone.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.sizing_objects.iter_mut().find(|item| item.id == payload.id) {
-        item.zone_id = payload.new_zone_id;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { sizing_objects: Rows::modifying(SizingObjectPatch { zone_id: Some(payload.new_zone_id), ..SizingObjectPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -19,6 +19,7 @@ pub enum MemberSnapshotOpenStep {
 
 pub trait MemberSnapshotOpenOperation: ErasedSnapshotRetirement {
     type Snapshot;
+    fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic>;
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError>
     where
         Self: Sized;
@@ -34,6 +35,7 @@ pub struct UnsupportedMemberSnapshotOpen<P> {
 
 impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
     type Snapshot = P;
+    fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
 
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
         if let Err(diagnostic) = request.admitted_expected() {
@@ -75,6 +77,7 @@ impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
     fn terminal_is_empty(&self) -> bool {
         self.request.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::next_close_byte_demand) }
 }
 
 impl<P> Drop for UnsupportedMemberSnapshotOpen<P> {
@@ -110,6 +113,7 @@ impl<P> PackMemberSnapshotOpen<P> {
 
 impl<P: ArtifactPack + semio_framework_value::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
     type Snapshot = P;
+    fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
 
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
         if let Err(diagnostic) = request.admitted_expected() {
@@ -226,6 +230,11 @@ impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none() && self.input.is_empty() && self.expected_bytes.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(active) = self.active.as_ref() { return active.next_close_byte_demand(); }
+        if self.snapshot.is_some() { return 1; }
+        self.request.as_ref().map_or(usize::from(!self.terminal), MemberOpenRequest::next_close_byte_demand)
+    }
 }
 
 impl<P> Drop for PackMemberSnapshotOpen<P> {
@@ -239,8 +248,13 @@ pub struct UnsupportedMemberFactoryOpen<M: Send> {
 }
 
 impl<M: Send> UnsupportedMemberFactoryOpen<M> {
-    pub fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
-        Ok(Self { snapshot: UnsupportedMemberSnapshotOpen::begin(request)? })
+    pub fn begin(request: &mut Option<MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self>, MemberOpenDiagnostic> {
+        request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.admitted_expected()?;
+        if grant.maximum_items == 0 { return Ok(None); }
+        match UnsupportedMemberSnapshotOpen::begin(request.take().expect("funded inline member open retains its original request")) {
+            Ok(snapshot) => Ok(Some(Self { snapshot })),
+            Err(rejected) => { *request = Some(rejected.request); Err(rejected.diagnostic) }
+        }
     }
 }
 
@@ -261,6 +275,8 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
     fn terminal_is_empty(&self) -> bool {
         self.snapshot.terminal_is_empty()
     }
+    fn next_close_byte_demand(&self) -> usize { self.snapshot.next_close_byte_demand() }
+    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.snapshot.terminal_is_empty().then_some(0) }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -348,6 +364,10 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
+    pub fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> {
+        P::SnapshotOpen::begin_birth_bytes(request)?.checked_add(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES).and_then(|bytes| bytes.checked_add(P::member_store_owners_birth_bytes())).ok_or(MemberOpenDiagnostic::Capacity)
+    }
+
     pub fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
         let operation = request.operation();
         let generation = request.generation();
@@ -369,7 +389,7 @@ where
             history_decoder: ManuallyDrop::new(None),
             decoded_history: ManuallyDrop::new(None),
             hydration: ManuallyDrop::new(None),
-            owners: ManuallyDrop::new(None),
+            owners: ManuallyDrop::new(Some(P::member_store_owners())),
             member: ManuallyDrop::new(None),
             active: ManuallyDrop::new(None),
             operation,
@@ -663,7 +683,7 @@ where
                     expected,
                     owner,
                     schema.to_string(),
-                    P::member_store_owners(),
+                    self.owners.take().expect("original admitted member owner catalog remains retained"),
                     self.operation,
                     self.generation,
                     self.expires_at_us,
@@ -677,21 +697,16 @@ where
             Phase::Hydrate => {
                 cx.set_stage("member-open.history.hydrate");
                 let hydration = self.hydration.as_mut().expect("member persisted hydration remains retained");
-                match hydration.step(cx) {
-                    crate::os_store::PersistedDocumentHydrationStep::Pending(progress) => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Replay, completed: progress.completed, total: progress.total }),
-                    crate::os_store::PersistedDocumentHydrationStep::Rejected(diagnostic) => self.reject(diagnostic),
-                    crate::os_store::PersistedDocumentHydrationStep::Ready(crate::os_store::PersistedDocumentHydrationOutput::Store(member)) => {
+                match hydration.step_store(cx) {
+                    crate::os_store::PersistedDocumentStoreHydrationStep::Pending(progress) => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Replay, completed: progress.completed, total: progress.total }),
+                    crate::os_store::PersistedDocumentStoreHydrationStep::Rejected(diagnostic) => self.reject(diagnostic),
+                    crate::os_store::PersistedDocumentStoreHydrationStep::Ready(member) => {
                         let hydration = self.hydration.take().expect("terminal member persisted hydration remains present");
                         assert!(hydration.terminal_is_empty());
                         drop(hydration);
                         *self.member = Some(member);
                         self.phase = Phase::RetireHistoryBytes;
                         MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Retire, completed: 0, total: 1 })
-                    }
-                    crate::os_store::PersistedDocumentHydrationStep::Ready(crate::os_store::PersistedDocumentHydrationOutput::Envelope(envelope)) => {
-                        *self.owners = Some(P::member_store_owners());
-                        *self.active = Some(self.owners.as_ref().expect("unexpected envelope handoff owner catalog remains retained").retire_decoded_envelope(envelope));
-                        self.reject(MemberOpenDiagnostic::Initialization)
                     }
                 }
             }
@@ -831,15 +846,12 @@ where
         close_field!(history);
         close_field!(snapshot_open);
         if let Some(snapshot) = self.snapshot.take() {
-            if self.owners.is_none() {
-                *self.owners = Some(P::member_store_owners());
-            }
             *self.active = Some(self.owners.as_ref().expect("member-open owner catalog remains retained").initial_snapshot_retirement.retire_owned(snapshot));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(owners) = self.owners.as_mut() {
-            match owners.store_disposer.close_uninstalled_step(items.min(1))? {
-                SnapshotRetirementStep::Complete if owners.store_disposer.uninstalled_terminal_is_empty() => {
+            match owners.close_uninstalled_owners_step(items.min(1), bytes)? {
+                SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
                     self.owners.take();
                     return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
@@ -852,6 +864,20 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.ownership_is_empty()
+    }
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(active) = self.active.as_ref() { return active.next_close_byte_demand(); }
+        if self.genesis_request.is_some() || self.genesis_pack.is_some() { return 1; }
+        if let Some(hydration) = self.hydration.as_ref() { return hydration.next_close_byte_demand(); }
+        if let Some(member) = self.member.as_ref() { return member.next_close_byte_demand(); }
+        if self.decoded_history.is_some() || self.history_decoder.is_some() || self.history_bytes.is_some() { return 1; }
+        if let Some(owner) = self.witness.as_ref() { return owner.next_close_byte_demand(); }
+        if let Some(owner) = self.dictionary.as_ref() { return owner.next_close_byte_demand(); }
+        if let Some(owner) = self.selected.as_ref() { return owner.next_close_byte_demand(); }
+        if let Some(owner) = self.selection.as_ref() { return owner.next_close_byte_demand(); }
+        if let Some(owner) = self.history.as_ref() { return owner.next_close_byte_demand(); }
+        if let Some(owner) = self.snapshot_open.as_ref() { return owner.next_close_byte_demand(); }
+        self.owners.as_ref().map_or(usize::from(!self.ownership_is_empty()), |owners| owners.next_close_byte_demand())
     }
 }
 
@@ -874,6 +900,8 @@ where
     fn terminal_is_empty(&self) -> bool {
         ErasedSnapshotRetirement::terminal_is_empty(self)
     }
+    fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(self) }
+    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.ownership_is_empty().then_some(std::mem::size_of_val(self.history_page.as_ref())) }
 }
 
 impl<F, P, M> Drop for InitialMemberStoreOpen<F, P, M>

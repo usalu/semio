@@ -1075,7 +1075,7 @@ fn diff_document(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) ->
 }
 
 impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
-    fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
+    fn apply(&self, base: &SemioDocumentSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;

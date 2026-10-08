@@ -185,9 +185,12 @@ pub fn process3d_presence_is_terminal_empty(presence: &Process3dPresence) -> boo
 /// variable-length engagement input, a second returns the inline root. Without it (and the disposer
 /// below) every close of a registry-backed app faulted `interactive-job.close-owned-disposer-missing`
 /// and the whole unit-test binary aborted in the fixture's `Drop` (ticket 26/09/15/DEV-PROCESS-REACT-E2E).
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Process3dPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Process3dPresence>) -> usize { std::mem::size_of::<Process3dPresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<Process3dPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(Process3dPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)), engagement_input: std::mem::ManuallyDrop::new(None) })
     }

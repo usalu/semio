@@ -28,3 +28,17 @@ fn generic_emission_matches_every_neutral_mode_under_independent_syntax_parsing(
         assert_eq!(traits, expected_traits, "{}", row["id"]);
     }
 }
+
+#[test]
+fn required_inline_statement_emission_preserves_the_authored_native_owner() {
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏷️required-inline/🔣️.json")).unwrap();
+ for row in fixture["fieldKinds"].as_array().unwrap(){
+  let declaration:DeriveInput=syn::parse_str(&format!("struct Required {{ #[dsl(statements)] statement: {} }}",row["type"].as_str().unwrap())).unwrap();
+  let fields=match &declaration.data{Data::Struct(value)=>&value.fields,_=>unreachable!()};
+  let plans=plan_fields(fields);let actual=match &plans[0].kind{FieldKind::RequiredInlineStatements(_)=>"RequiredInlineStatements",FieldKind::RequiredStatements(_)=>"RequiredStatements",FieldKind::OptionStatements(_)=>"OptionStatements",FieldKind::VecStatements(_)=>"VecStatements",_=>"wrong"};
+  assert_eq!(actual,row["role"].as_str().unwrap());
+  let output=emit_record(declaration);let _:syn::File=syn::parse2(output.clone()).unwrap();
+  if actual=="RequiredInlineStatements"{let output=output.to_string();assert!(!output.contains("Box :: new"));assert!(!output.contains("self . statement . as_ref"));assert!(output.contains("DslVariants"));}
+ }
+ println!("[DEBUG] required inline, boxed, optional and repeated native variant roles parsed with independent syn");
+}

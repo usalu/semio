@@ -1,0 +1,297 @@
+{
+  "category": {
+    "id": "mesh.inspect",
+    "emoji": "🔎️",
+    "order": 260,
+    "label": {
+      "en": "Mesh inspection",
+      "de": "Netzinspektion"
+    },
+    "description": {
+      "en": "Read positions, endpoints, normals and centers of single mesh components.",
+      "de": "Positionen, Endpunkte, Normalen und Mittelpunkte einzelner Netzelemente auslesen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.inspect.vertex",
+      "category": "mesh.inspect",
+      "emoji": "📍️",
+      "label": {
+        "en": "Inspect vertex",
+        "de": "Eckpunkt untersuchen"
+      },
+      "description": {
+        "en": "Reads the position of one vertex without changing the mesh.",
+        "de": "Liest die Position eines Eckpunkts, ohne das Netz zu ändern."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertex",
+          "label": {
+            "en": "Vertex",
+            "de": "Eckpunkt"
+          },
+          "description": {
+            "en": "The vertex to read.",
+            "de": "Der auszulesende Eckpunkt."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": false
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "position",
+          "label": {
+            "en": "Position",
+            "de": "Position"
+          },
+          "description": {
+            "en": "The position of the vertex.",
+            "de": "Die Position des Eckpunkts."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertex"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.inspect.edge",
+      "category": "mesh.inspect",
+      "emoji": "📏️",
+      "label": {
+        "en": "Inspect edge",
+        "de": "Kante untersuchen"
+      },
+      "description": {
+        "en": "Reads the endpoints and length of one edge without changing the mesh.",
+        "de": "Liest Endpunkte und Länge einer Kante, ohne das Netz zu ändern."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edge",
+          "label": {
+            "en": "Edge",
+            "de": "Kante"
+          },
+          "description": {
+            "en": "The edge to read.",
+            "de": "Die auszulesende Kante."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": false
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Start"
+          },
+          "description": {
+            "en": "The first end of the edge.",
+            "de": "Das erste Ende der Kante."
+          },
+          "type": "point"
+        },
+        {
+          "name": "end",
+          "label": {
+            "en": "End",
+            "de": "Ende"
+          },
+          "description": {
+            "en": "The second end of the edge.",
+            "de": "Das zweite Ende der Kante."
+          },
+          "type": "point"
+        },
+        {
+          "name": "length",
+          "label": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "description": {
+            "en": "The length of the edge.",
+            "de": "Die Länge der Kante."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edge"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "mesh.inspect.face",
+      "category": "mesh.inspect",
+      "emoji": "⬜️",
+      "label": {
+        "en": "Inspect face",
+        "de": "Fläche untersuchen"
+      },
+      "description": {
+        "en": "Reads the corner indices, unit normal and center of one face without changing the mesh.",
+        "de": "Liest Eckindizes, Einheitsnormale und Mittelpunkt einer Fläche, ohne das Netz zu ändern."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The face to read.",
+            "de": "Die auszulesende Fläche."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "mesh",
+            "multiple": false
+          },
+          "minItems": 1,
+          "maxItems": 1,
+          "default": [
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Corner vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertex indices around the face.",
+            "de": "Die Eckpunktindizes rund um die Fläche."
+          },
+          "type": "integer",
+          "list": true
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "The unit normal of the face.",
+            "de": "Die Einheitsnormale der Fläche."
+          },
+          "type": "vector"
+        },
+        {
+          "name": "center",
+          "label": {
+            "en": "Center",
+            "de": "Mittelpunkt"
+          },
+          "description": {
+            "en": "The mean of the corner positions.",
+            "de": "Der Mittelwert der Eckpositionen."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ]
+      },
+      "preview": false
+    }
+  ]
+}

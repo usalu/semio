@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ playbook document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookArtifact {
     #[state(artifact)]

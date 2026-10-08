@@ -1,7 +1,7 @@
 //! 🧭️ Fem2d mutation — `MoveSelection` payload + `MutationKind` impl.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::Fem2dSnapshot;
+use crate::{Fem2dSnapshot, FemNode, FemRegion};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -38,6 +38,36 @@ impl MoveSelection {
     /// 🫥️ Whether the transform is the identity: no offset, no angle, unit factors.
     pub fn is_identity(&self) -> bool {
         (self.dx, self.dy, self.angle, self.sx, self.sy) == (0.0, 0.0, 0.0, 1.0, 1.0)
+    }
+
+    /// 🛡️ The hard-bound breach of this payload, as its `mutation.invariant` message and address: a non-finite number, a factor that is not positive, or a target named twice.
+    pub fn breach(&self) -> Option<(String, Vec<String>)> {
+        let targets: Vec<String> = self.node_ids.iter().chain(&self.region_ids).cloned().collect();
+        if [self.pivot_x, self.pivot_y, self.dx, self.dy, self.angle, self.sx, self.sy].iter().any(|value| !value.is_finite()) {
+            return Some(("A move-selection carries a non-finite number.".to_string(), targets));
+        }
+        if self.sx <= 0.0 || self.sy <= 0.0 {
+            return Some((format!("A move-selection needs positive scale factors, got ({}, {}).", self.sx, self.sy), targets));
+        }
+        let repeated = |ids: &[String]| ids.iter().enumerate().find(|(at, id)| ids[..*at].contains(id)).map(|(_, id)| id.clone());
+        repeated(&self.node_ids).or_else(|| repeated(&self.region_ids)).map(|twice| (format!("A move-selection names \"{twice}\" twice."), vec![twice]))
+    }
+
+    /// 📍️ `node` carried through the transform, or `None` when it does not move.
+    pub fn moved_node(&self, node: &FemNode) -> Option<FemNode> {
+        let (x, y) = self.map(node.x, node.y);
+        let moved = FemNode { x, y, ..node.clone() };
+        (moved != *node).then_some(moved)
+    }
+
+    /// 🟩️ `region` carried through the transform, or `None` when it does not move.
+    pub fn moved_region(&self, region: &FemRegion) -> Option<FemRegion> {
+        let point = |point: &[f64; 2]| {
+            let (x, y) = self.map(point[0], point[1]);
+            [x, y]
+        };
+        let moved = FemRegion { outline: region.outline.iter().map(point).collect(), holes: region.holes.iter().map(|hole| hole.iter().map(point).collect()).collect(), ..region.clone() };
+        (moved != *region).then_some(moved)
     }
 }
 

@@ -36,7 +36,7 @@ describe("stable wasm package wrappers", () => {
 
   test("validates the exact language-agnostic wrapper contract", () => {
     
-    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["target"]).toEqual("test-wasm-package-wrappers");expect(fixture["registration"]["packageScript"]).toEqual("test-wasm-package-wrappers");expect(fixture["registration"]["launchSeedPath"]).toEqual(".vscode/🧩️launch.seed.jsonc");expect(fixture["registration"]["launchPath"]).toEqual(".vscode/launch.json");expect(fixture["registration"]["launchName"]).toEqual("🧱️test📦️wasm-package-wrappers");expect(fixture["registration"]["launchCommand"]).toEqual("bun nx run @semio-tech/repo-lib:test-wasm-package-wrappers");
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["target"]).toEqual("test-wasm-package-wrappers");expect(fixture["registration"]["packageScript"]).toEqual("test-wasm-package-wrappers");
     expect(fixture.wrappers.map((row: any) => row.id)).toEqual(["actor", "puzzle"]);
     expect(new Set(fixture.wrappers.map((row: any) => row.ownerPath)).size).toBe(2);
     
@@ -118,17 +118,12 @@ describe("stable wasm package wrappers", () => {
     }
   }, 30_000);
 
-  test("registers one exact cached Nx and launch route with complete inputs", async () => {
+  test("registers one exact cached Nx route with complete inputs", () => {
     const registration = fixture.registration;
     const project = json(registration.projectPath);
     const manifest = json(registration.packagePath);
     expect(project.namedInputs.wasmPackageWrapperSources).toEqual(fixture.inputs);
     expect(project.targets[registration.target]).toMatchObject({ cache: true, inputs: ["wasmPackageWrapperSources"], outputs: [], options: { command: "bun ./📜️script.ts test wasm-package-wrappers" } });
     expect(manifest.scripts[registration.packageScript]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
-    const jsonc = await import("jsonc-parser");
-    for (const path of [registration.launchSeedPath, registration.launchPath]) {
-      const launch = jsonc.parse(readFileSync(join(repoRoot, path), "utf8"));
-      expect(launch.configurations.filter((row: any) => row.name === registration.launchName && row.command === registration.launchCommand)).toHaveLength(1);
-    }
   });
 });

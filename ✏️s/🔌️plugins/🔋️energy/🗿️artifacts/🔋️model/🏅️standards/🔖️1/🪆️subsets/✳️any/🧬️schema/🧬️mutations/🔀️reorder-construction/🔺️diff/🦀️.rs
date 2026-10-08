@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReorderConstructionLayers` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ConstructionPatch, ListEdit, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -19,10 +19,6 @@ pub fn diff(payload: &super::ReorderConstructionLayers, base: &EnergyModelSnapsh
     if existing.layer_material_ids == payload.new_layer_material_ids {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Construction {} already holds its layers in this order.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(construction) = model.constructions.iter_mut().find(|item| item.id == payload.id) {
-        construction.layer_material_ids = payload.new_layer_material_ids.clone();
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { constructions: Rows::modifying(ConstructionPatch { layer_material_ids: ListEdit::replacing(&existing.layer_material_ids, &payload.new_layer_material_ids), ..ConstructionPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

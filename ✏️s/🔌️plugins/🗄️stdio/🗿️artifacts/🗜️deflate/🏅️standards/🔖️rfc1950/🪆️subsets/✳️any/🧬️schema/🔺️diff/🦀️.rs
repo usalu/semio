@@ -15,7 +15,7 @@ use protocol::command::DiffAlgebra;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.deflate`. No `snapshot: Option<DeflateSnapshot>` full-replace slot --
-/// even `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)`.
+/// every mutation leaf names exactly the fields it changes.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate.diff")]
@@ -40,7 +40,7 @@ pub struct DeflateDiff {
 }
 
 impl MutationDiff<DeflateSnapshot> for DeflateDiff {
-    fn apply(&self, base: &DeflateSnapshot) -> protocol::MutationApplyResult<DeflateSnapshot> {
+    fn apply(&self, base: &DeflateSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DeflateSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.compression_method {
             next.compression_method = v;
@@ -105,11 +105,6 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
-    DeflateDiff::between(base, snapshot)
-}
 /// 🧩 Builds a set-compression-params diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {

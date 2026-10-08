@@ -1,0 +1,20 @@
+# 🔬️ Ticket-local probe of the TUI backend contract (26/09/23/DASHBOARD-LAUNCH-COCKPIT, slice w0).
+# Standalone workspace: never a member of the repository workspace, built only by `w0-tui-contract-probe.py`.
+[package]
+name = "w0-tui-contract-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "w0-tui-contract-probe"
+path = "main.rs"
+
+[dependencies]
+ui_tui = { path = "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["tui-terminal"] }
+
+[profile.dev]
+debug = false
+incremental = false

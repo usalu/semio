@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -28,324 +17,653 @@
       "x-semio-state": "artifact"
     },
     "materials": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/materials"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993MaterialEdit"
+      },
       "x-semio-state": "artifact"
     },
     "sections": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/sections"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993SectionEdit"
+      },
       "x-semio-state": "artifact"
     },
     "members": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/members"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993MemberEdit"
+      },
       "x-semio-state": "artifact"
     },
     "loadCases": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/loadCases"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993LoadCaseEdit"
+      },
       "x-semio-state": "artifact"
     },
     "memberActions": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/memberActions"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993MemberActionEdit"
+      },
       "x-semio-state": "artifact"
     },
     "joints": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/joints"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993JointEdit"
+      },
       "x-semio-state": "artifact"
     },
     "fatigueDetails": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/fatigueDetails"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993FatigueDetailEdit"
+      },
       "x-semio-state": "artifact"
     },
     "fireExposures": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/fireExposures"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993FireExposureEdit"
+      },
       "x-semio-state": "artifact"
     },
     "coldFormedMembers": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/coldFormedMembers"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993ColdFormedMemberEdit"
+      },
       "x-semio-state": "artifact"
     },
     "platedPanels": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/platedPanels"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993PlatedPanelEdit"
+      },
       "x-semio-state": "artifact"
     },
     "siloShells": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/siloShells"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993SiloShellEdit"
+      },
       "x-semio-state": "artifact"
     },
     "tensionComponents": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/tensionComponents"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993TensionComponentEdit"
+      },
       "x-semio-state": "artifact"
     },
     "bridgeFatigue": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/bridgeFatigue"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993BridgeFatigueEdit"
+      },
       "x-semio-state": "artifact"
     },
     "towerLegs": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/towerLegs"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993TowerLegEdit"
+      },
       "x-semio-state": "artifact"
     },
     "piles": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/piles"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993PileEdit"
+      },
       "x-semio-state": "artifact"
     },
     "craneRunways": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/properties/craneRunways"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1993CraneRunwayEdit"
+      },
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1993RowOp": {
+      "enum": [
+        "Insert",
+        "Remove",
+        "Replace"
+      ]
+    },
+    "En1993MaterialEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMaterial"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993SectionEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelSection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993MemberEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMember"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993LoadCaseEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/LoadCase"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993MemberActionEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/MemberAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993JointEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelJoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993FatigueDetailEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993FireExposureEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FireExposure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993ColdFormedMemberEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993PlatedPanelEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PlatedPanel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993SiloShellEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SiloShell"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993TensionComponentEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TensionComponent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993BridgeFatigueEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993TowerLegEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TowerLeg"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993PileEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelPile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1993CraneRunwayEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1993RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/CraneRunway"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

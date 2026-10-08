@@ -8,18 +8,18 @@ use crate::{
 use store::ArtifactDsl;
 
 fn representative_drawing_document() -> DrawingSnapshot {
-    let mut assets = std::collections::BTreeMap::new();
-    assets.insert("src-1".to_string(), DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
+    let mut assets = semio_framework_value::paged::PagedMap::default();
+    assets.insert("src-1", DrawingImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 
     let mut rect_shape = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect_shape {
         shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() });
         shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 4.0].into()) });
     }
-    let rect_id = layer_id(&rect_shape).to_string();
+    let rect_id = layer_id(&rect_shape).clone();
 
     let line_shape = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 5.0, y2: 5.0 }), polygon: None });
-    let line_id = layer_id(&line_shape).to_string();
+    let line_id = layer_id(&line_shape).clone();
 
     let polygon_shape = DrawingLayerNode::Shape(DrawingShapeBody {
         base: default_layer_base("Polygon"),
@@ -44,13 +44,13 @@ fn representative_drawing_document() -> DrawingSnapshot {
             PathSegment::Cubic { ctrl1: [2.0, 2.0], ctrl2: [3.0, 2.0], to: [3.0, 3.0] },
             PathSegment::Arc { rx: 2.0, ry: 2.0, rotation: 0.0, large_arc: false, sweep: true, to: [1.0, -1.0] },
             PathSegment::Close,
-        ],
+        ].into(),
     );
 
     let text_layer = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base("Label"), x: 4.0, y: 5.0, content: "semio \"drawing\"\ndsl".into(), size: 12.0 });
     let image_layer = create_drawing_image_layer("Image", "src-1");
     let trace_layer = create_drawing_trace_layer("Trace", "src-1");
-    let boolean_layer = create_drawing_boolean_layer("Boolean", "xor", vec![rect_id, line_id]);
+    let boolean_layer = create_drawing_boolean_layer("Boolean", "xor", [rect_id, line_id].into_iter().collect());
 
     let ellipse_shape =
         DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
@@ -84,7 +84,7 @@ async fn dsl_round_trips_document_without_assets_or_artboard() {
 async fn dsl_round_trips_semio_example_fixture() {
     let doc = parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).expect("semio example fixture parses");
     assert_eq!(doc.id, "semio");
-    assert_eq!(doc.title.as_deref(), Some("Semio Emblem"));
+    assert!(doc.title.as_ref().is_some_and(|title| title.eq_str("Semio Emblem")));
     assert_eq!(doc.layers.len(), 1);
     store::os_store::test_support::assert_dsl_round_trip(&doc);
 }

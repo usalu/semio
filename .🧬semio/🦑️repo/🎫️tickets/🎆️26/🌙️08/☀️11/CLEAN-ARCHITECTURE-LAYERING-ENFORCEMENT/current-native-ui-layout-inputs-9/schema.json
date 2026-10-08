@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "element",
+              "capacity",
+              "owner",
+              "stack",
+              "worker",
+              "threshold",
+              "table-name",
+              "extra-field",
+              "remove-table",
+              "before",
+              "before-hash",
+              "path",
+              "binding",
+              "measurement",
+              "extra-pair",
+              "inverse",
+              "after-hash",
+              "transition",
+              "transition-layout",
+              "missing-transition"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -259,8 +259,20 @@ pub(crate) struct DemoDiff {
     n: Option<i32>,
 }
 
+impl crate::os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { n: self.n.map(|_| base.n) }
+    }
+    fn between(base: &DemoSnapshot, other: &DemoSnapshot) -> Self {
+        Self { n: (base.n != other.n).then_some(other.n) }
+    }
+    fn is_empty(&self) -> bool {
+        self.n.is_none()
+    }
+}
+
 impl MutationDiff<DemoSnapshot> for DemoDiff {
-    fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+    fn apply(&self, snapshot: &DemoSnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
         Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
     }
 

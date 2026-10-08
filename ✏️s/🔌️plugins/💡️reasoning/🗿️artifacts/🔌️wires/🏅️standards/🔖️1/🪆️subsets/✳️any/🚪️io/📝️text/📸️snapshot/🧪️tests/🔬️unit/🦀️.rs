@@ -10,7 +10,7 @@ async fn dsl_round_trip_empty_document() {
 /// relationships its edges carry) live in the child, never in the parent text.
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_metabolism_parent() {
-    let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism parent");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism parent");
     assert_eq!(document.wires_snapshot.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
     assert!(document.wires_snapshot.get("relationships").is_none() && document.wires_snapshot.get("board").is_none(), "the parent carries no board");
     assert_eq!(document.content.child_id, crate::WIRES_DEMO_CONTENT_ID);
@@ -22,7 +22,7 @@ async fn dsl_round_trip_metabolism_parent() {
 /// decode; the board travels in the child, whose own text codec carries every node and edge.
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_carries_the_parent_and_the_child_carries_the_board() {
-    let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism parent");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism parent");
     let back = <WiresSnapshot as store::ArtifactDsl>::parse_dsl(&<WiresSnapshot as store::ArtifactDsl>::print_dsl(&document)).expect("parse");
     assert_eq!((back.wires_snapshot, back.meta, back.content), (document.wires_snapshot.clone(), document.meta.clone(), document.content.clone()));
     let content = <crate::SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::CONTENT_TEXT).expect("demo board parses");

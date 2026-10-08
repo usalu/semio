@@ -63,7 +63,7 @@ define_id!(SurfaceId, "surface");
 
 // #region 🔖️Store
 
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 struct Slot<T> {
     generation: u32,
@@ -75,7 +75,7 @@ struct Slot<T> {
 /// for byte-identical serialized output), and index-ordered iteration. Serde bounds are pinned to
 /// `T` only — `Id` never needs to be (de)serializable itself, it only appears inside a zero-sized
 /// `PhantomData` marker.
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 pub struct Store<T, Id> {
     slots: Vec<Slot<T>>,

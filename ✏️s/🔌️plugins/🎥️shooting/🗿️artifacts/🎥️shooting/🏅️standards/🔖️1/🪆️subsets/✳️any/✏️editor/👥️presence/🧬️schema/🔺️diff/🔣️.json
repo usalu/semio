@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/presence-diff.json",
+  "title": "ShootingPresenceDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "selectedShotIds": { "type": "array", "items": { "type": "string" } },
+    "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera" }
+  }
+}

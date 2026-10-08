@@ -103,6 +103,21 @@
       }
     },
     "semantic-wire-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "native",
+                "kind": "flag",
+                "args": [
+                  "native"
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",

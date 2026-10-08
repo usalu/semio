@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::animate::presence::component::mutations::*;
 use crate::editor::animate::presence::component::*;
-use replace_presence::ReplacePresence;
+use crate::editor::animate::presence::ReplacePresence;
 
 impl protocol::OpText for PresentationPresenceMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -32,7 +32,7 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::animate::presence::component::mutations::*;
 use crate::editor::animate::presence::component::*;
-use replace_presence::ReplacePresence;
+use crate::editor::animate::presence::ReplacePresence;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `PresentationPresence`.

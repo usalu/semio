@@ -1,0 +1,158 @@
+{
+  "pageRecords": 8,
+  "itemsPerTurn": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "heldEdits": [
+        "held"
+      ],
+      "heldTransitions": [
+        "transition"
+      ],
+      "rows": [],
+      "keptSequences": []
+    },
+    {
+      "id": "shell-and-document",
+      "heldEdits": [
+        "held"
+      ],
+      "heldTransitions": [
+        "transition"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "editId": null,
+          "transitionId": null
+        },
+        {
+          "seq": 2,
+          "editId": "held",
+          "transitionId": null
+        },
+        {
+          "seq": 3,
+          "editId": "displaced",
+          "transitionId": null
+        }
+      ],
+      "keptSequences": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "three-pages-hidden-prefix",
+      "heldEdits": [
+        "held"
+      ],
+      "heldTransitions": [
+        "transition"
+      ],
+      "rows": [
+        {
+          "seq": 1,
+          "editId": "displaced",
+          "transitionId": "old"
+        },
+        {
+          "seq": 2,
+          "editId": "displaced",
+          "transitionId": "transition"
+        },
+        {
+          "seq": 3,
+          "editId": "displaced",
+          "transitionId": null
+        },
+        {
+          "seq": 4,
+          "editId": "displaced",
+          "transitionId": null
+        },
+        {
+          "seq": 5,
+          "editId": "displaced",
+          "transitionId": null
+        },
+        {
+          "seq": 6,
+          "editId": "displaced",
+          "transitionId": "old"
+        },
+        {
+          "seq": 7,
+          "editId": "displaced",
+          "transitionId": "transition"
+        },
+        {
+          "seq": 8,
+          "editId": "displaced",
+          "transitionId": null
+        },
+        {
+          "seq": 9,
+          "editId": null,
+          "transitionId": null
+        },
+        {
+          "seq": 10,
+          "editId": "held",
+          "transitionId": null
+        },
+        {
+          "seq": 11,
+          "editId": null,
+          "transitionId": "old"
+        },
+        {
+          "seq": 12,
+          "editId": null,
+          "transitionId": "transition"
+        },
+        {
+          "seq": 13,
+          "editId": "held",
+          "transitionId": null
+        },
+        {
+          "seq": 14,
+          "editId": null,
+          "transitionId": null
+        },
+        {
+          "seq": 15,
+          "editId": null,
+          "transitionId": null
+        },
+        {
+          "seq": 16,
+          "editId": "held",
+          "transitionId": "old"
+        },
+        {
+          "seq": 17,
+          "editId": null,
+          "transitionId": "transition"
+        }
+      ],
+      "keptSequences": [
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        17
+      ]
+    }
+  ],
+  "mutationSeal": {
+    "oldEditId": "held",
+    "newEditId": "displaced α",
+    "revisionAdvance": 1,
+    "expected": "stale"
+  }
+}

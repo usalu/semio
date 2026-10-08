@@ -1,6 +1,5 @@
-//! 📐️ `set-screen-size` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📐️ `set-screen-size` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +15,16 @@ pub struct SetScreenSize {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "screen-size", kind: "set-screen-size", record: "SetScreenSize" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetScreenSize(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { width, height } = self;
+        if let Some((message, target)) = base.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (*width, *height))) {
+            return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, target);
+        }
+        protocol::MutationOutcome::new(GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetScreenSize(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: base.width, height: base.height })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")
     }

@@ -64,12 +64,12 @@
     },
     "ui.timeTravel.progress": {
       "normal": {
-        "en": "Replaying {done} of {total} mutations",
-        "de": "{done} von {total} Mutationen werden neu angewendet"
+        "en": "Replaying history: {done} of {total} steps",
+        "de": "Verlauf wird neu angewendet: {done} von {total} Schritten"
       },
       "beginner": {
-        "en": "Replaying {done} of {total} mutations",
-        "de": "{done} von {total} Mutationen werden neu angewendet"
+        "en": "Replaying history: {done} of {total} steps",
+        "de": "Verlauf wird neu angewendet: {done} von {total} Schritten"
       }
     },
     "ui.timeTravel.worst": {
@@ -762,7 +762,7 @@
         "en": {
           "stage": "Replaying later mutations",
           "target": "Editing: Drag selection",
-          "progress": "Replaying 3 of 8 mutations",
+          "progress": "Replaying history: 3 of 8 steps",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -771,7 +771,7 @@
         "de": {
           "stage": "Spätere Mutationen werden neu angewendet",
           "target": "Bearbeitet: Auswahl ziehen",
-          "progress": "3 von 8 Mutationen werden neu angewendet",
+          "progress": "Verlauf wird neu angewendet: 3 von 8 Schritten",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -1497,7 +1497,7 @@
         "en": {
           "stage": "Replaying later mutations",
           "target": "Editing: Drag selection",
-          "progress": "Replaying 0 of 1 mutations · Work completed: 128",
+          "progress": "Replaying history: 0 of 1 steps · Work completed: 128",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -1506,7 +1506,7 @@
         "de": {
           "stage": "Spätere Mutationen werden neu angewendet",
           "target": "Bearbeitet: Auswahl ziehen",
-          "progress": "0 von 1 Mutationen werden neu angewendet · Arbeitsfortschritt: 128",
+          "progress": "Verlauf wird neu angewendet: 0 von 1 Schritten · Arbeitsfortschritt: 128",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -1559,7 +1559,7 @@
         "en": {
           "stage": "Replaying later mutations",
           "target": "Editing: Drag selection",
-          "progress": "Replaying 0 of 1 mutations · Work completed: 256",
+          "progress": "Replaying history: 0 of 1 steps · Work completed: 256",
           "review": null,
           "outcome": null,
           "fault": null,
@@ -1568,7 +1568,7 @@
         "de": {
           "stage": "Spätere Mutationen werden neu angewendet",
           "target": "Bearbeitet: Auswahl ziehen",
-          "progress": "0 von 1 Mutationen werden neu angewendet · Arbeitsfortschritt: 256",
+          "progress": "Verlauf wird neu angewendet: 0 von 1 Schritten · Arbeitsfortschritt: 256",
           "review": null,
           "outcome": null,
           "fault": null,

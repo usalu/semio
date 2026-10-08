@@ -1,13 +1,12 @@
-//! ↩️ `change-permanents` inverse.
+//! ⚓️ `change-permanents` inverse — removes the collection's new rows back to front, then inserts the base rows in order; the rows are stored in reverse, as the store replays inverses reversed.
 
 use super::ChangePermanents;
-use crate::En1990Mutation;
-use crate::En1990Snapshot;
+use crate::mutations::insert_permanent::InsertPermanent;
+use crate::mutations::remove_permanent::RemovePermanent;
+use crate::{En1990Mutation, En1990Snapshot};
 
 pub fn inverse(mutation: &ChangePermanents, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let _ = mutation;
-    vec![En1990Mutation::ChangePermanents(ChangePermanents { new_permanents: base.permanents.clone() })]
-
-    })())
+    let removed = (0..mutation.new_permanents.len()).rev().map(|index| En1990Mutation::RemovePermanent(RemovePermanent { index }));
+    let inserted = base.permanents.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertPermanent(InsertPermanent { index, item }));
+    Ok(removed.chain(inserted).rev().collect())
 }

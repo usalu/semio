@@ -5,6 +5,7 @@ use super::*;
 use std::sync::atomic::Ordering;
 
 //#region 📦️ReaderFixtures
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootRetirementFactory;
 struct EmptyRetirement;
 impl ErasedSnapshotRetirement for EmptyRetirement {
@@ -16,6 +17,8 @@ impl ErasedSnapshotRetirement for EmptyRetirement {
     }
 }
 impl SnapshotRetirementFactory<Edit<MapMutation>> for RootRetirementFactory {
+    fn retirement_birth_bytes(&self, snapshot: &Arc<Edit<MapMutation>>) -> usize { if std::sync::Arc::strong_count(snapshot) == 1 { std::mem::size_of::<ArtifactStoreDecodedEditRetirement<MapMutation>>() + 2 * std::mem::size_of::<usize>() } else { std::mem::size_of::<EmptyRetirement>() } }
+
     fn retire(&self, root: Arc<Edit<MapMutation>>) -> Box<dyn ErasedSnapshotRetirement> {
         match Arc::into_inner(root) {
             Some(edit) => Box::new(ArtifactStoreDecodedEditRetirement::new(edit, Arc::new(MapRetirementFactory))),
@@ -192,7 +195,8 @@ struct ErrorRoot {
     borrowed: bool,
     error: ErrorLeaf,
 }
-struct ErrorRootRetirement(Arc<std::sync::atomic::AtomicUsize>);
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct ErrorRootRetirement(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 
 impl ArtifactCanonicalJson for ErrorLeaf {
     fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
@@ -214,6 +218,8 @@ impl ArtifactCanonicalJson for ErrorRoot {
 }
 
 impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
+    fn retirement_birth_bytes(&self, snapshot: &Arc<ErrorRoot>) -> usize { if std::sync::Arc::strong_count(snapshot) == 1 { std::mem::size_of::<ArtifactStoreStringRetirement>() } else { std::mem::size_of::<EmptyRetirement>() } }
+
     fn retire(&self, root: Arc<ErrorRoot>) -> Box<dyn ErasedSnapshotRetirement> {
         match Arc::into_inner(root) {
             Some(root) => {

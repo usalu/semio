@@ -6,12 +6,9 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_drawing_layer_location(base, &payload.layer_id) {
+    Ok(match find_drawing_layer_location(base, &payload.layer_id) {
         Some(location) => vec![super::mutation::reorder_layer(payload.layer_id.clone(), location.parent_id, location.index)],
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

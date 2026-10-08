@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteConstruction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ConstructionPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::DeleteConstruction, base: &EnergyModelSnapshot) -> 
     if base.model.surfaces.iter().any(|surface| surface.construction_id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Construction {} is still assigned to a surface.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.constructions.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { constructions: Rows::removing(&base.model.constructions, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

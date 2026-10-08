@@ -149,81 +149,293 @@
       "x-semio-state": "artifact"
     },
     "permanents": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/permanents"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990PermanentEdit"
+      },
       "x-semio-state": "artifact"
     },
     "variables": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/variables"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990VariableEdit"
+      },
       "x-semio-state": "artifact"
     },
     "accidentals": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/accidentals"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990AccidentalEdit"
+      },
       "x-semio-state": "artifact"
     },
     "seismics": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/seismics"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990SeismicEdit"
+      },
       "x-semio-state": "artifact"
     },
     "members": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/members"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990MemberEdit"
+      },
       "x-semio-state": "artifact"
     },
     "bridgeSls": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/bridgeSls"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990BridgeSlsEdit"
+      },
       "x-semio-state": "artifact"
     },
     "effects": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/properties/effects"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1990EffectEdit"
+      },
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1990RowOp": {
+      "enum": [
+        "Insert",
+        "Remove",
+        "Replace"
+      ]
+    },
+    "En1990PermanentEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/PermanentAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990VariableEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/VariableAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990AccidentalEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/AccidentalAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990SeismicEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/SeismicAction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990MemberEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/Member"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990BridgeSlsEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/BridgeSls"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1990EffectEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1990RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/MemberEffect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

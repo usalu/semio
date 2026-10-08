@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 type Label = Readonly<{ en: string; de: string }>;
-type History = Readonly<{ store: string; editId: string; transaction: string | null; at: number; startedAt: string; opCount: number; opLines: readonly string[]; firstLabel?: Label }>;
+type History = Readonly<{ store: string; editId: string; transaction: string | null; at: number; startedAt: string; opCount: number; opLines: readonly string[]; firstLabel?: Label; intentLabel?: Label }>;
 type Group = Readonly<{ at: number; transaction: string | null; editIds: readonly string[]; label: Label; startedAt: string }>;
 type Backfill = Readonly<{ attached: Readonly<Record<string, readonly string[]>>; groups: readonly Group[] }>;
 type Case = Readonly<{ id: string; histories: readonly History[]; logged: readonly string[]; parentTransactions: Readonly<Record<string, string>>; expected: Backfill }>;
@@ -15,11 +15,12 @@ type Fixture = Readonly<{ cases: readonly Case[] }>;
 
 const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️composed-child-history";
 
-/** 🏷️ A row's label: its first leaf with `(+N)` for the operations after it, else its first printed operation, else its edit id. */
+/** 🏷️ Uses declared intent or the first leaf with the remaining operation count, then printed operation or edit id. */
 function rowLabel(history: History): Label {
-  if (history.firstLabel !== undefined) {
+  const label = history.intentLabel ?? history.firstLabel;
+  if (label !== undefined) {
     const more = history.opCount > 1 ? ` (+${history.opCount - 1})` : "";
-    return { en: `${history.firstLabel.en}${more}`, de: `${history.firstLabel.de}${more}` };
+    return { en: `${label.en}${more}`, de: `${label.de}${more}` };
   }
   const line = history.opLines[0] ?? history.editId;
   return { en: line, de: line };

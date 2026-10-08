@@ -18,8 +18,9 @@ class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
-      const snapshot = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
-      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")], this.repoRoot, "cad-snapshot-sqlite-public-types");
+      const subset = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+      const sources = ["🧬️schema/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"].map(file => resolve(subset, file));
+      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...sources], this.repoRoot, "cad-snapshot-sqlite-public-types");
       return;
     }
 if (segments[0] === "cad-document-contract") {

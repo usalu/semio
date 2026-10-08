@@ -1,0 +1,93 @@
+{
+  "pageRecords": 8,
+  "copyBytes": 64,
+  "cases": [
+    {
+      "records": 0,
+      "pages": 0,
+      "sequences": []
+    },
+    {
+      "records": 1,
+      "pages": 1,
+      "sequences": [
+        1
+      ]
+    },
+    {
+      "records": 8,
+      "pages": 1,
+      "sequences": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "records": 9,
+      "pages": 2,
+      "sequences": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "records": 17,
+      "pages": 3,
+      "sequences": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    }
+  ],
+  "inverseArgs": {
+    "original": "",
+    "nested": [
+      null,
+      true,
+      [
+        0,
+        3,
+        255
+      ],
+      {
+        "key": "α 🧪️"
+      }
+    ],
+    "emptyArray": []
+  },
+  "deniedItems": [
+    0
+  ],
+  "cancelStops": [
+    0,
+    1
+  ]
+}

@@ -1,31 +1,32 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": null,
   "savedCameras": {
-    "added": [
+    "edits": [
       {
-        "id": "cam-top",
-        "label": "Top",
-        "camera": {
-          "position": [
-            0.0,
-            0.0,
-            20.0
-          ],
-          "target": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "zoom": 1.0,
-          "fov": 50.0
+        "edit": "add",
+        "index": 2,
+        "item": {
+          "id": "cam-top",
+          "label": "Top",
+          "camera": {
+            "position": [
+              0.0,
+              0.0,
+              20.0
+            ],
+            "target": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "zoom": 1.0,
+            "fov": 50.0
+          }
         }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "patched": []
   },
   "scene": null,
   "shots": null,

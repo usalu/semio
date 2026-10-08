@@ -21,9 +21,9 @@ fn direct_presence_fixture_value_inverse() {
     let mut wire = row["payload"].clone();
     wire["operation"] = row["operation"].clone();
     let op = serde_json::from_value::<ValueMutation>(wire).unwrap();
-    let after = op.diff(&before).diff().apply(&before).unwrap();
+    let after = crate::os_spr::apply_diff(op.diff(&before).diff(), &before).unwrap();
     assert_eq!(after.0, serde_json::from_value::<i32>(row["after"].clone()).unwrap());
-    assert_eq!(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff().apply(&after).unwrap().0, before.0);
+    assert_eq!(crate::os_spr::apply_diff(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff(), &after).unwrap().0, before.0);
     assert_eq!(serde_json::from_value::<ValueMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
     for json in ["{\"operation\":\"setValue\"}", "{\"operation\":\"setValue\",\"n\":null}", "{\"operation\":\"setValue\",\"n\":2147483648}", "{\"operation\":\"setValue\",\"n\":0.5}", "{\"operation\":\"setValue\",\"n\":7,\"unknown\":true}"] {
         assert!(serde_json::from_str::<ValueMutation>(json).is_err());
@@ -46,8 +46,20 @@ impl semio_framework_value::FromValue for Value {
     }
 }
 
+impl crate::os_spr::DiffAlgebra<Value> for Value {
+    fn inverse(&self, base: &Value) -> Self {
+        base.clone()
+    }
+    fn between(_base: &Value, other: &Value) -> Self {
+        other.clone()
+    }
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
 impl MutationDiff<Value> for Value {
-    fn apply(&self, _base: &Value) -> crate::os_spr::MutationApplyResult<Value> {
+    fn apply(&self, _base: &Value, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<Value> {
         Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
@@ -55,13 +67,16 @@ impl MutationDiff<Value> for Value {
     }
 }
 
-struct Factory(Arc<std::sync::atomic::AtomicUsize>);
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct Factory(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 struct Retirement {
     root: std::mem::ManuallyDrop<Option<Arc<Value>>>,
     count: Arc<std::sync::atomic::AtomicUsize>,
 }
 
 impl SnapshotRetirementFactory<Value> for Factory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<Value>) -> usize { std::mem::size_of::<Retirement>() }
+
     fn retire(&self, root: Arc<Value>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(Retirement { root: std::mem::ManuallyDrop::new(Some(root)), count: self.0.clone() })
     }
@@ -149,13 +164,28 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     assert!(session.checked_out_outcome().is_some());
     cancel.cancel_now();
     session.begin_close();
+    let mut observed_worker_page = false;
     for _ in 0..4096 {
-        let _ = session.close_step(1, 4096);
+        let demand = session.next_close_byte_demand().unwrap();
+        if demand > 4096 {
+            assert_eq!(demand, law["workerPageBytes"].as_u64().unwrap() as usize);
+            let phase = session.close_phase();
+            let (released_items, released_bytes) = match session.close_step(1, 4096) {
+                semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes),
+                _ => panic!("unfunded whole worker page must remain pending"),
+            };
+            assert_eq!(serde_json::json!({"releasedItems": released_items, "releasedBytes": released_bytes}), law["workerUndergrant"]);
+            assert_eq!(session.close_phase(), phase);
+            assert_eq!(session.next_close_byte_demand().unwrap(), demand);
+            observed_worker_page = true;
+        }
+        let _ = session.close_step(1, demand.max(4096));
         owner.maintenance_local_reads_step(1, 4096).unwrap();
         if session.terminal_is_empty() && owner.local_read_maintenance_is_idle() {
             break;
         }
     }
+    assert!(observed_worker_page);
     assert_eq!(session.terminal_is_empty(), law["expectedWorkerTerminal"].as_bool().unwrap());
     assert!(!owner.retirement_started());
     assert_eq!(serde_json::to_value(owner.local()).unwrap(), law["expectedValueWhileOpen"]);
@@ -195,7 +225,7 @@ fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_
     });
     first.join().unwrap();
     second.join().unwrap();
-    let guard = owner.local_reads.state.lock().unwrap();
+    let guard = owner.local_reads.state.try_lock().unwrap();
     assert_eq!(advance_returned_local(&owner.local_reads, &mut owner.active_returned_local, owner.local_retirement_factory.as_ref(), 1, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
     drop(guard);
     for _ in 0..4096 {
@@ -479,7 +509,7 @@ fn retained_presence_read_transfer_contention_preserves_unreturned_capability() 
     let root = Arc::new(String::from("aä🧵"));
     let lease = registry.try_issue(root.clone()).unwrap();
     let read = ErasedSnapshotRead::new(root, lease);
-    let held = registry.state.lock().unwrap();
+    let held = registry.state.try_lock().unwrap();
     let worker_registry = registry.clone();
     let read = match std::thread::spawn(move || read.into_typed::<String>(&worker_registry)).join().unwrap() {
         Err(read) => read,

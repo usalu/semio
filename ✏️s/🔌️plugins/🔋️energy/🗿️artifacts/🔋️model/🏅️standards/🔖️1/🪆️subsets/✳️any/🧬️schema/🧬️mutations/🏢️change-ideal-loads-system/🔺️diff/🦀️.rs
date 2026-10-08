@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeIdealLoadsSystemZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemZone, base: &EnergyModelSnaps
     if existing.zone_id == payload.new_zone_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ideal loads system {} already has that zone.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {
-        item.zone_id = payload.new_zone_id;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::modifying(IdealLoadsSystemPatch { zone_id: Some(payload.new_zone_id), ..IdealLoadsSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

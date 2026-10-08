@@ -1,15 +1,16 @@
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_frame_delay;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+//! 🔺️ Diff for `SetFrameDelay`.
 
-/// 🔺️ Diff helper for set-frame-delay — an absent BASE frame `index` is `mutation.target-missing`
-/// (Error, empty diff).
+use super::super::*;
+
+//#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff(base: &SemioImageSnapshot, index: usize, delay_ms: u32) -> protocol::MutationOutcome<SemioImageDiff> {
-    if index >= base.frames.len() {
+pub fn diff(payload: &super::SetFrameDelay, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
+    let super::SetFrameDelay { index, delay_ms } = payload;
+    if *index >= base.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {index} does not exist."), [index.to_string()]);
     }
-    Mutation::diff(&SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }), base)
+    protocol::MutationOutcome::new({
+        SemioImageDiff { frames: Some(SemioImageFramesDiff { modified: vec![IndexModified { index: *index, diff: SemioImageFrameDiff { delay_ms: Some(*delay_ms), rgba8: None } }], ..Default::default() }), ..Default::default() }
+    })
 }
+//#endregion 🔖️Diff

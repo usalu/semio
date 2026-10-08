@@ -283,7 +283,7 @@ pub fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&
 /// 🔪️ Splits `"<prefix>-<uuid>"` into `(prefix, 16 raw uuid bytes)`, requiring the
 /// trailing 36 bytes to be a canonical lowercase-hex-with-dashes UUID and a non-empty prefix
 /// — so the round trip through `format_uuid` reproduces the original text exactly.
-fn split_prefix_uuid(id: &str) -> Option<(&str, [u8; 16])> {
+pub fn split_prefix_uuid(id: &str) -> Option<(&str, [u8; 16])> {
     let len = id.len();
     if len < 38 {
         return None;

@@ -1,0 +1,32 @@
+{
+  "rowIdentityBytes": 8,
+  "cases": [
+    {
+      "id": "empty",
+      "segments": [
+        ""
+      ],
+      "repeat": 1,
+      "textBytes": 0
+    },
+    {
+      "id": "ascii",
+      "segments": [
+        "cad"
+      ],
+      "repeat": 1,
+      "textBytes": 3
+    },
+    {
+      "id": "paged-unicode-nul",
+      "segments": [
+        "cad",
+        "🧪️",
+        "\u0000",
+        "ä"
+      ],
+      "repeat": 600,
+      "textBytes": 7800
+    }
+  ]
+}

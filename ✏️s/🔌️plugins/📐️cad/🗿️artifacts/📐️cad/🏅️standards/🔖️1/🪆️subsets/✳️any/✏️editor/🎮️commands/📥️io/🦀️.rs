@@ -1,7 +1,7 @@
 //! 📥️ CAD play app commands — the shell file round-trip: native/spatial import and the three export flavours.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry};
+use crate::editor::cad::modes::edit::tools::transform::cad_import_object_emit;
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, publish_engagement, reset_document_effect, runtime_of, CadInteractionSnapshot, CadPlayView};
 use crate::op::CadMutation;
@@ -31,9 +31,9 @@ pub mod import_cad_file {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_value::DslValue::String(payload.payload.clone()));
-        if let Some(element) = import_cad_object_by_extension(&name_lower, &payload_value) {
+        if let Some(imported) = import_cad_object_by_extension(&name_lower, &payload_value) {
             let pane = ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape);
-            let emit = cad_transform_tool_emit(doc, "importCadFile", vec![CadToolEntry::Create { pane, element }]);
+            let emit = cad_import_object_emit(doc, pane, "importCadFile", imported)?;
             if emit.child_preparations.is_empty() {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-refused"), format!("importCadFile cannot place the object \"{}\": the addressed pane composes no model child or already holds its id", payload.name)));
             }

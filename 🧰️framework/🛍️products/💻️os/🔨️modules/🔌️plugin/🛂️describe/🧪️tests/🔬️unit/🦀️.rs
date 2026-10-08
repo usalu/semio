@@ -56,3 +56,25 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
     assert_eq!((route.owner.as_str(), route.artifact_kind.as_str(), route.inference_schema.as_str()), (metadata.owner, metadata.artifact_kind, metadata.inference_schema));
     assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none());
 }
+
+/// 🔤️ Guest descriptors preserve the emitter's neutral canonical bytes and serde member ordering.
+#[semio_framework_async_macros::async_test]
+async fn native_descriptor_topic_payload_matches_canonical_emission() {
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../🖨️describe/🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical descriptor vectors");
+    let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder("canonical-native").label("Canonical Native").version("1.0.0").package_id("semio:canonical-native").try_build().expect("native plugin");
+    let runtime = crate::plugin_runtime::PluginRuntime::new();
+    crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
+    let initial = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("native descriptor");
+    let mut descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(initial).expect("descriptor shape");
+    for case in fixture.get("cases").and_then(|value| value.as_array()).expect("cases") {
+        let payload = semio_framework_pack_json::to_dsl_value(case.get("authored").expect("authored payload"));
+        descriptor.manifest.topic_contributions = vec![semio_framework::TopicContribution::new("canonical.payload", payload)];
+        descriptor.contributions.topic_contributions = descriptor.manifest.topic_contributions.clone();
+        let oracle = serde_json::to_value(&descriptor).expect("independent ordered object oracle");
+        let expected: semio_framework_value::DslValue = serde_json::from_value(oracle).expect("ordered oracle projection");
+        let bytes = encode_package_descriptor(&descriptor);
+        assert_eq!(bytes, store::pack_rt::encode_wire_value(&expected));
+        assert_eq!(crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&bytes).expect("native freshness bytes"), bytes);
+        eprintln!("[DEBUG] Native canonical descriptor matched neutral payload and serde oracle: {}", case.get("id").and_then(|value| value.as_str()).expect("case id"));
+    }
+}

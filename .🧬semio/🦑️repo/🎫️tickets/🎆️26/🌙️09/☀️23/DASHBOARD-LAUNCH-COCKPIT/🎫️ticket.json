@@ -3,8 +3,13 @@
   "emoji": "🎛️",
   "status": "open",
   "description": "The dashboard is the cockpit that runs every launch.json configuration through wizards: action, project, renderer (react default, wasm), examples (all default, subset, specific, none), and the remaining launch dimensions.",
+  "summary": "Completed the dashboard control plane end to end. Fixed dead keyboard input on macOS (terminal input now waits with select instead of poll on /dev/tty), so the launcher can be opened at all. Discovery now files every Nx target, workspace script and .vscode/launch.json terminal configuration and compound under its verb (build, test, publish, …, task fallback), with launch configurations and scripts available on the first frame. Added CommandLeaf::Compound, launch variable resolution, direct/shell execution, zero-touch first-start install, and a Ctrl+B Q that waits for daemon shutdown. Verified on the real workspace through a pseudo-terminal: 'build mit bestand zwischenbericht' lists the launch entry, script and Nx target; fixture launch configurations ran to exit 0. See control-plane-completion.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2769"
+  },
   "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
   "sessions": [
-    "20f03a5d-4cd7-405a-8e77-28c2ab997865"
+    "⚪20f03a5d4cd7405a8e7728c2ab997865",
+    "⚪8aebc0d3385b4cfca97aadfdc3b2989b"
   ]
 }

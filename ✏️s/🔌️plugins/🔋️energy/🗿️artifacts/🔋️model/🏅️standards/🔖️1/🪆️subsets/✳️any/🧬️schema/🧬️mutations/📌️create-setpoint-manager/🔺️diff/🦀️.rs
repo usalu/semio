@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSetpointManager` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SetpointManagerPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -45,8 +45,6 @@ pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) 
     } else {
         crate::model::SetpointManagerKind::Scheduled
     };
-    let mut model = base.model.clone();
-    model.setpoint_managers.push(crate::model::SetpointManager { id: payload.id, name: payload.name.clone(), kind, schedule_id: payload.schedule_present.then_some(payload.schedule_id) });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { setpoint_managers: Rows::inserting(base.model.setpoint_managers.len(), crate::model::SetpointManager { id: payload.id, name: payload.name.clone(), kind, schedule_id: payload.schedule_present.then_some(payload.schedule_id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

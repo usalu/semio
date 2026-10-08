@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/retract-run-node/schema.json",
+  "title": "RetractRunNode",
+  "propertyNames": {
+    "enum": [
+      "operation",
+      "nodeId"
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "nodeId"
+  ],
+  "properties": {
+    "operation": {
+      "const": "retractRunNode"
+    },
+    "nodeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

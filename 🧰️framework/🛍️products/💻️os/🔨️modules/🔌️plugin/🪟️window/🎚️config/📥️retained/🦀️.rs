@@ -1440,7 +1440,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             return Ok(PluginCloseStep::Pending { released_items, released_bytes });
         }
         if let Some(owners) = self.owners.as_mut() {
-            return match owners.close_uninstalled_owners_step(grant.maximum_items.min(1)).map_err(semio_framework_value::ValueError::into_message)? {
+            return match owners.close_uninstalled_owners_step(grant.maximum_items.min(1), grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)? {
                 store::SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
                     self.owners.take();
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })

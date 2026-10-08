@@ -37,13 +37,10 @@ use super::reorder_rows;
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate
 /// alias `🦀️.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
 /// `🔤️text`'s already-compiling facet uses.
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
 pub enum SemioTableMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateColumn(create_column::CreateColumn),
     DeleteColumn(delete_column::DeleteColumn),
     RenameColumn(rename_column::RenameColumn),
@@ -59,24 +56,22 @@ pub enum SemioTableMutation {
 /// `📊️mutate-semio-table`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
+pub const KINDS: &[&str] = &["create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioTableBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_table_mutation(snapshot: &mut SemioTableSnapshot, mutation: &SemioTableMutation) -> protocol::MutationOutcome<SemioTableDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+    <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `📊️mutate-semio-table` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_table_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
     Ok({

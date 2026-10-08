@@ -18,7 +18,7 @@
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{ApplyCapability, MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️PageDiff
@@ -70,6 +70,11 @@ fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
     if other.text.is_some() {
         base.text = other.text;
     }
+}
+/// ↩️ The negative patch for `diff` over `page`: every field the patch names is set back to the value `page` holds.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_page_diff(diff: &PdfPageDiff, page: &PageDoc) -> PdfPageDiff {
+    PdfPageDiff { width: diff.width.map(|_| page.width), height: diff.height.map(|_| page.height), text: diff.text.as_ref().map(|_| page.text.clone()) }
 }
 //#endregion 🔖️PageDiff
 
@@ -301,6 +306,46 @@ fn validate_pages_diff(diff: &PdfPagesDiff, base_len: usize) -> MutationApplyRes
     }
     Ok(())
 }
+/// ↩️ The negative page triple over `base`: it removes what `diff` added, patches every modified page back through its own
+/// negative patch at the position the page holds in the final state, and re-adds every removed base page at its base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_pages_diff(diff: &PdfPagesDiff, base: &[PageDoc]) -> PdfPagesDiff {
+    enum Origin {
+        Base(usize),
+        Added,
+    }
+    let mut layout: Vec<Origin> = (0..base.len()).map(Origin::Base).collect();
+    let mut removed = diff.removed.clone();
+    removed.sort_unstable();
+    removed.dedup();
+    for index in removed.iter().rev() {
+        if *index < layout.len() {
+            layout.remove(*index);
+        }
+    }
+    let mut added_order: Vec<usize> = (0..diff.added.len()).collect();
+    added_order.sort_by_key(|tag| diff.added[*tag].index);
+    for tag in added_order {
+        layout.insert(diff.added[tag].index.min(layout.len()), Origin::Added);
+    }
+    let mut inverse = PdfPagesDiff::default();
+    for (position, origin) in layout.into_iter().enumerate() {
+        match origin {
+            Origin::Added => inverse.removed.push(position),
+            Origin::Base(index) => {
+                if let (Some(modified), Some(page)) = (diff.modified.iter().find(|item| item.index == index), base.get(index)) {
+                    inverse.modified.push(PdfPageModified { index: position, diff: inverse_page_diff(&modified.diff, page) });
+                }
+            }
+        }
+    }
+    for index in removed {
+        if let Some(page) = base.get(index) {
+            inverse.added.push(PdfPageAdded { index, page: page.clone() });
+        }
+    }
+    inverse
+}
 //#endregion 🔖️PagesTriple
 
 //#region 🔖️Diff
@@ -315,7 +360,7 @@ pub struct PdfDiff {
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+    fn apply(&self, base: &PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<PdfSnapshot> {
         let mut next = base.clone();
         if let Some(pages) = &self.pages {
             validate_pages_diff(pages, base.pages.len())?;
@@ -339,10 +384,10 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 }
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction).
+    /// 🔁️ Diff-level undo, built from `base`: the page triple that removes what this one added, restores what it modified
+    /// and re-adds what it removed.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = self.apply(base).unwrap_or_else(|_| base.clone());
-        Self::between(&mid, base)
+        PdfDiff { pages: self.pages.as_ref().map(|pages| inverse_pages_diff(pages, &base.pages)) }
     }
 
     fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {

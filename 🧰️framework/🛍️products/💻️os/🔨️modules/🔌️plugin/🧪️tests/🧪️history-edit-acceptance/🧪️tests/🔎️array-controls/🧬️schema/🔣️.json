@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generic native history array controls",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "control",
+    "cases"
+  ],
+  "properties": {
+    "control": {
+      "const": {
+        "existingSlotsOnly": true,
+        "maximumArraySlots": 16,
+        "primitiveBuckets": [
+          "number",
+          "boolean",
+          "option",
+          "vector",
+          "text"
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "shape",
+          "before",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shape": {
+            "enum": [
+              "text",
+              "boolean",
+              "number",
+              "option",
+              "vector",
+              "object",
+              "nestedText"
+            ]
+          },
+          "before": {
+            "type": "object",
+            "required": [
+              "values"
+            ],
+            "properties": {
+              "values": {
+                "type": "array"
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bucket",
+                "pointer",
+                "value"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "pointer": {
+                  "type": "string",
+                  "pattern": "^/values/"
+                },
+                "value": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

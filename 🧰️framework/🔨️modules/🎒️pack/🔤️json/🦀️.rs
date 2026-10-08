@@ -1220,7 +1220,8 @@ impl fmt::Write for ScalarText {
     }
 }
 
-fn write_float_to(value: f64, out: &mut impl fmt::Write) -> fmt::Result {
+/// 🔢️ Writes canonical binary64 JSON directly into admitted first-party or system storage.
+pub fn write_float_to(value: f64, out: &mut impl fmt::Write) -> fmt::Result {
     use fmt::Write as _;
     if !value.is_finite() {
         return out.write_str("null");

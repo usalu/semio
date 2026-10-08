@@ -1,0 +1,882 @@
+{
+  "category": {
+    "id": "mesh.component",
+    "emoji": "🎚️",
+    "order": 230,
+    "label": {
+      "en": "Mesh components",
+      "de": "Netzelemente"
+    },
+    "description": {
+      "en": "Move, rotate and scale selected vertices, edges or faces.",
+      "de": "Ausgewählte Eckpunkte, Kanten oder Flächen verschieben, drehen und skalieren."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.component.moveVertices",
+      "category": "mesh.component",
+      "emoji": "📍️",
+      "label": {
+        "en": "Move vertices",
+        "de": "Eckpunkte verschieben"
+      },
+      "description": {
+        "en": "Moves the selected vertices by an offset vector.",
+        "de": "Verschiebt die ausgewählten Eckpunkte um einen Versatzvektor."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertices to move.",
+            "de": "Die zu verschiebenden Eckpunkte."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along each axis.",
+            "de": "Verschiebung entlang jeder Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with moved vertices.",
+            "de": "Das Netz mit verschobenen Eckpunkten."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertices"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "offset"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.component.translate",
+      "category": "mesh.component",
+      "emoji": "➡️",
+      "label": {
+        "en": "Move components",
+        "de": "Elemente verschieben"
+      },
+      "description": {
+        "en": "Moves selected vertices, edges or faces; shared vertices move once.",
+        "de": "Verschiebt ausgewählte Eckpunkte, Kanten oder Flächen; gemeinsame Eckpunkte werden nur einmal bewegt."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "mode",
+          "label": {
+            "en": "Component type",
+            "de": "Elementtyp"
+          },
+          "description": {
+            "en": "Which kind of mesh component the selection refers to.",
+            "de": "Auf welche Art von Netzelement sich die Auswahl bezieht."
+          },
+          "type": "enum",
+          "default": "vertex",
+          "options": [
+            {
+              "value": "vertex",
+              "label": {
+                "en": "Vertices",
+                "de": "Eckpunkte"
+              }
+            },
+            {
+              "value": "edge",
+              "label": {
+                "en": "Edges",
+                "de": "Kanten"
+              }
+            },
+            {
+              "value": "face",
+              "label": {
+                "en": "Faces",
+                "de": "Flächen"
+              }
+            }
+          ]
+        },
+        {
+          "name": "selection",
+          "label": {
+            "en": "Selection",
+            "de": "Auswahl"
+          },
+          "description": {
+            "en": "The components to move.",
+            "de": "Die zu verschiebenden Elemente."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "mode",
+            "source": "mesh",
+            "multiple": true,
+            "modeFrom": "mode"
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along each axis.",
+            "de": "Verschiebung entlang jeder Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with moved components.",
+            "de": "Das Netz mit verschobenen Elementen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "selection"
+          },
+          {
+            "component": "edge",
+            "port": "selection"
+          },
+          {
+            "component": "face",
+            "port": "selection"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "offset"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.component.rotate",
+      "category": "mesh.component",
+      "emoji": "🔃️",
+      "label": {
+        "en": "Rotate components",
+        "de": "Elemente drehen"
+      },
+      "description": {
+        "en": "Rotates selected vertices, edges or faces around their center or a chosen point.",
+        "de": "Dreht ausgewählte Eckpunkte, Kanten oder Flächen um ihre Mitte oder einen gewählten Punkt."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "mode",
+          "label": {
+            "en": "Component type",
+            "de": "Elementtyp"
+          },
+          "description": {
+            "en": "Which kind of mesh component the selection refers to.",
+            "de": "Auf welche Art von Netzelement sich die Auswahl bezieht."
+          },
+          "type": "enum",
+          "default": "vertex",
+          "options": [
+            {
+              "value": "vertex",
+              "label": {
+                "en": "Vertices",
+                "de": "Eckpunkte"
+              }
+            },
+            {
+              "value": "edge",
+              "label": {
+                "en": "Edges",
+                "de": "Kanten"
+              }
+            },
+            {
+              "value": "face",
+              "label": {
+                "en": "Faces",
+                "de": "Flächen"
+              }
+            }
+          ]
+        },
+        {
+          "name": "selection",
+          "label": {
+            "en": "Selection",
+            "de": "Auswahl"
+          },
+          "description": {
+            "en": "The components to rotate.",
+            "de": "Die zu drehenden Elemente."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "mode",
+            "source": "mesh",
+            "multiple": true,
+            "modeFrom": "mode"
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "pivot",
+          "label": {
+            "en": "Pivot",
+            "de": "Drehpunkt"
+          },
+          "description": {
+            "en": "Whether the transformation is centered on the selection or on a chosen point.",
+            "de": "Ob die Transformation um die Auswahl oder um einen gewählten Punkt zentriert ist."
+          },
+          "type": "enum",
+          "default": "selection",
+          "options": [
+            {
+              "value": "selection",
+              "label": {
+                "en": "Center of selection",
+                "de": "Mitte der Auswahl"
+              }
+            },
+            {
+              "value": "point",
+              "label": {
+                "en": "Chosen point",
+                "de": "Gewählter Punkt"
+              }
+            }
+          ]
+        },
+        {
+          "name": "center",
+          "label": {
+            "en": "Pivot point",
+            "de": "Drehpunkt"
+          },
+          "description": {
+            "en": "The fixed point, used when the pivot is set to a chosen point.",
+            "de": "Der feste Punkt, verwendet wenn als Drehpunkt ein gewählter Punkt eingestellt ist."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the rotation axis.",
+            "de": "Richtung der Drehachse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Rotation angle; positive values turn counter-clockwise around the axis.",
+            "de": "Drehwinkel; positive Werte drehen gegen den Uhrzeigersinn um die Achse."
+          },
+          "type": "angle",
+          "default": 0.7853981633974483,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with rotated components.",
+            "de": "Das Netz mit gedrehten Elementen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "selection"
+          },
+          {
+            "component": "edge",
+            "port": "selection"
+          },
+          {
+            "component": "face",
+            "port": "selection"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "rotate",
+            "port": "angle",
+            "axisPort": "axis",
+            "originPort": "center"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.component.scale",
+      "category": "mesh.component",
+      "emoji": "↔️",
+      "label": {
+        "en": "Scale components",
+        "de": "Elemente skalieren"
+      },
+      "description": {
+        "en": "Scales selected vertices, edges or faces about their center or a chosen point.",
+        "de": "Skaliert ausgewählte Eckpunkte, Kanten oder Flächen um ihre Mitte oder einen gewählten Punkt."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "mode",
+          "label": {
+            "en": "Component type",
+            "de": "Elementtyp"
+          },
+          "description": {
+            "en": "Which kind of mesh component the selection refers to.",
+            "de": "Auf welche Art von Netzelement sich die Auswahl bezieht."
+          },
+          "type": "enum",
+          "default": "vertex",
+          "options": [
+            {
+              "value": "vertex",
+              "label": {
+                "en": "Vertices",
+                "de": "Eckpunkte"
+              }
+            },
+            {
+              "value": "edge",
+              "label": {
+                "en": "Edges",
+                "de": "Kanten"
+              }
+            },
+            {
+              "value": "face",
+              "label": {
+                "en": "Faces",
+                "de": "Flächen"
+              }
+            }
+          ]
+        },
+        {
+          "name": "selection",
+          "label": {
+            "en": "Selection",
+            "de": "Auswahl"
+          },
+          "description": {
+            "en": "The components to scale.",
+            "de": "Die zu skalierenden Elemente."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "mode",
+            "source": "mesh",
+            "multiple": true,
+            "modeFrom": "mode"
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "pivot",
+          "label": {
+            "en": "Pivot",
+            "de": "Drehpunkt"
+          },
+          "description": {
+            "en": "Whether the transformation is centered on the selection or on a chosen point.",
+            "de": "Ob die Transformation um die Auswahl oder um einen gewählten Punkt zentriert ist."
+          },
+          "type": "enum",
+          "default": "selection",
+          "options": [
+            {
+              "value": "selection",
+              "label": {
+                "en": "Center of selection",
+                "de": "Mitte der Auswahl"
+              }
+            },
+            {
+              "value": "point",
+              "label": {
+                "en": "Chosen point",
+                "de": "Gewählter Punkt"
+              }
+            }
+          ]
+        },
+        {
+          "name": "center",
+          "label": {
+            "en": "Pivot point",
+            "de": "Drehpunkt"
+          },
+          "description": {
+            "en": "The fixed point, used when the pivot is set to a chosen point.",
+            "de": "Der feste Punkt, verwendet wenn als Drehpunkt ein gewählter Punkt eingestellt ist."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "factor",
+          "label": {
+            "en": "Scale factor",
+            "de": "Skalierfaktor"
+          },
+          "description": {
+            "en": "Scale factor per axis; negative values mirror.",
+            "de": "Skalierfaktor je Achse; negative Werte spiegeln."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with scaled components.",
+            "de": "Das Netz mit skalierten Elementen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "selection"
+          },
+          {
+            "component": "edge",
+            "port": "selection"
+          },
+          {
+            "component": "face",
+            "port": "selection"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "scale",
+            "port": "factor",
+            "originPort": "center"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.component.moveProportional",
+      "category": "mesh.component",
+      "emoji": "🌊️",
+      "label": {
+        "en": "Move proportionally",
+        "de": "Proportional verschieben"
+      },
+      "description": {
+        "en": "Moves the selected vertices fully and nearby vertices with a linear falloff.",
+        "de": "Verschiebt die ausgewählten Eckpunkte vollständig und nahe Eckpunkte mit linearem Abfall."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertices that move fully.",
+            "de": "Die Eckpunkte, die sich vollständig bewegen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along each axis.",
+            "de": "Verschiebung entlang jeder Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "center",
+          "label": {
+            "en": "Falloff center",
+            "de": "Abfallzentrum"
+          },
+          "description": {
+            "en": "Center from which the influence radius is measured.",
+            "de": "Zentrum, von dem aus der Einflussradius gemessen wird."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Influence radius",
+            "de": "Einflussradius"
+          },
+          "description": {
+            "en": "Distance beyond which vertices stay unmoved.",
+            "de": "Abstand, ab dem Eckpunkte unbewegt bleiben."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The deformed mesh.",
+            "de": "Das verformte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertices"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "offset"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.component.snapToGrid",
+      "category": "mesh.component",
+      "emoji": "🔲️",
+      "label": {
+        "en": "Snap vertices to grid",
+        "de": "Eckpunkte am Raster einrasten"
+      },
+      "description": {
+        "en": "Rounds the selected vertices to the nearest point of an origin-aligned grid.",
+        "de": "Rundet die ausgewählten Eckpunkte auf den nächsten Punkt eines am Ursprung ausgerichteten Rasters."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "The vertices to snap.",
+            "de": "Die einzurastenden Eckpunkte."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "vertex",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "grid",
+          "label": {
+            "en": "Grid spacing",
+            "de": "Rasterweite"
+          },
+          "description": {
+            "en": "Distance between grid lines.",
+            "de": "Abstand der Rasterlinien."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The snapped mesh.",
+            "de": "Das eingerastete Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "vertex",
+            "port": "vertices"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

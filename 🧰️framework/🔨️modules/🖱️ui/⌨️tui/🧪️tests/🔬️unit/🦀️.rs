@@ -2,7 +2,7 @@
 use crate::tui::ansi::{AnsiParser, AnsiPatch, emit_runs, setup_sequence, teardown_sequence};
 use crate::tui::cell::{Cell, CellBuffer, DiffRun, attr, diff};
 use crate::tui::chrome::{ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState, mount_window_layout, shell, window_chip_layout, window_content_padding};
-use crate::tui::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
+use crate::tui::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use crate::tui::geometry::{Pos, Rect, Size};
 use crate::tui::layout::{Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, create_default_layout, even_window_layout, solve, solve_window_layout};
 use crate::tui::scene::{Node, NodeContent, Scene};
@@ -154,7 +154,7 @@ fn window_control_clicks_resolve_to_close_and_maximize_signals() {
     let maximize_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2922}').expect("maximize glyph rendered");
     let close_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
     assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize));
-    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose));
+    assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose(0)));
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
     assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
 }
@@ -250,8 +250,8 @@ fn tui_dispatch_emits_window_close_signal_on_click() {
     let mut buf = CellBuffer::new(Size { width: rect.width, height: rect.height }, Cell::blank([0, 0, 0], [0, 0, 0]));
     ChromeState::Window(WindowState::new("plugins")).paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, rect.width, rect.height), &mut buf);
     let close_x = (0..rect.width).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
-    let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0 }));
-    assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose)]);
+    let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0, clicks: 1 }));
+    assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose(0))]);
 }
 
 fn sample_table() -> TableState {
@@ -692,7 +692,7 @@ fn parser_mouse_scroll_drag_and_release_kinds() {
             _ => panic!("expected mouse event"),
         })
         .collect();
-    assert_eq!(kinds, vec![MouseKind::ScrollUp, MouseKind::ScrollDown, MouseKind::Drag(0), MouseKind::Up(0)]);
+    assert_eq!(kinds, vec![MouseKind::Scroll { dx: 0, dy: -1 }, MouseKind::Scroll { dx: 0, dy: 1 }, MouseKind::Drag(MouseButton::Left), MouseKind::Up(MouseButton::Left)]);
 }
 
 #[test]
@@ -1139,7 +1139,7 @@ fn terminal_widget_scroll_search_and_passthrough() {
     let esc = KeyEvent { key: Key::Esc, mods: 0 };
     assert_eq!(widget.on_key(&esc), None);
     let x = KeyEvent { key: Key::Char('x'), mods: 0 };
-    assert_eq!(widget.on_key(&x), Some(WidgetSignal::TerminalPassthrough));
+    assert_eq!(widget.on_key(&x), Some(WidgetSignal::TerminalInput(b"x".to_vec())));
     let mut buf = CellBuffer::new(Size { width: 8, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     widget.paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, 8, 3), &mut buf, true);
 }
@@ -1400,9 +1400,9 @@ fn engine_mouse_move_does_not_steal_focus() {
     tui.scene.node_mut(b).set_constraint(Constraint { width: Dimension::Cells(10), ..Default::default() });
     let _ = tui.render_full();
     tui.set_focus(Some(a));
-    tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Move, pos: Pos { x: 15, y: 0 }, mods: 0 }));
+    tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Move, pos: Pos { x: 15, y: 0 }, mods: 0, clicks: 1 }));
     assert_eq!(tui.focus(), Some(a), "move must not change focus");
-    tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: 15, y: 0 }, mods: 0 }));
+    tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: 15, y: 0 }, mods: 0, clicks: 1 }));
     assert_eq!(tui.focus(), Some(b), "click focuses the hit widget");
 }
 

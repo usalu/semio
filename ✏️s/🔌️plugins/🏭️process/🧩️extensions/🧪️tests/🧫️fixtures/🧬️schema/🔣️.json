@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["catalogId", "machineIds", "capabilityCounts"],
+    "properties": {
+      "catalogId": {"enum": ["wood", "metal", "concrete", "robotic"]},
+      "machineIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+      "capabilityCounts": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}}
+    }
+  }
+}

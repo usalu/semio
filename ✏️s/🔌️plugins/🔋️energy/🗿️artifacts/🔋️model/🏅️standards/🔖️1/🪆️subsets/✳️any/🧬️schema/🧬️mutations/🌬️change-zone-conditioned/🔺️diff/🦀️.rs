@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeZoneConditioned` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZonePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::ChangeZoneConditioned, base: &EnergyModelSnapshot) 
     if existing.conditioned == payload.new_conditioned {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} is already conditioned={}.", payload.id.0, payload.new_conditioned));
     }
-    let mut model = base.model.clone();
-    if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
-        zone.conditioned = payload.new_conditioned;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zones: Rows::modifying(ZonePatch { conditioned: Some(payload.new_conditioned), ..ZonePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

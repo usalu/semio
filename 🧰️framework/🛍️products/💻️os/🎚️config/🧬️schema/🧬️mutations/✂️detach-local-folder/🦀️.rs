@@ -1,7 +1,8 @@
 //! ✂️ `DetachLocalFolder` is the authoritative direct Rust leaf for forgetting the local folder one document is attached to on
 //! this device.
 
-use super::attach_local_folder::{attach_local_folder, LocalFolderBindings};
+use super::super::KeyedEdit;
+use super::attach_local_folder::{attach_local_folder, LocalFolderBindings, LocalFoldersDiff};
 use super::LocalFoldersConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -25,11 +26,11 @@ pub fn detach_local_folder(document_id: &str) -> LocalFoldersConfigMutation {
 impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "local-folder", kind: "detach-local-folder", record: "Cleared" };
 
-    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFolderBindings> {
+    fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
+            return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));
         }
-        MutationOutcome::new(LocalFolderBindings { bindings: base.bindings.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect() })
+        MutationOutcome::new(LocalFoldersDiff { bindings: vec![KeyedEdit::new(self.document_id.clone(), None)] })
     }
 
     fn inverse(&self, base: &LocalFolderBindings) -> Result<Vec<LocalFoldersConfigMutation>, semio_framework_value::ValueError> {

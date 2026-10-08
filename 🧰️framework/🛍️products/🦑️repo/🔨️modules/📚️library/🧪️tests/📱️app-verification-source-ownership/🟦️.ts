@@ -16,7 +16,7 @@ type Fixture = Readonly<{
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
   consumers: readonly Readonly<{ path: string; owners: readonly string[] }>[];
   sourceDataConsumers: readonly Readonly<{ path: string; owners: readonly string[]; evidence: string }>[];
-  registration: Readonly<{ name: string; command: string; target: string }>;
+  registration: Readonly<{ target: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -128,7 +128,7 @@ describe("app verification source ownership", () => {
 
   });
 
-  test("registers the portable gate through package, Nx, and both launch projections", () => {
+  test("registers the portable gate through package and Nx", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test app-verification-source-ownership");
@@ -136,9 +136,5 @@ describe("app verification source ownership", () => {
     expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "app-verification-source-ownership"');
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { configurations: { name?: string; command?: string }[] };
-      expect(launch.configurations.filter(({ name, command }) => name === fixture.registration.name && command === fixture.registration.command), path).toHaveLength(1);
-    }
   });
 });

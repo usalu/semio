@@ -284,8 +284,6 @@
   ],
   "route": {
     "target": "test-root-taxonomy-workflow-source",
-    "command": "bun ./📜️script.ts test root-taxonomy-workflow-source",
-    "launchName": "🧹clean🧩️taxonomy🧪️root-taxonomy-workflow-source",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-taxonomy-workflow-source"
+    "command": "bun ./📜️script.ts test root-taxonomy-workflow-source"
   }
 }

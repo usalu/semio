@@ -1,6 +1,5 @@
-//! ⏱️ `set-frame-delay` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ⏱️ `set-frame-delay` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +16,20 @@ pub struct SetFrameDelay {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-delay", kind: "set-frame-delay", record: "SetFrameDelay" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetFrameDelay(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index, delay_cs } = self;
+        protocol::MutationOutcome::new({
+            let d = GifFrameDiff { delay_cs: Some(*delay_cs), ..Default::default() };
+            GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetFrameDelay(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(match base.frames.get(*index) {
+            Some(f) => vec![GifMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: *index, delay_cs: f.delay_cs })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frame delay", "Verzögerung des Einzelbilds setzen")
     }

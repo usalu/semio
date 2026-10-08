@@ -25,7 +25,7 @@ const fixture = JSON.parse(fixtureSource) as {
   readonly schemaVersion: 1;
   readonly owners: readonly { readonly path: string; readonly declarations: readonly string[]; readonly imports: readonly string[]; readonly rootImports: readonly string[]; readonly contextChain: readonly string[] }[];
   readonly contexts: readonly { readonly directoryName: string; readonly parentKindId: string; readonly kindId: string }[];
-  readonly route: { readonly command: string; readonly target: string; readonly launchName: string; readonly launchCommand: string; readonly launchGroup: string; readonly launchOrder: number; readonly inputs: readonly string[] };
+  readonly route: { readonly command: string; readonly target: string; readonly inputs: readonly string[] };
   readonly limits: { readonly localFrameBytes: number; readonly gisControlFrameBytes: number; readonly profiles: number; readonly outstandingReads: number; readonly cargoBuildStack: string; readonly cargoNativeStack: string };
   readonly sourceBoundary: Readonly<Record<"typescript" | "rust", { readonly source: string; readonly definition: string; readonly expectedBodies: number; readonly expectedCalls: readonly string[] }>>;
 };
@@ -374,9 +374,10 @@ test("source definition boundaries match TypeScript AST and reject stale credent
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8"),
     credential: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts"), "utf8"),
-    launch: readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8"),
+    project: readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };
   expect(nativeCredentialSourceOrderConforms(native)).toBe(true);
+  expect(nativeCredentialSourceOrderConforms({ ...native, project: native.project.replace('"bun ./📜️script.ts dev secure-native"', '"bun ./📜️script.ts dev secure-suite"') })).toBe(false);
   expect(nativeCredentialSourceOrderConforms({ ...native, runner: native.runner.replace("await runNativeSession(", "await staleNativeSession(") })).toBe(false);
   expect(() => proveNativeCredentialSourceOrder(repoRoot)).not.toThrow();
 
@@ -386,9 +387,11 @@ test("source definition boundaries match TypeScript AST and reject stale credent
     remote: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8"),
     directory: native.credential,
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),
-    launch: native.launch,
+    project: native.project,
   };
   expect(mcpCredentialSourceOrderConforms(mcp)).toBe(true);
+  expect(mcpCredentialSourceOrderConforms({ ...mcp, project: mcp.project.replace('"bun ./📜️script.ts dev secure-mcp"', '"bun ./📜️script.ts dev secure-suite"') })).toBe(false);
+  expect(mcpCredentialSourceOrderConforms({ ...mcp, project: "{" })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("surface: Some(PROBE_SURFACE_ID.to_string()) },", "surface: Some(PROBE_SURFACE_ID.to_string()) }, _ if lease.is_some() => unreachable!(),") })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, workspace: mcp.workspace.replace("pub fn open_hub(", "fn stale_probe_claim(&self) { self.artifact_host.set_document_execution_target_lease(&key, probe); }\n    pub fn open_hub(") })).toBe(false);
   expect(mcpCredentialSourceOrderConforms({ ...mcp, entrypoint: mcp.entrypoint.replace('claim_inherited_local_hub_credential("mcp")', 'claim_inherited_local_hub_credential("late")') })).toBe(false);
@@ -415,11 +418,11 @@ test("ordered publication and Cargo staging retain their exact authorities", () 
   expect(() => assertObservationExpectation("positive", { stage: "contract", result: "accepted", code: "valid" }, true)).not.toThrow();
 });
 
-// 🧮 This one parses every owner's TypeScript, the router's, `📋️project.json`, `nx.json` and
-// `.vscode/launch.json`; it measured 21.7 s at fleet load 62 on 2026-09-22 against bun's 5 s
+// 🧮 This one parses every owner's TypeScript, the router's and `📋️project.json`; it measured
+// 21.7 s at fleet load 62 on 2026-09-22 against bun's 5 s
 // default, which was chosen for nothing in particular and failed it. The budget below is named for
 // what the test does, and is a wedge bound (~30x the measured run), not a verdict on speed.
-test("package, target, input and launch registrations bind only the moved owners", async () => {
+test("package, target and input registrations bind only the moved owners", () => {
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const router = readFileSync(routerPath, "utf8");
   const moved = fixture.owners.flatMap((owner) => owner.declarations);
@@ -437,15 +440,4 @@ test("package, target, input and launch registrations bind only the moved owners
   expect(project.namedInputs.hubFoundationSources).toEqual(fixture.route.inputs);
   expect(project.targets[fixture.route.target]?.inputs).toEqual(["hubFoundationSources"]);
   expect(project.targets[fixture.route.target]?.options?.command).toBe("bun ./📜️script.ts foundation-source-check");
-  const jsonc = await import("jsonc-parser");
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launch = jsonc.parse(readFileSync(join(repoRoot, path), "utf8"));
-    expect(
-      launch.configurations.filter(
-        (row: { name?: string; command?: string; presentation?: { group?: string; order?: number } }) =>
-          row.name === fixture.route.launchName && row.command === fixture.route.launchCommand && row.presentation?.group === fixture.route.launchGroup && row.presentation?.order === fixture.route.launchOrder,
-      ),
-      path,
-    ).toHaveLength(1);
-  }
 }, 600_000);

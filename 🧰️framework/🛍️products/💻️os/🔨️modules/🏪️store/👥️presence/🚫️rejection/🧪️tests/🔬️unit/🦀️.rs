@@ -1,9 +1,12 @@
 use super::*;
 
-struct Factory(Arc<std::sync::atomic::AtomicUsize>);
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct Factory(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
 struct Retirement(std::mem::ManuallyDrop<Option<Arc<i32>>>, Arc<std::sync::atomic::AtomicUsize>);
 
 impl SnapshotRetirementFactory<i32> for Factory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<i32>) -> usize { std::mem::size_of::<Retirement>() }
+
     fn retire(&self, value: Arc<i32>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(Retirement(std::mem::ManuallyDrop::new(Some(value)), self.0.clone()))
     }

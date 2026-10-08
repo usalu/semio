@@ -7,7 +7,5 @@
   "bunTimeoutMs": 120000,
   "testName": "rolls back and atomically applies CAD and Draw projections to an empty second plan",
   "runner": "runTestBudgeted",
-  "extraArguments": false,
-  "launchName": "🧹clean🧩️taxonomy🧪️artifact-source-commit",
-  "launchOrder": 410.198
+  "extraArguments": false
 }

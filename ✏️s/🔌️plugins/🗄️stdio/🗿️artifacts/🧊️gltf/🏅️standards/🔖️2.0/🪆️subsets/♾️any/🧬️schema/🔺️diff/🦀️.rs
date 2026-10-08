@@ -1372,7 +1372,7 @@ impl protocol::DiffRegions for GltfDiff {
 //#endregion 🗺️TouchedRegions
 
 impl MutationDiff<GltfSnapshot> for GltfDiff {
-    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+    fn apply(&self, base: &GltfSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GltfSnapshot> {
         macro_rules! validate_collection {
             ($field:ident, $base:expr, $target:literal) => {
                 if let Some(diff) = &self.$field {

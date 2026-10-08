@@ -347,9 +347,7 @@ fn controlled_native_paint_refuses_cumulative_ownership_and_forged_completed_res
         &mut |_| true,
     ).unwrap();
     let mut forged=valid;forged.image.ancillary_chunks[0].data.push(1);
-    let mutation = crate::PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation { revision, region, paint, result: forged });
-    let outcome = mutation.diff(&base);
-    assert!(!outcome.messages().is_empty(), "a completed result that changes bytes outside the admitted IDAT domain must be refused without replaying codecs");
+    assert!(validate_completed_native_paint(&base,&forged,region,paint).is_err(), "a completed result that changes bytes outside the admitted IDAT domain must be refused");
     assert_eq!(base,decode_png(MULTI_IDAT).unwrap());
 }
 
@@ -359,12 +357,10 @@ fn native_paint_mutation_roundtrips_and_inverse_restores_exact_source() {
     let base = decode_png(PRECISION_16).unwrap();
     let region = PngRegion { x: 1, y: 0, width: 1, height: 1 };
     let paint = PngNativePaint::grayscale(0x1234);
-    let result = paint_native_region_owned_controlled(&base, &png_revision(&base), region, paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES, &mut |_| true).unwrap();
     let mutation = crate::PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation {
         revision: png_revision(&base),
         region,
         paint,
-        result,
     });
     assert_eq!(crate::PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     assert_eq!(crate::PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);

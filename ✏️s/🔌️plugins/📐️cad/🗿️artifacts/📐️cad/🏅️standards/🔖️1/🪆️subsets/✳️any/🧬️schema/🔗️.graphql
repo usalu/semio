@@ -1,4 +1,4 @@
-# 🧬️ CAD document composed from shared stdio model and drawing child identities.
+# 🧬️ CAD document composed from shared stdio model, drawing and topology child identities.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 type CadArtifact {
   schema: String! @state(class: ARTIFACT)
@@ -8,6 +8,7 @@ type CadArtifact {
   energyModel: ArtifactChild @state(class: ARTIFACT)
   structureClassicModel: ArtifactChild @state(class: ARTIFACT)
   drawings: [ArtifactChild!]! @state(class: ARTIFACT)
+  breps: [ArtifactChild!]! @state(class: ARTIFACT)
   referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: ARTIFACT)
   nodes: [CadNode!]! @state(class: ARTIFACT)
 }

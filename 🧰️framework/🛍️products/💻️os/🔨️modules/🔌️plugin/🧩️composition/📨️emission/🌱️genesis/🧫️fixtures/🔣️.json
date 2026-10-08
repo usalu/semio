@@ -1,0 +1,148 @@
+{
+  "receipts": {
+    "parentTouched": [false, true],
+    "groupId": "group:私的-α",
+    "editIds": ["edit:parent-α", "edit:brep-β", "edit:model-γ"],
+    "copyOrder": [0, 1, 2],
+    "transactions": [null, {"id": "transaction:separate-δ", "tool": "tool:neutral"}]
+  },
+  "ownerInput": {
+    "parentMutations": [19, 7, 3],
+    "childMutations": [17, 3, 9],
+    "cancelStops": [0, 1, 3, 17, 65],
+    "initialPack": {"ordered": [17, 3, 9]}
+  },
+  "source": {
+    "slot": "breps",
+    "childId": "brep-local-α",
+    "reference": {
+      "artifactId": "topology-target-β",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    },
+    "actor": "actor:private-genesis",
+    "maximumWorkItems": 1,
+    "maximumBorrowedBytes": 64,
+    "maximumDeclaredChildren": 64,
+    "maximumPhaseAllocationBytes": 262144
+  },
+  "initial": {
+    "parent": {
+      "breps": []
+    },
+    "brep": {
+      "vertices": []
+    },
+    "model": {
+      "elements": []
+    },
+    "visibleMembers": {}
+  },
+  "patches": {
+    "parent": [
+      {
+        "op": "add",
+        "path": "/breps/0",
+        "value": {
+          "id": "brep-local-α",
+          "target": {
+            "artifactId": "topology-target-β",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        }
+      }
+    ],
+    "brep": [
+      {
+        "op": "add",
+        "path": "/vertices/0",
+        "value": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "model": [
+      {
+        "op": "add",
+        "path": "/elements/0",
+        "value": {
+          "id": "element-1",
+          "geometry": "topology-target-β"
+        }
+      }
+    ]
+  },
+  "phaseOrder": [
+    "admit",
+    "open",
+    "prepareBrep",
+    "prepareModel",
+    "prepareParent",
+    "stage",
+    "commit",
+    "adopt",
+    "retire"
+  ],
+  "cancelBeforeCommit": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "expected": {
+    "parent": {
+      "breps": [
+        {
+          "id": "brep-local-α",
+          "target": {
+            "artifactId": "topology-target-β",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "brep"
+            }
+          }
+        }
+      ]
+    },
+    "brep": {
+      "vertices": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    "model": {
+      "elements": [
+        {
+          "id": "element-1",
+          "geometry": "topology-target-β"
+        }
+      ]
+    },
+    "visibleMembers": {
+      "brep-local-α": {
+        "artifactId": "topology-target-β",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "brep"
+        }
+      }
+    }
+  }
+}

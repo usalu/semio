@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeletePvSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::DeletePvSystem, base: &EnergyModelSnapshot) -> prot
     if base.model.electrical_load_centers.iter().any(|centre| centre.pv_ids.contains(&payload.id)) {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("PV system {} is still attached to an electrical load centre.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.pv_systems.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { pv_systems: Rows::removing(&base.model.pv_systems, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

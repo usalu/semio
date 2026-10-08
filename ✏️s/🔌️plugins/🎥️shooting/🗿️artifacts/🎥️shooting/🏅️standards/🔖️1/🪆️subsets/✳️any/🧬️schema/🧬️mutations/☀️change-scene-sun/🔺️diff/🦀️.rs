@@ -8,7 +8,5 @@ pub fn diff(payload: &ChangeSceneSunEnabled, base: &ShootingSnapshot) -> protoco
     if base.scene.sun.enabled == payload.new_enabled {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun is already {}.", if payload.new_enabled { "enabled" } else { "disabled" }));
     }
-    let mut scene = base.scene.clone();
-    scene.sun.enabled = payload.new_enabled;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { sun_enabled: Some(payload.new_enabled), ..Default::default() }), ..Default::default() })
 }

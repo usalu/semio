@@ -40,7 +40,7 @@ pub fn chart_values_equal(left:&DslValue,right:&DslValue)->bool{
         _=>left==right,
     }
 }
-fn presence_equal(left:Option<&DslValue>,right:Option<&DslValue>)->bool{match(left,right){(Some(a),Some(b))=>chart_values_equal(a,b),(None,None)=>true,_=>false}}
+pub fn presence_equal(left:Option<&DslValue>,right:Option<&DslValue>)->bool{match(left,right){(Some(a),Some(b))=>chart_values_equal(a,b),(None,None)=>true,_=>false}}
 
 pub fn read_path<'a>(root: &'a DslValue, path: &[String]) -> Option<&'a DslValue> {
     let mut value = root;
@@ -54,7 +54,7 @@ pub fn read_path<'a>(root: &'a DslValue, path: &[String]) -> Option<&'a DslValue
     Some(value)
 }
 
-fn array_index(segment: &str) -> Option<usize> {
+pub fn array_index(segment: &str) -> Option<usize> {
     let index = segment.parse::<usize>().ok()?;
     (index.to_string() == segment).then_some(index)
 }
@@ -107,19 +107,79 @@ fn write_path(root: &mut DslValue, edit: &ChartEdit) -> MutationApplyResult<()> 
     Ok(())
 }
 
+impl ChartEdit {
+    /// 🧭️ Authors the guarded edit that sets `path` to `value` in `root` by reading `root` only: `None` when the slot already holds `value`.
+    pub fn authored(root: &DslValue, path: &[String], value: Option<&DslValue>) -> MutationApplyResult<Option<Self>> {
+        if !valid_path(path) {
+            return Err(MutationApplyError::new("print.chart.path", "invalid chart address").at(path.to_vec()));
+        }
+        let segment = &path[path.len() - 1];
+        let parent = read_path(root, &path[..path.len() - 1]).ok_or_else(|| MutationApplyError::new("print.chart.parent", "chart address parent is missing").at(path.to_vec()))?;
+        let before = match parent {
+            DslValue::Object(entries) => entries.iter().find(|(key, _)| key == segment).map(|(_, held)| held),
+            DslValue::Array(items) => {
+                let index = array_index(segment).ok_or_else(|| MutationApplyError::new("print.chart.index", "array index must be canonical").at(path.to_vec()))?;
+                if index > items.len() {
+                    return Err(MutationApplyError::new("print.chart.precondition", "array index or prior value is invalid").at(path.to_vec()));
+                }
+                items.get(index)
+            },
+            _ => return Err(MutationApplyError::new("print.chart.parent", "chart address parent is scalar").at(path.to_vec())),
+        };
+        Ok((!presence_equal(before, value)).then(|| Self { path: path.to_vec(), before: before.cloned(), after: value.cloned() }))
+    }
+
+    /// ↩️ The edits that undo `self` against `state`, the chart as it stands just before `self` applies, in application order.
+    /// Removing an array element shifts its tail, so its undo restores every shifted slot and re-appends the last one.
+    pub fn negation(&self, state: &DslValue) -> Vec<Self> {
+        let parent_path = &self.path[..self.path.len().saturating_sub(1)];
+        if self.before.is_some() && self.after.is_none() {
+            if let (Some(DslValue::Array(items)), Some(index)) = (read_path(state, parent_path), self.path.last().and_then(|segment| array_index(segment))) {
+                if index < items.len() {
+                    return (index..items.len())
+                        .rev()
+                        .map(|slot| Self {
+                            path: parent_path.iter().cloned().chain(std::iter::once(slot.to_string())).collect(),
+                            before: items.get(slot + 1).cloned(),
+                            after: Some(items[slot].clone()),
+                        })
+                        .collect();
+                }
+            }
+        }
+        vec![Self { path: self.path.clone(), before: self.after.clone(), after: self.before.clone() }]
+    }
+}
+
 impl MutationDiff<ChartSnapshot> for ChartDiff {
-    fn apply(&self, base: &ChartSnapshot) -> MutationApplyResult<ChartSnapshot> {
+    fn apply(&self, base: &ChartSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ChartSnapshot> {
         let mut next = base.clone();
         for edit in &self.edits { write_path(&mut next.chart, edit)?; }
         if !self.edits.is_empty() { crate::inferences::validate_chart(&next).map_err(|message| MutationApplyError::new("print.chart.schema", message))?; }
         Ok(next)
     }
-    fn absorb(&mut self, other: Self) { self.edits.extend(other.edits); }
+    fn absorb(&mut self, other: Self) {
+        for edit in other.edits {
+            match self.edits.last_mut() {
+                Some(held) if held.path == edit.path && held.after.is_some() && edit.after.is_some() && presence_equal(held.after.as_ref(), edit.before.as_ref()) => held.after = edit.after,
+                _ => self.edits.push(edit),
+            }
+            if self.edits.last().is_some_and(|held| presence_equal(held.before.as_ref(), held.after.as_ref())) {
+                self.edits.pop();
+            }
+        }
+    }
 }
 
 impl DiffAlgebra<ChartSnapshot> for ChartDiff {
     fn inverse(&self, base: &ChartSnapshot) -> Self {
-        match self.apply(base) { Ok(next) => Self::between(&next, base), Err(_) => Self::default() }
+        let mut state = base.chart.clone();
+        let mut negations = Vec::with_capacity(self.edits.len());
+        for edit in &self.edits {
+            negations.push(edit.negation(&state));
+            if write_path(&mut state, edit).is_err() { return Self::default(); }
+        }
+        Self { edits: negations.into_iter().rev().flatten().collect() }
     }
     fn between(base: &ChartSnapshot, other: &ChartSnapshot) -> Self {
         let mut names = std::collections::BTreeSet::new();

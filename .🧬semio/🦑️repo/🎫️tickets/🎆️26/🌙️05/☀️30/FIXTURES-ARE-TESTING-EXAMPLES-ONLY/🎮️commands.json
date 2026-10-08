@@ -1,0 +1,2622 @@
+{
+  "tools": [
+    {
+      "id": "fixtures-testing-only-boolean-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:boolean-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-cad-geometry-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:cad-geometry-source",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-camera-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:camera-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-canonical-architecture-audit",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:verify",
+        "--args=canonical-architecture",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-catalog-source-tests",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:tests",
+        "--args=🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-core-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:core-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-dev-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:dev-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-dev-latency",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:dev-latency",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-distribution-generate",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:distribution-generate",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-distribution-session",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:distribution-session",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-draft07-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:draft07-oracle",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-directory",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-directory",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-directory-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-directory-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-followup",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-followup",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-followup-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-followup-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-output",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-output",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-plan",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-plan",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-preflight-owner",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-preflight-owner",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-route",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-route",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-embedded-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:embedded-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-empty-facet",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:empty-facet",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-en1997-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:en1997-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-flow-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:flow-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-geometry-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:geometry-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-geometry-current-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:geometry-current-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-geometry-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:geometry-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-gltf-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:gltf-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-gltf-twin",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:gltf-twin",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-broker-lifecycle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-broker",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-core-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-core-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-creation-authority",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-creation",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-final-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-final-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-memory-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-memory-oracle",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-hub-puzzle-current-repin",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:hub-puzzle-current-repin",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-kernel-canonical-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:kernel-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-kernel-example-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:kernel-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-kernel-store-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:kernel-test",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-pack-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:pack-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-paged-history-domain",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:kernel-command",
+        "--args=paged-history-stack-check",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-parser-input-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:parser-input-oracles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-parser-input-tests",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:parser-input-tests",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-parser-python",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:parser-python",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-actor",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-actor",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-behavior",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-behavior",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-diagnostics",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-diagnostics",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-followup",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-followup",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-frontier",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-frontier",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-frontier-final",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-frontier-final",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-ledger",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-ledger",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-oracle-final",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-oracle-final",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-oracles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-owner-final",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-owner-final",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-plan",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-plan",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-proofs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-proofs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-publication-final",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-publication-final",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-admission-current-welcome",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-admission-current-welcome",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-completed-output-receipts",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-completed-output-receipts",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-component-ghost-closure",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-component-ghost-closure",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-component-ghost-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-component-ghost-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-component-inputs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-component-inputs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-concurrent-ledger-observation",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-concurrent-ledger-observation",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-current-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-current-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-current-plan",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-current-plan",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-current-refs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-current-refs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-energy-admission-closure",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-energy-admission-closure",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-energy-extent-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-energy-extent-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-energy-sqlite-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-energy-sqlite-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-final-ghosts",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-final-ghosts",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-pack-intrinsic-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-pack-intrinsic-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-publication-doc-observation",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-concurrent-publication-doc-observation",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-reference-inputs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-reference-inputs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-reference-owners",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-reference-owners",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-reference-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-reference-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-renderer-owner-final",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-renderer-owner-final",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-shell-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-shell-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-table-ghost-closure",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-table-ghost-closure",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-table-ghost-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-table-ghost-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-value-ghost-closure",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-value-ghost-closure",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-value-ghost-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-value-ghost-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-value-policy-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-value-policy-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-value-policy-current-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-value-policy-current-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-value-policy-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-value-policy-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-plugin-world-capacity-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:plugin-world-capacity-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-pptx-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:pptx-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-pptx-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:pptx-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-behavior",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-behavior",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-followup",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-followup",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-inference",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-inference",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-integrity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-integrity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-office",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-office",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-plan",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-plan",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-prepare-tex",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-prepare-tex",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-prepare-toolchain",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-prepare-toolchain",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-print-measurement",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:print-measurement",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-puzzle2d-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:puzzle2d-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-puzzle5d-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:puzzle5d-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-register-current-profiles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:register-current-profiles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-registry-rebuild-current",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:registry-rebuild-current",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-registry-rebuild-current-resume",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:registry-rebuild-current-resume",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-repository-suite",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:repo-test-long",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-asset-dedup",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-asset-dedup",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-collision-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-collision-oracle",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-composition-ownership",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-composition-ownership",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-current-corpus-tests",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-current-corpus-tests",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-job-fixed-operation-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-job-fixed-operation-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-job-ghost-closure",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-job-ghost-closure",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-job-ghost-ledger",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-job-ghost-ledger",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-job-shared-action-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-job-shared-action-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-job-shared-action-proof",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-job-shared-action-proof",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-lexical-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-lexical-oracles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-node-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-node-oracles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-schema-check",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-schema-check",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-schema-docs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-schema-docs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-schema-generate",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-schema-generate",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-store-payload-tests",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-store-payload-tests",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-store-replay-oracles",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-store-replay-oracles",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-store-scalar-wide",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-store-scalar-wide",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-root-story-inspect",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:root-story-inspect",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-batch59",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-batch59",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-channel-wire",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-channel-wire",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-child-worker",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-child-worker",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-clamp-current",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-clamp-current",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-closure-ingress",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-closure-ingress",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-dsl-producer-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-dsl-producer-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-member-open-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-member-open-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-new-authority",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-new-authority",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-parser-native-manifest",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-parser-native-manifest",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-parser-native-schema",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-parser-native-schema",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-parser-native-stdio",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-parser-native-stdio",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-runtime-stale-consumers",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:runtime-stale-consumers",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-schema-catalog-boundary",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:structural-catalog-test",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-schema-catalog-check",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:schema",
+        "--args=check",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-schema-catalog-docs",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:schema",
+        "--args=docs",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-schema-catalog-generate",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:schema",
+        "--args=generate",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-source-current-apply",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:source-current-apply",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-source-current-verify",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:source-current-verify",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-stdio-production-preparation",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:stdio-production",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-storage-frontiers",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:storage-frontiers",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-test-host-parity",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:parity",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-trinity-native",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:trinity-native",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-ui-corpus",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:ui-corpus",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "fixtures-testing-only-ui-layered",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "{workspace}/node_modules/nx/dist/bin/nx.js",
+        "run",
+        "ticket-fixture-verification:ui-layered",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/launch-nx-data",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated"
+      }
+    },
+    {
+      "id": "test-repo-test-fixture-isolation",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/repo-test:test-fixture-isolation",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/fixture-isolation"
+      }
+    }
+  ]
+}

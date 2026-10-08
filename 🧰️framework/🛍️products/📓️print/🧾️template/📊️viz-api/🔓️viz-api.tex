@@ -1267,6 +1267,7 @@
 \ApiScopeSource{api-path-column}{semio / viz / column}
 \SemioTableLong[text-size=8pt]{\ApiTitle{api-path-column}}{0.20,0.14,0.16,0.50}{\ApiKey & \ApiType & \ApiDefault & \ApiMeaning}{%
   \SemioTableRow{\Key{width} & \Key{mm} & \ApiText{figure width}{Figurenbreite} & \ApiText{Own column width in millimetres; begins at the active figure width, advances the section cursor, and restores the enclosing width after closing.}{Eigene Spaltenbreite in Millimetern; beginnt mit der aktiven Figurenbreite, bewegt den Abschnittscursor und stellt nach dem Schließen die umgebende Breite wieder her.}}
+  \SemioTableRow{\Key{height} & \Key{number} & \Key{0} & \ApiText{Canvas height in millimetres of the chart the column holds; the chart fills that rectangle under the heading. Zero leaves the column to content that grows downward.}{Höhe der Zeichenfläche in Millimetern für das Diagramm der Spalte; das Diagramm füllt dieses Rechteck unter der Überschrift. Null überlässt die Spalte nach unten wachsendem Inhalt.}}
   \SemioTableRow{\Key{title} & \Key{text} & --- & \ApiText{Heading above the column; empty omits it and its content gap.}{Überschrift über der Spalte; leer unterdrückt sie und ihren Inhaltsabstand.}}
   \SemioTableRow{\Key{note} & \Key{text} & --- & \ApiText{Caption paragraph below the heading, wrapped to the active column width; empty omits it and its note gap.}{Beschriftungsabsatz unter der Überschrift, auf die aktive Spaltenbreite umbrochen; leer unterdrückt ihn und seinen Notizabstand.}}
 }
@@ -1287,13 +1288,15 @@
 
 \begin{VizFigure}[title={\ApiText{Sections, columns and a note}{Streifen, Spalten und eine Notiz}}, width=100]
 \begin{VizSection}[title={\ApiText{A \ One section}{A \ Ein Streifen}}]
+\begin{VizColumn}[height=24]
 \SemioVizChart{icon-array}[columns=5]
+\end{VizColumn}
 \end{VizSection}
 \begin{VizSection}[title={\ApiText{B \ Two columns}{B \ Zwei Spalten}}]
 \begin{VizColumn}[width=48, title={\ApiText{Left}{Links}}]
 \SemioVizText{label}[width=40]{0,0}{\ApiText{A text mark inside a column.}{Eine Textmarke in einer Spalte.}}
 \end{VizColumn}
-\begin{VizColumn}[width=48, title={\ApiText{Right}{Rechts}}, note={\ApiText{Caption text before the chart.}{Bildunterschrift vor dem Diagramm.}}]
+\begin{VizColumn}[width=48, height=30, title={\ApiText{Right}{Rechts}}, note={\ApiText{Caption text before the chart.}{Bildunterschrift vor dem Diagramm.}}]
 \SemioVizChart{horizontal-bar-chart}[axes=false]
 \coordinate (api-bar-end) at (0, 0);
 \SemioVizNoteBelow{api-bar-end}{48}{\ApiText{A note placed from the chart's own drawn extent.}{Eine Notiz, aus der tatsächlichen Ausdehnung des Diagramms heraus platziert.}}
@@ -2041,7 +2044,8 @@
   \SemioTableRow{\Key{chip} & \Key{string} & \Key{chip} & \ApiText{Column supplying the source chip of a stage chain.}{Spalte für den Quellbaustein einer Stufenkette.}}
   \SemioTableRow{\Key{stages} & \Key{string} & \ApiText{empty}{leer} & \ApiText{Comma-separated column names supplying the chain stages.}{Durch Kommas getrennte Spaltennamen für die Stufen der Kette.}}
   \SemioTableRow{\Key{columns} & \Key{integer} & \Key{0} & \ApiText{Boxes per row; zero places every input row on one line.}{Kästen je Zeile; null platziert alle Eingabezeilen in einer einzigen Linie.}}
-  \SemioTableRow{\Key{boxHeight} & \Key{number} & \Key{7} & \ApiText{Height of one box in millimetres.}{Höhe eines Kastens in Millimetern.}}
+  \SemioTableRow{\Key{boxHeight} & \Key{number} & \Key{7} & \ApiText{Least height of one box in millimetres; a row grows to its tallest text.}{Mindesthöhe eines Kastens in Millimetern; eine Zeile wächst mit ihrem höchsten Text.}}
+  \SemioTableRow{\Key{font} & \Key{string} & \Key{cell} & \ApiText{Theme font role a cell is set in: \Key{cell}, \Key{label} or \Key{value}.}{Schriftrolle des Themas, in der eine Zelle gesetzt wird: \Key{cell}, \Key{label} oder \Key{value}.}}
   \SemioTableRow{\Key{gutter} & \Key{number} & \Key{1.6} & \ApiText{Gap between neighbouring boxes in millimetres.}{Abstand zwischen benachbarten Kästen in Millimetern.}}
   \SemioTableRow{\Key{labelWidth} & \Key{number} & \Key{25} & \ApiText{Width of the leading span-row caption column in millimetres.}{Breite der vorangestellten Beschriftungsspalte einer Spannzeile in Millimetern.}}
 }

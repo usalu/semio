@@ -68,16 +68,6 @@ impl Default for WiresCanvasTransient {
     }
 }
 
-impl protocol::MutationDiff<WiresCanvasTransient> for WiresCanvasTransient {
-    fn apply(&self, _base: &WiresCanvasTransient) -> protocol::MutationApplyResult<WiresCanvasTransient> {
-        Ok(self.clone())
-    }
-
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
-
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

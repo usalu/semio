@@ -1,0 +1,182 @@
+{
+  "version": 2,
+  "ready": false,
+  "scope": "Coupled current Renderer test descriptor held model only; fresh original common closure all-three native wholes required",
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json",
+      "before": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+      "after": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+      "beforeHash": "f2dac3de322be116e4e8563d502d90364f618d3f64a638274c266c4864f6ad1f",
+      "afterHash": "4032df701f8d242253465d4bd1e7cac5d081fbde22c4f89c422d1c43cd48d68a",
+      "forward": {
+        "start": 0,
+        "delete": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+        "insert": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n"
+      },
+      "inverse": {
+        "start": 0,
+        "delete": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+        "insert": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json",
+      "sha256": "f2dac3de322be116e4e8563d502d90364f618d3f64a638274c266c4864f6ad1f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "043bb7d108d2fa2b0907b18f37ca568586d6a2889243a8e8e06c57281397a03c"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs",
+      "sha256": "a6ddf65548737c98d125ac4318e64aa72d352b9382ab70d6d51652e6d734f1e6"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "3d1d3f465e36765f691e5fa859b7d5595c84ae0a6d5f421d5483ff25a71c79cb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "40ce3f8c33a56fa74b59866b5c97f7b683ff647bbe8c45bd275dd071c0d35ef0"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs",
+      "sha256": "bdd036ccd3689cda2e15221105297a020b35818863a919a4f188afad59c10e59"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+      "sha256": "499910c65c35c1310509401f85e69c8cf3d6eeefebd1bf12c4b6979bc78c4dcb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
+      "sha256": "ce60f081c65823bc80e76b9adcf61b644e5bcfe3315bfc639b7f952aa51b1061"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "sha256": "5c89dcb6ee5cdf6ad18bf1ecbee12a9e7f60aca7d025a5d7d805eab20e3d92e5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "dee55e0cae6cbaf51a10e9b1707f3526e440dfc716d83b2c63c5d6b13719d89e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "sha256": "8a8cdb14868ecfa11c62bdfc5091546738d302127bd663734b907a0ff5b777f9"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "sha256": "bf3f7b8a889dda036627e3dc587b497421777cc35f8df3b47c7cdf1851a09910"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/Cargo.toml",
+      "sha256": "8cbec0c3fa580693648ddb2d09fc60fa62631a8caffa24e5396b5060314a39a5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/Cargo.lock",
+      "sha256": "b7305f4727a8888ceb8f4af4be3f358b66d7a751b71295f17d0c958079eb5774"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "f43c0d3a97047f7f64c37f3d93d4c1ffb18535df13dfc87673902f750e875c7d"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "81f1c2f6307d44bb2696401379bc5fe7fa3393d29ad1d8810830807305fe2c43"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🔬️wgpu-admitted-surface-map/🦀️.rs",
+      "sha256": "719594b4cf80703c64e0077e4cb43bfe097fc124fcbedcf76022a51f83d069f2"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-kernel-runtime-semantic-document/🦀️.rs",
+      "sha256": "0548b3824695e07fdfd73046439240ae40aa87c63aa0f3726dd33a2ccea3f5c5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️.rs",
+      "sha256": "d8077874973a2c12763d33f718fe05685e9e21d1ce5e0d3b36ae5377e10d3efe"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-5/admission.json",
+      "sha256": "7b6668dae5e9aa0981474b684efe5978aababd61d134a7148b37a977c9cf7c16"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/held-model-input/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "2a58ad3c24802238ffde605670c09875e295718aa0e1a3ae60d39e74f6827731"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/plan.json",
+      "sha256": "11b86893d802eabf92ae190698cea3ccd51f6a23ba91eb7311326de7234553bb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/artifacts/semio-nextest-HzTy1k/binaries-metadata.json",
+      "sha256": "bd033315686a2a7de22fb8ca38cca0be0e95ac4ccc039a438c96d94f37aa6380"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/target/debug/build/semio-framework-os-renderer-wgpu/8ab75bf45212f2e4/out/semio_framework_os_renderer_wgpu-8ab75bf45212f2e4",
+      "sha256": "d0509cd5303ec8ccf46eb4d266345d66107274d3f83106b09eff63da7b8d8681"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-1.json",
+      "sha256": "debfcda6bd81138eae1b54fd060b610a9bc92f50461f547caa81fac6cfb7a472"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-2.json",
+      "sha256": "db959791a58f7cd6e1b45435916ec614c74eacb11040e7a2b41e2e0e95ef427b"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-3.json",
+      "sha256": "c6832ec1efda07d0567bba5374acdf0b7fdfc640b7c5d5663ccb9fa7b3b58aab"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/gui-run.log",
+      "sha256": "a342702f0b41d73de7afa6f6652ded7d1b6ab9a1c1ac210706bb8febee54c229"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/terminal.json",
+      "sha256": "ada15226d8329dd41afc832c2027628a82eedd094d7587db567427cdef8dd048"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/laws.json",
+      "sha256": "ae1b4babe456205031de77ba06eb63e073db45cfbe9853f0f482b81023c085e4"
+    }
+  ],
+  "sourceWritesOutsideTicket": false,
+  "nativeExecuted": false,
+  "publicationReady": false,
+  "coupledWorld": {
+    "receiptPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-5/admission.json",
+    "receiptHash": "7b6668dae5e9aa0981474b684efe5978aababd61d134a7148b37a977c9cf7c16",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+    "beforeHash": "f43c0d3a97047f7f64c37f3d93d4c1ffb18535df13dfc87673902f750e875c7d",
+    "afterHash": "2a58ad3c24802238ffde605670c09875e295718aa0e1a3ae60d39e74f6827731",
+    "capturedModelPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/held-model-input/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs"
+  },
+  "measurements": [
+    {
+      "owner": "engine_canvas::EngineSurfaceRegistry",
+      "beforeBytes": 86544,
+      "afterBytes": 90264,
+      "capacity": 256,
+      "ownerBytes": 32
+    },
+    {
+      "owner": "scenes::AdmittedSurfaceMap<World3dState>",
+      "beforeBytes": 28400,
+      "afterBytes": 28440,
+      "capacity": 256,
+      "ownerBytes": 3136
+    }
+  ],
+  "conditions": [
+    "Exact current authorities and original assertion bodies",
+    "Joint held model with World5 and DAG successor",
+    "All three original whole runs on one fresh current selected closure",
+    "Exact post custody and independent publication admission"
+  ],
+  "historicalCauseAttribution": false,
+  "liveIdentity": false,
+  "atomicity": false
+}

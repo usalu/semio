@@ -26,6 +26,8 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::Ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{ChangeWidgetInput, WidgetInputValue};
+use crate::standards::v1::subsets::any::schema::mutations::change_generation_preview::ChangeGenerationPreview;
+use crate::standards::v1::subsets::any::schema::mutations::select_generation::SelectGeneration;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 //#region 🔖️RetainedMountedIngress
@@ -33,7 +35,7 @@ const GENERATION3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYT
 const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 20;
+const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 22;
 pub const GENERATION3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION3D_MOUNTED_CONTROL_CREDITS: usize = 1;
 const GENERATION3D_PUBLICATION_SLOTS: usize = 4;
@@ -415,6 +417,8 @@ pub const GENERATION3D_RETAINED_MUTATION_OWNERS: [&str; GENERATION3D_MUTATION_VA
     "scale-transforms",
     "move-nodes",
     "change-widget-input",
+    "select-generation",
+    "change-generation-preview",
 ];
 
 pub const GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR: [u8; 4] = *b"P3D3";
@@ -701,6 +705,17 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
                 Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Layouts(displaced)))
             }
         }
+        Generation3dMutation::SelectGeneration(payload) => {
+            if let Some(id) = &payload.generation_id {
+                if !snapshot.generation.generations.iter().any(|entry| &entry.id == id) { return Err("generation3d-replay.generation-missing"); }
+            }
+            let next = payload.generation_id.as_deref().map(generation3d_copy_string).transpose()?;
+            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.selected_generation_id, next).map(Generation3dReplayDisplaced::Text).map(generation3d_retire_displaced)
+        }
+        Generation3dMutation::ChangeGenerationPreview(payload) => {
+            let next = payload.text.as_deref().map(generation3d_copy_string).transpose()?;
+            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.preview_text, next).map(Generation3dReplayDisplaced::Text).map(generation3d_retire_displaced)
+        }
         Generation3dMutation::ChangeWidgetInput(payload) => {
             if !payload.admissible() { return Err("generation3d-replay.input-invariant"); }
             let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
@@ -765,6 +780,7 @@ impl Drop for Generation3dRetainedSnapshotRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation3dRetainedSnapshotRetirementFactory;
 
 pub(crate) fn generation3d_retire_owned_snapshot(value: Generation3dSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
@@ -808,6 +824,8 @@ impl Drop for Generation3dRetainedSnapshotArcRetirement {
 }
 
 impl store::SnapshotRetirementFactory<Generation3dSnapshot> for Generation3dRetainedSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Generation3dSnapshot>) -> usize { std::mem::size_of::<Generation3dRetainedSnapshotArcRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<Generation3dSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(Generation3dRetainedSnapshotArcRetirement {
             value: std::mem::ManuallyDrop::new(Some(snapshot)),
@@ -858,6 +876,7 @@ impl Drop for Generation3dRetainedMutationRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation3dRetainedMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Generation3dMutation> for Generation3dRetainedMutationRetirementFactory {
@@ -964,7 +983,7 @@ struct Generation3dMutationStringOwner {
     symbol: Option<(u64, usize, usize)>,
 }
 
-/// 🧬️ Fixed-depth typed owner for the exact twenty Generation3d mutation records.
+/// 🧬️ Fixed-depth typed owner for the exact twenty-two Generation3d mutation records.
 /// Dynamic JSON is admitted only at the ChangeGenerationValue value and the ChangeWidgetInput input leaves.
 struct Generation3dRetainedMutationOwner {
     ordinal: u8,
@@ -1122,6 +1141,10 @@ impl Generation3dRetainedMutationOwner {
                     (2 | 5 | 6 | 7 | 9 | 11 | 14, 0) => 0,
                     (12 | 13 | 19, 0) => 0,
                     (12 | 13 | 19, 1) => 1,
+                    (20 | 21, 0) => {
+                        self.index = 1;
+                        0
+                    }
                     _ => return Err("generation3d-mutation.root-string-field"),
                 };
                 self.strings[slot] = owner.value;
@@ -1729,6 +1752,8 @@ impl Generation3dRetainedMutationOwner {
                     17 => Generation3dMutation::ScaleTransforms(ScaleTransforms { targets: std::mem::take(&mut self.targets), sx: self.numbers[0], sy: self.numbers[1], sz: self.numbers[2] }),
                     18 => Generation3dMutation::MoveNodes(MoveNodes { ids: std::mem::take(&mut self.targets), dx: self.numbers[0], dy: self.numbers[1] }),
                     19 => Generation3dMutation::ChangeWidgetInput(ChangeWidgetInput { id: first, channel: second, input: <WidgetInputValue as semio_framework_value::FromValue>::from_value(std::mem::replace(&mut self.json, semio_framework_value::DslValue::Null)).map_err(|_| "generation3d-mutation.widget-input")? }),
+                    20 => Generation3dMutation::SelectGeneration(SelectGeneration { generation_id: (self.index == 1).then_some(first) }),
+                    21 => Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: (self.index == 1).then_some(first) }),
                     _ => return Err("generation3d-mutation.variant"),
                 };
                 *self.value = Some(mutation);
@@ -2345,6 +2370,10 @@ impl Generation3dMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Generation3dMutationDecodeAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if let Some(session) = self.session.as_ref() { return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0)); }
+        Ok(self.retirement.as_ref().map_or(0, store::artifact_retirement_box_byte_demand))
+    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -2516,17 +2545,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
             return Ok(store::SnapshotRetirementStep::Complete);
         }
         let retirement_fault = self.diagnostic("generation3d-envelope.mutation-retirement-fault", 0);
-        let retirement_false_terminal = self.diagnostic("generation3d-envelope.mutation-retirement-false-terminal", 0);
-        let retirement = self.retirement.as_mut().expect("P3 mutation retirement retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| retirement_fault)? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = Generation3dMutationDecodeState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(retirement_false_terminal),
-            step => Ok(step),
-        }
+        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| retirement_fault)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3118,6 +3137,10 @@ impl Generation3dStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSnapshot, Generation3dMutation> for Generation3dStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"generation3d-store.initializer-stale-aba");
@@ -3503,6 +3526,10 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
             question_id: "deep-answer".into(),
             new_value: semio_framework_value::DslValue::object([("object".to_string(), semio_framework_value::DslValue::object([("array".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::Bool(false), semio_framework_value::DslValue::String("value".to_string())]))]))]),
         }),
+        Generation3dMutation::SelectGeneration(SelectGeneration { generation_id: Some("retained-generation".into()) }),
+        Generation3dMutation::SelectGeneration(SelectGeneration { generation_id: None }),
+        Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: Some("Retained preview \u{1F600}".into()) }),
+        Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: None }),
     ];
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("semantic wire corpus");
     for case in corpus["cases"].as_array().expect("semantic wire cases") {

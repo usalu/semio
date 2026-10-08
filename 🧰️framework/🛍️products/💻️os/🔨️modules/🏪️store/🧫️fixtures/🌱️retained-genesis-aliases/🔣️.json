@@ -2,6 +2,8 @@
   "cases": [
     { "name": "empty", "commands": [], "snapshotRetirements": 0, "genesisRetirements": 1, "final": { "n": 0 } },
     { "name": "edited", "commands": ["apply"], "snapshotRetirements": 1, "genesisRetirements": 1, "final": { "n": 7 } },
-    { "name": "undo-redo", "commands": ["apply", "undo", "redo"], "snapshotRetirements": 2, "genesisRetirements": 1, "final": { "n": 7 } }
+    { "name": "undo-redo", "commands": ["apply", "undo", "redo"], "snapshotRetirements": 2, "genesisRetirements": 1, "final": { "n": 7 } },
+    { "name": "edited-live-reader", "commands": ["apply"], "liveReader": true, "snapshotRetirements": 1, "genesisRetirements": 1, "final": { "n": 7 } },
+    { "name": "twice-edited-tail-reader", "commands": ["apply", "applyNext"], "tailReader": true, "snapshotRetirements": 2, "genesisRetirements": 1, "final": { "n": 8 } }
   ]
 }

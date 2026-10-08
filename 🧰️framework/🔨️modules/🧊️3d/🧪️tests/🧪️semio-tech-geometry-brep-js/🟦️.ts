@@ -5,7 +5,7 @@ import union from "lodash/union.js";
 import difference from "lodash/difference.js";
 import xor from "lodash/xor.js";
 import uniq from "lodash/uniq.js";
-import { BufferGeometry, Float32BufferAttribute, OrthographicCamera, PerspectiveCamera, Ray, Vector3 } from "three";
+import { BufferGeometry, Float32BufferAttribute, OrthographicCamera, PerspectiveCamera, Ray, Triangle, Vector3 } from "three";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -198,6 +198,34 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const mesh=meshTransferFromPreviewPayload(transfer)!;
         expect(isRenderableMeshTransfer(mesh)).toBe(false);
         expect(meshTransferToGeometryData(mesh).position.length).toBe(0);
+      }
+    });
+    it("measures shape-value fixture tessellations with independent Three volume, area and manifold checks", () => {
+      const fixture = JSON.parse(readFileSync(new URL("./📐️brep/⚙️engine/🧫️fixtures/🪬️shape-values/🔣️.json",source.url),"utf8"));
+      expect(fixture.tessellations.length).toBeGreaterThanOrEqual(5);
+      for (const entry of fixture.tessellations) {
+        const expected = fixture.cases.find((row: { name: string }) => row.name === entry.case);
+        const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(entry.positions, 3)).setIndex(entry.indices);
+        const position = geometry.getAttribute("position");
+        const corner = [new Vector3(), new Vector3(), new Vector3()];
+        const edgeUses = new Map<string, number>();
+        const weld = (point: Vector3) => [point.x, point.y, point.z].map((value) => Math.round(value * 1e5)).join(",");
+        let volume = 0, area = 0;
+        for (let triangle = 0; triangle < entry.indices.length; triangle += 3) {
+          corner.forEach((point, index) => point.fromBufferAttribute(position, entry.indices[triangle + index]));
+          volume += corner[0].dot(corner[1].clone().cross(corner[2])) / 6;
+          area += new Triangle(corner[0], corner[1], corner[2]).getArea();
+          for (let index = 0; index < 3; index++) {
+            const key = [weld(corner[index]), weld(corner[(index + 1) % 3])].sort().join("|");
+            edgeUses.set(key, (edgeUses.get(key) ?? 0) + 1);
+          }
+        }
+        const relative = entry.relativeTolerance ?? 1e-6;
+        expect(Math.abs(volume - expected.measures.volume) / expected.measures.volume, `${entry.case} volume ${volume}`).toBeLessThanOrEqual(relative);
+        if (expected.measures.area !== undefined) expect(Math.abs(area - expected.measures.area) / expected.measures.area, `${entry.case} area ${area}`).toBeLessThanOrEqual(relative);
+        expect([...edgeUses.values()].every((uses) => uses === 2), `${entry.case} watertight`).toBe(true);
+        if (expected.components?.face !== undefined) expect(entry.faceEntityIds.length).toBe(expected.components.face);
+        geometry.dispose();
       }
     });
     it("isRenderableMeshTransfer accepts triangle meshes", () => {

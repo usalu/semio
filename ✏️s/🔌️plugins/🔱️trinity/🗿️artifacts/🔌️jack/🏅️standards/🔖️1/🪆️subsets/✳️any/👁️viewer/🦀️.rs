@@ -75,7 +75,7 @@ impl ArtifactViewer for TrinityJackViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::operations::jack_document_store_owners())
+        Some(crate::host::jack_document_store_owners())
     }
 
     fn initial_snapshot() -> JackSnapshot {

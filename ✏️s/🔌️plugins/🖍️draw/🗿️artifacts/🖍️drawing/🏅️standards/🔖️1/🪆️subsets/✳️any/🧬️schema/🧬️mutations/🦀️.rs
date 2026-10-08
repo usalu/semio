@@ -46,8 +46,9 @@ pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mu
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
-pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
+pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
+    let layer_id = &layer_base(layer).id;
     let finite = || value.as_f64().filter(|number| number.is_finite());
     match field {
         "name" => { value.as_str()?; }
@@ -72,16 +73,16 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
         _ => return None,
     }
     let operation = match field {
-        "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
+        "name" => rename_layer(layer_id.clone(), value.as_str().unwrap_or("").into()),
         "textContent" | "textSize" => {
             let DrawingLayerNode::Text(text) = layer else { return None; };
-            update_text(layer_id.into(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size })
+            update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size })
         }
-        "opacity" => set_layer_opacity(layer_id.into(), value.as_f64().unwrap_or(1.0)),
-        "visible" => set_layer_visible(layer_id.into(), value.as_bool().unwrap_or(true)),
-        "locked" => set_layer_locked(layer_id.into(), value.as_bool().unwrap_or(false)),
-        "blendMode" => set_layer_blend_mode(layer_id.into(), value.as_str().unwrap_or("normal").into()),
-        "booleanOperation" => set_layer_boolean_operation(layer_id.into(), value.as_str().unwrap_or("union").into()),
+        "opacity" => set_layer_opacity(layer_id.clone(), value.as_f64().unwrap_or(1.0)),
+        "visible" => set_layer_visible(layer_id.clone(), value.as_bool().unwrap_or(true)),
+        "locked" => set_layer_locked(layer_id.clone(), value.as_bool().unwrap_or(false)),
+        "blendMode" => set_layer_blend_mode(layer_id.clone(), value.as_str().unwrap_or("normal").into()),
+        "booleanOperation" => set_layer_boolean_operation(layer_id.clone(), value.as_str().unwrap_or("union").into()),
         "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" | "transformShear" | "rotationDegrees" => {
             let mut transform = layer_base(layer).transform.clone();
             match field {
@@ -93,19 +94,19 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
                 "rotationDegrees" => transform.rotation = finite()?.to_radians(),
                 _ => transform.rotation = finite()?,
             }
-            update_layer_transform(layer_id.into(), transform)
+            update_layer_transform(layer_id.clone(), transform)
         }
         "fillColor" => {
             let alpha = layer_base(layer).attributes.fill.as_ref().map_or(1.0, |fill| match fill {
                 FillStyle::Solid { color } => color[3],
                 FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
             });
-            replace_layer_fill(layer_id.into(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
+            replace_layer_fill(layer_id.clone(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
         }
-        "isolation" => set_group_isolation(layer_id.into(),value.as_bool()?),
-        "fillRule" => set_layer_fill_rule(layer_id.into(),crate::FillRule::parse(value.as_str()?).ok()?),
-        "fillEnabled" => replace_layer_fill(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.fill.clone().unwrap_or(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })) } else { None }),
-        "strokeEnabled" => replace_layer_stroke(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None })) } else { None }),
+        "isolation" => set_group_isolation(layer_id.clone(),value.as_bool()?),
+        "fillRule" => set_layer_fill_rule(layer_id.clone(),crate::FillRule::parse(value.as_str()?).ok()?),
+        "fillEnabled" => replace_layer_fill(layer_id.clone(), if value.as_bool()? { Some(layer_base(layer).attributes.fill.clone().unwrap_or(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })) } else { None }),
+        "strokeEnabled" => replace_layer_stroke(layer_id.clone(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None })) } else { None }),
         "strokeWidth" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" => {
             let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
             match field {
@@ -113,21 +114,21 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
                 "strokeColor" => stroke.color = hex_to_rgba(value.as_str()?, stroke.color[3]),
                 "strokeCap" => stroke.cap = crate::StrokeCap::parse(value.as_str()?).ok()?,
                 "strokeJoin" => stroke.join = crate::StrokeJoin::parse(value.as_str()?).ok()?,
-                _ => stroke.dash = crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?,
+                _ => stroke.dash = crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?.map(Into::into),
             }
-            replace_layer_stroke(layer_id.into(), Some(stroke))
+            replace_layer_stroke(layer_id.clone(), Some(stroke))
         }
         "traceThreshold" => {
             let DrawingLayerNode::Trace(trace) = layer else { return None };
             let mut params = trace.params.clone();
             params.threshold = value.as_f64().unwrap_or(0.5);
-            update_layer_trace_params(layer_id.into(), params)
+            update_layer_trace_params(layer_id.clone(), params)
         }
         "traceSimplify" => {
             let DrawingLayerNode::Trace(trace) = layer else { return None };
             let mut params = trace.params.clone();
             params.simplify_epsilon = value.as_f64().unwrap_or(1.5);
-            update_layer_trace_params(layer_id.into(), params)
+            update_layer_trace_params(layer_id.clone(), params)
         }
         _ => return None,
     };
@@ -137,9 +138,9 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`drawing_op_for_layer_field` is the undoable/command-facing entry point).
 pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &semio_framework_value::DslValue) -> protocol::MutationApplyResult<DrawingSnapshot> {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     match drawing_op_for_layer_field(doc, layer_id, field, value) {
-        Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
+        Some(operation) => protocol::apply_diff(operation.diff(doc).diff(), doc).map_err(|error| error.under(["layers", layer_id])),
         None => Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "layer field cannot be patched").at(["layers", layer_id, field])),
     }
 }
@@ -169,18 +170,13 @@ pub use crate::standards::v1::subsets::transform::schema::mutations::update_laye
 /// diff carries an empty `DrawingDiff`, so the snapshot is left untouched and `Ok(())` is still
 /// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
 pub fn apply_drawing_mutation(snapshot: &mut DrawingSnapshot, mutation: &DrawingMutation) -> protocol::MutationApplyResult<()> {
-    use store::MutationDiff;
-    let next = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
-    *snapshot = next;
+    *snapshot = protocol::apply_diff(<DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(mutation, snapshot).diff(), snapshot)?;
     Ok(())
 }
 
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
 pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-    <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)?
-
-    })
+    <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -197,10 +193,10 @@ mod tests;
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingSnapshot, Vec<String>), String> {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }
@@ -271,13 +267,13 @@ pub struct DrawingPlacedLayer<'a> {
     pub layer: &'a DrawingLayerNode,
     pub parent: [f64; 6],
     pub editable: bool,
-    pub addressed_ancestor: Option<&'a str>,
+    pub addressed_ancestor: Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
 }
 
 /// 🗂️ Every layer of `base` whose id is in `ids`, in document (pre-)order, placed in the world.
-pub fn drawing_placed_layers<'a>(base: &'a DrawingSnapshot, ids: &[&str]) -> Vec<DrawingPlacedLayer<'a>> {
+pub fn drawing_placed_layers<'a, T: semio_framework_value::paged::Utf8Text>(base: &'a DrawingSnapshot, ids: &[T]) -> Vec<DrawingPlacedLayer<'a>> {
     let mut placed = Vec::new();
-    let mut stack: Vec<(std::slice::Iter<'a, DrawingLayerNode>, [f64; 6], bool, Option<&'a str>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
+    let mut stack: Vec<(semio_framework_value::list::PagedIter<'a, DrawingLayerNode, {usize::MAX}>, [f64; 6], bool, Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
     while let Some((layers, parent, editable, ancestor)) = stack.last_mut() {
         let Some(layer) = layers.next() else {
             stack.pop();
@@ -286,75 +282,39 @@ pub fn drawing_placed_layers<'a>(base: &'a DrawingSnapshot, ids: &[&str]) -> Vec
         let (parent, ancestor) = (*parent, *ancestor);
         let layer_base = layer_base(layer);
         let editable = *editable && layer_base.visible && !layer_base.locked;
-        let addressed = ids.contains(&layer_base.id.as_str());
+        let addressed = ids.iter().any(|id| layer_base.id.eq_text(id));
         if addressed {
             placed.push(DrawingPlacedLayer { layer, parent, editable, addressed_ancestor: ancestor });
         }
         if let DrawingLayerNode::Group(group) = layer {
             let matrix = crate::schema::geometry::multiply(parent, crate::schema::drawing_transform_to_matrix(&layer_base.transform));
-            stack.push((group.children.iter(), matrix, editable, if addressed { Some(layer_base.id.as_str()) } else { ancestor }));
+            stack.push((group.children.iter(), matrix, editable, if addressed { Some(&layer_base.id) } else { ancestor }));
         }
     }
     placed
 }
 
 /// 🚨️ The schema-stated target invariant every selection transform shares: at least one id, none repeated.
-pub fn drawing_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+pub fn drawing_targets_invariant(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> Result<(), &'static str> {
     if targets.is_empty() {
         return Err("a selection transform addresses at least one layer");
     }
-    let unique: std::collections::BTreeSet<&str> = targets.iter().map(String::as_str).collect();
+    let unique: std::collections::BTreeSet<_> = targets.iter().collect();
     if unique.len() != targets.len() {
         return Err("a selection transform addresses every layer once");
     }
     Ok(())
 }
 
-/// 🧭️ The one diff every layer selection transform builds: `place` maps a surviving layer's transform through its parent's
-/// world matrix, a layer whose addressed ancestor moved moves with it, locked, hidden, missing or singular targets are
-/// skipped (`mutation.partial`), none left is `mutation.target-missing`, nothing moving is `mutation.no-op`.
-pub fn drawing_selection_diff(base: &DrawingSnapshot, targets: &[String], place: impl Fn(&crate::DrawingTransform, [f64; 6]) -> Option<crate::DrawingTransform>) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
-    if let Err(reason) = drawing_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
-    }
-    let ids: Vec<&str> = targets.iter().map(String::as_str).collect();
-    let placed = drawing_placed_layers(base, &ids);
-    let (mut moved, mut locked, mut singular, mut patched) = (std::collections::BTreeSet::<&str>::new(), Vec::new(), Vec::new(), Vec::new());
-    let mut applies = false;
-    for entry in &placed {
-        let source = layer_base(entry.layer);
-        if entry.addressed_ancestor.is_some_and(|ancestor| moved.contains(ancestor)) {
-            applies = true;
-            continue;
-        }
-        if !entry.editable {
-            locked.push(source.id.clone());
-            continue;
-        }
-        match place(&source.transform, entry.parent) {
-            Some(next) => {
-                applies = true;
-                moved.insert(source.id.as_str());
-                if next != source.transform {
-                    patched.push((source.id.clone(), next));
-                }
-            }
-            None => singular.push(source.id.clone()),
-        }
-    }
-    if !applies {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a visible, unlocked layer this transform can place", targets.len()), targets.to_vec());
-    }
-    let missing: Vec<String> = targets.iter().filter(|id| !placed.iter().any(|entry| layer_base(entry.layer).id == **id)).cloned().collect();
-    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
+/// 🚨️ The `mutation.partial` warnings of a layer selection transform: addressed ids missing from the drawing, locked or hidden,
+/// or placed through a singular transform — each skipped, never fatal.
+pub fn drawing_selection_partial(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, placed: &[DrawingPlacedLayer<'_>], locked: Vec<String>, singular: Vec<String>) -> Vec<protocol::MutationMessage> {
+    let missing: Vec<String> = targets.iter().filter(|id| !placed.iter().any(|entry| &layer_base(entry.layer).id == *id)).map(|id| id.to_string_owner()).collect();
+    [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
         .into_iter()
         .filter(|(skipped, _)| !skipped.is_empty())
         .map(|(skipped, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", skipped.len(), targets.len(), skipped.join(", "))).at(skipped))
-        .collect();
-    if patched.is_empty() {
-        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no layer changes its transform").at(targets.to_vec())]));
-    }
-    protocol::MutationOutcome::new(crate::diff::diff_set_layer_transforms(patched)).absorb_messages(partial)
+        .collect()
 }
 
 /// ↔️ A layer's transform after its world-space drag by `delta` through its parent's world matrix — only the origin moves.
@@ -380,15 +340,6 @@ pub fn drawing_rotation_matrix(pivot_x: f64, pivot_y: f64, angle: f64) -> [f64; 
 /// 📐️ The world-space scaling by `(scale_x, scale_y)` about `(pivot_x, pivot_y)`.
 pub fn drawing_scaling_matrix(pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> [f64; 6] {
     [scale_x, 0.0, 0.0, scale_y, pivot_x * (1.0 - scale_x), pivot_y * (1.0 - scale_y)]
-}
-
-/// ↩️ Exact base-derived inverse of a layer selection transform: `update-layer-transform` back to every BASE transform its
-/// forward outcome patches — absolute setters, never a negated motion that would accumulate float error.
-pub fn drawing_selection_inverse(base: &DrawingSnapshot, outcome: protocol::MutationOutcome<crate::diff::DrawingDiff>) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()).filter_map(|entry| find_drawing_layer(base, &entry.id).map(|layer| update_layer_transform(entry.id.clone().into(), layer_base(layer).transform.clone()))).collect()
-
-    })())
 }
 
 /// 🔢️ A selection label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.

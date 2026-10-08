@@ -28,11 +28,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerLocked
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked), &format!("Sperre von Ebene \"{}\" auf {} setzen", self.layer_id, self.locked))
     }

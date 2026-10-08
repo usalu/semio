@@ -45,6 +45,7 @@ use std::collections::{HashMap, HashSet};
 use crate::brep::operations::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex, split_face_by_chain, split_face_by_interior_chain, split_face_by_interior_curve, split_face_by_seam_crossing, ParametricEdge};
 use crate::brep::operations::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
 use crate::brep::operations::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::brep::operations::staged::{drive, drive_solid, StageOutput};
 use crate::brep::operations::transform::{copy_solid, transform_solid};
 use crate::brep::representation::vector::matrix::Affine3;
 use crate::brep::engine::{MeshTransfer, PointClassification};
@@ -95,20 +96,7 @@ pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol
 /// [`BooleanJob::new`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_tol(tol)?;
-    require_solid(body, target)?;
-    if tools.is_empty() {
-        return Err(KernelError::InvalidInput("compound_cut requires at least one tool solid".into()));
-    }
-    let mut current = target;
-    for &tool in tools {
-        let next = boolean_solid(body, current, tool, BooleanOp::Cut, tol, rec)?;
-        if current != target {
-            remove_solid_and_orphans(body, current, &HashSet::new(), rec);
-        }
-        current = next;
-    }
-    Ok(current)
+    drive_solid(&mut BooleanFoldJob::compound_cut(body, target, tools, tol)?, body, rec)
 }
 
 /// 🔀 Planar section of `solid` by the plane `(origin, normal)`.
@@ -119,49 +107,10 @@ pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f6
 /// imprint engine — documented gap, see `📓️w2b-booleans.md`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
-    require_tol(tol)?;
-    require_solid(body, solid)?;
-    let n = plane_normal(normal)?;
-    let points = solid_vertex_positions(body, solid);
-    let mut section_pts = Vec::new();
-    for p in &points {
-        if ((*p - origin).dot(n)).abs() <= tol * 10.0 {
-            section_pts.push(*p);
-        }
+    match drive(&mut SectionJob::new(body, solid, origin, normal, tol)?, body, rec)? {
+        StageOutput::Faces(faces) => Ok(faces),
+        other => Err(KernelError::Operation(format!("section did not yield faces: {other:?}"))),
     }
-    // Also sample edge intersections with the plane.
-    let mut edge_ids = HashSet::new();
-    for face in body.solid_faces(solid) {
-        for loop_id in body.face_loops(face) {
-            for cid in body.loop_coedges(loop_id) {
-                if let Some(co) = body.coedges.get(cid) {
-                    edge_ids.insert(co.edge);
-                }
-            }
-        }
-    }
-    for edge_id in edge_ids {
-        let Some(edge) = body.edges.get(edge_id) else { continue };
-        let Some(v0) = body.vertices.get(edge.v0).map(|v| v.position) else { continue };
-        let Some(v1) = body.vertices.get(edge.v1).map(|v| v.position) else { continue };
-        let d0 = (v0 - origin).dot(n);
-        let d1 = (v1 - origin).dot(n);
-        if d0 * d1 > 0.0 {
-            continue;
-        }
-        let denom = d0 - d1;
-        if denom.abs() <= 1e-15 {
-            continue;
-        }
-        let t = d0 / denom;
-        section_pts.push(v0 + (v1 - v0) * t);
-    }
-    if section_pts.len() < 3 {
-        return Ok(Vec::new());
-    }
-    // Build a planar face from the convex hull of section points in-plane.
-    let face = crate::brep::operations::primitives::make_planar_face_from_points(body, &section_pts, rec)?;
-    Ok(vec![face])
 }
 
 /// 🔀 Splits `solid` by the plane `(origin, normal)` into two solids (classified triangle soups;
@@ -170,67 +119,10 @@ pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, nor
 /// see `📓️w2b-booleans.md`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<(SolidId, SolidId), KernelError> {
-    require_tol(tol)?;
-    require_solid(body, solid)?;
-    let n = plane_normal(normal)?;
-    let mesh = tessellate_solid(body, solid, tol.max(1e-3))?;
-    let mut pos_tris: Vec<[Pnt3; 3]> = Vec::new();
-    let mut neg_tris: Vec<[Pnt3; 3]> = Vec::new();
-    let mut pos_pts = Vec::new();
-    let mut neg_pts = Vec::new();
-    let npos = mesh.position.len() / 3;
-    if mesh.index.len() % 3 != 0 {
-        return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
+    match drive(&mut SplitJob::new(body, solid, origin, normal, tol)?, body, rec)? {
+        StageOutput::Solids(solids) if solids.len() == 2 => Ok((solids[0], solids[1])),
+        other => Err(KernelError::Operation(format!("split did not yield two solids: {other:?}"))),
     }
-    for tri in mesh.index.as_chunks::<3>().0 {
-        let i0 = tri[0] as usize;
-        let i1 = tri[1] as usize;
-        let i2 = tri[2] as usize;
-        if i0 >= npos || i1 >= npos || i2 >= npos {
-            return Err(KernelError::InvalidInput("mesh index out of range".into()));
-        }
-        let p0 = mesh_position(&mesh, i0);
-        let p1 = mesh_position(&mesh, i1);
-        let p2 = mesh_position(&mesh, i2);
-        let c = Pnt3::new((p0.x + p1.x + p2.x) / 3.0, (p0.y + p1.y + p2.y) / 3.0, (p0.z + p1.z + p2.z) / 3.0);
-        let d = (c - origin).dot(n);
-        if d >= -tol {
-            pos_tris.push([p0, p1, p2]);
-            pos_pts.extend([p0, p1, p2]);
-        }
-        if d <= tol {
-            neg_tris.push([p0, p1, p2]);
-            neg_pts.extend([p0, p1, p2]);
-        }
-    }
-    if pos_tris.is_empty() || neg_tris.is_empty() {
-        // Fall back to vertex-side hulls when tessellation did not straddle the plane.
-        let points = solid_vertex_positions(body, solid);
-        let mut pos = Vec::new();
-        let mut neg = Vec::new();
-        for p in points {
-            let d = (p - origin).dot(n);
-            if d >= -tol {
-                pos.push(p);
-            }
-            if d <= tol {
-                neg.push(p);
-            }
-        }
-        if pos.len() < 4 || neg.len() < 4 {
-            return Err(KernelError::Boolean(BooleanError::InvalidResult("split_solid_by_plane: one side has too few points".into())));
-        }
-        return Ok((make_convex_hull(body, &pos, rec)?, make_convex_hull(body, &neg, rec)?));
-    }
-    let solid_pos = match solid_from_triangle_soup(body, &pos_tris, rec) {
-        Ok(id) => id,
-        Err(_) => make_convex_hull(body, &pos_pts, rec)?,
-    };
-    let solid_neg = match solid_from_triangle_soup(body, &neg_tris, rec) {
-        Ok(id) => id,
-        Err(_) => make_convex_hull(body, &neg_pts, rec)?,
-    };
-    Ok((solid_pos, solid_neg))
 }
 
 // #endregion 🔖️Api
@@ -478,6 +370,15 @@ fn imprint_face_pair(
             if !full_period && p0.distance(p1) <= tol.max(1e-9) {
                 continue; // degenerate near-zero chord — nothing useful to imprint
             }
+            let along_a = coincident_boundary_edge(body, fa, ic, (t0, t1), tol);
+            let along_b = coincident_boundary_edge(body, fb, ic, (t0, t1), tol);
+            let (t0, t1) = if full_period {
+                if let Some(edge) = along_a.or(along_b).and_then(|id| body.edges.get(id)) {
+                    let point = body.vertices.get(edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v0)))?.position;
+                    let anchor = closest_parameter(&ic.curve3, (t0, t1), point, tol).t;
+                    (anchor, anchor + (t1 - t0))
+                } else { (t0, t1) }
+            } else { (t0, t1) };
             let (kind_a, kind_b, t0, t1) = if full_period {
                 let outer_a = body.faces.get(fa).and_then(|f| f.outer);
                 let outer_b = body.faces.get(fb).and_then(|f| f.outer);
@@ -496,7 +397,7 @@ fn imprint_face_pair(
                 // almost never on the seam. Re-anchor the SAME closed period to start at
                 // the first detected touch parameter instead (harmless for `Interior`: any
                 // start point on a closed loop is topologically equivalent there).
-                if (matches!(ka, ImprintKind::SeamCrossing) || matches!(kb, ImprintKind::SeamCrossing)) && !touches.is_empty() {
+                if along_a.is_none() && along_b.is_none() && (matches!(ka, ImprintKind::SeamCrossing) || matches!(kb, ImprintKind::SeamCrossing)) && !touches.is_empty() {
                     let anchor = touches[0];
                     (ka, kb, anchor, anchor + (t1 - t0))
                 } else {
@@ -511,28 +412,30 @@ fn imprint_face_pair(
             // leave duplicate topology, so the existing edge is subdivided and REUSED as
             // the shared edge, and that operand queues no imprint of its own — the
             // boundary it needs is already there.
-            let along_a = if full_period { None } else { coincident_boundary_edge(body, fa, ic, (t0, t1), tol) };
-            let along_b = if full_period { None } else { coincident_boundary_edge(body, fb, ic, (t0, t1), tol) };
             let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
             // 🧱 A segment running along BOTH operands' boundaries (two boxes flush on a face: the
             // stock's side face meets the tool's top face exactly along the stock's own top edge) is
             // already topology on each side; neither face needs an imprint, only the two boundary
             // subedges must become ONE edge so the pieces stitch by shared-edge adjacency. Queueing
             // it as B's imprint used to fail with "midpoint not found inside any active piece".
-            if let (Some(_), Some(_)) = (along_a, along_b) {
-                let ea = boundary_subedge(body, fa, endpoints, (tol, weld), rec)?;
-                let eb = boundary_subedge(body, fb, endpoints, (tol, weld), rec)?;
+            if let (Some(existing_a), Some(existing_b)) = (along_a, along_b) {
+                let ea = if full_period { existing_a } else { boundary_subedge(body, fa, endpoints, (tol, weld), rec)? };
+                let eb = if full_period { existing_b } else { boundary_subedge(body, fb, endpoints, (tol, weld), rec)? };
+                if full_period { unify_closed_boundary_vertices(body, eb, ea, tol, weld)?; }
                 if ea != eb {
                     unify_boundary_edges(body, eb, ea)?;
                 }
                 continue;
             }
             let edge_id = match (along_a, along_b) {
-                (Some(_), _) => boundary_subedge(body, fa, endpoints, (tol, weld), rec)?,
-                (None, Some(_)) => boundary_subedge(body, fb, endpoints, (tol, weld), rec)?,
+                (Some(existing), _) => if full_period { existing } else { boundary_subedge(body, fa, endpoints, (tol, weld), rec)? },
+                (None, Some(existing)) => if full_period { existing } else { boundary_subedge(body, fb, endpoints, (tol, weld), rec)? },
                 (None, None) => build_imprint_edge(body, ic, (t0, t1), full_period, (tol, weld), rec),
             };
-            let prange = oriented_prange(body, edge_id, endpoints, (t0, t1));
+            let prange = if full_period {
+                let tangent = body.edges.get(edge_id).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0)));
+                if tangent.zip(ic.curve3.tangent(t0)).is_some_and(|(a, b)| a.dot(b) < 0.0) { (t1, t0) } else { (t0, t1) }
+            } else { oriented_prange(body, edge_id, endpoints, (t0, t1)) };
             let pca = body.curves2.insert(pcurve_for_clip(sa, &ic.curve3, &ic.pcurve_a, (t0, t1), tol));
             let pcb = body.curves2.insert(pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (t0, t1), tol));
             if along_a.is_none() {
@@ -652,7 +555,7 @@ pub struct BooleanJob {
     /// whole-arena orphan sweep would eat every live `Wire` handle's geometry as collateral.
     protected_edges: HashSet<EdgeId>,
     protected_vertices: HashSet<VertexId>,
-    coincident_a: HashSet<FaceId>,
+    coincident_a: HashMap<FaceId, bool>,
     /// 🧱 Pieces of B found coincident with a piece of A AFTER imprinting (a tool face lying within a
     /// stock face — the flush notch), dropped in `ClassifyB` the way a whole coincident B face is
     /// dropped up front; their A twins join `coincident_a`.
@@ -703,8 +606,8 @@ impl BooleanJob {
         let faces_a_all = body.solid_faces(a);
         let faces_b_all = body.solid_faces(b);
         let coincident = find_coincident_face_pairs(body, &faces_a_all, &faces_b_all, tol);
-        let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb)| fb).collect();
-        let coincident_a: HashSet<FaceId> = coincident.iter().map(|&(fa, _)| fa).collect();
+        let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb, _)| fb).collect();
+        let coincident_a: HashMap<FaceId, bool> = coincident.iter().map(|&(fa, _, aligned)| (fa, aligned)).collect();
         let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
         let faces_a: Vec<FaceId> = faces_a_all;
         // 🔗 Imprint endpoints are welded against each other AND against both operands' existing
@@ -818,7 +721,7 @@ impl BooleanJob {
                         continue;
                     }
                     let fa = self.faces_a[self.cursor_a];
-                    if self.coincident_a.contains(&fa) || self.faces_b.is_empty() {
+                    if self.coincident_a.contains_key(&fa) || self.faces_b.is_empty() {
                         self.cursor_a += 1;
                         self.cursor_b = 0;
                         self.row = None;
@@ -861,7 +764,7 @@ impl BooleanJob {
                         continue;
                     }
                     let fa = self.faces_a[self.apply_a];
-                    if self.coincident_a.contains(&fa) {
+                    if self.coincident_a.contains_key(&fa) {
                         self.pieces_a.push(fa);
                     } else {
                         match self.pending_a.remove(&fa) {
@@ -896,8 +799,8 @@ impl BooleanJob {
                         // pair is one boundary, not two: A's piece follows the whole-face coincident
                         // rule below and B's piece is dropped, or both survived as duplicate topology
                         // (edges used by three coedges) and the stitch failed validation.
-                        for (fa, fb) in find_coincident_face_pairs(body, &self.pieces_a, &self.pieces_b, self.tol) {
-                            self.coincident_a.insert(fa);
+                        for (fa, fb, aligned) in find_coincident_face_pairs(body, &self.pieces_a, &self.pieces_b, self.tol) {
+                            self.coincident_a.insert(fa, aligned);
                             self.coincident_b.insert(fb);
                         }
                     }
@@ -906,8 +809,8 @@ impl BooleanJob {
                         continue;
                     }
                     let f = self.pieces_a[self.classify_a];
-                    if self.coincident_a.contains(&f) {
-                        if matches!(self.op, BooleanOp::Unite | BooleanOp::Intersect) {
+                    if let Some(&aligned) = self.coincident_a.get(&f) {
+                        if keep_coincident_boundary(self.op, aligned) {
                             self.selected.push(f);
                         }
                     } else {
@@ -1746,6 +1649,23 @@ fn boundary_subedge(body: &mut Body, face: FaceId, (p0, p1): (Pnt3, Pnt3), (tol,
     Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("coincident imprint on face {face} did not resolve to one boundary edge between its endpoints"))))
 }
 
+/// 🔗️ Retains one existing seam vertex for geometrically coincident closed operand boundaries.
+fn unify_closed_boundary_vertices(body: &mut Body, from: EdgeId, to: EdgeId, tol: f64, weld: &mut [(Pnt3, VertexId)]) -> Result<(), KernelError> {
+    let from_vertex = body.edges.get(from).map(|edge| edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("edge {from}")))?;
+    let to_vertex = body.edges.get(to).map(|edge| edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("edge {to}")))?;
+    let a = body.vertices.get(from_vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {from_vertex}")))?.position;
+    let b = body.vertices.get(to_vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {to_vertex}")))?.position;
+    if a.distance(b) > tol { return Err(KernelError::Boolean(BooleanError::ImprintFailed("closed coincident boundaries have distinct seam anchors".into()))); }
+    if from_vertex != to_vertex {
+        for (_, edge) in body.edges.iter_mut() {
+            if edge.v0 == from_vertex { edge.v0 = to_vertex; }
+            if edge.v1 == from_vertex { edge.v1 = to_vertex; }
+        }
+        for (_, vertex) in weld.iter_mut() { if *vertex == from_vertex { *vertex = to_vertex; } }
+    }
+    Ok(())
+}
+
 /// 🔀 Re-points every coedge of `from` at `to` — the same physical segment, already bounded by the
 /// same welded vertices on both operands — flipping the coedge's sense when the two edges run in
 /// opposite vertex order. A coedge's p-curve is parameterised along its own edge's curve, so one
@@ -1755,7 +1675,11 @@ fn boundary_subedge(body: &mut Body, face: FaceId, (p0, p1): (Pnt3, Pnt3), (tol,
 fn unify_boundary_edges(body: &mut Body, from: EdgeId, to: EdgeId) -> Result<(), KernelError> {
     let (from_v0, from_v1) = body.edges.get(from).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {from}")))?;
     let (to_v0, to_v1) = body.edges.get(to).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {to}")))?;
-    let same_order = from_v0 == to_v0 && from_v1 == to_v1;
+    let same_order = if from_v0 == from_v1 && to_v0 == to_v1 {
+        body.edges.get(from).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0)))
+            .zip(body.edges.get(to).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0))))
+            .is_some_and(|(a, b)| a.dot(b) >= 0.0)
+    } else { from_v0 == to_v0 && from_v1 == to_v1 };
     if !same_order && !(from_v0 == to_v1 && from_v1 == to_v0) {
         return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("boundary edges {from} and {to} do not span the same welded vertices"))));
     }
@@ -2122,7 +2046,29 @@ fn flip_face(body: &mut Body, face: FaceId) {
 // #region 🔖️Coincident
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn find_coincident_face_pairs(body: &Body, faces_a: &[FaceId], faces_b: &[FaceId], tol: f64) -> Vec<(FaceId, FaceId)> {
+/// ↔️ Selects the surviving operand boundary for a coincident face pair.
+fn keep_coincident_boundary(op: BooleanOp, aligned: bool) -> bool {
+    match op { BooleanOp::Unite | BooleanOp::Intersect => aligned, BooleanOp::Cut => !aligned }
+}
+
+/// 🧭️ Compares outward normals at the same boundary point on both analytic surfaces.
+fn coincident_face_alignment(body: &Body, fa: FaceId, fb: FaceId, tol: f64) -> Option<bool> {
+    let a = body.faces.get(fa)?;
+    let b = body.faces.get(fb)?;
+    let sa = body.surfaces.get(a.surface)?;
+    let sb = body.surfaces.get(b.surface)?;
+    body.face_coedges(fa).into_iter().find_map(|coedge| {
+        let edge = body.edges.get(body.coedges.get(coedge)?.edge)?;
+        let point = body.curves3.get(edge.curve)?.eval((edge.range.0 + edge.range.1) * 0.5);
+        let ua = crate::brep::representation::surface::surface_ops::closest_uv(sa, sa.domain(), point, tol);
+        let ub = crate::brep::representation::surface::surface_ops::closest_uv(sb, sb.domain(), point, tol);
+        let na = sa.normal(ua.u, ua.v)? * if a.flipped { -1.0 } else { 1.0 };
+        let nb = sb.normal(ub.u, ub.v)? * if b.flipped { -1.0 } else { 1.0 };
+        Some(na.dot(nb) > 0.0)
+    })
+}
+
+fn find_coincident_face_pairs(body: &Body, faces_a: &[FaceId], faces_b: &[FaceId], tol: f64) -> Vec<(FaceId, FaceId, bool)> {
     let mut out = Vec::new();
     for &fa in faces_a {
         let Some(face_a) = body.faces.get(fa) else { continue };
@@ -2133,7 +2079,7 @@ fn find_coincident_face_pairs(body: &Body, faces_a: &[FaceId], faces_b: &[FaceId
             let Some(outer_b) = face_b.outer else { continue };
             let Some(sb) = body.surfaces.get(face_b.surface) else { continue };
             if surfaces_equal(sa, sb, tol) && loops_coincide(body, outer_a, outer_b, tol) {
-                out.push((fa, fb));
+                if let Some(aligned) = coincident_face_alignment(body, fa, fb, tol) { out.push((fa, fb, aligned)); }
             }
         }
     }
@@ -2252,7 +2198,7 @@ fn group_shells(body: &Body, selected: &[FaceId]) -> Vec<Vec<FaceId>> {
             }
         }
     }
-    let mut adjacency: HashMap<FaceId, HashSet<FaceId>> = HashMap::new();
+    let mut adjacency: std::collections::BTreeMap<FaceId, std::collections::BTreeSet<FaceId>> = std::collections::BTreeMap::new();
     for &f in selected {
         adjacency.entry(f).or_default();
     }
@@ -2583,6 +2529,14 @@ fn aabb_overlap(a: &crate::brep::engine::Aabb, b: &crate::brep::engine::Aabb, to
 }
 
 // #endregion 🔖️AabbMath
+
+// #region 🔖️Jobs
+
+#[path = "⏱️jobs/🦀️.rs"]
+mod jobs;
+pub use jobs::{BooleanFoldJob, SectionJob, SplitJob};
+
+// #endregion 🔖️Jobs
 
 // #region 🔖️Validate
 

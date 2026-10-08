@@ -50,13 +50,10 @@ use super::set_node_property;
 /// (`change-node-kind`/`change-node-label`/`move-node`), node nested collections
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph")]
 pub enum SemioGraphMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateNode(create_node::CreateNode),
     DeleteNode(delete_node::DeleteNode),
     ChangeNodeKind(change_node_kind::ChangeNodeKind),
@@ -82,24 +79,22 @@ pub enum SemioGraphMutation {
 /// `🌳️mutate-semio-graph`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "create-node", "delete-node", "change-node-kind", "change-node-label", "move-node", "add-node-port", "remove-node-port", "add-node-property", "remove-node-property", "create-edge", "delete-edge", "drag-nodes", "set-node-property", "resize-node", "rename-node", "set-edge-property", "add-edge-property", "remove-edge-property"];
+pub const KINDS: &[&str] = &["create-node", "delete-node", "change-node-kind", "change-node-label", "move-node", "add-node-port", "remove-node-port", "add-node-property", "remove-node-property", "create-edge", "delete-edge", "drag-nodes", "set-node-property", "resize-node", "rename-node", "set-edge-property", "add-edge-property", "remove-edge-property"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioGraphBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_graph_mutation(snapshot: &mut SemioGraphSnapshot, mutation: &SemioGraphMutation) -> protocol::MutationOutcome<SemioGraphDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
+    <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🌳️mutate-semio-graph` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_graph_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
     Ok({

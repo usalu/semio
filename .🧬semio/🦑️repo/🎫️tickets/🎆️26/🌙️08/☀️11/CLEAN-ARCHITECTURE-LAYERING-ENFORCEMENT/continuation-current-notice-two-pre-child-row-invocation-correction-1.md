@@ -1,0 +1,3 @@
+# Notice Two Pre Child Row Selection Correction
+
+Red normative actualNx1/session65989 retained complete23+10+4+4 controls. A subsequent wrapper selected GUI array index3, which is registered red-3 (900.287004), while the intended green row is index1 (900.287002). Output red-3 directory absent caused shell redirection refusal before Bun/Nx/helper child; actual wrapper30945 exit1 is not a green source-control outcome. Raw wrapper retained under green/pre-child-wrong-row-registration-wrapper-1.log. Exact green retry selects supplied index1 without helper/schema/GUI/body mutation. No Source23 capture or Root source writes.

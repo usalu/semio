@@ -10,7 +10,7 @@ fn mutation() -> En1998Mutation { semio_framework_pack_json::from_json_str(MUTAT
 fn apply(mutation: &En1998Mutation, base: &En1998Snapshot) -> En1998Snapshot {
     let raised = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "remove-foundation raised {:?}", raised.messages());
-    <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(raised.diff(), base).expect("apply")
+    protocol::apply_diff(raised.diff(), base).expect("apply")
 }
 #[test]
 fn mutation_is_the_canonical_wire() {
@@ -30,7 +30,7 @@ fn inverse_restores_before() {
     let base = before();
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "remove-foundation changes the document, so its inverse must not be empty");
-    let restored = inverse.iter().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
+    let restored = inverse.iter().rev().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
     assert_eq!(restored, base);
 }
 #[test]

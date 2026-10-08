@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumItems",
+    "ordinaryBytes",
+    "maximumBytes",
+    "identifierByte",
+    "parentByte",
+    "slotByte",
+    "identifierBytes",
+    "deniedBytes",
+    "expectedDemandBytes",
+    "physicalReceiptBytes",
+    "finalOwnedStage"
+  ],
+  "properties": {
+    "maximumItems": {
+      "type": "integer",
+      "const": 1
+    },
+    "ordinaryBytes": {
+      "type": "integer",
+      "const": 4096
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "const": 65536
+    },
+    "identifierByte": {
+      "type": "integer",
+      "const": 120
+    },
+    "parentByte": {
+      "type": "integer",
+      "const": 121
+    },
+    "slotByte": {
+      "type": "integer",
+      "const": 122
+    },
+    "identifierBytes": {
+      "type": "integer",
+      "const": 8194
+    },
+    "deniedBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "const": [
+        0,
+        4096,
+        8193
+      ]
+    },
+    "expectedDemandBytes": {
+      "type": "integer",
+      "const": 8194
+    },
+    "physicalReceiptBytes": {
+      "type": "integer",
+      "const": 8194
+    },
+    "finalOwnedStage": {
+      "type": "integer",
+      "const": 8
+    }
+  }
+}

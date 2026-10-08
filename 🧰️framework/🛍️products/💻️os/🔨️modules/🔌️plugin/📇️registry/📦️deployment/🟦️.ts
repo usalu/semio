@@ -33,8 +33,12 @@ export function readPublishedPageOrigins(): Readonly<Record<string, string>> {
 
 /** 🌐️ Prefix a root-relative asset path with the CDN page that publishes it. Absolute URLs stay put. */
 export function publishedPageUrl(path: string, origins: Readonly<Record<string, string>> = readPublishedPageOrigins()): string {
-  if (!path.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(path)) return path;
-  const key = Object.keys(origins).sort((a, b) => b.length - a.length).find((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  if (!path.startsWith("/") || path.startsWith("//")) return path;
+  const encoded = path.split(/[?#]/, 1)[0]!;
+  if (/%(?:2f|5c)/iu.test(encoded)) return path;
+  let pathname: string;
+  try { pathname = decodeURIComponent(encoded); } catch { return path; }
+  const key = Object.keys(origins).sort((a, b) => b.length - a.length).find((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   return key ? `${origins[key].replace(/\/$/, "")}${path}` : path;
 }
 

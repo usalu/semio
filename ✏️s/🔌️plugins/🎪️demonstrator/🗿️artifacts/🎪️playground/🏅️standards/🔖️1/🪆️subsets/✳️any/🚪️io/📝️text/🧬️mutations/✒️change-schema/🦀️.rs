@@ -96,7 +96,7 @@ mod tests;
 
 mod json_orchestration {
 use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
-use crate::standards::v1::subsets::any::schema::change_schema::bridge_step;
+use crate::standards::v1::subsets::any::schema::mutations::change_schema::bridge_step;
 use semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to_string, Value};
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(PlaygroundSnapshot, PlaygroundMutation), String> {
     let snapshot = from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;

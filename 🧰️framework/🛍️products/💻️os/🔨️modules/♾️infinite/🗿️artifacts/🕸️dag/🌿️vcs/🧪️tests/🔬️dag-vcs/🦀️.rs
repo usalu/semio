@@ -6,10 +6,10 @@ fn sample_node(id: &str) -> DagNodeSpec {
 }
 
 fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
-    let forward = operation.diff(document).diff().apply(document).expect("valid DAG diff");
+    let forward = crate::os_spr::apply_diff(operation.diff(document).diff(), document).expect("valid DAG diff");
     let mut restored = forward.clone();
     for back in operation.inverse(document).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse DAG diff");
+        restored = crate::os_spr::apply_diff(back.diff(&restored).diff(), &restored).expect("valid inverse DAG diff");
     }
     assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
     forward
@@ -123,7 +123,7 @@ fn diff_and_inverse_are_deterministic() {
 fn move_node_diff_is_consistent_with_direct_field_mutation() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 5.0, y: 6.0 });
-    let via_diff = Mutation::diff(&mutation, &document).diff().apply(&document).expect("valid DAG diff");
+    let via_diff = crate::os_spr::apply_diff(Mutation::diff(&mutation, &document).diff(), &document).expect("valid DAG diff");
     let mut via_direct = document;
     via_direct.nodes[0].x = 5.0;
     via_direct.nodes[0].y = 6.0;
@@ -134,10 +134,10 @@ fn move_node_diff_is_consistent_with_direct_field_mutation() {
 fn move_node_diff_absorb_law_holds() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }), &document).into_parts();
-    let mid = d1.apply(&document).expect("valid first DAG diff");
+    let mid = crate::os_spr::apply_diff(&d1, &document).expect("valid first DAG diff");
     let (d2, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }), &mid).into_parts();
     d1.absorb(d2);
-    let absorbed = d1.apply(&document).expect("valid absorbed DAG diff");
+    let absorbed = crate::os_spr::apply_diff(&d1, &document).expect("valid absorbed DAG diff");
     assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
     assert_eq!(absorbed.nodes[0].y, 30.0);
 }

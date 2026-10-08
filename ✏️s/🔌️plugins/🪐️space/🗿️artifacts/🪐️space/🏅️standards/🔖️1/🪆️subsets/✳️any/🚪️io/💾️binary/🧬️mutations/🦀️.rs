@@ -10,10 +10,10 @@ use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use protocol::OpBinary;
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
-    ("create-artifact", crate::standards::v1::subsets::any::schema::mutations::create_artifact::BINARY_TAG),
-    ("delete-artifact", crate::standards::v1::subsets::any::schema::mutations::delete_artifact::BINARY_TAG),
-    ("rename-artifact", crate::standards::v1::subsets::any::schema::mutations::rename_artifact::BINARY_TAG),
-    ("touch-artifact", crate::standards::v1::subsets::any::schema::mutations::touch_artifact::BINARY_TAG),
+    ("create-artifact", create_artifact::BINARY_TAG),
+    ("delete-artifact", delete_artifact::BINARY_TAG),
+    ("rename-artifact", rename_artifact::BINARY_TAG),
+    ("touch-artifact", touch_artifact::BINARY_TAG),
 ];
 
 /// 📦️ Encodes an `SSpaceMutation` to its binary command form.

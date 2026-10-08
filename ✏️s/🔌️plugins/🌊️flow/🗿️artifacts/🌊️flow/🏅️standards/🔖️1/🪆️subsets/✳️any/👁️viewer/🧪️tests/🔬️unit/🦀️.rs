@@ -39,7 +39,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         })
         .collect::<Vec<_>>();
     assert_eq!(document_rights, fixture["documentRights"].as_array().unwrap().iter().map(|right| right.as_str().unwrap()).collect::<Vec<_>>());
-    let mut app = plugin.create_app(&id).expect("registered Flow viewer factory must retain its typed member fleet");
+    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).expect("registered Flow viewer factory must retain its typed member fleet");
     assert!(matches!(&app, FlowViewerTestApps::FlowViewer(_)));
     let items = fixture["grant"]["items"].as_u64().unwrap() as usize;
     let bytes = fixture["grant"]["bytes"].as_u64().unwrap() as usize;

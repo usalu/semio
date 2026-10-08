@@ -2,7 +2,7 @@
 //! when already at that format.
 
 use super::ChangeShotFormat;
-use crate::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingShotPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &ChangeShotFormat, base: &ShootingSnapshot) -> protocol::Mu
     if existing.format == payload.new_format {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has format \"{}\".", payload.id, payload.new_format));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { format: Some(payload.new_format.clone()), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::shot_patches([(payload.id.clone(), ShootingShotPatch { format: Some(payload.new_format.clone()), ..Default::default() })]))
 }

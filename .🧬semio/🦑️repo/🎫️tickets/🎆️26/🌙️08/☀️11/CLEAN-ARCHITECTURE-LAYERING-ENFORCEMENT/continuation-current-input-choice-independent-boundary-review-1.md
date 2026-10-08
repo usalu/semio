@@ -1,0 +1,9 @@
+# Current Input Choice Independent Boundary Review
+
+The proposed separation of immutable executable method from explicit immutable choice data is coherent and preserves the current authority boundary. It does not require a Root authority cut: all six role receipts, complete current preimages and Root bindings still must admit immediately before early capture. Source21's preflight refusal remains preserved, with no capture inferred.
+
+Review conditions for concrete implementation: require exactly one explicit ticket-local regular choice file argument, canonical physical path and complete UTF8 body/hash; validate six unique roles and the closed33 unique path corpus; reject duplicate receipt roles/paths or mismatched role/pair payload joins. Bind full chosen bytes and every raw receipt body/hash before current admission, rehash before sealing, and retain choice authority in all source/runtime/dispatcher paths. Dispatcher must independently reconstruct exact choice-to-six-receipts-to-full33pairs joins. Metadata/run read the sealed plan choice only. Publication must require the three complete choices to agree as well as pair arrays, with full immutable/current applicability obligations intact.
+
+Actual same-function controls must distinguish missing argument, path/type/symlink/outside-ticket, malformed/extra/duplicate roles, wrong complete pair corpus, changed choice bytes after admission and mismatched receipt bodies. Independent JSON5/Ajv finite evidence supplements semantic current byte joins; a schema count alone cannot prove role or payload identity. Exact GUI arguments must be registered before each invocation.
+
+Approved as a design boundary for implementation and finite controls, not executable method or capture admission. No latest/default/fallback selection, receipt mutation, Root freeze, native/physical/publication acceptance is permitted or inferred.

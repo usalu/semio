@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeNodeVisible` — patches the one addressed node in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
@@ -7,13 +7,15 @@ pub fn diff(payload: &super::ChangeNodeVisible, base: &Puzzle2dSnapshot) -> prot
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node", payload.id), vec![payload.id.to_string_owner()]);
     };
-    let mut next = node.clone();
-    next.visible = payload.new_visible;
-    if next == *node {
+    let patch = Puzzle2dNodePatch {
+        visible: (payload.new_visible != node.visible).then_some(payload.new_visible),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
+        nodes: Some(Puzzle2dNodesDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

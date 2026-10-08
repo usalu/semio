@@ -19,7 +19,7 @@ function pluginDirectories(repoRoot: string): readonly string[] {
 /** 📂️ The plugin directory a registry row's crate lives under. */
 function pluginDirectoryOfCratePath(cratePath: string): string | undefined {
   const parts = cratePath.split("/");
-  return parts[0] === "✏️s" && parts[1] === "🔌️plugins" ? parts[2] : undefined;
+  return parts[0] === "🌎️hub" && parts[1] === "🧩️compositions" ? parts[2] : undefined;
 }
 
 /** 🗂️ The apps every registry plugin's descriptor declares, BOTH roles, keyed by the crate's OWNER root
@@ -44,7 +44,7 @@ function descriptorAppsByOwner(repoRoot: string, rows: readonly { readonly crate
 function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined> {
   const byDirectory = new Map<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined>();
   for (const directory of pluginDirectories(repoRoot)) {
-    const file = join(repoRoot, PLUGINS_ROOT, directory, "🔣️.json");
+    const file = join(repoRoot, "🌎️hub/🧩️compositions", directory, "🔣️.json");
     if (!existsSync(file)) { byDirectory.set(directory, undefined); continue; }
     const manifest = JSON.parse(readFileSync(file, "utf8")).manifest;
     byDirectory.set(directory, { pluginId: manifest.pluginId, apps: manifest.apps ?? [] });
@@ -78,7 +78,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const host of PLUGIN_HOST_CONFIGS) {
       const row = PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === host.pluginId)!;
       const directory = pluginDirectoryOfCratePath(row.cratePath)!;
-      const descriptor = JSON.parse(readFileSync(join(repoRoot, PLUGINS_ROOT, directory, "🔣️.json"), "utf8")).manifest;
+      const descriptor = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧩️compositions", directory, "🔣️.json"), "utf8")).manifest;
       const matches = (descriptor.apps ?? []).filter((app: any) => app.role === "editor" && app.dialect?.artifactKind.split(".").at(-1) === host.hostAppId);
       if (matches.length !== 1) throw new Error(`host app "${host.hostAppId}" of ${host.pluginId} resolved to ${matches.length} editor apps`);
       ids.push(matches[0].id);
@@ -171,7 +171,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("keeps stdio's component bounded to the app fleet it can link", () => {
       expect(PLAYGROUND_BUILD_TARGETS.find((row: any) => row.variant === "stdio").app).toBe("s.stdio.md@commonmark/*#editor");
-      const cargo = readFileSync(join(repoRoot, PLUGINS_ROOT, "🗄️stdio/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+      const cargo = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml"), "utf8");
       const features = Object.fromEntries([...cargo.matchAll(/^([a-z0-9-]+) = \[(.*)\]$/gm)].map(row => [row[1]!, [...row[2]!.matchAll(/"([^"]+)"/g)].map(item => item[1]!)]));
       const closure = new Set<string>(), pending = ["default"];
       while (pending.length) {
@@ -198,6 +198,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("uses only registered icons", () => {
       expect(PLAY_RUNTIME_PANES.filter((pane: any) => !isIconName(pane.icon)).map((pane: any) => pane.icon)).toEqual([]);
+    });
+
+    it("executes every pane's editor and viewer contract under an independent schema validator", () => {
+      const root = join(repoRoot, "🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🧫️fixtures/🔀️roles");
+      const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+      const Ajv = createRequire(import.meta.url)("ajv");
+      const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      expect(fixture.steps.map((step: any) => step.role)).toEqual(["viewer", "editor"]);
+      expect(fixture.dismissControlId).toBe("ui.introduction.skip");
+      expect(fixture.settlement).toEqual({ controlId: "playground.navbar.roles", busy: false, beforePaint: true });
+      expect(fixture.domPaintCases.map((row: any) => [row.id, row.painted])).toEqual([["empty-chrome", false], ["pending-chrome", false], ["portal-only", false], ["document-content", true]]);
+      const source = readFileSync(join(repoRoot, "🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts"), "utf8");
+      expect(source).toContain("for (const step of roleContract.steps)");
+      expect(source).toContain("exerciseCuratedExample(page, pane)");
+      expect(source).toContain("dismissPaneIntroduction(page, pane)");
+      const roundTrip = source.slice(source.indexOf("async function exerciseSurfaceRoundTrip"), source.indexOf('test.describe("semio-tech play"'));
+      expect(roundTrip.indexOf("await waitForSurfaceSettlement(page, pane)")).toBeGreaterThan(0);
+      expect(roundTrip.indexOf("await waitForSurfaceSettlement(page, pane)")).toBeLessThan(roundTrip.indexOf("await paintWitness(page, pane.variant)"));
+      expect(source).toContain('page.on("requestfailed"');
+      expect(source).toContain('page.on("close"');
+      expect(source).not.toContain("Failed to load resource:.*\\b40[0-9]\\b");
     });
   });
   //#endregion 🧪️PlayPaneCoverageTests

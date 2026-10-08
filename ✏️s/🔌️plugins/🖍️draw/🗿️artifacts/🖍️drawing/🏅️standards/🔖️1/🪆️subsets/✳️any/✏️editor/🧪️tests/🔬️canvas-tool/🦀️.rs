@@ -221,10 +221,10 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
     assert!(session.tool.matches("dragging"));
     assert!(session.sample(end,false,false).unwrap().artifact_mutations.is_empty(), "a drag tick never publishes");
     assert_eq!(session.preview().transformation,Some((vec![id.clone()],[1.0,0.0,0.0,1.0,8.0,10.0])));
-    assert_eq!(session.tool.provisional(), Some(&drag_layers(vec![id.clone()],8.0,10.0)), "the open transaction holds the net parametric leaf");
+    assert_eq!(session.tool.provisional(), Some(&drag_layers(std::iter::once(id.as_str().into()).collect(),8.0,10.0)), "the open transaction holds the net parametric leaf");
     assert_eq!(document,before);
     let emit = session.release("canvasPointerUp",pointer("selectDirect",end),base(&document)).unwrap().unwrap();
-    assert_eq!(emit.artifact_mutations,vec![drag_layers(vec![id.clone()],8.0,10.0)]);
+    assert_eq!(emit.artifact_mutations,vec![drag_layers(std::iter::once(id.as_str().into()).collect(),8.0,10.0)]);
     assert!(emit.transaction.as_ref().is_some_and(|transaction|transaction.tool=="s.draw.drawing@1/*#editor#selectDirect"));
     assert!(session.preview().transformation.is_none());
     assert!(session.tool.at_rest());
@@ -299,7 +299,7 @@ fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() 
     for _ in 0..8 { if preparation.advance(&document).unwrap() {complete=true;break;} }
     assert!(complete);
     let DrawingGrab::Layers { targets, handle: None }=preparation.grab() else { panic!("a layer grab") };
-    assert_eq!(targets,vec!["a".to_string(),"b".to_string()]);
+    assert_eq!(targets.iter().map(|id|id.to_string_owner()).collect::<Vec<_>>(),vec!["a".to_string(),"b".to_string()]);
     let leaf=drawing_grab_leaf(&DrawingGrab::Layers { targets, handle: None },[0.0,0.0],[12.0,8.0],false,false).unwrap();
     crate::mutations::apply_drawing_mutation(&mut document,&leaf).unwrap();
     let after=crate::schema::flatten_drawing_document_to_scene_nodes(&document);

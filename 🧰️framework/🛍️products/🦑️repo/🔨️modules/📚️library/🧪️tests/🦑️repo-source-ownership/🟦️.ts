@@ -101,7 +101,8 @@ describe("repository source ownership", () => {
   test("binds native manifests and preserves the library package-directory anchor", async () => {
     const cliManifest = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml"), "utf8");
     expect(cliManifest).toContain('path = "../../🦀️.rs"');
-    expect(cliManifest).toContain('path = "../../🚪️entrypoint/🦀️.rs"');
+    const dashboardManifest = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+    expect(dashboardManifest).toContain('path = "../../🚪️entrypoint/🦀️.rs"');
     const rustTestManifest = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"), "utf8");
     expect(rustTestManifest).toContain('path = "../../🦀️.rs"');
     const dotnetProject = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/🧪️Semio.Repo.Test.csproj"), "utf8");
@@ -116,15 +117,6 @@ describe("repository source ownership", () => {
     for (const row of packageEntries) {
       const source = readFileSync(resolve(repoRoot, row.legacy), "utf8");
       expect(classifyPackageSource(source, taxonomy.packageGlueGrammar.typescript!).role, row.legacy).toBe("declaration");
-    }
-  });
-
-  test("registers the portable check in both editor launch authorities", () => {
-    const name = "🧹clean🦑️repo🧪️source-ownership";
-    const command = "bun nx run @semio-tech/repo-lib:test-repo-source-ownership";
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { readonly configurations: readonly { readonly name?: string; readonly command?: string }[] };
-      expect(launch.configurations.filter((row) => row.name === name && row.command === command), path).toHaveLength(1);
     }
   });
 });

@@ -29,7 +29,7 @@ class TestScript extends BundleScript {
       "exact-cargo-laws": { source: "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "owner-context": { source: "📋️context/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "vitest-driver": { source: "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
-      "cargo-driver": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "cargo-driver": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "test-command": { source: "🧪️testing/🎛️execution/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       routing: { source: "🧭️routing/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "execution-budget": { source: "⏱️budget/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },

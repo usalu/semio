@@ -1,6 +1,7 @@
 mod app_builder_tests {
     use super::*;
     use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
     use ui_wgpu::wgpu::create_default_layout;
 
     /// 🧭️ Executes neutral owner placements through the actual action disposition join and independent serde projection.
@@ -574,6 +575,7 @@ mod app_builder_tests {
     async fn declaring_introduction_injects_start_introduction_action() {
         use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("intro-app")
             .await
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
@@ -604,6 +606,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_duplicate_introduction_step_ids() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("dupe-step-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -619,6 +622,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, window_element_id};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-window-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] })
@@ -631,6 +635,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, panel_tab_element_id, panel_tab_first_draggable_element_id};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-panel-tab-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))] })
@@ -652,6 +657,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-element-app").await;
         let __chain =
             __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).await;
@@ -668,6 +674,7 @@ mod app_builder_tests {
     async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-escape-hatch-app")
             .await
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
@@ -681,6 +688,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-utility-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -696,6 +704,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-window-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -711,6 +720,7 @@ mod app_builder_tests {
     async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition, window_element_id};
         use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-intro-app")
             .await
             .mutation("addLayer", LocalizedLabel::data("Add Layer"))

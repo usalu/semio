@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `CreateEdge`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeList};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff};
 use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphSnapshot};
 
 //#region 🔖️Diff
@@ -17,8 +18,8 @@ pub fn diff(payload: &super::CreateEdge, base: &SemioGraphSnapshot) -> protocol:
     if !base.nodes.iter().any(|n| n.id == payload.target) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Edge \"{}\" references unknown target node \"{}\".", payload.id.value, payload.target.value), [payload.id.value.clone(), payload.target.value.clone()]);
     }
-    let mut edges = base.edges.clone();
-    edges.insert(payload.at.map_or(edges.len(), |at| at.min(edges.len())), SemioGraphEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), kind: payload.kind.clone(), label: payload.label.clone(), source_port:payload.source_port.clone(),target_port:payload.target_port.clone(),properties:payload.properties.clone() });
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(SemioGraphEdgeList { values: edges }) })
+    let at = payload.at.map_or(base.edges.len(), |at| at.min(base.edges.len()));
+    let edge = SemioGraphEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), kind: payload.kind.clone(), label: payload.label.clone(), source_port: payload.source_port.clone(), target_port: payload.target_port.clone(), properties: payload.properties.clone() };
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(IndexedTripleDiff { added: vec![IndexAdded { index: at, item: edge }], ..Default::default() }) })
 }
 //#endregion 🔖️Diff

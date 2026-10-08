@@ -1,8 +1,7 @@
 //! 🗂️ Saves, replaces or removes one of the user's named window layouts of one app.
-use super::super::super::{UiPreferences, UiPreferencesDiff, UserNamedLayout};
+use super::super::super::{NamedLayoutEdit, UiPreferences, UiPreferencesDiff, UserNamedLayout};
 use super::super::UiPreferencesConfigMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::HashMap;
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -25,22 +24,9 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetN
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "named-layout", kind: "set-named-layout", record: "Set" };
     fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
         if self.saved(base) == self.layout.as_ref() {
-            return protocol::MutationOutcome::new(UiPreferencesDiff(base.clone())).warning("mutation.no-op", "named layout already has the requested value.");
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "named layout already has the requested value.");
         }
-        let mut next = base.clone();
-        let mut app_layouts: HashMap<String, UserNamedLayout> = next.named_layouts.remove(&self.app_id).unwrap_or_default();
-        match &self.layout {
-            Some(layout) => {
-                app_layouts.insert(self.layout_id.clone(), layout.clone());
-            }
-            None => {
-                app_layouts.remove(&self.layout_id);
-            }
-        }
-        if !app_layouts.is_empty() {
-            next.named_layouts.insert(self.app_id.clone(), app_layouts);
-        }
-        protocol::MutationOutcome::new(UiPreferencesDiff(next))
+        protocol::MutationOutcome::new(UiPreferencesDiff { named_layouts: vec![NamedLayoutEdit { app_id: self.app_id.clone(), layout_id: self.layout_id.clone(), value: self.layout.clone() }], ..UiPreferencesDiff::default() })
     }
     fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {

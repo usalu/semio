@@ -4,8 +4,7 @@
 grammar Semio_value_mutations;
 
 document
-    : 'set-snapshot' WS 'snapshot' '=' snapshot
-    | 'set-value' WS 'path' '=' path WS 'value' '=' value
+    : 'set-value' WS 'path' '=' path WS 'value' '=' value
     | 'set-map-entry' WS 'path' '=' path WS 'key' '=' hex WS 'value' '=' value
     | 'remove-map-entry' WS 'path' '=' path WS 'key' '=' hex
     | 'insert-list-item' WS 'path' '=' path WS 'index' '=' INT WS 'value' '=' value

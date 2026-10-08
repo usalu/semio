@@ -1,0 +1,5 @@
+{
+  "page": 4096, "snapshotOpen": 24, "disposer": 32,
+  "factories": [{ "arc": 16, "ticket": 24 }, { "arc": 24, "ticket": 32 }, { "arc": 32, "ticket": 40 }],
+  "cases": [{ "id": "zero", "items": 0, "bytes": "exact", "born": false }, { "id": "under", "items": 1, "bytes": "one-below", "born": false }, { "id": "exact", "items": 1, "bytes": "exact", "born": true }]
+}

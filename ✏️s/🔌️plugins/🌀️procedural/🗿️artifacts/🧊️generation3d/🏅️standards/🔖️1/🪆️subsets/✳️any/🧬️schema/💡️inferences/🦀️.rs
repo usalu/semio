@@ -35,8 +35,10 @@ impl protocol::InferenceSpec<Generation3dSnapshot> for Generation3dInference {
     fn schema_version() -> u32 {
         1
     }
+    /// 🗺️ `topology` reads the widget ids and the synapse endpoints only: a layout, camera, schema or generation edit
+    /// never reaches it (`protocol::DiffRegions` of `Generation3dDiff` names those regions apart).
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["hostSnapshot"] }]
+        &[protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["hostSnapshot/widgets", "hostSnapshot/synapses"] }]
     }
 }
 //#endregion 🔖️Inference

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeShwSystemSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ShwSystemConfigPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -20,10 +20,6 @@ pub fn diff(payload: &super::ChangeShwSystemSchedule, base: &EnergyModelSnapshot
     if existing.schedule_id == payload.new_schedule_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Service hot water system {} already carries this schedule reference: {}.", payload.id.0, payload.new_schedule_id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.shw_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.schedule_id = payload.new_schedule_id;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { shw_systems: Rows::modifying(ShwSystemConfigPatch { schedule_id: Some(payload.new_schedule_id), ..ShwSystemConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

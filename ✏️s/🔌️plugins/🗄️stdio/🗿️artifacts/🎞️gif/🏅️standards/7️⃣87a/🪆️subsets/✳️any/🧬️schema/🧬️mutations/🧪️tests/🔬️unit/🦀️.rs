@@ -14,12 +14,12 @@ fn base_snapshot() -> GifSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
     let diff = mutation.diff(base);
-    let mutated = diff.diff().apply(base).expect("diff must apply to base");
+    let mutated = protocol::apply_diff(diff.diff(), base).expect("diff must apply to base");
     let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
     for inv in &inverses {
         let inv_diff = inv.diff(&restored);
-        restored = inv_diff.diff().apply(&restored).expect("inverse diff must apply to restored");
+        restored = protocol::apply_diff(inv_diff.diff(), &restored).expect("inverse diff must apply to restored");
     }
     assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
 }
@@ -30,7 +30,6 @@ fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
 async fn mutation_diff_law() {
     let base = base_snapshot();
     for mutation in [
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: GifSnapshot { background_color_index: 9, ..base.clone() } }),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 10, height: 10 }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: true, colors: vec![GifRgb::default(); 2] }) }),
         GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: 5 }),
@@ -46,7 +45,7 @@ async fn mutation_diff_law() {
         let returned_diff = apply_gif_mutation(&mut snap, &mutation);
         let expected_diff = mutation.diff(&base);
         assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-        assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply_gif_mutation must match diff.diff().apply(base) for {mutation:?}");
+        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("diff must apply to base"), "apply_gif_mutation must match protocol::apply_diff(diff.diff(), base) for {mutation:?}");
     }
 }
 
@@ -54,7 +53,6 @@ async fn mutation_diff_law() {
 #[semio_framework_async_macros::async_test]
 async fn mutation_apply_inverse_round_trips_every_variant() {
     let base = base_snapshot();
-    round_trips(&base, GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: GifSnapshot { background_color_index: 5, ..base.clone() } }));
     round_trips(&base, GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 8, height: 6 }));
     round_trips(&base, GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] }) }));
     round_trips(&base, GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: 2 }));
@@ -74,9 +72,9 @@ async fn mutation_apply_inverse_round_trips_every_variant() {
 async fn kinds_match_enum_variants_and_manifest_catalog() {
     assert_eq!(
         KINDS,
-        ["set-snapshot", "patch-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
+        ["set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
     );
-    assert_eq!(KINDS.len(), 12, "one kebab-case entry per GifMutation variant");
+    assert_eq!(KINDS.len(), 10, "one kebab-case entry per GifMutation variant");
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "manifest mutationCatalogs[].kinds must list {kind:?}");
@@ -97,7 +95,6 @@ async fn remove_image_out_of_range_is_noop_not_panic() {
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     for mutation in [
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: GifSnapshot { background_color_index: 9, ..base.clone() } }),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 10, height: 10 }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: true, colors: vec![GifRgb::default(); 2] }) }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: None }),
@@ -147,5 +144,27 @@ async fn raster_rules_refuse_what_gif87a_cannot_carry() {
         (&without_maps, GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] }) })),
     ] {
         assert!(mutation.diff(snapshot).messages().is_empty(), "{mutation:?} keeps every image valid and must apply");
+    }
+}
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in [
+        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 8, height: 6 }),
+        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] }) }),
+        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: None }),
+        GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: 2 }),
+        GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: 9 }),
+        GifMutation::InsertImage(insert_image::InsertImage { index: 1, image: sample_image(9) }),
+        GifMutation::RemoveImage(remove_image::RemoveImage { index: 1 }),
+        GifMutation::MoveImage(move_image::MoveImage { from: 0, to: 2 }),
+        GifMutation::MoveImage(move_image::MoveImage { from: 2, to: 0 }),
+        GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: 0, left: 1, top: 1, width: 2, height: 2 }),
+        GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: 0, indices: vec![1, 1, 1, 1] }),
+        GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: 2, interlace: true }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

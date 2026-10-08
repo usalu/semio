@@ -2,18 +2,15 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏁benchmarks` per Wave C.
 
 use super::CreateBenchmarkRecord;
+use crate::diff::ProgramBenchmarksDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🌱️ Reads the live `benchmarks` rows off the working-scene cache; Fatal `mutation.duplicate-id`
-/// if the id already exists (empty diff); else appends the payload row and re-mints a fresh
-/// content-addressed `table` child handle — composed-child equivalent of the former
-/// `added = [payload row]` sparse delta (`📓️migration-recipe.md` §3/§4).
+/// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff); else `added = [payload row]` — `apply` re-derives the composed child handle from the rows.
 pub fn diff(payload: &CreateBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let mut records = crate::program_benchmarks(base);
-    if records.iter().any(|row| row.header.id == payload.benchmark_record.header.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A benchmark record already exists with this id.", [payload.benchmark_record.header.id.0.clone()]);
+    let id = &payload.benchmark_record.header.id;
+    if base.benchmarks_payload.iter().any(|row| row.header.id == *id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A benchmark record already exists with this id.", [id.0.clone()]);
     }
-    records.push(payload.benchmark_record.clone());
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(ProgramBenchmarksDelta { added: vec![payload.benchmark_record.clone()], ..Default::default() }), ..Default::default() })
 }

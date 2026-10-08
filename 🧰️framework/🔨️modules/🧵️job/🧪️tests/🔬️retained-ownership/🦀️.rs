@@ -28,9 +28,18 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
             let pointer = payload.page(0).unwrap().as_ptr();
             let insufficient_grant = row["insufficientGrant"].as_u64().unwrap() as usize;
             assert_eq!(payload.close_step(1, 0), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "a zero-byte grant buys nothing");
+            assert_eq!(payload.next_close_byte_demand(), JOB_PAYLOAD_PAGE_BYTES);
+            assert_eq!(payload.close_step(0, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            for _ in 0..4 {
+                assert_eq!(payload.close_step(1, insufficient_grant), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(payload.page(0).unwrap().as_ptr(), pointer);
+                assert_eq!(payload.page(0).unwrap(), bytes);
+                assert_eq!(ledger.process_share_bytes(), JOB_PAYLOAD_PAGE_BYTES);
+            }
             let refused = payload.close_step(1, insufficient_grant);
             let retained_pointer = payload.page(0).map(|page| page.as_ptr()) == Some(pointer);
-            let released = payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            let released = payload.close_step(1, payload.next_close_byte_demand());
+            assert_eq!(payload.next_close_byte_demand(), 0);
             let remaining_logical_bytes = payload.len();
             let remaining_pages = payload.page_count();
             while !payload.terminal_is_empty() { payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
@@ -65,22 +74,25 @@ fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
         let rejected_pointer = writer.rejected.as_ref().unwrap().backing_identity();
         let mut observations = Vec::new();
         for (staged, pointer) in [(true, staged_pointer), (false, rejected_pointer)] {
+            assert_eq!(writer.next_close_byte_demand(), JOB_PAYLOAD_PAGE_BYTES);
+            for _ in 0..4 {
+                assert_eq!(writer.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
             let refused = writer.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize);
             let retained_pointer = if staged {
                 writer.staged.as_ref().map(|(_, source, _)| source.backing_identity()) == Some(pointer)
             } else {
                 writer.rejected.as_ref().map(JobPayloadPageSource::backing_identity) == Some(pointer)
             };
-            let released = writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            let released = writer.close_step(1, writer.next_close_byte_demand());
             observations.push((staged, refused, retained_pointer, released));
         }
         while !writer.terminal_is_empty() { writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
         assert!(ledger.terminal_is_empty());
-        let insufficient_grant = row["insufficientGrant"].as_u64().unwrap() as usize;
         for (staged, refused, retained_pointer, released) in observations {
-            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: insufficient_grant }, "staged={staged} {}", row["name"]);
+            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "staged={staged} {}", row["name"]);
             assert!(retained_pointer, "staged={staged} {}", row["name"]);
-            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES - insufficient_grant }, "staged={staged} {}", row["name"]);
+            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES }, "staged={staged} {}", row["name"]);
         }
     }
 }
@@ -97,25 +109,24 @@ impl InteractiveJob for ShortGrantCloseJob {
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if maximum_items == 0 {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if maximum_items == 0 || maximum_bytes < self.next_close_byte_demand() {
             return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
         if self.backing.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<u8>() };
         }
         InteractiveJobCloseStep::Complete
+    }
+    fn next_close_byte_demand(&self) -> usize {
+        if self.backing.is_some() { size_of::<u8>() } else { 0 }
     }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.backing.is_none()
     }
 }
 
-/// 🔭️ A bounded close completes on ANY positive byte grant, and reports which named phase its
-/// cursor is in on the way. Every session owns one pre-admitted 16 KiB terminal-fault page; a
-/// caller closing on a SHORTER granule (the store's retirement ladders run on 4 KiB) used to park
-/// on that page forever, answering `Pending { 0, 0 }` — "progress, call again" — from the turn
-/// after `begin_close` onwards, with nothing in the protocol able to say so.
+/// 🔭️ Logical work remains one item while each named phase declares its physical release extent.
 #[test]
 fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
     let _slots = super::worker_session_slots_shared();
@@ -137,19 +148,20 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
             break;
         }
         turns += 1;
-        match mounted.close_step(1, grant) {
+        let release_grant = mounted.next_close_byte_demand().expect("exclusive mounted fixture close query");
+        match mounted.close_step(1, release_grant) {
             WorkerJobCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1, "a one-item grant releases at most one owner: {released_items}");
-                assert!(released_bytes <= grant, "a close turn never spends more than its own byte grant: {released_bytes}");
+                assert!(released_bytes <= release_grant, "a close turn never spends more than its explicit physical release grant: {released_bytes}");
                 charged += released_bytes;
             }
             WorkerJobCloseStep::Complete => {}
             WorkerJobCloseStep::Blocked => panic!("a mounted close on a positive grant is never blocked"),
         }
     }
-    assert!(mounted.terminal_is_empty(), "a bounded close completes on any positive byte grant, not only on a whole physical page");
-    assert_eq!(charged, JOB_PAYLOAD_PAGE_BYTES, "the pre-admitted fault page costs exactly one physical page of grant, however many turns pay it");
-    assert_eq!(turns, JOB_PAYLOAD_PAGE_BYTES / grant + 6, "the short-grant close is bounded: one charging turn per grant-sized slice of the fault page, plus the fixed phase ladder");
+    assert!(mounted.terminal_is_empty(), "every named phase completes under its exact queried physical release authority");
+    assert_eq!(charged, JOB_PAYLOAD_PAGE_BYTES + size_of::<u8>(), "fault page and domain Box each spend their actual allocation extent");
+    assert_eq!(turns, 7, "one fault-page release and the fixed phase ladder remain bounded");
     assert_eq!(
         ladder,
         vec![

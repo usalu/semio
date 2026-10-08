@@ -61,8 +61,21 @@ enum ReservedFieldNames {
     Entry { path: std::path::PathBuf, index: bool, edit: String },
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 enum EmptyExternal {}
+
+#[test]
+fn empty_enum_retirement_preserves_the_uninhabited_value_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️empty-enum-retirement/🔣️.json")).unwrap();
+    let syntax: syn::ItemEnum = syn::parse_str("enum EmptyExternal {}").unwrap();
+    assert_eq!(fixture["kind"], "enum");
+    assert_eq!(syntax.ident.to_string(), fixture["name"].as_str().unwrap());
+    assert_eq!(syntax.variants.len(), fixture["variants"].as_array().unwrap().len());
+    assert_eq!(fixture["inhabited"], false);
+    assert_eq!(fixture["borrowedReferenceInhabited"], true);
+    assert_eq!(<EmptyExternal as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(), fixture["controlledRetirement"].as_bool().unwrap());
+    eprintln!("[DEBUG] empty-enum retirement compiled owned and borrowed methods; neutral zero-variant shape oracle=syn/serde_json");
+}
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind")]

@@ -1,0 +1,10 @@
+{
+  "schema": "semio.mounted.private-child-group-identity/v1",
+  "copyBytes": 64,
+  "capacityBytes": 70,
+  "cases": [
+    { "id": "ascii", "parent": "parent", "actor": "actor", "revision": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "instance": 3, "operation": 17, "expectedId": "group:996631ed07d22f64d55c1b8af9f413532f381280becfc0e588cbc180b83d4375" },
+    { "id": "unicode", "parent": "Eltern:β", "actor": "Akteur:δ", "revision": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "instance": 3, "operation": 17, "expectedId": "group:ddf4519c3e86d480d06a34875083689c78bebe2c09878967478b8f9bd66f0f21" },
+    { "id": "framed-delimiters", "parent": "parent:actor", "actor": "", "revision": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "instance": 4, "operation": 18, "expectedId": "group:92c321ef7f940e25efe5d73624d8addb31f15dffd35932f9223bfac59f51388b" }
+  ]
+}

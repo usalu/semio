@@ -2,7 +2,7 @@
 //! subset declaration the plugin root binds.
 
 use crate::examples::{blocks, pipes_3d};
-use crate::io::text::snapshot::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Grid3dSnapshot, WFC_GRID3D_DIALECT};
 use store::ArtifactPack;
 

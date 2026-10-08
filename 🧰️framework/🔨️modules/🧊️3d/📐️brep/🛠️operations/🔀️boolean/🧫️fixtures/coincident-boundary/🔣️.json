@@ -1,0 +1,88 @@
+{
+  "cases": [
+    {
+      "operation": "union",
+      "aligned": true,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        true,
+        false
+      ],
+      "retainsBoundary": true,
+      "volume": 1
+    },
+    {
+      "operation": "intersection",
+      "aligned": true,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        true,
+        false
+      ],
+      "retainsBoundary": true,
+      "volume": 1
+    },
+    {
+      "operation": "difference",
+      "aligned": true,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        true,
+        false
+      ],
+      "retainsBoundary": false,
+      "volume": 0
+    },
+    {
+      "operation": "union",
+      "aligned": false,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        false,
+        true
+      ],
+      "retainsBoundary": false,
+      "volume": 2
+    },
+    {
+      "operation": "intersection",
+      "aligned": false,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        false,
+        true
+      ],
+      "retainsBoundary": false,
+      "volume": 0
+    },
+    {
+      "operation": "difference",
+      "aligned": false,
+      "leftInside": [
+        true,
+        false
+      ],
+      "rightInside": [
+        false,
+        true
+      ],
+      "retainsBoundary": true,
+      "volume": 1
+    }
+  ]
+}

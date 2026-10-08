@@ -3,7 +3,6 @@
 
 //! 🧱️ Shared kernel types for architect program entities — ids, headers, quantities, traces, and diagnostics.
 
-use protocol::Patchable;
 use std::cmp::Ordering;
 use std::fmt;
 // #region 🔖️EntityId
@@ -49,6 +48,10 @@ impl PartialOrd for EntityId {
 /// only supports named fields, and `#[derive(dsl::DslScalar)]` only unit-variant enums — so its
 /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
 /// own blanket impl does.
+impl semio_framework_dsl_record::BorrowedDslField for EntityId {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Text;
+}
+
 impl semio_framework_dsl_record::DslField for EntityId {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Text
@@ -376,7 +379,7 @@ impl std::error::Error for PluginError {}
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -384,26 +387,5 @@ pub struct TraceLinkPatch {
     pub from_id: Option<EntityId>,
     pub to_id: Option<EntityId>,
     pub kind: Option<TraceKind>,
-    pub label: Option<Option<String>>,
-}
-
-impl Patchable<TraceLinkPatch> for TraceLink {
-    fn apply_patch(&mut self, patch: &TraceLinkPatch) {
-        if let Some(value) = &patch.from_id {
-            self.from_id = value.clone();
-        }
-        if let Some(value) = &patch.to_id {
-            self.to_id = value.clone();
-        }
-        if let Some(value) = &patch.kind {
-            self.kind = value.clone();
-        }
-        if let Some(value) = &patch.label {
-            self.label = value.clone();
-        }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<TraceLinkPatch> {
-        Some(TraceLinkPatch { from_id: Some(other.from_id.clone()), to_id: Some(other.to_id.clone()), kind: Some(other.kind.clone()), label: Some(other.label.clone()) })
-    }
+    pub label: Option<String>,
 }

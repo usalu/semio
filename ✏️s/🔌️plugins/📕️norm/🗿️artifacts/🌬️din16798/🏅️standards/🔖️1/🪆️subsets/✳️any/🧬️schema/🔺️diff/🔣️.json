@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -42,46 +31,6 @@
       "anyOf": [
         {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/properties/outdoorCo2Ppm"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "zones": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/properties/zones"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "ventSystems": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/properties/ventSystems"
-            }
-          }
         },
         {
           "type": "null"
@@ -143,6 +92,426 @@
         }
       ],
       "x-semio-state": "artifact"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Din16798ZoneEdit"
+      },
+      "x-semio-state": "artifact"
+    },
+    "ventSystems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Din16798VentSystemEdit"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "Din16798RowOp": {
+      "enum": [
+        "Insert",
+        "Remove",
+        "Replace",
+        "Patch"
+      ]
+    },
+    "Din16798ZoneEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/Din16798RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/ZoneDocument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Din16798ZonePatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Din16798VentSystemEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/Din16798RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/VentSystemDocument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Din16798VentSystemPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Din16798ZonePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "usageType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "floorAreaM2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occupants": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comfortCategory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pollutionClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comfortModel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tOpWinterC": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tOpSummerC": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "airSpeedMS": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clothingClo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metabolicRateMet": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rhPercent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outdoorAirSuppliedM3H": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "co2Ppm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "illuminanceLx": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noiseDb": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turbulenceIntensityPercent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ventMethod": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ventSystemId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Din16798VentSystemPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "systemType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sfpWM3S": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sfpRequiredClass": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "heatRecoveryEta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "odaClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterSupClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "yearsSinceInspection": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ductClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ductLeakageM3SM2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "designAirflowM3H": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

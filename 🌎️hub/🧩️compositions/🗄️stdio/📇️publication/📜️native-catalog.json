@@ -82,7 +82,7 @@
       "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
       "factoryId": "stdio.native.jpg.v1",
       "extension": "jpg",
-      "protocolSourceSha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22"
+      "protocolSourceSha256": "0d32030c224fda4733dc23733130d50931413bba28c83168817f294c8d1943c8"
     },
     {
       "artifactKind": "s.stdio.json",
@@ -202,7 +202,7 @@
       "packSchemaHash": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
       "factoryId": "stdio.native.tiff.v1",
       "extension": "tiff",
-      "protocolSourceSha256": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09"
+      "protocolSourceSha256": "a03332233369d8b4fe73673352f9eed2c828468b800bec3ab54a47f0d29f5327"
     },
     {
       "artifactKind": "s.stdio.tsv",

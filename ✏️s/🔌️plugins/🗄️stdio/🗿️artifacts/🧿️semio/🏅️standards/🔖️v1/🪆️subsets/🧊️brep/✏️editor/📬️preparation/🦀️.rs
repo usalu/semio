@@ -15,6 +15,14 @@ use std::{marker::PhantomData, mem::size_of, sync::Arc};
 
 const PREFIX: &str = "stdio-semio-brep-set-vertex";
 
+/// 🌱️ Prices the exact structural route without constructing any catalog or factory.
+pub(super) fn route_birth_bytes() -> usize {
+    StructuralPreparationFactory::<SemioBrepSnapshot, SemioBrepMutation>::constructor_birth_bytes(
+        semio_framework_value::factory_constructor_birth_bytes::<SemioMutationRetirementFactory<SemioBrepMutation>>(0),
+        semio_framework_value::factory_constructor_birth_bytes::<SemioSnapshotRetirementFactory<SemioBrepSnapshot>>(0),
+    )
+}
+
 pub(super) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<SemioBrepSnapshot, SemioBrepMutation>> {
     Some(NativeEditPreparationRoute::new(
         recognizes,

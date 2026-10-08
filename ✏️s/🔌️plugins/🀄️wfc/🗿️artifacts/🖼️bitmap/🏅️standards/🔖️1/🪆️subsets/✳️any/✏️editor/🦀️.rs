@@ -544,6 +544,7 @@ fn bitmap_one_item_footprint(mutation: &BitmapMutation, maximum_bytes: usize) ->
 /// measured live on the playground: that factory declares every mutation point-invertible (above), and
 /// it CONSUMES its mutation owner before the fallible steps, so the store's second admission retry
 /// reports `…-mutation-owner-missing` and the real first failure is never printed anywhere.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct BitmapOneItemPreparationFactory {
     maximum_bytes: usize,
 }

@@ -2,21 +2,19 @@
 //!
 //! `change-merge-policy` is the merge-policy config facet's one mutation kind: it sets
 //! `os.config.merge-policy`'s single `policy` field. Its diff oracle has exactly one guard — the
-//! same policy is already active ⇒ Warning `mutation.no-op` carrying the UNCHANGED base record back.
-//! That guard uses `MutationOutcome::new(*base)` rather than `MutationOutcome::empty()` precisely
-//! because this facet's diff IS the whole record: an "empty" diff would apply as
-//! `MergePolicySetting::default()` and silently loosen a `Vigilant` authority back to `Normal`.
+//! same policy is already active ⇒ Warning `mutation.no-op` carrying an EMPTY `MergePolicyDiff`, which the central
+//! applier leaves the active policy under: a `Vigilant` authority is never loosened back to `Normal` by a no-op.
 //! This case takes the other branch — `Normal` → `Vigilant`, tightening quarantine from "reject
 //! Error and worse" to "reject Warning and worse".
 //!
-//! 🛡️ Shape note: `MergePolicySetting` is its own `Mutation::Diff`, and `MergePolicy` carries NO
+//! 🛡️ Shape note: the sparse `MergePolicyDiff` carries the absolute new policy, and `MergePolicy` carries NO
 //! `rename_all`, so the wire spellings are the PascalCase variant names — `"Vigilant"`, not
 //! `"vigilant"`. This fixture is the pin on that.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use super::{MergePolicyConfigMutation, MergePolicySetting};
+use super::{MergePolicyConfigMutation, MergePolicyDiff, MergePolicySetting};
 
 const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../🧫️fixtures/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json");
@@ -43,7 +41,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 fn tightens_the_active_policy() {
     let base = before();
     let outcome = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &base);
-    let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("change-merge-policy applies to its committed before-setting");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("change-merge-policy applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: the tightened setting differs from the committed after-snapshot");
     assert_eq!(applied.policy, protocol::MergePolicy::Vigilant, "change-merge-policy/tightens-the-authority-to-vigilant: the payload's policy must land verbatim on the setting");
     assert!(applied.policy.rejects(semio_framework_diagnostic::Severity::Warning), "change-merge-policy/tightens-the-authority-to-vigilant: Vigilant is the only policy that quarantines a Warning");
@@ -59,10 +57,10 @@ fn restoring_the_prior_policy_restores_before() {
     let MergePolicyConfigMutation::ChangeMergePolicy(undo) = &inverse[0];
     assert_eq!(undo.policy, protocol::MergePolicy::Normal, "change-merge-policy/tightens-the-authority-to-vigilant: the undo must carry BASE's own prior policy");
     let forward = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward change-merge-policy applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward change-merge-policy applies");
     for step in &inverse {
         let redo = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(redo.diff(), &snapshot).expect("the change-merge-policy inverse step applies");
+        snapshot = protocol::apply_diff(redo.diff(), &snapshot).expect("the change-merge-policy inverse step applies");
     }
     assert_eq!(snapshot, base, "change-merge-policy/tightens-the-authority-to-vigilant: restoring Normal did not restore the before-setting");
 }
@@ -93,8 +91,7 @@ fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "change-merge-policy/tightens-the-authority-to-vigilant: an accepted policy change emits no diagnostics");
 }
 
-/// 🔺️ The committed diff is the whole post-op `MergePolicySetting` — this facet's declared `Diff`
-/// type is the record itself, so the diff carries the new policy outright rather than a delta.
+/// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &before());
@@ -103,21 +100,20 @@ fn produces_committed_diff() {
     assert_eq!(produced, committed, "change-merge-policy/tightens-the-authority-to-vigilant: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `MergePolicySetting` and re-encodes unchanged.
+/// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
-    assert_eq!(decoded.policy, protocol::MergePolicy::Vigilant, "change-merge-policy/tightens-the-authority-to-vigilant: the committed diff must carry the tightened policy");
+    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
+    assert_eq!(decoded.policy, Some(protocol::MergePolicy::Vigilant), "change-merge-policy/tightens-the-authority-to-vigilant: the committed diff must carry the tightened policy");
     let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-merge-policy/tightens-the-authority-to-vigilant: committed diff JSON is not canonical");
 }
 
-/// 🩹 The committed diff carries the before-setting to the after-setting — and because this facet's
-/// `apply` ignores `base` outright, the diff IS the after-setting.
+/// 🩹 The committed diff carries the before-setting to the after-setting through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-setting");
+    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: committed diff did not carry before to after");
 }

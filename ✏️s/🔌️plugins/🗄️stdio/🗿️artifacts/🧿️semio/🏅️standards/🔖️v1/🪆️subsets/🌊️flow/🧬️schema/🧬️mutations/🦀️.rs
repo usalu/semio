@@ -57,10 +57,6 @@ pub mod drag_nodes;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -76,8 +72,6 @@ pub mod set_snapshot;
 #[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioFlowMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `node` (whole payload, already carries its own `id`).
     InsertNode(insert_node::InsertNode),
     /// ➖️ Removes the node with id `id` (and — at the snapshot level, via a real referential
@@ -110,23 +104,22 @@ pub enum SemioFlowMutation {
 /// `tag` ordinal (see [`wire_tag`]), for `parse_flow_mutation`'s keyword match, and for the
 /// `semio-v1-flow` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind", "drag-nodes", "patch-snapshot"];
+pub const KINDS: &[&str] = &["insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind", "drag-nodes", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` — the diff is the single semantics source (mirrors docx/gif convention).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
+    <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🌊️mutate-semio-flow` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_flow_mutation`] alone cannot. Same shape as `🧰️kit`'s
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
@@ -154,85 +147,9 @@ fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Optio
 }
 //#endregion 🔖️Helpers
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
-    if let SemioFlowMutation::DragNodes(drag) = this {
-        return drag.outcome(base);
-    }
-    protocol::MutationOutcome::new(match this {
-        SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        SemioFlowMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation>>::diff(patch, base),
-        SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => diff_insert_node(node.clone()),
-        SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => diff_remove_node(id),
-        SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, kind }) => diff_set_node_kind(id, kind),
-        SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id, label }) => diff_set_node_label(id, label),
-        SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id, position }) => diff_set_node_position(id, *position),
-        SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id, key, value }) => diff_set_node_param(base, id, key, value),
-        SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id, key }) => diff_remove_node_param(id, key),
-        SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge }) => diff_insert_edge(edge.clone()),
-        SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id }) => diff_remove_edge(id),
-        SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => diff_set_edge_endpoints(id, from.clone(), to.clone()),
-        SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id, kind }) => diff_set_edge_kind(id, kind),
-        SemioFlowMutation::DragNodes(_) => SemioFlowDiff::default(),
-    })
-}
 
-/// ↩️ Lifted verbatim from the former `impl Mutation`, except every `None`-target fallback that
-/// used to construct `NoMutation` now returns `Vec::new()` (an inverse with nothing to restore) —
-/// the convention this migration's fleet coordinator ruled on, since `NoMutation` is no longer a
-/// constructible variant. `SetNodeParam`'s and `RemoveNodeParam`'s "param was absent" fallbacks
-/// already inverted into a real opposite mutation (`RemoveNodeParam`/`SetNodeParam`) rather than a
-/// no-op, so only their OWN "node absent" arm changes shape here.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        SemioFlowMutation::SetSnapshot(_) => vec![SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        SemioFlowMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation>>::inverse(patch, base)?),
-        SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => vec![SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() })],
-        SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => match node_at(base, id) {
-            Some(node) => vec![SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, .. }) => match node_at(base, id) {
-            Some(node) => vec![SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id: id.clone(), kind: node.kind.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id, .. }) => match node_at(base, id) {
-            Some(node) => vec![SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id: id.clone(), label: node.label.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id, .. }) => match node_at(base, id) {
-            Some(node) => vec![SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id: id.clone(), position: node.position })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id, key, .. }) => match param_value_at(base, id, key) {
-            Some(value) => vec![SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: id.clone(), key: key.clone(), value: value.to_string() })],
-            None => vec![SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: id.clone(), key: key.clone() })],
-        },
-        SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id, key }) => match param_value_at(base, id, key) {
-            Some(value) => vec![SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: id.clone(), key: key.clone(), value: value.to_string() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge }) => vec![SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() })],
-        SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id }) => match edge_at(base, id) {
-            Some(edge) => vec![SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge: edge.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id, .. }) => match edge_at(base, id) {
-            Some(edge) => vec![SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: id.clone(), from: edge.from.clone(), to: edge.to.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id, .. }) => match edge_at(base, id) {
-            Some(edge) => vec![SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: id.clone(), kind: edge.kind.clone() })],
-            None => Vec::new(),
-        },
-        SemioFlowMutation::DragNodes(drag) => drag.undo(base),
-    }
 
-    })
-}
+
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -278,8 +195,6 @@ fn fixture() -> SemioFlowSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
     vec![
-        SemioFlowMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: fixture() }),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) }),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: "n2".into() }),
         SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id: "n1".into(), kind: "changed".into() }),
@@ -302,15 +217,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️relabels/🦀️.rs"]
-mod set_snapshot_relabels_and_repositions_the_transform_node;
-//#endregion 🧪️FixtureCases
 
 /// 🌱 Shared fixture helpers + representative `SemioFlowMutation` cases (one per variant) —
 /// single source of truth for this facet's own tests AND `ops_grammar_conformance_law`/

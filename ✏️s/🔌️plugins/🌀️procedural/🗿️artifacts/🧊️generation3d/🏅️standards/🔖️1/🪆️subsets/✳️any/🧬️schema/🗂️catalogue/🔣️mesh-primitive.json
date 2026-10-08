@@ -1,0 +1,598 @@
+{
+  "category": {
+    "id": "mesh.primitive",
+    "emoji": "🥽️",
+    "order": 200,
+    "label": {
+      "en": "Mesh primitives",
+      "de": "Netz-Grundformen"
+    },
+    "description": {
+      "en": "Create polygon meshes from numbers: boxes, planes, spheres, cylinders, cones, tori or raw vertex and face data.",
+      "de": "Polygonnetze aus Zahlen erzeugen: Quader, Ebenen, Kugeln, Zylinder, Kegel, Tori oder rohe Eckpunkt- und Flächendaten."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.primitive.construct",
+      "category": "mesh.primitive",
+      "emoji": "🧮️",
+      "label": {
+        "en": "Mesh from data",
+        "de": "Netz aus Daten"
+      },
+      "description": {
+        "en": "Builds a mesh from JSON text with vertex positions and zero-based face indices.",
+        "de": "Baut ein Netz aus JSON-Text mit Eckpunktpositionen und nullbasierten Flächenindizes."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Mesh data",
+            "de": "Netzdaten"
+          },
+          "description": {
+            "en": "JSON with a \"vertices\" list of positions and a \"faces\" list of index lists.",
+            "de": "JSON mit einer Liste \"vertices\" aus Positionen und einer Liste \"faces\" aus Indexlisten."
+          },
+          "type": "text",
+          "default": "{\"vertices\":[[0,0,0],[1,0,0],[0,1,0]],\"faces\":[[0,1,2]]}"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The constructed mesh.",
+            "de": "Das erzeugte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.box",
+      "category": "mesh.primitive",
+      "emoji": "📦️",
+      "label": {
+        "en": "Mesh box",
+        "de": "Netz-Quader"
+      },
+      "description": {
+        "en": "Creates a closed box with six quad faces.",
+        "de": "Erzeugt einen geschlossenen Quader mit sechs Vierecksflächen."
+      },
+      "inputs": [
+        {
+          "name": "width",
+          "label": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "description": {
+            "en": "First box dimension.",
+            "de": "Erste Abmessung des Quaders."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Second box dimension.",
+            "de": "Zweite Abmessung des Quaders."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "depth",
+          "label": {
+            "en": "Depth",
+            "de": "Tiefe"
+          },
+          "description": {
+            "en": "Third box dimension.",
+            "de": "Dritte Abmessung des Quaders."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The box mesh.",
+            "de": "Das Quadernetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.plane",
+      "category": "mesh.primitive",
+      "emoji": "⬜️",
+      "label": {
+        "en": "Mesh plane",
+        "de": "Netz-Ebene"
+      },
+      "description": {
+        "en": "Creates one open quad in the horizontal plane.",
+        "de": "Erzeugt ein offenes Viereck in der horizontalen Ebene."
+      },
+      "inputs": [
+        {
+          "name": "width",
+          "label": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "description": {
+            "en": "Size in the first direction.",
+            "de": "Ausdehnung in der ersten Richtung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "depth",
+          "label": {
+            "en": "Depth",
+            "de": "Tiefe"
+          },
+          "description": {
+            "en": "Size in the second direction.",
+            "de": "Ausdehnung in der zweiten Richtung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The plane mesh.",
+            "de": "Das Ebenennetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.sphere",
+      "category": "mesh.primitive",
+      "emoji": "⚪️",
+      "label": {
+        "en": "Mesh icosphere",
+        "de": "Netz-Ikosphäre"
+      },
+      "description": {
+        "en": "Creates a closed triangle sphere by subdividing an icosahedron.",
+        "de": "Erzeugt eine geschlossene Dreieckskugel durch Unterteilen eines Ikosaeders."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "subdivisions",
+          "label": {
+            "en": "Subdivisions",
+            "de": "Unterteilungen"
+          },
+          "description": {
+            "en": "Each step quadruples the number of triangles; 0 to 5.",
+            "de": "Jeder Schritt vervierfacht die Dreieckszahl; 0 bis 5."
+          },
+          "type": "integer",
+          "default": 2,
+          "min": 0,
+          "max": 5,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The sphere mesh.",
+            "de": "Das Kugelnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.cylinder",
+      "category": "mesh.primitive",
+      "emoji": "🛢️",
+      "label": {
+        "en": "Mesh cylinder",
+        "de": "Netz-Zylinder"
+      },
+      "description": {
+        "en": "Creates a closed cylinder with polygon caps and quad sides.",
+        "de": "Erzeugt einen geschlossenen Zylinder mit Vieleckdeckeln und Vierecksseiten."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Size along the Z axis.",
+            "de": "Ausdehnung entlang der Z-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "segments",
+          "label": {
+            "en": "Segments",
+            "de": "Segmente"
+          },
+          "description": {
+            "en": "Number of sides around the axis.",
+            "de": "Anzahl der Seiten um die Achse."
+          },
+          "type": "integer",
+          "default": 32,
+          "min": 3,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The cylinder mesh.",
+            "de": "Das Zylindernetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.cone",
+      "category": "mesh.primitive",
+      "emoji": "🔺️",
+      "label": {
+        "en": "Mesh cone",
+        "de": "Netz-Kegel"
+      },
+      "description": {
+        "en": "Creates a closed cone with a polygon base and triangle sides.",
+        "de": "Erzeugt einen geschlossenen Kegel mit Vieleckgrundfläche und Dreiecksseiten."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Radius of the base.",
+            "de": "Radius der Grundfläche."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Distance from the base to the apex.",
+            "de": "Abstand von der Grundfläche zur Spitze."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "segments",
+          "label": {
+            "en": "Segments",
+            "de": "Segmente"
+          },
+          "description": {
+            "en": "Number of sides around the axis.",
+            "de": "Anzahl der Seiten um die Achse."
+          },
+          "type": "integer",
+          "default": 32,
+          "min": 3,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The cone mesh.",
+            "de": "Das Kegelnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.torus",
+      "category": "mesh.primitive",
+      "emoji": "🍩️",
+      "label": {
+        "en": "Mesh torus",
+        "de": "Netz-Torus"
+      },
+      "description": {
+        "en": "Creates a closed torus ring from quads.",
+        "de": "Erzeugt einen geschlossenen Torusring aus Vierecken."
+      },
+      "inputs": [
+        {
+          "name": "major",
+          "label": {
+            "en": "Ring radius",
+            "de": "Ringradius"
+          },
+          "description": {
+            "en": "Distance from the center to the middle of the tube.",
+            "de": "Abstand vom Mittelpunkt zur Mitte der Röhre."
+          },
+          "type": "length",
+          "default": 2,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "minor",
+          "label": {
+            "en": "Tube radius",
+            "de": "Röhrenradius"
+          },
+          "description": {
+            "en": "Radius of the tube; keep it below the ring radius.",
+            "de": "Radius der Röhre; kleiner als der Ringradius halten."
+          },
+          "type": "length",
+          "default": 0.5,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "segments",
+          "label": {
+            "en": "Ring segments",
+            "de": "Ringsegmente"
+          },
+          "description": {
+            "en": "Number of segments around the ring.",
+            "de": "Anzahl der Segmente um den Ring."
+          },
+          "type": "integer",
+          "default": 32,
+          "min": 3,
+          "max": 1024,
+          "step": 1
+        },
+        {
+          "name": "rings",
+          "label": {
+            "en": "Tube segments",
+            "de": "Röhrensegmente"
+          },
+          "description": {
+            "en": "Number of segments around the tube.",
+            "de": "Anzahl der Segmente um die Röhre."
+          },
+          "type": "integer",
+          "default": 16,
+          "min": 3,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The torus mesh.",
+            "de": "Das Torusnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.primitive.uvSphere",
+      "category": "mesh.primitive",
+      "emoji": "🌐️",
+      "label": {
+        "en": "Mesh UV sphere",
+        "de": "Netz-UV-Kugel"
+      },
+      "description": {
+        "en": "Creates a closed sphere from latitude rings and longitude segments.",
+        "de": "Erzeugt eine geschlossene Kugel aus Breitenringen und Längensegmenten."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "segments",
+          "label": {
+            "en": "Segments",
+            "de": "Segmente"
+          },
+          "description": {
+            "en": "Number of meridians around the poles.",
+            "de": "Anzahl der Meridiane um die Pole."
+          },
+          "type": "integer",
+          "default": 32,
+          "min": 3,
+          "max": 1024,
+          "step": 1
+        },
+        {
+          "name": "rings",
+          "label": {
+            "en": "Rings",
+            "de": "Ringe"
+          },
+          "description": {
+            "en": "Number of latitude rings from pole to pole.",
+            "de": "Anzahl der Breitenringe von Pol zu Pol."
+          },
+          "type": "integer",
+          "default": 16,
+          "min": 2,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The sphere mesh.",
+            "de": "Das Kugelnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    }
+  ]
+}

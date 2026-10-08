@@ -43,7 +43,7 @@ async fn board_values_round_trip_through_the_graph_child() {
 /// ⚖️ LAW: the composed read derives the relationships from the child's edges and keeps the parent's identities verbatim.
 #[semio_framework_async_macros::async_test]
 async fn the_composed_read_derives_relationships_from_the_child_edges() {
-    let document = schema::metabolism_wires_example_snapshot().expect("the committed metabolism example parses");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("the committed metabolism example parses");
     let composed = wires_composed(&document, demo_content());
     assert_eq!(schema::board_snapshot_nodes(&composed.board).len(), 7);
     assert_eq!(schema::board_snapshot_edges(&composed.board).len(), 9);
@@ -74,7 +74,7 @@ async fn wires_child_restore_projection_accepts_the_exact_owned_content() {
 /// host silently skipped (the reasoning-wires pane drew only its grid, ticket 26/09/19).
 #[test]
 fn the_curated_example_projects_into_drawable_canvas_layers() {
-    let document = schema::metabolism_wires_example_snapshot().expect("curated example parses");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("curated example parses");
     let composed = wires_composed(&document, demo_content());
     let layers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::Array(schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot))))).expect("independent JSON oracle");
     let layers = layers.as_array().expect("layer list");

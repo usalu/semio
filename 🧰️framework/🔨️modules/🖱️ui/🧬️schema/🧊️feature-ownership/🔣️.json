@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "targets", "groups", "dependencies"],
+  "properties": {
+    "version": { "const": 2 },
+    "dependencies": {
+      "const": {
+        "async": { "package": "semio-framework-async", "features": ["entrypoint"], "devOnly": true },
+        "viewport": { "package": "semio-framework-ui-viewport", "devOnly": true }
+      }
+    },
+    "targets": {
+      "const": [
+        { "name": "test", "features": ["tui-terminal", "wgpu"] },
+        { "name": "test-wgpu-engine", "features": ["wgpu-engine"] }
+      ]
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/group" }
+    }
+  },
+  "$defs": {
+    "source": { "type": "string", "pattern": "^(?![./])[^\\\\]+\\.rs$" },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "law": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "owner"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "owner": { "enum": ["portable", "engine"] }
+      }
+    },
+    "helper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "sha256"],
+      "properties": {
+        "name": { "$ref": "#/$defs/name" },
+        "source": { "$ref": "#/$defs/source" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "portableSource", "engineSource", "productionSource", "laws", "helpers", "sharedDeclarations"],
+      "properties": {
+        "id": { "enum": ["input", "prepared", "theme"] },
+        "portableSource": { "$ref": "#/$defs/source" },
+        "engineSource": { "$ref": "#/$defs/source" },
+        "productionSource": { "$ref": "#/$defs/source" },
+        "laws": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/law" } },
+        "helpers": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/helper" } },
+        "sharedDeclarations": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

@@ -17,6 +17,43 @@ impl Default for ArchitectRegisterWindowConfig {
     }
 }
 
+/// 🔺️ Sparse field diff of one register selection window config: a present field is written, the rest of the config is untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct ArchitectRegisterWindowConfigDiff {
+    pub active_register: Option<String>,
+}
+
+impl protocol::MutationDiff<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
+    fn apply(&self, base: &ArchitectRegisterWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectRegisterWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.active_register {
+            next.active_register = value.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.active_register.is_some() {
+            self.active_register = other.active_register;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Self {
+        Self { active_register: self.active_register.as_ref().map(|_| base.active_register.clone()) }
+    }
+
+    fn between(base: &ArchitectRegisterWindowConfig, other: &ArchitectRegisterWindowConfig) -> Self {
+        Self { active_register: (base.active_register != other.active_register).then(|| other.active_register.clone()) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.active_register.is_none()
+    }
+}
+
 /// 🔁️ Changes the selected register of one addressed Register window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
@@ -25,7 +62,7 @@ pub enum ArchitectRegisterWindowConfigMutation {
 }
 
 impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigMutation {
-    type Diff = ArchitectRegisterWindowConfig;
+    type Diff = ArchitectRegisterWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config",
@@ -58,9 +95,9 @@ impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWind
     fn diff(&self, base: &ArchitectRegisterWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         let Self::SetActiveRegister { active_register } = self;
         if base.active_register == *active_register {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Register selection is unchanged.");
+            return protocol::MutationOutcome::new(ArchitectRegisterWindowConfigDiff::default()).warning("mutation.no-op", "Register selection is unchanged.");
         }
-        protocol::MutationOutcome::new(ArchitectRegisterWindowConfig { active_register: active_register.clone() })
+        protocol::MutationOutcome::new(ArchitectRegisterWindowConfigDiff { active_register: Some(active_register.clone()) })
     }
 
     fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -116,7 +153,7 @@ impl store::ArtifactPack for ArchitectRegisterWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(ArchitectRegisterWindowConfig);
+impl store::ConfigRecord for ArchitectRegisterWindowConfig {}
 
 impl protocol::OpText for ArchitectRegisterWindowConfigMutation {
     fn print_op(&self) -> String {

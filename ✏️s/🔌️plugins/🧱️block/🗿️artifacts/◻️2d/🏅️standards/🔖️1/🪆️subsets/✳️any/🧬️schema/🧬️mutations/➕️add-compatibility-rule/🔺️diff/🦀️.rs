@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `AddCompatibilityRule`.
 
 use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block2dCompatibilityDelta, Block2dDiff};
+use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
+use semio_s_plugin_block::BlockCompatibilityDelta;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddCompatibilityRule, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
@@ -9,6 +10,6 @@ pub fn diff(payload: &super::AddCompatibilityRule, base: &Block2dSnapshot) -> pr
         return protocol::MutationOutcome::new(Block2dDiff::default())
             .absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("{} \"{}\" already present", "compatibility-rule", payload.rule.id)).at(vec![payload.rule.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { compatibility: Some(Block2dCompatibilityDelta { added: vec![payload.rule.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { compatibility: Some(BlockCompatibilityDelta { added: vec![payload.rule.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

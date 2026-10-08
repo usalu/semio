@@ -172,7 +172,7 @@ mod typed_command_full_operation_tests {
             }
             if self.prepared.is_none() {
                 let request = self.request.take().ok_or_else(|| "two-turn publication-presence preparation lost its owner bundle".to_string())?;
-                let next_root = request.mutation.diff(request.base.as_ref()).diff().apply(request.base.as_ref()).map_err(|error| error.to_string())?;
+                let next_root = protocol::apply_diff(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
                 self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
             }
@@ -232,9 +232,12 @@ mod typed_command_full_operation_tests {
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct PublicationPresenceLocalRootRetirementFactory;
 
     impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { std::mem::size_of::<PublicationPresenceLocalRootRetirement>() }
+
         fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
             Box::new(PublicationPresenceLocalRootRetirement { root: Some(snapshot) })
         }
@@ -273,7 +276,7 @@ mod typed_command_full_operation_tests {
                 publication_lanes: &[ArtifactToolPublicationLane::Presence],
                 session: None,
                 session_rejected: None,
-                completion: None,
+                reserved_producer: None, completion: None,
                 raw_input: None,
                 output_chunks: None,
                 cancellation_lease: Some(lease),
@@ -282,6 +285,9 @@ mod typed_command_full_operation_tests {
                 publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                 pending_artifact_publication: None,
                 pending_child_publication: None,
+                owned_child_group: None,
+                owned_child_committed: false,
+                owned_child_result_pending: false,
                 captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                 captured_child_content_generation: 0,
                 result_page: None,
@@ -479,7 +485,7 @@ mod typed_command_full_operation_tests {
                     publication_lanes: &[ArtifactToolPublicationLane::Artifact],
                     session: None,
                     session_rejected: None,
-                    completion: None,
+                    reserved_producer: None, completion: None,
                     raw_input: None,
                     output_chunks: None,
                     cancellation_lease: Some(lease),
@@ -488,6 +494,9 @@ mod typed_command_full_operation_tests {
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                     pending_artifact_publication: None,
                     pending_child_publication: None,
+                    owned_child_group: None,
+                    owned_child_committed: false,
+                    owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     result_page: None,
@@ -892,7 +901,7 @@ mod typed_command_full_operation_tests {
                     publication_lanes: &[ArtifactToolPublicationLane::Presence],
                     session: None,
                     session_rejected: None,
-                    completion: None,
+                    reserved_producer: None, completion: None,
                     raw_input: None,
                     output_chunks: None,
                     cancellation_lease: Some(lease),
@@ -901,6 +910,9 @@ mod typed_command_full_operation_tests {
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                     pending_artifact_publication: pending,
                     pending_child_publication: None,
+                    owned_child_group: None,
+                    owned_child_committed: false,
+                    owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     result_page: None,
@@ -967,7 +979,7 @@ mod typed_command_full_operation_tests {
                     publication_lanes: &[],
                     session: None,
                     session_rejected: None,
-                    completion: None,
+                    reserved_producer: None, completion: None,
                     raw_input: None,
                     output_chunks: None,
                     cancellation_lease: None,
@@ -976,6 +988,9 @@ mod typed_command_full_operation_tests {
                     publication: None,
                     pending_artifact_publication: None,
                     pending_child_publication: None,
+                    owned_child_group: None,
+                    owned_child_committed: false,
+                    owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     result_page: Some(page),
@@ -1222,6 +1237,49 @@ mod typed_command_full_operation_tests {
     }
 
     #[test]
+    fn private_child_genesis_wire_retains_exact_identity_and_indivisible_backing() {
+        let fixture: Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).expect("neutral private genesis contract");
+        let source=&fixture["source"];
+        let reference=&source["reference"];
+        let genesis=ChildEmitGenesis {
+            reference: ArtifactRef { artifact_id:reference["artifactId"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind:reference["dialect"]["artifactKind"].as_str().unwrap().into(), standard:reference["dialect"]["standard"].as_str().unwrap().into(), subset:reference["dialect"]["subset"].as_str().unwrap().into() } },
+            initial_pack: serde_json::to_vec(&fixture["initial"]["brep"]).unwrap(),
+        };
+        let mut child=ChildEmit::open(source["slot"].as_str().unwrap(),source["childId"].as_str().unwrap(),0);
+        child.genesis=Some(genesis);
+        assert_ne!(child.child_id,child.genesis.as_ref().unwrap().reference.artifact_id);
+        let independent=serde_json::to_value(&child).expect("independent exact genesis projection");
+        assert_eq!(independent["genesis"]["reference"],source["reference"]);
+        assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&child)),independent);
+        let wire=ChildEmit::encode_groups(std::slice::from_ref(&child));
+        let mut decoded=ChildEmit::decode_groups(&wire).expect("exact genesis wire roundtrip");
+        assert_eq!(decoded[0],child);
+        let pointer=child.genesis.as_ref().unwrap().initial_pack.as_ptr();
+        let bytes=child.next_close_byte_demand();
+        assert!(bytes>0);
+        for _ in 0..4 {
+            assert_eq!(child.close_one(1,bytes-1),PluginCloseStep::Pending{released_items:0,released_bytes:0});
+            assert_eq!(child.genesis.as_ref().unwrap().initial_pack.as_ptr(),pointer);
+            assert_eq!(child.genesis.as_ref().unwrap().reference.artifact_id,reference["artifactId"].as_str().unwrap());
+        }
+        assert_eq!(child.close_one(0,bytes),PluginCloseStep::Pending{released_items:0,released_bytes:0});
+        assert_eq!(child.close_one(1,bytes),PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+        for child in std::iter::once(&mut child).chain(decoded.iter_mut()) {
+            for _ in 0..32 {
+                let demand=child.next_close_byte_demand();
+                match child.close_one(1,demand) {
+                    PluginCloseStep::Pending{released_items,released_bytes}=>assert!(released_items<=1&&released_bytes<=demand),
+                    PluginCloseStep::Complete=>break,
+                    _=>panic!("exact private genesis owner release failed"),
+                }
+            }
+            assert!(child.genesis.is_none());
+            assert_eq!(child.next_close_byte_demand(),0);
+        }
+        println!("[DEBUG] Private genesis native exact wire local={} target={} physicalBytes={bytes}",source["childId"],reference["artifactId"]);
+    }
+
+    #[test]
     fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
         let fixture: Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/📢️member-publication.json")).expect("retained child fixture");
         let row = &fixture["orderedMembers"][0];
@@ -1229,6 +1287,7 @@ mod typed_command_full_operation_tests {
         wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
         let wire_bytes = wire.len();
         let mut child = ChildEmit {
+            genesis: None,
             owner: String::new(),
             slot: "slot".into(),
             child_id: "child".into(),
@@ -1739,15 +1798,45 @@ mod child_complete_group_candidate_tests{
     #[test]
     fn child_complete_actual_authored_typed_source_physical8194_grant4096(){
         use semio_framework_value::retirement::{RetireOwned,RetirementStep};
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️typed-source-physical/🔣️.json" )).unwrap();assert_eq!(fixture["textBytes"],8194);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);
-        let mutation=crate::test_app_mutation_fixture::SetLabel{value:"x".repeat(8194)};let pointer=mutation.value.as_ptr();let backing=mutation.value.capacity();assert_eq!(backing,8194);
-        let ((mut cursor,source_pointer),construction)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let source_pointer=mutation.value.as_ptr();(mutation.value.retirement(),source_pointer)});assert_eq!(pointer,source_pointer);assert_eq!(construction.released_bytes,0);assert!(!construction.overflowed);
-        let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(0));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
-        let mut physical=0;let mut complete=false;
-        for turn in 0..8194+128{
-            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(4096));eprintln!("[DEBUG] actual typed String source retirement turn={turn} requested={} released={} largestRelease={}",observed.requested_bytes,observed.released_bytes,observed.largest_release_bytes);assert!(!observed.overflowed);assert_eq!(observed.requested_bytes,0);assert!(observed.largest_release_bytes<=4096);physical+=observed.released_bytes;
-            match step{RetirementStep::Bytes(reported)=>{assert_eq!(reported,observed.released_bytes,"logical truncation cannot count as physical source release");assert!(reported<=4096)},RetirementStep::Complete=>{assert!(cursor.terminal_is_empty());complete=true;break},RetirementStep::BudgetExhausted=>{},RetirementStep::Child(_)=>panic!("actual contiguous String unexpectedly produced another source owner")}
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️typed-source-physical/🔣️.json")).unwrap();
+        let backing_bytes=fixture["textBytes"].as_u64().unwrap() as usize;
+        let work_bytes=fixture["maximumBytes"].as_u64().unwrap() as usize;
+        let admission=fixture["maximumAllocationBytes"].as_u64().unwrap() as usize;
+        assert_eq!((backing_bytes,work_bytes,admission),(8194,4096,65536));assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["textByte"],b'x');
+        let mutation=crate::test_app_mutation_fixture::SetLabel{value:"x".repeat(backing_bytes)};
+        let pointer=mutation.value.as_ptr();let backing=mutation.value.capacity();assert_eq!(backing,backing_bytes);
+        let ((mut cursor,source_pointer),construction)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let source_pointer=mutation.value.as_ptr();(mutation.value.retirement(),source_pointer)});
+        assert_eq!(pointer,source_pointer);assert_eq!(construction.released_bytes,0);assert!(!construction.overflowed);
+        let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(0));
+        assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
+        let mut processed=0;
+        while cursor.next_work_byte_demand()!=0{
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(work_bytes));
+            assert!(!observed.overflowed);assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));
+            let RetirementStep::ProcessedBytes(bytes)=step else{panic!("logical source drain must preserve the exact backing")};
+            assert!(bytes>0&&bytes<=work_bytes);processed+=bytes;assert!(processed<=backing_bytes);
+            eprintln!("[DEBUG] actual typed String logical processed={bytes} total={processed} physicalRelease=0 originalBacking={backing}");
         }
-        assert!(complete,"original typed8194 source did not close under original4096 grant");assert_eq!(physical,backing);let (_,scaffold)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));assert!(scaffold.largest_release_bytes<=4096);assert_eq!(scaffold.requested_bytes,0);assert!(scaffold.released_bytes<backing);
+        assert_eq!(processed,backing_bytes);
+        for grant in fixture["physicalRelease"]["deniedBytes"].as_array().unwrap(){
+            let bytes=grant.as_u64().unwrap() as usize;assert_eq!(cursor.next_close_byte_demand(),Some(backing));
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(bytes));
+            assert!(matches!(step,RetirementStep::BudgetExhausted));assert!(!cursor.terminal_is_empty());
+            assert_eq!(cursor.next_close_byte_demand(),Some(backing));assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));assert!(!observed.overflowed);
+            eprintln!("[DEBUG] actual typed String physical denied grant={bytes} retainedDemand={backing} released=0");
+        }
+        let demand=cursor.next_close_byte_demand().expect("retained physical source demand");
+        assert_eq!(demand,fixture["physicalRelease"]["demandBytes"].as_u64().unwrap() as usize);assert!(demand<=admission);
+        let (step,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(demand));
+        let RetirementStep::Bytes(reported)=step else{panic!("whole funded source release must publish its exact physical receipt")};
+        assert_eq!(reported,fixture["physicalRelease"]["reportedBytes"].as_u64().unwrap() as usize);
+        assert_eq!((released.requested_bytes,released.released_bytes,released.largest_release_bytes),(0,reported,reported));assert!(!released.overflowed);assert_eq!(reported,backing);
+        let (step,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(work_bytes));
+        assert!(matches!(step,RetirementStep::Complete));assert!(cursor.terminal_is_empty());assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));assert!(!terminal.overflowed);
+        let frame=cursor.terminal_release_bytes().expect("separate terminal cursor extent");
+        assert_eq!(frame,std::mem::size_of_val(cursor.as_ref()));assert_eq!(frame,construction.requested_bytes);assert!(frame<=admission);assert_eq!(fixture["physicalRelease"]["terminalFrameSeparate"],true);
+        let (_,scaffold)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));
+        assert_eq!((scaffold.requested_bytes,scaffold.released_bytes,scaffold.largest_release_bytes),(0,frame,frame));assert!(!scaffold.overflowed);
+        eprintln!("[DEBUG] actual typed String whole release grant={demand} physical={reported}; separate terminal frame funded={frame} physical={}",scaffold.released_bytes);
     }
 }

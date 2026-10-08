@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-asset/➕️appends/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-asset/➕️appends/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("create-asset diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("create-asset diff applies")
 }
 
 /// ▶️ `create-asset` appends "asset-detail" and touches nothing else — note the payload asks for
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_duplicate_id_is_fatal() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "create-asset/appends-asset-detail: re-creating \"asset-detail\" must be Fatal, not a silent overwrite");
     assert_eq!(second.messages()[0].code.0, "mutation.duplicate-id", "create-asset/appends-asset-detail: the duplicate guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["asset-detail".to_string()], "create-asset/appends-asset-detail: the duplicate is reported against the colliding asset id");
-    let unchanged = second.into_parts().0.apply(&expected_after()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "create-asset/appends-asset-detail: a Fatal duplicate must leave the snapshot untouched");
 }
 
@@ -92,8 +92,8 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-asset/appends-asset-detail: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["assets"]["added"][0]["id"], "asset-detail", "create-asset/appends-asset-detail: the new record travels in `assets.added`, by value");
-    assert!(committed["assets"]["reordered"].is_null(), "create-asset/appends-asset-detail: a create carries no explicit ordering — the payload's `index` never reaches the diff");
+    assert_eq!(committed["assets"]["edits"][0]["item"]["id"], "asset-detail", "create-asset/appends-asset-detail: the new record travels in `assets.added`, by value");
+    assert_eq!(committed["assets"]["edits"][0]["index"], 2, "create-asset/appends-asset-detail: an absent payload `index` resolves to the append position of the BASE list");
     assert!(committed["shots"].is_null() && committed["savedCameras"].is_null() && committed["activeAssetId"].is_null(), "create-asset/appends-asset-detail: creating an asset must touch no other slot");
 }
 
@@ -110,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-asset/appends-asset-detail: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

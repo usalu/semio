@@ -338,12 +338,12 @@ test("test preparation leaves normalizer bytes unchanged and never materializes 
   expect(vector.phaseCases).toHaveLength(13);
 });
 
-test("move source authority gate registration matches the package Nx router and both launch catalogs", () => {
+test("move source authority gate registration matches the package Nx router", () => {
   const expected = vector.execution, repoRoot = resolve(library, "../../../../.."), packagePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
-  const parsed = (path: string, jsonc = false): any => {
-    const text = readFileSync(join(repoRoot, path), "utf8"), errors: ParseError[] = [], value = parseJson(text, errors, { disallowComments: !jsonc, allowTrailingComma: jsonc });
+  const parsed = (path: string): any => {
+    const text = readFileSync(join(repoRoot, path), "utf8"), errors: ParseError[] = [], value = parseJson(text, errors, { disallowComments: true, allowTrailingComma: false });
     expect(errors, path).toEqual([]);
-    if (!jsonc) expect(value, path).toEqual(JSON.parse(text));
+    expect(value, path).toEqual(JSON.parse(text));
     return value;
   };
   const project = parsed(packagePath + "/📋️project.json"), manifest = parsed(packagePath + "/package.json");
@@ -353,16 +353,11 @@ test("move source authority gate registration matches the package Nx router and 
     ts.forEachChild(node, visit);
   };
   visit(routerTree);
-  const launches = [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"].map((path) => {
-    const configurations = parsed(path, true).configurations;
-    return { path, rows: configurations.filter((row: any) => row.name === expected.launchName), orderRows: configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder).length };
-  });
-  expect({ packageName: manifest.name, packageCommand: manifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length, launches }).toEqual({
+  expect({ packageName: manifest.name, packageCommand: manifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length }).toEqual({
     packageName: expected.packageName,
     packageCommand: expected.packageCommand,
     target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } },
     branches: 1,
-    launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })),
   });
   expect(branches[0]!.thenStatement.getText(routerTree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
   expect(branches[0]!.thenStatement.getText(routerTree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');

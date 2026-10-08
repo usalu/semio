@@ -38,7 +38,7 @@ pub struct Block2dViewer;
 
 impl ArtifactViewer for Block2dViewer {
     type Snapshot = Block2dSnapshot;
-    type Mutation = io::text::mutations::Block2dMutation;
+    type Mutation = schema::mutations::Block2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -94,9 +94,9 @@ impl ArtifactViewer for Block2dViewer {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view board
     /// renders real handle kinds/handles instead of two bare header lines — the artifact-side
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
-    /// `crate::standards::v1::subsets::any::schema`).
+    /// `crate::standards::v1::subsets::any::io::text::snapshot`).
     fn initial_snapshot() -> Block2dSnapshot {
-        schema::default_block2d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_block2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block2dViewCommand::Noop` variant never carries a config

@@ -454,15 +454,15 @@ impl WriterCommandToolJob {
         let mut emit = Emit::default();
         let mut ephemeral = EphemeralEmit::default();
         match command {
-            WriterCommand::TextEdit(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
-            WriterCommand::SetText(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
+            WriterCommand::TextEdit(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::schema::mutations::EditText { text: payload.text })]),
+            WriterCommand::SetText(payload) => emit = Emit::mutations(vec![WriterMutation::EditText(crate::schema::mutations::EditText { text: payload.text })]),
             WriterCommand::TextSplice(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer typing requires its concrete window context")?;
                 let selection = crate::WriterEditorSelection { start: payload.anchor, end: payload.caret, splice: payload.seq };
                 ephemeral.window_transient.push(
                     main::transient::addressed(view, WriterMainWindowTransientMutation::SetEditorSelection(main::transient::SetEditorSelection { selection: Some(selection) })).map_err(|_| "Writer typing rejected its concrete window context")?,
                 );
-                emit = Emit::mutations(vec![crate::op::splice_text(payload.splice())]);
+                emit = Emit::mutations(vec![crate::schema::mutations::splice_text(payload.splice())]);
             }
             WriterCommand::SetCamera(payload) => {
                 let view = self.view_state.as_ref().ok_or("Writer camera change requires its concrete window context")?;
@@ -538,7 +538,7 @@ impl WriterCommandToolJob {
             WriterCommand::FormatDocument(_) => {
                 let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
                 if formatted != text.as_ref() {
-                    emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
+                    emit.artifact_mutations.push(WriterMutation::EditText(crate::schema::mutations::EditText { text: formatted }));
                 }
             }
             WriterCommand::CommitRename(payload) => {
@@ -547,7 +547,7 @@ impl WriterCommandToolJob {
                 if selection.start == selection.end {
                     if let Some(symbol) = jack_symbol_at_offset(text, selection.start) {
                         if symbol.kind == JackSymbolKind::Variable {
-                            emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: apply_jack_rename(text, &symbol.occurrences, &payload.text) }));
+                            emit.artifact_mutations.push(WriterMutation::EditText(crate::schema::mutations::EditText { text: apply_jack_rename(text, &symbol.occurrences, &payload.text) }));
                             return Ok((emit, ephemeral));
                         }
                     }
@@ -555,7 +555,7 @@ impl WriterCommandToolJob {
                 if selection.start <= selection.end && selection.end <= text.len() {
                     let mut updated = text.to_string();
                     updated.replace_range(selection.start..selection.end, &payload.text);
-                    emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: updated }));
+                    emit.artifact_mutations.push(WriterMutation::EditText(crate::schema::mutations::EditText { text: updated }));
                 }
             }
             WriterCommand::EngagementSubmit(payload) => {
@@ -569,7 +569,7 @@ impl WriterCommandToolJob {
                 if engagement_token_matches(trimmed, "format") {
                     let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
                     if formatted != text.as_ref() {
-                        emit.artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
+                        emit.artifact_mutations.push(WriterMutation::EditText(crate::schema::mutations::EditText { text: formatted }));
                     }
                 } else if engagement_token_matches(trimmed, "lint") {
                     ephemeral.window_transient.push(
@@ -916,6 +916,7 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
 //#region 📬️ArtifactStorePreparation
 const WRITER_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 32_768;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct WriterArtifactStorePreparationFactory;
 
 struct WriterArtifactStorePreparation {
@@ -949,9 +950,9 @@ fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> R
     if writer_snapshot_retained_bytes(base) > WRITER_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Writer Artifact base exceeds its fixed retained preparation envelope".into());
     }
-    let inverse = crate::op::inverse_writer_mutation(base, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
+    let inverse = crate::schema::mutations::inverse_writer_mutation(base, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
     let mut post = base.clone();
-    crate::op::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
+    crate::schema::mutations::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
     Ok((post, inverse, mutation))
 }
 
@@ -1094,7 +1095,7 @@ impl ArtifactEditor for WriterPlayApp {
         use semio_framework_plugin::{TextSpliceComposition, TypingFold, TEXT_SPLICE_CONTEXT_SCALARS};
         match (net, next) {
             ([WriterMutation::SpliceText(run)], [WriterMutation::SpliceText(typed)]) => match run.splice().then(&typed.splice(), TEXT_SPLICE_CONTEXT_SCALARS) {
-                TextSpliceComposition::Composed(splice) => TypingFold::Net(vec![crate::op::splice_text(splice)]),
+                TextSpliceComposition::Composed(splice) => TypingFold::Net(vec![crate::schema::mutations::splice_text(splice)]),
                 TextSpliceComposition::Cancelled => TypingFold::Net(Vec::new()),
                 TextSpliceComposition::Disjoint => TypingFold::Split,
             },

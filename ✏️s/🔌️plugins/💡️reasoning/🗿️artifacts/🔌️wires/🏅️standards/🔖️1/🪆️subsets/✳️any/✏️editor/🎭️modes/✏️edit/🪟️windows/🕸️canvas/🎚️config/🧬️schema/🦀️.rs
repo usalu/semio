@@ -25,3 +25,42 @@ pub struct WiresCanvasWindowConfig {
     #[dsl(block)]
     pub camera: WiresCanvasCamera,
 }
+
+/// 🔺️ Sparse field delta over [`WiresCanvasWindowConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct WiresCanvasWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<WiresCanvasCamera>,
+}
+
+impl protocol::MutationDiff<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
+    fn apply(&self, base: &WiresCanvasWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WiresCanvasWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera {
+            next.camera = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<WiresCanvasWindowConfig> for WiresCanvasWindowConfigDiff {
+    fn inverse(&self, base: &WiresCanvasWindowConfig) -> Self {
+        Self {
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+        }
+    }
+    fn between(base: &WiresCanvasWindowConfig, other: &WiresCanvasWindowConfig) -> Self {
+        Self {
+            camera: (base.camera != other.camera).then(|| other.camera.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none()
+    }
+}

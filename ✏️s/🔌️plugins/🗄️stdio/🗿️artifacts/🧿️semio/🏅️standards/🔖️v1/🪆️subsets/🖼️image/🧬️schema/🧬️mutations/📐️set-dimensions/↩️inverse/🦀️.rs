@@ -1,13 +1,10 @@
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
+//! ↩️ Inverse for `SetDimensions`.
 
-/// ↩️ Inverse of set-dimensions.
+use super::super::*;
+
+//#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, width: u32, height: u32) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
-    Ok({
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }), base)?
-
-    })
+pub fn inverse(payload: &super::SetDimensions, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok(vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: base.width, height: base.height })])
 }
+//#endregion 🔖️Inverse

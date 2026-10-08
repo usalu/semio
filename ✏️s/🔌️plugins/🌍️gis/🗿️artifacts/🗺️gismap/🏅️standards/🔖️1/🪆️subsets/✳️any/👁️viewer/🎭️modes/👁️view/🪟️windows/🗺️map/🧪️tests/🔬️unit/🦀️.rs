@@ -22,7 +22,7 @@ async fn the_map_window_declares_the_hosts_camera_verb() {
 /// camera is published exactly.
 #[semio_framework_async_macros::async_test]
 async fn render_publishes_the_default_camera_until_the_window_retains_one() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let unpanned = semio_framework_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, None).expect("render")).expect("tiled map scene");
     assert_eq!(unpanned.camera_json, GIS_MAP_VIEW_DEFAULT_CAMERA_JSON);
     let window = config::GisMapViewerWindowConfig { camera: config::GisMapViewerCamera { x: 12.0, y: -4.5, zoom: 2.0 } };

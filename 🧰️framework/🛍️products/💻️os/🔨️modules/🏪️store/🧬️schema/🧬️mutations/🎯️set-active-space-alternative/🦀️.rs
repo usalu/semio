@@ -1,0 +1,64 @@
+//! 🎯️ Direct active space-alternative restoration mutation.
+use super::super::SpaceHistoryMutation;
+use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
+use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Payload
+/// 🎯️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
+/// derive (this file's own `serde_json` differential test below). Production never serializes
+/// through serde. `alternative_id` is `#[value(required)]`: the derive's default rule for an
+/// `Option<T>` field is to DECODE A MISSING KEY AS `None`, which is not this mutation's contract —
+/// "restore the active alternative to nothing" and "the sender forgot to say" must not be the same
+/// wire word. `required` is what gives the `#[value]` codec the same "key must be present, value
+/// may be `null`" shape as the test-only `#[serde(deserialize_with = "required_option")]` bridge
+/// below, which is exactly what this leaf's own wire law measures.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetActiveSpaceAlternative {
+    #[cfg_attr(test, serde(deserialize_with = "required_option"))]
+    #[value(required)]
+    pub alternative_id: Option<String>,
+}
+//#endregion 🔖️Payload
+
+//#region ⚙️Serde
+#[cfg(test)]
+fn required_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Option::<String>::deserialize(deserializer)
+}
+//#endregion ⚙️Serde
+
+//#region ⚙️Semantics
+impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
+    const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
+    }
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![SpaceHistoryMutation::SetActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })]
+    
+    })())
+}
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["activeAlternativeId".into()]
+    }
+}
+//#endregion ⚙️Semantics
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

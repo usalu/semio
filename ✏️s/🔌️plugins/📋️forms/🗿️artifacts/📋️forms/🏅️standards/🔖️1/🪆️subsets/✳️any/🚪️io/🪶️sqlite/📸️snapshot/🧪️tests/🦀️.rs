@@ -1,5 +1,6 @@
 //! 🧫️ Forms exact owner capability precedes semantic and independently edited SQLite I/O.
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::v1::subsets::any::io::sqlite::snapshot as sqlite;
 #[path="💰️backing/🦀️.rs"]
 mod backing;
 

@@ -397,6 +397,10 @@ impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
 
 impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
     type Snapshot = SemioFlowSnapshot;
+    fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> {
+        let dialect = &request.admitted_expected()?.dialect;
+        if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" { Ok(0) } else { Err(MemberOpenDiagnostic::Identity) }
+    }
 
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
         let dialect = match request.admitted_expected() {

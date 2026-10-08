@@ -329,6 +329,34 @@
       ]
     },
     "acceptance-goal": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "valueFlag": "--hub"
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "valueFlag": "--serve"
+              },
+              {
+                "id": "local-serve",
+                "kind": "text",
+                "valueFlag": "--local-serve"
+              },
+              {
+                "id": "users",
+                "kind": "text",
+                "valueFlag": "--users"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {

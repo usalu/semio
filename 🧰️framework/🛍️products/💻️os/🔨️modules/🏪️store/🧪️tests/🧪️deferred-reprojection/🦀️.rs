@@ -62,8 +62,14 @@ fn view(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> (Option<i32>, [u8;
 async fn drive(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, budget: usize) -> usize {
     let mut last = store.reprojection_progress().expect("a deferred change waits");
     let mut steps = 0;
-    while let Some(progress) = store.step_reprojection(None).await.expect("a deferred step") {
-        assert!(progress.done > last.done && progress.done - last.done <= budget as u32, "progress grows by at most one budget: {last:?} -> {progress:?}");
+    loop {
+        let owner_before = replay_owner_work(store);
+        let Some(progress) = store.step_reprojection(None).await.expect("a deferred step") else { break; };
+        assert!(progress.done >= last.done && progress.done - last.done <= budget as u32, "progress grows by at most one budget: {last:?} -> {progress:?}");
+        if progress.done == last.done {
+            let owner_after = replay_owner_work(store);
+            assert!(owner_before != owner_after || owner_before.3 || owner_after.3, "an unchanged semantic cursor must visit its retained cleanup owner: {owner_before:?} -> {owner_after:?}");
+        }
         assert!(progress.done <= progress.total && (last.total == 0 || progress.total == last.total), "{last:?} -> {progress:?}");
         last = progress;
         steps += 1;
@@ -71,6 +77,12 @@ async fn drive(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, budget: us
     }
     assert!(store.reprojection_progress().is_none(), "nothing waits after the adoption");
     steps
+}
+
+/// 🧳️ Captures the actual retained replay's diagnostic, convergence and cleanup cursors.
+fn replay_owner_work<M: super::Mutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
+    let replay = store.pending_reprojection.as_ref().and_then(|pending| pending.replay.as_ref()).map(|(_, replay)| replay);
+    replay.map_or((0, None, None, false), |replay| (replay.cursor, replay.message_settlement.as_ref().map(|settlement| (settlement.completed_work(), settlement.is_finished())), replay.convergence_search, replay.replay_retirement.is_some()))
 }
 //#endregion 🧰️Harness
 
@@ -301,6 +313,14 @@ impl Mutation<DemoSnapshot> for CountedOp {
 impl MemberStoreOwner<CountedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
 
+    fn member_store_owners_birth_bytes() -> usize {
+        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, CountedOp>>([
+            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
+        ])
+    }
+
     fn member_store_owners() -> DocumentStoreOwners<Self, CountedOp> {
         DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, CountedOp>::new()))
     }
@@ -486,9 +506,14 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
     loop {
         let before = CountedOp::folds();
         let deadline = (turns % 2 == 1).then(|| fold_clock_us().expect("the fold clock reads") + 2_000);
+        let owner_before = replay_owner_work(&deferred);
         let stepped = deferred.step_reprojection(deadline).await.expect("a wall-bounded turn");
         let folded = CountedOp::folds() - before;
-        assert!(folded >= 1 && folded <= if deadline.is_some() { 3 } else { 5 }, "turn {turns} folded {folded} operations (runtime deadline {deadline:?})");
+        assert!(folded <= if deadline.is_some() { 3 } else { 5 }, "turn {turns} folded {folded} operations (runtime deadline {deadline:?})");
+        if folded == 0 && stepped.is_some() {
+            let owner_after = replay_owner_work(&deferred);
+            assert!(owner_before != owner_after || owner_before.3 || owner_after.3, "a zero-fold turn visits retained work: {owner_before:?} -> {owner_after:?}");
+        }
         settle(&mut deferred);
         turns += 1;
         if stepped.is_none() {
@@ -508,3 +533,36 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
     test_support::assert_live_equals_replay(&deferred).await;
 }
 //#endregion 🧪️DeferredLocalStepLaws
+
+
+#[semio_framework_async_macros::async_test]
+async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_mutation_limit() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
+    let count = law["mutationCount"].as_u64().unwrap() as usize;
+    let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect()).await;
+    let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.envelope.vcs.edits).unwrap();
+    let mut replay = make();
+    assert!(matches!(replay.step_operations(&author.envelope.vcs.edits, 0, &mut || false).unwrap(), ReplayStep::Pending(_)));
+    assert_eq!(replay.state.as_ref().unwrap().n, Some(0));
+    assert_eq!(replay.progress(), ReplayProgress { done: 0, total: count as u32 });
+    let mut checks = 0;
+    let mut finished = false;
+    for _ in 0..law["maximumTurns"].as_u64().unwrap() {
+        let before = replay.state.as_ref().unwrap().n.unwrap();
+        let before_progress = replay.progress();
+        let step = replay.step_operations(&author.envelope.vcs.edits, law["operationCap"].as_u64().unwrap() as usize, &mut || { checks += 1; false }).unwrap();
+        assert!(replay.state.as_ref().unwrap().n.unwrap() - before <= 1);
+        assert_eq!(replay.progress().total, count as u32);
+        assert!(replay.progress().done - before_progress.done <= law["operationCap"].as_u64().unwrap() as u32);
+        if matches!(step, ReplayStep::Finished(_)) { finished = true; break; }
+    }
+    assert!(finished);
+    assert_eq!(replay.state.as_ref().unwrap().n, Some(law["expected"].as_i64().unwrap() as i32));
+    assert!(checks > count, "structural checks remain distinct from folded operations");
+    let mut deadline = make();
+    let mut deadline_checks = 0;
+    assert!(matches!(deadline.step_operations(&author.envelope.vcs.edits, count, &mut || { deadline_checks += 1; true }).unwrap(), ReplayStep::Pending(_)));
+    assert_eq!(deadline_checks, 1);
+    assert_eq!(deadline.state.as_ref().unwrap().n, Some(1));
+    println!("[DEBUG] Replay operation authority12/cap1 retains structural deadline checks and zero-cap unchanged projection");
+}

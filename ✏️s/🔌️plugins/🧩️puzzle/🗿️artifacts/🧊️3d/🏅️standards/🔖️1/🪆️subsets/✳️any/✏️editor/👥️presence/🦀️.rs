@@ -184,9 +184,12 @@ pub fn puzzle3d_presence_is_terminal_empty(presence: &Puzzle3dPresence) -> bool 
 
 /// 👥️ Exact local and peer root ownership for puzzle3d presence: one bounded turn returns the
 /// variable-length active-tool identifier, a second returns the inline root.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Puzzle3dPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<Puzzle3dPresence> for Puzzle3dPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Puzzle3dPresence>) -> usize { std::mem::size_of::<Puzzle3dPresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<Puzzle3dPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(Puzzle3dPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)), tool_id: std::mem::ManuallyDrop::new(None) })
     }

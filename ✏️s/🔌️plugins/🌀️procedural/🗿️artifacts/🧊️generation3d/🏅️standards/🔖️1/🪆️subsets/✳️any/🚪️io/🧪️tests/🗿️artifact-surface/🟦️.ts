@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Uint8BufferAttribute, Uint16BufferAttribute, Matrix4, Quaternion, ShapeUtils, Vector2, Vector3 } from "three";
 import { toTrianglesDrawMode } from "three/addons/utils/BufferGeometryUtils.js";
 import { polygonMeshFromPrepared, polygonMeshFromObj, polygonMeshFromPly, mergePreparedMeshes, meshFormatDiagnostics, exportSourceChannels, applyGltfSceneToHost, materialFieldsForExport, gltfMaterialSurface, preparedGltfChannels, gltfImportAdmission, restoreGltfAuthoredAttributes } from "../../🟦️.ts";
-import { parseGltfDocument } from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
+import { parseGltfDocument } from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type { FlowHostSnapshot, NeuralDictionary } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type { MeshAttribute } from "../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";

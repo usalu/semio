@@ -4,12 +4,7 @@
   "execution": {
     "projectLibraryRelativePath": "📦️packages/🟦️typescript/📋️project.json",
     "target": "test-historical-package-owner-identity",
-    "command": "bun ./📜️script.ts test historical-package-owner-identity",
-    "launchName": "🧹clean🧩️taxonomy🏺️historical-package-owner-identity",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-historical-package-owner-identity --skip-nx-cache",
-    "launchCatalogs": [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"],
-    "group": "4_gate",
-    "order": 410.07
+    "command": "bun ./📜️script.ts test historical-package-owner-identity"
   },
   "historicalDocument": {
     "libraryRelativePath": "🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",

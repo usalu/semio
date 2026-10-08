@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
 /// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="sqlite::retire")]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::io::sqlite::snapshot::retire")]
 #[dsl(extension = "layout")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {

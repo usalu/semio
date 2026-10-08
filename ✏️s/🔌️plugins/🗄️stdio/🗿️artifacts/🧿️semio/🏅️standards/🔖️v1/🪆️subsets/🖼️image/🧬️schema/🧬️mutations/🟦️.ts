@@ -2,11 +2,8 @@
  * Discriminated union on the `mutation` tag, matching the serde `#[serde(tag = "mutation")]`
  * shape. */
 import type { SemioColorspace, SemioImageFrame, SemioImageSnapshot } from "../📸️snapshot/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioImageMutation =
-  | { mutation: "setSnapshot"; snapshot: SemioImageSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "setDimensions"; width: number; height: number }
   | { mutation: "setColorspace"; colorspace: SemioColorspace }
   | { mutation: "setBitDepth"; bitDepth: number }

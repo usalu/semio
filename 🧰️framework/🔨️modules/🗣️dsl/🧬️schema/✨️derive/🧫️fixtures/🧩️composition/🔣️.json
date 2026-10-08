@@ -14,6 +14,8 @@
         "__dsl_from_record_controlled"
       ],
       "traits": [
+        "BorrowedDslRecord",
+        "BorrowedDslField",
         "DslField"
       ]
     },
@@ -30,13 +32,16 @@
         "emit",
         "bind"
       ],
-      "traits": []
+      "traits": [
+        "BorrowedDslRecord"
+      ]
     },
     {
       "id": "scalar",
       "mode": "Scalar",
       "members": [],
       "traits": [
+        "BorrowedDslField",
         "DslField"
       ]
     },
@@ -49,10 +54,13 @@
         "__dsl_variant_spec_0_producer",
         "__dsl_variant_spec_1",
         "__dsl_variant_spec_1_controlled",
-        "__dsl_variant_spec_1_producer"
+        "__dsl_variant_spec_1_producer",
+        "__dsl_borrowed_variant_0",
+        "__dsl_borrowed_variant_1"
       ],
       "traits": [
-        "DslVariants"
+        "DslVariants",
+        "BorrowedDslVariants"
       ]
     },
     {
@@ -68,6 +76,8 @@
         "__dsl_from_record_controlled"
       ],
       "traits": [
+        "BorrowedDslRecord",
+        "BorrowedDslField",
         "DslField"
       ],
       "declaration": "struct Example {}"

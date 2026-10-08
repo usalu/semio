@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `AddPlantLoopEquipment` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ListEdit, ModelPatch, PlantLoopConfigPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,11 +15,7 @@ pub fn diff(payload: &super::AddPlantLoopEquipment, base: &EnergyModelSnapshot) 
     if existing.equipment_ids.contains(&payload.equipment_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Plant loop {} already lists plant equipment {}.", payload.id.0, payload.equipment_id.0), [payload.equipment_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.plant_loops.iter_mut().find(|item| item.id == payload.id) {
-        let position = item.equipment_ids.iter().position(|entry| entry.0 > payload.equipment_id.0).unwrap_or(item.equipment_ids.len());
-        item.equipment_ids.insert(position, payload.equipment_id);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    let position = existing.equipment_ids.iter().position(|entry| entry.0 > payload.equipment_id.0).unwrap_or(existing.equipment_ids.len());
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::modifying(PlantLoopConfigPatch { equipment_ids: ListEdit::inserting(position, payload.equipment_id), ..PlantLoopConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

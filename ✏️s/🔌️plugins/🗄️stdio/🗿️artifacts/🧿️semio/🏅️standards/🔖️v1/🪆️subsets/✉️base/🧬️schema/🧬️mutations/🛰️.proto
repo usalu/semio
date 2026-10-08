@@ -1,19 +1,11 @@
 syntax = "proto3";
 // 🧬️ SemioMutation schema — real mirror of `🦀️.rs`. The envelope union's own mutation
-// vocabulary: SetSnapshot (the only way to change SUBSET KIND — reuses this package's
-// own SemioSnapshot message directly), and 18 wrapper variants. Proto packages never cross-import
+// vocabulary: 18 wrapper variants. Proto packages never cross-import
 // between subsets, so each wrapped variant carries that subset's own mutation OPAQUE wire form.
 package semio.s_stdio_semio.mutations;
 
-import "../📸️snapshot/🛰️.proto";
-
-message SetSnapshotPayload {
-  semio.s_stdio_semio.snapshot.SemioSnapshot snapshot = 1;
-}
-
 message SemioMutation {
   oneof mutation {
-    SetSnapshotPayload set_snapshot = 2;
     bytes brep = 3;         // SemioBrepMutation (brep subset's own wire form)
     bytes mesh = 4;          // SemioMeshMutation (mesh subset's own wire form)
     bytes model = 5;         // SemioModelMutation (model subset's own wire form)

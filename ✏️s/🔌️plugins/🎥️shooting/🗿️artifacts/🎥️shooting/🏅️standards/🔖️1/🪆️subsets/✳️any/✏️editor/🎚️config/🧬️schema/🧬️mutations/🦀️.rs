@@ -21,7 +21,7 @@ mod set_defaults;
 pub use set_defaults::SetDefaults;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
-#[mutations(snapshot = ShootingConfig, diff = ShootingConfig, schema = "shooting.config")]
+#[mutations(snapshot = ShootingConfig, diff = ShootingConfigDiff, schema = "shooting.config")]
 pub enum ShootingConfigMutation {
     #[dsl(key = "replace-config")]
     ReplaceConfig(ReplaceConfig),

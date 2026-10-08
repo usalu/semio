@@ -90,6 +90,11 @@
             "label": {
               "en": "Representation items",
               "de": "Darstellungselemente"
+            },
+            "widget": "reference",
+            "role": "target",
+            "ref": {
+              "kind": "entity"
             }
           }
         },
@@ -104,7 +109,7 @@
             }
           ],
           "x-semio-ui": {
-            "widget": "stepper",
+            "widget": "reference",
             "label": {
               "en": "Representation context",
               "de": "Darstellungskontext"
@@ -112,6 +117,10 @@
             "description": {
               "en": "Instance number (#n) of the geometric representation context.",
               "de": "Instanznummer (#n) des geometrischen Darstellungskontexts."
+            },
+            "role": "target",
+            "ref": {
+              "kind": "entity"
             }
           }
         }

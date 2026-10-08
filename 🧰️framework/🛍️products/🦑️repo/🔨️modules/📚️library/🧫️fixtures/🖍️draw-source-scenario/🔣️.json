@@ -41,11 +41,6 @@
     "initialOutputs": "actual-generator-before-baseline",
     "registryNodeCount": 16
   },
-  "launchSeed": {
-    "path": ".vscode/🧩️launch.seed.jsonc",
-    "format": "jsonc",
-    "content": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    \"@generated:draw-fixture-host:react\",\n    \"@generated:draw-fixture-host:wgpu\"\n  ],\n  \"compounds\": [],\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.\n  \"devLaunchers\": {\n    \"draw-fixture-host\": {\n      \"namePrefix\": \"🧪️draw-fixture-host\",\n      \"order\": 390,\n      \"wgpuOrder\": 390.1,\n      \"env\": { \"FIXTURE_PORT\": \"{PORT}\" }\n    }\n  }\n}\n"
-  },
   "catalogContext": [
     {
       "path": "🌎️hub/🧩️compositions/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml",

@@ -1,7 +1,6 @@
 grammar Stdio_deflate_mutations;
 // DeflateMutation wire form: tagged camelCase JSON object, `mutation` discriminates the variant.
-document              : setSnapshot | setCompressionParams | setPresetDictionary | setPayload ;
-setSnapshot           : '{"mutation":"setSnapshot","snapshot":' SNAPSHOT_OBJECT '}' ;
+document              : setCompressionParams | setPresetDictionary | setPayload ;
 setCompressionParams  : '{"mutation":"setCompressionParams","method":' DIGIT+ ',"windowBits":' DIGIT+ ',"levelHint":' LEVEL_HINT '}' ;
 setPresetDictionary   : '{"mutation":"setPresetDictionary","dictId":' ( 'null' | DIGIT+ ) '}' ;
 setPayload            : '{"mutation":"setPayload","payload":[' (DIGIT+ (',' DIGIT+)*)? ']}' ;

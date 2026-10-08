@@ -2,11 +2,7 @@
 
 use super::remove_display_doc_title::RemoveDisplayDocTitle;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{
-    conformance_support as support,
-    diff::PdfDiff,
-    snapshot::{PdfObject, PdfSnapshot},
-};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -21,9 +17,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "display-doc-title", kind: "set-display-doc-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::set_catalog_entry(&mut next, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)));
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)))))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {

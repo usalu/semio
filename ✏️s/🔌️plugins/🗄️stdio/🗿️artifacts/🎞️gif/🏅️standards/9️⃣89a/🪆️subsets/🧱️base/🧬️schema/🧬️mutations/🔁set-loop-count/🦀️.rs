@@ -1,6 +1,5 @@
-//! 🔁️ `set-loop-count` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔁️ `set-loop-count` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +15,13 @@ pub struct SetLoopCount {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "loop-count", kind: "set-loop-count", record: "SetLoopCount" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetLoopCount(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { loop_count } = self;
+        protocol::MutationOutcome::new(GifDiff { loop_count: (*loop_count != base.loop_count).then_some(*loop_count), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetLoopCount(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![GifMutation::SetLoopCount(set_loop_count::SetLoopCount { loop_count: base.loop_count })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set loop count", "Wiederholungsanzahl setzen")
     }

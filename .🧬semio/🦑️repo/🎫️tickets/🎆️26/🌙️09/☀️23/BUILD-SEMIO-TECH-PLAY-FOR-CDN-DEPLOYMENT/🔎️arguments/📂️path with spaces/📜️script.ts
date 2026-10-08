@@ -1,0 +1,23 @@
+import { strict as assert } from "node:assert";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import Ajv from "ajv";
+import parseArguments from "string-argv";
+import fixture from "../🔣️.json";
+import schema from "../🧬️schema.json";
+
+assert.equal(new Ajv({ strict: true }).compile(schema)(fixture), true);
+const [command, ...received] = process.argv.slice(2);
+if (command !== "probe") throw new Error("Use probe <fixture arguments>");
+assert.deepEqual(received, fixture.arguments);
+assert.equal(process.env.NX_PROJECT_NAME, fixture.expectedProject);
+const workspace = resolve(import.meta.dirname, "../../../../../../../../..");
+const nx = join(workspace, ".nx/installation/node_modules/nx/dist/src/command-line/exec/exec.js");
+const source = readFileSync(nx, "utf8");
+assert.equal(source.includes('argv.reduce((cmd, arg) => cmd + `"${arg}" `'), true);
+const serialized = received.map(argument => `"${argument}"`).join(" ");
+assert.deepEqual(parseArguments(serialized), fixture.arguments);
+const observed = { platform: process.platform, script: import.meta.filename, cwd: process.cwd(), project: process.env.NX_PROJECT_NAME, arguments: received };
+console.log(`[DEBUG] Actual Nx exec spaced script and arguments preserved ${JSON.stringify(observed)}`);
+const report = resolve(import.meta.dirname, "../../📓️diagnostic-argument-path-audit.md");
+writeFileSync(report, `# Diagnostic Argument Path Audit\n\nReal pinned Nx exec run on ${new Date().toISOString()}.\n\nStatus: PASSED.\n\nA retained script under a literal directory with spaces received all neutral fixture arguments exactly, including POSIX and Windows-style workspace strings and emoji. The existing third-party string-argv parser independently returned the same arguments from the installed Nx serializer's quoted form.\n\nObserved runtime:\n\n\`\`\`json\n${JSON.stringify(observed, null, 2)}\n\`\`\`\n\nThe pinned Nx 23.2.0 exec implementation wraps each parsed argument in double quotes before execSync, preserving ordinary spaces. It does not escape embedded double quotes; the earlier inline-code quoting failure is consistent with that source. Current diagnostic commands pass filenames and plain commands, not inline code. No spaced-path defect was demonstrated and no launch rewrite is required. Native Windows execution was not available: the Windows path argument round-trip ran on macOS and does not claim a cmd.exe runtime test. The quoted Windows filename pattern is supported by the inspected serializer, but that platform remains an execution boundary.\n\nThe browser-capabilities probe can derive workspace from its own import.meta.dirname just as the other probes do, reducing one argument. This is an optional simplification; its existing quoted workspace argument has no demonstrated space failure.\n`);

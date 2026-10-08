@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -49,50 +48,47 @@
   "validations": null,
   "performance": null,
   "quality": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "quality-record-a",
-        "patch": {
-          "name": "Quality Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "qualityTopic": "Replaced Quality Record A",
-          "standard": null,
-          "targetLevel": null,
-          "inspectionPoints": [],
-          "acceptanceCriteria": [],
-          "testingRequirements": [],
-          "sampleRate": null,
-          "defectCategories": [],
-          "correctiveActionProcess": [],
-          "elementIds": [],
-          "requirementIds": [],
-          "supplierRequirements": [],
-          "documentationRequirements": [],
-          "trainingRequirements": [],
-          "auditSchedule": null,
-          "kpis": [],
+        "name": "Quality Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "certificationTargets": [],
-          "continuousImprovement": []
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "qualityTopic": "Replaced Quality Record A",
+        "standard": null,
+        "targetLevel": null,
+        "inspectionPoints": [],
+        "acceptanceCriteria": [],
+        "testingRequirements": [],
+        "sampleRate": null,
+        "defectCategories": [],
+        "correctiveActionProcess": [],
+        "elementIds": [],
+        "requirementIds": [],
+        "supplierRequirements": [],
+        "documentationRequirements": [],
+        "trainingRequirements": [],
+        "auditSchedule": null,
+        "kpis": [],
+        "ownerId": null,
+        "certificationTargets": [],
+        "continuousImprovement": []
       }
     ],
+    "removed": [
+      "quality-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "artifacts": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

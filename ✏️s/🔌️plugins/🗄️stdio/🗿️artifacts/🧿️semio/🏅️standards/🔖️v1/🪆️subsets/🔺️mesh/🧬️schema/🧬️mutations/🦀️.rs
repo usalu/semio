@@ -117,13 +117,10 @@ use super::set_primitive_topology;
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh")]
 pub enum SemioMeshMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateMesh(create_mesh::CreateMesh),
     DeleteMesh(delete_mesh::DeleteMesh),
     CreatePrimitive(create_primitive::CreatePrimitive),
@@ -148,8 +145,7 @@ pub enum SemioMeshMutation {
 /// `🔺️mutate-semio-mesh`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
-    "create-mesh",
+pub const KINDS: &[&str] = &["create-mesh",
     "delete-mesh",
     "create-primitive",
     "delete-primitive",
@@ -169,21 +165,19 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot",
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioMeshBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_mesh_mutation(snapshot: &mut SemioMeshSnapshot, mutation: &SemioMeshMutation) -> protocol::MutationOutcome<SemioMeshDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
+    <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🔺️mutate-semio-mesh` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_mesh_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -242,7 +236,6 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
-        SemioMeshMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } }),
         SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() }),
         SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: "mesh-a".into(), primitive: SemioPrimitive { id: "prim-b".into(), ..Default::default() } }),

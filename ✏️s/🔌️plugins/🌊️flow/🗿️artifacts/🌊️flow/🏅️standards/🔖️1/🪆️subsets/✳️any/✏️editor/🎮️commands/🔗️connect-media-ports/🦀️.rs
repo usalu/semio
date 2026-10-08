@@ -24,7 +24,7 @@ pub struct ConnectMediaPorts {
 /// synapse on the content child — refused by name when the host adds none.
 pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let emit = host_scene_edit(composed, config, session, |host| Ok(host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id).is_ok()))?;
-    if emit.child_emits.is_empty() {
+    if emit.child_emits.is_empty() && emit.child_preparations.is_empty() {
         return Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("flow.connect-incompatible"),
@@ -37,3 +37,7 @@ pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     connect_edit(payload, &crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session)
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

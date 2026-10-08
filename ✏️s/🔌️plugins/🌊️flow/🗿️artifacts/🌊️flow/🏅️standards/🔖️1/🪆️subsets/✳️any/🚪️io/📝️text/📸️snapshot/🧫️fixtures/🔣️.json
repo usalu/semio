@@ -1,0 +1,10 @@
+{
+  "schema": "s.flow.flow",
+  "content": {
+    "childId": "content",
+    "target": {
+      "artifactId": "literal target!@/日本",
+      "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" }
+    }
+  }
+}

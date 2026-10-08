@@ -177,8 +177,6 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "contract": [
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/package.json",
@@ -210,8 +208,6 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "graph": [
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/package.json",
@@ -248,8 +244,6 @@
   "registration": {
     "projectPath": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📋️project.json",
     "packagePath": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/package.json",
-    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
-    "launchPath": ".vscode/launch.json",
     "projectName": "@semio-tech/stdio-js"
   }
 }

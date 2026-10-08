@@ -1,5 +1,5 @@
 //! 📐️ Sets or clears the OS-wide chrome layout preference.
-use super::super::super::{UiChromeLayout, UiPreferences, UiPreferencesDiff};
+use super::super::super::{SettingEdit, UiChromeLayout, UiPreferences, UiPreferencesDiff};
 use super::super::UiPreferencesConfigMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
@@ -11,7 +11,28 @@ pub struct SetLayout {
 pub fn set_layout(layout: Option<UiChromeLayout>) -> UiPreferencesConfigMutation {
     UiPreferencesConfigMutation::SetLayout(SetLayout { layout })
 }
-optional_setting_impl!(SetLayout, SetLayout, layout, "set-layout", "layout", "layout", "layout");
+impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetLayout {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layout", kind: "set-layout", record: "Set" };
+
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.layout == self.layout {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "layout is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { layout: Some(SettingEdit::new(self.layout.clone())), ..UiPreferencesDiff::default() })
+    }
+
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::Layout(Self { layout: base.layout.clone() })])
+    }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layout to {:?}", self.layout), &format!("Layout auf {:?} setzen", self.layout))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["layout".to_string()]
+    }
+}
 
 //#region 🧪️Tests
 #[cfg(test)]

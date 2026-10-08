@@ -1,4 +1,4 @@
-# 🔺️ Sparse CAD document diff over composed model and drawing child identities.
+# 🔺️ Sparse CAD document diff over composed model, drawing and topology child identities.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # import CadArtifact from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type CadDiff {
@@ -10,10 +10,12 @@ type CadDiff {
   energyModel: ArtifactChild @state(class: ARTIFACT)
   structureClassicModel: ArtifactChild @state(class: ARTIFACT)
   drawings: CadDrawingChildList @state(class: ARTIFACT)
+  breps: CadBrepChildList @state(class: ARTIFACT)
   referencesByModelDefinitionId: [CadReferenceListEntry!] @state(class: ARTIFACT)
   nodes: CadNodesDelta @state(class: ARTIFACT)
 }
 type CadDrawingChildList { values: [ArtifactChild!]! }
+type CadBrepChildList { values: [ArtifactChild!]! }
 type CadNodePatch { label: String }
 type CadNodePatchEntry { id: String! patch: CadNodePatch! }
 type CadNodesDelta { added: [CadNode!]! removed: [String!]! patched: [CadNodePatchEntry!]! reordered: [String!] }

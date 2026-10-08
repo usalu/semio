@@ -1,0 +1,11 @@
+{
+  "title": "Replace Zwischenbericht Placeholders With Real Material",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "zwischenbericht mit bestand: Replace the Platzhalter with the real material in /Users/ueli/Documents/semio/temp/material",
+  "summary": "Wired the four temp/material screenshots into the mit-bestand Zwischenbericht: three figure placeholders now include real images (unbreakable figures), the cover Arbeitsprobe uses the new screenshot under the corrected asset name arbeitsprobe.png (cls + Forschungsbericht asset renamed). Build verified (194 pages, pages 1/17/18/20 inspected). The Entwurfsgrammatik text placeholder remains because no material exists for it.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "⚪882a2cad455249fa928c0224fd0a76cd"
+  ]
+}

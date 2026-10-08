@@ -76,7 +76,57 @@ impl Default for ImperativeConfig {
     }
 }
 
-store::impl_whole_record_config!(ImperativeConfig);
+impl store::ConfigRecord for ImperativeConfig {}
+
+/// 🔺️ Sparse field delta over [`ImperativeConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct ImperativeConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub run_output_json: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
+}
+
+impl protocol::MutationDiff<ImperativeConfig> for ImperativeConfigDiff {
+    fn apply(&self, base: &ImperativeConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ImperativeConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.run_output_json {
+            next.run_output_json = value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.run_output_json.is_some() {
+            self.run_output_json = other.run_output_json;
+        }
+        if other.contributions_json.is_some() {
+            self.contributions_json = other.contributions_json;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ImperativeConfig> for ImperativeConfigDiff {
+    fn inverse(&self, base: &ImperativeConfig) -> Self {
+        Self {
+            run_output_json: self.run_output_json.as_ref().map(|_| base.run_output_json.clone()),
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+        }
+    }
+    fn between(base: &ImperativeConfig, other: &ImperativeConfig) -> Self {
+        Self {
+            run_output_json: (base.run_output_json != other.run_output_json).then(|| other.run_output_json.clone()),
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.run_output_json.is_none() && self.contributions_json.is_none()
+    }
+}
+
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

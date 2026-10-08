@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreatePeopleGain` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PeopleGainPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -31,10 +31,7 @@ pub fn diff(payload: &super::CreatePeopleGain, base: &EnergyModelSnapshot) -> pr
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.activity_schedule_id.0), [payload.activity_schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.people.insert(
-        payload.index as usize,
-        crate::model::PeopleGain {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { people: Rows::inserting(payload.index as usize, crate::model::PeopleGain {
             id: payload.id,
             zone_id: payload.zone_id,
             schedule_id: payload.schedule_id,
@@ -43,8 +40,6 @@ pub fn diff(payload: &super::CreatePeopleGain, base: &EnergyModelSnapshot) -> pr
             sensible_fraction: payload.sensible_fraction,
             latent_fraction: payload.latent_fraction,
             radiant_fraction: payload.radiant_fraction,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

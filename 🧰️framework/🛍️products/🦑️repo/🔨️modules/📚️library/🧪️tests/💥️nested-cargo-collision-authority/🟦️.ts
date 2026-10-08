@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { join, posix, resolve } from "node:path";
 import stringify from "fast-json-stable-stringify";
 import { escape, minimatch } from "minimatch";
-import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import { semanticPackageProjectionAuthority, type SemanticPackageProjectionCatalog, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 
@@ -161,13 +160,7 @@ test("bounded alternating collision timings preserve identical outputs", () => {
   }
 });
 
-test("collision gate is registered through Nx and both ordered launch catalogs", () => {
+test("collision gate is registered through Nx", () => {
   const expected = vector.execution, project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(repoRoot, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.group, order: expected.order });
-  }
 });

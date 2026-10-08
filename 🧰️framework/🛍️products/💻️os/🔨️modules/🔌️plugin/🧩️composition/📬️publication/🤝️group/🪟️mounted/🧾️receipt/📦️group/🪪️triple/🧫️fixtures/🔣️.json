@@ -1,0 +1,36 @@
+{
+  "prefix": "x",
+  "repeat": 8192,
+  "suffix": "α",
+  "utf8Bytes": 8194,
+  "maximumCopyBytes": 64,
+  "sources": 3,
+  "chunks": [
+    {
+      "grant": 0,
+      "copied": 0
+    },
+    {
+      "grant": 1,
+      "copied": 0
+    },
+    {
+      "grant": 2,
+      "copied": 0
+    },
+    {
+      "grant": 3,
+      "copied": 3
+    },
+    {
+      "grant": 63,
+      "copied": 63
+    },
+    {
+      "grant": 64,
+      "copied": 63
+    }
+  ],
+  "move": "separate-one-item-zero-copy",
+  "mismatch": "final-byte-retains-original"
+}

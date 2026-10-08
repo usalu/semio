@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `MoveCamera3d`.
 
-use crate::BlockCamera3d;
 use crate::Block5dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
 
@@ -12,6 +11,6 @@ pub fn diff(payload: &super::MoveCamera3d, base: &Block5dSnapshot) -> protocol::
     if payload.new_position == base.camera3d.position && payload.new_target == base.camera3d.target {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Camera is already at {:?}.", payload.new_position));
     }
-    protocol::MutationOutcome::new(Block5dDiff { camera3d: Some(BlockCamera3d { position: payload.new_position, target: payload.new_target, ..base.camera3d.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff { camera3d: Some(semio_s_plugin_block::BlockCamera3dPatch { position: Some(payload.new_position), target: Some(payload.new_target), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -2,8 +2,7 @@
 //!
 //! `sign-in` is one of the identity config facet's two mutation kinds: it establishes the OS-wide
 //! session, and — the branch this case pins — REPLACES one that is already established. The facet's
-//! `Diff` type is `IdentitySetting` itself, so the committed diff is the whole post-op record; its
-//! `apply` ignores `base` outright, which is why a replacement can be expressed as a single step.
+//! `Diff` type is the sparse `IdentityDiff` — the absolute new session — which is why a replacement is a single step.
 //!
 //! ↩️ The inverse reads BASE, never the payload: replacing Ada's session with Grace's must undo to
 //! `sign-in(Ada)`, not to `sign-out`. That distinction is the reason this fixture starts from an
@@ -17,7 +16,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
-use super::{Identity, IdentityConfigMutation, IdentitySetting};
+use super::{Identity, IdentityConfigMutation, IdentityDiff, IdentitySetting};
 
 const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json");
@@ -25,6 +24,9 @@ const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-a
 const DIFF: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json");
 
+fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
+}
 fn before() -> IdentitySetting {
     serde_json::from_str(BEFORE).expect("before identity setting decodes")
 }
@@ -44,7 +46,7 @@ fn session(setting: &IdentitySetting) -> Identity {
 fn replaces_the_whole_active_session() {
     let base = before();
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("sign-in applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: the replaced session differs from the committed after-snapshot");
     assert_eq!(session(&applied).user_id, "grace", "sign-in/replaces-the-active-session-with-a-second-account: the payload's account must land verbatim on the setting");
     assert_ne!(session(&applied).email, session(&base).email, "sign-in/replaces-the-active-session-with-a-second-account: the prior account must not survive a replacement");
@@ -64,10 +66,10 @@ fn restoring_the_prior_session_restores_before() {
     };
     assert_eq!(undo.user_id, "ada", "sign-in/replaces-the-active-session-with-a-second-account: the undo must carry BASE's own prior account");
     let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward sign-in applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward sign-in applies");
     for step in &inverse {
         let redo = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(redo.diff(), &snapshot).expect("the sign-in inverse step applies");
+        snapshot = protocol::apply_diff(redo.diff(), &snapshot).expect("the sign-in inverse step applies");
     }
     assert_eq!(snapshot, base, "sign-in/replaces-the-active-session-with-a-second-account: restoring the prior account did not restore the before-setting");
 }
@@ -100,31 +102,29 @@ fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "sign-in/replaces-the-active-session-with-a-second-account: an accepted sign-in emits no diagnostics");
 }
 
-/// 🔺️ The committed diff is the whole post-op `IdentitySetting` — this facet's declared `Diff` type
-/// is the record itself, so the diff carries the new session outright rather than a delta.
+/// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced sign-in diff encodes");
+    let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "sign-in/replaces-the-active-session-with-a-second-account: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `IdentitySetting` and re-encodes unchanged.
+/// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: IdentitySetting = serde_json::from_str(DIFF).expect("committed sign-in diff decodes");
-    assert_eq!(session(&decoded).email, "grace@studio.example", "sign-in/replaces-the-active-session-with-a-second-account: the committed diff must carry the new session");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
+    assert_eq!(decoded.session.as_ref().and_then(|edit| edit.value.as_ref()).map(|identity| identity.email.as_str()), Some("grace@studio.example"), "sign-in/replaces-the-active-session-with-a-second-account: the committed diff must carry the new session");
+    let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "sign-in/replaces-the-active-session-with-a-second-account: committed diff JSON is not canonical");
 }
 
-/// 🩹 The committed diff carries the before-setting to the after-setting — and because this facet's
-/// `apply` ignores `base` outright, the diff IS the after-setting.
+/// 🩹 The committed diff carries the before-setting to the after-setting through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: IdentitySetting = serde_json::from_str(DIFF).expect("committed sign-in diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-setting");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: committed diff did not carry before to after");
 }

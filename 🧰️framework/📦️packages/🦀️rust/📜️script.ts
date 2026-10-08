@@ -98,7 +98,7 @@ class HistoryEditActionsTestScript extends BundleScript {
 class HistoryProgressTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-history-progress accepts no arguments");
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)"]);
+    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
   }
 }
 

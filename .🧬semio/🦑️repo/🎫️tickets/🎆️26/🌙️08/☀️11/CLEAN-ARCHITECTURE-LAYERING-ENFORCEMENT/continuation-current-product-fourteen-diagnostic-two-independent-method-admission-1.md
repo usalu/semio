@@ -1,0 +1,5 @@
+# Product Fourteen Diagnostic Two Method
+
+Current source differs from admitted diagnostic1 by exact epoch14/runtime18/dispatcher16 routing, awaited cancellable full endpoint hashing with progress, and physical Node/Nx package membership rescan using the same declared exclusions as dispatcher. Actual seven route own/AJV control outcomes and all current bound laws inputs agree. Complete three endpoint source/pair/preparation guards, captured execution driver and actual compiled binary/declared native shared library custody remain intact. Unique exact original EngineCanvas,KernelRuntime,Scenes laws are enumerated from current captured binary. No compiler or Root source mutation is proposed.
+
+Admitted readonly supplementary diagnostic scope. Complete stdout is captured; stderr is actual inherited GUI log. Native whole acceptance remains failed regardless of the three supplemental case results; fresh actual all-owner original whole and independent live applicability are still mandatory before publication.

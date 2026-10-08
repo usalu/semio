@@ -47,6 +47,23 @@ impl JsonWriteSource for SnapshotPatch{
     }
 }
 
+impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson for SnapshotPatch {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, String> {
+        use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode as N;
+        Ok(match self.node_at_path(path).map_err(|error| error.to_string())? {
+            JsonWriteNode::Null => N::Null,
+            JsonWriteNode::Bool(value) => N::Bool(value),
+            JsonWriteNode::Number(Number::Int(value)) => N::I64(value),
+            JsonWriteNode::Number(Number::UInt(value)) => N::U64(value),
+            JsonWriteNode::Number(Number::Float(value)) => N::F64(value),
+            JsonWriteNode::String(value) => N::String(value),
+            JsonWriteNode::Array(length) => N::Array(length),
+            JsonWriteNode::Object(length) => N::Object(length),
+        })
+    }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<&str, String> { self.object_key_at_path(path, index).map_err(|error| error.to_string()) }
+}
+
 #[path="../📥️decode/🫳️borrowed/🦀️.rs"]
 mod borrowed_operation_read;
 pub use borrowed_operation_read::SnapshotPatchReadCursor;

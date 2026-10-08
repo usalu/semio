@@ -2,20 +2,19 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📚knowledge` per Wave C.
 
 use super::RenameKnowledgeRecord;
+use crate::diff::{ProgramKnowledgeDelta, ProgramKnowledgePatchEntry};
+use crate::registers::KnowledgeRecordPatch;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// ✏️ Sets the target row's `header.name` within the working-scene cache, then re-mints a fresh
-/// content-addressed `table` child handle. Error `mutation.target-missing` if absent, Warning
-/// `mutation.no-op` if the name is unchanged (both empty diff).
+/// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameKnowledgeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let mut records = crate::program_knowledge(base);
-    let Some(existing) = records.iter_mut().find(|row| row.header.id == payload.id) else {
+    let Some(existing) = base.knowledge_payload.iter().find(|row| row.header.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "No knowledge record exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This knowledge record already has this name.").at([payload.id.0.clone()])]);
     }
-    existing.header.name = payload.new_name.clone();
-    protocol::MutationOutcome::new(ProgramDiff { knowledge_payload: Some(records.clone()), knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
+    let patch = KnowledgeRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
+    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(ProgramKnowledgeDelta { patched: vec![ProgramKnowledgePatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
 }

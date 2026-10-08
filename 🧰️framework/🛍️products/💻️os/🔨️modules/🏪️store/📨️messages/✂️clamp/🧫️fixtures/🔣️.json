@@ -253,10 +253,35 @@
       "name": "empty-target-segments-consume-native-scaffold",
       "editId": "empty-targets",
       "messages": [
-        { "level": "fatal", "code": "mutation.invariant", "text": "body", "repeat": 1, "target": [""], "targetRepeat": 320, "opIndex": 0 },
-        { "level": "warning", "code": "mutation.invariant", "text": "fallback", "repeat": 1, "target": [], "opIndex": 1 }
+        {
+          "level": "fatal",
+          "code": "mutation.invariant",
+          "text": "body",
+          "repeat": 1,
+          "target": [
+            ""
+          ],
+          "targetRepeat": 320,
+          "opIndex": 0
+        },
+        {
+          "level": "warning",
+          "code": "mutation.invariant",
+          "text": "fallback",
+          "repeat": 1,
+          "target": [],
+          "opIndex": 1
+        }
       ],
-      "expected": { "changed": true, "kept": [0], "dropped": 1, "summaryOp": 1, "truncatedUtf8Bytes": 4 }
+      "expected": {
+        "changed": true,
+        "kept": [
+          0
+        ],
+        "dropped": 1,
+        "summaryOp": 1,
+        "truncatedUtf8Bytes": 4
+      }
     },
     {
       "name": "empty-message-bodies-consume-row-owner-budget",
@@ -325,11 +350,31 @@
   "settlement": {
     "operations": 512,
     "edits": 1,
-    "pendingWork": { "done": 512, "total": 513 },
-    "finishedWork": { "done": 513, "total": 513 },
-    "cancelStages": ["clamp", "outcome-retirement", "partial-copy", "finished"],
+    "pendingWork": {
+      "done": 512,
+      "total": 513
+    },
+    "finishedWork": {
+      "done": 513,
+      "total": 513
+    },
+    "cancelStages": [
+      "clamp",
+      "outcome-retirement",
+      "partial-copy",
+      "finished"
+    ],
     "preserveFullWorst": true,
     "cancelPreservesBaseline": true,
-    "retirementTerminal": true
+    "retirementTerminal": true,
+    "maximumReleaseBytes": 4096,
+    "copyRelease": {
+      "copyGrants": [
+        1,
+        7
+      ],
+      "allocationBytes": 1000,
+      "oneBelowRetains": true
+    }
   }
 }

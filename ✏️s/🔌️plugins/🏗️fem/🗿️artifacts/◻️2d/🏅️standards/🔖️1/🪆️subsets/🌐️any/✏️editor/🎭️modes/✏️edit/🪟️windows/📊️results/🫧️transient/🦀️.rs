@@ -98,12 +98,24 @@ impl store::ArtifactPack for FemResultsWindowTransient {
     }
 }
 
-impl protocol::MutationDiff<FemResultsWindowTransient> for FemResultsWindowTransient {
-    fn apply(&self, _base: &FemResultsWindowTransient) -> protocol::MutationApplyResult<FemResultsWindowTransient> {
-        Ok(self.clone())
+impl protocol::MutationDiff<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
+    fn apply(&self, base: &FemResultsWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<FemResultsWindowTransient> {
+        Ok(FemResultsWindowTransient { clock: self.clock.map_or(base.clock, |change| change.clock) })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        self.clock = other.clock.or(self.clock);
+    }
+}
+
+impl protocol::DiffAlgebra<FemResultsWindowTransient> for FemResultsWindowTransientDiff {
+    fn inverse(&self, base: &FemResultsWindowTransient) -> Self {
+        Self { clock: self.clock.map(|_| FemPlaybackClockChange { clock: base.clock }) }
+    }
+    fn between(base: &FemResultsWindowTransient, other: &FemResultsWindowTransient) -> Self {
+        Self { clock: (base.clock != other.clock).then_some(FemPlaybackClockChange { clock: other.clock }) }
+    }
+    fn is_empty(&self) -> bool {
+        self.clock.is_none()
     }
 }
 

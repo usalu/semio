@@ -1,3 +1,4 @@
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 use semio_framework::kernel::Budget;
 use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,OwnedRuntime,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,GuestCallCancellation,sqlite_wire};
 use std::path::PathBuf;

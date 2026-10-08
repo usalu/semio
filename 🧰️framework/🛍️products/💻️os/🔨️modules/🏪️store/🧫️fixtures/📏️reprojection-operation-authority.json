@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "mutationCount": 12,
+  "operationCap": 1,
+  "maximumTurns": 13,
+  "delta": 1,
+  "expected": 12,
+  "zeroCapChangesProjection": false,
+  "structuralDeadlineChecksRequired": true
+}

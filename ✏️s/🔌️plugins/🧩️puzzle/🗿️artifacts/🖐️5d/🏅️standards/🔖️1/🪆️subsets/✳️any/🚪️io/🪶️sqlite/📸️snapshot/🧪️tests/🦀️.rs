@@ -54,7 +54,7 @@ fn sqlite_snapshot_puzzle5d_rejects_malformed_graphs_presence_and_scalar_domains
 
 #[test]
 fn sqlite_snapshot_puzzle5d_actual_typed_and_play_erased_io_preserves_every_field(){
- let declared=crate::standards::v1::subsets::any::io::sqlite::snapshot::native_codec();let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
+ let declared=crate::standards::v1::subsets::any::schema::snapshot::native_codec();let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
  let play=store::ArtifactCodec::bare::<crate::Puzzle5dPlaySnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.puzzle.puzzle5d".into(),standard:"1".into(),subset:"*".into()};
  for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=(provider.import)(schema,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(actual,payload);}}}
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeInfiltrationSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, InfiltrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -20,10 +20,6 @@ pub fn diff(payload: &super::ChangeInfiltrationSchedule, base: &EnergyModelSnaps
     if existing.schedule_id == payload.new_schedule_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this schedule reference: {}.", payload.id.0, payload.new_schedule_id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {
-        item.schedule_id = payload.new_schedule_id;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { infiltrations: Rows::modifying(InfiltrationPatch { schedule_id: Some(payload.new_schedule_id), ..InfiltrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

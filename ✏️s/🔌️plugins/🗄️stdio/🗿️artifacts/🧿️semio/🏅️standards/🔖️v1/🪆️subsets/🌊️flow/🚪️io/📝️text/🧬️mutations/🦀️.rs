@@ -64,8 +64,6 @@ pub(crate) fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, Stri
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_flow_mutation(m: &SemioFlowMutation) -> String {
     match m {
-        SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_flow_snapshot(snapshot)),
-        SemioFlowMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => format!("insert-node node={}", enc_node(node)),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => format!("remove-node id={}", enc_str(id)),
         SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, kind }) => format!("set-node-kind id={} kind={}", enc_str(id), enc_str(kind)),
@@ -83,15 +81,10 @@ pub(crate) fn print_flow_mutation(m: &SemioFlowMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioFlowMutation::PatchSnapshot(crate::standards::v1::subsets::flow::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("flow mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_flow_snapshot(arg("snapshot")?)? })),
         "insert-node" => Ok(SemioFlowMutation::InsertNode(insert_node::InsertNode { node: dec_node(arg("node")?)? })),
         "remove-node" => Ok(SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: dec_str(arg("id")?)? })),
         "set-node-kind" => Ok(SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? })),

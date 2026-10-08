@@ -48,8 +48,6 @@ use crate::standards::v1::subsets::model::io::text::mutations::{print_semio_mode
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioModelMutation) -> u8 {
     match m {
-        SemioModelMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioModelMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioModelMutation::InsertSpatialNode(_) => TAG_INSERT_SPATIAL_NODE,
         SemioModelMutation::RemoveSpatialNode(_) => TAG_REMOVE_SPATIAL_NODE,
         SemioModelMutation::SetSpatialNode(_) => TAG_SET_SPATIAL_NODE,
@@ -83,11 +81,6 @@ pub(crate) fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String 
 /// second independent encoding.
 impl OpBinary for SemioModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
@@ -100,9 +93,6 @@ impl OpBinary for SemioModelMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::model::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -117,8 +107,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioModelMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-spatial-node");
 const TAG_REMOVE_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-spatial-node");
 const TAG_SET_SPATIAL_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-spatial-node");
@@ -132,3 +120,17 @@ const TAG_DRAG_ELEMENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-
 const TAG_ROTATE_ELEMENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rotate-elements");
 const TAG_SCALE_ELEMENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "scale-elements");
 //#endregion 🏷️WireTags
+
+#[path = "🫳️borrowed/🦀️.rs"]
+mod borrowed;
+
+/// 📦️ Reborrows original typed patch or imported element fields for bounded prestage receipts.
+pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> {
+    use crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation;
+    use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource;
+    Some(match mutation {
+        SemioModelMutation::InsertElement(_) => ArtifactPreparedOperationSource::Text { header: &[1, TAG_INSERT_ELEMENT], body: mutation },
+        SemioModelMutation::RemoveElement(_) => ArtifactPreparedOperationSource::Text { header: &[1, TAG_REMOVE_ELEMENT], body: mutation },
+        _ => return None,
+    })
+}

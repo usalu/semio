@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📷️replace-shot-camera/📷️rewrites/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📷️replace-shot-camera/📷️rewrites/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("replace-shot-camera diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("replace-shot-camera diff applies")
 }
 
 /// ▶️ `replace-shot-camera` is addressed by SHOT id but writes through to the `savedCameras` entry
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
     let skipped = unbound.diff(&before());
     assert_eq!(skipped.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
     assert_eq!(skipped.messages()[0].code.0, "mutation.no-op", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the dereference guard's frozen code");
-    let unchanged = skipped.into_parts().0.apply(&before()).expect("a no-op outcome still applies");
+    let unchanged = skipped.into_parts().protocol::apply_diff(&0, &before()).expect("a no-op outcome still applies");
     assert_eq!(unchanged.saved_cameras, before().saved_cameras, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot must not mint a saved camera");
 }
 
@@ -110,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

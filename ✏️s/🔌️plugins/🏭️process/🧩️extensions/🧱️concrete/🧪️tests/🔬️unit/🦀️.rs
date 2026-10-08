@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "../../../🧪️tests/🔬️catalog-json/🦀️.rs"]
+mod json_oracle;
+
 #[semio_framework_async_macros::async_test]
 async fn every_machine_and_capability_id_is_unique() {
     let machines = ConcreteCatalog.machines();
@@ -44,9 +47,10 @@ async fn every_recipe_and_rule_parameter_resolves() {
 #[semio_framework_async_macros::async_test]
 async fn machines_round_trip_json() {
     let machines = ConcreteCatalog.machines();
-    let json = semio_framework_os_kernel::json::to_json_string(&machines);
-    let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&machines);
+    let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(parsed, machines);
+    json_oracle::verify(ConcreteCatalog.catalog_id(), &json);
 }
 
 #[semio_framework_async_macros::async_test]

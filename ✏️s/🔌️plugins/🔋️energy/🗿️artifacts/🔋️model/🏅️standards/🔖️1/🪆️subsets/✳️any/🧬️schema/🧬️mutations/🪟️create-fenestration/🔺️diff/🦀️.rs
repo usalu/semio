@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateFenestration` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -36,11 +36,8 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
     if !payload.sill_height_m.is_finite() || payload.sill_height_m < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite sill height.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    let position = model.fenestrations.iter().position(|item| item.id > payload.id).unwrap_or(model.fenestrations.len());
-    model.fenestrations.insert(
-        position,
-        crate::model::Fenestration {
+    let position = base.model.fenestrations.iter().position(|item| item.id > payload.id).unwrap_or(base.model.fenestrations.len());
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::inserting(position, crate::model::Fenestration {
             id: payload.id,
             name: payload.name.clone(),
             surface_id: payload.surface_id,
@@ -60,8 +57,6 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
             // 🔶️ A freshly created aperture starts on the derived rectangle; a caller that wants a
             // polygon follows with `replace-fenestration-vertices` (which the delete inverse replays).
             vertices_m: Vec::new(),
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

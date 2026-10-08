@@ -379,6 +379,7 @@ where
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Gis3dArtifactStorePreparationFactory;
 
 fn begin_gis3d_preparation<P, M>(request: store::ArtifactStoreOneItemPreparationRequest<P, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>

@@ -131,4 +131,43 @@ mod runtime_close_budget_tests {
         }
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
     }
+
+    #[test]
+    fn live_maintenance_caller_funds_exact_retained_physical_extent_without_more_work() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️live-physical-demand/🔣️.json")).expect("closed live physical authority");
+        assert_eq!(fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, RUNTIME_CLOSE_BYTES_PER_STEP);
+        for extent in fixture["allocationBytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
+            let mut owner = Some(vec![42u8; extent]);
+            let mut work = 0;
+            let mut grant = 0;
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_live_maintenance_step(extent, |items, bytes| {
+                work = items;
+                grant = bytes;
+                if bytes < extent { return Ok(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+                drop(owner.take());
+                Ok(crate::app::PluginCloseStep::Pending { released_items: 1, released_bytes: extent })
+            }));
+            let retained = owner.is_some();
+            drop(owner.take());
+            eprintln!("[DEBUG] live maintenance demand={} grant={} work={} retained={} heap={:?} result={:?}", extent, grant, work, retained, heap, result);
+            assert_eq!(work, fixture["maximumItems"].as_u64().unwrap() as usize);
+            assert_eq!(grant, extent);
+            assert!(!retained);
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
+            assert!(matches!(result, Ok((crate::app::PluginCloseStep::Pending { released_items: 1, released_bytes }, bytes)) if released_bytes == extent && bytes == extent));
+        }
+        let extent = fixture["refusedAllocationBytes"].as_u64().unwrap() as usize;
+        let mut owner = Some(vec![42u8; extent]);
+        let mut work = 0;
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_live_maintenance_step(extent, |items, _| {
+            work += items;
+            Ok(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+        }));
+        let retained = owner.is_some();
+        drop(owner.take());
+        assert!(retained);
+        assert!(result.is_err());
+        assert_eq!(work, fixture["refusedWorkItems"].as_u64().unwrap() as usize);
+        assert_eq!(heap.released_bytes, 0);
+    }
 }

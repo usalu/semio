@@ -18,7 +18,7 @@ type Fixture = Readonly<{
   package: Readonly<{ manifestPath: string; name: string; files: readonly string[]; exports: Readonly<Record<string, PackageExport>> }>;
   consumers: readonly Readonly<{ path: string; tokens: readonly string[]; forbiddenTokens?: readonly string[] }>[];
   target: Readonly<{ projectPath: string; name: string; previewName: string; inputs: readonly string[] }>;
-  registration: Readonly<{ packagePath: string; packageScript: string; previewPackageScript: string; launchSeedPath: string; launchPath: string; launchCommand: string; previewLaunchCommand: string }>;
+  registration: Readonly<{ packagePath: string; packageScript: string; previewPackageScript: string; packageCommand: string; previewPackageCommand: string }>;
 }>;
 
 const sourcePath = fileURLToPath(import.meta.url).replaceAll("\\", "/");
@@ -91,13 +91,8 @@ export async function testFlowBrowserOwnership(): Promise<void> {
   assert.equal(generator.target, "semio-framework-os-flow-core:wasm");
   assert.equal(generator.previewTarget, `semio-framework-os-flow-core:${fixture.target.previewName}`);
   const buildPackage = JSON.parse(readFileSync(join(workspaceRoot, fixture.registration.packagePath), "utf8"));
-  assert.equal(buildPackage.scripts[fixture.registration.packageScript], fixture.registration.launchCommand);
-  assert.equal(buildPackage.scripts[fixture.registration.previewPackageScript], fixture.registration.previewLaunchCommand);
-  for (const path of [fixture.registration.launchSeedPath, fixture.registration.launchPath]) {
-    const source = readFileSync(join(workspaceRoot, path), "utf8");
-    assert.ok(source.includes(fixture.registration.launchCommand), path);
-    assert.ok(source.includes(fixture.registration.previewLaunchCommand), path);
-  }
+  assert.equal(buildPackage.scripts[fixture.registration.packageScript], fixture.registration.packageCommand);
+  assert.equal(buildPackage.scripts[fixture.registration.previewPackageScript], fixture.registration.previewPackageCommand);
 
   const packageRoot = dirname(join(workspaceRoot, fixture.package.manifestPath));
   const manifest = JSON.parse(readFileSync(join(workspaceRoot, fixture.package.manifestPath), "utf8"));

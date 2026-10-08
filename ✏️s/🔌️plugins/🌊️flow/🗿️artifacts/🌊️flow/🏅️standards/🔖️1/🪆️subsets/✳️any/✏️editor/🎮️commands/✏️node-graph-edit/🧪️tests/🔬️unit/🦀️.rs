@@ -240,7 +240,7 @@ fn node_position(content: &SemioFlowSnapshot, id: &str) -> (f64, f64) {
 
 /// ⏪️ Runs one history-edit verb and answers its output (a refusal is a `{rejected}` output, a fault fails the law).
 async fn history_edit(app: &mut FlowApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) -> semio_framework_value::DslValue {
-    history_edit_as(app, &meta("history-edit"), verb, args).await
+    history_edit_as(app, &meta(semio_framework_os_kernel::LOCAL_ACTOR_ID), verb, args).await
 }
 
 /// 🎭️ [`history_edit`] dispatched by `metadata`'s actor on `metadata`'s instance.
@@ -325,7 +325,11 @@ async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
     assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 node by (10, 0)");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️composed-child-history/🔣️.json")).expect("independent composed history JSON oracle");
+    let expected = &fixture["cases"].as_array().expect("history cases").iter().find(|case| case["id"] == "declared-child-intent-follows-structural-support").expect("mixed gesture contract")["expected"]["groups"][0]["label"];
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), expected["en"].as_str().expect("English intent label"));
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), expected["de"].as_str().expect("German intent label"));
+    eprintln!("[DEBUG] Flow mixed child transaction labels both locales by its declared drag intent");
 }
 
 /// ⚖️ LAW (design §12): time travel on a composed child's mutation runs on that member store — editing the drag's `dx`
@@ -368,8 +372,8 @@ async fn finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_k
     release_drag(&mut app, &["add"], 284.0, 48.0).await;
     let line = member_alternative(&app).await;
     let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();
-    edit_drag_offset(&mut app, &meta("history-edit"), &store, mutation).await;
-    finalize_as_alternative(&mut app, &meta("history-edit"), "Closer").await;
+    edit_drag_offset(&mut app, &meta(semio_framework_os_kernel::LOCAL_ACTOR_ID), &store, mutation).await;
+    finalize_as_alternative(&mut app, &meta(semio_framework_os_kernel::LOCAL_ACTOR_ID), "Closer").await;
     assert_eq!(store, format!("content/{}", app.snapshot().expect("snapshot").content.child_id), "the parent never re-mints the live child");
     let branch = member_alternative(&app).await;
     assert!(branch.is_some() && branch != line, "the member views its new alternative: {line:?} -> {branch:?}");
@@ -381,29 +385,58 @@ async fn finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_k
 
 /// ⚖️ LAW (design §12, §2): a member finalize reaches the other replica on the member's lane of the parent's backbone —
 /// every transition it authored, so a new alternative's commit and `Branch` arrive with its scoped `Supersede` — and both
-/// replicas converge on the edited member and the same member alternative.
+/// replicas hold the complete shared journal while each retains its own viewed alternative (design §22.3).
 #[semio_framework_async_macros::async_test]
 async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
     use store::MemoryBackbone;
-    let mut instance_a = crate::editor::flow::unit_tests::context::flow_app_with_registry().await;
-    let mut instance_b = crate::editor::flow::unit_tests::context::flow_app_with_registry().await;
-    let metadata_a = semio_framework_plugin::ActionMeta { instance_id: 73, ..meta("actor-a") };
-    let metadata_b = semio_framework_plugin::ActionMeta { instance_id: 74, ..meta("actor-b") };
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️replica-head/🔣️.json")).expect("neutral replica head witness");
+    let actors = fixture["actors"].as_array().expect("actors");
+    let mut instance_a = crate::editor::flow::unit_tests::context::flow_app_with_actor(semio_framework_os_kernel::ActorId(actors[0].as_str().unwrap().into())).await;
+    let mut instance_b = crate::editor::flow::unit_tests::context::flow_app_with_actor(semio_framework_os_kernel::ActorId(actors[1].as_str().unwrap().into())).await;
+    let metadata_a = semio_framework_plugin::ActionMeta { instance_id: u32::try_from(fixture["instances"][0].as_u64().unwrap()).unwrap(), ..meta(actors[0].as_str().unwrap()) };
+    let metadata_b = semio_framework_plugin::ActionMeta { instance_id: u32::try_from(fixture["instances"][1].as_u64().unwrap()).unwrap(), ..meta(actors[1].as_str().unwrap()) };
     instance_a.bind_instance_id(metadata_a.instance_id).await;
     instance_b.bind_instance_id(metadata_b.instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-member-history", "mem://flow-member-history").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let store = format!("content/{}", instance_a.snapshot().expect("snapshot").content.child_id);
-    release_drag_as(&mut instance_a, &metadata_a, &["add"], 284.0, 48.0).await;
+    let node = fixture["node"].as_str().unwrap();
+    let position = |field: &str| (fixture[field][0].as_f64().unwrap(), fixture[field][1].as_f64().unwrap());
+    let drag = position("drag");
+    release_drag_as(&mut instance_a, &metadata_a, &[node], drag.0, drag.1).await;
     instance_b.tick_backbone().await.expect("b folds a's drag");
-    assert_eq!(node_position(&content_snapshot(&instance_b).await, "add"), (284.0, 48.0), "b holds a's drag");
+    assert_eq!(node_position(&content_snapshot(&instance_b).await, node), drag, "b holds a's drag");
+    let peer_head = member_alternative(&instance_b).await;
+    assert_eq!(serde_json::to_value(&peer_head).unwrap(), fixture["peerAlternative"]);
+    let content_id = instance_a.snapshot().unwrap().content.child_id.clone();
+    let prior_payload = instance_a.child_store("content", &content_id).await.unwrap().event_log_payload().await.expect("prior shared journal");
+    let prior_ids: std::collections::BTreeSet<_> = store::os_spr::decode_envelopes(&prior_payload).unwrap().into_iter().map(|event| event.mutation_id).collect();
     let mutation = member_rows(&mut instance_a).await[0].mutations[0].mutation_id.clone();
     edit_drag_offset(&mut instance_a, &metadata_a, &store, mutation).await;
     finalize_as_alternative(&mut instance_a, &metadata_a, "Closer").await;
     instance_b.tick_backbone().await.expect("b folds a's member finalize");
-    assert_eq!(node_position(&content_snapshot(&instance_b).await, "add"), (100.0, 48.0), "b folds the edited offset");
-    assert_eq!(member_alternative(&instance_b).await, member_alternative(&instance_a).await, "both replicas view the same member alternative");
+    assert_eq!(node_position(&content_snapshot(&instance_a).await, node), position("authorAfterFinalize"), "the author views its edited branch");
+    assert!(member_alternative(&instance_a).await.is_some(), "the author views its new alternative");
+    assert_eq!(node_position(&content_snapshot(&instance_b).await, node), position("peerAfterFinalize"), "shared registration preserves the peer's own trunk projection");
+    assert_eq!(member_alternative(&instance_b).await, peer_head, "the peer retains its local viewed alternative");
+    let author_payload = instance_a.child_store("content", &content_id).await.unwrap().event_log_payload().await.expect("author shared journal");
+    let peer_payload = instance_b.child_store("content", &content_id).await.unwrap().event_log_payload().await.expect("peer shared journal");
+    let canonical = |payload: &[u8]| {
+        let mut events = store::os_spr::decode_envelopes(payload).expect("native shared event decode");
+        events.sort_by(|left, right| left.mutation_id.0.cmp(&right.mutation_id.0));
+        let json = serde_json::to_value(store::os_spr::encode_envelopes(&events)).expect("independent shared event JSON");
+        serde_json::from_str::<serde_json::Value>(&serde_json::to_string(&json).unwrap()).expect("independent shared event JSON roundtrip")
+    };
+    assert_eq!(canonical(&peer_payload), canonical(&author_payload), "every committed edit and scoped history transition reaches the peer");
+    let transitions: Vec<&str> = store::os_spr::decode_envelopes(&peer_payload).unwrap().iter().filter(|event| !prior_ids.contains(&event.mutation_id)).filter_map(|event| match store::os_spr::history_transition_from_envelope(event).expect("history event") {
+        Some(store::os_spr::HistoryTransition::Commit(_)) => Some("commit"),
+        Some(store::os_spr::HistoryTransition::Branch { .. }) => Some("branch"),
+        Some(store::os_spr::HistoryTransition::Supersede(_)) => Some("supersede"),
+        _ => None,
+    }).collect();
+    assert_eq!(serde_json::to_value(&transitions).unwrap(), fixture["authoredTransitions"]);
+    eprintln!("[DEBUG] Flow member replica shared journal={} transitions; author branch and peer trunk remain independent", transitions.len());
     assert_eq!(content_snapshot(&instance_a).await.nodes.len(), content_snapshot(&instance_b).await.nodes.len());
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
@@ -595,4 +628,3 @@ fn host_edits_land_as_the_intent_leaves_that_reproduce_the_scene() {
     }
 }
 //#endregion 🔖️IntentRows
-

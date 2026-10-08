@@ -7,7 +7,7 @@ use crate::DrawingSnapshot;
 /// 🔺️ One `visible` field patch — a real sparse `DrawingDiff`, never apply-then-capture.
 pub fn diff(payload: &super::mutation::SetLayerVisible, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
     let Some(layer) = find_drawing_layer(base, &payload.layer_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.to_string_owner()]);
     };
     if layer_base(layer).visible == payload.visible {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" visible is already {}.", payload.layer_id, payload.visible));

@@ -5,8 +5,8 @@ mod mutations_codec {
 use super::*;
 use crate::editor::playbook::config::component::mutations::*;
 use crate::editor::playbook::config::component::PlaybookConfig;
-use replace_config::ReplaceConfig;
-use set_contributions::SetContributions;
+use crate::editor::playbook::config::component::mutations::ReplaceConfig;
+use crate::editor::playbook::config::component::mutations::SetContributions;
 
 impl protocol::OpBinary for PlaybookConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

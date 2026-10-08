@@ -63,7 +63,7 @@ async fn absorb_law_holds_over_curated_ops() {
     let mut d1 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &mid);
     let d2 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
-    assert_eq!(d1.apply(&base).unwrap(), after);
+    assert_eq!(protocol::apply_diff(&d1, &base).unwrap(), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,9 +71,9 @@ async fn between_roundtrip_law() {
     let a = GifSnapshot { width: 4, height: 4, images: vec![img(1, 4, 4)], ..GifSnapshot::default() };
     let b = GifSnapshot { width: 4, height: 4, images: vec![img(1, 4, 4), img(2, 2, 2)], ..GifSnapshot::default() };
     let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
-    assert_eq!(ab.apply(&a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b);
     let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a);
-    assert_eq!(ba.apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a);
     assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -89,9 +89,9 @@ async fn inverse_law() {
         s
     };
     let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &next);
-    let mutated = d.apply(&base).unwrap();
+    let mutated = protocol::apply_diff(&d, &base).unwrap();
     let inv = d.inverse(&base);
-    assert_eq!(inv.apply(&mutated).unwrap(), base);
+    assert_eq!(protocol::apply_diff(&inv, &mutated).unwrap(), base);
 }
 
 /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
@@ -123,7 +123,7 @@ async fn field_sweep_covers_every_mutable_field() {
     sweep_b.images.push(img(6, 3, 3));
 
     let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(ab.apply(&sweep_a).unwrap(), sweep_b);
+    assert_eq!(protocol::apply_diff(&ab, &sweep_a).unwrap(), sweep_b);
     assert!(ab.width.is_some());
     assert!(ab.height.is_some());
     assert!(ab.gct.is_some());
@@ -134,7 +134,7 @@ async fn field_sweep_covers_every_mutable_field() {
     assert!(!images_ab.added.is_empty(), "sweep must exercise an added image (b is longer)");
 
     let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(ba.apply(&sweep_b).unwrap(), sweep_a);
+    assert_eq!(protocol::apply_diff(&ba, &sweep_b).unwrap(), sweep_a);
     let images_ba = ba.images.as_ref().expect("images must differ");
     assert!(!images_ba.removed.is_empty(), "reverse direction must exercise a removed image (a is shorter)");
 
@@ -149,7 +149,7 @@ async fn gct_tristate_removal_is_some_none() {
     let b = GifSnapshot { gct: None, ..GifSnapshot::default() };
     let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
     assert_eq!(d.gct, Some(None));
-    assert_eq!(d.apply(&a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&d, &a).unwrap(), b);
 }
 
 /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `GifDiff` text/binary grammar —

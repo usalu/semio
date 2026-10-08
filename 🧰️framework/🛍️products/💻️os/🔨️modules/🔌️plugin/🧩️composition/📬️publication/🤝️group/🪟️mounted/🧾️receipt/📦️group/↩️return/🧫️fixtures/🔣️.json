@@ -1,0 +1,38 @@
+{
+  "schema": "semio.mounted-group.return/v1",
+  "cases": [
+    {
+      "id": "denied-zero-item",
+      "items": 0,
+      "transferred": true,
+      "empty": true,
+      "accepted": false
+    },
+    {
+      "id": "denied-live-owner",
+      "items": 1,
+      "transferred": false,
+      "empty": true,
+      "accepted": false
+    },
+    {
+      "id": "denied-resident-owner",
+      "items": 1,
+      "transferred": true,
+      "empty": false,
+      "accepted": false
+    },
+    {
+      "id": "returned-original-output",
+      "items": 1,
+      "transferred": true,
+      "empty": true,
+      "accepted": true
+    }
+  ],
+  "expected": {
+    "birthBytes": 0,
+    "releaseBytes": 0,
+    "originalPointer": true
+  }
+}

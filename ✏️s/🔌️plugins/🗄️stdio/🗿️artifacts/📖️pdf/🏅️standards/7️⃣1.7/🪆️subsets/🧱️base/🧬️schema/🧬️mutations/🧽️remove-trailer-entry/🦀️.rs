@@ -20,7 +20,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveTrailerEntry {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "trailer-entry", kind: "remove-trailer-entry", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_trailer_entry(base, &self.key)))
+        MutationOutcome::new(diff::graph_edit(diff::diff_remove_trailer_entry(base, &self.key)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

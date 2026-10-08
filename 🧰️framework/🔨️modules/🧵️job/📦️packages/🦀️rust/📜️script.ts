@@ -2,7 +2,8 @@
 import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -25,6 +26,14 @@ class CanonicalArchitectureScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript);
+/** 📏️ Validate declared release demand against the independent allocation oracle. */
+class CloseDemandSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments, "quick");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📏️close-demand/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

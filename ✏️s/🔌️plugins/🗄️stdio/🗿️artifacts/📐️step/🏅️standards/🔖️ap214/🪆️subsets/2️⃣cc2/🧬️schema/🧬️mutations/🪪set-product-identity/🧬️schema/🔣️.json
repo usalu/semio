@@ -44,7 +44,18 @@
       "properties": {
         "product": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "ref": {
+              "kind": "entity"
+            },
+            "label": {
+              "en": "Product instance",
+              "de": "Produktinstanz"
+            }
+          }
         },
         "productName": {
           "type": "string",
@@ -60,7 +71,7 @@
           "type": "integer",
           "minimum": 0,
           "x-semio-ui": {
-            "widget": "stepper",
+            "widget": "reference",
             "label": {
               "en": "Product version",
               "de": "Produktversion"
@@ -68,6 +79,10 @@
             "description": {
               "en": "Instance number (#n) of the PRODUCT_DEFINITION_FORMATION.",
               "de": "Instanznummer (#n) der PRODUCT_DEFINITION_FORMATION."
+            },
+            "role": "target",
+            "ref": {
+              "kind": "entity"
             }
           }
         },
@@ -89,7 +104,7 @@
           "type": "integer",
           "minimum": 0,
           "x-semio-ui": {
-            "widget": "stepper",
+            "widget": "reference",
             "label": {
               "en": "Product definition",
               "de": "Produktdefinition"
@@ -97,6 +112,10 @@
             "description": {
               "en": "Instance number (#n) of the PRODUCT_DEFINITION.",
               "de": "Instanznummer (#n) der PRODUCT_DEFINITION."
+            },
+            "role": "target",
+            "ref": {
+              "kind": "entity"
             }
           }
         },

@@ -1,5 +1,6 @@
 //! ↔️ Persisted local filtering for one exact Architect Adjacency window.
 
+use crate::editor::architect::presence::AdjacencyKindFilterSet;
 use crate::registers::AdjacencyKind;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -12,6 +13,43 @@ pub struct ArchitectAdjacencyWindowConfig {
     pub adjacency_kind_filter: Option<AdjacencyKind>,
 }
 
+/// 🔺️ Sparse field diff of one adjacency filter window config: a present field is written, the rest of the config is untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct ArchitectAdjacencyWindowConfigDiff {
+    pub adjacency_kind_filter: Option<AdjacencyKindFilterSet>,
+}
+
+impl protocol::MutationDiff<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
+    fn apply(&self, base: &ArchitectAdjacencyWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectAdjacencyWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.adjacency_kind_filter {
+            next.adjacency_kind_filter = value.value.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.adjacency_kind_filter.is_some() {
+            self.adjacency_kind_filter = other.adjacency_kind_filter;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Self {
+        Self { adjacency_kind_filter: self.adjacency_kind_filter.as_ref().map(|_| AdjacencyKindFilterSet { value: base.adjacency_kind_filter.clone() }) }
+    }
+
+    fn between(base: &ArchitectAdjacencyWindowConfig, other: &ArchitectAdjacencyWindowConfig) -> Self {
+        Self { adjacency_kind_filter: (base.adjacency_kind_filter != other.adjacency_kind_filter).then(|| AdjacencyKindFilterSet { value: other.adjacency_kind_filter.clone() }) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.adjacency_kind_filter.is_none()
+    }
+}
+
 /// 🔁️ Changes the kind filter of one addressed Adjacency window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
@@ -20,7 +58,7 @@ pub enum ArchitectAdjacencyWindowConfigMutation {
 }
 
 impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigMutation {
-    type Diff = ArchitectAdjacencyWindowConfig;
+    type Diff = ArchitectAdjacencyWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/↔️adjacency/🎚️config",
@@ -53,9 +91,9 @@ impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWi
     fn diff(&self, base: &ArchitectAdjacencyWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         let Self::SetAdjacencyKindFilter { adjacency_kind_filter } = self;
         if base.adjacency_kind_filter == *adjacency_kind_filter {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Adjacency filter is unchanged.");
+            return protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfigDiff::default()).warning("mutation.no-op", "Adjacency filter is unchanged.");
         }
-        protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfig { adjacency_kind_filter: adjacency_kind_filter.clone() })
+        protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfigDiff { adjacency_kind_filter: Some(AdjacencyKindFilterSet { value: adjacency_kind_filter.clone() }) })
     }
 
     fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -111,7 +149,7 @@ impl store::ArtifactPack for ArchitectAdjacencyWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(ArchitectAdjacencyWindowConfig);
+impl store::ConfigRecord for ArchitectAdjacencyWindowConfig {}
 
 impl protocol::OpText for ArchitectAdjacencyWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }

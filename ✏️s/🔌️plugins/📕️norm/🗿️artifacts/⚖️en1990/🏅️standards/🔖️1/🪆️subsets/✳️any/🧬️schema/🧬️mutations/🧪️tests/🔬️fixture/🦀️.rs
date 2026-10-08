@@ -8,7 +8,7 @@
 use crate::diff::En1990Diff;
 use crate::{En1990Mutation, En1990Snapshot};
 use semio_framework_value::ToValue;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation};
 
 //#region 🧾️Vector
 /// 🧾️ One committed vector: the semantic kind it witnesses and its committed files — a refused vector commits no diff.
@@ -75,15 +75,15 @@ pub(crate) fn assert_vector(vector: Vector) {
         let delta: En1990Diff = semio_framework_pack_json::from_json_str(diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed diff decodes");
         assert_eq!(wire(&delta), committed(diff), "{kind}: the committed diff is not the canonical wire");
         assert_eq!(wire(outcome.diff()), committed(diff), "{kind}: production dispatch produces another diff than the committed one");
-        assert_eq!(MutationDiff::apply(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
+        assert_eq!(protocol::apply_diff(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
     }
-    let applied = MutationDiff::apply(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
     assert_eq!(applied, after, "{kind}: production dispatch does not land on the committed after-snapshot");
     assert_eq!(status == "applied", applied != before, "{kind}: an applied vector must move the document and only an applied one may");
     if status == "applied" {
         let inverse = op.inverse(&before).expect("valid retained mutation inverse fixture");
         assert!(!inverse.is_empty(), "{kind}: an applied vector computes a non-empty inverse");
-        let restored = inverse.iter().fold(applied, |current, step| MutationDiff::apply(step.diff(&current).diff(), &current).expect("an inverse step applies"));
+        let restored = inverse.iter().rev().fold(applied, |current, step| protocol::apply_diff(step.diff(&current).diff(), &current).expect("an inverse step applies"));
         assert_eq!(restored, before, "{kind}: replaying the inverse does not restore the committed before-snapshot");
     }
     let again = op.diff(&after);

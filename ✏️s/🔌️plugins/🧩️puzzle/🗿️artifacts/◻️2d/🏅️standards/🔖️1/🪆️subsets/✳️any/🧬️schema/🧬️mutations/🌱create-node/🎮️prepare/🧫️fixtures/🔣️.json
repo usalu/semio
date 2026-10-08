@@ -1,0 +1,471 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 32,
+    "largePrefix": "😀é",
+    "largeRepeats": 20000
+  },
+  "cases": [
+    {
+      "id": "append",
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2
+        },
+        "index": null
+      },
+      "status": "changed",
+      "position": 2,
+      "after": [
+        "a",
+        "b",
+        "new"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "insert",
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2
+        },
+        "index": 1
+      },
+      "status": "changed",
+      "position": 1,
+      "after": [
+        "a",
+        "new",
+        "b"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "clamp",
+      "nodes": [
+        "a"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2
+        },
+        "index": 100
+      },
+      "status": "changed",
+      "position": 1,
+      "after": [
+        "a",
+        "new"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "duplicate",
+      "nodes": [
+        "a",
+        "new",
+        "new"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2
+        },
+        "index": null
+      },
+      "status": "duplicate-id",
+      "position": null,
+      "after": [
+        "a",
+        "new",
+        "new"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "nonfinite-x",
+      "nodes": [
+        "new"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": "nan",
+          "y": 2
+        },
+        "index": null
+      },
+      "status": "nonfinite-x",
+      "position": null,
+      "after": [
+        "new"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "nonfinite-y",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": "positive-infinity"
+        },
+        "index": null
+      },
+      "status": "nonfinite-y",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "bad-shape",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "shape": "triangle"
+        },
+        "index": null
+      },
+      "status": "invalid-shape",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "bad-radius",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "radius": 0
+        },
+        "index": null
+      },
+      "status": "invalid-radius",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "bad-width",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "width": -1
+        },
+        "index": null
+      },
+      "status": "invalid-width",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "bad-height",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "height": 0
+        },
+        "index": null
+      },
+      "status": "invalid-height",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "bad-scale",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "scale": 0
+        },
+        "index": null
+      },
+      "status": "invalid-scale",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "nested-handle",
+      "nodes": [
+        "a"
+      ],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "shape": "rectangle",
+          "width": 3,
+          "height": 4,
+          "handles": [
+            {
+              "id": "h1",
+              "angle": 0,
+              "radius": 1,
+              "scale": 2
+            },
+            {
+              "id": "h2",
+              "angle": 2
+            }
+          ]
+        },
+        "index": 0
+      },
+      "status": "changed",
+      "position": 0,
+      "after": [
+        "new",
+        "a"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "handle-angle",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "handles": [
+            {
+              "id": "h1",
+              "angle": 0
+            },
+            {
+              "id": "h2",
+              "angle": "nan"
+            }
+          ]
+        },
+        "index": null
+      },
+      "status": "invalid-handle-angle",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "handle-radius",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "handles": [
+            {
+              "id": "h1",
+              "angle": 0,
+              "radius": 0
+            }
+          ]
+        },
+        "index": null
+      },
+      "status": "invalid-handle-radius",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "handle-scale",
+      "nodes": [],
+      "mutation": {
+        "node": {
+          "id": "new",
+          "x": 1,
+          "y": 2,
+          "handles": [
+            {
+              "id": "h1",
+              "angle": 0,
+              "scale": -1
+            }
+          ]
+        },
+        "index": null
+      },
+      "status": "invalid-handle-scale",
+      "position": null,
+      "after": [],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "new"
+        }
+      }
+    },
+    {
+      "id": "large-prefix",
+      "nodes": [
+        "$large:a",
+        "$large:b"
+      ],
+      "mutation": {
+        "node": {
+          "id": "$large:new",
+          "x": 1,
+          "y": 2
+        },
+        "index": 1
+      },
+      "status": "changed",
+      "position": 1,
+      "after": [
+        "$large:a",
+        "$large:new",
+        "$large:b"
+      ],
+      "inverse": {
+        "mutation": "delete-node",
+        "payload": {
+          "id": "$large:new"
+        }
+      }
+    }
+  ],
+  "inverseOwnership": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128,
+    "journeys": [
+      "inverseBeforeRefusal",
+      "duplicateInverseIntent",
+      "borrowedIdOnly",
+      "largeUtf8",
+      "zeroGrant",
+      "sourceSwap",
+      "cancelDuringIdCopy",
+      "takeOnce",
+      "controlledRetirement"
+    ]
+  },
+  "forwardOwnership": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128,
+    "changedOwner": "nativePagedSnapshot",
+    "unchangedOwner": "retainedOriginal",
+    "journeys": [
+      "append",
+      "indexedInsertion",
+      "clampedInsertion",
+      "refusalRetainsOriginal",
+      "borrowedNodeOnly",
+      "nestedHandles",
+      "allUntouchedOwners",
+      "zeroGrant",
+      "cancelDuringSnapshotCopy",
+      "cancelDuringNodeCopy",
+      "cancelDuringInsertion",
+      "takeOnce",
+      "controlledRetirement"
+    ]
+  }
+}

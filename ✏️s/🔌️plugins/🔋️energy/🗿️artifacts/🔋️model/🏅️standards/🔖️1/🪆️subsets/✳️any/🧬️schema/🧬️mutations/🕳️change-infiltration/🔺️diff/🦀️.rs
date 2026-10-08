@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeInfiltrationEffectiveLeakageArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, InfiltrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -19,10 +19,6 @@ pub fn diff(payload: &super::ChangeInfiltrationEffectiveLeakageArea, base: &Ener
     if existing.effective_leakage_area_m2 == payload.new_effective_leakage_area_m2 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this effective leakage area (m²): {}.", payload.id.0, payload.new_effective_leakage_area_m2));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {
-        item.effective_leakage_area_m2 = payload.new_effective_leakage_area_m2;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { infiltrations: Rows::modifying(InfiltrationPatch { effective_leakage_area_m2: Some(payload.new_effective_leakage_area_m2), ..InfiltrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -5,5 +5,7 @@
     "🧬️schema/📎️references/🔌️consumers/🦀️.rs",
     "🚪️io/🪶️sqlite/📸️snapshot/🚦️owner/🦀️.rs"
   ],
-  "broken": "pub struct Broken { entries: Vec<(String, }"
+  "mountedFiles": ["🧬️schema/💡️inferences/🦀️.rs"],
+  "broken": "pub struct Broken { entries: Vec<(String, }",
+  "brokenVisibility": "pub pub(crate) fn kernel() {}"
 }

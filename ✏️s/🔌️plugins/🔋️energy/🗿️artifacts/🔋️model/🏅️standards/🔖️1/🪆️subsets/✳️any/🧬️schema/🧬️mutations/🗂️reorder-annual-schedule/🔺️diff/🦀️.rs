@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReorderAnnualScheduleRules` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, AnnualSchedulePatch, ListEdit, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,11 +15,6 @@ pub fn diff(payload: &super::ReorderAnnualScheduleRules, base: &EnergyModelSnaps
     if payload.from == payload.to {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Annual schedule {} rule {} is already at that position.", payload.id.0, payload.from));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.annual.iter_mut().find(|item| item.id == payload.id) {
-        let rule = item.rules.remove(payload.from as usize);
-        item.rules.insert(payload.to as usize, rule);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { annual: Rows::modifying(AnnualSchedulePatch { rules: ListEdit::moving(&existing.rules, payload.from as usize, payload.to as usize), ..AnnualSchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

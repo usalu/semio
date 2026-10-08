@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "leaf": "✋️drag-nodes",
+      "field": "targets",
+      "many": true,
+      "definition": "GraphNodeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "🎛️set-node-property",
+      "field": "node_id",
+      "many": false,
+      "definition": "GraphNodeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "📐resize-node",
+      "field": "id",
+      "many": false,
+      "definition": "GraphNodeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "🏷️rename-node",
+      "field": "id",
+      "many": false,
+      "definition": "GraphNodeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "🎚️set-edge-property",
+      "field": "edge_id",
+      "many": false,
+      "definition": "GraphEdgeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "➕add-edge-property",
+      "field": "edge_id",
+      "many": false,
+      "definition": "GraphEdgeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    },
+    {
+      "leaf": "➖remove-edge-property",
+      "field": "edge_id",
+      "many": false,
+      "definition": "GraphEdgeId",
+      "value": {
+        "value": "Knoten 😀 A"
+      }
+    }
+  ]
+}

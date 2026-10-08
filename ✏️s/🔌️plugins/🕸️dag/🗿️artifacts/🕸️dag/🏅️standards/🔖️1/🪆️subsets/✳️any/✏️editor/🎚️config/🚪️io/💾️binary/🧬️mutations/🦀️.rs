@@ -5,8 +5,8 @@ mod mutations_codec {
 use super::*;
 use crate::editor::dag::config::component::mutations::*;
 use crate::editor::dag::config::component::DagConfig;
-use replace_config::ReplaceConfig;
-use change_camera::ChangeCamera;
+use crate::editor::dag::config::component::mutations::ReplaceConfig;
+use crate::editor::dag::config::component::mutations::ChangeCamera;
 
 impl protocol::OpBinary for DagConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

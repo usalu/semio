@@ -1,6 +1,5 @@
-//! ♻️ `set-frame-disposal` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ♻️ `set-frame-disposal` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +15,20 @@ pub struct SetFrameDisposal {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-disposal", kind: "set-frame-disposal", record: "SetFrameDisposal" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetFrameDisposal(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index, disposal } = self;
+        protocol::MutationOutcome::new({
+            let d = GifFrameDiff { disposal: Some(*disposal), ..Default::default() };
+            GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetFrameDisposal(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(match base.frames.get(*index) {
+            Some(f) => vec![GifMutation::SetFrameDisposal(set_frame_disposal::SetFrameDisposal { index: *index, disposal: f.disposal })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frame disposal", "Entsorgungsmethode des Einzelbilds setzen")
     }

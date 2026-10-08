@@ -1,0 +1,1 @@
+{"maximumItems":1,"maximumCopyBytes":64,"maximumBytes":1048576,"maximumTurns":100000,"members":[{"subset":"model","entity":"element","kind":"insert-element","schema":"element.insert-element"},{"subset":"brep","entity":"snapshot","kind":"set-snapshot","schema":"snapshot.set-snapshot"}]}

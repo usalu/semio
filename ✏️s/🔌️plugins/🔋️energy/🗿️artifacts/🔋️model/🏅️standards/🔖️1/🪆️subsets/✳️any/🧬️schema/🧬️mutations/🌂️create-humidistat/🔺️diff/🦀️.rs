@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateHumidistat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, HumidistatPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -34,15 +34,13 @@ pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> pr
     if !payload.dehumidifying_throttle_range.is_finite() || payload.dehumidifying_throttle_range <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A dehumidifying throttle range must be a positive finite number, got {}.", payload.dehumidifying_throttle_range), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.humidistats.push(crate::model::Humidistat {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { humidistats: Rows::inserting(base.model.humidistats.len(), crate::model::Humidistat {
         id: payload.id,
         zone_id: payload.zone_id,
         humidifying_setpoint_schedule_id: payload.humidifying_setpoint_schedule_id,
         dehumidifying_setpoint_schedule_id: payload.dehumidifying_setpoint_schedule_id,
         humidifying_throttle_range: payload.humidifying_throttle_range,
         dehumidifying_throttle_range: payload.dehumidifying_throttle_range,
-    });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

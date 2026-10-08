@@ -3,8 +3,9 @@
 @comparison-ordered-json-v1
 Feature: One workspace always projects the same dashboard command tree
   The dashboard discovers what it can run by walking a repository: every `📋️project.json` target
-  becomes a wizard path whose first step is the target name and whose remaining steps are the
-  taxonomy segments of the manifest's directory with the noise segments dropped, and the repo
+  becomes a wizard path whose first step is the verb its name begins with (`task` for any other
+  name), whose middle steps are the taxonomy segments of the manifest's directory with the noise
+  segments dropped and whose last step is the exact target name, and the repo
   domain contributes its own branches — one branch per ticket found under
   `.🧬semio/🦑️repo/🎫️tickets` with its show, files, close and reopen actions, a goals branch, an
   analyze branch per scope, a tree branch per projection and the statute catalog. A repo leaf
@@ -27,4 +28,4 @@ Feature: One workspace always projects the same dashboard command tree
   Scenario: The projection does not depend on the order the workspace files were written in
     Given the workspace vector shared://🌳️command-tree-projection/🏗️workspace.json
     When each implementation materialises the workspace twice, once in the given order and once in the reversed order, and discovers the command tree of both
-    Then every implementation projects the same tree document for both orders, because the walk sorts by verb rank at the root and alphabetically below it
+    Then every implementation projects the same tree document for both orders, because the walk sorts by verb order at the root and alphabetically below it

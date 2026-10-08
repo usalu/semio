@@ -1,22 +1,20 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": {
-    "added": [],
-    "removed": [],
+    "edits": [],
     "patched": [
       {
         "id": "asset-prop",
         "patch": {
           "name": null,
           "url": "/mesh/prop-v2.glb",
+          "format": null,
           "origin": null,
           "orientation": null,
           "scale": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "savedCameras": null,
   "scene": null,

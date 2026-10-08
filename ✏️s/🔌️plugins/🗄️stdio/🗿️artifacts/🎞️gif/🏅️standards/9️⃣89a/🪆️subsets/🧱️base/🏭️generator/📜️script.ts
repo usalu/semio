@@ -88,8 +88,6 @@ const FIXTURE_DIRECTORY_NAMES: Readonly<Record<string, string>> = {
   "set-loop-count-applied": "🔁️set-loop-count-applied",
   "set-pixel-aspect-ratio": "⚖️set-pixel-aspect-ratio",
   "set-screen-size-applied": "🖥️set-screen-size-applied",
-  "set-snapshot-applied": "📸️set-snapshot-applied",
-  "set-snapshot-no-op": "🪞️set-snapshot-no-op",
 };
 
 const APPLICATION_RECIPES = new Set(["add-app-extension", "remove-app-extension", "set-loop-count-applied"]);
@@ -107,14 +105,9 @@ function committedFixtureRoot(id: string): string {
  *  WITNESSABLE `GifMutation` (89a) kind (16 of 21 — see `../🔮️oracles/🔣️.json`'s `-uncarried`
  *  entries for the other 5, and `reader.rs`'s own header docstring for why). Every kind here
  *  applies `["applied"]` per the real dispatch (`../🧬️schema/🧬️mutations/🦀️.rs:288`,
- *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch) EXCEPT
- *  `set-snapshot`, which also reaches a documented `no-op` warn path on an identical replacement
- *  (`../🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs:19`) — exercised by its own `-no-op` recipe,
- *  same convention as `no-mutation-no-op`. */
+ *  `MutationOutcome::new(...)` uniform for all 21 kinds, no per-kind rejection branch). */
 const READER_RECIPES: readonly ReaderRecipe[] = [
   { id: "no-mutation-no-op", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after bytes are the same document; no-mutation's diff is unconditionally a no-op." },
-  { id: "set-snapshot-applied", mutation: "set-snapshot", outcome: "applied", notes: "Whole-document replace: screen size, palette, background index, loop count and frames all change together." },
-  { id: "set-snapshot-no-op", mutation: "set-snapshot", outcome: "no-op", notes: "Replacement snapshot is byte-identical to the current one — the dispatch's own documented no-op/warn branch." },
   { id: "set-screen-size-applied", mutation: "set-screen-size", outcome: "applied", notes: "Only the logical screen width/height change." },
   { id: "set-global-color-table-applied", mutation: "set-global-color-table", outcome: "applied", notes: "The global colour table is replaced with a different palette." },
   { id: "set-background-color-index-applied", mutation: "set-background-color-index", outcome: "applied", notes: "Only the background colour index scalar changes — readable via `Decoder::bg_color`, a real public getter, even though the encoder has no setter for it." },

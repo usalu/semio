@@ -170,7 +170,7 @@ fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -
     let emit = reduce(command, &doc).expect("document verb reduces");
     let mut next = snapshot.clone();
     for mutation in &emit.artifact_mutations {
-        next = protocol::MutationDiff::apply(mutation.diff(&next).diff(), &next).expect("diff applies");
+        next = protocol::apply_diff(mutation.diff(&next).diff(), &next).expect("diff applies");
     }
     next.model
 }

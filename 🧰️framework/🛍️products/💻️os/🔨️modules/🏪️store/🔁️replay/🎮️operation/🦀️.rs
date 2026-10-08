@@ -157,7 +157,7 @@ pub trait ArtifactReplayPreparation<P, M>: Send {
 }
 
 /// 🏭️ An admitted artifact capability begins with an immutable projection alias in constant work.
-pub trait ArtifactReplayPreparationFactory<P, M>: Send + Sync {
+pub trait ArtifactReplayPreparationFactory<P, M>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn begin(&self, base: Arc<P>, context: ArtifactReplayPreparationContext) -> Result<Box<dyn ArtifactReplayPreparation<P, M>>, String>;
 }
 

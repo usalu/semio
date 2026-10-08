@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -37,50 +36,47 @@
   "growth": null,
   "sustainability": null,
   "resilience": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "resilience-requirement-a",
-        "patch": {
-          "name": "Resilience Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "hazard": "Replaced Resilience Requirement A",
-          "riskLevel": "negligible",
-          "scenario": null,
-          "recoveryTime": null,
-          "recoveryPoint": null,
-          "redundancy": [],
-          "hardeningMeasures": [],
-          "backupSystems": [],
-          "alternateSites": [],
-          "supplyChain": [],
-          "communicationPlan": [],
-          "drillRequirements": [],
-          "elementIds": [],
-          "infrastructureIds": [],
-          "standards": [],
-          "insuranceImplications": [],
-          "climateAdaptation": [],
+        "name": "Resilience Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "verificationPlan": null
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "hazard": "Replaced Resilience Requirement A",
+        "riskLevel": "negligible",
+        "scenario": null,
+        "recoveryTime": null,
+        "recoveryPoint": null,
+        "redundancy": [],
+        "hardeningMeasures": [],
+        "backupSystems": [],
+        "alternateSites": [],
+        "supplyChain": [],
+        "communicationPlan": [],
+        "drillRequirements": [],
+        "elementIds": [],
+        "infrastructureIds": [],
+        "standards": [],
+        "insuranceImplications": [],
+        "climateAdaptation": [],
+        "ownerId": null,
+        "verificationPlan": null
       }
     ],
+    "removed": [
+      "resilience-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "costs": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

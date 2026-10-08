@@ -1,0 +1,169 @@
+{
+  "cases": [
+    {
+      "role": "nodeIcon",
+      "before": null,
+      "next": null,
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": null
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": null,
+      "next": "",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": null
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": "",
+      "next": null,
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": ""
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": "😀\u0000甲",
+      "next": "😀\u0000甲",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "😀\u0000甲"
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": "a😀",
+      "next": "a甲",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "a😀"
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": "abc",
+      "next": "abcZ",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "abc"
+        }
+      ]
+    },
+    {
+      "role": "nodeIcon",
+      "before": "long",
+      "next": null,
+      "target": false,
+      "expectedInverse": []
+    },
+    {
+      "role": "regionLabel",
+      "before": null,
+      "next": null,
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": null
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": null,
+      "next": "",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": null
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": "",
+      "next": null,
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": ""
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": "😀\u0000甲",
+      "next": "😀\u0000甲",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "😀\u0000甲"
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": "a😀",
+      "next": "a甲",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "a😀"
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": "abc",
+      "next": "abcZ",
+      "target": true,
+      "expectedInverse": [
+        {
+          "id": "retained",
+          "previous": "abc"
+        }
+      ]
+    },
+    {
+      "role": "regionLabel",
+      "before": "long",
+      "next": null,
+      "target": false,
+      "expectedInverse": []
+    }
+  ],
+  "pausePoints": [
+    0,
+    1,
+    3,
+    7,
+    17
+  ]
+}

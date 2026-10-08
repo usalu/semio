@@ -1,6 +1,6 @@
 //! 🔀️ Direct active space-alternative switch mutation.
-use super::super::{RestoreActiveSpaceAlternative, SpaceHistoryMutation};
-use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
+use super::super::{SetActiveSpaceAlternative, SpaceHistoryMutation};
+use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -22,11 +22,11 @@ pub struct SwitchSpaceAlternative {
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SwitchSpaceAlternative {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "switch", entity: "space-alternative", kind: "switch-space-alternative", record: "SwitchedSpaceAlternative" };
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { set_active_alternative_id: Some(Some(self.alternative_id.clone())), ..Default::default() })
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: Some(self.alternative_id.clone()) }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() })]
+        vec![SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() })]
     
     })())
 }

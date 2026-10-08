@@ -44,9 +44,7 @@ impl SemioFlowMutation{
         let mut limited=OperationByteLimitedOutput::new(output,options.limits.max_file_len);
         let output:&mut dyn OperationByteOutput=&mut limited;
         output.write_bytes(&[1,wire_tag(self)],control)?;
-        if let Self::PatchSnapshot(payload)=self{return payload.patch.encode_op_into(options,output,control);}
         match self{
-            Self::SetSnapshot(set_snapshot::SetSnapshot{snapshot:value})=>{raw(output,"snapshot=",control)?;snapshot(options,output,control,value)?;},
             Self::InsertNode(insert_node::InsertNode{node:value})=>{raw(output,"node=",control)?;node(options,output,control,value)?;},
             Self::RemoveNode(remove_node::RemoveNode{id})|Self::RemoveEdge(remove_edge::RemoveEdge{id})=>{raw(output,"id=",control)?;hex(output,id,control)?;},
             Self::SetNodeKind(set_node_kind::SetNodeKind{id,kind})|Self::SetEdgeKind(set_edge_kind::SetEdgeKind{id,kind})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," kind=",control)?;hex(output,kind,control)?;},
@@ -57,7 +55,6 @@ impl SemioFlowMutation{
             Self::InsertEdge(insert_edge::InsertEdge{edge:value})=>{raw(output,"edge=",control)?;edge(options,output,control,value)?;},
             Self::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints{id,from,to})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," from=",control)?;port(options,output,control,from)?;raw(output," to=",control)?;port(options,output,control,to)?;},
             Self::DragNodes(drag_nodes::DragNodes{targets,dx,dy})=>{raw(output,"targets=",control)?;tuple(options,output,control,targets.len(),|index,output,control|hex(output,&targets[index],control))?;raw(output," dx=",control)?;number(output,*dx,control)?;raw(output," dy=",control)?;number(output,*dy,control)?;},
-            Self::PatchSnapshot(_)=>unreachable!(),
         }
         Ok(())
         })

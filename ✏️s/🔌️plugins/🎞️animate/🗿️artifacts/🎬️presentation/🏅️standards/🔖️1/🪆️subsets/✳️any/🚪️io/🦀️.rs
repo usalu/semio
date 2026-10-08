@@ -56,14 +56,14 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#region 🔖️MediaCodec
 /// 🖼️ Encodes a portable title card through the shared XML/SVG model.
 pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_json::Value) -> Result<(String, u32, u32), String> {
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
+    use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or("Animate Presentation");
     let attributes = |values: &[(&str, &str)]| values.iter().map(|(name, value)| XmlAttr { name: (*name).into(), value: (*value).into() }).collect();
     let background = XmlNode::Element { name: "rect".into(), attrs: attributes(&[("width", "100%"), ("height", "100%"), ("fill", "white")]), children: Vec::new() };
     let title = XmlNode::Element { name: "text".into(), attrs: attributes(&[("x", "32"), ("y", "64"), ("font-size", "32"), ("fill", "#111827")]), children: vec![XmlNode::Text { text: title.into() }] };
     let root = XmlNode::Element { name: "svg".into(), attrs: attributes(&[("xmlns", "http://www.w3.org/2000/svg"), ("viewBox", "0 0 1280 720"), ("width", "1280"), ("height", "720")]), children: vec![background, title] };
-    Ok((write_svg_xml(&XmlDocument { root: Some(root), ..Default::default() })?, 1280, 720))
+    Ok((xml_document_to_text_checked(&XmlDocument { root: Some(root), ..Default::default() })?, 1280, 720))
 }
 
 /// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.

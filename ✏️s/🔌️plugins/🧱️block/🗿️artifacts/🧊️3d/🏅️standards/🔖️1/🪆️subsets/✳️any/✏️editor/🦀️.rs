@@ -453,6 +453,7 @@ fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<store::
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Block3dArtifactStorePreparationFactory;
 
 struct Block3dArtifactStorePreparation {
@@ -574,6 +575,7 @@ fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<sto
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Block3dConfigStorePreparationFactory;
 
 struct Block3dConfigStorePreparation {

@@ -627,7 +627,7 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub pub(crate) fn cad_brep_kernel() -> Brep {
+    pub(crate) fn cad_brep_kernel() -> Brep {
         Brep::new()
     }
 
@@ -682,9 +682,16 @@ mod scene_compute {
             .iter()
             .filter(|object| object.visible)
             .filter_map(|object| {
+                if let Some(geometry) = geometry.filter(|geometry| object.solid_handle.as_ref().is_some_and(|id| geometry.owned_meshes.contains_key(id))) {
+                    let snapshot = geometry.owned_breps.get(object.solid_handle.as_ref()?)?;
+                    let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).ok()?;
+                    let local = kernel.merge_representation(body);
+                    return Some(local.into_iter().filter_map(|solid| place_object_solid(kernel, solid, object)).collect::<Vec<_>>());
+                }
                 let local = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| host_snapshot_local_solid(kernel, object, geometry, &handles)).or_else(|| typology_local_solid(kernel, &object.typology, object.extent))?;
-                place_object_solid(kernel, local, object)
+                place_object_solid(kernel, local, object).map(|solid| vec![solid])
             })
+            .flatten()
             .collect()
     }
 
@@ -812,6 +819,7 @@ mod scene_compute {
             energy_model: Some(crate::cad_empty_pane_child(CadPaneId::Energy)),
             structure_classic_model: Some(crate::cad_empty_pane_child(CadPaneId::StructureClassic)),
             drawings: Vec::new(),
+            breps: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
             references_by_model_definition_id: crate::CadReferenceIndex::new(),
         }
@@ -837,6 +845,7 @@ mod scene_compute {
             energy_model: child(CadPaneId::Energy),
             structure_classic_model: child(CadPaneId::StructureClassic),
             drawings: Vec::new(),
+            breps: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),
         }
@@ -940,6 +949,9 @@ mod scene_compute {
     }
 
     pub(crate) fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
+        if let Some(mesh) = object.solid_handle.as_ref().and_then(|id| geometry?.owned_meshes.get(id)) {
+            return (**mesh).clone();
+        }
         let kind = primary_primitive_kind(object);
         {
             let mut kernel = cad_brep_kernel();

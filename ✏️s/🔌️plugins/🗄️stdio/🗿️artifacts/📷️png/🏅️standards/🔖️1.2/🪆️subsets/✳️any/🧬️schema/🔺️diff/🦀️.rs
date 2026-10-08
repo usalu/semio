@@ -15,7 +15,7 @@ pub struct PngDiff {
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
-    fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
+    fn apply(&self, base: &PngSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PngSnapshot> {
         let next = PngSnapshot { schema: base.schema.clone(), image: self.image.clone().unwrap_or_else(|| base.image.clone()) };
         next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-image", message).at(["image"]))?;
         Ok(next)

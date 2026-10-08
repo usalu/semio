@@ -5,7 +5,7 @@ use store::sqlite_snapshot::transfer;
 enum Attach<'a>{Entry(usize,&'a str),Array(i64,usize),Member(i64,usize,&'a str)}
 struct Pending<'a>{value:&'a DslValue,attach:Attach<'a>}
 fn decimal(value:u64,buffer:&mut[u8;20])->&str{let mut value=value;let mut start=20;loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[start..]).expect("decimal digits")}
-pub(super) fn project(value:&FormDictionary,p:&mut Projection<'_,'_>)->Result<(),ValueError>{
+pub(super) fn project(value:&FormDictionary,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let mut identities=p.allocate_frontier(value.entries.len())?;for(index,entry)in value.entries.iter().enumerate(){identities.push((index,entry.question_id.as_str()));}p.sort_frontier(&mut identities,|a,b,control|{let order=transfer::compare_text(a.1,b.1,SqliteSnapshotPhase::ProjectSnapshot,control)?;if order.is_eq()&&a.0!=b.0{return Err(invalid("duplicate FormDictionary question identity"))}Ok(order)})?;p.insert_key("layout_form_dictionary",1,&[Cell::Integer(1)])?;let mut pending=p.allocate_frontier(value.entries.len())?;
  for(index,entry)in value.entries.iter().enumerate().rev(){pending.push(Pending{value:&entry.value,attach:Attach::Entry(index,&entry.question_id)});}
  while let Some(Pending{value,attach})=pending.pop(){let kind=match value{DslValue::Null=>"null",DslValue::Bool(_)=>"boolean",DslValue::Number(Number::UInt(_))=>"unsigned",DslValue::Number(Number::Int(_))=>"signed",DslValue::Number(Number::Float(_))=>"float",DslValue::String(_)=>"text",DslValue::Bytes(_)=>"bytes",DslValue::Array(_)=>"array",DslValue::Object(_)=>"object"};let id=p.insert("layout_dictionary_value",&[Cell::Text(kind)])?;

@@ -41,10 +41,6 @@
   "performance": { "noisePaths": 128, "timingRounds": 4, "timingNoisePaths": 512 },
   "execution": {
     "target": "test-nested-cargo-collision-authority",
-    "command": "bun ./📜️script.ts test nested-cargo-collision-authority",
-    "launchName": "🧹clean🧩️taxonomy💥️nested-cargo-collision-authority",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-nested-cargo-collision-authority --skip-nx-cache",
-    "group": "4_gate",
-    "order": 410.14
+    "command": "bun ./📜️script.ts test nested-cargo-collision-authority"
   }
 }

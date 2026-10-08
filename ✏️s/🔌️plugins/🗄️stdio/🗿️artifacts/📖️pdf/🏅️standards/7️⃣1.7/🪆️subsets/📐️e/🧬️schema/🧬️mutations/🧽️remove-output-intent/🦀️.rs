@@ -2,7 +2,7 @@
 
 use super::set_output_intent::SetOutputIntent;
 use super::PdfEMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -14,9 +14,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveOutputIntent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "output-intent", kind: "remove-output-intent", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::remove_catalog_entry(&mut next, "OutputIntents");
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "OutputIntents")))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfEMutation>, semio_framework_value::ValueError> {

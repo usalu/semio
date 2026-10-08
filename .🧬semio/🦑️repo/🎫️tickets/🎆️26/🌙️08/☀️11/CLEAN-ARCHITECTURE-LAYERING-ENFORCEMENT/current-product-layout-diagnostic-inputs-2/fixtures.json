@@ -1,0 +1,79 @@
+[
+  {
+    "id": "valid",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "lib",
+      "platform": "target",
+      "insideTarget": true,
+      "caseCount": 3
+    },
+    "accepted": true
+  },
+  {
+    "id": "id-refusal",
+    "value": {
+      "id": "foreign",
+      "kind": "lib",
+      "platform": "target",
+      "insideTarget": true,
+      "caseCount": 3
+    },
+    "accepted": false
+  },
+  {
+    "id": "kind-refusal",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "bin",
+      "platform": "target",
+      "insideTarget": true,
+      "caseCount": 3
+    },
+    "accepted": false
+  },
+  {
+    "id": "platform-refusal",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "lib",
+      "platform": "host",
+      "insideTarget": true,
+      "caseCount": 3
+    },
+    "accepted": false
+  },
+  {
+    "id": "insideTarget-refusal",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "lib",
+      "platform": "target",
+      "insideTarget": false,
+      "caseCount": 3
+    },
+    "accepted": false
+  },
+  {
+    "id": "caseCount-refusal",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "lib",
+      "platform": "target",
+      "insideTarget": true,
+      "caseCount": 2
+    },
+    "accepted": false
+  },
+  {
+    "id": "caseCount-refusal",
+    "value": {
+      "id": "semio-framework-os-renderer-wgpu",
+      "kind": "lib",
+      "platform": "target",
+      "insideTarget": true,
+      "caseCount": 4
+    },
+    "accepted": false
+  }
+]

@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::inferences::compute_energy_model_entries;
 use super::*;
 
 /// 🌱 `crate::model::Model` has exactly 44 top-level fields (name/version/site/zones/spaces/

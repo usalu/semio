@@ -1,0 +1,493 @@
+{
+  "category": {
+    "id": "brep.intersect",
+    "emoji": "✂️",
+    "order": 80,
+    "label": {
+      "en": "Sections and intersections",
+      "de": "Schnitte und Schnittmengen"
+    },
+    "description": {
+      "en": "Cut solids with planes and intersect curves and surfaces.",
+      "de": "Körper mit Ebenen schneiden sowie Kurven und Flächen schneiden."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.intersect.section",
+      "category": "brep.intersect",
+      "emoji": "🍰️",
+      "label": {
+        "en": "Section",
+        "de": "Schnitt"
+      },
+      "description": {
+        "en": "Cuts a solid with a plane and returns the cross-section faces; sections of curved faces are not exact yet.",
+        "de": "Schneidet einen Körper mit einer Ebene und liefert die Schnittflächen; Schnitte gekrümmter Flächen sind noch nicht exakt."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane given by an origin and a normal.",
+            "de": "Die Ebene aus Ursprung und Normale."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "faces",
+          "label": {
+            "en": "Section faces",
+            "de": "Schnittflächen"
+          },
+          "description": {
+            "en": "Every cross-section face the plane produced.",
+            "de": "Jede Schnittfläche, die die Ebene erzeugt hat."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "face"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "plane"
+          },
+          {
+            "motion": "rotate",
+            "port": "plane"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.intersect.split",
+      "category": "brep.intersect",
+      "emoji": "✂️",
+      "label": {
+        "en": "Split",
+        "de": "Teilen"
+      },
+      "description": {
+        "en": "Splits a solid at a plane into the part in front of and the part behind it.",
+        "de": "Teilt einen Körper an einer Ebene in den Teil vor und den Teil hinter der Ebene."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane given by an origin and a normal.",
+            "de": "Die Ebene aus Ursprung und Normale."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "label": {
+            "en": "Front",
+            "de": "Vorderseite"
+          },
+          "description": {
+            "en": "The part on the side the plane normal points to.",
+            "de": "Der Teil auf der Seite, zu der die Ebenennormale zeigt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "negative",
+          "label": {
+            "en": "Back",
+            "de": "Rückseite"
+          },
+          "description": {
+            "en": "The part on the opposite side.",
+            "de": "Der Teil auf der gegenüberliegenden Seite."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "plane"
+          },
+          {
+            "motion": "rotate",
+            "port": "plane"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.intersect.curveCurve",
+      "category": "brep.intersect",
+      "emoji": "❌️",
+      "label": {
+        "en": "Curve-curve intersection",
+        "de": "Kurve-Kurve-Schnitt"
+      },
+      "description": {
+        "en": "Finds the points where two curves meet.",
+        "de": "Findet die Punkte, an denen sich zwei Kurven treffen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Curve A",
+            "de": "Kurve A"
+          },
+          "description": {
+            "en": "The first curve.",
+            "de": "Die erste Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Curve B",
+            "de": "Kurve B"
+          },
+          "description": {
+            "en": "The second curve.",
+            "de": "Die zweite Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest gap that still counts as a meeting point.",
+            "de": "Größter Abstand, der noch als Treffpunkt gilt."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The intersection points.",
+            "de": "Die Schnittpunkte."
+          },
+          "type": "point",
+          "list": true
+        },
+        {
+          "name": "wire",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "A polyline through the points; absent when fewer than two points were found.",
+            "de": "Eine Polylinie durch die Punkte; entfällt, wenn weniger als zwei Punkte gefunden wurden."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ],
+          "optional": true
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    },
+    {
+      "id": "brep.intersect.curveSurface",
+      "category": "brep.intersect",
+      "emoji": "📌️",
+      "label": {
+        "en": "Curve-surface intersection",
+        "de": "Kurve-Fläche-Schnitt"
+      },
+      "description": {
+        "en": "Finds the points where a curve pierces a surface.",
+        "de": "Findet die Punkte, an denen eine Kurve eine Fläche durchstößt."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "surface",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The surface to evaluate.",
+            "de": "Die auszuwertende Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest gap that still counts as a meeting point.",
+            "de": "Größter Abstand, der noch als Treffpunkt gilt."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The intersection points.",
+            "de": "Die Schnittpunkte."
+          },
+          "type": "point",
+          "list": true
+        },
+        {
+          "name": "wire",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "A polyline through the points; absent when fewer than two points were found.",
+            "de": "Eine Polylinie durch die Punkte; entfällt, wenn weniger als zwei Punkte gefunden wurden."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ],
+          "optional": true
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    },
+    {
+      "id": "brep.intersect.surfaceSurface",
+      "category": "brep.intersect",
+      "emoji": "🌐️",
+      "label": {
+        "en": "Surface-surface intersection",
+        "de": "Fläche-Fläche-Schnitt"
+      },
+      "description": {
+        "en": "Finds the curves along which two surfaces meet.",
+        "de": "Findet die Kurven, entlang derer sich zwei Flächen treffen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Surface A",
+            "de": "Fläche A"
+          },
+          "description": {
+            "en": "The first surface.",
+            "de": "Die erste Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Surface B",
+            "de": "Fläche B"
+          },
+          "description": {
+            "en": "The second surface.",
+            "de": "Die zweite Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest gap that still counts as a meeting curve.",
+            "de": "Größter Abstand, der noch als Schnittkurve gilt."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "wires",
+          "label": {
+            "en": "Intersection wires",
+            "de": "Schnittkantenzüge"
+          },
+          "description": {
+            "en": "Every intersection wire; two surfaces can meet along several disjoint curves.",
+            "de": "Jeder Schnittkantenzug; zwei Flächen können sich entlang mehrerer getrennter Kurven treffen."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "wire"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    }
+  ]
+}

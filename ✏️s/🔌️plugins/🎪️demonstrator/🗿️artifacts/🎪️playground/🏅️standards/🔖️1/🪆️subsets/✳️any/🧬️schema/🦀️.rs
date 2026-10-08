@@ -4,7 +4,7 @@ use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full playground artifact state (artifact-lane fields only today).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.demonstrator.playground")]
 pub struct PlaygroundArtifact {

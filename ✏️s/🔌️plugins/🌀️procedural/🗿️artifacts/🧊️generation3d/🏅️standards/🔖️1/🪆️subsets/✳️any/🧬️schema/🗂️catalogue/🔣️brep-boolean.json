@@ -1,0 +1,318 @@
+{
+  "category": {
+    "id": "brep.boolean",
+    "emoji": "🔗️",
+    "order": 50,
+    "label": {
+      "en": "Booleans",
+      "de": "Boolesche Operationen"
+    },
+    "description": {
+      "en": "Combine solids by union, difference and intersection.",
+      "de": "Körper durch Vereinigung, Differenz und Schnittmenge kombinieren."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.boolean.fuse",
+      "category": "brep.boolean",
+      "emoji": "➕️",
+      "label": {
+        "en": "Union",
+        "de": "Vereinigen"
+      },
+      "description": {
+        "en": "Merges two solids into one that covers both.",
+        "de": "Verschmilzt zwei Körper zu einem, der beide abdeckt."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Solid A",
+            "de": "Körper A"
+          },
+          "description": {
+            "en": "The first solid.",
+            "de": "Der erste Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Solid B",
+            "de": "Körper B"
+          },
+          "description": {
+            "en": "The second solid.",
+            "de": "Der zweite Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The united solid.",
+            "de": "Der vereinigte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.boolean.cut",
+      "category": "brep.boolean",
+      "emoji": "➖️",
+      "label": {
+        "en": "Difference",
+        "de": "Subtrahieren"
+      },
+      "description": {
+        "en": "Removes the second solid from the first.",
+        "de": "Entfernt den zweiten Körper aus dem ersten."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Base",
+            "de": "Basis"
+          },
+          "description": {
+            "en": "The solid to cut into.",
+            "de": "Der Körper, in den geschnitten wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Tool",
+            "de": "Werkzeug"
+          },
+          "description": {
+            "en": "The solid that is removed.",
+            "de": "Der Körper, der entfernt wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid after the cut.",
+            "de": "Der Körper nach dem Schnitt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.boolean.intersect",
+      "category": "brep.boolean",
+      "emoji": "✖️",
+      "label": {
+        "en": "Intersection",
+        "de": "Schnittmenge"
+      },
+      "description": {
+        "en": "Keeps only the volume shared by both solids.",
+        "de": "Behält nur das Volumen, das beiden Körpern gemeinsam ist."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Solid A",
+            "de": "Körper A"
+          },
+          "description": {
+            "en": "The first solid.",
+            "de": "Der erste Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Solid B",
+            "de": "Körper B"
+          },
+          "description": {
+            "en": "The second solid.",
+            "de": "Der zweite Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The common volume.",
+            "de": "Das gemeinsame Volumen."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.boolean.compoundCut",
+      "category": "brep.boolean",
+      "emoji": "🔪️",
+      "label": {
+        "en": "Difference with many tools",
+        "de": "Mehrfach subtrahieren"
+      },
+      "description": {
+        "en": "Removes several tool solids from a target in one step.",
+        "de": "Entfernt mehrere Werkzeugkörper in einem Schritt aus einem Zielkörper."
+      },
+      "inputs": [
+        {
+          "name": "target",
+          "label": {
+            "en": "Target",
+            "de": "Ziel"
+          },
+          "description": {
+            "en": "The solid to cut into.",
+            "de": "Der Körper, in den geschnitten wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "tools",
+          "label": {
+            "en": "Tools",
+            "de": "Werkzeuge"
+          },
+          "description": {
+            "en": "The solids that are removed.",
+            "de": "Die Körper, die entfernt werden."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ],
+          "minItems": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The target after all cuts.",
+            "de": "Das Ziel nach allen Schnitten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "target"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

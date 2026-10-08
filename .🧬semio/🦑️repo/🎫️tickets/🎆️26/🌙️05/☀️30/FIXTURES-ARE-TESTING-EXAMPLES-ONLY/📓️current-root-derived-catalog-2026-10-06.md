@@ -59,3 +59,7 @@ Actual sequential generate exit0 in1m8s:3644scopes/9345diagnostics; docs exit0 i
 Actual60 generation exited0 (3645scopes/9333diagnostics,3m48s); actual docs exited0 (2m25s); full check exited1 (2m40s) with9336 diagnostic JSON lines including1clamp whole-corpus authority and1catalog-stale. These are retained failed gate receipts, not a fixture-zero pass. Clamp corpus schema and three whole-law Ajv lines were then removed; plain fixtureSHA46e76cd remained unchanged and actualBun clamp3passed/0failed/1017assertions (66ms;142ms Nx) executed independent stableSort/BufferUTF8/JSONPatch and cancellation/settlement laws. See the clamp closure report.
 
 The Oct7 fresh audit subsequently caught reappeared replay policies and additional Value/Drawing/Layout/Table testing authority. Root current closure and68 neutral regression tests are documented in 📓️oct7-root-corpus-authority-closure.md; refreshed derived outputs follow the current source settlement. No unrelated whole-schema success is claimed.
+
+## Oct7 Latest Generation, Oct8 Followup
+
+The latest actual root-schema-generate terminal receipt exited0 in3m30s with3639scopes/9308diagnostics after the68-case source closures. Its terminal stdout was observed; no deleted output file is claimed retained. Current docs and full diagnostic check follow sequentially on Oct8; the published catalog is not described as globally clean.

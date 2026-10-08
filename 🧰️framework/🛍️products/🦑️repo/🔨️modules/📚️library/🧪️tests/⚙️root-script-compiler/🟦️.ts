@@ -3,7 +3,6 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileS
 import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import glob from "fast-glob";
-import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import { policySnakeToCamel } from "../../🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
 import { policyExtractRustSchemaFields } from "../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
@@ -113,14 +112,8 @@ test("glue path discovery retains its declared targets with independent compiler
   for (const implementation of implementations("policyCollectGluePathTargets")) expect([...implementation(join(directory, vector.glue.entry))].map((path) => relative(directory, path as string).replaceAll("\\", "/")).sort()).toEqual(vector.glue.targets);
 });
 
-test("registers the root compiler gate through Nx and both launch catalogs", () => {
+test("registers the root compiler gate through Nx", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(root, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
 });

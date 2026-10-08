@@ -326,6 +326,59 @@
       }
     },
     "test-native-grammar": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "phase",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_GRAMMAR_PHASE"
+              },
+              {
+                "id": "diagram-family",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_DIAGRAM_FAMILY"
+              },
+              {
+                "id": "geo-palette-phase",
+                "kind": "text",
+                "valueEnv": "PRINT_NATIVE_GEO_PALETTE_PHASE"
+              },
+              {
+                "id": "geo-planar-phase",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "guard",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_PHASE": "guard"
+                    }
+                  },
+                  {
+                    "id": "admission",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_PHASE": "admission"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "geo-planar-source",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "rust",
+                    "env": {
+                      "PRINT_NATIVE_GEO_PLANAR_SOURCE": "rust"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {

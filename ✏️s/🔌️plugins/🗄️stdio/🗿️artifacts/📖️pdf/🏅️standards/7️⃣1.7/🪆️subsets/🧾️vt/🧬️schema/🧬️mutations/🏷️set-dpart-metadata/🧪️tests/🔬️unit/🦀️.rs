@@ -1,14 +1,19 @@
 use super::*;
-use protocol::MutationDiff;
+use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
-    let mut base = PdfSnapshot::default();
-    support::insert_object(&mut base, support::dict(vec![("Type", PdfObject::Name("Catalog".to_string()))]));
-    support::set_dpart_root(&mut base, "before");
+    let catalog = support::document_of(vec![support::catalog_object()]);
+    let base = support::after_rows(&catalog, support::dpart_root_rows(&catalog, "before"));
     let mutation = SetDpartMetadata { job: "after".to_string() };
-    let outcome = <SetDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::diff(&mutation, &base);
-    let next = outcome.diff().apply(&base).unwrap();
+    let next = applied(&base, &PdfVtMutation::SetDpartMetadata(mutation.clone()));
     assert_eq!(support::dpart_job(&next).as_deref(), Some("after"));
     assert_eq!(<SetDpartMetadata as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "before".to_string() })]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = { let catalog = support::document_of(vec![support::catalog_object()]); support::after_rows(&catalog, support::dpart_root_rows(&catalog, "before")) };
+    assert_mutation_inverse_sum_law(&PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: "after".to_string() }), &base).await;
 }

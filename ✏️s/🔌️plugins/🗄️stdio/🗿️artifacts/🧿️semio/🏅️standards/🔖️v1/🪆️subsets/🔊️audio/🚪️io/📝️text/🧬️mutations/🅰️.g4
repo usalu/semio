@@ -4,8 +4,7 @@
 // `print_audio_mutation`/`parse_audio_mutation`).
 grammar Stdio_semio_audio_mutations;
 
-op                : setSnapshot | setSampleRate | setFormat | insertChannel | removeChannel | setChannelSamples | insertTag | removeTag | setTagValue ;
-setSnapshot       : 'set-snapshot' snapshot ;
+op                : setSampleRate | setFormat | insertChannel | removeChannel | setChannelSamples | insertTag | removeTag | setTagValue ;
 setSampleRate     : 'set-sample-rate' INT ;
 setFormat         : 'set-format' format ;
 insertChannel     : 'insert-channel' INT channel ;

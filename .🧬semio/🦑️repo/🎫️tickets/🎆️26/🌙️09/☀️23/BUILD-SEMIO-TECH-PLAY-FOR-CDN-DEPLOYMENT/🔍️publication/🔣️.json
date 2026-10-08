@@ -1,0 +1,33 @@
+{
+  "coreName": "synthetic_component.core.wasm",
+  "cases": [
+    {
+      "id": "valid",
+      "content": "abc",
+      "declared": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "writeCore": true,
+      "accepted": true
+    },
+    {
+      "id": "mismatched",
+      "content": "abd",
+      "declared": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "writeCore": true,
+      "accepted": false
+    },
+    {
+      "id": "missing-core",
+      "content": "abc",
+      "declared": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "writeCore": false,
+      "accepted": false
+    },
+    {
+      "id": "invalid-digest",
+      "content": "abc",
+      "declared": "",
+      "writeCore": true,
+      "accepted": false
+    }
+  ]
+}

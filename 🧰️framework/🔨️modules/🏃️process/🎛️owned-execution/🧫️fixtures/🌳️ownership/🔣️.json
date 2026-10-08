@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "mode": "timeout",
+      "timeoutMs": 5000,
+      "settleMs": 8000,
+      "expected": {
+        "settled": true,
+        "survivors": 0,
+        "unrelatedAlive": true,
+        "reason": "timeout 5000ms"
+      }
+    },
+    {
+      "mode": "abort",
+      "timeoutMs": 5000,
+      "settleMs": 8000,
+      "expected": {
+        "settled": true,
+        "survivors": 0,
+        "unrelatedAlive": true,
+        "reason": "cancelled"
+      }
+    },
+    {
+      "mode": "stop",
+      "timeoutMs": 5000,
+      "settleMs": 8000,
+      "expected": {
+        "settled": true,
+        "survivors": 0,
+        "unrelatedAlive": true,
+        "reason": "SIGTERM"
+      }
+    }
+  ]
+}

@@ -72,7 +72,7 @@ pub enum PdfEMutation {
 pub fn apply_e_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfEMutation) -> protocol::MutationOutcome<PdfDiff> {
     use protocol::Mutation;
     let outcome = mutation.diff(snapshot);
-    outcome.apply_to(snapshot)
+    crate::standards::v1_7::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
 }
 
 /// 🧾️ Returns the derive-owned semantic catalog in declaration and binary-tag order.

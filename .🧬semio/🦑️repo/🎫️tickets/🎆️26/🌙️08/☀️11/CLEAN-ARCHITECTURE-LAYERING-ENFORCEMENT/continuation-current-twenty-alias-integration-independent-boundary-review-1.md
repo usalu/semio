@@ -1,0 +1,7 @@
+# Twenty Alias Integration Independent Boundary Review
+
+Reviewed the current integration proposal; executable Source20 successors and Alias2 remain unadmitted. Overlay materialization before actual owning preparation is necessary because preparation imports captured providers. Model/prepared namespace proofs must remain distinct and join exact captured manifests and bodies; later source/runtime/dispatcher pre/post checks must call the same immutable namespace assertion. Runtime must refuse actual live Root-owned module resolution even when bytes match.
+
+The real snapshot is nested inside Root. A missing optional captured alias cannot rely on a dangling link to prevent ancestor node_modules fallback. Require actual nested-context bare and arbitrary subpath imports under both Bun and Node to refuse through closed physical denial packages. Import failure must be an explicit normative successful refusal outcome, separate from exception-to-rejection mutation controls: a successful fallback cannot be caught and equated with expected model rejection. Full namespace type/link/manifest/membership and declared external package custody remain necessary.
+
+These are review conditions, not implementation or method acceptance. Source19 actual runtime refusals and no-whole state remain preserved. Full source scans are separate immutable custody evidence and cannot override a live alias import mismatch.

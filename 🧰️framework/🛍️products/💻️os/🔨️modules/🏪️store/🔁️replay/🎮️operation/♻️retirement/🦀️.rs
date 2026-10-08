@@ -4,13 +4,16 @@ use super::super::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::{mem::{ManuallyDrop, size_of}, sync::Arc};
 
-pub(crate) trait ArtifactReplayRetirementFactory<P, M>: Send + Sync {
+pub(crate) trait ArtifactReplayRetirementFactory<P, M>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn snapshot(&self, owner: Arc<P>) -> Box<dyn ErasedSnapshotRetirement>;
     fn mutations(&self, owners: semio_framework_value::list::PagedList<M, {usize::MAX}>) -> Box<dyn ErasedSnapshotRetirement>;
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RegisteredReplayRetirement<P, M> {
+    #[factory_child]
     snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    #[factory_child]
     mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
 }
 

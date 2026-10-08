@@ -13,7 +13,7 @@ pub use change_camera::ChangeCamera;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
-#[mutations(snapshot = DagConfig, diff = DagConfig, schema = "dag.config")]
+#[mutations(snapshot = DagConfig, diff = DagConfigDiff, schema = "dag.config")]
 pub enum DagConfigMutation {
     ReplaceConfig(ReplaceConfig),
     ChangeCamera(ChangeCamera),

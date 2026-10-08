@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeMaterialDensity` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeMaterialDensity, base: &EnergyModelSnapshot) 
     if existing.density_kg_m3 == payload.new_density_kg_m3 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this density (kg/m³): {}.", payload.id.0, payload.new_density_kg_m3));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {
-        item.density_kg_m3 = payload.new_density_kg_m3;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { materials: Rows::modifying(MaterialPatch { density_kg_m3: Some(payload.new_density_kg_m3), ..MaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

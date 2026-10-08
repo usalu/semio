@@ -1,6 +1,5 @@
 //! 🧬️ GifMutation (87a) — document mutation dispatch. Ticket
-//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: beyond the universal
-//! `{NoMutation, SetSnapshot}` stub, 87a's real vocabulary covers everything GIF87a actually has —
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 87a's real vocabulary covers everything GIF87a actually has —
 //! screen descriptor, GCT, and the image sequence (insert/remove/move/geometry/pixels/interlace).
 //! No GCE-shaped mutations here (delay/disposal/transparency/loop) — 87a genuinely has none of
 //! those concepts; that scope lives entirely on 89a's mutation enum.
@@ -12,9 +11,8 @@
 //! mirroring `stdio.tiff`'s `🔖️6.0/🧱️baseline` reference migration). `NoMutation` is dropped: the
 //! derive requires every variant to wrap exactly one leaf payload and asserts
 //! `is_approved_verb(SEMANTICS.verb)`, and `"no"` is not an approved verb. The old
-//! `impl Mutation<GifSnapshot> for GifMutation` block is gone; its `diff`/`inverse` bodies live on
-//! verbatim as the free functions `agg_diff`/`agg_inverse` below, which every leaf's own
-//! `MutationKind::diff`/`inverse` delegates back into.
+//! `impl Mutation<GifSnapshot> for GifMutation` block is gone; every leaf's own `MutationKind::diff`/`inverse`
+//! builds its sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! `#[derive(dsl::DslOps)]` is KEPT alongside `#[derive(dsl::Mutations)]`: the hand-rolled
 //! `OpText`/`OpBinary` impls below (P6: `DslOps` emits `DslVariants` only) still need
@@ -22,11 +20,11 @@
 //! variant's `RecordSpec` to its inner type's own `DslField` impl — which is why every leaf payload
 //! struct below derives `dsl::DslRecord` in addition to `dsl::MutationLeaf`.
 
-use crate::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
+use crate::standards::v87a::subsets::any::schema::diff::{GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
 #[cfg(test)]
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 
 //#region 🔖️Mutations
@@ -50,13 +48,6 @@ pub mod set_image_pixels;
 pub mod set_pixel_aspect_ratio;
 #[path = "📐set-screen-size/🦀️.rs"]
 pub mod set_screen_size;
-/// 📐️ Typed content mutation for `stdio.gif` (87a).
-//#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-//#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
@@ -64,8 +55,6 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = GifSnapshot, diff = GifDiff, schema = "GifMutation")]
 pub enum GifMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetScreenSize(set_screen_size::SetScreenSize),
     SetGlobalColorTable(set_global_color_table::SetGlobalColorTable),
     SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex),
@@ -85,7 +74,7 @@ pub enum GifMutation {
 /// this list honest against the enum — the framework never parses Rust, so nothing else notices if
 /// this list and the enum drift apart.
 pub const KINDS: &[&str] =
-    &["set-snapshot", "patch-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
+    &["set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
 //#endregion 🔖️Mutations
 
 /// 🧪️ P2-FG2: representative `GifMutation` cases for `ops_grammar_conformance_law`/
@@ -99,8 +88,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     let base = crate::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };
     vec![
-        GifMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 10, height: 10 }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: base.gct.clone() }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: None }),
@@ -120,7 +107,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
     let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -131,86 +118,31 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
-    if let Some((message, target)) = raster_refusal(this, base) {
-        return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, target);
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the diverging image tail is removed, the screen descriptor fields set,
+/// then the next tail inserted, so every intermediate state keeps the raster rules the leaves enforce. The snapshot `schema`
+/// is a constant of the artifact and never differs.
+pub fn net_mutations(base: &GifSnapshot, next: &GifSnapshot) -> Vec<GifMutation> {
+    let common = base.images.iter().zip(&next.images).take_while(|(left, right)| left == right).count();
+    let mut leaves: Vec<GifMutation> = (common..base.images.len()).rev().map(|index| GifMutation::RemoveImage(remove_image::RemoveImage { index })).collect();
+    if (base.width, base.height) != (next.width, next.height) {
+        leaves.push(GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: next.width, height: next.height }));
     }
-    protocol::MutationOutcome::new(match this {
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
-        GifMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<GifSnapshot, GifMutation>>::diff(patch, base),
-        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
-        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
-        GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index }) => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
-        GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio }) => GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() },
-        GifMutation::InsertImage(insert_image::InsertImage { index, image }) => {
-            GifDiff { images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }), ..Default::default() }
-        }
-        GifMutation::RemoveImage(remove_image::RemoveImage { index }) => GifDiff { images: Some(GifImagesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
-        GifMutation::MoveImage(move_image::MoveImage { from, to }) => {
-            let mut images = base.images.clone();
-            if *from < images.len() {
-                let item = images.remove(*from);
-                let at = (*to).min(images.len());
-                images.insert(at, item);
-            }
-            GifDiff { images: Some(GifImagesDiff::between(&base.images, &images)), ..Default::default() }
-        }
-        GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, left, top, width, height }) => {
-            let d = GifImageDiff { left: Some(*left), top: Some(*top), width: Some(*width), height: Some(*height), ..Default::default() };
-            GifDiff { images: Some(GifImagesDiff { modified: vec![GifImageModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
-        }
-        GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, indices }) => {
-            let d = GifImageDiff { indices: Some(indices.clone()), ..Default::default() };
-            GifDiff { images: Some(GifImagesDiff { modified: vec![GifImageModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
-        }
-        GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index, interlace }) => {
-            let d = GifImageDiff { interlace: Some(*interlace), ..Default::default() };
-            GifDiff { images: Some(GifImagesDiff { modified: vec![GifImageModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
-        }
-    })
+    if base.gct != next.gct {
+        leaves.push(GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: next.gct.clone() }));
+    }
+    if base.background_color_index != next.background_color_index {
+        leaves.push(GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: next.background_color_index }));
+    }
+    if base.pixel_aspect_ratio != next.pixel_aspect_ratio {
+        leaves.push(GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: next.pixel_aspect_ratio }));
+    }
+    leaves.extend(next.images.iter().enumerate().skip(common).map(|(index, image)| GifMutation::InsertImage(insert_image::InsertImage { index, image: image.clone() })));
+    leaves
 }
+//#endregion 🔖️Net
 
 //#region 🔖️RasterGuard
-/// 🖼️ The whole-snapshot raster guard: the first image of `snapshot` the GIF87a stream cannot carry, if any.
-fn snapshot_raster_refusal(snapshot: &GifSnapshot) -> Option<(String, Vec<String>)> {
-    snapshot.images.iter().enumerate().find_map(|(index, image)| image_fits(index, image, (snapshot.width, snapshot.height)).or_else(|| image_covers(index, image)).or_else(|| image_colored(index, image, snapshot.gct.as_ref())))
-}
-
-/// 🛂️ The raster guard a path-scoped snapshot patch must pass (the `patch-snapshot` leaf's whole-snapshot check).
-pub(crate) fn raster_check(snapshot: &GifSnapshot) -> Result<(), String> {
-    snapshot_raster_refusal(snapshot).map_or(Ok(()), |(message, _)| Err(message))
-}
-
-/// 🖼️ Refuses an edit that would leave an image the GIF87a stream cannot carry, checked on the images the edit touches:
-/// "The specifications for the image position and size must be confined to the dimensions defined by the Screen
-/// Descriptor", the raster carries pixel indices "the number of which is equal to image-width*image-height", and every
-/// index addresses an entry of the active colour map, the image's Local Color Map or else the Global Color Map.
-/// <https://www.w3.org/Graphics/GIF/spec-gif87.txt>
-fn raster_refusal(this: &GifMutation, base: &GifSnapshot) -> Option<(String, Vec<String>)> {
-    let screen = (base.width, base.height);
-    let image_at = |index: usize| base.images.get(index).map(|image| (index, image));
-    match this {
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => snapshot_raster_refusal(snapshot),
-        GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => base.images.iter().enumerate().find_map(|(index, image)| image_fits(index, image, (*width, *height))),
-        GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => base.images.iter().enumerate().filter(|(_, image)| image.lct.is_none()).find_map(|(index, image)| image_colored(index, image, gct.as_ref())),
-        GifMutation::InsertImage(insert_image::InsertImage { index, image }) => {
-            let at = (*index).min(base.images.len());
-            image_fits(at, image, screen).or_else(|| image_covers(at, image)).or_else(|| image_colored(at, image, base.gct.as_ref()))
-        }
-        GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, left, top, width, height }) => image_at(*index).and_then(|(index, image)| {
-            let moved = GifImage { left: *left, top: *top, width: *width, height: *height, ..image.clone() };
-            image_covers(index, &moved).or_else(|| image_fits(index, &moved, screen))
-        }),
-        GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, indices }) => image_at(*index).and_then(|(index, image)| {
-            let repainted = GifImage { indices: indices.clone(), ..image.clone() };
-            image_covers(index, &repainted).or_else(|| image_colored(index, &repainted, base.gct.as_ref()))
-        }),
-        _ => None,
-    }
-}
-
 /// 📐️ The image's rectangle lies inside the screen the Screen Descriptor defines.
 fn image_fits(index: usize, image: &GifImage, (width, height): (u32, u32)) -> Option<(String, Vec<String>)> {
     (u64::from(image.left) + u64::from(image.width) > u64::from(width) || u64::from(image.top) + u64::from(image.height) > u64::from(height))
@@ -229,55 +161,6 @@ fn image_colored(index: usize, image: &GifImage, gct: Option<&GifColorTable>) ->
     image.indices.iter().max().filter(|max| usize::from(**max) >= colors).map(|max| (format!("image {index} uses colour index {max}, past its {colors}-entry active colour map (GIF87a Color Map)"), vec!["images".to_string(), index.to_string(), "indices".to_string()]))
 }
 //#endregion 🔖️RasterGuard
-
-/// ↩️ Real, round-trippable inverses. `apply(inverse(m), apply(m, base)) == base` for every variant,
-/// incl. image-index ops. A target that no longer exists (an out-of-range index) inverts to the
-/// EMPTY step list — there is no `NoMutation` stand-in any more, and an empty list is already what
-/// "nothing to undo" means to every caller of `Mutation::inverse`.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &GifMutation, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        GifMutation::SetSnapshot(_) => vec![GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        GifMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<GifSnapshot, GifMutation>>::inverse(patch, base)?),
-        GifMutation::SetScreenSize(_) => vec![GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: base.width, height: base.height })],
-        GifMutation::SetGlobalColorTable(_) => vec![GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: base.gct.clone() })],
-        GifMutation::SetBackgroundColorIndex(_) => vec![GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: base.background_color_index })],
-        GifMutation::SetPixelAspectRatio(_) => vec![GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: base.pixel_aspect_ratio })],
-        GifMutation::InsertImage(insert_image::InsertImage { index, .. }) => vec![GifMutation::RemoveImage(remove_image::RemoveImage { index: (*index).min(base.images.len()) })],
-        GifMutation::RemoveImage(remove_image::RemoveImage { index }) => match base.images.get(*index) {
-            Some(image) => vec![GifMutation::InsertImage(insert_image::InsertImage { index: *index, image: image.clone() })],
-            None => Vec::new(),
-        },
-        GifMutation::MoveImage(move_image::MoveImage { from, to }) => {
-            let mut images = base.images.clone();
-            let landed_at = if *from < images.len() {
-                let item = images.remove(*from);
-                let at = (*to).min(images.len());
-                images.insert(at, item);
-                at
-            } else {
-                *from
-            };
-            vec![GifMutation::MoveImage(move_image::MoveImage { from: landed_at, to: *from })]
-        }
-        GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index, .. }) => match base.images.get(*index) {
-            Some(img) => vec![GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: *index, left: img.left, top: img.top, width: img.width, height: img.height })],
-            None => Vec::new(),
-        },
-        GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index, .. }) => match base.images.get(*index) {
-            Some(img) => vec![GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: *index, indices: img.indices.clone() })],
-            None => Vec::new(),
-        },
-        GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index, .. }) => match base.images.get(*index) {
-            Some(img) => vec![GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: *index, interlace: img.interlace })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
-//#endregion 🔖️MutationTrait
 
 //#region OpCodecs
 

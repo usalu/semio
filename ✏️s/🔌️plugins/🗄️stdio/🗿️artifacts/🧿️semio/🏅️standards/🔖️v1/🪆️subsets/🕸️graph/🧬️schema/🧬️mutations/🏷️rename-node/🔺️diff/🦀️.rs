@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `RenameNode`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeList, SemioGraphNodeList};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff, SemioGraphNodeDiff};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
 
 //#region 🔖️Diff
 /// 🧮️ An empty new id is a Fatal `mutation.invariant` (the schema's hard bound); a node the graph lacks is
@@ -21,20 +22,17 @@ pub fn diff(payload: &super::RenameNode, base: &SemioGraphSnapshot) -> protocol:
     if base.nodes.iter().any(|node| node.id == payload.new_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.new_id.value), [payload.new_id.value.clone()]);
     }
-    let mut nodes = base.nodes.clone();
-    if let Some(node) = nodes.iter_mut().find(|node| node.id == payload.id) {
-        node.id = payload.new_id.clone();
-    }
-    let mut edges = base.edges.clone();
-    let mut touched = false;
-    for edge in &mut edges {
-        for endpoint in [&mut edge.source, &mut edge.target] {
-            if *endpoint == payload.id {
-                *endpoint = payload.new_id.clone();
-                touched = true;
-            }
-        }
-    }
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: touched.then_some(SemioGraphEdgeList { values: edges }) })
+    let at = base.nodes.iter().position(|node| node.id == payload.id).expect("checked above");
+    let edges: Vec<IndexModified<SemioGraphEdgeDiff>> = base
+        .edges
+        .iter()
+        .enumerate()
+        .filter(|(_, edge)| edge.source == payload.id || edge.target == payload.id)
+        .map(|(index, edge)| IndexModified { index, diff: SemioGraphEdgeDiff { source: (edge.source == payload.id).then(|| payload.new_id.clone()), target: (edge.target == payload.id).then(|| payload.new_id.clone()), ..Default::default() } })
+        .collect();
+    protocol::MutationOutcome::new(SemioGraphDiff {
+        nodes: Some(IndexedTripleDiff { modified: vec![IndexModified { index: at, diff: SemioGraphNodeDiff { id: Some(payload.new_id.clone()), ..Default::default() } }], ..Default::default() }),
+        edges: (!edges.is_empty()).then(|| IndexedTripleDiff { modified: edges, ..Default::default() }),
+    })
 }
 //#endregion 🔖️Diff

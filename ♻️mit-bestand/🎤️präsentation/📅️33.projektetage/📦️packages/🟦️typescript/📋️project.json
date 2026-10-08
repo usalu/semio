@@ -13,6 +13,16 @@
   },
   "targets": {
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6050,
+              "portEnv": "PRAESENTATION_PROJEKTETAGE_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {

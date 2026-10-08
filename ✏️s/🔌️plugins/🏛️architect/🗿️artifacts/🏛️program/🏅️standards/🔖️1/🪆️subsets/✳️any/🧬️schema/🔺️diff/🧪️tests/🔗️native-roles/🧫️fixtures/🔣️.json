@@ -1,0 +1,19 @@
+{
+  "ids": [
+    "Stakeholder A",
+    "Stakeholder B"
+  ],
+  "delta": {
+    "added": [],
+    "removed": [
+      "Stakeholder A"
+    ],
+    "patched": [],
+    "reordered": [
+      "Stakeholder B"
+    ]
+  },
+  "expected": [
+    "Stakeholder B"
+  ]
+}

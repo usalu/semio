@@ -14,10 +14,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
-          "iconId": "box",
+          "moduleId": "spatial-shape",
           "label": "Spatial Shape",
-          "moduleId": "spatial-shape"
+          "iconId": "box",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"
         }
       }
     ],
@@ -32,7 +32,7 @@
   },
   "execution": "declarative",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -41,17 +41,17 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
-          "iconId": "box",
+          "moduleId": "spatial-shape",
           "label": "Spatial Shape",
-          "moduleId": "spatial-shape"
+          "iconId": "box",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"
         }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "b2c7f1c13e8c64a9d41b8f52ce2e33b22a6e46c171ce60dc9702ad33b376294c",
-    "coreWasmSha256": "e332f35076e9636faa76900168a539be05ade10b93f316a4229d5626951580b3",
-    "descriptorSha256": "2b640d6bd0eed8f296d75a8a7c05f681eb5c170846fde825552923433eb8ad4d"
+    "wasmSha256": "68771de18438ba298c4b26d14342e0fe8277064823b20efaadaa242c9176398f",
+    "coreWasmSha256": "e9211ad440df21b35b048697979d616f5f99e0fc70e1126218d88b34667cb03a",
+    "descriptorSha256": "12d6e21600f0cdd37a63380b230130c26ddc26717ea3debf3430ed2e64a6c042"
   }
 }

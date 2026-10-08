@@ -242,7 +242,7 @@ fn replace_all<T: Clone>(base: &[T], target: &[T], remove: impl Fn(usize) -> En1
 pub fn apply_en1998_mutation(base: &En1998Snapshot, mutation: &En1998Mutation) -> Result<(En1998Snapshot, Vec<String>), String> {
     let raised = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.

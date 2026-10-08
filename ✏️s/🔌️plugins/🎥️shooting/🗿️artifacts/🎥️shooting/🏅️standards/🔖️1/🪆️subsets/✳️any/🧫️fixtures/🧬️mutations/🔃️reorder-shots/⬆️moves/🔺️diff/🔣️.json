@@ -1,17 +1,17 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": null,
   "savedCameras": null,
   "scene": null,
   "shots": {
-    "added": [],
-    "removed": [],
-    "patched": [],
-    "reordered": [
-      "shot-close",
-      "shot-wide"
-    ]
+    "edits": [
+      {
+        "edit": "move",
+        "id": "shot-close",
+        "index": 0
+      }
+    ],
+    "patched": []
   },
   "activeShotId": null,
   "activeAssetId": null,

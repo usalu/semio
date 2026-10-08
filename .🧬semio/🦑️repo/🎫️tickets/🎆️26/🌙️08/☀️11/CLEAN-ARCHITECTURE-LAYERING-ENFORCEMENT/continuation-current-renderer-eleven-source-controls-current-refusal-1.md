@@ -1,0 +1,3 @@
+# Current Renderer Eleven Source Refusal
+
+RegisteredGUI259001 actualNx1 before finiteoutcomes/receipt. CurrentcompleteStore binding advanced fromauthored eb350229719c9d371e7be273788dcdeee33e3d30379c0e1332e735b602467d8f toactualcommand113cd5adde4b223b04fdcf155bd03b140aa451ab6de1a13ef4a6bd56b1bf037b. Exactrawerror retained under 🗑️generated/current-engine-layout-11/green-1/outer.log. Renderer11proposal/helper/source before-after bodies remain retained. No source-current/native/physics acceptance, noRootwrite/compiler. Renderer10earlierclosed0thenimmediatecurrentStore drift also remainswithheld. Freshsuccessor mustcaptureactualcurrentbody/complete recipe/control outcomes; noguardrelaxation.

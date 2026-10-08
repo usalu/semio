@@ -1,0 +1,137 @@
+{
+  "pageOrigin": "https://play.semio-tech.com",
+  "cases": [
+    {
+      "id": "literal-module",
+      "input": "/🔌️plugin-modules/a.wasm",
+      "output": "https://modules.assets.semio-tech.com/🔌️plugin-modules/a.wasm"
+    },
+    {
+      "id": "encoded-module",
+      "input": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/a.wasm",
+      "output": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/a.wasm"
+    },
+    {
+      "id": "absolute-module",
+      "input": "https://play.semio-tech.com/🔌️plugin-modules/a.wasm?token=a%2Fb#fragment",
+      "output": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/a.wasm?token=a%2Fb#fragment"
+    },
+    {
+      "id": "absolute-extension",
+      "input": "https://play.semio-tech.com/🧩️extension-modules/e/bridge.js",
+      "output": "https://modules.assets.semio-tech.com/%F0%9F%A7%A9%EF%B8%8Fextension-modules/e/bridge.js"
+    },
+    {
+      "id": "absolute-media",
+      "input": "https://play.semio-tech.com/🖼️assets/a%20b.woff2",
+      "output": "https://media.assets.semio-tech.com/%F0%9F%96%BC%EF%B8%8Fassets/a%20b.woff2"
+    },
+    {
+      "id": "route-query",
+      "input": "/osm?v=1#root",
+      "output": "https://map.assets.semio-tech.com/osm?v=1#root"
+    },
+    {
+      "id": "foreign-origin",
+      "input": "https://cdn.example/🔌️plugin-modules/a.wasm",
+      "output": "https://cdn.example/🔌️plugin-modules/a.wasm"
+    },
+    {
+      "id": "similar-route",
+      "input": "/🔌️plugin-modules-extra/a.wasm",
+      "output": "/🔌️plugin-modules-extra/a.wasm"
+    },
+    {
+      "id": "malformed-encoding",
+      "input": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%zz",
+      "output": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%zz"
+    },
+    {
+      "id": "encoded-separator",
+      "input": "/🔌️plugin-modules%2Fa.wasm",
+      "output": "/🔌️plugin-modules%2Fa.wasm"
+    },
+    {
+      "id": "network-relative",
+      "input": "//foreign.example/osm/a.png",
+      "output": "//foreign.example/osm/a.png"
+    }
+  ],
+  "worker": {
+    "path": "🔌️plugin-modules/🧵️shard/shard-worker.js",
+    "shimPath": "🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
+    "source": "globalThis.diagnostics = () => import(/* @vite-ignore */ \"../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\");",
+    "importUrl": "https://modules.assets.semio-tech.com/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%F0%9F%AA%9E%EF%B8%8Fvendor/%F0%9F%A4%9D%EF%B8%8Fbytecode-alliance/%F0%9F%AA%9F%EF%B8%8Fpreview2-shim/cli.js",
+    "generatedImports": [
+      {
+        "kind": "dynamic",
+        "specifier": "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js",
+        "expression": "\"../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\""
+      },
+      {
+        "kind": "dynamic",
+        "specifier": null,
+        "expression": "moduleUrl"
+      }
+    ]
+  },
+  "publication": {
+    "files": [
+      {
+        "path": "index.html",
+        "content": "x"
+      }
+    ],
+    "cases": [
+      {
+        "id": "metadata-within-budget",
+        "budget": 100,
+        "accepted": true
+      },
+      {
+        "id": "metadata-exceeds-budget",
+        "budget": 20,
+        "accepted": false
+      }
+    ]
+  },
+  "cache": {
+    "control": "no-cache",
+    "pages": [
+      "play",
+      "map",
+      "media",
+      "modules"
+    ],
+    "files": [
+      {
+        "path": "index.html",
+        "content": "x"
+      },
+      {
+        "path": "osm/a.png",
+        "content": "tile"
+      },
+      {
+        "path": "mesh/a.glb",
+        "content": "mesh"
+      },
+      {
+        "path": "🔌️plugin-modules/fixture/🌉️bridge.js",
+        "content": "export {};"
+      }
+    ],
+    "responseHeaders": {
+      "cache-control": "max-age=31536000, immutable",
+      "etag": "\"old-release\""
+    },
+    "satisfiesWithoutRevalidation": false,
+    "obsoleteFiles": [
+      "play/assets/old.js",
+      "map/osm/old.png",
+      "media/mesh/old.glb",
+      "modules/🔌️plugin-modules/old/core.wasm",
+      "retired/CNAME"
+    ]
+  }
+}

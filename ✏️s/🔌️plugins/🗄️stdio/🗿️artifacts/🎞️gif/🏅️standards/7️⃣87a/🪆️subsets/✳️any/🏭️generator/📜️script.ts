@@ -51,7 +51,7 @@ const COMPARISON_PROFILE = "semantic-gif-87a-reader-v1";
  *  above Pillow writes the descriptor's interlace bit by default and clears it on `interlace=False`,
  *  both under a GIF87a signature — so the interlace pair uses a 16x16 canvas where every other kind
  *  uses 4x3. */
-const KINDS: readonly string[] = ["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
+const KINDS: readonly string[] = ["no-mutation", "set-screen-size", "set-global-color-table", "set-background-color-index", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];
 const FIXTURE_DIRECTORIES: Readonly<Record<string, string>> = {
   "insert-image": "➕️insert-image",
   "move-image": "🔀️move-image",
@@ -64,7 +64,6 @@ const FIXTURE_DIRECTORIES: Readonly<Record<string, string>> = {
   "set-image-pixels": "🎞️set-image-pixels",
   "set-pixel-aspect-ratio": "⚖️set-pixel-aspect-ratio",
   "set-screen-size": "🖥️set-screen-size",
-  "set-snapshot": "📸️set-snapshot",
 };
 const BEFORE_FILE = "⬅️before.gif";
 const AFTER_FILE = "➡️after.gif";
@@ -145,8 +144,6 @@ def base():
 def pair(kind):
     if kind == 'no-mutation':
         return base(), base()
-    if kind == 'set-snapshot':
-        return base(), assemble([single(2, 2, [0,1,2,3])])
     if kind == 'set-screen-size':
         return single(4, 3, FA), single(6, 2, [0,1,2,3,0,1, 2,3,0,1,2,3])
     if kind == 'set-global-color-table':

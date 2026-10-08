@@ -4596,6 +4596,7 @@ name = "semio-framework"
 version = "0.1.0"
 dependencies = [
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-hash",
@@ -4665,6 +4666,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-artifact-infinite-dag",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4686,6 +4688,7 @@ dependencies = [
 name = "semio-framework-artifact-infinite-dag"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4719,9 +4722,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-artifact-reference"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-schema-registry",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-artifact-space-collection"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4737,6 +4750,7 @@ dependencies = [
 name = "semio-framework-artifact-space-space"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4752,6 +4766,7 @@ dependencies = [
 name = "semio-framework-artifact-workflow-run"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4770,6 +4785,7 @@ name = "semio-framework-artifact-workflow-workflow"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
@@ -4940,6 +4956,7 @@ dependencies = [
 name = "semio-framework-io-schema"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-schema-registry",
@@ -5014,6 +5031,7 @@ dependencies = [
  "resvg",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-artifact-space-collection",
  "semio-framework-artifact-space-space",
  "semio-framework-artifact-workflow-workflow",
@@ -5046,6 +5064,7 @@ version = "0.1.0"
 dependencies = [
  "schemars",
  "semio-framework",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
@@ -5070,6 +5089,7 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-dsl-record",
  "semio-framework-graph",
@@ -5104,6 +5124,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-artifact-infinite-dag",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-compiler",
  "semio-framework-geometry",
@@ -5138,6 +5159,7 @@ dependencies = [
  "futures",
  "js-sys",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-deflate",
  "semio-framework-diagnostic",
@@ -5178,6 +5200,7 @@ version = "0.1.0"
 dependencies = [
  "neo4rs",
  "rusqlite",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-hash",
@@ -5224,6 +5247,7 @@ dependencies = [
  "schemars",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -5252,6 +5276,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-artifact-workflow-run",
  "semio-framework-artifact-workflow-workflow",
  "semio-framework-async",
@@ -5322,6 +5347,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -5360,6 +5386,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-hash",
@@ -6817,6 +6844,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -6861,6 +6889,7 @@ name = "semio-s-artifact-architect-program"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -6876,6 +6905,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
@@ -6896,6 +6926,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -6915,7 +6946,6 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
- "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-zip",
  "semio-s-plugin-block",
  "semio-s-plugin-block-catalog",
@@ -6929,6 +6959,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -6963,6 +6994,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -6997,6 +7029,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7037,6 +7070,7 @@ dependencies = [
  "semio-framework-2d",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7075,6 +7109,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
  "semio-framework-dsl",
@@ -7104,6 +7139,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7141,6 +7177,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7179,6 +7216,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7216,6 +7254,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7256,6 +7295,7 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
  "semio-framework-dsl",
@@ -7296,6 +7336,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
  "semio-framework-dsl",
@@ -7327,6 +7368,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7367,6 +7409,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
  "semio-framework-dsl",
@@ -7408,6 +7451,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7443,6 +7487,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7486,6 +7531,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7529,6 +7575,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7587,6 +7634,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7614,6 +7662,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7642,6 +7691,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7669,6 +7719,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7696,6 +7747,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7723,6 +7775,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7751,6 +7804,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7779,6 +7833,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7806,6 +7861,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7833,6 +7889,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7860,6 +7917,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7887,6 +7945,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7914,6 +7973,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7941,6 +8001,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7968,6 +8029,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -7995,6 +8057,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8033,6 +8096,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8067,6 +8131,7 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8113,6 +8178,7 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8159,6 +8225,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8201,6 +8268,7 @@ dependencies = [
  "js-sys",
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8251,6 +8319,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8298,6 +8367,7 @@ dependencies = [
  "js-sys",
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8343,6 +8413,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8384,6 +8455,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8420,6 +8492,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8469,6 +8542,7 @@ dependencies = [
  "semio-framework-2d",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8505,6 +8579,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8546,6 +8621,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8579,6 +8655,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-artifact-space-space",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -8616,6 +8693,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-artifact-space-collection",
  "semio-framework-artifact-space-space",
  "semio-framework-async",
@@ -8648,6 +8726,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8675,6 +8754,7 @@ name = "semio-s-artifact-stdio-bcf"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8705,6 +8785,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8731,6 +8812,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8758,6 +8840,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-contract"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8781,6 +8864,7 @@ name = "semio-s-artifact-stdio-csv"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8809,6 +8893,7 @@ name = "semio-s-artifact-stdio-deflate"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-deflate",
  "semio-framework-diagnostic",
@@ -8838,6 +8923,7 @@ name = "semio-s-artifact-stdio-docx"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8865,6 +8951,7 @@ name = "semio-s-artifact-stdio-dwg"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8894,6 +8981,7 @@ name = "semio-s-artifact-stdio-dxf"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8921,6 +9009,7 @@ name = "semio-s-artifact-stdio-epw"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8946,6 +9035,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -8973,6 +9063,7 @@ name = "semio-s-artifact-stdio-gltf"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9003,6 +9094,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9028,6 +9120,7 @@ name = "semio-s-artifact-stdio-ifc"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9058,6 +9151,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9085,6 +9179,7 @@ name = "semio-s-artifact-stdio-json"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9113,6 +9208,7 @@ name = "semio-s-artifact-stdio-las"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9142,6 +9238,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9171,6 +9268,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9199,6 +9297,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9226,6 +9325,7 @@ name = "semio-s-artifact-stdio-obj"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9254,6 +9354,7 @@ name = "semio-s-artifact-stdio-pdf"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9283,6 +9384,7 @@ name = "semio-s-artifact-stdio-ply"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9312,6 +9414,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9343,6 +9446,7 @@ name = "semio-s-artifact-stdio-pptx"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9374,6 +9478,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9436,6 +9541,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9467,6 +9573,7 @@ name = "semio-s-artifact-stdio-stl"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9497,6 +9604,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9524,6 +9632,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9546,6 +9655,9 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-jpg",
+ "semio-s-artifact-stdio-png",
  "serde_json",
 ]
 
@@ -9554,6 +9666,7 @@ name = "semio-s-artifact-stdio-tsv"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9582,6 +9695,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9612,6 +9726,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9639,6 +9754,7 @@ name = "semio-s-artifact-stdio-xlsx"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9665,6 +9781,7 @@ name = "semio-s-artifact-stdio-xml"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9691,6 +9808,7 @@ name = "semio-s-artifact-stdio-zip"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9723,6 +9841,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-artifact-flow-flow",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9763,6 +9882,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9801,6 +9921,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9833,6 +9954,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9875,6 +9997,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9911,6 +10034,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -9941,6 +10065,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -9981,6 +10106,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -10020,6 +10146,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -10082,6 +10209,7 @@ dependencies = [
 name = "semio-s-plugin-block"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-value",
@@ -10099,6 +10227,7 @@ dependencies = [
 name = "semio-s-plugin-stdio"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-plugin",
  "semio-s-artifact-stdio-contract",
 ]

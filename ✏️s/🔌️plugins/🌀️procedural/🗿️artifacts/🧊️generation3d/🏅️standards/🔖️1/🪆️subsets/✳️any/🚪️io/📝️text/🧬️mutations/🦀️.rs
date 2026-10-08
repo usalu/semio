@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,generation3d_host_snapshot_operations,generation_mutation_to_generation3d,inverse_generation3d_mutation,Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation,generation_mutation_to_generation3d,inverse_generation3d_mutation,Generation3dMutation};
 
 
 //#region 📖️SemioGrammar
@@ -39,6 +39,8 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::Ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{ChangeWidgetInput, WidgetInputValue};
+use crate::standards::v1::subsets::any::schema::mutations::change_generation_preview::ChangeGenerationPreview;
+use crate::standards::v1::subsets::any::schema::mutations::select_generation::SelectGeneration;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
@@ -104,6 +106,8 @@ pub(crate) enum Generation3dOperationDsl {
     ScaleTransforms { targets: Vec<String>, sx: f64, sy: f64, sz: f64 },
     MoveNodes { ids: Vec<String>, dx: f64, dy: f64 },
     ChangeWidgetInput { id: String, channel: String, input: semio_framework_value::DslValue },
+    SelectGeneration { generation_id: Option<String> },
+    ChangeGenerationPreview { text: Option<String> },
 }
 
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -149,6 +153,8 @@ pub(crate) fn generation3d_operation_to_dsl(operation: &Generation3dMutation) ->
         Generation3dMutation::ScaleTransforms(ScaleTransforms { targets, sx, sy, sz }) => Generation3dOperationDsl::ScaleTransforms { targets: targets.clone(), sx: *sx, sy: *sy, sz: *sz },
         Generation3dMutation::MoveNodes(MoveNodes { ids, dx, dy }) => Generation3dOperationDsl::MoveNodes { ids: ids.clone(), dx: *dx, dy: *dy },
         Generation3dMutation::ChangeWidgetInput(ChangeWidgetInput { id, channel, input }) => Generation3dOperationDsl::ChangeWidgetInput { id: id.clone(), channel: channel.clone(), input: semio_framework_value::ToValue::to_value(input) },
+        Generation3dMutation::SelectGeneration(SelectGeneration { generation_id }) => Generation3dOperationDsl::SelectGeneration { generation_id: generation_id.clone() },
+        Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text }) => Generation3dOperationDsl::ChangeGenerationPreview { text: text.clone() },
     }
 }
 
@@ -174,6 +180,8 @@ pub(crate) fn generation3d_operation_from_dsl(operation: Generation3dOperationDs
         Generation3dOperationDsl::ScaleTransforms { targets, sx, sy, sz } => Generation3dMutation::ScaleTransforms(ScaleTransforms { targets, sx, sy, sz }),
         Generation3dOperationDsl::MoveNodes { ids, dx, dy } => Generation3dMutation::MoveNodes(MoveNodes { ids, dx, dy }),
         Generation3dOperationDsl::ChangeWidgetInput { id, channel, input } => Generation3dMutation::ChangeWidgetInput(ChangeWidgetInput { id, channel, input: <WidgetInputValue as semio_framework_value::FromValue>::from_value(input).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("change-widget-input input: {error}"),semio_framework_diagnostic::TextSpan::at(1,1)))? }),
+        Generation3dOperationDsl::SelectGeneration { generation_id } => Generation3dMutation::SelectGeneration(SelectGeneration { generation_id }),
+        Generation3dOperationDsl::ChangeGenerationPreview { text } => Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text }),
     })
 }
 

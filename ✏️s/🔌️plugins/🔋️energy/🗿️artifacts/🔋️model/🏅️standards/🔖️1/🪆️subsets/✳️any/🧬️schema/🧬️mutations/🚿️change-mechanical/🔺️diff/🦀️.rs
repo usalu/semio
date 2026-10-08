@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeMechanicalVentilationDesignFlow` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MechanicalVentilationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -19,10 +19,6 @@ pub fn diff(payload: &super::ChangeMechanicalVentilationDesignFlow, base: &Energ
     if existing.design_flow_m3_s == payload.new_design_flow_m3_s {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Mechanical Ventilation {} already carries this design supply flow (m³/s): {}.", payload.id.0, payload.new_design_flow_m3_s));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.mechanical_ventilations.iter_mut().find(|item| item.id == payload.id) {
-        item.design_flow_m3_s = payload.new_design_flow_m3_s;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { mechanical_ventilations: Rows::modifying(MechanicalVentilationPatch { design_flow_m3_s: Some(payload.new_design_flow_m3_s), ..MechanicalVentilationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,13 @@
+{
+  "schema": "semio.member.group-publication/v1",
+  "maximumItems": 1,
+  "maximumBytes": 16384,
+  "decisionRequestedBytes": 0,
+  "decisionReleasedBytes": 0,
+  "cases": [
+    { "id": "empty", "historyEntries": 0, "before": [0, 10, 100], "after": [1, 11, 101] },
+    { "id": "one", "historyEntries": 1, "before": [1, 11, 101], "after": [2, 12, 102] },
+    { "id": "second-page", "historyEntries": 65, "before": [65, 75, 165], "after": [66, 76, 166] },
+    { "id": "five-pages", "historyEntries": 257, "before": [257, 267, 357], "after": [258, 268, 358] }
+  ]
+}

@@ -1,0 +1,20 @@
+# All Pane Interaction Contracts
+
+The authored Play catalog contains 148 panes backed by 43 committed composition descriptor owners. Every resolved boot application has role `editor`, at least one declared window, at least one mode, and a viewer sibling at the exact same dialect coordinate. No viewer exception is justified by the current contracts. The viewer/editor round-trip gate remains mandatory for all 148 panes.
+
+Exactly 121 panes now pin a curated example. Twenty-six stdio panes have no registered example for their exact dialect: the ten PDF variants; the three DOCX, three PPTX, and three XLSX variants; semio BREP and mesh; binary, deflate, ZIP, ZIP ISO 21320, and EPW. Their example picker legitimately does not exist, so acceptance skips only the example operation for those panes while still requiring editor paint and both surface switches. Demonstrator publishes one composition example but is an established picker-exempt host; its authored catalog has no curated example and its documented exemption already gates that behavior in unit coverage.
+
+The selectors correspond directly to the runtime source:
+
+- `PlayShell` assigns the pane identifier to `FrameworkOsShell.shellId`, which emits the enclosing `data-shell-id`. Shell-scoped selectors cannot accidentally press a prewarmed neighboring pane's controls.
+- `LayeredPaneView` emits `data-layered-pane`, marks unopened panes inert, and exposes only the opened pane as an accessible region.
+- The desktop navbar mounts one `ButtonGroup` with identifier `playground.navbar.roles`. Its button items forward their identifier, `aria-pressed`, `disabled`, and `data-role` directly to native buttons.
+- The active session emits `data-slot="surface-role-chip"`, its resolved role, and its full application identifier. Those attributes provide an independent witness after a switch; the test does not infer success from the click.
+- The role group is `aria-busy` during the switching transaction and disables inactive items. Acceptance waits for the destination to be pressed and the transaction to finish before attempting the next switch.
+- Play brands lock locale, terminology, and theme, but their example identifiers are defaults. They do not lock role or example controls.
+- `NavbarExampleSelect` gives its trigger the exact identifier `playground.navbar.fixture`. It adds the blank option first by default, then the app's filtered example rows. Accessible option selection therefore follows the control's published order and uses the curated descriptor label when restoring the document.
+- Puzzle3d's committed editor descriptor declares a first-use introduction. That introduction can cover its picker and role buttons. Acceptance now closes a mounted tour through its own `ui.introduction.skip` button before document interactions and after surface switches. It verifies `data-introduction-active` disappears. A global Escape shortcut is avoided because the enclosing overview also binds Escape to return to its cards.
+
+Blank selection is a supported document command rather than an inference from UI availability. `buildActiveExampleAction` emits `setActiveExample` with `exampleId: ""`; its source contract identifies that payload as the app's initial document. The framework guest's `catalogue_example_document` returns the initial snapshot for an empty identifier. No app descriptor exposes a separate policy forbidding the blank option. A refusal in a declared app command is therefore a runtime defect to diagnose, not a reason to exempt a pane.
+
+This audit reads actual committed catalogs and source; it is not a claim that the release browser run has passed. Per-pane data was emitted temporarily under the ticket's generated folder. The neutral role fixture/schema and source contract now include the published dismissal control; the full unit gate will run after publication and descriptor freshness are established, rather than repeatedly exercising known stale-registry failures. Focused mutation regression commands for all 34 families are recorded in `📓️2026-10-07-editor-mutation-regression-targets.md`.

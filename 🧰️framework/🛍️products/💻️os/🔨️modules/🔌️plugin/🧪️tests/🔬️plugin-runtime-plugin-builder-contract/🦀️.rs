@@ -184,6 +184,7 @@ mod plugin_builder_contract_tests {
     use crate::test_app_mutation_fixture::{SetSlotChildren, SetCount, SetLabel, TestMutation};
     //#endregion 🧬️TestDocumentMutationLeaves
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TestCountOneItemPreparationFactory;
 
     struct TestCountOneItemPreparation {
@@ -771,9 +772,12 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct PublicationPresenceRetirementFactory;
 
     impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { std::mem::size_of::<PublicationPresenceRetirement>() }
+
         fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
             Box::new(PublicationPresenceRetirement { snapshot: Some(snapshot) })
         }
@@ -912,7 +916,26 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    fn test_prepared_operation_wire_source(operation: &TestMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
+        let (_, ordinal, spec) = semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_identity(operation);
+        let tag = u64::try_from(ordinal).ok()?;
+        Some(match operation {
+            TestMutation::SetCount(payload) => store::ArtifactPreparedOperationSource::Pack { tag, body: payload, spec },
+            TestMutation::SetLabel(payload) => store::ArtifactPreparedOperationSource::Pack { tag, body: payload, spec },
+            TestMutation::SetSlotChildren(payload) => store::ArtifactPreparedOperationSource::Pack { tag, body: payload, spec },
+        })
+    }
+
+    fn test_document_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation>> {
+        store::operation_wire_preparation_factory(crate::app::bounded_config_store_one_item_preparation_factory::<TestSnapshot, TestMutation>("test-app-artifact-retained", 4_096), test_prepared_operation_wire_source, |operation| {
+            let semantics = protocol::SemanticMutation::semantics(operation);
+            Some((semantics.entity, semantics.kind))
+        })
+    }
+
     impl<const RETAINED: bool, const TOOLS: u8> ArtifactApp for TestApp<RETAINED, TOOLS> {
+        fn owned_mutation_batch_birth_bytes() -> Option<usize> { Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<TestMutation>()) }
+        fn admit_owned_mutation_batch(values: &mut Option<Vec<TestMutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::MemberStoreOwnedBatch::admit(values, grant) }
         const DIALECT: Dialect = TEST_APP_DIALECT;
         fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
             test_restart_proofs::<RETAINED, TOOLS>()
@@ -930,7 +953,7 @@ mod plugin_builder_contract_tests {
             if RETAINED {
                 return Some(std::sync::Arc::new(TestCountOneItemPreparationFactory));
             }
-            (TOOLS != TEST_APP_TOOLS_NONE).then(|| crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("test-app-artifact-retained", 4_096))
+            (TOOLS != TEST_APP_TOOLS_NONE).then(test_document_preparation_factory)
         }
 
         fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -4511,11 +4534,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TestSnapshotRetirementFactory {
         lie_about_terminal: bool,
     }
 
     impl store::SnapshotRetirementFactory<TestSnapshot> for TestSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<TestSnapshot>) -> usize { std::mem::size_of::<TestSnapshotRetirement>() }
+
         fn retire(&self, snapshot: std::sync::Arc<TestSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
             Box::new(TestSnapshotRetirement { snapshot: Some(snapshot), lie_about_terminal: self.lie_about_terminal })
         }
@@ -4530,7 +4556,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// for ever would make the member impossible to close at all — the law would then prove nothing
     /// beyond "a lying store cannot be shut down". One lie is all the subject needs: the first
     /// unique owner a child-content retirement hands back.
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TestLyingOwnedValueRetirementFactory {
+        #[factory_owned]
         lie_about_terminal: std::sync::atomic::AtomicBool,
     }
 
@@ -4558,6 +4586,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TestOwnedValueRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
     impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for TestOwnedValueRetirementFactory<T> {
@@ -4576,13 +4605,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
         type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
+        fn member_store_owners_birth_bytes() -> usize {
+            store::document_store_owners_constructor_birth_bytes::<store::ArtifactStoreCursorDisposer<Self, TestMutation>>([
+                semio_framework_value::factory_constructor_birth_bytes::<TestSnapshotRetirementFactory>(0),
+                semio_framework_value::factory_constructor_birth_bytes::<TestOwnedValueRetirementFactory<Self>>(0),
+                semio_framework_value::factory_constructor_birth_bytes::<TestOwnedValueRetirementFactory<TestMutation>>(0),
+            ]) + store::operation_wire_preparation_factory_birth_bytes::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_birth_bytes::<Self, TestMutation>())
+        }
+
         fn member_store_owners() -> store::DocumentStoreOwners<Self, TestMutation> {
             store::DocumentStoreOwners::new(
                 std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
                 std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),
                 std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
                 Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
-            )
+            ).with_one_item_preparation(test_document_preparation_factory())
         }
     }
 
@@ -8476,4 +8513,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     // `plugin_mount_surface`/`plugin_render_surface`, and this module's fixtures (`TestApp`,
     // `RENDER_CONTEXT_PROBE`, `reserved_action`, `interaction_target_args`) are private to it.
     include!("../🔬️surface-view-state-routing/🦀️.rs");
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_command_history_original_pages_retain_exact_app_close_authority() {
+        let mut app = Box::pin(contract_app_raw()).await;
+        crate::app::test_mounted_command_history_pages(&mut app);
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_command_history_document_replacement_keeps_original_held_rows() {
+        let mut app = Box::pin(contract_app_raw()).await;
+        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }).await.unwrap();
+        crate::app::test_mounted_command_history_replacement(&mut app);
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_private_child_frame_retains_exact_admission_and_close_authority() {
+        let mut app = Box::pin(contract_app_raw()).await;
+        crate::app::test_mounted_private_child_frame(&mut app);
+        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app);
+    }
+    mod mounted_owned_child_laws { include!("🪟️mounted-owned-child/🦀️.rs"); }
+    mod owned_child_dispatch_laws { include!("📨️owned-child-dispatch/🦀️.rs"); }
+
 }

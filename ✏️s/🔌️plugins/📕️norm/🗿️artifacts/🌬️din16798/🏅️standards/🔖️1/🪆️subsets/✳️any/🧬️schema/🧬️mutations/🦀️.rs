@@ -158,7 +158,7 @@ impl Din16798Mutation {
 pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Result<(Din16798Snapshot, Vec<String>), String> {
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|m| format!("{:?}:{}", m.level, m.code.0)).collect();
-    let applied = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
     Ok((applied, messages))
 }
 pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {

@@ -1,0 +1,119 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "largePrefix": "😀é",
+    "largeRepeats": 20000,
+    "cancelAfterBodyBytes": 128
+  },
+  "cases": [
+    {
+      "name": "literal",
+      "id": "edge",
+      "source": "source",
+      "target": "target",
+      "gapWord": "0000000000000000",
+      "base": [
+        "a",
+        "b"
+      ],
+      "position": 1,
+      "changed": true,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": "edge"
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "id": "",
+      "source": "",
+      "target": "",
+      "gapWord": "8000000000000000",
+      "base": [],
+      "position": 0,
+      "changed": true,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": ""
+        }
+      ]
+    },
+    {
+      "name": "nul-unicode",
+      "id": "e\u0000日本😀",
+      "source": "$large:source",
+      "target": "unneeded",
+      "gapWord": "0000000000000000",
+      "base": [
+        "a"
+      ],
+      "position": 1,
+      "changed": true,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": "e\u0000日本😀"
+        }
+      ]
+    },
+    {
+      "name": "duplicate-intent",
+      "id": "a",
+      "source": "missing",
+      "target": "missing",
+      "gapWord": "0000000000000000",
+      "base": [
+        "a"
+      ],
+      "position": 0,
+      "changed": false,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": "a"
+        }
+      ]
+    },
+    {
+      "name": "invalid-intent",
+      "id": "refused",
+      "source": "$large:source",
+      "target": "$large:target",
+      "gapWord": "7ff8000000000042",
+      "base": [
+        "a"
+      ],
+      "position": 0,
+      "changed": false,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": "refused"
+        }
+      ]
+    },
+    {
+      "name": "large-id",
+      "id": "$large:edge",
+      "source": "$large:source",
+      "target": "$large:target",
+      "gapWord": "0000000000000000",
+      "base": [
+        "a",
+        "b"
+      ],
+      "position": 2,
+      "changed": true,
+      "inverse": [
+        {
+          "kind": "disconnect-handles",
+          "id": "$large:edge"
+        }
+      ]
+    }
+  ]
+}

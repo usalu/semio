@@ -1,0 +1,122 @@
+{
+  "schema": "pack.retained-inline-symbols/v1",
+  "maximumTurnBytes": 4096,
+  "maximumSymbols": 2048,
+  "maximumSymbolBytes": 262144,
+  "constructorBytes": 0,
+  "large": {
+    "word": "🧬\u0000é",
+    "repetitions": 20000,
+    "bytes": 140000,
+    "emptySymbols": 2048
+  },
+  "valid": [
+    {
+      "name": "empty",
+      "hex": "00",
+      "symbols": [],
+      "prefixBytes": 1,
+      "sourceOffset": 0
+    },
+    {
+      "name": "ascii-with-record-tail",
+      "hex": "010361626300",
+      "symbols": [
+        "abc"
+      ],
+      "prefixBytes": 5,
+      "sourceOffset": 0
+    },
+    {
+      "name": "empty-and-emoji",
+      "hex": "020004f09fa7ac",
+      "symbols": [
+        "",
+        "🧬"
+      ],
+      "prefixBytes": 7,
+      "sourceOffset": 0
+    },
+    {
+      "name": "unicode-nul-empty",
+      "hex": "020c4772c3bcc39f6500f09fa7ac00",
+      "symbols": [
+        "Grüße\u0000🧬",
+        ""
+      ],
+      "prefixBytes": 15,
+      "sourceOffset": 0
+    },
+    {
+      "name": "duplicate-indices-preserved",
+      "hex": "0201780178",
+      "symbols": [
+        "x",
+        "x"
+      ],
+      "prefixBytes": 5,
+      "sourceOffset": 0
+    },
+    {
+      "name": "original-op-frame-prefix",
+      "hex": "0100010361626300",
+      "symbols": [
+        "abc"
+      ],
+      "prefixBytes": 7,
+      "sourceOffset": 2
+    }
+  ],
+  "invalid": [
+    {
+      "name": "missing-count",
+      "hex": "",
+      "refusal": "incomplete"
+    },
+    {
+      "name": "partial-count",
+      "hex": "80",
+      "refusal": "incomplete"
+    },
+    {
+      "name": "overlong-count",
+      "hex": "8000",
+      "refusal": "noncanonical"
+    },
+    {
+      "name": "overlong-length",
+      "hex": "018000",
+      "refusal": "noncanonical"
+    },
+    {
+      "name": "partial-content",
+      "hex": "010461",
+      "refusal": "incomplete"
+    },
+    {
+      "name": "invalid-leading-byte",
+      "hex": "0101ff",
+      "refusal": "utf8"
+    },
+    {
+      "name": "surrogate",
+      "hex": "0103eda080",
+      "refusal": "utf8"
+    },
+    {
+      "name": "unfinished-codepoint",
+      "hex": "0102e282",
+      "refusal": "utf8"
+    },
+    {
+      "name": "symbol-count-over-authority",
+      "hex": "8110",
+      "refusal": "symbol-count"
+    },
+    {
+      "name": "symbol-length-over-authority",
+      "hex": "01818010",
+      "refusal": "symbol-length"
+    }
+  ]
+}

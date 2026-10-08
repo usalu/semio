@@ -8,11 +8,11 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 pub fn inverse(payload: &super::AddMark, base: &SemioTextSnapshot) -> Result<Vec<SemioTextMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.runs.get(payload.run_index) {
-        Some(run) => {
+        Some(run) if !run.marks.contains(&payload.mark) => {
             let at = payload.index.min(run.marks.len());
             vec![SemioTextMutation::RemoveMark(remove_mark::RemoveMark { run_index: payload.run_index, index: at })]
         }
-        None => Vec::new(),
+        _ => Vec::new(),
     }
 
     })())

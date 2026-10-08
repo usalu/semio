@@ -6,7 +6,7 @@ use crate::{DrawingGroupBody, DrawingLayerBase, DrawingShapeBody};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn shape_layer(id: &str, name: &str) -> DrawingLayerNode {
-    DrawingLayerNode::Shape(DrawingShapeBody { base: DrawingLayerBase { id: id.to_string(), name: name.to_string().into(), ..default_layer_base(name) }, shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None })
+    DrawingLayerNode::Shape(DrawingShapeBody { base: DrawingLayerBase { id: id.into(), name: name.into(), ..default_layer_base(name) }, shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None })
 }
 
 /// 🪟️ A document an order of magnitude past one viewport, whose FIRST layer is a group holding
@@ -16,7 +16,7 @@ fn oversized_document(top: usize, nested: usize) -> DrawingSnapshot {
     let group = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: DrawingLayerBase { id: "group-0".into(), name: "Group 0".into(), ..default_layer_base("Group 0") }, children });
     let mut layers = vec![group];
     layers.extend((1..top).map(|index| shape_layer(&format!("shape-{index}"), &format!("Shape {index}"))));
-    DrawingSnapshot { layers, ..Default::default() }
+    DrawingSnapshot { layers:layers.into_iter().collect(), ..Default::default() }
 }
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.

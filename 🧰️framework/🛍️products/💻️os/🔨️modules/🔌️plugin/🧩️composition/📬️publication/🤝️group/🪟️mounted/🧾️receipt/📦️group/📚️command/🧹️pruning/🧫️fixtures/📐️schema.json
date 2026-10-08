@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageRecords",
+    "itemsPerTurn",
+    "cases",
+    "mutationSeal"
+  ],
+  "properties": {
+    "pageRecords": {
+      "const": 8
+    },
+    "itemsPerTurn": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "heldEdits",
+          "heldTransitions",
+          "rows",
+          "keptSequences"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "heldEdits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "heldTransitions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "seq",
+                "editId",
+                "transitionId"
+              ],
+              "properties": {
+                "seq": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "editId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "transitionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "keptSequences": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "mutationSeal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oldEditId",
+        "newEditId",
+        "revisionAdvance",
+        "expected"
+      ],
+      "properties": {
+        "oldEditId": {
+          "type": "string"
+        },
+        "newEditId": {
+          "type": "string"
+        },
+        "revisionAdvance": {
+          "const": 1
+        },
+        "expected": {
+          "const": "stale"
+        }
+      }
+    }
+  }
+}

@@ -290,7 +290,7 @@ fn text_block_from_dwg(ids: &mut crate::schema::NoteIdOwner, at: &[f64; 3], heig
 
 pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let mut ids = crate::schema::NoteIdOwner::new(format!("dwg-import:{}", drawing.entities.len()), 0);
-    let mut document = crate::schema::empty_note_snapshot();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     document.id = crate::schema::create_note_id(&mut ids, "dwg-import");
     document.title = Some("Imported Drawing".into());
     for entity in &drawing.entities {
@@ -327,7 +327,7 @@ mod media_tests;
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::standards::v1::subsets::any::io::{diff, mutations, snapshot};
+    use crate::standards::v1::subsets::any::io::binary::{diff, mutations, snapshot};
     use crate::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};

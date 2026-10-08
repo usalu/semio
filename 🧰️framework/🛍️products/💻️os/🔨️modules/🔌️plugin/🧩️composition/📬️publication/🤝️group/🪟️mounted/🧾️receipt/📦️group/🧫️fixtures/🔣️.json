@@ -1,0 +1,227 @@
+{
+  "schema": "semio.mounted.group-receipt.v1",
+  "maximumItems": 1,
+  "maximumCopyBytes": 64,
+  "maximumCapacityBytes": 1048576,
+  "maximumTurns": 100000,
+  "cancelStops": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "cases": [
+    {
+      "id": "empty",
+      "invocationId": "group 😀",
+      "parentEditId": null,
+      "childEditIds": [],
+      "lanes": [],
+      "members": []
+    },
+    {
+      "id": "parent",
+      "invocationId": "group 😀",
+      "parentEditId": "parent",
+      "childEditIds": [],
+      "lanes": [
+        {
+          "document": 1,
+          "mutationId": "parent",
+          "invocationId": "group 😀",
+          "schema": "schema/parent",
+          "forward": [
+            0,
+            7
+          ],
+          "inverse": [
+            0,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 0,
+          "timestamp": 1
+        }
+      ],
+      "members": [
+        {
+          "document": 1,
+          "editId": "parent"
+        }
+      ]
+    },
+    {
+      "id": "three",
+      "invocationId": "group 😀",
+      "parentEditId": "parent",
+      "childEditIds": [
+        "child α",
+        "child 😀"
+      ],
+      "lanes": [
+        {
+          "document": 1,
+          "mutationId": "parent",
+          "invocationId": "group 😀",
+          "schema": "schema/parent",
+          "forward": [
+            0,
+            7
+          ],
+          "inverse": [
+            0,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 0,
+          "timestamp": 1
+        },
+        {
+          "document": 2,
+          "mutationId": "child α",
+          "invocationId": "group 😀",
+          "schema": "schema/child α",
+          "forward": [
+            1,
+            7
+          ],
+          "inverse": [
+            1,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 1,
+          "timestamp": 2
+        },
+        {
+          "document": 3,
+          "mutationId": "child 😀",
+          "invocationId": "group 😀",
+          "schema": "schema/child 😀",
+          "forward": [
+            2,
+            7
+          ],
+          "inverse": [
+            2,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 2,
+          "timestamp": 3
+        }
+      ],
+      "members": [
+        {
+          "document": 1,
+          "editId": "parent"
+        },
+        {
+          "document": 2,
+          "editId": "child α"
+        },
+        {
+          "document": 3,
+          "editId": "child 😀"
+        }
+      ]
+    },
+    {
+      "id": "multi-operation",
+      "invocationId": "group 😀",
+      "parentEditId": "parent",
+      "childEditIds": [
+        "child α"
+      ],
+      "lanes": [
+        {
+          "document": 1,
+          "mutationId": "parent#0",
+          "invocationId": "group 😀",
+          "schema": "schema/parent",
+          "forward": [
+            0,
+            7
+          ],
+          "inverse": [
+            0,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 0,
+          "timestamp": 1
+        },
+        {
+          "document": 1,
+          "mutationId": "parent#1",
+          "invocationId": "group 😀",
+          "schema": "schema/child α",
+          "forward": [
+            1,
+            7
+          ],
+          "inverse": [
+            1,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 1,
+          "timestamp": 2
+        },
+        {
+          "document": 2,
+          "mutationId": "child α#0",
+          "invocationId": "group 😀",
+          "schema": "schema/child 😀",
+          "forward": [
+            2,
+            7
+          ],
+          "inverse": [
+            2,
+            9
+          ],
+          "dependencies": [
+            "before α"
+          ],
+          "author": "actor β",
+          "baseVersion": 2,
+          "timestamp": 3
+        }
+      ],
+      "members": [
+        {
+          "document": 1,
+          "editId": "parent"
+        },
+        {
+          "document": 2,
+          "editId": "child α"
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,6 @@ Feature: Authored startup choices survive compiled catalog withholding
     Given a source owner declares browser ports and engine dependencies
     And its artifact source root contains demo and session examples
     And its compiled descriptor uses a withheld channel
-    When the source launch catalog is generated
+    When the source playground catalog is generated
     Then both exact example identities remain selectable
     And the declared ports and engines are preserved

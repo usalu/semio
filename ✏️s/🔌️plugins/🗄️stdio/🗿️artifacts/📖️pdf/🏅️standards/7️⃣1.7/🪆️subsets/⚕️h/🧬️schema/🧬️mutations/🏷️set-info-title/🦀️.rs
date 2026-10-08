@@ -1,8 +1,7 @@
 //! 🏷️ Authoritative PDF/H mutation for setting the document title conformance axis.
 
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
+use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +16,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoTitle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-title", kind: "set-info-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        next.info.title = Some(self.title.clone());
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        let change = (base.info.title.as_deref() != Some(self.title.as_str())).then(|| PdfInfoDiff { title: Some(PdfSet::Set { value: self.title.clone() }), ..Default::default() });
+        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {

@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplaceNodeGeometry` — patches the one addressed node's shape/extent.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodesDelta};
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_positive,puzzle2d_shape};
 
@@ -12,16 +12,18 @@ pub fn diff(payload: &super::ReplaceNodeGeometry, base: &Puzzle2dSnapshot) -> pr
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node", payload.id), vec![payload.id.to_string_owner()]);
     };
-    let mut next = node.clone();
-    next.shape = payload.new_shape.clone();
-    next.radius = payload.new_radius;
-    next.width = payload.new_width;
-    next.height = payload.new_height;
-    if next == *node {
+    let patch = Puzzle2dNodePatch {
+        shape: (payload.new_shape != node.shape).then(|| payload.new_shape.clone()),
+        radius: (payload.new_radius != node.radius).then_some(payload.new_radius),
+        width: (payload.new_width != node.width).then_some(payload.new_width),
+        height: (payload.new_height != node.height).then_some(payload.new_height),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
+        nodes: Some(Puzzle2dNodesDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

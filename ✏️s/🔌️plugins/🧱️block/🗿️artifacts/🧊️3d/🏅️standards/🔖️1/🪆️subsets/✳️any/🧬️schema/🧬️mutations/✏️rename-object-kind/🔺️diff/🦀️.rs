@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `RenameObjectKind`.
 
-use crate::BlockKindIdentity;
 use crate::Block3dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
 
@@ -11,6 +10,6 @@ pub fn diff(payload: &super::RenameObjectKind, base: &Block3dSnapshot) -> protoc
     if payload.new_name == base.object_kind.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object kind name is already \"{}\".", payload.new_name));
     }
-    protocol::MutationOutcome::new(Block3dDiff { object_kind: Some(BlockKindIdentity { name: payload.new_name.clone(), ..base.object_kind.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { object_kind: Some(semio_s_plugin_block::BlockKindIdentityPatch { name: Some(payload.new_name.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -215,7 +215,8 @@
         "total": {
           "$ref": "#/$defs/U32"
         }
-      }
+      },
+      "description": "Replay work steps include operation application and final edit settlement."
     },
     "TimeTravelSession": {
       "description": "Ephemeral local-only session of one app instance; id names the latest session, generation only grows and fences driver results and user actions.",

@@ -9,17 +9,27 @@
       "type": "object",
       "description": "🌳️ One wizard step. A node without `children` is a leaf and carries a `leaf`.",
       "properties": {
-        "key": { "type": "string", "description": "🔑️ The stable, emoji-free key the wizard path is built from." },
+        "key": { "type": "string", "description": "🔑️ The stable key the wizard path is built from; a project target is keyed `:<target>` under its owner." },
         "label": { "type": "string", "description": "🏷️ The line the wizard shows." },
         "leaf": { "$ref": "#/$defs/CommandLeaf" },
-        "children": { "type": "array", "items": { "$ref": "#/$defs/CommandNode" }, "description": "🌿️ The next wizard step, sorted by verb rank at the root and alphabetically below it." }
+        "children": { "type": "array", "items": { "$ref": "#/$defs/CommandNode" }, "description": "🌿️ The next wizard step: the verb at the root in launcher order, then the owner taxonomy, workspace scripts or launch configurations, sorted alphabetically." }
       },
       "required": ["key", "label"],
       "additionalProperties": false
     },
     "CommandLeaf": {
       "description": "🍃️ What activating the leaf does.",
-      "oneOf": [{ "$ref": "#/$defs/ProcessLeaf" }, { "$ref": "#/$defs/RepoLeaf" }]
+      "oneOf": [{ "$ref": "#/$defs/ProcessLeaf" }, { "$ref": "#/$defs/CompoundLeaf" }, { "$ref": "#/$defs/RepoLeaf" }]
+    },
+    "CompoundLeaf": {
+      "type": "object",
+      "description": "🧭️ Several processes started together, each in its own pseudo-terminal window.",
+      "properties": {
+        "kind": { "const": "compound" },
+        "processes": { "type": "array", "items": { "$ref": "#/$defs/ProcessLeaf" }, "minItems": 1 }
+      },
+      "required": ["kind", "processes"],
+      "additionalProperties": false
     },
     "ProcessLeaf": {
       "type": "object",

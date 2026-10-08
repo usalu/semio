@@ -31,6 +31,10 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapsho
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadGeometry {
+    #[value(skip)]
+    pub owned_meshes: HashMap<String, std::sync::Arc<MeshData>>,
+    #[value(skip)]
+    pub owned_breps: HashMap<String, std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>>,
     #[value(default)]
     pub anchors: Vec<DslValue>,
     #[value(default)]
@@ -45,6 +49,34 @@ pub(crate) struct CadGeometry {
     pub shells: Vec<CadShell>,
     #[value(default)]
     pub solids: Vec<CadSolid>,
+}
+
+/// 🧊️ Projects a current owned topology snapshot into triangles without retaining importer handles.
+pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {
+    let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;
+    let mut result = MeshData::default();
+    for face in body.faces.ids() {
+        let transfer = semio_framework_3d::brep::queries::tessellation::tessellate_face(&body, face, 0.1).map_err(|error| format!("{error:?}"))?;
+        let mut mesh = mesh_data_from_mesh_transfer(&transfer).map_err(|error| format!("{error:?}"))?;
+        let offset = (result.positions.len() / 3) as u32;
+        for (kind, ids) in [("face", &mut mesh.face_ids), ("edge", &mut mesh.edge_ids), ("vertex", &mut mesh.vertex_ids)] {
+            let offset = u32::try_from(result.component_references.get(kind).map_or(0, Vec::len)).map_err(|_| "topology component count exceeds the portable u32 domain")?;
+            for id in ids.iter_mut().filter(|id| **id != u32::MAX) { *id = id.checked_add(offset).ok_or("topology component index overflow")?; }
+        }
+        result.positions.extend(mesh.positions);
+        result.normals.extend(mesh.normals);
+        result.colors.extend(mesh.colors);
+        result.indices.extend(mesh.indices.into_iter().map(|index| index + offset));
+        result.uvs.extend(mesh.uvs);
+        result.face_ids.extend(mesh.face_ids);
+        result.vertex_ids.extend(mesh.vertex_ids);
+        result.edge_positions.extend(mesh.edge_positions);
+        result.edge_ids.extend(mesh.edge_ids);
+        result.edge_uvs.extend(mesh.edge_uvs);
+        result.edge_is_seam.extend(mesh.edge_is_seam);
+        for (kind, labels) in mesh.component_references { result.component_references.entry(kind).or_default().extend(labels); }
+    }
+    Ok(result)
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

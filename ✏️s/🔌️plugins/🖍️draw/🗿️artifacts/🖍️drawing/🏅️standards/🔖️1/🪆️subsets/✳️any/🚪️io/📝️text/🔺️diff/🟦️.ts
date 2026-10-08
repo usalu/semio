@@ -19,11 +19,6 @@ export function decodeDrawingDiffJson(text:string):DrawingDiff {
     for(const entry of layers?.patched??[])for(const field of ["transform","fill","stroke","traceParams","layer"])if(entry.patch[field]!=null)entry.patch[field]=decodedDrawingValue(entry.patch[field]);
     for(const entry of layers?.added??[])entry.layer=decodedDrawingValue(entry.layer);
     if(row.artboard!=null)row.artboard=decodedDrawingValue(row.artboard);
-    if(row.artifact!==null&&typeof row.artifact==="object"){
-      const artifact=row.artifact as {layers?:unknown[];artboard?:unknown};
-      if(artifact.layers)artifact.layers=artifact.layers.map(decodedDrawingValue);
-      if(artifact.artboard!=null)artifact.artboard=decodedDrawingValue(artifact.artboard);
-    }
   }
   return parseDrawingDiff(value);
 }

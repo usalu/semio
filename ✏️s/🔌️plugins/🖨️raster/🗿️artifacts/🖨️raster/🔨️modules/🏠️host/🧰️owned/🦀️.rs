@@ -37,6 +37,10 @@ struct RasterStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"raster-store.initializer-stale-authority");
@@ -463,6 +467,7 @@ impl Drop for RasterInitializationControlReservation {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RasterSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
@@ -472,11 +477,14 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapsh
 }
 
 impl store::SnapshotRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<RasterSnapshot>) -> usize { std::mem::size_of::<RasterSnapshotRootRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(RasterSnapshotRootRetirement::new_in(&RASTER_STANDALONE_PROCESS_CONTROLS, snapshot))
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RasterMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<RasterMutation> for RasterMutationRetirementFactory {

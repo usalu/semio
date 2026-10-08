@@ -6,6 +6,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
+/// 🧩️ Builds one capability parameter for the authored domain catalogs.
+fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
+    CapabilityParameter { id: id.into(), label: label.into(), value }
+}
+
 
 //#region 🔖️Artifact
 /// 🧬️ process3d document artifact state.

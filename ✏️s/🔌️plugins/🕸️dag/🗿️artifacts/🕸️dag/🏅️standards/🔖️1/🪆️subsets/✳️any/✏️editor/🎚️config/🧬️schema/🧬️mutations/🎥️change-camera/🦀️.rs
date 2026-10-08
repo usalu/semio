@@ -1,6 +1,6 @@
 //! 🎥️ Change Camera in the DAG config facet.
 
-use super::{DagConfig, DagConfigMutation};
+use super::{DagConfig, DagConfigDiff, DagConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -16,8 +16,12 @@ pub struct ChangeCamera {
 
 impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "camera", kind: "change-camera", record: "ChangeCamera" };
-    fn diff(&self, _base: &DagConfig) -> protocol::MutationOutcome<DagConfig> {
-        protocol::MutationOutcome::new(DagConfig { camera_x: self.x, camera_y: self.y, camera_zoom: self.zoom })
+    fn diff(&self, base: &DagConfig) -> protocol::MutationOutcome<DagConfigDiff> {
+        protocol::MutationOutcome::new(DagConfigDiff {
+            camera_x: (base.camera_x != self.x).then_some(self.x),
+            camera_y: (base.camera_y != self.y).then_some(self.y),
+            camera_zoom: (base.camera_zoom != self.zoom).then_some(self.zoom),
+        })
     }
     fn inverse(&self, base: &DagConfig) -> Result<Vec<DagConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -30,5 +34,17 @@ impl protocol::MutationKind<DagConfig, DagConfigMutation> for ChangeCamera {
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[test]
+    fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 1.5 };
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&DagConfigMutation::ChangeCamera(ChangeCamera { x: -3.0, y: 2.0, zoom: 2.0 }), &base);
     }
 }

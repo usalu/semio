@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "previous-channel",
+              "future-channel",
+              "stack-budget",
+              "request-change",
+              "drop-apps",
+              "selected-app",
+              "exit-success",
+              "runtime-change",
+              "body-truncate",
+              "before-hash",
+              "after-hash",
+              "forward",
+              "inverse",
+              "unknown-field",
+              "unknown-path",
+              "channel-authority",
+              "extra-pair",
+              "drop-pair",
+              "source-write",
+              "native-acceptance",
+              "publication-acceptance"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

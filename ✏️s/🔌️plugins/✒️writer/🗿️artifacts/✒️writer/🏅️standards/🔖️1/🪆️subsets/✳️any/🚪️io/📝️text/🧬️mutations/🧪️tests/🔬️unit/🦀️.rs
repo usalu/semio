@@ -1,4 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::mutations::*;
+use crate::mutations::{EditText, RenameWriter, ChangeUri, ChangeLanguage};
 
 /// ✍️ Hand-built representative document — used across the artifact's own component tests.
 fn jack_snapshot() -> crate::WriterSnapshot {

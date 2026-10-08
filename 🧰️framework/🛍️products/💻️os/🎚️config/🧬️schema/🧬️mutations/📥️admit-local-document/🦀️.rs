@@ -1,5 +1,6 @@
 //! 📥️ `AdmitLocalDocument` is the authoritative direct Rust leaf for listing one document in this device's local catalog.
 
+use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
@@ -41,13 +42,50 @@ pub struct LocalCatalog {
 /// 🗂️ The schema id for the local document catalog config facet.
 pub const LOCAL_CATALOG_CONFIG_SCHEMA: &str = "os.config.local-catalog";
 
-impl MutationDiff<LocalCatalog> for LocalCatalog {
-    fn apply(&self, _base: &LocalCatalog) -> protocol::MutationApplyResult<LocalCatalog> {
-        Ok(self.clone())
+/// 🔺️ Sparse diff of [`LocalCatalog`]: one absolute row per touched document id.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct LocalCatalogDiff {
+    #[value(skip_serializing_if = "Vec::is_empty")]
+    pub documents: Vec<KeyedEdit<LocalDocument>>,
+}
+
+impl MutationDiff<LocalCatalog> for LocalCatalogDiff {
+    fn apply(&self, base: &LocalCatalog, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LocalCatalog> {
+        let mut documents = base.documents.clone();
+        for row in &self.documents {
+            documents.retain(|entry| entry.document_id != row.key);
+            if let Some(document) = &row.value {
+                documents.push(document.clone());
+            }
+        }
+        documents.sort_by(|left, right| left.document_id.cmp(&right.document_id));
+        Ok(LocalCatalog { documents })
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        absorb_keyed_rows(&mut self.documents, other.documents);
+    }
+}
+
+impl protocol::DiffAlgebra<LocalCatalog> for LocalCatalogDiff {
+    fn inverse(&self, base: &LocalCatalog) -> Self {
+        Self { documents: self.documents.iter().map(|row| KeyedEdit::new(row.key.clone(), base.documents.iter().find(|entry| entry.document_id == row.key).cloned())).collect() }
+    }
+
+    fn between(base: &LocalCatalog, other: &LocalCatalog) -> Self {
+        let mut documents: Vec<KeyedEdit<LocalDocument>> = base
+            .documents
+            .iter()
+            .filter(|entry| other.documents.iter().find(|candidate| candidate.document_id == entry.document_id) != Some(*entry))
+            .map(|entry| KeyedEdit::new(entry.document_id.clone(), other.documents.iter().find(|candidate| candidate.document_id == entry.document_id).cloned()))
+            .collect();
+        documents.extend(other.documents.iter().filter(|entry| !base.documents.iter().any(|candidate| candidate.document_id == entry.document_id)).map(|entry| KeyedEdit::new(entry.document_id.clone(), Some(entry.clone()))));
+        Self { documents }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.documents.is_empty()
     }
 }
 //#endregion 🔖️Schema
@@ -87,15 +125,12 @@ impl From<&AdmitLocalDocument> for LocalDocument {
 impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "local-document", kind: "admit-local-document", record: "Set" };
 
-    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalog> {
+    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         let admitted = LocalDocument::from(self);
         if base.documents.iter().any(|entry| *entry == admitted) {
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is already listed in the local catalog.", self.document_id));
+            return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is already listed in the local catalog.", self.document_id));
         }
-        let mut documents: Vec<LocalDocument> = base.documents.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect();
-        documents.push(admitted);
-        documents.sort_by(|left, right| left.document_id.cmp(&right.document_id));
-        MutationOutcome::new(LocalCatalog { documents })
+        MutationOutcome::new(LocalCatalogDiff { documents: vec![KeyedEdit::new(self.document_id.clone(), Some(admitted))] })
     }
 
     fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
@@ -119,13 +154,6 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
 //#endregion 🔖️Mutation
 
 //#region 🌉️MutationCodecBridge
-/// 🧮️ Applies one local-catalog mutation through its whole-record diff.
-pub fn apply_local_catalog_config_mutation(snapshot: &mut LocalCatalog, mutation: &LocalCatalogConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::{Mutation as _, MutationDiff as _};
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
-    Ok(())
-}
-
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation catalog.
 pub fn inverse_local_catalog_config_mutation(snapshot: &LocalCatalog, mutation: &LocalCatalogConfigMutation) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -148,13 +176,6 @@ pub fn encode_local_catalog_json(snapshot: &LocalCatalog) -> String {
 /// 📥️ Decodes the canonical local catalog JSON projection.
 pub fn decode_local_catalog_json(text: &str) -> Result<LocalCatalog, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut LocalCatalog, mutation: &LocalCatalogConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.

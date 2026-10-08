@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumAdmissionBytes", "maximumItems", "undergrantOffset", "undergrantReleasedBytes", "terminalFrameSeparate", "reportedPhysicalEqualsActual", "oracleExtents"],
+  "properties": {
+    "maximumAdmissionBytes": {"const": 262144},
+    "maximumItems": {"const": 1},
+    "undergrantOffset": {"const": 1},
+    "undergrantReleasedBytes": {"const": 0},
+    "terminalFrameSeparate": {"const": true},
+    "reportedPhysicalEqualsActual": {"const": true},
+    "oracleExtents": {"const": [24, 4098, 43024]}
+  }
+}

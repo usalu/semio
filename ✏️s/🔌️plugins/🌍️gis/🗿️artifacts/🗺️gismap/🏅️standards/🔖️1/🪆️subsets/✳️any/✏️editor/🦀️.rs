@@ -388,7 +388,7 @@ fn gis2d_retained_contract() -> ToolExecutionContract {
 fn gis2d_map_window_mutation(command: &Gis2dCommand, document: &GisMapSnapshot, config: &MapWindowConfig) -> Option<MapWindowConfigMutation> {
     match command {
         Gis2dCommand::SetActiveExample(payload) if !payload.example_id.is_empty() => {
-            let mut host = crate::editor::gis2d::maphost::map_host_from(&crate::schema::default_document(), config);
+            let mut host = crate::editor::gis2d::maphost::map_host_from(&crate::standards::v1::subsets::any::io::text::snapshot::default_document(), config);
             host.fit_world_camera();
             Some(MapWindowConfigMutation::SetCamera(map_config_mutations::SetCamera { camera_json: host.camera_json() }))
         }
@@ -518,6 +518,7 @@ impl ArtifactOwnedToolJobFactory for Gis2dRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️OneItemPreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Gis2dOneItemPreparationFactory<P, M> {
     marker: std::marker::PhantomData<fn() -> (P, M)>,
     stamp: Option<GisMapOneItemStampV1>,
@@ -624,8 +625,8 @@ where
         self.stamp.as_ref().map(|stamp| stamp.timestamp)
     }
 
-    fn stamped_mutation_id(&self) -> Option<protocol::MutationId> {
-        self.stamp.as_ref().map(|stamp| stamp.mutation_id.clone())
+    fn stamped_mutation_id(&self) -> Option<&protocol::MutationId> {
+        self.stamp.as_ref().map(|stamp| &stamp.mutation_id)
     }
 
     fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -944,7 +945,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     }
 
     fn initial_snapshot() -> GisMapSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {

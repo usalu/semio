@@ -1,10 +1,8 @@
 syntax = "proto3";
 package semio.s.imperative.procedure.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message ProcedureDiff {
-  optional semio.s.imperative.procedure.ProcedureArtifact artifact = 1;
-  optional string schema = 2;
-  optional semio.os.store.ArtifactChild flow = 3;
-  optional semio.os.store.ArtifactChild text = 4;
+  optional string schema = 1;
+  optional semio.os.store.ArtifactChild flow = 2;
+  optional semio.os.store.ArtifactChild text = 3;
 }

@@ -1,6 +1,7 @@
 //! 🚪️ `SignOut` is the authoritative direct Rust leaf for clearing the OS identity session.
 
-use super::sign_in::{sign_in, IdentitySetting};
+use super::super::SettingEdit;
+use super::sign_in::{sign_in, IdentityDiff, IdentitySetting};
 use super::IdentityConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,8 +21,11 @@ pub fn sign_out() -> IdentityConfigMutation {
 impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "identity", kind: "sign-out", record: "Cleared" };
 
-    fn diff(&self, _base: &IdentitySetting) -> MutationOutcome<IdentitySetting> {
-        MutationOutcome::new(IdentitySetting(None))
+    fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
+        if base.0.is_none() {
+            return MutationOutcome::empty();
+        }
+        MutationOutcome::new(IdentityDiff { session: Some(SettingEdit::new(None)) })
     }
 
     fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {

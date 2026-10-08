@@ -1,0 +1,990 @@
+{
+  "category": {
+    "id": "math.arithmetic",
+    "emoji": "🧮️",
+    "order": 410,
+    "label": {
+      "en": "Arithmetic",
+      "de": "Arithmetik"
+    },
+    "description": {
+      "en": "Calculate with numbers: the four basic operations, powers, rounding, limits and trigonometry.",
+      "de": "Mit Zahlen rechnen: Grundrechenarten, Potenzen, Runden, Grenzen und Trigonometrie."
+    }
+  },
+  "kinds": [
+    {
+      "id": "math.add",
+      "category": "math.arithmetic",
+      "emoji": "➕️",
+      "label": {
+        "en": "Add",
+        "de": "Addieren"
+      },
+      "description": {
+        "en": "Adds two numbers.",
+        "de": "Addiert zwei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The sum of A and B.",
+            "de": "Die Summe aus A und B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.subtract",
+      "category": "math.arithmetic",
+      "emoji": "➖️",
+      "label": {
+        "en": "Subtract",
+        "de": "Subtrahieren"
+      },
+      "description": {
+        "en": "Subtracts B from A.",
+        "de": "Subtrahiert B von A."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The difference A minus B.",
+            "de": "Die Differenz A minus B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.multiply",
+      "category": "math.arithmetic",
+      "emoji": "✖️",
+      "label": {
+        "en": "Multiply",
+        "de": "Multiplizieren"
+      },
+      "description": {
+        "en": "Multiplies two numbers.",
+        "de": "Multipliziert zwei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The product of A and B.",
+            "de": "Das Produkt aus A und B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.divide",
+      "category": "math.arithmetic",
+      "emoji": "➗️",
+      "label": {
+        "en": "Divide",
+        "de": "Dividieren"
+      },
+      "description": {
+        "en": "Divides A by B; B must not be zero.",
+        "de": "Dividiert A durch B; B darf nicht null sein."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The quotient A divided by B.",
+            "de": "Der Quotient A durch B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.modulo",
+      "category": "math.arithmetic",
+      "emoji": "🍰️",
+      "label": {
+        "en": "Remainder",
+        "de": "Rest"
+      },
+      "description": {
+        "en": "Gives the remainder of dividing A by B; B must not be zero.",
+        "de": "Liefert den Rest der Division von A durch B; B darf nicht null sein."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 2,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The remainder of A divided by B.",
+            "de": "Der Rest von A geteilt durch B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.power",
+      "category": "math.arithmetic",
+      "emoji": "⚡️",
+      "label": {
+        "en": "Power",
+        "de": "Potenz"
+      },
+      "description": {
+        "en": "Raises a base to an exponent.",
+        "de": "Potenziert eine Basis mit einem Exponenten."
+      },
+      "inputs": [
+        {
+          "name": "base",
+          "label": {
+            "en": "Base",
+            "de": "Basis"
+          },
+          "description": {
+            "en": "The number to raise.",
+            "de": "Die zu potenzierende Zahl."
+          },
+          "type": "number",
+          "default": 2,
+          "step": 0.1
+        },
+        {
+          "name": "exponent",
+          "label": {
+            "en": "Exponent",
+            "de": "Exponent"
+          },
+          "description": {
+            "en": "The power to raise it to.",
+            "de": "Die Hochzahl."
+          },
+          "type": "number",
+          "default": 2,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The base raised to the exponent.",
+            "de": "Die Basis hoch Exponent."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.negate",
+      "category": "math.arithmetic",
+      "emoji": "🔀️",
+      "label": {
+        "en": "Negate",
+        "de": "Negieren"
+      },
+      "description": {
+        "en": "Flips the sign of a number.",
+        "de": "Kehrt das Vorzeichen einer Zahl um."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number.",
+            "de": "Die Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The number with the opposite sign.",
+            "de": "Die Zahl mit umgekehrtem Vorzeichen."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.absolute",
+      "category": "math.arithmetic",
+      "emoji": "🧲️",
+      "label": {
+        "en": "Absolute value",
+        "de": "Betrag"
+      },
+      "description": {
+        "en": "Removes the sign of a number.",
+        "de": "Entfernt das Vorzeichen einer Zahl."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number.",
+            "de": "Die Zahl."
+          },
+          "type": "number",
+          "default": -1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The distance of the number from zero.",
+            "de": "Der Abstand der Zahl von null."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.squareRoot",
+      "category": "math.arithmetic",
+      "emoji": "🌱️",
+      "label": {
+        "en": "Square root",
+        "de": "Quadratwurzel"
+      },
+      "description": {
+        "en": "Takes the square root of a non-negative number.",
+        "de": "Zieht die Quadratwurzel einer nichtnegativen Zahl."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number; it must not be negative.",
+            "de": "Die Zahl; sie darf nicht negativ sein."
+          },
+          "type": "number",
+          "default": 4,
+          "min": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The square root.",
+            "de": "Die Quadratwurzel."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.round",
+      "category": "math.arithmetic",
+      "emoji": "🎯️",
+      "label": {
+        "en": "Round",
+        "de": "Runden"
+      },
+      "description": {
+        "en": "Rounds a number to a whole number.",
+        "de": "Rundet eine Zahl auf eine ganze Zahl."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number to round.",
+            "de": "Die zu rundende Zahl."
+          },
+          "type": "number",
+          "default": 0.5,
+          "step": 0.1
+        },
+        {
+          "name": "mode",
+          "label": {
+            "en": "Direction",
+            "de": "Richtung"
+          },
+          "description": {
+            "en": "How the number is rounded.",
+            "de": "Wie die Zahl gerundet wird."
+          },
+          "type": "enum",
+          "default": "nearest",
+          "options": [
+            {
+              "value": "nearest",
+              "label": {
+                "en": "To nearest",
+                "de": "Zur nächsten"
+              }
+            },
+            {
+              "value": "down",
+              "label": {
+                "en": "Down",
+                "de": "Abrunden"
+              }
+            },
+            {
+              "value": "up",
+              "label": {
+                "en": "Up",
+                "de": "Aufrunden"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The rounded whole number.",
+            "de": "Die gerundete ganze Zahl."
+          },
+          "type": "integer"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.minimum",
+      "category": "math.arithmetic",
+      "emoji": "⬇️",
+      "label": {
+        "en": "Minimum",
+        "de": "Minimum"
+      },
+      "description": {
+        "en": "Picks the smaller of two numbers.",
+        "de": "Wählt die kleinere von zwei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The smaller of A and B.",
+            "de": "Die kleinere der Zahlen A und B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.maximum",
+      "category": "math.arithmetic",
+      "emoji": "⬆️",
+      "label": {
+        "en": "Maximum",
+        "de": "Maximum"
+      },
+      "description": {
+        "en": "Picks the larger of two numbers.",
+        "de": "Wählt die größere von zwei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "A",
+            "de": "A"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "B",
+            "de": "B"
+          },
+          "description": {
+            "en": "The second number.",
+            "de": "Die zweite Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The larger of A and B.",
+            "de": "Die größere der Zahlen A und B."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.clamp",
+      "category": "math.arithmetic",
+      "emoji": "🗜️",
+      "label": {
+        "en": "Clamp",
+        "de": "Begrenzen"
+      },
+      "description": {
+        "en": "Limits a number to a range.",
+        "de": "Begrenzt eine Zahl auf einen Bereich."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number to limit.",
+            "de": "Die zu begrenzende Zahl."
+          },
+          "type": "number",
+          "default": 0.5,
+          "step": 0.1
+        },
+        {
+          "name": "lower",
+          "label": {
+            "en": "Lower limit",
+            "de": "Untergrenze"
+          },
+          "description": {
+            "en": "The smallest allowed value.",
+            "de": "Der kleinste erlaubte Wert."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "upper",
+          "label": {
+            "en": "Upper limit",
+            "de": "Obergrenze"
+          },
+          "description": {
+            "en": "The largest allowed value.",
+            "de": "Der größte erlaubte Wert."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The number limited to the range.",
+            "de": "Die auf den Bereich begrenzte Zahl."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.interpolate",
+      "category": "math.arithmetic",
+      "emoji": "🎚️",
+      "label": {
+        "en": "Interpolate",
+        "de": "Interpolieren"
+      },
+      "description": {
+        "en": "Blends between two numbers.",
+        "de": "Überblendet zwischen zwei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "From",
+            "de": "Von"
+          },
+          "description": {
+            "en": "The value at 0.",
+            "de": "Der Wert bei 0."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "To",
+            "de": "Nach"
+          },
+          "description": {
+            "en": "The value at 1.",
+            "de": "Der Wert bei 1."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "t",
+          "label": {
+            "en": "Blend",
+            "de": "Anteil"
+          },
+          "description": {
+            "en": "Blend factor; 0 gives From and 1 gives To.",
+            "de": "Mischfaktor; 0 ergibt Von und 1 ergibt Nach."
+          },
+          "type": "number",
+          "default": 0.5,
+          "step": 0.05
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The blended number.",
+            "de": "Die überblendete Zahl."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.sine",
+      "category": "math.arithmetic",
+      "emoji": "🌊️",
+      "label": {
+        "en": "Sine",
+        "de": "Sinus"
+      },
+      "description": {
+        "en": "Takes the sine of an angle.",
+        "de": "Bildet den Sinus eines Winkels."
+      },
+      "inputs": [
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "The angle.",
+            "de": "Der Winkel."
+          },
+          "type": "angle",
+          "default": 0,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The sine, between -1 and 1.",
+            "de": "Der Sinus, zwischen -1 und 1."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.cosine",
+      "category": "math.arithmetic",
+      "emoji": "〰️",
+      "label": {
+        "en": "Cosine",
+        "de": "Kosinus"
+      },
+      "description": {
+        "en": "Takes the cosine of an angle.",
+        "de": "Bildet den Kosinus eines Winkels."
+      },
+      "inputs": [
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "The angle.",
+            "de": "Der Winkel."
+          },
+          "type": "angle",
+          "default": 0,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The cosine, between -1 and 1.",
+            "de": "Der Kosinus, zwischen -1 und 1."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.tangent",
+      "category": "math.arithmetic",
+      "emoji": "📈️",
+      "label": {
+        "en": "Tangent",
+        "de": "Tangens"
+      },
+      "description": {
+        "en": "Takes the tangent of an angle; it is undefined at 90 degrees.",
+        "de": "Bildet den Tangens eines Winkels; bei 90 Grad ist er nicht definiert."
+      },
+      "inputs": [
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "The angle.",
+            "de": "Der Winkel."
+          },
+          "type": "angle",
+          "default": 0,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Result",
+            "de": "Ergebnis"
+          },
+          "description": {
+            "en": "The tangent.",
+            "de": "Der Tangens."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    }
+  ]
+}

@@ -32,38 +32,12 @@ use protocol::MutationDiff;
 /// 🎙️ Handcrafted `protocol::DiffCodec` — one `tag:payload` line, where `payload` for the 13
 /// same-kind variants is exactly that subset's OWN already-real, already-hand-rolled
 /// `print_diff()`/`parse_diff()` output (genuine reuse — this module never re-derives any of the
-/// 13 subsets' own bracket/triple grammars). `Replace`'s payload is hex(`SemioSnapshot::print_dsl`)
-/// — real delegation to THIS envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️.rs,
-/// itself a real delegating codec over the same 13 subsets), hex-flattened to keep `print_diff`'s
-/// mandatory one-physical-line contract despite `print_dsl`'s own embedded newlines.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
-    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
-    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
-    if !hex.len().is_multiple_of(2) {
-        return Err("replace: odd hex length".to_string());
-    }
-    let mut bytes = Vec::with_capacity(hex.len() / 2);
-    let mut i = 0usize;
-    while i < hex.len() {
-        let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("replace: invalid hex: {e}"))?;
-        bytes.push(byte);
-        i += 2;
-    }
-    let text = String::from_utf8(bytes).map_err(|e| format!("replace: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
-}
-
+/// 13 subsets' own bracket/triple grammars).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_diff(d: &SemioDiff) -> String {
     match d {
         SemioDiff::NoChange => "noChange".to_string(),
         SemioDiff::Rejected(error) => format!("rejected:{}", enc_rejection(error)),
-        SemioDiff::Replace(s) => format!("replace:{}", enc_replace_snapshot(s)),
         SemioDiff::Brep(d) => format!("brep:{}", d.print_diff()),
         SemioDiff::Mesh(d) => format!("mesh:{}", d.print_diff()),
         SemioDiff::Model(d) => format!("model:{}", d.print_diff()),
@@ -92,7 +66,6 @@ pub(crate) fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio diff: missing ':' in {line:?}"))?;
     match tag {
-        "replace" => Ok(SemioDiff::Replace(Box::new(dec_replace_snapshot(rest)?))),
         "rejected" => Ok(SemioDiff::Rejected(dec_rejection(rest)?)),
         "brep" => Ok(SemioDiff::Brep(SemioBrepDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "mesh" => Ok(SemioDiff::Mesh(SemioMeshDiff::parse_diff(rest).map_err(|e| e.to_string())?)),

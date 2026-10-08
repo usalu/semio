@@ -100,6 +100,10 @@ impl semio_framework_dsl_record::DslField for QueryResult {
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for QueryResult {
+    const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;
+}
+
 impl QueryResult {
     pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
         Self { kind: QueryResultKind::Table, columns, rows, graph_snapshot: None }

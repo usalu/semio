@@ -233,6 +233,36 @@
           }
         ]
       }
+    },
+    {
+      "id": "declared-child-intent-follows-structural-support",
+      "histories": [
+        {
+          "store": "content/flow-1",
+          "editId": "c3",
+          "transaction": "tx-00000000000000c5",
+          "at": 1200,
+          "startedAt": "1200",
+          "opCount": 2,
+          "opLines": ["insert-edge e1 slider number add b data", "drag-nodes add 10 0"],
+          "firstLabel": {"en": "Insert edge", "de": "Kante einfügen"},
+          "intentLabel": {"en": "Drag 1 node by (10, 0)", "de": "1 Knoten um (10; 0) ziehen"}
+        }
+      ],
+      "logged": [],
+      "parentTransactions": {},
+      "expected": {
+        "attached": {},
+        "groups": [
+          {
+            "at": 1200,
+            "transaction": "tx-00000000000000c5",
+            "editIds": ["c3"],
+            "label": {"en": "Drag 1 node by (10, 0) (+1)", "de": "1 Knoten um (10; 0) ziehen (+1)"},
+            "startedAt": "1200"
+          }
+        ]
+      }
     }
   ]
 }

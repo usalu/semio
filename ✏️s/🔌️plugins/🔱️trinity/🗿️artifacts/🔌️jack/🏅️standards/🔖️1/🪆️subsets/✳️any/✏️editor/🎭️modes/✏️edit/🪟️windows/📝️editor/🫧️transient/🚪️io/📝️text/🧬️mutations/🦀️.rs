@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::jack::transient::component::editor_window::mutations::*;
 use crate::editor::jack::transient::component::editor_window::JackEditorWindowTransient;
-use set_editor_selection::SetEditorSelection;
 
 impl protocol::OpText for JackEditorWindowTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -35,7 +34,6 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::jack::transient::component::editor_window::mutations::*;
 use crate::editor::jack::transient::component::editor_window::JackEditorWindowTransient;
-use set_editor_selection::SetEditorSelection;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `JackEditorWindowTransient`.

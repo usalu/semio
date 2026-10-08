@@ -24,8 +24,6 @@ use protocol::{OpBinary, OpText};
 pub(crate) fn wire_tag(m: &SemioAnimationMutation) -> u8 {
     use SemioAnimationMutation::*;
     match m {
-        SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         InsertTimeline(_) => TAG_INSERT_TIMELINE,
         RemoveTimeline(_) => TAG_REMOVE_TIMELINE,
         SetTimelineName(_) => TAG_SET_TIMELINE_NAME,
@@ -48,11 +46,6 @@ pub(crate) fn wire_tag(m: &SemioAnimationMutation) -> u8 {
 /// `OpBinary` upgrade uses.
 impl OpBinary for SemioAnimationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         let printed = <Self as OpText>::print_op(self);
         let args = match printed.split_once(':') {
             Some((_, rest)) => rest,
@@ -68,9 +61,6 @@ impl OpBinary for SemioAnimationMutation {
         if *format != OP_BINARY_FORMAT {
             return Err(malformed("op format", format!("unsupported op format {format}")));
         }
-        if *tag == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(rest)? }));
-        }
         let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(*tag)).ok_or_else(|| malformed("op tag", format!("tag {tag} names no record of 📡️.protocol.semio")))?;
         let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| malformed("op tag", format!("record {kind} has no text keyword")))?;
         let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
@@ -84,8 +74,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioAnimationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-timeline");
 const TAG_REMOVE_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-timeline");
 const TAG_SET_TIMELINE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-timeline-name");

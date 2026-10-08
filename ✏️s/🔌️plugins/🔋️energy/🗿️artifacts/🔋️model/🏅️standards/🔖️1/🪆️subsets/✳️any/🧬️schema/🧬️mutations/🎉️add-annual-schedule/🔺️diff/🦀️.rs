@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `AddAnnualScheduleHoliday` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, AnnualSchedulePatch, ListEdit, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::AddAnnualScheduleHoliday, base: &EnergyModelSnapsho
     if existing.holiday_dates.contains(&(payload.year, payload.month, payload.day)) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Annual schedule {} already holds {}-{}-{} as a holiday.", payload.id.0, payload.year, payload.month, payload.day));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.annual.iter_mut().find(|item| item.id == payload.id) {
-        item.holiday_dates.insert(payload.index as usize, (payload.year, payload.month, payload.day));
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { annual: Rows::modifying(AnnualSchedulePatch { holiday_dates: ListEdit::inserting(payload.index as usize, (payload.year, payload.month, payload.day)), ..AnnualSchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

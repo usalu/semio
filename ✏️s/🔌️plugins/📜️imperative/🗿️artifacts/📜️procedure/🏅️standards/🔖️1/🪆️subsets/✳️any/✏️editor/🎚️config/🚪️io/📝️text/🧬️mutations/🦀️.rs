@@ -5,9 +5,9 @@ mod mutations_codec {
 use super::*;
 use crate::editor::procedure::config::component::mutations::*;
 use crate::editor::procedure::config::component::*;
-use replace_config::ReplaceConfig;
-use set_run_output::SetRunOutput;
-use set_contributions::SetContributions;
+use crate::editor::procedure::config::component::mutations::ReplaceConfig;
+use crate::editor::procedure::config::component::mutations::SetRunOutput;
+use crate::editor::procedure::config::component::mutations::SetContributions;
 
 impl protocol::OpText for ImperativeConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -34,9 +34,9 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::procedure::config::component::mutations::*;
 use crate::editor::procedure::config::component::*;
-use replace_config::ReplaceConfig;
-use set_run_output::SetRunOutput;
-use set_contributions::SetContributions;
+use crate::editor::procedure::config::component::mutations::ReplaceConfig;
+use crate::editor::procedure::config::component::mutations::SetRunOutput;
+use crate::editor::procedure::config::component::mutations::SetContributions;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `ImperativeConfig`.

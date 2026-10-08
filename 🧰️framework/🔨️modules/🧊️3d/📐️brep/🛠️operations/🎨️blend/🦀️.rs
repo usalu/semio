@@ -33,6 +33,7 @@ use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
 use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
 use crate::brep::operations::offset::exact_pcurve;
+use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::brep::queries::mass_properties::edge_length;
 use crate::brep::representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use crate::brep::representation::curve::bspline::KnotVector;
@@ -1023,137 +1024,213 @@ fn attach_with_pcurves(body: &mut Body, surface: SurfaceId, members: &mut [Membe
     face
 }
 
-/// 🎨️ The blend engine: builds every patch, classifies every vertex the blend reaches, trims each
-/// patch to its corners, then rebuilds the whole solid — original faces with their boundaries
-/// substituted and shortened, one patch face per selected edge, one corner face per fully blended
-/// vertex.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn blend_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], spec: BlendSpec, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let solid_faces: BTreeSet<FaceId> = body.solid_faces(solid).into_iter().collect();
-    let selected: BTreeSet<EdgeId> = edges.iter().copied().collect();
+/// 🎨️ Phase indices of a [`BlendJob`] plan, in execution order.
+const PATCHES: usize = 0;
+const CORNERS: usize = 1;
+const TRIM: usize = 2;
+const CORNER_VERTICES: usize = 3;
+const CARRIED: usize = 4;
+const SEAMS: usize = 5;
+const FACES: usize = 6;
+const PATCH_FACES: usize = 7;
+const CORNER_FACES: usize = 8;
+const ASSEMBLE: usize = 9;
 
-    let mut patches: BTreeMap<EdgeId, Patch> = BTreeMap::new();
-    for &edge in &selected {
-        patches.insert(edge, build_patch(body, edge, &solid_faces, spec)?);
-    }
-
-    let mut incident: BTreeMap<VertexId, Vec<EdgeId>> = BTreeMap::new();
-    for &edge in patches.keys() {
-        let ent = body.edges.get(edge).unwrap();
-        incident.entry(ent.v0).or_default().push(edge);
-        if ent.v1 != ent.v0 {
-            incident.entry(ent.v1).or_default().push(edge);
-        }
-    }
-
-    let mut corners: BTreeMap<VertexId, Corner> = BTreeMap::new();
-    for (&vertex, edges_here) in &incident {
-        corners.insert(vertex, build_corner(body, vertex, edges_here, &patches, &solid_faces, spec)?);
-    }
-
-    trim_patches(body, &mut patches, &corners)?;
-
-    let mut minted = Minted { vertices: BTreeMap::new(), edges: BTreeMap::new(), ranges: BTreeMap::new(), tangency: BTreeMap::new(), ends: BTreeMap::new() };
-    for corner in corners.values_mut() {
-        let points: Vec<(FaceId, Pnt3)> = corner.points.iter().map(|(f, p)| (*f, *p)).collect();
-        for (face, point) in points {
-            let id = make_vertex(body, point, Tol::DEFAULT, rec);
-            corner.verts.insert(face, id);
-        }
-    }
-
-    for &edge in &solid_edge_set(body, solid) {
-        if selected.contains(&edge) {
-            continue;
-        }
-        mint_carried_edge(body, edge, &corners, &solid_faces, &mut minted, rec)?;
-    }
-
-    for (&edge, patch) in &patches {
-        for i in 0..2 {
-            let curve_id = body.curves3.insert(patch.tangency(i));
-            let v0 = corners[&patch.end_vertex[0]].verts[&patch.faces[i]];
-            let v1 = corners[&patch.end_vertex[1]].verts[&patch.faces[i]];
-            let fresh = make_edge(body, curve_id, patch.run[i], v0, v1, Tol::DEFAULT, rec);
-            minted.tangency.insert((edge, i), fresh);
-        }
-        for slot in 0..2 {
-            if patch.closed && slot == 1 {
-                let seam = minted.ends[&(edge, 0)];
-                minted.ends.insert((edge, 1), seam);
-                continue;
-            }
-            let (curve, range) = patch.end_curve(slot);
-            let curve_id = body.curves3.insert(curve);
-            let v0 = corners[&patch.end_vertex[slot]].verts[&patch.faces[0]];
-            let v1 = corners[&patch.end_vertex[slot]].verts[&patch.faces[1]];
-            let fresh = make_edge(body, curve_id, range, v0, v1, Tol::DEFAULT, rec);
-            minted.ends.insert((edge, slot), fresh);
-        }
-    }
-
-    let mut faces: Vec<FaceId> = Vec::new();
-    for &face in &solid_faces {
-        faces.push(rebuild_face(body, face, &patches, &corners, &minted, rec)?);
-    }
-    for (&edge, patch) in &patches {
-        faces.push(build_patch_face(body, edge, patch, &minted, rec)?);
-    }
-    for (&vertex, corner) in &corners {
-        if corner.corner_surface.is_some() {
-            faces.push(build_corner_face(body, vertex, corner, &patches, &minted, rec)?);
-        }
-    }
-
-    let shell = add_shell(body, faces, rec);
-    Ok(add_solid(body, shell, vec![], rec))
+/// ⏱️ The blend engine as a resumable job: one unit builds one patch (per selected edge), classifies
+/// one corner (per reached vertex), trims one patch, mints one corner's vertices, carries one
+/// unblended edge, mints one patch's seam edges, rebuilds one original face, assembles one patch
+/// face or one corner face, and finally closes the shell. The input solid is never touched — every
+/// entity of the result is freshly minted — so a job that is abandoned leaves only unreachable
+/// garbage in the body it ran in.
+pub struct BlendJob {
+    spec: BlendSpec,
+    solid_faces: BTreeSet<FaceId>,
+    selected: Vec<EdgeId>,
+    incident: Vec<(VertexId, Vec<EdgeId>)>,
+    carried: Vec<EdgeId>,
+    face_order: Vec<FaceId>,
+    patches: BTreeMap<EdgeId, Patch>,
+    corners: BTreeMap<VertexId, Corner>,
+    minted: Minted,
+    faces: Vec<FaceId>,
+    plan: Plan,
 }
 
-/// 🎨️ Orders each patch's two ends by its own run parameter and derives the end trims: an iso-line
+impl BlendJob {
+    /// 🎨️ Plans a constant-radius fillet of `edges` of `solid` after validating the request.
+    pub fn fillet(body: &Body, solid: SolidId, edges: &[EdgeId], radius: f64) -> Result<Self, KernelError> {
+        validate_blend_request(body, solid, edges, radius)?;
+        Self::plan(body, solid, edges, BlendSpec::Fillet(radius))
+    }
+
+    /// 🎨️ Plans a linearly varying fillet of one `edge` after validating the request.
+    pub fn variable_fillet(body: &Body, solid: SolidId, edge: EdgeId, r0: f64, r1: f64) -> Result<Self, KernelError> {
+        if r0 <= 0.0 || r1 <= 0.0 {
+            return Err(KernelError::InvalidInput("variable fillet radii must be positive".into()));
+        }
+        validate_blend_request(body, solid, &[edge], r0.max(r1))?;
+        Self::plan(body, solid, &[edge], BlendSpec::VariableFillet(r0, r1))
+    }
+
+    /// 🎨️ Plans an asymmetric chamfer of `edges` of `solid` after validating the request.
+    pub fn chamfer(body: &Body, solid: SolidId, edges: &[EdgeId], d1: f64, d2: f64) -> Result<Self, KernelError> {
+        validate_blend_request(body, solid, edges, d1.min(d2))?;
+        if !(d2.is_finite() && d2 > 0.0) {
+            return Err(KernelError::InvalidInput("chamfer distance must be positive".into()));
+        }
+        Self::plan(body, solid, edges, BlendSpec::Chamfer(d1, d2))
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn plan(body: &Body, solid: SolidId, edges: &[EdgeId], spec: BlendSpec) -> Result<Self, KernelError> {
+        let solid_faces: BTreeSet<FaceId> = body.solid_faces(solid).into_iter().collect();
+        let selected_set: BTreeSet<EdgeId> = edges.iter().copied().collect();
+        let mut incident: BTreeMap<VertexId, Vec<EdgeId>> = BTreeMap::new();
+        for &edge in &selected_set {
+            let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+            incident.entry(ent.v0).or_default().push(edge);
+            if ent.v1 != ent.v0 {
+                incident.entry(ent.v1).or_default().push(edge);
+            }
+        }
+        let carried: Vec<EdgeId> = solid_edge_set(body, solid).into_iter().filter(|edge| !selected_set.contains(edge)).collect();
+        let selected: Vec<EdgeId> = selected_set.into_iter().collect();
+        let face_order: Vec<FaceId> = solid_faces.iter().copied().collect();
+        let plan = Plan::new(&[
+            ("patches", selected.len()),
+            ("corners", incident.len()),
+            ("trim", selected.len()),
+            ("corner-vertices", incident.len()),
+            ("carried-edges", carried.len()),
+            ("seams", selected.len()),
+            ("faces", face_order.len()),
+            ("patch-faces", selected.len()),
+            ("corner-faces", incident.len()),
+            ("assemble", 1),
+        ]);
+        let minted = Minted { vertices: BTreeMap::new(), edges: BTreeMap::new(), ranges: BTreeMap::new(), tangency: BTreeMap::new(), ends: BTreeMap::new() };
+        Ok(Self { spec, solid_faces, selected, incident: incident.into_iter().collect(), carried, face_order, patches: BTreeMap::new(), corners: BTreeMap::new(), minted, faces: Vec::new(), plan })
+    }
+}
+
+impl StagedOperation for BlendJob {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn progress(&self) -> StageProgress {
+        self.plan.progress()
+    }
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        let unit = self.plan.take().ok_or_else(|| KernelError::Operation("blend job already finished".into()))?;
+        match unit.phase {
+            PATCHES => {
+                let edge = self.selected[unit.index];
+                self.patches.insert(edge, build_patch(body, edge, &self.solid_faces, self.spec)?);
+            }
+            CORNERS => {
+                let (vertex, here) = &self.incident[unit.index];
+                self.corners.insert(*vertex, build_corner(body, *vertex, here, &self.patches, &self.solid_faces, self.spec)?);
+            }
+            TRIM => {
+                let edge = self.selected[unit.index];
+                let patch = self.patches.get_mut(&edge).expect("patch built before trimming");
+                trim_patch(body, edge, patch, &self.corners)?;
+            }
+            CORNER_VERTICES => {
+                let corner = self.corners.get_mut(&self.incident[unit.index].0).expect("corner built before minting");
+                let points: Vec<(FaceId, Pnt3)> = corner.points.iter().map(|(f, p)| (*f, *p)).collect();
+                for (face, point) in points {
+                    let id = make_vertex(body, point, Tol::DEFAULT, rec);
+                    corner.verts.insert(face, id);
+                }
+            }
+            CARRIED => mint_carried_edge(body, self.carried[unit.index], &self.corners, &self.solid_faces, &mut self.minted, rec)?,
+            SEAMS => {
+                let edge = self.selected[unit.index];
+                let patch = &self.patches[&edge];
+                for i in 0..2 {
+                    let curve_id = body.curves3.insert(patch.tangency(i));
+                    let v0 = self.corners[&patch.end_vertex[0]].verts[&patch.faces[i]];
+                    let v1 = self.corners[&patch.end_vertex[1]].verts[&patch.faces[i]];
+                    let fresh = make_edge(body, curve_id, patch.run[i], v0, v1, Tol::DEFAULT, rec);
+                    self.minted.tangency.insert((edge, i), fresh);
+                }
+                for slot in 0..2 {
+                    if patch.closed && slot == 1 {
+                        let seam = self.minted.ends[&(edge, 0)];
+                        self.minted.ends.insert((edge, 1), seam);
+                        continue;
+                    }
+                    let (curve, range) = patch.end_curve(slot);
+                    let curve_id = body.curves3.insert(curve);
+                    let v0 = self.corners[&patch.end_vertex[slot]].verts[&patch.faces[0]];
+                    let v1 = self.corners[&patch.end_vertex[slot]].verts[&patch.faces[1]];
+                    let fresh = make_edge(body, curve_id, range, v0, v1, Tol::DEFAULT, rec);
+                    self.minted.ends.insert((edge, slot), fresh);
+                }
+            }
+            FACES => self.faces.push(rebuild_face(body, self.face_order[unit.index], &self.patches, &self.corners, &self.minted, rec)?),
+            PATCH_FACES => {
+                let edge = self.selected[unit.index];
+                self.faces.push(build_patch_face(body, edge, &self.patches[&edge], &self.minted, rec)?);
+            }
+            CORNER_FACES => {
+                let vertex = self.incident[unit.index].0;
+                if self.corners[&vertex].corner_surface.is_some() {
+                    self.faces.push(build_corner_face(body, vertex, &self.corners[&vertex], &self.patches, &self.minted, rec)?);
+                }
+            }
+            _ => {
+                let shell = add_shell(body, std::mem::take(&mut self.faces), rec);
+                return Ok(StageStep::Done(StageOutput::Solid(add_solid(body, shell, vec![], rec))));
+            }
+        }
+        Ok(StageStep::Working)
+    }
+}
+
+/// 🎨️ Orders the patch's two ends by its own run parameter and derives the end trims: an iso-line
 /// wherever both faces stop at the same station (every constant-radius blend, whose cap plane is
 /// perpendicular to its axis), the exact conic otherwise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn trim_patches(body: &Body, patches: &mut BTreeMap<EdgeId, Patch>, corners: &BTreeMap<VertexId, Corner>) -> Result<(), KernelError> {
-    for (&edge, patch) in patches.iter_mut() {
-        if patch.closed {
-            patch.run = [(0.0, TAU); 2];
-            patch.ends = [EndTrim::Iso(0.0), EndTrim::Iso(TAU)];
+fn trim_patch(body: &Body, edge: EdgeId, patch: &mut Patch, corners: &BTreeMap<VertexId, Corner>) -> Result<(), KernelError> {
+    if patch.closed {
+        patch.run = [(0.0, TAU); 2];
+        patch.ends = [EndTrim::Iso(0.0), EndTrim::Iso(TAU)];
+        return Ok(());
+    }
+    let faces = patch.faces;
+    let mut ends = patch.end_vertex;
+    let at = |ends: &[VertexId; 2], slot: usize, i: usize| corners[&ends[slot]].runs[&(edge, faces[i])];
+    if at(&ends, 0, 0) > at(&ends, 1, 0) {
+        ends.swap(0, 1);
+    }
+    let mut run = [(0.0, 0.0); 2];
+    for (i, entry) in run.iter_mut().enumerate() {
+        let (lo, hi) = (at(&ends, 0, i), at(&ends, 1, i));
+        if hi - lo <= 1e-9 {
+            return Err(KernelError::Operation("blend: the blend consumes its whole edge — reduce the radius".into()));
+        }
+        *entry = (lo, hi);
+    }
+    patch.end_vertex = ends;
+    patch.run = run;
+    for slot in 0..2 {
+        let (a, b) = (at(&ends, slot, 0), at(&ends, slot, 1));
+        let Some(cap) = corners[&ends[slot]].cap else {
+            patch.ends[slot] = EndTrim::Iso(a);
             continue;
-        }
-        let faces = patch.faces;
-        let mut ends = patch.end_vertex;
-        let at = |ends: &[VertexId; 2], slot: usize, i: usize| corners[&ends[slot]].runs[&(edge, faces[i])];
-        if at(&ends, 0, 0) > at(&ends, 1, 0) {
-            ends.swap(0, 1);
-        }
-        let mut run = [(0.0, 0.0); 2];
-        for (i, entry) in run.iter_mut().enumerate() {
-            let (lo, hi) = (at(&ends, 0, i), at(&ends, 1, i));
-            if hi - lo <= 1e-9 {
-                return Err(KernelError::Operation("blend: the blend consumes its whole edge — reduce the radius".into()));
-            }
-            *entry = (lo, hi);
-        }
-        patch.end_vertex = ends;
-        patch.run = run;
-        for slot in 0..2 {
-            let (a, b) = (at(&ends, slot, 0), at(&ends, slot, 1));
-            let Some(cap) = corners[&ends[slot]].cap else {
-                patch.ends[slot] = EndTrim::Iso(a);
-                continue;
-            };
-            let (point, normal) = face_plane(body, cap)?;
-            // 🧭️ Agreeing on ONE station is necessary but not sufficient: a variable fillet's cap
-            // plane is symmetric about the dihedral's bisector, so both rulings meet it at the same
-            // distance from the apex while the cross-section circle between them bulges straight
-            // out of that plane. The trim is an iso-line only when the iso-line itself lies IN the
-            // cap — which is exactly the constant-radius case, whose axis the cap is perpendicular to.
-            patch.ends[slot] = if (a - b).abs() <= 1e-9 && iso_lies_in_plane(patch, a, point, normal) {
-                EndTrim::Iso(a)
-            } else {
-                EndTrim::Conic(conic_end_trim(patch, point, normal)?)
-            };
-        }
+        };
+        let (point, normal) = face_plane(body, cap)?;
+        // 🧭️ Agreeing on ONE station is necessary but not sufficient: a variable fillet's cap
+        // plane is symmetric about the dihedral's bisector, so both rulings meet it at the same
+        // distance from the apex while the cross-section circle between them bulges straight
+        // out of that plane. The trim is an iso-line only when the iso-line itself lies IN the
+        // cap — which is exactly the constant-radius case, whose axis the cap is perpendicular to.
+        patch.ends[slot] = if (a - b).abs() <= 1e-9 && iso_lies_in_plane(patch, a, point, normal) {
+            EndTrim::Iso(a)
+        } else {
+            EndTrim::Conic(conic_end_trim(patch, point, normal)?)
+        };
     }
     Ok(())
 }
@@ -1341,19 +1418,14 @@ fn build_corner_face(body: &mut Body, vertex: VertexId, corner: &Corner, patches
 /// see this module's own docstring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn fillet_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    validate_blend_request(body, solid, edges, radius)?;
-    blend_edges(body, solid, edges, BlendSpec::Fillet(radius), rec)
+    drive_solid(&mut BlendJob::fillet(body, solid, edges, radius)?, body, rec)
 }
 
 /// 🎨️ Linearly varying fillet radius `r0 → r1` along a single `edge`: the ball centres still run
 /// along a line, so the envelope is exactly a cone of revolution — see [`cone_fillet_patch`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn fillet_variable(body: &mut Body, solid: SolidId, edge: EdgeId, r0: f64, r1: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if r0 <= 0.0 || r1 <= 0.0 {
-        return Err(KernelError::InvalidInput("variable fillet radii must be positive".into()));
-    }
-    validate_blend_request(body, solid, &[edge], r0.max(r1))?;
-    blend_edges(body, solid, &[edge], BlendSpec::VariableFillet(r0, r1), rec)
+    drive_solid(&mut BlendJob::variable_fillet(body, solid, edge, r0, r1)?, body, rec)
 }
 
 // #endregion 🔖️Fillet
@@ -1364,11 +1436,7 @@ pub fn fillet_variable(body: &mut Body, solid: SolidId, edge: EdgeId, r0: f64, r
 /// `solid` — a planar cut face between two planar faces, an exact cone frustum at a cylinder's cap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn chamfer_edges(body: &mut Body, solid: SolidId, edges: &[EdgeId], d1: f64, d2: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    validate_blend_request(body, solid, edges, d1.min(d2))?;
-    if !(d2.is_finite() && d2 > 0.0) {
-        return Err(KernelError::InvalidInput("chamfer distance must be positive".into()));
-    }
-    blend_edges(body, solid, edges, BlendSpec::Chamfer(d1, d2), rec)
+    drive_solid(&mut BlendJob::chamfer(body, solid, edges, d1, d2)?, body, rec)
 }
 
 // #endregion 🔖️Chamfer

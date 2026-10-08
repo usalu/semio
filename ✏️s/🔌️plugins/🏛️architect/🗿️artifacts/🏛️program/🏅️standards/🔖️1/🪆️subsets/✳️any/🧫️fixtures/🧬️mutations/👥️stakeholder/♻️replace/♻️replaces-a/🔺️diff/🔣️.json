@@ -1,58 +1,54 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
   "stakeholders": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "stakeholder-a",
-        "patch": {
-          "name": "Stakeholder A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "role": "Replaced Stakeholder A",
-          "organization": "",
-          "department": null,
-          "contactEmail": null,
-          "contactPhone": null,
-          "influence": "low",
-          "interest": "low",
-          "engagement": "unaware",
-          "expectations": [],
-          "concerns": [],
-          "requirementIds": [],
-          "decisionAuthority": false,
-          "communicationPreferences": [],
-          "reportingFrequency": null,
-          "involvementPhases": [],
-          "availability": null,
-          "representativeOf": null,
-          "delegatedTo": null,
-          "relationshipToClient": null,
-          "powerInterestNotes": [],
-          "stakeholderType": "",
-          "influenceStrategy": null,
-          "communicationChannels": [],
-          "successMetrics": []
-        }
+        "name": "Stakeholder A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "role": "Replaced Stakeholder A",
+        "organization": "",
+        "department": null,
+        "contactEmail": null,
+        "contactPhone": null,
+        "influence": "low",
+        "interest": "low",
+        "engagement": "unaware",
+        "expectations": [],
+        "concerns": [],
+        "requirementIds": [],
+        "decisionAuthority": false,
+        "communicationPreferences": [],
+        "reportingFrequency": null,
+        "involvementPhases": [],
+        "availability": null,
+        "representativeOf": null,
+        "delegatedTo": null,
+        "relationshipToClient": null,
+        "powerInterestNotes": [],
+        "stakeholderType": "",
+        "influenceStrategy": null,
+        "communicationChannels": [],
+        "successMetrics": []
       }
     ],
+    "removed": [
+      "stakeholder-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "users": null,
@@ -117,9 +113,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

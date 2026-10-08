@@ -11,10 +11,12 @@ message CadDiff {
   optional semio.os.store.ArtifactChild energy_model = 6;
   optional semio.os.store.ArtifactChild structure_classic_model = 7;
   optional CadDrawingChildList drawings = 8;
-  map<string, semio.s.cad.cad.artifact.CadReferenceList> references_by_model_definition_id = 9;
-  optional CadNodesDelta nodes = 10;
+  optional CadBrepChildList breps = 9;
+  map<string, semio.s.cad.cad.artifact.CadReferenceList> references_by_model_definition_id = 10;
+  optional CadNodesDelta nodes = 11;
 }
 message CadDrawingChildList { repeated semio.os.store.ArtifactChild values = 1; }
+message CadBrepChildList { repeated semio.os.store.ArtifactChild values = 1; }
 message CadNodePatch { optional string label = 1; }
 message CadNodePatchEntry { string id = 1; CadNodePatch patch = 2; }
 message CadNodesDelta {

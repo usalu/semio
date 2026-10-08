@@ -122,7 +122,7 @@ async fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
 /// fresh call mints depend on test execution order and never match the fixture's baked-in ids.
 #[semio_framework_async_macros::async_test]
 async fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
-    let parsed = ProgramSnapshot::parse_dsl(document_dsl::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
+    let parsed = ProgramSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
     let expected = sample_plugin();
     assert_eq!(parsed.meta.title, expected.meta.title);
     assert_eq!(parsed.meta.industry_sector, expected.meta.industry_sector);

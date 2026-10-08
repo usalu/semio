@@ -31,11 +31,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateLayerTra
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\" transform", self.layer_id), &format!("Transformation von Ebene \"{}\" aktualisieren", self.layer_id))
     }

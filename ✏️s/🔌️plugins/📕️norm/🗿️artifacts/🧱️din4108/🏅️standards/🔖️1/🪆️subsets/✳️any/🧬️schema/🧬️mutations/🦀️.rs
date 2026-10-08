@@ -202,7 +202,7 @@ mod tests;
 pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation) -> Result<(Din4108Snapshot, Vec<String>), String> {
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 

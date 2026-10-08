@@ -7,9 +7,7 @@
  * declared (no `payload` wrapper key exists on the wire at all). None of the 8 leaf structs carry
  * `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so every
  * leaf's own field names are the literal Rust snake_case names verbatim. */
-import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioTableCellKind, SemioTableRow, SemioValue } from "../📸️snapshot/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateColumn {
   name: string;
@@ -60,5 +58,3 @@ export type SemioTableMutation =
   | { RemoveRow: RemoveRow }
   | { ReorderRows: ReorderRows }
   | { EditCell: EditCell }
-  | { SetSnapshot: SetSnapshot }
-  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

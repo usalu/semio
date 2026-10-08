@@ -1,15 +1,13 @@
 //! 🔺️ Sparse diff builder for `MoveReference`.
 use super::MoveReference;
-use crate::diff::apply_reference_patch;
-use crate::diff::CadDiff;
+use crate::diff::{CadDiff, CadReferencePatchEntry, CadReferencesDelta};
 use crate::mutations::CadReferencePatch;
 use crate::CadSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 pub fn diff(payload: &MoveReference, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
-    let references = base.references_by_model_definition_id.get(&payload.model_definition_id).cloned().unwrap_or_default();
-    let Some(existing) = references.iter().find(|reference| reference.id == payload.reference_id) else {
+    let Some(existing) = base.references_by_model_definition_id.get(&payload.model_definition_id).and_then(|references| references.iter().find(|reference| reference.id == payload.reference_id)) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Reference \"{}\" does not exist.", payload.reference_id), [payload.model_definition_id.clone(), payload.reference_id.clone()]);
     };
     if payload.new_origin.iter().any(|component| !component.is_finite()) {
@@ -19,15 +17,9 @@ pub fn diff(payload: &MoveReference, base: &CadSnapshot) -> protocol::MutationOu
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" is already at {:?}.", payload.reference_id, payload.new_origin));
     }
     let patch = CadReferencePatch { origin: Some(payload.new_origin), ..Default::default() };
-    let next = references
-        .into_iter()
-        .map(|mut reference| {
-            if reference.id == payload.reference_id {
-                apply_reference_patch(&mut reference, &patch);
-            }
-            reference
-        })
-        .collect();
-    protocol::MutationOutcome::new(CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(payload.model_definition_id.clone(), next)])), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff {
+        references_by_model_definition_id: Some(BTreeMap::from([(payload.model_definition_id.clone(), CadReferencesDelta { patched: vec![CadReferencePatchEntry { id: payload.reference_id.clone(), patch }], ..Default::default() })])),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

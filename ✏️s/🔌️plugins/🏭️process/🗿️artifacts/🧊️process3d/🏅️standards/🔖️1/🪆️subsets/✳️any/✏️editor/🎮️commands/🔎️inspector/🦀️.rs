@@ -2,11 +2,12 @@
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::mutations::change_stock_label::ChangeStockLabel;
-use crate::mutations::move_stock::MoveStock;
-use crate::mutations::rename_machine::RenameMachine;
-use crate::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
+use crate::standards::v1::subsets::any::schema::mutations::change_stock_label::ChangeStockLabel;
+use crate::standards::v1::subsets::any::schema::mutations::move_stock::MoveStock;
+use crate::standards::v1::subsets::any::schema::mutations::rename_machine::RenameMachine;
+use crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{Pose, Process3dSnapshot, WorkshopMachine};
 use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -22,6 +22,7 @@ struct MessageCopyRetirement(MessageCopyCursor);
 impl ErasedSnapshotRetirement for MessageCopyRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> { self.0.close_step(maximum_items, maximum_bytes) }
     fn terminal_is_empty(&self) -> bool { self.0.terminal_is_empty() }
+    fn next_close_byte_demand(&self) -> usize { self.0.next_close_byte_demand() }
 }
 
 impl EditMessageSettlement {
@@ -33,11 +34,11 @@ impl EditMessageSettlement {
     pub(crate) fn is_finished(&self) -> bool { matches!(self.phase, Phase::Finished) }
 
     /// ⏳️ Visits one diagnostic segment, view entry or exact cleanup child.
-    pub(crate) fn step(&mut self, messages: &mut Vec<MutationMessage>, outcomes: &mut [MutationReplayOutcome], maximum_bytes: usize) -> Result<bool, ValueError> {
+    pub(crate) fn step(&mut self, messages: &mut Vec<MutationMessage>, outcomes: &mut [MutationReplayOutcome], maximum_bytes: usize, maximum_release_bytes: usize) -> Result<bool, ValueError> {
         if self.is_finished() { return Ok(true); }
         self.work = self.work.saturating_add(1);
         if let Some(active) = self.active.as_mut() {
-            if active.close_step(1, maximum_bytes)? == SnapshotRetirementStep::Complete {
+            if active.close_step(1, maximum_release_bytes)? == SnapshotRetirementStep::Complete {
                 assert!(active.terminal_is_empty(), "settlement cleanup child is terminal");
                 drop(self.active.take());
             }
@@ -45,7 +46,7 @@ impl EditMessageSettlement {
         }
         match self.phase {
             Phase::Clamp => {
-                if self.clamp.step(messages, maximum_bytes)? {
+                if self.clamp.step(messages, maximum_release_bytes)? {
                     self.phase = if self.clamp.changed() { Phase::RetireOutcome } else { Phase::Finish };
                 }
             }
@@ -73,7 +74,7 @@ impl EditMessageSettlement {
             }
             Phase::CloseCopy => {
                 let copy = self.copy.as_mut().expect("settlement owns its completed copy cursor");
-                if copy.close_step(1, maximum_bytes)? == SnapshotRetirementStep::Complete {
+                if copy.close_step(1, maximum_release_bytes)? == SnapshotRetirementStep::Complete {
                     assert!(copy.terminal_is_empty());
                     drop(self.copy.take());
                     self.ledger += 1;
@@ -131,8 +132,41 @@ mod tests {
     }
 
     #[test]
+    fn edit_message_clamp_partial_copy_retirement_exposes_exact_whole_release() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+        for copy_bytes in law["settlement"]["copyRelease"]["copyGrants"].as_array().unwrap() {
+            let source = MutationMessage::fatal("mutation.invariant", "x".repeat(law["settlement"]["copyRelease"]["allocationBytes"].as_u64().unwrap() as usize));
+            let mut copy = MessageCopyCursor::new();
+            for _ in 0..12 { copy.advance(&source, MessageCopyGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes.as_u64().unwrap() as usize, maximum_capacity_bytes: 4096 }).unwrap(); }
+            copy.cancel(); copy.begin_close();
+            let mut owner = MessageCopyRetirement(copy);
+            let mut released = 0;
+            for _ in 0..1000 {
+                if owner.terminal_is_empty() { break; }
+                let demand = owner.next_close_byte_demand();
+                assert!(demand <= law["settlement"]["maximumReleaseBytes"].as_u64().unwrap() as usize);
+                if demand > 0 {
+                    let (step, allocated, freed) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand - 1).unwrap());
+                    assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    assert_eq!((allocated, freed), (0, 0));
+                    assert_eq!(owner.next_close_byte_demand(), demand);
+                }
+                let (step, allocated, freed) = crate::test_allocation::observe_backing(|| owner.close_step(1, demand).unwrap());
+                assert_eq!(allocated, 0);
+                if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step { assert!(released_items <= 1 && released_bytes <= demand && freed <= released_bytes); }
+                released += freed;
+            }
+            assert!(owner.terminal_is_empty());
+            let (_, allocated, freed) = crate::test_allocation::observe_backing(|| drop(owner));
+            assert_eq!((allocated, freed), (0, 0));
+            println!("[DEBUG] settlement partial copy exact paid release={released} copy={copy_bytes} one-below retains original physical owner");
+        }
+    }
+
+    #[test]
     fn edit_message_clamp_settlement_cancels_at_every_owned_stage() {
-        let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+        let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+        let release_bytes = law["settlement"]["maximumReleaseBytes"].as_u64().unwrap() as usize;
         for bytes in [1, 7] {
             for stage in law["settlement"]["cancelStages"].as_array().unwrap() {
                 let baseline = serde_json::json!({"artifact": "unchanged", "alternatives": ["original"]});
@@ -150,7 +184,7 @@ mod tests {
                     };
                     if reached {
                         if stage == "partial-copy" {
-                            for _ in 0..10 { cursor.step(&mut messages, &mut outcomes, bytes).unwrap(); }
+                            for _ in 0..10 { cursor.step(&mut messages, &mut outcomes, bytes, release_bytes).unwrap(); }
                             assert!(cursor.copy.is_some());
                             assert!(matches!(cursor.phase, Phase::Copy));
                             assert!(outcomes[cursor.outcome].messages.is_empty());
@@ -158,20 +192,20 @@ mod tests {
                         break;
                     }
                     let before = cursor.completed_work();
-                    cursor.step(&mut messages, &mut outcomes, bytes).unwrap();
+                    cursor.step(&mut messages, &mut outcomes, bytes, release_bytes).unwrap();
                     assert_eq!(cursor.completed_work() - before, 1);
                     assert_eq!(outcomes.iter().map(|outcome| outcome.worst).collect::<Vec<_>>(), original_status);
                     assert!(turn < 999_999, "requested settlement stage was not reached");
                 }
-                while let Some(child) = cursor.retire_item() { close(child, bytes); }
+                while let Some(child) = cursor.retire_item() { close(child, release_bytes); }
                 cursor.finish_retirement();
                 assert!(cursor.is_finished());
                 drop(cursor);
-                close(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), messages)), bytes);
-                for outcome in outcomes { close(Box::new(ArtifactStoreMessageLedgerRetirement::new(outcome.edit_id, outcome.messages)), bytes); }
+                close(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), messages)), release_bytes);
+                for outcome in outcomes { close(Box::new(ArtifactStoreMessageLedgerRetirement::new(outcome.edit_id, outcome.messages)), release_bytes); }
                 assert_eq!(baseline, serde_json::json!({"artifact": "unchanged", "alternatives": ["original"]}));
             }
         }
-        eprintln!("[DEBUG] edit settlement cancellation covered clamp, exact outcome retirement, partial bounded copy and finished ownership with1/7-byte grants");
+        eprintln!("[DEBUG] edit settlement cancellation covered clamp, exact outcome retirement, partial bounded copy and finished ownership with1/7 copy bytes and explicit whole4096 release bytes");
     }
 }

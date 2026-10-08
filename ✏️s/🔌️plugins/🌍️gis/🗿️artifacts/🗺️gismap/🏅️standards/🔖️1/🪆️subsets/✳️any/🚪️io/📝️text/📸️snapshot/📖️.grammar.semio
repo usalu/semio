@@ -4,6 +4,12 @@ extension gismap
 start document
 
 document = header body
-header = "schema" SP "gis.gismap.snapshot" NL
-body = payload NL?
-payload = OCTET+
+header = "semio gis.gismap.dsl v1" NL
+body = "positions=" features "routes=" features "regions=" features "drawing=" child ["image=" child] "value=" child "values=" values
+features = "[" {"{" "id=" TEXT "value=" UINT "}"} "]"
+child = "child-id=" TEXT "artifact-id=" TEXT "artifact-kind=" TEXT "standard=" TEXT "subset=" TEXT
+values = "[" {"{" value "}"} "]"
+value = "kind=" kind ["boolean=" BOOL] ["unsigned=" UINT] ["signed=" INT] ["float=" NUM] ["text=" TEXT] ["bytes=" BASE64] "items=" indices "members=" members
+kind = "null" | "boolean" | "unsigned" | "signed" | "float" | "text" | "bytes" | "array" | "object"
+indices = "[" {UINT} "]"
+members = "[" {"{" "name=" TEXT "value=" UINT "}"} "]"

@@ -154,20 +154,6 @@ mod imp {
     //#endregion 🔖️JsonHelpers
 
     //#region 🔖️SnapshotJson
-    /// 📸️ A `GifSnapshot` wire value (`set-snapshot`'s replacement document) as this oracle's own model.
-    fn snapshot_from_json(value: &Json) -> Result<OSnapshot, String> {
-        Ok(OSnapshot {
-            width: num_or(value, "width", 0.0) as u16,
-            height: num_or(value, "height", 0.0) as u16,
-            global_palette: color_table_from_json(value.get("gct"))?,
-            bg_color_index: num_or(value, "backgroundColorIndex", 0.0) as u8,
-            aspect_ratio: num_or(value, "pixelAspectRatio", 0.0) as u8,
-            loop_count: opt_num(value, "loopCount").map(|n| n as u16),
-            frames: value.array("frames").iter().map(frame_from_json).collect::<Result<_, _>>()?,
-            comments: value.array("comments").iter().map(|item| match item { Json::String(text) => Ok(text.clone()), other => Err(format!("a comment must be text, not {}", other.to_string())) }).collect::<Result<_, String>>()?,
-            app_extensions: value.array("appExtensions").iter().map(app_ext_from_json).collect::<Result<_, _>>()?,
-        })
-    }
     /// 🎞️ A `GifFrame` wire value. `gif` writes no Plain Text Extension, so a frame carrying one is refused.
     fn frame_from_json(value: &Json) -> Result<OFrame, String> {
         if !matches!(value.get("plainText"), None | Some(Json::Null)) {
@@ -190,47 +176,6 @@ mod imp {
     /// 🧩️ A `GifAppExtension` wire value: an 8-byte identifier, a 3-byte authentication code and the payload.
     fn app_ext_from_json(value: &Json) -> Result<OAppExt, String> {
         Ok(OAppExt { identifier: fixed_bytes(value, "identifier")?, auth_code: fixed_bytes(value, "authCode")?, data: indices_from_json(value, "data").unwrap_or_default() })
-    }
-    /// 🩹️ This oracle's own model as the `GifSnapshot` wire [`snapshot_from_json`] reads — the reading a `patch-snapshot`
-    /// row's pointer operation addresses.
-    fn snapshot_to_json(snap: &OSnapshot) -> Json {
-        let bytes = |bytes: &[u8]| Json::Array(bytes.iter().map(|byte| Json::Number(f64::from(*byte))).collect());
-        let table = |palette: &Option<Vec<u8>>| match palette {
-            None => Json::Null,
-            Some(palette) => Json::Object(vec![
-                ("sorted".to_string(), Json::Bool(false)),
-                ("colors".to_string(), Json::Array(palette.chunks(3).map(|rgb| Json::Object(["r", "g", "b"].iter().zip(rgb).map(|(channel, value)| (channel.to_string(), Json::Number(f64::from(*value)))).collect())).collect())),
-            ]),
-        };
-        let optional = |value: Option<f64>| value.map_or(Json::Null, Json::Number);
-        let frame = |frame: &OFrame| {
-            Json::Object(vec![
-                ("left".to_string(), Json::Number(f64::from(frame.left))),
-                ("top".to_string(), Json::Number(f64::from(frame.top))),
-                ("width".to_string(), Json::Number(f64::from(frame.width))),
-                ("height".to_string(), Json::Number(f64::from(frame.height))),
-                ("interlace".to_string(), Json::Bool(frame.interlaced)),
-                ("lct".to_string(), table(&frame.palette)),
-                ("indices".to_string(), bytes(&frame.indices)),
-                ("delayCs".to_string(), Json::Number(f64::from(frame.delay))),
-                ("disposal".to_string(), Json::String(disposal_to_str(frame.dispose).to_string())),
-                ("transparentIndex".to_string(), optional(frame.transparent.map(f64::from))),
-                ("userInput".to_string(), Json::Bool(frame.needs_user_input)),
-            ])
-        };
-        let extension = |extension: &OAppExt| Json::Object(vec![("identifier".to_string(), bytes(&extension.identifier)), ("authCode".to_string(), bytes(&extension.auth_code)), ("data".to_string(), bytes(&extension.data))]);
-        Json::Object(vec![
-            ("schema".to_string(), Json::String("stdio.gif.89a".to_string())),
-            ("width".to_string(), Json::Number(f64::from(snap.width))),
-            ("height".to_string(), Json::Number(f64::from(snap.height))),
-            ("gct".to_string(), table(&snap.global_palette)),
-            ("backgroundColorIndex".to_string(), Json::Number(f64::from(snap.bg_color_index))),
-            ("pixelAspectRatio".to_string(), Json::Number(f64::from(snap.aspect_ratio))),
-            ("loopCount".to_string(), optional(snap.loop_count.map(f64::from))),
-            ("frames".to_string(), Json::Array(snap.frames.iter().map(frame).collect())),
-            ("comments".to_string(), Json::Array(snap.comments.iter().map(|comment| Json::String(comment.clone())).collect())),
-            ("appExtensions".to_string(), Json::Array(snap.app_extensions.iter().map(extension).collect())),
-        ])
     }
     //#endregion 🔖️SnapshotJson
 
@@ -473,7 +418,6 @@ mod imp {
         };
         let targeted = || Some(num_or(params, "index", 0.0) as usize).filter(|index| *index < snap.frames.len());
         match kind {
-            "set-snapshot" | "patch-snapshot" => (0..snap.frames.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
             "set-screen-size" => (0..snap.frames.len()).find_map(fits),
             "set-global-color-table" => (0..snap.frames.len()).filter(|index| snap.frames[*index].palette.is_none()).find_map(colored),
             "insert-frame" => {
@@ -488,14 +432,12 @@ mod imp {
     //#endregion 🔖️RasterRules
 
     //#region 🔖️Apply
-    /// 🦠️ Applies one of the 21 declared kinds in place. Out-of-range frame/comment/extension
+    /// 🦠️ Applies one of the 19 declared kinds in place. Out-of-range frame/comment/extension
     /// indices degrade gracefully to a no-op rather than erroring — the same documented behavior as
     /// the subject's own `GifMutation::diff` (`../../🧬️schema/🧬️mutations/🦀️.rs`), which
     /// this independent oracle deliberately mirrors rather than diverging from without reason.
     fn apply_kind(snap: &mut OSnapshot, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => *snap = snapshot_from_json(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
-            "patch-snapshot" => *snap = snapshot_from_json(&semio_repo_test_host::law::patched_snapshot(&snapshot_to_json(snap), params.get("patch").ok_or("patch-snapshot carries no patch")?)?)?,
             "set-screen-size" => {
                 snap.width = num_or(params, "width", snap.width as f64) as u16;
                 snap.height = num_or(params, "height", snap.height as f64) as u16;
@@ -608,7 +550,6 @@ mod imp {
             }
         };
         match kind {
-            "set-snapshot" | "patch-snapshot" => *snap = original.clone(),
             "set-screen-size" => (snap.width, snap.height) = (original.width, original.height),
             "set-global-color-table" => snap.global_palette = original.global_palette.clone(),
             "set-background-color-index" => snap.bg_color_index = original.bg_color_index,

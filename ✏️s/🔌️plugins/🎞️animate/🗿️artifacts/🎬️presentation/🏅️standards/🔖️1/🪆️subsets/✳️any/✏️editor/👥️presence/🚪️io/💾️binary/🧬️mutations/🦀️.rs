@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::animate::presence::component::mutations::*;
 use crate::editor::animate::presence::component::*;
-use replace_presence::ReplacePresence;
+use crate::editor::animate::presence::ReplacePresence;
 
 impl protocol::OpBinary for PresentationPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -9,7 +9,7 @@ use serde_json::json;
 /// 🖋️ One block spelled the way the ink-canvas host sends it — taken from the note's own canvas
 /// projection, so the test pins the round trip host wire → note block.
 fn ink_wire_block(block: &NoteBlockNode) -> serde_json::Value {
-    let snapshot = NoteSnapshot { blocks: vec![block.clone()], ..crate::schema::empty_note_snapshot() };
+    let snapshot = NoteSnapshot { blocks: vec![block.clone()], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let document: serde_json::Value = serde_json::from_str(&crate::note_canvas_document_json(&snapshot, &NoteCamera::default())).expect("canvas JSON");
     assert_eq!(document["schema"], "ink.document");
     document["blocks"][0].clone()

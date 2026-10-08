@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::dag::presence::component::mutations::*;
 use crate::editor::dag::presence::component::DagPresence;
-use replace_presence::ReplacePresence;
+use crate::editor::dag::presence::component::mutations::ReplacePresence;
 
 impl protocol::OpBinary for DagPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

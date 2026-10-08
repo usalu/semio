@@ -55,15 +55,13 @@
     "tracePointerPendingWork": 3
   },
   "configMutation": {
-    "kind": "snapshot",
-    "config": {
-      "viewport": {
-        "x": 18,
-        "y": -9,
-        "zoom": 2.5
-      },
-      "framed": true
-    }
+    "kind": "set",
+    "viewport": {
+      "x": 18,
+      "y": -9,
+      "zoom": 2.5
+    },
+    "framed": true
   },
   "transientMutation": {
     "kind": "snapshot",
@@ -79,30 +77,26 @@
       "windowId": "drawing-left",
       "windowKindId": "drawing-composite",
       "mutation": {
-        "kind": "snapshot",
-        "config": {
-          "viewport": {
-            "x": 18,
-            "y": -9,
-            "zoom": 2.5
-          },
-          "framed": true
-        }
+        "kind": "set",
+        "viewport": {
+          "x": 18,
+          "y": -9,
+          "zoom": 2.5
+        },
+        "framed": true
       }
     },
     {
       "windowId": "drawing-right",
       "windowKindId": "drawing-composite",
       "mutation": {
-        "kind": "snapshot",
-        "config": {
-          "viewport": {
-            "x": -7,
-            "y": 31,
-            "zoom": 0.5
-          },
-          "framed": true
-        }
+        "kind": "set",
+        "viewport": {
+          "x": -7,
+          "y": 31,
+          "zoom": 0.5
+        },
+        "framed": true
       }
     }
   ],

@@ -1,7 +1,7 @@
 /** 🖼️ Full-width bitmap problem fixture and independent SQLite edits. */
 import {fileURLToPath} from "node:url";
 import {readFileSync} from "node:fs";
-import {parse as parseJsonc} from "jsonc-parser";
+import {dirname,join} from "node:path";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import fixture from "../🧫️fixtures/🔣️.json";
@@ -23,14 +23,15 @@ test("unlinked public artifact resolves its own exports in independent Bun runti
 
 test("bitmap controlled native example has independent collection and text extents",async()=>{const d=new Database(":memory:");try{const result=d.query("WITH RECURSIVE items(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM items WHERE n<?) SELECT count(*) AS total,sum(n<=?) AS canceled FROM items").get(fixture.controlledAdmission.collectionItems,fixture.controlledAdmission.cancelAfter);expect(result).toEqual({total:1024,canceled:256});expect(d.query("SELECT length(CAST(? AS BLOB)) AS bytes").get("x".repeat(fixture.controlledAdmission.largeTextBytes))).toEqual({bytes:100000});}finally{d.close();}});
 
-test("WFC fifteen exact owning SQLite commands are registered on both developer launch surfaces",()=>{
- for(const path of[".vscode/🧩️launch.seed.jsonc",".vscode/launch.json"]){
-  const launch=parseJsonc(readFileSync(path,"utf8")) as {configurations:{command?:string;env?:{SEMIO_TEST_LEVEL?:string};presentation?:{order?:number}}[]};
-  for(const expected of fixture.owningLaunchCommands){const entries=launch.configurations.filter(entry=>entry.command===expected.command);expect(entries.length).toBe(1);expect(entries[0]!.presentation?.order).toBe(expected.order);expect(entries[0]!.env?.SEMIO_TEST_LEVEL).toBe("quick")}
- }
+type OwningTarget={project:string;manifest:string;target:string;command:string};
+const workspaceRoot=fileURLToPath(new URL("../".repeat(13),import.meta.url));
+function expectOwningTargets(rows:OwningTarget[]){expect(rows.length).toBe(15);for(const expected of rows){const manifest=JSON.parse(readFileSync(join(workspaceRoot,expected.manifest),"utf8")),target=manifest.targets[expected.target];expect(manifest.name).toBe(expected.project);expect(target.executor).toBe("nx:run-commands");expect(target.options.command).toBe(expected.command);expect(target.options.cwd).toBe(dirname(expected.manifest));}}
+test("WFC fifteen exact owning SQLite commands are declared by their owner Nx targets and package routers",()=>{
+ expectOwningTargets(fixture.owningSqliteTargets);
+ for(const expected of fixture.owningSqliteTargets)expect(readFileSync(join(workspaceRoot,dirname(expected.manifest),"📜️script.ts"),"utf8")).toMatch(/snapshotSqliteTests:\s*\["/u);
 });
 
-test("WFC fifteen owning Source build check test commands are on both launch surfaces",()=>{for(const path of[".vscode/🧩️launch.seed.jsonc",".vscode/launch.json"]){const launch=parseJsonc(readFileSync(path,"utf8")) as {configurations:{command?:string;env?:{SEMIO_TEST_LEVEL?:string};presentation?:{order?:number}}[]};for(const expected of fixture.owningSourceLaunchCommands){const entries=launch.configurations.filter(entry=>entry.command===expected.command);expect(entries.length).toBe(1);expect(entries[0]!.presentation?.order).toBe(expected.order);if(expected.command.includes(":test "))expect(entries[0]!.env?.SEMIO_TEST_LEVEL).toBe("quick");}}});
+test("WFC fifteen owning Source build check test commands are declared by their owner Nx targets",()=>{expectOwningTargets(fixture.owningSourceTargets);});
 
 import byteFields from "../../../📝️text/📸️snapshot/🧫️fixtures/byte-fields/🔣️.json";
 test("bitmap intrinsic bytes and physical base64 agree with independent Buffer",()=>{

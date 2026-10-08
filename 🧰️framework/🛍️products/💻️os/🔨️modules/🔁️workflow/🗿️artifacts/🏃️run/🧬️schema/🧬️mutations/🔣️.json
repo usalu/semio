@@ -17,6 +17,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/seal-run/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/set-run-header/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/set-run-seal/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/retract-run-log/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/retract-run-node/schema.json"
     }
   ]
 }

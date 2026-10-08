@@ -10,7 +10,7 @@ fn snapshot(value:&BmpSnapshot)->V<'_>{object([("schema",text(&value.schema)),("
 fn image(value:&BmpImage)->V<'_>{object([
 ("width",number(value.width)),("height",number(value.height)),("rowOrder",text(match value.row_order {BmpRowOrder::BottomUp=>"bottomUp",BmpRowOrder::TopDown=>"topDown"})),("profile",text(value.profile.id())),("masks",array(&value.masks,|v|number(*v))),
 ("palette",array(&value.palette,|v|object([("r",number(v.r)),("g",number(v.g)),("b",number(v.b)),("reserved",number(v.reserved))]))),
-("pixels",match &value.pixels {BmpPixels::Indexed{indices}=>object([("kind",text("indexed")),("indices",array(indices,|v|number(*v)))]),BmpPixels::Direct{samples}=>object([("kind",text("direct")),("samples",array(samples,|v|object([("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha)),("reserved",number(v.reserved))])))] )}),
+("pixels",match &value.pixels {BmpPixels::Indexed{indices}=>object([("storage",text("indexed")),("indices",array(indices,|v|number(*v)))]),BmpPixels::Direct{samples}=>object([("storage",text("direct")),("samples",array(samples,|v|object([("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha)),("reserved",number(v.reserved))])))] )}),
 ("xPixelsPerMeter",signed(value.x_pixels_per_meter)),("yPixelsPerMeter",signed(value.y_pixels_per_meter)),("colorsUsed",number(value.colors_used)),("colorsImportant",number(value.colors_important)),("reserved1",number(value.reserved_1)),("reserved2",number(value.reserved_2)),("opaqueGap",array(&value.opaque_gap,|v|number(*v))),("opaqueTrailer",array(&value.opaque_trailer,|v|number(*v)))
 ])}
 impl store::ArtifactCanonicalJson for BmpMutation {

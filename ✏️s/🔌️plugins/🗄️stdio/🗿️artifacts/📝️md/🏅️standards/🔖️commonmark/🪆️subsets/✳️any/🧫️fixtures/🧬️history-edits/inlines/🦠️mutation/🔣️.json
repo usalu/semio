@@ -1,0 +1,59 @@
+{
+  "mutation": {
+    "mutation": "setInlines",
+    "path": [],
+    "index": 0,
+    "inlines": [
+      {
+        "kind": "text",
+        "text": "Hallo 😀"
+      }
+    ]
+  },
+  "before": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "One."
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Hallo 😀"
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -151,6 +151,27 @@
       "field": "toolRunTrace",
       "bodyKey": "framework.scene.world3d.toolRunTrace",
       "optional": true
+    },
+    {
+      "lane": "annotations",
+      "field": "annotations",
+      "bodyKey": "framework.scene.world3d.annotations",
+      "optional": true,
+      "encoding": "json"
+    },
+    {
+      "lane": "scalarField",
+      "field": "scalarField",
+      "bodyKey": "framework.scene.world3d.scalarField",
+      "optional": true,
+      "encoding": "json"
+    },
+    {
+      "lane": "modellingOptions",
+      "field": "modellingOptions",
+      "bodyKey": "framework.scene.world3d.modellingOptions",
+      "optional": true,
+      "encoding": "json"
     }
   ],
   "roundTrip": {

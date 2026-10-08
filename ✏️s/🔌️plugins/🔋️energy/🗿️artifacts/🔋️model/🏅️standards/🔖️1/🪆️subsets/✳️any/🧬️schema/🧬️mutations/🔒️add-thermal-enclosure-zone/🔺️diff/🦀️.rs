@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `AddThermalEnclosureZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ListEdit, ModelPatch, Rows, ThermalEnclosurePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::AddThermalEnclosureZone, base: &EnergyModelSnapshot
     if existing.zone_ids.contains(&payload.zone_id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} already belongs to Thermal enclosure {}.", payload.zone_id.0, payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.thermal_enclosures.iter_mut().find(|item| item.id == payload.id) {
-        item.zone_ids.insert(payload.index as usize, payload.zone_id);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermal_enclosures: Rows::modifying(ThermalEnclosurePatch { zone_ids: ListEdit::inserting(payload.index as usize, payload.zone_id), ..ThermalEnclosurePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

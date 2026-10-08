@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -62,59 +61,54 @@
   "searchFilters": null,
   "statusRecords": null,
   "workshops": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "workshop-a",
-        "patch": {
-          "name": "Workshop A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "workshopType": "Replaced Workshop A",
-          "objectives": [],
-          "agenda": [],
-          "facilitatorId": null,
-          "participants": [],
-          "scheduledStart": null,
-          "scheduledEnd": null,
-          "location": null,
-          "materials": [],
-          "methods": [],
-          "outputs": [],
-          "decisions": [],
-          "issues": [],
-          "followUpActions": [],
-          "feedback": [],
-          "recordingRef": null,
-          "budget": null,
-          "workshopStatus": "draft",
-          "surveyIds": []
-        }
+        "name": "Workshop A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "workshopType": "Replaced Workshop A",
+        "objectives": [],
+        "agenda": [],
+        "facilitatorId": null,
+        "participants": [],
+        "scheduledStart": null,
+        "scheduledEnd": null,
+        "location": null,
+        "materials": [],
+        "methods": [],
+        "outputs": [],
+        "decisions": [],
+        "issues": [],
+        "followUpActions": [],
+        "feedback": [],
+        "recordingRef": null,
+        "budget": null,
+        "workshopStatus": "draft",
+        "surveyIds": []
       }
     ],
+    "removed": [
+      "workshop-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "surveys": null,
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

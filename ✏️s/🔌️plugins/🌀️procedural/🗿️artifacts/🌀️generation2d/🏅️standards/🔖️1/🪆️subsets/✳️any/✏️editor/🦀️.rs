@@ -878,6 +878,7 @@ fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: Generati
     Ok((post, inverse, mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dArtifactStorePreparationFactory;
 
 struct Generation2dArtifactStorePreparation {
@@ -1015,6 +1016,7 @@ fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) 
     Ok(GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dConfigPreparationFactory;
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparationFactory {

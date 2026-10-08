@@ -104,6 +104,7 @@ struct FixtureGrant {
     maximum_items: usize,
     maximum_copy_bytes: usize,
     maximum_capacity_bytes: usize,
+    maximum_release_bytes: usize,
     maximum_depth: usize,
 }
 
@@ -159,7 +160,7 @@ fn fixture_labels(fixture: &Fixture) -> RetainedOrderedMap<String, String> {
 }
 
 fn grant(fixture: &Fixture) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: fixture.grant.maximum_items, maximum_copy_bytes: fixture.grant.maximum_copy_bytes, maximum_capacity_bytes: fixture.grant.maximum_capacity_bytes, maximum_depth: fixture.grant.maximum_depth }
+    RetainedCloneGrant { maximum_items: fixture.grant.maximum_items, maximum_copy_bytes: fixture.grant.maximum_copy_bytes, maximum_capacity_bytes: fixture.grant.maximum_capacity_bytes, maximum_depth: fixture.grant.maximum_depth, maximum_release_bytes: fixture.grant.maximum_release_bytes }
 }
 
 fn assert_progress(progress: RetainedCloneProgress, grant: RetainedCloneGrant) {
@@ -290,13 +291,13 @@ fn cancellation_retires_every_partial_owner_through_bounded_steps() {
 fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
     let fixture = fixture();
     let source = "βeta 🧬 Deutsch 🇯🇵".repeat(512);
-    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 7, maximum_capacity_bytes: source.len(), maximum_depth: 512 };
+    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 7, maximum_capacity_bytes: source.len(), maximum_depth: 512, maximum_release_bytes: source.len() };
     assert_eq!(retained_copy(&source, grant), source);
 
     let mut external = fixture.immutable_lease.captured.clone();
     let retained = retained_source(external.clone());
     let mut cursor = String::retained_clone_cursor();
-    let reserve = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: external.len(), maximum_depth: 512 };
+    let reserve = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: external.len(), maximum_depth: 512, maximum_release_bytes: external.len() };
     cursor.advance(retained.borrow(), reserve).expect("string reserve");
     cursor.advance(retained.borrow(), reserve).expect("first immutable page");
     external = fixture.immutable_lease.external_after_capture.clone();
@@ -325,7 +326,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
     let retained_source = RetainedCloneSource::from_authority(Arc::clone(&owner), super::SnapshotRead::new(Arc::clone(&owner), lease));
-    let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64 };
+    let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
     let mut turns = 0usize;
     let copied = loop {
@@ -376,7 +377,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
 fn retained_vector_and_completed_optional_preserve_their_captured_owner() {
     let mut values = vec![1u64, 2, 3, 4];
     let retained_values = retained_source(values.clone());
-    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 64, maximum_capacity_bytes: 1_024, maximum_depth: 512 };
+    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 64, maximum_capacity_bytes: 1_024, maximum_depth: 512, maximum_release_bytes: 1_024 };
     let mut vector = Vec::<u64>::retained_clone_cursor();
     vector.advance(retained_values.borrow(), grant).expect("vector reserve");
     values.pop();
@@ -405,7 +406,7 @@ fn retained_vector_and_completed_optional_preserve_their_captured_owner() {
 
 #[test]
 fn unit_generic_enum_and_recursive_records_remain_grant_bounded() {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 16, maximum_capacity_bytes: 65_536, maximum_depth: 512 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 16, maximum_capacity_bytes: 65_536, maximum_depth: 512, maximum_release_bytes: 65_536 };
     let units = vec![UnitRecord; 256];
     let retained_units = retained_source(units.clone());
     let mut cursor = Vec::<UnitRecord>::retained_clone_cursor();
@@ -440,35 +441,44 @@ fn unit_generic_enum_and_recursive_records_remain_grant_bounded() {
 
 #[test]
 fn recursive_depth_envelope_accepts_boundary_and_rejects_the_next_box() {
-    let maximum_depth = 64usize;
-    let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 64, maximum_capacity_bytes: 65_536, maximum_depth };
-    let accepted = recursive_record(maximum_depth);
-    assert_eq!(retained_copy(&accepted, grant), accepted);
-
-    let refused = recursive_record(maximum_depth + 1);
-    let retained_refused = retained_source(refused);
-    let mut cursor = RecursiveRecord::retained_clone_cursor();
-    let mut turns = 0usize;
-    let error = loop {
-        turns += 1;
-        match cursor.advance(retained_refused.borrow(), grant) {
-            Ok(RetainedCloneStep::Progress(progress)) => assert_progress(progress, grant),
-            Ok(RetainedCloneStep::Complete(_)) => panic!("over-depth recursive owner completed"),
-            Err(error) => break error,
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/🌳️structural-depth/🔣️.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let boxes = row["boxes"].as_u64().unwrap() as usize;
+        let maximum_depth = row["maximumDepth"].as_u64().unwrap() as usize;
+        assert_eq!(boxes * 2 + 1, row["requiredDepth"].as_u64().unwrap() as usize);
+        let grant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 64, maximum_capacity_bytes: 65_536, maximum_depth, maximum_release_bytes: 65_536 };
+        let source = recursive_record(boxes);
+        if row["accepted"].as_bool().unwrap() {
+            let copied = retained_copy(&source, grant);
+            assert_eq!(copied, source);
+            assert_eq!(serde_json::to_value(&copied).unwrap(), serde_json::to_value(&source).unwrap());
+        } else {
+            let retained_refused = retained_source(source);
+            let mut cursor = RecursiveRecord::retained_clone_cursor();
+            let mut turns = 0usize;
+            let error = loop {
+                turns += 1;
+                match cursor.advance(retained_refused.borrow(), grant) {
+                    Ok(RetainedCloneStep::Progress(progress)) => assert_progress(progress, grant),
+                    Ok(RetainedCloneStep::Complete(_)) => panic!("over-depth recursive owner completed"),
+                    Err(error) => break error,
+                }
+                assert!(turns < 100_000);
+            };
+            assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::DepthLimit);
+            assert!(error.message.contains("depth limit"));
+            close_cursor::<RecursiveRecord>(&mut cursor);
         }
-        assert!(turns < 100_000);
-    };
-    assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::DepthLimit);
-    assert!(error.message.contains("depth limit"));
-    close_cursor::<RecursiveRecord>(&mut cursor);
+        println!("[DEBUG] Recursive structural boundary boxes={boxes} depth={maximum_depth} accepted={}", row["accepted"]);
+    }
 }
 
 #[test]
 fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
     let maximum_depth = 64usize;
-    let source = recursive_record(maximum_depth);
+    let source = recursive_record((maximum_depth - 1) / 2);
     let retained_owner = retained_source(source);
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: 65_536, maximum_depth };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 2, maximum_capacity_bytes: 65_536, maximum_depth, maximum_release_bytes: 65_536 };
     let mut cursor = RecursiveRecord::retained_clone_cursor();
     for _ in 0..256 {
         assert!(matches!(cursor.advance(retained_owner.borrow(), grant).expect("recursive prefix copy"), RetainedCloneStep::Progress(_)));
@@ -476,7 +486,11 @@ fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
     assert!(cursor.begin_close());
     let mut turns = 0usize;
     while !cursor.terminal_is_empty() {
-        let step = cursor.close_step(1, 2).expect("recursive prefix close");
+        let step = cursor.close_step(grant.maximum_items, grant.maximum_release_bytes).expect("recursive prefix physical close");
+        if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+            assert!(released_items <= grant.maximum_items);
+            assert!(released_bytes <= grant.maximum_release_bytes);
+        }
         if step == SnapshotRetirementStep::Complete {
             assert!(cursor.terminal_is_empty());
         }
@@ -489,7 +503,7 @@ fn recursive_partial_copy_cancels_within_the_declared_depth_envelope() {
 #[test]
 fn fixed_arrays_standard_tuples_and_tuple_records_preserve_native_shape() {
     let array = std::array::from_fn::<_, 128, _>(|index| index as u32);
-    let refused = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of_val(&array) - 1, maximum_capacity_bytes: 0, maximum_depth: 512 };
+    let refused = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of_val(&array) - 1, maximum_capacity_bytes: 0, maximum_depth: 512, maximum_release_bytes: 0 };
     let mut cursor = <[u32; 128]>::retained_clone_cursor();
     let retained_array = retained_source(array);
     assert_eq!(cursor.advance(retained_array.borrow(), refused).expect("array refusal").progress(), RetainedCloneProgress::default());
@@ -500,7 +514,7 @@ fn fixed_arrays_standard_tuples_and_tuple_records_preserve_native_shape() {
     let pair = ("βeta".repeat(128), 42u64);
     let triple = ("Deutsch".to_string(), 7u32, "日本語".to_string());
     let record = TupleRecord("tuple record".repeat(64), 9);
-    let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 32, maximum_capacity_bytes: 65_536, maximum_depth: 512 };
+    let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 32, maximum_capacity_bytes: 65_536, maximum_depth: 512, maximum_release_bytes: 65_536 };
     assert_eq!(retained_copy(&pair, grant), pair);
     assert_eq!(retained_copy(&triple, grant), triple);
     assert_eq!(retained_copy(&record, grant), record);

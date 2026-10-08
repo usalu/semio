@@ -11,8 +11,16 @@ export function createPluginRunnerTests(dependencies: Record<string, any>, sourc
         const selected = pluginTestInvocation(row.args);
         assert.equal(selected.mode, row.mode);
         assert.deepEqual(selected.args, row.forwarded);
-        const parsed = parseArgs({ args: row.args, strict: false, allowPositionals: true, options: { "no-run": { type: "boolean" } } });
+        const options = { "no-run": { type: "boolean" }, lib: { type: "boolean" }, test: { type: "string" }, "all-targets": { type: "boolean" } };
+        const parsed = parseArgs({ args: row.args, strict: false, allowPositionals: true, options });
         assert.equal(parsed.values["no-run"] === true ? "inventory" : "budgeted", row.mode);
+        const forwarded = parseArgs({ args: selected.args, strict: false, allowPositionals: true, options, tokens: true });
+        for (const name of ["lib", "test", "all-targets"]) {
+          if (parsed.values[name] === undefined) continue;
+          assert.equal(forwarded.values[name], parsed.values[name]);
+          assert.equal(forwarded.tokens.filter((token: {kind:string;name?:string}) => token.kind === "option" && token.name === name).length, 1);
+        }
+        if (parsed.values.test !== undefined || parsed.values["all-targets"] === true) assert.equal(forwarded.values.lib, undefined);
       }
     } finally {
       if (level === undefined) delete process.env.SEMIO_TEST_LEVEL;

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateWaterSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, WaterSystemConfigPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -20,8 +20,6 @@ pub fn diff(payload: &super::CreateWaterSystem, base: &EnergyModelSnapshot) -> p
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.water_systems.insert(payload.index as usize, crate::model::WaterSystemConfig { id: payload.id, fixture_count: payload.fixture_count, peak_flow_l_s: payload.peak_flow_l_s, schedule_id: payload.schedule_id });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { water_systems: Rows::inserting(payload.index as usize, crate::model::WaterSystemConfig { id: payload.id, fixture_count: payload.fixture_count, peak_flow_l_s: payload.peak_flow_l_s, schedule_id: payload.schedule_id }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

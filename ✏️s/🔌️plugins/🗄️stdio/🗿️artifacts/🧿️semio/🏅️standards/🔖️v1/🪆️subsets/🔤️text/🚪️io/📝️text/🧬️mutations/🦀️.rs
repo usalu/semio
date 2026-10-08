@@ -9,7 +9,6 @@ use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::text::schema::mutations::{
-    set_snapshot::SetSnapshot,add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 
 //#region 📖️SemioGrammar
@@ -90,8 +89,6 @@ fn dec_run(s: &str) -> Result<SemioTextRun, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_text_mutation(m: &SemioTextMutation) -> String {
     match m {
-        SemioTextMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioTextMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioTextMutation::InsertRun(p) => format!("insertRun:{},{}", p.index, enc_run(&p.run)),
         SemioTextMutation::RemoveRun(p) => format!("removeRun:{}", p.index),
         SemioTextMutation::EditRun(p) => format!("editRun:{},{}", p.index, enc_str(&p.new_content)),
@@ -104,16 +101,11 @@ fn print_text_mutation(m: &SemioTextMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioTextMutation::PatchSnapshot(crate::standards::v1::subsets::text::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioTextMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("text mutation: missing ':' in {line:?}"))?;
     match tag {
@@ -166,7 +158,6 @@ impl protocol::OpText for SemioTextMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioTextMutation> {
     vec![
-        SemioTextMutation::PatchSnapshot(crate::standards::v1::subsets::text::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioTextMutation::InsertRun(InsertRun { index: 1, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }),
         SemioTextMutation::RemoveRun(RemoveRun { index: 0 }),
         SemioTextMutation::EditRun(EditRun { index: 0, new_content: "greetings".into() }),
@@ -203,7 +194,6 @@ use crate::standards::v1::subsets::text::schema::mutations::reorder_runs;
 /// (`extern crate semio_framework_os_kernel as dsl;`), the same spelling every other stdio subset's
 /// eventual `dsl::Mutations` derive uses (confirmed against `din4108`'s already-compiling facet,
 /// this ticket's binding reference).
-use crate::standards::v1::subsets::text::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`) JSON
 /// projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

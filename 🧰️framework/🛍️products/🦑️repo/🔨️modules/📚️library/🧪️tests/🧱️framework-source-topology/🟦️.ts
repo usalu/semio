@@ -90,12 +90,9 @@ describe("framework source topology", () => {
     expect(readFileSync(resolve(repoRoot, fixture.browserBoundary.buildConfig), "utf8")).toContain(fixture.browserBoundary.testSentinel);
   }, 30_000);
 
-  test("declares the portable gate and its generated editor entry", () => {
-    const command = "bun nx run @semio-tech/repo-lib:test-framework-source-topology";
+  test("declares the portable gate", () => {
     const project = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
     expect(project.targets["test-framework-source-topology"].options.command).toBe("bun ./📜️script.ts test framework-source-topology");
-    const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, ".vscode/launch.json"), "utf8")) as { readonly configurations: readonly { readonly command?: string }[] };
-    expect(launch.configurations.filter(row => row.command === command)).toHaveLength(1);
   });
 
   test("extracts font, styling, and asset APIs into their semantic owners", async () => {

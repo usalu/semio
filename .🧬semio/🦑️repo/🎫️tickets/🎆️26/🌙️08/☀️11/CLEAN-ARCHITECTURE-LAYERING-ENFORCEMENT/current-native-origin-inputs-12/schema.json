@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "const": {
+        "id": "board",
+        "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+        "command": [
+          "native",
+          "cargo",
+          "test",
+          "--manifest",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "registeredArgv": [
+          "nx",
+          "run",
+          "semio-framework-os-infinite:test",
+          "--skip-nx-cache",
+          "--excludeTaskDependencies"
+        ],
+        "packages": [],
+        "extraArgs": [],
+        "selectedFeatures": [],
+        "level": "long",
+        "expectedHistoricalSelectedCount": null
+      }
+    },
+    {
+      "const": {
+        "id": "ui",
+        "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+        "command": [
+          "test",
+          "wgpu-engine",
+          "long"
+        ],
+        "registeredArgv": [
+          "nx",
+          "run",
+          "@semio-tech/ui-rs:test-wgpu-engine",
+          "--skip-nx-cache",
+          "--excludeTaskDependencies",
+          "--args=long"
+        ],
+        "packages": [],
+        "extraArgs": [
+          "--features",
+          "wgpu-engine",
+          "--lib"
+        ],
+        "selectedFeatures": [
+          "wgpu-engine"
+        ],
+        "level": "long",
+        "expectedHistoricalSelectedCount": null
+      }
+    },
+    {
+      "const": {
+        "id": "product",
+        "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+        "command": [
+          "test-native"
+        ],
+        "registeredArgv": [
+          "nx",
+          "run",
+          "@semio-tech/framework-renderer-wgpu:test-native",
+          "--skip-nx-cache",
+          "--excludeTaskDependencies"
+        ],
+        "packages": [
+          "semio-framework-os-renderer-wgpu"
+        ],
+        "extraArgs": [],
+        "selectedFeatures": [],
+        "level": "long",
+        "expectedHistoricalSelectedCount": null
+      }
+    }
+  ]
+}

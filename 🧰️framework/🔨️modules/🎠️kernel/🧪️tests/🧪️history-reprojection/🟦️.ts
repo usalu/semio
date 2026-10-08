@@ -4,11 +4,25 @@
  * its status in both locales. */
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
+import { createInstance } from "i18next";
 import fixture from "../../🧫️fixtures/🧫️history-reprojection/🔣️.json";
 import schema from "../../🧬️schema/🔣️history-patch/🔣️.json";
 import { HISTORY_REPROJECTION_LABELS, historyReprojectionStatus, type HistoryReprojection } from "../../🟦️.ts";
 
 describe("history reprojection status", () => {
+  it("replay steps include final settlement and match the independent translation oracle", async () => {
+    const row = fixture.cases.find(row => row.name === "operation complete while edit settlement remains")!;
+    for (const locale of ["en", "de"] as const) {
+      const oracle = createInstance();
+      await oracle.init({ lng: locale, fallbackLng: false, keySeparator: false, resources: { [locale]: { translation: Object.fromEntries(fixture.labels.map(label => [label.key, label[locale].replace(/\{(\w+)\}/gu, "{{$1}}")])) } } });
+      const expected = `${oracle.t("step.progress", row.reprojection)} · ${oracle.t("work.processed", row.reprojection)}`;
+      expect(expected).toBe(row.text[locale]);
+      expect(historyReprojectionStatus(row.reprojection as HistoryReprojection, "native", locale).text).toBe(expected);
+      expect(row.reprojection.done).toBeLessThan(row.reprojection.total);
+      console.log(`[DEBUG] replay settlement caption locale=${locale} done=${row.reprojection.done} total=${row.reprojection.total} text=${expected}`);
+    }
+  });
+
   it("the fixture satisfies its schema and refuses hostile rows", () => {
     const first = fixture.cases[0]!;
     const ajv = new Ajv({ allErrors: true, strict: false });

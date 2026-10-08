@@ -1,6 +1,6 @@
 //! ✍️ ✍️ Writer play app commands command — `set-text`.
 
-use crate::op::{EditText, WriterMutation};
+use crate::mutations::{EditText, WriterMutation};
 use crate::WriterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

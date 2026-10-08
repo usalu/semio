@@ -2,11 +2,7 @@
 
 use super::remove_struct_tree_root::RemoveStructTreeRoot;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{
-    conformance_support as support,
-    diff::PdfDiff,
-    snapshot::{PdfObject, PdfSnapshot},
-};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfObject, PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -19,10 +15,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetStructTreeRoot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "struct-tree-root", kind: "set-struct-tree-root", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        let id = support::insert_object(&mut next, support::struct_tree_root_object());
-        support::set_catalog_entry(&mut next, "StructTreeRoot", PdfObject::Ref(id));
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let (root, rows) = support::insert_object_rows(base, support::struct_tree_root_object());
+        MutationOutcome::new(diff::graph_edit(diff::sequence(rows, support::set_catalog_entry_rows(base, "StructTreeRoot", PdfObject::Ref(root)))))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {

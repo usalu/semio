@@ -10,7 +10,7 @@ fn every_declared_recipe_id_resolves() {
 
 #[test]
 fn no_op_recipes_have_byte_identical_before_and_after() {
-    for id in ["no-mutation-no-op", "set-snapshot-no-op"] {
+    for id in ["no-mutation-no-op"] {
         let (before, after) = recipe(id).unwrap();
         assert_eq!(encode_gif(&before), encode_gif(&after), "recipe {id} must be byte-identical");
     }

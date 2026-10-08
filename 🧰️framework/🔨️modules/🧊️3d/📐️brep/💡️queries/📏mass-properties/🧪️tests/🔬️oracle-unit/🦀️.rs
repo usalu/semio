@@ -83,6 +83,5 @@ mod tests {
         assert_eq!(tight.verdict, WatertightnessVerdict::Watertight);
         let open = watertightness_from_boundary_edge_count(3);
         assert_eq!(open.verdict, WatertightnessVerdict::HasBoundaryEdges { count: 3 });
-        assert_eq!(watertightness_stub_unchecked().verdict, WatertightnessVerdict::NotChecked);
     }
 }

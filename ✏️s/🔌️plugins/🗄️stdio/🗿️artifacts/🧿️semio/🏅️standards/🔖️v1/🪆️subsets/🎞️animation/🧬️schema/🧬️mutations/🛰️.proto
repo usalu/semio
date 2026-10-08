@@ -4,7 +4,6 @@ package semio.s_stdio_semio_animation.mutations;
 
 import "../📸️snapshot/🛰️.proto";
 
-message SetSnapshot { semio.s_stdio_semio_animation.snapshot.SemioAnimationSnapshot snapshot = 1; }
 message InsertTimeline { uint32 index = 1; semio.s_stdio_semio_animation.snapshot.AnimTimeline timeline = 2; }
 message RemoveTimeline { uint32 index = 1; }
 message SetTimelineName { uint32 index = 1; optional string name = 2; bool has_name = 3; }
@@ -20,7 +19,6 @@ message SetKeyframeValue { uint32 timeline_index = 1; uint32 channel_index = 2; 
 message SemioAnimationMutation {
   oneof mutation {
     bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
     InsertTimeline insert_timeline = 3;
     RemoveTimeline remove_timeline = 4;
     SetTimelineName set_timeline_name = 5;

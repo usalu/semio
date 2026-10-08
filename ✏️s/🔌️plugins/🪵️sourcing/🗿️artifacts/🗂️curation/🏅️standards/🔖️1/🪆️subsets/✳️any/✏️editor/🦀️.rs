@@ -493,6 +493,7 @@ const SOURCING_CURATION_CONFIG_METADATA_BYTES: usize = 64;
 /// shape as `SOURCING_CURATION_DOCUMENT_GRANT_BYTES` below.
 const SOURCING_CURATION_CONFIG_GRANT_BYTES: usize = 4_096;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct SourcingCurationConfigPreparationFactory;
 
 struct SourcingCurationConfigPreparation {
@@ -678,6 +679,7 @@ const SOURCING_CURATION_DOCUMENT_METADATA_BYTES: usize = 64;
 /// shape as the config lane above.
 const SOURCING_CURATION_DOCUMENT_GRANT_BYTES: usize = 4_096;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct SourcingCurationArtifactPreparationFactory;
 
 struct SourcingCurationArtifactPreparation {
@@ -993,7 +995,7 @@ impl ArtifactEditor for SourcingCurationApp {
     }
 
     fn initial_snapshot() -> CurationSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1051,7 +1053,7 @@ impl ArtifactEditor for SourcingCurationApp {
 
     fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok((action == "setContributions").then(|| SourcingCurationConfigMutation::SetContributions {
-            json: crate::schema::installable_contributions(args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES),
+            json: crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES),
         }))
     }
 

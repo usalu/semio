@@ -222,7 +222,7 @@ test("keeps the 62-case shard selection and source-as-data consumers exact", asy
   expect(suite).not.toContain("📦️packages/🟦️typescript/📜️script.ts");
 });
 
-test("registers exact Bun, Nx, cache, package, and launch closure", () => {
+test("registers exact Bun, Nx, cache, and package closure", () => {
   const projectPath = resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json");
   const project = JSON.parse(readFileSync(projectPath, "utf8"));
   const source = fixture.routes.source;
@@ -238,13 +238,6 @@ test("registers exact Bun, Nx, cache, package, and launch closure", () => {
     expect(inputs.has(`{workspaceRoot}/${path}`), path).toBe(true);
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(packageJson.scripts[source.target]).toBe(`nx run @semio-tech/repo-lib:${source.target}`);
-  for (const path of [".vscode/launch.json"]) {
-    const launch = readFileSync(resolve(repoRoot, path), "utf8");
-    for (const route of [source, fixture.routes.goProjection, fixture.routes.goDispatch, fixture.routes.transaction]) {
-      expect(launch.split(route.launchName).length - 1, `${path}: ${route.launchName}`).toBe(1);
-      expect(launch).toContain(route.launchCommand);
-    }
-  }
 });
 
 

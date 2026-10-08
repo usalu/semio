@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🐛issues` per Wave C.
 
 use super::ReplaceIssue;
-use crate::diff::{ProgramIssuesDelta, ProgramIssuesPatchEntry};
+use crate::diff::ProgramIssuesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceIssue, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.issues.iter().find(|row| row.header.id == payload.issue.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No issue exists with this id.", [payload.issue.header.id.0.clone()]);
+    let id = &payload.issue.header.id;
+    let Some(position) = base.issues.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No issue exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.issue {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This issue already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.issues[position] == payload.issue {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This issue already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.issue).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { issues: Some(ProgramIssuesDelta { patched: vec![ProgramIssuesPatchEntry { id: payload.issue.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.issues.len()).then(|| base.issues.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { issues: Some(ProgramIssuesDelta { removed: vec![id.0.clone()], added: vec![payload.issue.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

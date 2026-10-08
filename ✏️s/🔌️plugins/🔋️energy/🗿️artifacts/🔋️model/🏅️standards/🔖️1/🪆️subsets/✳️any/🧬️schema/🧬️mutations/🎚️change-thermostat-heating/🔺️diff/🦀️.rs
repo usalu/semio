@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeThermostatHeatingThrottleRange` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ThermostatPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeThermostatHeatingThrottleRange, base: &Energy
     if existing.heating_throttle_range_k == payload.new_heating_throttle_range_k {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Thermostat {} already has that heating throttle range.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.thermostats.iter_mut().find(|item| item.id == payload.id) {
-        item.heating_throttle_range_k = payload.new_heating_throttle_range_k;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermostats: Rows::modifying(ThermostatPatch { heating_throttle_range_k: Some(payload.new_heating_throttle_range_k), ..ThermostatPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

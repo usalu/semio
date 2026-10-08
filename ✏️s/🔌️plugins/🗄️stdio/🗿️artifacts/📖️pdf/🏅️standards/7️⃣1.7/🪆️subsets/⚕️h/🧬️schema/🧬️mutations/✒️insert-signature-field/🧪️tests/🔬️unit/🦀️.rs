@@ -1,17 +1,17 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfIndirectObject, PdfObject};
-use protocol::MutationDiff;
-
-/// 📕️ The smallest document an `/AcroForm` can hang off: one `/Type /Catalog` root.
-fn catalog_only() -> PdfSnapshot {
-    PdfSnapshot { objects: vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: support::dict(vec![("Type", PdfObject::Name("Catalog".into()))]) }], ..PdfSnapshot::default() }
-}
+use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn inserts_the_named_signature_field() {
-    let base = catalog_only();
+    let base = support::document_of(vec![support::catalog_object()]);
     let mutation = InsertSignatureField { name: "Signature1".to_string() };
-    let outcome = <InsertSignatureField as MutationKind<PdfSnapshot, PdfHMutation>>::diff(&mutation, &base);
-    let next = outcome.diff().apply(&base).unwrap();
+    let next = applied(&base, &PdfHMutation::InsertSignatureField(mutation.clone()));
     assert!(support::signature_field_named(&next, &mutation.name).is_some());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = support::document();
+    assert_mutation_inverse_sum_law(&PdfHMutation::InsertSignatureField(InsertSignatureField { name: "Signature1".to_string() }), &base).await;
 }

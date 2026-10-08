@@ -1,0 +1,10 @@
+{
+  "mutation": "patch-snapshot",
+  "payload": {
+    "patch": {
+      "operation": "set",
+      "path": "/image/interlace",
+      "value": true
+    }
+  }
+}

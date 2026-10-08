@@ -1,11 +1,13 @@
+//! ➖️ `remove-fire-exposure` diff — removes the row at the index, guarded by the row's own id.
+
 use super::RemoveFireExposure;
-use crate::diff::En1993FireList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993FireExposureEdit};
+use crate::En1993Snapshot;
+
 pub fn diff(payload: &RemoveFireExposure, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    if payload.index >= base.fire_exposures.len() {
+    let Some(row) = base.fire_exposures.get(payload.index) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("fire-exposure index {} out of range.", payload.index), Vec::<String>::new());
-    }
-    let mut values = base.fire_exposures.clone();
-    values.remove(payload.index);
-    protocol::MutationOutcome::new(En1993Diff { fire_exposures: Some(En1993FireList { values }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(En1993Diff { fire_exposures: vec![En1993FireExposureEdit::remove(payload.index, row.id.clone())], ..Default::default() })
 }

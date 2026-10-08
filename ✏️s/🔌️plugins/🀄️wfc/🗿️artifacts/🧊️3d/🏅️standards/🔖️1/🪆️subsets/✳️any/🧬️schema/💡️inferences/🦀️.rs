@@ -124,7 +124,7 @@ pub struct Wfc3dSolve;
 /// 🏁 The solve as one call, for the editor/viewer preview lane: the inferred assignment is rendered,
 /// never persisted.
 pub fn solve_assignments(snapshot: &Wfc3dSnapshot) -> BTreeMap<String, String> {
-    solve_with_job(snapshot).map(|commit| commit.assignments).unwrap_or_default()
+    crate::host::inferences::solve_with_job(snapshot).map(|commit| commit.assignments).unwrap_or_default()
 }
 //#endregion 🔖️Solve
 

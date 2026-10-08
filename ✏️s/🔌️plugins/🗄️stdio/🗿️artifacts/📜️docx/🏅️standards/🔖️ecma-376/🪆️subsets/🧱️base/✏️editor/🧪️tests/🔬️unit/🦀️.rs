@@ -379,7 +379,11 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     }
     assert!(reopened_retirement.terminal_is_empty());
     drop(reopened_retirement);
-    assert_eq!(reopened_owners.close_uninstalled_owners_step(1).expect("unused reopened Store disposer closes"), store::SnapshotRetirementStep::Complete);
+    for _ in 0..maximum_turns {
+        let bytes = reopened_owners.next_close_byte_demand();
+        assert!(bytes <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+        if reopened_owners.close_uninstalled_owners_step(1, bytes).expect("unused reopened Store catalog closes") == store::SnapshotRetirementStep::Complete { break; }
+    }
     assert!(reopened_owners.uninstalled_owners_terminal_is_empty());
 
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<DocxSnapshot, DocxMutation>::new();

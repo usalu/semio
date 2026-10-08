@@ -407,3 +407,46 @@ async fn box_minus_cylinder_blind_bore_removes_the_bore_volume() {
     let expected = 1.0 - std::f64::consts::PI * 0.1 * 0.1 * 0.5;
     assert!((vol - expected).abs() / expected < 5e-3, "expected≈{expected}, got {vol}");
 }
+
+/// 🧪️ Preserves coincident boundary occupancy across aligned and opposed outward orientations.
+#[test]
+fn coincident_face_boundary_selection_agrees_with_the_neutral_law() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/coincident-boundary/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let op = match row["operation"].as_str().unwrap() { "union" => BooleanOp::Unite, "intersection" => BooleanOp::Intersect, "difference" => BooleanOp::Cut, _ => unreachable!() };
+        assert_eq!(keep_coincident_boundary(op, row["aligned"].as_bool().unwrap()), row["retainsBoundary"].as_bool().unwrap(), "neutral coincident boundary: {row}");
+    }
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let a = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let b = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let aligned = find_coincident_face_pairs(&body, &body.solid_faces(a), &body.solid_faces(b), 1e-6);
+    assert_eq!(aligned.len(), 6);
+    assert!(aligned.iter().all(|&(_, _, same)| same));
+    let adjacent = translate_solid(&mut body, b, Vec3::new(0.0, 0.0, 1.0), &mut rec).unwrap();
+    let opposed = find_coincident_face_pairs(&body, &body.solid_faces(a), &body.solid_faces(adjacent), 1e-6);
+    assert_eq!(opposed.len(), 1);
+    assert!(!opposed[0].2);
+    eprintln!("[DEBUG] Coincident boundary neutral cases=6 aligned cube faces=6 opposed shared face=1");
+}
+
+
+/// 🧪️ Retains one closed shared seam when a cylindrical bore is refilled by its matching tool.
+#[semio_framework_async_macros::async_test]
+async fn coincident_bore_refill_retains_a_closed_owned_seam() {
+    let row: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/coincident-seam/🔣️.json")).unwrap();
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let dims = row["stock"].as_array().unwrap();
+    let stock = make_box(&mut body, dims[0].as_f64().unwrap(), dims[1].as_f64().unwrap(), dims[2].as_f64().unwrap(), &mut rec).unwrap();
+    let bit = make_cylinder(&mut body, row["radius"].as_f64().unwrap(), row["height"].as_f64().unwrap(), &mut rec).unwrap();
+    let offset = row["translation"].as_array().unwrap();
+    let bit = translate_solid(&mut body, bit, Vec3::new(offset[0].as_f64().unwrap(), offset[1].as_f64().unwrap(), offset[2].as_f64().unwrap()), &mut rec).unwrap();
+    let bored = boolean_solid(&mut body, stock, bit, BooleanOp::Cut, 1e-6, &mut rec).unwrap();
+    let filled = boolean_solid(&mut body, bored, bit, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
+    let issues = validate_body(&body);
+    assert_eq!(issues.is_empty(), row["closedShell"].as_bool().unwrap(), "neutral closed seam: {issues:?}");
+    let volume = solid_volume(&body, filled, 1e-4).unwrap();
+    assert!((volume - row["expectedVolume"].as_f64().unwrap()).abs() < 1e-3);
+    eprintln!("[DEBUG] Native bore refill retained closed seam volume={volume} independent serde_json dimensions matched");
+}

@@ -2137,11 +2137,11 @@ export type HistoryReprojection = {
  * body titles its reprojection section with it. `{done}`/`{total}` are replayed operations, `{reason}` a refusal's notice. */
 export const HISTORY_REPROJECTION_LABELS = [
   { key: "remote.title", en: "Remote history change", de: "Entfernte Verlaufsänderung" },
-  { key: "remote.progress", en: "Replaying a remote history change: {done} of {total} mutations", de: "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen" },
+  { key: "remote.progress", en: "Replaying a remote history change: {done} of {total} steps", de: "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Schritten" },
   { key: "remote.paused", en: "Remote history change paused: this replica still shows the history before it", de: "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor" },
   { key: "remote.refused", en: "Remote history change refused: {reason}", de: "Entfernte Verlaufsänderung abgelehnt: {reason}" },
   { key: "step.title", en: "History step", de: "Verlaufsschritt" },
-  { key: "step.progress", en: "Replaying history: {done} of {total} mutations", de: "Verlauf wird neu angewendet: {done} von {total} Mutationen" },
+  { key: "step.progress", en: "Replaying history: {done} of {total} steps", de: "Verlauf wird neu angewendet: {done} von {total} Schritten" },
   { key: "step.refused", en: "History step refused: {reason}", de: "Verlaufsschritt abgelehnt: {reason}" },
   { key: "load.title", en: "Document load", de: "Dokument laden" },
   { key: "load.progress", en: "Loading document: {done} of {total}", de: "Dokument wird geladen: {done} von {total}" },

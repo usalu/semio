@@ -1,16 +1,21 @@
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+//! 🔺️ Diff for `SetMetadataEntry`.
 
-/// 🔺️ Diff helper for set-metadata-entry — an upsert (adds the entry when `key` is absent from
-/// `base.metadata`, otherwise updates its value), so there is no "target missing" case. An
-/// existing entry already holding this exact `value` is `mutation.no-op` (Warning, empty diff).
+use super::super::*;
+
+//#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff(base: &SemioImageSnapshot, key: String, value: String) -> protocol::MutationOutcome<SemioImageDiff> {
-    if base.metadata.iter().any(|e| e.key == key && e.value == value) {
+pub fn diff(payload: &super::SetMetadataEntry, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
+    let super::SetMetadataEntry { key, value } = payload;
+    if base.metadata.iter().any(|e| &e.key == key && &e.value == value) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Metadata entry \"{key}\" already has this value."));
     }
-    Mutation::diff(&SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }), base)
+    protocol::MutationOutcome::new({
+        let metadata = if base.metadata.iter().any(|e| &e.key == key) {
+            SemioImageMetadataDiff { modified: vec![NamedModified { key: key.clone(), diff: value.clone() }], ..Default::default() }
+        } else {
+            SemioImageMetadataDiff { added: vec![SemioImageMetadataEntry { key: key.clone(), value: value.clone() }], ..Default::default() }
+        };
+        SemioImageDiff { metadata: Some(metadata), ..Default::default() }
+    })
 }
+//#endregion 🔖️Diff

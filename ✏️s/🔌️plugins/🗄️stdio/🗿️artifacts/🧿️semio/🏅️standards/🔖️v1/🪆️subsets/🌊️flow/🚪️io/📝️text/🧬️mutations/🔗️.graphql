@@ -30,7 +30,6 @@ type SemioFlowSnapshot {
   edges: [FlowEdge!]!
 }
 enum SemioFlowMutationKind {
-  SET_SNAPSHOT
   INSERT_NODE
   REMOVE_NODE
   SET_NODE_KIND
@@ -45,7 +44,6 @@ enum SemioFlowMutationKind {
 }
 type SemioFlowMutation {
   mutation: SemioFlowMutationKind!
-  snapshot: SemioFlowSnapshot
   node: FlowNode
   edge: FlowEdge
   id: String
@@ -60,7 +58,6 @@ type SemioFlowMutation {
 
 type SemioFlowMutationText {
   mutation: String!
-  snapshot: SemioFlowSnapshot
   node: FlowNode
   edge: FlowEdge
   id: String

@@ -39,6 +39,8 @@ pub use refusal::{ValueError, ValueRefusalKind};
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;
+#[cfg(test)]
+pub(crate) use codec::controlled_tests::observe_retirement_allocations;
 pub use codec::{edit_through_value, ControlledValueHasher, DecodedValue, IntrinsicRetirement, FromValue, ToValue, ValueEdit, ValueShape};
 //#endregion 🔁️Codec
 

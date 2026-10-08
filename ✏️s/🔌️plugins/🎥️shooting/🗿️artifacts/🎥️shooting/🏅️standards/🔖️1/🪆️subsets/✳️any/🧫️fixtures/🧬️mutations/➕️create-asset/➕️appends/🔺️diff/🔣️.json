@@ -1,23 +1,24 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": {
-    "added": [
+    "edits": [
       {
-        "id": "asset-detail",
-        "name": "Detail",
-        "url": "/mesh/detail.glb",
-        "format": "glb",
-        "origin": [
-          0.0,
-          4.0,
-          0.0
-        ]
+        "edit": "add",
+        "index": 2,
+        "item": {
+          "id": "asset-detail",
+          "name": "Detail",
+          "url": "/mesh/detail.glb",
+          "format": "glb",
+          "origin": [
+            0.0,
+            4.0,
+            0.0
+          ]
+        }
       }
     ],
-    "removed": [],
-    "patched": [],
-    "reordered": null
+    "patched": []
   },
   "savedCameras": null,
   "scene": null,

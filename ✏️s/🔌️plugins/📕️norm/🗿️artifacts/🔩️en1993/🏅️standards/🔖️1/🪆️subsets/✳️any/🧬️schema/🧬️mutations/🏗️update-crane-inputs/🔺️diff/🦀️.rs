@@ -1,20 +1,15 @@
-//! 🔺️ `upsert-crane-runway` — sparse diff construction.
+//! 🏗️ `update-crane-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
 use super::UpdateCraneInputs;
-use crate::diff::En1993CraneList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993CraneRunwayEdit};
+use crate::En1993Snapshot;
 
-//#region 🔖️Diff
 pub fn diff(payload: &UpdateCraneInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    let mut values = base.crane_runways.clone();
-    if let Some(idx) = values.iter().position(|x| x.id == payload.crane_runway.id) {
-        if values[idx] == payload.crane_runway {
-            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
-        }
-        values[idx] = payload.crane_runway.clone();
-    } else {
-        values.push(payload.crane_runway.clone());
-    }
-    protocol::MutationOutcome::new(En1993Diff { crane_runways: Some(En1993CraneList { values }), ..Default::default() })
+    let edit = match base.crane_runways.iter().position(|row| row.id == payload.crane_runway.id) {
+        Some(index) if base.crane_runways[index] == payload.crane_runway => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
+        Some(index) => En1993CraneRunwayEdit::replace(index, payload.crane_runway.id.clone(), payload.crane_runway.clone()),
+        None => En1993CraneRunwayEdit::insert(base.crane_runways.len(), payload.crane_runway.clone()),
+    };
+    protocol::MutationOutcome::new(En1993Diff { crane_runways: vec![edit], ..Default::default() })
 }
-//#endregion 🔖️Diff

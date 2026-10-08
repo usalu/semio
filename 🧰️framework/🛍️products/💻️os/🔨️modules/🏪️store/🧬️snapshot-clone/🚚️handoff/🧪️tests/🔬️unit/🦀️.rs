@@ -27,7 +27,7 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
     let source = Arc::new(source(entries));
     let retained = RetainedCloneSource::from_authority(Arc::clone(&source), ());
     let mut cursor = PagedList::<String, 64>::retained_clone_cursor();
-    let step = cursor.advance(retained.borrow(), RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 16, maximum_capacity_bytes: 4096, maximum_depth: 16 }).expect("partial retained cursor progresses");
+    let step = cursor.advance(retained.borrow(), RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 16, maximum_capacity_bytes: 4096, maximum_depth: 16, maximum_release_bytes: 4096 }).expect("partial retained cursor progresses");
     assert!(matches!(step, RetainedCloneStep::Progress(_)));
 
     let mut handoff = RetainedCloneCursorHandoff::<PagedList<String, 64>>::new(cursor);

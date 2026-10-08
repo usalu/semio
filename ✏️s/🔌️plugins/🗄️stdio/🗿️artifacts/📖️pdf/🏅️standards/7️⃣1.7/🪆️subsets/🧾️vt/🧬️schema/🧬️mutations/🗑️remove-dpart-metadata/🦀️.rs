@@ -2,9 +2,7 @@
 
 use super::set_dpart_metadata::SetDpartMetadata;
 use super::PdfVtMutation;
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +15,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartMetadata {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dpart-metadata", kind: "remove-dpart-metadata", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::set_dpart_job(&mut next, None);
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, None)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {

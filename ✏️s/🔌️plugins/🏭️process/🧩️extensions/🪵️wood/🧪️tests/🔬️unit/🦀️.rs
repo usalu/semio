@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "../../../🧪️tests/🔬️catalog-json/🦀️.rs"]
+mod json_oracle;
+
 #[semio_framework_async_macros::async_test]
 async fn every_machine_and_capability_id_is_unique() {
     let machines = WoodCatalog.machines();
@@ -45,9 +48,10 @@ async fn every_recipe_and_rule_parameter_resolves() {
 #[semio_framework_async_macros::async_test]
 async fn machines_round_trip_json() {
     let machines = WoodCatalog.machines();
-    let json = semio_framework_os_kernel::json::to_json_string(&machines);
-    let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+    let json = semio_framework_pack_json::to_json_string(&machines);
+    let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
     assert_eq!(parsed, machines);
+    json_oracle::verify(WoodCatalog.catalog_id(), &json);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -69,5 +73,5 @@ async fn bundle_contributes_wood_machines_for_process3d_play() {
     assert_eq!(payload["appId"].as_str(), Some("process3d-play"));
     assert_eq!(payload["moduleId"].as_str(), Some("wood"));
     assert_eq!(payload["label"].as_str(), Some("Wood"));
-    assert!(semio_framework_os_kernel::json::from_json_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string")).is_ok());
+    assert!(semio_framework_pack_json::from_json_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string"), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok());
 }

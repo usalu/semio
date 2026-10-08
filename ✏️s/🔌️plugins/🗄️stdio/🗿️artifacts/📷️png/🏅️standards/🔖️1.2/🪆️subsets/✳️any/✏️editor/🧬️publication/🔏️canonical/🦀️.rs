@@ -30,7 +30,7 @@ impl store::ArtifactCanonicalJson for PngMutation {
             Self::SetSnapshot(v)=>("set-snapshot",object([("snapshot",snapshot(&v.snapshot))])),
             Self::ChangeGamma(v)=>("change-gamma",object([("revision",text(&v.revision)),("gama",optional(v.gama.as_ref(),|v|number(*v)))])),
             Self::PatchPixels(v)=>("patch-pixels",object([("revision",text(&v.revision)),("x",number(v.x)),("y",number(v.y)),("width",number(v.width)),("height",number(v.height)),("red",number(v.red)),("green",number(v.green)),("blue",number(v.blue)),("alpha",number(v.alpha))])),
-            Self::PaintNativeSamples(v)=>("paint-native-samples",object([("revision",text(&v.revision)),("region",region(&v.region)),("paint",paint(&v.paint)),("result",snapshot(&v.result))])),
+            Self::PaintNativeSamples(v)=>("paint-native-samples",object([("revision",text(&v.revision)),("region",region(&v.region)),("paint",paint(&v.paint))])),
             Self::PatchSnapshot(_)=>return Err("png: path patch has no controlled canonical publication source".into()),
         };Ok(Some(object([("mutation",text(kind)),("payload",payload)])))
     }

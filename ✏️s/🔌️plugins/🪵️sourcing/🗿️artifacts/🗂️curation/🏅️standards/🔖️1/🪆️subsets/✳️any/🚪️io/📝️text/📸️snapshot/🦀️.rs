@@ -197,7 +197,7 @@ pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
         if modules.len() >= SOURCING_MAXIMUM_MODULES {
             break;
         }
-        if modules.iter().any(|installed| installed.module_id() == module.module_id) {
+        if modules.iter().any(|installed| installed.module_id() == module.module_id()) {
             continue;
         }
         modules.push(SourcingModules::from(module));

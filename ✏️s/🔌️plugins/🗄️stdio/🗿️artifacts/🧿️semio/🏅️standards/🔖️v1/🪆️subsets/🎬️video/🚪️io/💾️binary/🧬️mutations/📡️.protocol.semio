@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=0
-field payload bytes
 record insert-stream tag=1
 field payload bytes
 record remove-stream tag=2
@@ -26,6 +24,4 @@ field payload bytes
 record set-sample-data tag=6
 field payload bytes
 record set-sample-flags tag=7
-field payload bytes
-record patch-snapshot tag=8
 field payload bytes

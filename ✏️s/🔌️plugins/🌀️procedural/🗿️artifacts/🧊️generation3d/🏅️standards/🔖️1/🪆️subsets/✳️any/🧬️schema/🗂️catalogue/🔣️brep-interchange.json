@@ -1,0 +1,493 @@
+{
+  "category": {
+    "id": "brep.interchange",
+    "emoji": "💾️",
+    "order": 110,
+    "label": {
+      "en": "Import and export",
+      "de": "Import und Export"
+    },
+    "description": {
+      "en": "Exchange B-Rep geometry with STEP, STL, OBJ and DWG files.",
+      "de": "B-Rep-Geometrie über STEP-, STL-, OBJ- und DWG-Dateien austauschen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.interchange.exportStep",
+      "category": "brep.interchange",
+      "emoji": "💾️",
+      "label": {
+        "en": "Export STEP",
+        "de": "STEP exportieren"
+      },
+      "description": {
+        "en": "Writes a shape as STEP text with exact curved geometry.",
+        "de": "Schreibt eine Form als STEP-Text mit exakter gekrümmter Geometrie."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "step",
+          "label": {
+            "en": "STEP",
+            "de": "STEP"
+          },
+          "description": {
+            "en": "The STEP file content.",
+            "de": "Der Inhalt der STEP-Datei."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.interchange.importStep",
+      "category": "brep.interchange",
+      "emoji": "📂️",
+      "label": {
+        "en": "Import STEP",
+        "de": "STEP importieren"
+      },
+      "description": {
+        "en": "Reads the first solid of STEP text; only planes, quadrics, B-splines and closed shells are supported.",
+        "de": "Liest den ersten Körper aus STEP-Text; unterstützt werden nur Ebenen, Quadriken, B-Splines und geschlossene Schalen."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The STEP file content.",
+            "de": "Der Inhalt der STEP-Datei."
+          },
+          "type": "text",
+          "default": ""
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The imported shape.",
+            "de": "Die importierte Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.interchange.exportStl",
+      "category": "brep.interchange",
+      "emoji": "🧊️",
+      "label": {
+        "en": "Export STL",
+        "de": "STL exportieren"
+      },
+      "description": {
+        "en": "Triangulates a shape and writes it as binary STL, encoded as base64 text.",
+        "de": "Trianguliert eine Form und schreibt sie als binäres STL, als Base64-Text kodiert."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "deflection",
+          "label": {
+            "en": "Deflection",
+            "de": "Abweichung"
+          },
+          "description": {
+            "en": "Largest distance between the surface and its triangles; smaller values give finer meshes.",
+            "de": "Größter Abstand zwischen Oberfläche und Dreiecken; kleinere Werte ergeben feinere Netze."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.01
+        }
+      ],
+      "outputs": [
+        {
+          "name": "stl",
+          "label": {
+            "en": "STL",
+            "de": "STL"
+          },
+          "description": {
+            "en": "The STL file content as base64 text.",
+            "de": "Der STL-Dateiinhalt als Base64-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.interchange.importStl",
+      "category": "brep.interchange",
+      "emoji": "📥️",
+      "label": {
+        "en": "Import STL",
+        "de": "STL importieren"
+      },
+      "description": {
+        "en": "Reads base64 STL text into a faceted solid with one planar face per triangle.",
+        "de": "Liest Base64-STL-Text in einen facettierten Körper mit einer ebenen Fläche je Dreieck."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The STL file content as base64 text.",
+            "de": "Der STL-Dateiinhalt als Base64-Text."
+          },
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Distance within which vertices are merged.",
+            "de": "Abstand, innerhalb dessen Eckpunkte verschmolzen werden."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The faceted solid.",
+            "de": "Der facettierte Körper."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "preview": true
+    },
+    {
+      "id": "brep.interchange.exportObj",
+      "category": "brep.interchange",
+      "emoji": "🗒️",
+      "label": {
+        "en": "Export OBJ",
+        "de": "OBJ exportieren"
+      },
+      "description": {
+        "en": "Triangulates a shape and writes it as OBJ text.",
+        "de": "Trianguliert eine Form und schreibt sie als OBJ-Text."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "deflection",
+          "label": {
+            "en": "Deflection",
+            "de": "Abweichung"
+          },
+          "description": {
+            "en": "Largest distance between the surface and its triangles; smaller values give finer meshes.",
+            "de": "Größter Abstand zwischen Oberfläche und Dreiecken; kleinere Werte ergeben feinere Netze."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.01
+        }
+      ],
+      "outputs": [
+        {
+          "name": "obj",
+          "label": {
+            "en": "OBJ",
+            "de": "OBJ"
+          },
+          "description": {
+            "en": "The OBJ file content.",
+            "de": "Der Inhalt der OBJ-Datei."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.interchange.importObj",
+      "category": "brep.interchange",
+      "emoji": "🗂️",
+      "label": {
+        "en": "Import OBJ",
+        "de": "OBJ importieren"
+      },
+      "description": {
+        "en": "Reads OBJ text into a faceted solid with one planar face per triangle.",
+        "de": "Liest OBJ-Text in einen facettierten Körper mit einer ebenen Fläche je Dreieck."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The OBJ file content.",
+            "de": "Der Inhalt der OBJ-Datei."
+          },
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Distance within which vertices are merged.",
+            "de": "Abstand, innerhalb dessen Eckpunkte verschmolzen werden."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The faceted solid.",
+            "de": "Der facettierte Körper."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "preview": true
+    },
+    {
+      "id": "brep.interchange.exportDwg",
+      "category": "brep.interchange",
+      "emoji": "📐️",
+      "label": {
+        "en": "Export DWG",
+        "de": "DWG exportieren"
+      },
+      "description": {
+        "en": "Triangulates a shape and writes it as a DWG triangle bridge, encoded as base64 text.",
+        "de": "Trianguliert eine Form und schreibt sie als DWG-Dreiecksbrücke, als Base64-Text kodiert."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "deflection",
+          "label": {
+            "en": "Deflection",
+            "de": "Abweichung"
+          },
+          "description": {
+            "en": "Largest distance between the surface and its triangles; smaller values give finer meshes.",
+            "de": "Größter Abstand zwischen Oberfläche und Dreiecken; kleinere Werte ergeben feinere Netze."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.01
+        }
+      ],
+      "outputs": [
+        {
+          "name": "dwg",
+          "label": {
+            "en": "DWG",
+            "de": "DWG"
+          },
+          "description": {
+            "en": "The DWG file content as base64 text.",
+            "de": "Der DWG-Dateiinhalt als Base64-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.interchange.importDwg",
+      "category": "brep.interchange",
+      "emoji": "📏️",
+      "label": {
+        "en": "Import DWG",
+        "de": "DWG importieren"
+      },
+      "description": {
+        "en": "Reads a base64 DWG triangle bridge into a faceted solid.",
+        "de": "Liest eine Base64-DWG-Dreiecksbrücke in einen facettierten Körper."
+      },
+      "inputs": [
+        {
+          "name": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "description": {
+            "en": "The DWG file content as base64 text.",
+            "de": "Der DWG-Dateiinhalt als Base64-Text."
+          },
+          "type": "text",
+          "default": ""
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Distance within which vertices are merged.",
+            "de": "Abstand, innerhalb dessen Eckpunkte verschmolzen werden."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The faceted solid.",
+            "de": "Der facettierte Körper."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "preview": true
+    }
+  ]
+}

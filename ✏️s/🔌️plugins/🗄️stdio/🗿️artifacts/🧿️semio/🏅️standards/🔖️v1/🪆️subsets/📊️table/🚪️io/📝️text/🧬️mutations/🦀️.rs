@@ -11,7 +11,6 @@ use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
 use crate::standards::v1::subsets::table::schema::mutations::{
-    set_snapshot::SetSnapshot,
     create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn, reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
 };
 use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
@@ -61,8 +60,6 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_table_mutation(m: &SemioTableMutation) -> String {
     match m {
-        SemioTableMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioTableMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioTableMutation::CreateColumn(p) => format!("createColumn:{},{},{}", enc_str(&p.name), enc_cell_kind(p.kind), enc_opt_usize(p.index)),
         SemioTableMutation::DeleteColumn(p) => format!("deleteColumn:{}", enc_str(&p.name)),
         SemioTableMutation::RenameColumn(p) => format!("renameColumn:{},{}", enc_str(&p.name), enc_str(&p.new_name)),
@@ -76,16 +73,11 @@ fn print_table_mutation(m: &SemioTableMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioTableMutation::PatchSnapshot(crate::standards::v1::subsets::table::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioTableMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("table mutation: missing ':' in {line:?}"))?;
     match tag {
@@ -143,7 +135,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
     use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
     use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
-        SemioTableMutation::PatchSnapshot(crate::standards::v1::subsets::table::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "extra".into(), kind: SemioTableCellKind::Int, index: None }),
         SemioTableMutation::DeleteColumn(DeleteColumn { name: "label".into() }),
@@ -182,7 +173,6 @@ use crate::standards::v1::subsets::table::schema::mutations::reorder_rows;
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate
 /// alias `🦀️.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
 /// `🔤️text`'s already-compiling facet uses.
-use crate::standards::v1::subsets::table::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

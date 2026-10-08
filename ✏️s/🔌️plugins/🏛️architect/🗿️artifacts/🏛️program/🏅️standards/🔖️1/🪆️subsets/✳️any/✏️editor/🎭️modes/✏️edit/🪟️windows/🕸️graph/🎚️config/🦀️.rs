@@ -13,6 +13,43 @@ pub struct ArchitectGraphWindowConfig {
     pub viewport: Viewport2d,
 }
 
+/// 🔺️ Sparse field diff of one graph viewport window config: a present field is written, the rest of the config is untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct ArchitectGraphWindowConfigDiff {
+    pub viewport: Option<Viewport2d>,
+}
+
+impl protocol::MutationDiff<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
+    fn apply(&self, base: &ArchitectGraphWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectGraphWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.viewport {
+            next.viewport = value.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.viewport.is_some() {
+            self.viewport = other.viewport;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigDiff {
+    fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Self {
+        Self { viewport: self.viewport.as_ref().map(|_| base.viewport.clone()) }
+    }
+
+    fn between(base: &ArchitectGraphWindowConfig, other: &ArchitectGraphWindowConfig) -> Self {
+        Self { viewport: (base.viewport != other.viewport).then(|| other.viewport.clone()) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.viewport.is_none()
+    }
+}
+
 /// 🔁️ Changes the shared viewport of one addressed Graph window.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
@@ -21,7 +58,7 @@ pub enum ArchitectGraphWindowConfigMutation {
 }
 
 impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigMutation {
-    type Diff = ArchitectGraphWindowConfig;
+    type Diff = ArchitectGraphWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config",
@@ -52,9 +89,9 @@ impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConf
     fn diff(&self, base: &ArchitectGraphWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         let Self::SetViewport { viewport } = self;
         if base.viewport == *viewport {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Graph viewport is unchanged.");
+            return protocol::MutationOutcome::new(ArchitectGraphWindowConfigDiff::default()).warning("mutation.no-op", "Graph viewport is unchanged.");
         }
-        protocol::MutationOutcome::new(ArchitectGraphWindowConfig { viewport: viewport.clone() })
+        protocol::MutationOutcome::new(ArchitectGraphWindowConfigDiff { viewport: Some(viewport.clone()) })
     }
 
     fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -107,7 +144,7 @@ impl store::ArtifactPack for ArchitectGraphWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(ArchitectGraphWindowConfig);
+impl store::ConfigRecord for ArchitectGraphWindowConfig {}
 
 impl protocol::OpText for ArchitectGraphWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }

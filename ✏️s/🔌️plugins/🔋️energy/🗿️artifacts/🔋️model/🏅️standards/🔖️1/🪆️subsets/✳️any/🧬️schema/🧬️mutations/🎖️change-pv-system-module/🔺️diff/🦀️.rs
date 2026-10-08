@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePvSystemModuleEfficiency` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangePvSystemModuleEfficiency, base: &EnergyModelS
     if existing.module_efficiency == payload.new_module_efficiency {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("PV system {} already carries this module efficiency: {}.", payload.id.0, payload.new_module_efficiency));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.module_efficiency = payload.new_module_efficiency;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { pv_systems: Rows::modifying(PvSystemAssignmentPatch { module_efficiency: Some(payload.new_module_efficiency), ..PvSystemAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

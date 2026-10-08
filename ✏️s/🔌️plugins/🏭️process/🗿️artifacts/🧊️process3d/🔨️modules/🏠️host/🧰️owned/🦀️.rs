@@ -1,7 +1,9 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::standards::v1::subsets::any::io::binary::mutations::{process3d_protocol_error, PROCESS3D_MUTATION_BINARY_FORMAT};
 use store::{ArtifactEnvelopeMutationFieldAuthority as _, ArtifactEnvelopeSnapshotFieldAuthority as _};
+use semio_framework_plugin::ArtifactOwnedDisposer as _;
 use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Process3dPublicationLease {
@@ -193,9 +195,10 @@ struct Process3dStoreInitializationAuthority {
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Process3dSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Process3dSnapshot, Process3dMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    active_terminal: bool,
+    release_progress: (usize, usize),
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     clone_cursor: std::mem::ManuallyDrop<Option<Process3dSnapshotCopyCursor>>,
+    timeline_cursor: std::mem::ManuallyDrop<Option<Process3dTimelineCursor>>,
     census: std::mem::ManuallyDrop<Option<Process3dOwnerCensusCursor>>,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<Process3dSnapshot, Process3dMutation>>>,
     edit_index: store::ArtifactStoreInitializationEditIndex,
@@ -217,7 +220,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         if cx.should_yield() || cx.fuel_remaining() == 0 {
             return semio_framework_job::StepOutcome::Yield;
         }
-        match self.pump_active() {
+        let release_grant = match process3d_admitted_release_grant(self.next_close_byte_demand()) { Ok(grant) => grant, Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = Process3dStoreInitializationPhase::RetireFault; return semio_framework_job::StepOutcome::Yield; } };
+        match self.pump_active(release_grant) {
             Ok(true) => {
                 cx.consume_fuel(1);
                 return semio_framework_job::StepOutcome::Yield;
@@ -428,6 +432,12 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
                     return semio_framework_job::StepOutcome::Yield;
                 }
+                if effective.operation().is_some_and(|operation| Process3dTimelineCursor::target(operation).is_some()) {
+                    *self.timeline_cursor = Some(Process3dTimelineCursor::new());
+                    self.phase = Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation };
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Process3d runtime current retained");
                 let applied = effective.operation().map(|operation| process3d_apply_retained_mutation(current, operation));
                 drop(effective);
@@ -440,6 +450,30 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     Some(Err(code)) => self.fail(code.as_bytes()),
                 }
             }
+
+            Process3dStoreInitializationPhase::ApplyTimeline { position, edit, mutation } => {
+                let envelope = self.envelope.as_ref().expect("retained timeline envelope");
+                let entry = envelope.vcs.edits.get(edit).expect("retained timeline edit");
+                let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("retained timeline forward");
+                let operation = effective.operation().expect("retained timeline operation");
+                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("retained timeline workspace");
+                let advanced = self.timeline_cursor.as_mut().expect("retained timeline cursor").step(current, operation);
+                drop(effective);
+                match advanced {
+                    Ok(true) => {
+                        *self.active = self.timeline_cursor.as_mut().expect("completed timeline cursor").commit(current);
+                        drop(self.timeline_cursor.take());
+                        self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                    }
+                    Ok(false) => {}
+                    Err(code) => {
+                        self.fail(code.as_bytes());
+                        cx.consume_fuel(1);
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                }
+            }
+
             Process3dStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Process3d applied retained");
                 let runtime = self.runtime.as_mut().expect("Process3d runtime retained");
@@ -500,7 +534,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 });
             }
-            Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(PROCESS3D_OWNER_BYTES) {
+            Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(release_grant) {
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
                     process3d_release_app_publication_authority(self.operation);
@@ -558,8 +592,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        match self.pump_terminal_retirement(maximum_bytes.min(PROCESS3D_OWNER_BYTES)) {
-            Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+        match self.pump_terminal_retirement(maximum_bytes) {
+            Ok(false) if self.release_progress.0 <= maximum_items && self.release_progress.1 <= maximum_bytes => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: self.release_progress.0, released_bytes: self.release_progress.1 }),
+            Ok(false) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close-grant"), "Process3d initializer exceeded the supplied close grant")),
             Ok(true) => {
                 process3d_release_app_publication_authority(self.operation);
                 self.terminal_handoff = true;
@@ -569,14 +604,51 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         }
     }
 
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(active) = self.active.as_ref() { return process3d_erased_release_demand(active); }
+        if matches!(self.phase, Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault) {
+            if let Some(runtime) = self.runtime.as_ref() { return runtime.next_close_byte_demand(); }
+        }
+        if let Some(cursor) = self.timeline_cursor.as_ref() { return cursor.next_close_byte_demand(); }
+        if let Some(retirement) = self.envelope_retirement.as_ref() { return process3d_erased_release_demand(retirement); }
+        PROCESS3D_OWNER_BYTES
+    }
+
     fn terminal_is_empty(&self) -> bool {
         self.terminal_is_empty_inner()
     }
 }
 
-const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub(crate) const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
-const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
+fn process3d_erased_release_demand(owner: &Box<dyn store::ErasedSnapshotRetirement>) -> usize {
+    if owner.terminal_is_empty() { size_of_val(owner.as_ref()).max(1) } else { owner.next_close_byte_demand() }
+}
+
+fn process3d_retire_erased_step(slot: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, maximum_bytes: usize) -> Result<(usize, usize), semio_framework_value::ValueError> {
+    let Some(owner) = slot.as_mut() else { return Ok((0, 0)); };
+    if owner.terminal_is_empty() {
+        let extent = size_of_val(owner.as_ref());
+        if extent > maximum_bytes { return Ok((0, 0)); }
+        drop(slot.take());
+        return Ok((1, extent));
+    }
+    match owner.close_step(1, maximum_bytes)? {
+        store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok((released_items, released_bytes)),
+        store::SnapshotRetirementStep::Complete if owner.terminal_is_empty() => Ok((0, 0)),
+        store::SnapshotRetirementStep::Blocked => Ok((0, 0)),
+        _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d retirement exceeded exact grant or reported false terminal")),
+    }
+}
+
+fn process3d_admitted_release_grant(demand: usize) -> Result<usize, semio_framework_value::ValueError> {
+    if demand > PROCESS3D_MAXIMUM_DOMAIN_BYTES {
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d physical release exceeds admitted domain allocation"));
+    }
+    Ok(if demand > PROCESS3D_OWNER_BYTES { demand } else { PROCESS3D_OWNER_BYTES })
+}
+
+pub(crate) const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 
 const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
@@ -711,6 +783,7 @@ pub fn process3d_release_publication_authority(operation: semio_framework_job::O
     leases.take(key).is_some()
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Process3dSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Process3dSnapshot> for Process3dSnapshotRetirementFactory {
@@ -720,11 +793,14 @@ impl store::ArtifactOwnedValueRetirementFactory<Process3dSnapshot> for Process3d
 }
 
 impl store::SnapshotRetirementFactory<Process3dSnapshot> for Process3dSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Process3dSnapshot>) -> usize { std::mem::size_of::<Process3dSnapshotRootRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<Process3dSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(Process3dSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None), terminal: false })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Process3dMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Process3dMutation> for Process3dMutationRetirementFactory {
@@ -962,10 +1038,310 @@ fn process3d_fault_detail(code: &[u8]) -> Vec<u8> {
     detail
 }
 
+
+struct Process3dTimelineOwner {
+    steps: Vec<ProcessStep>,
+    tools: Vec<store::ArtifactChild<crate::SemioBrepSnapshot>>,
+    flow: Option<store::ArtifactChild<crate::SemioFlowSnapshot>>,
+    phase: u8,
+}
+
+impl Process3dTimelineOwner {
+    fn empty() -> Self {
+        Self { steps: Vec::new(), tools: Vec::new(), flow: None, phase: 0 }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Process3dTimelinePhase {
+    Scan(usize),
+    Allocate,
+    Copy(usize),
+    Tools(usize),
+    Reference { index: usize, offset: usize },
+    Edges(usize),
+    Nodes { index: usize, tool: usize },
+    Complete,
+    Unchanged,
+    Write,
+    Hash(usize),
+}
+
+struct Process3dTimelineCursor {
+    phase: Process3dTimelinePhase,
+    found: Option<usize>,
+    length: usize,
+    payload: Process3dTimelineOwner,
+    hash: framework_hash::Sha256,
+    reference_hash: Option<framework_hash::Sha256>,
+    writer: Option<semio_framework_pack_json::JsonWriteCursor<semio_framework_value::DslValue>>,
+    output: Option<String>,
+    resume: Option<Process3dTimelinePhase>,
+    json_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    payload_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    release_progress: (usize, usize),
+}
+
+impl Process3dTimelineCursor {
+    fn new() -> Self {
+        Self { phase: Process3dTimelinePhase::Scan(0), found: None, length: 0, payload: Process3dTimelineOwner::empty(), hash: framework_hash::Sha256::new(), reference_hash: None, writer: None, output: None, resume: None, json_retirement: None, payload_retirement: None, release_progress: (0, 0) }
+    }
+
+    fn target(mutation: &Process3dMutation) -> Option<&str> {
+        use Process3dMutation::*;
+        Some(match mutation {
+            CreateStep(value) => &value.step.id,
+            DeleteStep(value) => &value.id,
+            RenameStep(value) => &value.id,
+            ChangeStepEnabled(value) => &value.id,
+            ChangeStepOrigin(value) => &value.id,
+            ReplaceStepMeasure(value) => &value.id,
+            ReorderSteps(value) => &value.id,
+            _ => return None,
+        })
+    }
+
+    fn source_index(&self, mutation: &Process3dMutation, index: usize, old_length: usize) -> Option<usize> {
+        use Process3dMutation::*;
+        match mutation {
+            CreateStep(value) => {
+                let target = value.index.min(old_length);
+                if index == target { None } else { Some(index - usize::from(index > target)) }
+            }
+            DeleteStep(_) => Some(index + usize::from(index >= self.found.expect("retained delete target"))),
+            ReorderSteps(value) => {
+                let from = self.found.expect("retained reorder target");
+                let to = value.to_index.min(old_length - 1);
+                Some(if index == to { from } else if from < to && index >= from && index < to { index + 1 } else if to < from && index > to && index <= from { index - 1 } else { index })
+            }
+            _ => Some(index),
+        }
+    }
+
+    fn step(&mut self, source: &Process3dSnapshot, mutation: &Process3dMutation) -> Result<bool, &'static str> {
+        use Process3dMutation::*;
+        if let Some(retirement) = self.json_retirement.as_ref() {
+            let grant = process3d_admitted_release_grant(process3d_erased_release_demand(retirement)).map_err(|_| "process3d-store.timeline-json-release-admission")?;
+            process3d_retire_erased_step(&mut self.json_retirement, grant).map_err(|_| "process3d-store.timeline-json-retirement")?;
+            return Ok(false);
+        }
+        match self.phase {
+            Process3dTimelinePhase::Scan(index) => {
+                if let Some(step) = source.step_payloads.get(index) {
+                    if Some(step.id.as_str()) == Self::target(mutation) {
+                        if self.found.is_some() { return Err("process3d-store.timeline-duplicate"); }
+                        self.found = Some(index);
+                    }
+                    self.phase = Process3dTimelinePhase::Scan(index + 1);
+                } else {
+                    if matches!(mutation, CreateStep(_)) && self.found.is_some() { return Err("process3d-store.duplicate-step"); }
+                    if !matches!(mutation, CreateStep(_)) && self.found.is_none() {
+                        self.phase = Process3dTimelinePhase::Unchanged;
+                        return Ok(true);
+                    }
+                    if let Some(found) = self.found {
+                        let step = &source.step_payloads[found];
+                        let unchanged = match mutation {
+                            RenameStep(value) => step.label == value.new_label,
+                            ChangeStepEnabled(value) => step.enabled == value.new_enabled,
+                            ChangeStepOrigin(value) => step.origin == value.new_origin,
+                            ReplaceStepMeasure(value) => step.measure == value.new_measure,
+                            ReorderSteps(value) => found == value.to_index,
+                            _ => false,
+                        };
+                        if unchanged {
+                            self.phase = Process3dTimelinePhase::Unchanged;
+                            return Ok(true);
+                        }
+                    }
+                    self.length = source.step_payloads.len() + usize::from(matches!(mutation, CreateStep(_))) - usize::from(matches!(mutation, DeleteStep(_)));
+                    if self.length > PROCESS3D_MAXIMUM_DOMAIN_ITEMS { return Err("process3d-store.timeline-capacity"); }
+                    self.phase = Process3dTimelinePhase::Allocate;
+                }
+            }
+            Process3dTimelinePhase::Allocate => {
+                let extent = self.length.checked_mul(size_of::<ProcessStep>() + size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()).ok_or("process3d-store.timeline-allocation-overflow")?;
+                if extent > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
+                self.payload.steps = Vec::with_capacity(self.length);
+                self.payload.tools = Vec::with_capacity(self.length);
+                if self.payload.steps.capacity().saturating_mul(size_of::<ProcessStep>()) + self.payload.tools.capacity().saturating_mul(size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()) > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
+                self.phase = Process3dTimelinePhase::Copy(0);
+            }
+            Process3dTimelinePhase::Copy(index) => {
+                if index == self.length {
+                    self.phase = Process3dTimelinePhase::Tools(0);
+                } else {
+                    let origin = self.source_index(mutation, index, source.step_payloads.len());
+                    let mut step = match origin {
+                        Some(origin) => process3d_copy_step(&source.step_payloads[origin])?,
+                        None => match mutation { CreateStep(value) => process3d_copy_step(&value.step)?, _ => return Err("process3d-store.timeline-source") },
+                    };
+                    if origin == self.found && origin.is_some() {
+                        match mutation {
+                            RenameStep(value) => step.label = process3d_copy_string(&value.new_label)?,
+                            ChangeStepEnabled(value) => step.enabled = value.new_enabled,
+                            ChangeStepOrigin(value) => step.origin = value.new_origin.as_ref().map(process3d_copy_origin).transpose()?,
+                            ReplaceStepMeasure(value) => step.measure = process3d_copy_measure(&value.new_measure)?,
+                            _ => {}
+                        }
+                    }
+                    self.payload.steps.push(step);
+                    self.phase = Process3dTimelinePhase::Copy(index + 1);
+                }
+            }
+            Process3dTimelinePhase::Tools(index) => {
+                let Some(step) = self.payload.steps.get(index) else {
+                    self.hash.update(b"{\"schema\":");
+                    self.hash.update(semio_framework_pack_json::to_json_string(&crate::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.to_string()).as_bytes());
+                    self.hash.update(b",\"nodes\":[");
+                    self.phase = Process3dTimelinePhase::Nodes { index: 0, tool: 0 };
+                    return Ok(false);
+                };
+                let solid = match &step.measure { ProcessMeasure::Cut { tool, .. } => Some(tool), ProcessMeasure::Attach { component, .. } => Some(component), ProcessMeasure::Drill { .. } => None };
+                match solid {
+                    Some(WorkingSolid::Reference { .. }) => {
+                        self.reference_hash = Some(framework_hash::Sha256::new());
+                        self.phase = Process3dTimelinePhase::Reference { index, offset: 0 };
+                    }
+                    Some(solid) => {
+                        self.payload.tools.push(crate::working_solid_child_handle(&format!("tool-{}", step.id), solid));
+                        self.phase = Process3dTimelinePhase::Tools(index + 1);
+                    }
+                    None => self.phase = Process3dTimelinePhase::Tools(index + 1),
+                }
+            }
+            Process3dTimelinePhase::Reference { index, offset } => {
+                let step = &self.payload.steps[index];
+                let reference_id = match &step.measure { ProcessMeasure::Cut { tool: WorkingSolid::Reference { reference_id }, .. } | ProcessMeasure::Attach { component: WorkingSolid::Reference { reference_id }, .. } => reference_id, _ => return Err("process3d-store.reference-owner") };
+                let bytes = crate::reference_solid(reference_id).map_or(reference_id.as_bytes(), |reference| reference.step.as_bytes());
+                let end = offset.saturating_add(4_096).min(bytes.len());
+                self.reference_hash.as_mut().expect("retained reference hash").update(&bytes[offset..end]);
+                if end == bytes.len() {
+                    let digest = self.reference_hash.take().expect("retained reference digest").finalize();
+                    let id = format!("tool-{}-brep-{}", step.id, framework_hash::hex_lower(&digest[..8]));
+                    self.payload.tools.push(Self::child(&id, "brep"));
+                    self.phase = Process3dTimelinePhase::Tools(index + 1);
+                } else {
+                    self.phase = Process3dTimelinePhase::Reference { index, offset: end };
+                }
+            }
+            Process3dTimelinePhase::Edges(index) => {
+                if index + 1 < self.payload.steps.len() {
+                    if index > 0 { self.hash.update(b","); }
+                    let left = &self.payload.steps[index];
+                    let right = &self.payload.steps[index + 1];
+                    let edge = crate::FlowEdge { id: format!("e-{}-{}", left.id, right.id), from: crate::PortRef { node: process3d_copy_string(&left.id)?, port: "out".into() }, to: crate::PortRef { node: process3d_copy_string(&right.id)?, port: "in".into() }, kind: "sequence".into() };
+                    self.write_json(&edge, Process3dTimelinePhase::Edges(index + 1));
+                } else {
+                    self.hash.update(b"]}");
+                    let digest = self.hash.clone().finalize();
+                    self.payload.flow = Some(Self::child(&format!("steps-flow-{}", framework_hash::hex_lower(&digest[..8])), "flow"));
+                    self.phase = Process3dTimelinePhase::Complete;
+                }
+            }
+            Process3dTimelinePhase::Nodes { index, tool } => {
+                if let Some(step) = self.payload.steps.get(index) {
+                    if index > 0 { self.hash.update(b","); }
+                    let has_tool = !matches!(step.measure, ProcessMeasure::Drill { .. });
+                    let child = if has_tool { Some(self.payload.tools[tool].child_id.as_str()) } else { None };
+                    let node = crate::flow_node_from_process_step(step, index, child);
+                    self.write_json(&node, Process3dTimelinePhase::Nodes { index: index + 1, tool: tool + usize::from(has_tool) });
+                } else {
+                    self.hash.update(b"],\"edges\":[");
+                    self.phase = Process3dTimelinePhase::Edges(0);
+                }
+            }
+            Process3dTimelinePhase::Write => {
+                let mut accepted = |_| true;
+                let mut control = semio_framework_value::NativeEncodeControl::new(PROCESS3D_MAXIMUM_DOMAIN_BYTES, &mut accepted);
+                if let Some(output) = self.writer.as_mut().expect("retained timeline JSON writer").step(256, &mut control).map_err(|_| "process3d-store.timeline-json")? {
+                    self.output = Some(output);
+                    self.json_retirement = Some(semio_framework_value::retirement::owned_retirement(self.writer.take().expect("completed timeline JSON writer")));
+                    self.phase = Process3dTimelinePhase::Hash(0);
+                }
+            }
+            Process3dTimelinePhase::Hash(offset) => {
+                let bytes = self.output.as_ref().expect("retained timeline JSON output").as_bytes();
+                let end = offset.saturating_add(4_096).min(bytes.len());
+                self.hash.update(&bytes[offset..end]);
+                if end == bytes.len() {
+                    self.json_retirement = Some(semio_framework_value::retirement::owned_retirement(self.output.take().expect("hashed timeline JSON output")));
+                    self.phase = self.resume.take().expect("retained timeline continuation");
+                } else {
+                    self.phase = Process3dTimelinePhase::Hash(end);
+                }
+            }
+            Process3dTimelinePhase::Complete | Process3dTimelinePhase::Unchanged => return Ok(true),
+        }
+        Ok(matches!(self.phase, Process3dTimelinePhase::Complete | Process3dTimelinePhase::Unchanged))
+    }
+
+    fn write_json<T: semio_framework_value::ToValue>(&mut self, value: &T, resume: Process3dTimelinePhase) {
+        self.writer = Some(semio_framework_pack_json::JsonWriteCursor::new(semio_framework_value::ToValue::to_value(value)));
+        self.resume = Some(resume);
+        self.phase = Process3dTimelinePhase::Write;
+    }
+
+    fn child<S>(id: &str, subset: &str) -> store::ArtifactChild<S> {
+        store::ArtifactChild::new(id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } })
+    }
+
+    fn commit(&mut self, snapshot: &mut Process3dSnapshot) -> Option<Box<dyn store::ErasedSnapshotRetirement>> {
+        if self.phase == Process3dTimelinePhase::Unchanged { return None; }
+        assert!(self.phase == Process3dTimelinePhase::Complete);
+        let old = Process3dTimelineOwner {
+            steps: std::mem::replace(&mut snapshot.step_payloads, std::mem::take(&mut self.payload.steps)),
+            tools: std::mem::replace(&mut snapshot.tool_solids, std::mem::take(&mut self.payload.tools)),
+            flow: Some(std::mem::replace(&mut snapshot.steps, self.payload.flow.take().expect("complete timeline flow"))),
+            phase: 0,
+        };
+        Some(Box::new(Process3dOwnedRetirement::owner(Process3dRetirementOwner::Timeline { value: old })))
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        self.json_retirement.as_ref().or(self.payload_retirement.as_ref()).map_or(PROCESS3D_OWNER_BYTES, process3d_erased_release_demand)
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<bool, semio_framework_value::ValueError> {
+        self.release_progress = (0, 0);
+        if maximum_bytes == 0 { return Ok(false); }
+        if self.json_retirement.is_none() {
+            if let Some(writer) = self.writer.take() {
+                self.json_retirement = Some(semio_framework_value::retirement::owned_retirement(writer));
+                return Ok(false);
+            }
+            if let Some(output) = self.output.take() {
+                self.json_retirement = Some(semio_framework_value::retirement::owned_retirement(output));
+                return Ok(false);
+            }
+        }
+        if self.json_retirement.is_some() {
+            self.release_progress = process3d_retire_erased_step(&mut self.json_retirement, maximum_bytes)?;
+            return Ok(false);
+        }
+        if self.payload_retirement.is_none() && (!self.payload.steps.is_empty() || self.payload.steps.capacity() > 0 || !self.payload.tools.is_empty() || self.payload.tools.capacity() > 0 || self.payload.flow.is_some()) {
+            let value = std::mem::replace(&mut self.payload, Process3dTimelineOwner::empty());
+            self.payload_retirement = Some(Box::new(Process3dOwnedRetirement::owner(Process3dRetirementOwner::Timeline { value })));
+            return Ok(false);
+        }
+        if self.payload_retirement.is_some() {
+            self.release_progress = process3d_retire_erased_step(&mut self.payload_retirement, maximum_bytes)?;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+}
+
+impl Drop for Process3dTimelineCursor {
+    fn drop(&mut self) {
+        assert!(self.payload.steps.is_empty() && self.payload.steps.capacity() == 0 && self.payload.tools.is_empty() && self.payload.tools.capacity() == 0 && self.payload.flow.is_none() && self.writer.is_none() && self.output.is_none() && self.json_retirement.is_none() && self.payload_retirement.is_none(), "Process3d timeline reached Drop before handoff or retained retirement");
+    }
+}
+
 fn process3d_apply_retained_mutation(snapshot: &mut Process3dSnapshot, mutation: &Process3dMutation) -> Result<Option<Box<dyn store::ErasedSnapshotRetirement>>, &'static str> {
     use Process3dMutation::*;
     let retired = match mutation {
-        CreateStep(_) | DeleteStep(_) | RenameStep(_) | ChangeStepEnabled(_) | ChangeStepOrigin(_) | ReplaceStepMeasure(_) | ReorderSteps(_) => None,
+        CreateStep(_) | DeleteStep(_) | RenameStep(_) | ChangeStepEnabled(_) | ChangeStepOrigin(_) | ReplaceStepMeasure(_) | ReorderSteps(_) => return Err("process3d-store.timeline-requires-cursor"),
         CreateMachine(value) => {
             if snapshot.workshop.machines.iter().any(|machine| machine.id == value.machine.id) {
                 return Err("process3d-store.duplicate-machine");
@@ -1034,6 +1410,7 @@ enum Process3dStoreInitializationPhase {
     FoldSupersessions { transition: usize },
     FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
+    ApplyTimeline { position: usize, edit: usize, mutation: usize },
     CommitApplied { position: usize, edit: usize },
     FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
@@ -1063,9 +1440,10 @@ impl Process3dStoreInitializationAuthority {
             runtime: std::mem::ManuallyDrop::new(None),
             candidate: std::mem::ManuallyDrop::new(None),
             active: std::mem::ManuallyDrop::new(None),
-            active_terminal: false,
+            release_progress: (0, 0),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             clone_cursor: std::mem::ManuallyDrop::new(None),
+            timeline_cursor: std::mem::ManuallyDrop::new(None),
             census: std::mem::ManuallyDrop::new(Some(Process3dOwnerCensusCursor::new())),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
@@ -1094,63 +1472,56 @@ impl Process3dStoreInitializationAuthority {
         self.phase = Process3dStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self) -> Result<bool, semio_framework_value::ValueError> {
-        if self.active_terminal {
-            drop(self.active.take());
-            self.active_terminal = false;
-            return Ok(true);
-        }
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        match active.close_step(1, PROCESS3D_OWNER_BYTES)? {
-            store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => self.active_terminal = true,
-            store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d initializer active false terminal")),
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= PROCESS3D_OWNER_BYTES => {}
-            store::SnapshotRetirementStep::Pending { .. } => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d initializer active exceeded grant")),
-            store::SnapshotRetirementStep::Blocked => {}
-        }
+    fn pump_active(&mut self, maximum_bytes: usize) -> Result<bool, semio_framework_value::ValueError> {
+        if self.active.is_none() { return Ok(false); }
+        self.release_progress = process3d_retire_erased_step(&mut self.active, maximum_bytes)?;
         Ok(true)
     }
 
     fn pump_terminal_retirement(&mut self, maximum_bytes: usize) -> Result<bool, semio_framework_value::ValueError> {
-        if self.pump_active()? {
+        self.release_progress = (0, 0);
+        if self.pump_active(maximum_bytes)? { return Ok(false); }
+        if self.candidate_disposer.is_none() && self.candidate.is_some() {
+            *self.candidate_disposer = Some(semio_framework_plugin::ArtifactDocumentStoreDisposer::new());
             return Ok(false);
         }
         if let Some(candidate) = self.candidate.as_mut() {
-            use semio_framework_plugin::ArtifactOwnedDisposer;
-            if self.candidate_disposer.is_none() {
-                *self.candidate_disposer = Some(semio_framework_plugin::ArtifactDocumentStoreDisposer::new());
-                return Ok(false);
-            }
-            let disposer = self.candidate_disposer.as_mut().expect("Process3d candidate disposer retained");
-            return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer fault"))? {
+            let disposer = self.candidate_disposer.as_mut().expect("candidate retained disposer");
+            match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer fault"))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
                     *self.candidate_disposer = None;
                     drop(self.candidate.take());
-                    Ok(false)
+                    self.release_progress = (1, 0);
                 }
-                semio_framework_plugin::PluginCloseStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer false terminal")),
-                _ => Ok(false),
-            };
+                semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => self.release_progress = (released_items, released_bytes),
+                semio_framework_plugin::PluginCloseStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer false terminal")),
+                _ => {}
+            }
+            return Ok(false);
         }
         if let Some(runtime) = self.runtime.as_mut() {
-            return match runtime.close_step(&Process3dSnapshotRetirementFactory, 1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
-                    drop(self.runtime.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d runtime false terminal")),
-                _ => Ok(false),
-            };
+            match runtime.close_step(&Process3dSnapshotRetirementFactory, 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => { drop(self.runtime.take()); self.release_progress = (1, 0); }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => self.release_progress = (released_items, released_bytes),
+                store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d runtime false terminal")),
+                _ => {}
+            }
+            return Ok(false);
+        }
+        if let Some(cursor) = self.timeline_cursor.as_mut() {
+            let complete = cursor.close_step(maximum_bytes)?;
+            self.release_progress = cursor.release_progress;
+            if complete { drop(self.timeline_cursor.take()); }
+            return Ok(false);
         }
         if let Some(cursor) = self.clone_cursor.as_mut() {
-            return match cursor.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if cursor.terminal_is_empty() => {
-                    drop(self.clone_cursor.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d clone false terminal")),
-                _ => Ok(false),
-            };
+            match cursor.close_step(1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if cursor.terminal_is_empty() => { drop(self.clone_cursor.take()); self.release_progress = (1, 0); }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => self.release_progress = (released_items, released_bytes),
+                store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d clone false terminal")),
+                _ => {}
+            }
+            return Ok(false);
         }
         *self.census = None;
         if self.envelope_retirement.is_none() {
@@ -1159,15 +1530,9 @@ impl Process3dStoreInitializationAuthority {
                 return Ok(false);
             }
         }
-        if let Some(retirement) = self.envelope_retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.envelope_retirement.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d envelope retirement false terminal")),
-                _ => Ok(false),
-            };
+        if self.envelope_retirement.is_some() {
+            self.release_progress = process3d_retire_erased_step(&mut self.envelope_retirement, maximum_bytes)?;
+            return Ok(false);
         }
         Ok(true)
     }
@@ -1180,6 +1545,7 @@ impl Process3dStoreInitializationAuthority {
             && self.active.is_none()
             && self.envelope_retirement.is_none()
             && self.clone_cursor.is_none()
+            && self.timeline_cursor.is_none()
             && self.census.is_none()
             && self.candidate_disposer.is_none()
     }
@@ -1262,6 +1628,7 @@ fn process3d_empty_child<S>() -> store::ArtifactChild<S> {
 }
 
 enum Process3dRetirementOwner {
+    Timeline { value: Process3dTimelineOwner },
     Snapshot { value: Process3dSnapshot, phase: u8 },
     Machine { value: WorkshopMachine, phase: u8 },
     Capability { value: Capability, phase: u8 },
@@ -1324,12 +1691,59 @@ impl Process3dRetirementStack {
     }
 
     fn advance(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
+        if self.len != 0 && maximum_bytes < self.next_close_byte_demand() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         let Some(owner) = self.pop_owner() else { return Ok(store::SnapshotRetirementStep::Complete) };
         let mut parent = None;
         let mut child = None;
         let mut released_items = 0;
         let mut released_bytes = 0;
         match owner {
+
+            Process3dRetirementOwner::Timeline { mut value } => match value.phase {
+                0 if !value.tools.is_empty() => {
+                    child = value.tools.pop().map(Process3dChildParts::from_child).map(|value| Process3dRetirementOwner::Child { value, phase: 0 });
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                0 => {
+                    value.phase = 1;
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                1 => {
+                    let extent = value.tools.capacity().saturating_mul(size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>());
+                    if extent <= maximum_bytes {
+                        drop(std::mem::take(&mut value.tools));
+                        released_bytes = extent;
+                        released_items = 1;
+                        value.phase = 2;
+                    }
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                2 if !value.steps.is_empty() => {
+                    child = value.steps.pop().map(|value| Process3dRetirementOwner::Step { value, phase: 0 });
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                2 => {
+                    value.phase = 3;
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                3 => {
+                    let extent = value.steps.capacity().saturating_mul(size_of::<ProcessStep>());
+                    if extent <= maximum_bytes {
+                        drop(std::mem::take(&mut value.steps));
+                        released_bytes = extent;
+                        released_items = 1;
+                        value.phase = 4;
+                    }
+                    parent = Some(Process3dRetirementOwner::Timeline { value });
+                }
+                _ => {
+                    child = value.flow.take().map(Process3dChildParts::from_child).map(|value| Process3dRetirementOwner::Child { value, phase: 0 });
+                    released_items = 1;
+                }
+            },
+
             Process3dRetirementOwner::Snapshot { mut value, phase } => match phase {
                 0 if !value.tool_solids.is_empty() => {
                     child = value.tool_solids.pop().map(Process3dChildParts::from_child).map(|value| Process3dRetirementOwner::Child { value, phase: 0 });
@@ -1580,6 +1994,23 @@ impl Process3dRetirementStack {
         Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes })
     }
 
+    fn next_close_byte_demand(&self) -> usize {
+        match self.len.checked_sub(1).and_then(|index| self.slots[index].as_ref()) {
+            Some(Process3dRetirementOwner::Timeline { value }) if value.phase == 1 => value.tools.capacity().saturating_mul(size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()).max(1),
+            Some(Process3dRetirementOwner::Timeline { value }) if value.phase == 3 => value.steps.capacity().saturating_mul(size_of::<ProcessStep>()).max(1),
+            Some(Process3dRetirementOwner::Snapshot { value, phase: 0 }) if value.tool_solids.is_empty() => value.tool_solids.capacity().saturating_mul(size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()).max(1),
+            Some(Process3dRetirementOwner::Snapshot { value, phase: 1 }) if value.step_payloads.is_empty() => value.step_payloads.capacity().saturating_mul(size_of::<ProcessStep>()).max(1),
+            Some(Process3dRetirementOwner::Snapshot { value, phase: 2 }) if value.workshop.machines.is_empty() => value.workshop.machines.capacity().saturating_mul(size_of::<WorkshopMachine>()).max(1),
+            Some(Process3dRetirementOwner::Machine { value, phase: 0 }) if value.capabilities.is_empty() => value.capabilities.capacity().saturating_mul(size_of::<Capability>()).max(1),
+            Some(Process3dRetirementOwner::Capability { value, phase: 0 }) if value.rules.is_empty() => value.rules.capacity().saturating_mul(size_of::<CapabilityRule>()).max(1),
+            Some(Process3dRetirementOwner::Capability { value, phase: 1 }) if value.parameters.is_empty() => value.parameters.capacity().saturating_mul(size_of::<CapabilityParameter>()).max(1),
+            Some(Process3dRetirementOwner::Capabilities { values }) if values.is_empty() => values.capacity().saturating_mul(size_of::<Capability>()).max(1),
+            Some(Process3dRetirementOwner::Strings { values, phase }) => values.get(*phase).and_then(Option::as_ref).map_or(1, |value| value.capacity().max(1)),
+            Some(Process3dRetirementOwner::Child { value, phase }) => value.strings.get(*phase).and_then(Option::as_ref).map_or(1, |value| value.capacity().max(1)),
+            _ => 1,
+        }
+    }
+
     fn terminal_is_empty(&self) -> bool {
         self.len == 0 && self.slots.iter().all(Option::is_none)
     }
@@ -1623,7 +2054,11 @@ impl store::ErasedSnapshotRetirement for Process3dOwnedRetirement {
             self.terminal = true;
             return Ok(store::SnapshotRetirementStep::Complete);
         }
-        stack.advance(maximum_bytes.min(PROCESS3D_OWNER_BYTES))
+        stack.advance(maximum_bytes)
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        self.stack.as_ref().map_or(1, Process3dRetirementStack::next_close_byte_demand)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1713,7 +2148,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             }
             let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
             let maximum_items = process3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("process3d-envelope.snapshot-item-authority", token.start))?;
-            *self.session = Some(crate::standards::v1::subsets::any::io::text::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
+            *self.session = Some(crate::standards::v1::subsets::any::io::binary::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
             self.token = Some(token);
             self.state = Process3dSnapshotDecodeState::Ingest;
         }
@@ -1793,10 +2228,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
     }
 
     fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        if let Some(session) = self.session.as_ref() {
-            return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0));
-        }
-        Ok(usize::from(self.retirement.is_some()) * PROCESS3D_OWNER_BYTES)
+        if let Some(session) = self.session.as_ref() { return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0)); }
+        let demand = self.retirement.as_ref().map_or(0, process3d_erased_release_demand);
+        if demand > self.maximum_close_byte_demand() { return Err(self.diagnostic("process3d-envelope.snapshot-release-over-admitted-maximum", 0)); }
+        Ok(demand)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
@@ -1834,17 +2269,9 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             self.state = Process3dSnapshotDecodeState::Complete;
             return Ok(store::SnapshotRetirementStep::Complete);
         }
-        let path = self.path;
-        let retirement = self.retirement.as_mut().expect("Process3d snapshot retirement retained");
-        match retirement.close_step(1, maximum_bytes.min(PROCESS3D_OWNER_BYTES)).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path })? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = Process3dSnapshotDecodeState::Complete;
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-            }
-            store::SnapshotRetirementStep::Complete => Err(self.diagnostic("process3d-envelope.snapshot-retirement-false-terminal", 0)),
-            step => Ok(step),
-        }
+        let (released_items, released_bytes) = process3d_retire_erased_step(&mut self.retirement, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0))?;
+        if self.retirement.is_none() { self.state = Process3dSnapshotDecodeState::Complete; }
+        Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2155,7 +2582,7 @@ impl Process3dRetainedMutationReader {
     }
 
     fn structural_step(&mut self, bytes: &[u8]) -> Result<(), protocol::ProtocolError> {
-        use crate::mutations::{
+        use crate::standards::v1::subsets::any::schema::mutations::{
             change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
             replace_machine_capabilities, replace_step_measure, replace_stock_solid,
         };
@@ -2373,7 +2800,7 @@ impl Process3dRetainedMutationReader {
     }
 
     fn take_partial(&mut self) -> Option<Process3dMutation> {
-        use crate::mutations::{
+        use crate::standards::v1::subsets::any::schema::mutations::{
             change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
             replace_machine_capabilities, replace_step_measure, replace_stock_solid,
         };
@@ -2477,7 +2904,6 @@ struct Process3dMutationDecodeAuthority {
     reader: std::mem::ManuallyDrop<Option<Process3dRetainedMutationReader>>,
     value: std::mem::ManuallyDrop<Option<Process3dMutation>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    retirement_terminal: bool,
 }
 
 impl Process3dMutationDecodeAuthority {
@@ -2491,7 +2917,6 @@ impl Process3dMutationDecodeAuthority {
             reader: std::mem::ManuallyDrop::new(None),
             value: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
-            retirement_terminal: false,
         }
     }
 
@@ -2501,6 +2926,11 @@ impl Process3dMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Process3dMutationDecodeAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if self.reader.is_some() { return Ok(0); }
+        if self.hex.is_some() { return Ok(PROCESS3D_OWNER_BYTES); }
+        Ok(self.retirement.as_ref().map_or(0, process3d_erased_release_demand))
+    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -2571,12 +3001,6 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Proces
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.retirement_terminal {
-            drop(self.retirement.take());
-            self.retirement_terminal = false;
-            self.state = Process3dMutationDecodeState::Complete;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(reader) = self.reader.as_mut() {
             if let Some(value) = reader.take_rejected() {
                 *self.value = Some(value);
@@ -2599,20 +3023,13 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Proces
             self.state = Process3dMutationDecodeState::Complete;
             return Ok(store::SnapshotRetirementStep::Complete);
         }
-        let path = self.path;
-        let retirement = self.retirement.as_mut().expect("Process3d mutation retirement retained");
-        match retirement.close_step(1, maximum_bytes.min(PROCESS3D_OWNER_BYTES)).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path })? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                self.retirement_terminal = true;
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-            }
-            store::SnapshotRetirementStep::Complete => Err(self.diagnostic("process3d-envelope.mutation-retirement-false-terminal", 0)),
-            step => Ok(step),
-        }
+        let (released_items, released_bytes) = process3d_retire_erased_step(&mut self.retirement, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.mutation-retirement-fault", 0))?;
+        if self.retirement.is_none() { self.state = Process3dMutationDecodeState::Complete; }
+        Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        matches!(self.state, Process3dMutationDecodeState::Published | Process3dMutationDecodeState::Complete) && self.hex.is_none() && self.reader.is_none() && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal
+        matches!(self.state, Process3dMutationDecodeState::Published | Process3dMutationDecodeState::Complete) && self.hex.is_none() && self.reader.is_none() && self.value.is_none() && self.retirement.is_none()
     }
 }
 
@@ -2774,12 +3191,6 @@ enum Process3dCopyPhase {
     Steps(usize),
     Tools(usize),
     Complete,
-}
-
-const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
-
-fn process3d_protocol_error(detail: String) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "process3d mutation", offset: 0, detail }
 }
 
 const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 15;
@@ -3435,3 +3846,7 @@ enum Process3dRetainedStepPhase {
     OriginCapability,
     Measure,
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retained-laws/🦀️.rs"]
+mod retained_laws;

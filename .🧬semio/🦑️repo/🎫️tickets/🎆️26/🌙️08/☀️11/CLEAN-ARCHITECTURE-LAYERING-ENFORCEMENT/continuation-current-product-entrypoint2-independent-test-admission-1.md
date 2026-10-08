@@ -1,0 +1,5 @@
+# Current Product Entrypoint Consumer Two Independent Test Admission
+
+Exact current helper/fixture/schema/native-source/consumer bindings and full live-before body agree. One full pair changes only the query string drive_entrypoint( to drive_native_entrypoint( in native_binary_owns_exactly_one_entrypoint_driver. Original assertion counts one and three, all other unit text, and 78 function identities are conserved. Forward/inverse body and hashes recompute exactly. Actual canonical native owner has one generic driver definition, three calls and one canonical blocking call; eight normative/adversarial lexical/independent AST facts agree.
+
+Ten complete raw Rust parser controls actually exit zero with current empty stderr and retained stdout/stderr hashes. An AST-only view removes exactly the unsafe extern modifier unsupported by the bundled grammar, retaining declaration/call identities; it does not rewrite production source. This test-only query correction is admitted for immediate exact-before/binding guarded application and fresh Product whole verification. Twenty proposed production model pairs remain unpublished.

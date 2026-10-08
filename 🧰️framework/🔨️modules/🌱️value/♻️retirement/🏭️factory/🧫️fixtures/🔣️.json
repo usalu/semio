@@ -1,0 +1,27 @@
+{
+  "maximumAdmissionBytes": 262144,
+  "aliasCount": 4,
+  "payloadBytes": [
+    8194,
+    65536
+  ],
+  "winnerCount": 1,
+  "deniedReleaseBytes": 0,
+  "birthBeforeClose": true,
+  "weakAliasesRefused": true,
+  "nestedDepth": 2,
+  "inlineOwnedPayload": true,
+  "soleSnapshotWeak": [
+    {
+      "pointerBytes": 4,
+      "snapshotBytes": 8,
+      "frameBytes": 16
+    },
+    {
+      "pointerBytes": 8,
+      "snapshotBytes": 8,
+      "frameBytes": 24
+    }
+  ],
+  "observerGuard": "inline-exclusive"
+}

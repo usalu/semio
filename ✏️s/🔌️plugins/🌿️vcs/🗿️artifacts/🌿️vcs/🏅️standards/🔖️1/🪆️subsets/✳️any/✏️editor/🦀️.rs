@@ -644,6 +644,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommand
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct VcsOneItemPreparationFactory<P, M> {
     lane: store::HistoryLane,
     marker: std::marker::PhantomData<fn() -> (P, M)>,

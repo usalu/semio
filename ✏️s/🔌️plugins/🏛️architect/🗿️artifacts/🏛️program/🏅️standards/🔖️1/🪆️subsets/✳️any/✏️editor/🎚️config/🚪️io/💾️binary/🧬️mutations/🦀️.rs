@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::architect::config::component::mutations::*;
 use crate::editor::architect::config::component::*;
-use replace_config::ReplaceConfig;
+use crate::editor::architect::config::component::mutations::ReplaceConfig;
 
 impl protocol::OpBinary for ArchitectConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

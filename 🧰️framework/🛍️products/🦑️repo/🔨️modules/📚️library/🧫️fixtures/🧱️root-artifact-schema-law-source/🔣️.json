@@ -144,8 +144,6 @@
   "route": {
     "target": "test-root-artifact-schema-law-source",
     "command": "bun ./📜️script.ts test root-artifact-schema-law-source",
-    "launchName": "🧬schema🗿artifact🧪root-artifact-schema-law-source",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source",
     "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts"]
   }
 }

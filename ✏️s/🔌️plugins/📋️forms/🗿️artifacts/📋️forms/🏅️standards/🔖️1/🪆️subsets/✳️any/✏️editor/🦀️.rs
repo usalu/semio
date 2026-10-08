@@ -807,6 +807,7 @@ where
     Ok((post, inverse, mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FormsStorePreparationFactory<P, M> {
     prefix: &'static str,
     marker: std::marker::PhantomData<fn() -> (P, M)>,

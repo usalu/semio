@@ -3,6 +3,8 @@
   "wireSchema": "demo.member.json-number",
   "maximumItems": 1,
   "maximumBytes": 4096,
+  "wirePasses": 2,
+  "fixedPublicationTurns": 32,
   "groupId": "member-group-ordered",
   "orderedMembers": [
     { "id": "first", "wire": "17", "paddingBytes": 8192, "expected": 17 },

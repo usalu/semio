@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeLightingGainWattsPerArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, LightingGainPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeLightingGainWattsPerArea, base: &EnergyModelS
     if existing.watts_per_area == payload.new_watts_per_area {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Lighting Gain {} already carries this installed power density (W/m²): {}.", payload.id.0, payload.new_watts_per_area));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.lighting.iter_mut().find(|item| item.id == payload.id) {
-        item.watts_per_area = payload.new_watts_per_area;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { lighting: Rows::modifying(LightingGainPatch { watts_per_area: Some(payload.new_watts_per_area), ..LightingGainPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

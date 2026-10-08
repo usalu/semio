@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSpaceFloorArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SpacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeSpaceFloorArea, base: &EnergyModelSnapshot) -
     if existing.floor_area_m2 == payload.new_floor_area_m2 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Space {} already has this floor area.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.spaces.iter_mut().find(|item| item.id == payload.id) {
-        item.floor_area_m2 = payload.new_floor_area_m2;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { spaces: Rows::modifying(SpacePatch { floor_area_m2: Some(payload.new_floor_area_m2), ..SpacePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -62,10 +62,6 @@
   ],
   "execution": {
     "target": "test-cargo-discovery-exclusions",
-    "command": "bun ./📜️script.ts test cargo-discovery-exclusions",
-    "launchName": "🧹clean🧩️taxonomy🚧️cargo-discovery-exclusions",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-cargo-discovery-exclusions --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.13
+    "command": "bun ./📜️script.ts test cargo-discovery-exclusions"
   }
 }

@@ -176,10 +176,10 @@ pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value
     // W4 batch Db) — its rows live behind the working-scene cache, not a direct `Vec<T>` field,
     // so it can't join the generic `program.$field.iter()` macro expansion below.
     if register == "benchmarks" {
-        return crate::program_benchmarks(program).iter().map(entity_to_json).collect();
+        return program.benchmarks_payload.iter().map(entity_to_json).collect();
     }
     if register == "knowledge" {
-        return crate::program_knowledge(program).iter().map(entity_to_json).collect();
+        return program.knowledge_payload.iter().map(entity_to_json).collect();
     }
     macro_rules! collect {
         ($($name:literal => $field:ident),+ $(,)?) => {
@@ -266,10 +266,10 @@ pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Opt
         return Some("traces");
     }
     // 🧩️ `benchmarks` composes stdio's `table` subset — see `register_entities`'s own comment.
-    if crate::program_benchmarks(program).iter().any(|row| row.header.id == *id) {
+    if program.benchmarks_payload.iter().any(|row| row.header.id == *id) {
         return Some("benchmarks");
     }
-    if crate::program_knowledge(program).iter().any(|row| row.header.id == *id) {
+    if program.knowledge_payload.iter().any(|row| row.header.id == *id) {
         return Some("knowledge");
     }
     macro_rules! find {

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSiteLongitude` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, SitePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,8 +12,6 @@ pub fn diff(payload: &super::ChangeSiteLongitude, base: &EnergyModelSnapshot) ->
     if base.model.site.longitude_deg == payload.new_longitude_deg {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The site longitude is already {}°.", payload.new_longitude_deg));
     }
-    let mut model = base.model.clone();
-    model.site.longitude_deg = payload.new_longitude_deg;
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { site: SitePatch { longitude_deg: Some(payload.new_longitude_deg), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

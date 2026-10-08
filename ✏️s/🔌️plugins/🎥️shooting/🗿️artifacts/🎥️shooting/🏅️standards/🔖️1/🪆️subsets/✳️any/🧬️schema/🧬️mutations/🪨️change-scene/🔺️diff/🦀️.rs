@@ -11,7 +11,5 @@ pub fn diff(payload: &ChangeSceneMaterialRoughness, base: &ShootingSnapshot) -> 
     if base.scene.material.roughness == payload.new_roughness {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material roughness is already {}.", payload.new_roughness));
     }
-    let mut scene = base.scene.clone();
-    scene.material.roughness = payload.new_roughness;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { material_roughness: Some(payload.new_roughness), ..Default::default() }), ..Default::default() })
 }

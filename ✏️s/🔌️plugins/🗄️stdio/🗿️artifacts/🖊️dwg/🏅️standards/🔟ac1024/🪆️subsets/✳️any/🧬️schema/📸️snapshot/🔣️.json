@@ -39,7 +39,7 @@
       }
     },
     "summary": {
-      "type": "object"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgSummaryInfo"
     },
     "application": {
       "type": "object"

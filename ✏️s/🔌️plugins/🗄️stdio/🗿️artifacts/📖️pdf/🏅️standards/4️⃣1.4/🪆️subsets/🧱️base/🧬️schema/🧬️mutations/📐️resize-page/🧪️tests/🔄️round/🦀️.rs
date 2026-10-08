@@ -35,7 +35,7 @@ fn mutation() -> PdfMutation {
 fn applies_to_committed_after() {
     let base = before();
     let mut state = base.clone();
-    let outcome = mutation().diff(&state).apply_to(&mut state);
+    let outcome = crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(mutation().diff(&state), &mut state);
     assert!(outcome.messages().is_empty(), "resize-page/round-trips-the-concrete-inverse: the committed vector is a clean applied vector");
     assert_eq!(state, expected_after(), "resize-page/round-trips-the-concrete-inverse: applied state differs from the committed after-snapshot");
 }
@@ -46,11 +46,11 @@ fn inverse_restores_before() {
     let base = before();
     let payload = mutation();
     let mut state = base.clone();
-    payload.diff(&state).apply_to(&mut state);
+    crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(payload.diff(&state), &mut state);
     let inverse = payload.inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "resize-page/round-trips-the-concrete-inverse: a mutation that really moved the document must offer an undo");
     for step in &inverse {
-        assert!(step.diff(&state).apply_to(&mut state).messages().is_empty(), "resize-page/round-trips-the-concrete-inverse: an inverse step was refused");
+        assert!(crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(step.diff(&state), &mut state).messages().is_empty(), "resize-page/round-trips-the-concrete-inverse: an inverse step was refused");
     }
     assert_eq!(state, base, "resize-page/round-trips-the-concrete-inverse: the undo did not restore the committed before-snapshot");
 }
@@ -96,7 +96,7 @@ fn produces_committed_diff() {
 fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: PdfDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-page/round-trips-the-concrete-inverse: committed diff did not carry before to after");
 }
 

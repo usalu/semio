@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
 /// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
 /// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceArtifact {

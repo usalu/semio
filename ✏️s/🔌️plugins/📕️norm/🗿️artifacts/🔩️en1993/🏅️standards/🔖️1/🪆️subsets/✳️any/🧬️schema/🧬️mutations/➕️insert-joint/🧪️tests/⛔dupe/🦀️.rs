@@ -24,7 +24,7 @@ fn refuses_with_the_declared_code() {
 #[test]
 fn leaves_the_document_untouched() {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(&mutation(), &before());
-    let after = <En1993Diff as protocol::MutationDiff<En1993Snapshot>>::apply(raised.diff(), &before()).expect("apply");
+    let after = protocol::apply_diff(raised.diff(), &before()).expect("apply");
     assert_eq!(after, before());
     assert_eq!(semio_framework_pack_json::from_json_str::<En1993Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"), before());
 }

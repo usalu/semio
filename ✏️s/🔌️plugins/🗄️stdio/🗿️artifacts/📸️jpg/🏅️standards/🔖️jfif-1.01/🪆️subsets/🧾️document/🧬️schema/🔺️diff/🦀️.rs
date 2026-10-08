@@ -910,7 +910,7 @@ pub struct JpgDiff {
 }
 
 impl MutationDiff<JpgSnapshot> for JpgDiff {
-    fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
+    fn apply(&self, base: &JpgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<JpgSnapshot> {
         validate_jpg_frame(base.frame.as_ref(), self.frame.as_ref())?;
         if let Some(quant) = &self.quant_tables {
             validate_jpg_quant_tables(&base.quant_tables, quant)?;

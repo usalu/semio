@@ -44,7 +44,6 @@ use crate::mutations::{
 };
 use crate::{FormQuestion, FormStep};
 use crate::mutations::{commit_response::mutation::CommitResponse, discard_response::mutation::DiscardResponse};
-pub use mutations_wire_codec::*;
 use crate::standards::v1::subsets::any::io::text::mutations::{enc_step,dec_step,enc_block,dec_block};
 fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);

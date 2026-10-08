@@ -2,7 +2,7 @@
 //! when already at that height, Fatal `invariant` when the height is zero.
 
 use super::ChangeShotHeight;
-use crate::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingShotPatch;
 use crate::ShootingSnapshot;
 
@@ -16,8 +16,5 @@ pub fn diff(payload: &ChangeShotHeight, base: &ShootingSnapshot) -> protocol::Mu
     if existing.height == payload.new_height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has height {}.", payload.id, payload.new_height));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { height: Some(payload.new_height), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::shot_patches([(payload.id.clone(), ShootingShotPatch { height: Some(payload.new_height), ..Default::default() })]))
 }

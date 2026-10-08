@@ -2446,6 +2446,7 @@ struct Puzzle2dConfigStorePreparation {
 /// 🎚️ Config-lane preparation factory — the precondition every `Config` publication contract above
 /// depends on (`build_config_store_one_item_preparation_factory`); mirrors
 /// `Puzzle3dConfigStorePreparationFactory`.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle2dConfigStorePreparationFactory;
 
 /// 🌉️ Measures the fully encoded config root against the fixed store envelope. `Puzzle2dConfig` is
@@ -2590,6 +2591,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
 /// because one retained completion emits whatever the granular document delta produced (create /
 /// delete node, connect / disconnect handles, manifest, compatibility, catalogs) one per store turn.
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
@@ -3238,7 +3240,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                         edge.y,
                         edge.source_tip.clone(),
                         edge.target_tip.clone(),
-                    ));
+                     None,));
                     self.target_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-edge", "Adding example edge", "Beispielkante wird hinzugefügt"));
                 }
@@ -4704,8 +4706,12 @@ impl ArtifactReservedJob for Puzzle2dImportJob {
                 if $slice.pop().is_some() {
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                if let Some(step) = puzzle2d_retire_vec_backing(&mut $slice, maximum_bytes)? {
-                    return Ok(step);
+                let step = $slice.release_empty_page(maximum_bytes).map_err(|error| Fault::from(error.reason))?;
+                if step.progressed {
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: step.released_allocation_bytes });
+                }
+                if $slice.capacity() != 0 {
+                    return Ok(PluginCloseStep::Blocked { reason: "puzzle2d catalog page requires its exact physical disposal grant" });
                 }
             };
         }
@@ -5026,11 +5032,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let document = doc.snapshot.typed();
         let mut ordered = Vec::new();
         for node in &document.nodes {
-            ordered.push(semio_framework_plugin::TopologyNode { id: node.id.clone(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None });
-            ordered.extend(node.handles.iter().map(|handle| semio_framework_plugin::TopologyNode { id: handle.id.clone(), granularity: PUZZLE2D_GRANULARITY_HANDLE.into(), parent: Some(node.id.clone()) }));
+            ordered.push(semio_framework_plugin::TopologyNode { id: node.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None });
+            ordered.extend(node.handles.iter().map(|handle| semio_framework_plugin::TopologyNode { id: handle.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_HANDLE.into(), parent: Some(node.id.to_string_owner()) }));
         }
-        ordered.extend(document.edges.iter().map(|edge| semio_framework_plugin::TopologyNode { id: edge.id.clone(), granularity: PUZZLE2D_GRANULARITY_EDGE.into(), parent: None }));
-        ordered.extend(document.target_regions.iter().map(|region| semio_framework_plugin::TopologyNode { id: region.id.clone(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None }));
+        ordered.extend(document.edges.iter().map(|edge| semio_framework_plugin::TopologyNode { id: edge.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_EDGE.into(), parent: None }));
+        ordered.extend(document.target_regions.iter().map(|region| semio_framework_plugin::TopologyNode { id: region.id.to_string_owner(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None }));
         Ok(semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(PUZZLE2D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered })]) })
     }
 

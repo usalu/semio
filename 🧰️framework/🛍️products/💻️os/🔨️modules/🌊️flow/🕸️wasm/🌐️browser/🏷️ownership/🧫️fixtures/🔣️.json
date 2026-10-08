@@ -368,18 +368,14 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-      "{workspaceRoot}/.vscode/launch.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
     ]
   },
   "registration": {
     "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
     "packageScript": "test:browser-ownership",
     "previewPackageScript": "preview:browser-package",
-    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
-    "launchPath": ".vscode/launch.json",
-    "launchCommand": "bun nx run semio-framework-os-flow-core:test-browser-ownership",
-    "previewLaunchCommand": "bun nx run semio-framework-os-flow-core:preview-generated"
+    "packageCommand": "bun nx run semio-framework-os-flow-core:test-browser-ownership",
+    "previewPackageCommand": "bun nx run semio-framework-os-flow-core:preview-generated"
   }
 }

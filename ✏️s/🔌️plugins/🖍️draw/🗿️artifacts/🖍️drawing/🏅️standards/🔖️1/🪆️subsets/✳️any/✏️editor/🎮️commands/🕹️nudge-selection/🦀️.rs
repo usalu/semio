@@ -7,11 +7,12 @@ use crate::schema::geometry::{multiply,editing::{PathPointRef,translate_world_pa
 use crate::{DrawingLayerNode,DrawingSnapshot};
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
+use semio_framework_value::{list::PagedList,paged::PagedUtf8};
 
 /// 🎯️ What a selection transform addresses once validated against `document`: the selected layers without the ones a
 /// selected ancestor already moves, or the selected points of the selected paths — `None` when nothing moves.
 pub(crate) enum DrawingSelectionTargets {
-    Layers(Vec<String>),
+    Layers(PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>),
     Points(Vec<DrawingPathPointTarget>),
 }
 
@@ -21,17 +22,17 @@ pub(crate) enum DrawingSelectionTargets {
 pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingSelectionTargets>,Fault> {
     if ids.is_empty() || (nodes && point_ids.is_empty()) {return Ok(None);}
     if ids.len()>4_096 || point_ids.len()>4_096 {return Err(Fault::from("Selection exceeds keyboard movement capacity"));}
-    let selected: BTreeSet<_>=ids.iter().map(String::as_str).collect();
-    let mut references:BTreeMap<&str,Vec<points::PointSelectionRef<'_>>>=BTreeMap::new();
+    let selected: BTreeSet<_>=ids.iter().map(|id|PagedUtf8::<{usize::MAX}>::from(id.as_str())).collect();
+    let mut references:BTreeMap<PagedUtf8<{usize::MAX}>,Vec<points::PointSelectionRef<'_>>>=BTreeMap::new();
     if nodes {for id in point_ids {
         let point=points::parse_point_id(id).ok_or_else(||Fault::from("Invalid selected point"))?;
-        if selected.contains(point.layer_id) {references.entry(point.layer_id).or_default().push(point);}
+        if selected.contains(&PagedUtf8::from(point.layer_id)) {references.entry(point.layer_id.into()).or_default().push(point);}
     }}
-    let wanted:BTreeSet<_>=if nodes {references.keys().copied().collect()} else {selected};
+    let wanted:BTreeSet<_>=if nodes {references.keys().cloned().collect()} else {selected};
     if wanted.is_empty() {return Ok(None);}
-    let mut stack=vec![(document.layers.as_slice(),0usize,[1.0,0.0,0.0,1.0,0.0,0.0],true,false)];
+    let mut stack=vec![(&document.layers,0usize,[1.0,0.0,0.0,1.0,0.0,0.0],true,false)];
     let mut found=BTreeSet::new();
-    let (mut layers,mut targets)=(Vec::new(),Vec::new());
+    let (mut layers,mut targets)=(PagedList::new(),Vec::new());
     let mut remaining=4_096usize;
     while let Some((children,index,parent,editable,ancestor_selected))=stack.last_mut() {
         let Some(layer)=children.get(*index) else {stack.pop();continue;};
@@ -39,18 +40,18 @@ pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids
         remaining=remaining.checked_sub(1).ok_or_else(||Fault::from("Drawing exceeds keyboard movement capacity"))?;
         let base=crate::schema::layer_base(layer);
         let editable=*editable && base.visible && !base.locked;
-        let chosen=wanted.contains(base.id.as_str());
+        let chosen=wanted.contains(&base.id);
         let ancestor_selected=*ancestor_selected;
         let parent=*parent;
         let matrix=multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform));
         if chosen {
-            found.insert(base.id.as_str());
+            found.insert(base.id.clone());
             if !editable {return Err(Fault::from("Unlock and show selected layers before moving"));}
             if nodes {
                 let DrawingLayerNode::Path(path)=layer else {return Err(Fault::from("Selected points no longer belong to a path"));};
                 remaining=remaining.checked_sub(path.segments.len()).ok_or_else(||Fault::from("Path exceeds keyboard movement capacity"))?;
                 let before=points::geometry_id(&path.segments).ok_or_else(||Fault::from("Invalid path geometry"))?;
-                let chosen_points=&references[base.id.as_str()];
+                let chosen_points=&references[&base.id];
                 if chosen_points.iter().any(|point|point.geometry!=before) {return Err(Fault::from("Selected path points changed"));}
                 let refs=chosen_points.iter().map(|point|PathPointRef {index:point.index,point:point.point}).collect::<Vec<_>>();
                 translate_world_path_points(&path.segments,&refs,matrix,delta).map_err(Fault::from)?;
@@ -61,7 +62,7 @@ pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids
                 layers.push(base.id.clone());
             }
         }
-        if let DrawingLayerNode::Group(group)=layer {stack.push((group.children.as_slice(),0,matrix,editable,ancestor_selected || chosen));}
+        if let DrawingLayerNode::Group(group)=layer {stack.push((&group.children,0,matrix,editable,ancestor_selected || chosen));}
     }
     if found!=wanted {return Err(Fault::from("A selected layer no longer exists"));}
     Ok(if nodes {(!targets.is_empty()).then_some(DrawingSelectionTargets::Points(targets))} else {(!layers.is_empty()).then_some(DrawingSelectionTargets::Layers(layers))})

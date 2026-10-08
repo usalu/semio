@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeBatteryRoundTripEfficiency` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, BatteryAssignmentPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeBatteryRoundTripEfficiency, base: &EnergyMode
     if existing.round_trip_efficiency == payload.new_round_trip_efficiency {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already carries this round-trip efficiency: {}.", payload.id.0, payload.new_round_trip_efficiency));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {
-        item.round_trip_efficiency = payload.new_round_trip_efficiency;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { battery_storage: Rows::modifying(BatteryAssignmentPatch { round_trip_efficiency: Some(payload.new_round_trip_efficiency), ..BatteryAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

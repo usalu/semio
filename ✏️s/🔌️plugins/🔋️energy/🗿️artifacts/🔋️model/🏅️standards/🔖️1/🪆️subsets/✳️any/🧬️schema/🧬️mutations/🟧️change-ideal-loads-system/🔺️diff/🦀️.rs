@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeIdealLoadsSystemMaxCoolingCapacity` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, OptionChange, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -19,10 +19,6 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemMaxCoolingCapacity, base: &En
     if existing.max_cooling_capacity_w == value {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ideal loads system {} already has that maximum cooling capacity.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {
-        item.max_cooling_capacity_w = value;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::modifying(IdealLoadsSystemPatch { max_cooling_capacity_w: OptionChange::assign(value), ..IdealLoadsSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

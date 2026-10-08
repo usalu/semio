@@ -79,8 +79,6 @@ pub(crate) fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_value_mutation(m: &SemioValueMutation) -> String {
     match m {
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_snapshot(snapshot)),
-        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioValueMutation::SetValue(set_value::SetValue { path, value }) => format!("set-value path={} value={}", enc_path(path), enc_semio_value(value)),
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => {
             format!("set-map-entry path={} key={} value={}", enc_path(path), enc_str(key), enc_semio_value(value))
@@ -97,18 +95,12 @@ pub(crate) fn print_value_mutation(m: &SemioValueMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioValueMutation::PatchSnapshot(crate::standards::v1::subsets::value::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio value mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio value mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_snapshot(arg("snapshot")?)? })),
         "set-value" => Ok(SemioValueMutation::SetValue(set_value::SetValue { path: dec_path(arg("path")?)?, value: dec_semio_value(arg("value")?)? })),
         "set-map-entry" => Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_semio_value(arg("value")?)? })),
         "remove-map-entry" => Ok(SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)? })),

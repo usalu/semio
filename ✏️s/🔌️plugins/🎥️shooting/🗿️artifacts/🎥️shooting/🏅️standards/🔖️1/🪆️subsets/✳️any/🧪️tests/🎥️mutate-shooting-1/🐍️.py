@@ -17,13 +17,11 @@ verb table. It imports nothing from the Rust it judges and transliterates none o
 📐 Two conventions this vocabulary uses that are NOT read off the Rust implementation, because they
 are forced by the committed vectors themselves or by the payload schemas' own declared shape, not by
 an arbitrary code choice:
-  - `create-<singular>{..., index}`: EVERY committed `create-*` vector's `index` field disagrees with
-    where its own committed after-document actually places the new member (`create-asset`'s vector
-    carries `index: 0` but the new asset lands LAST, at position 2 of 2 existing) — the only reading
-    consistent with all three `create-*` vectors at once is APPEND-ONLY, `index` recorded but not
-    acted on. `delete-*`'s inverse therefore also always appends (this is why every committed
-    `delete-*` vector removes the TRAILING member — an append-only re-creation can only land back on
-    the original position when that position was last).
+  - `create-<singular>{..., index}`: `index` is the destination position (`null` appends), clamped to the
+    current length; `delete-*`'s inverse is a `create-*` carrying the removed member's original position,
+    so deleting a non-trailing member is undone exactly. Every committed `create-*` vector appends
+    (`index: null`), so the three committed vectors cannot tell clamping from rejection — this note
+    records that rather than concealing it.
   - `replace-shot-camera{shotId, newCamera}` patches the SAVED CAMERA the named shot's `cameraId`
     resolves to, not the shot itself — read off the one committed vector, where the diff lands on
     `savedCameras[0]` (`cam-wide`, `shot-wide`'s own `cameraId`) rather than on `shots[0]`, and
@@ -163,9 +161,14 @@ def _reciprocal(value):
 
 
 # region 🔖️Vocabulary — forward appliers
+def _insert(items, item, index):
+    """➕ Inserts `item` at `index` (clamped to the current length); `None` appends."""
+    items.insert(len(items) if index is None else min(index, len(items)), copy.deepcopy(item))
+
+
 def apply_create_asset(doc, p):
     after = copy.deepcopy(doc)
-    after["assets"].append(copy.deepcopy(p["asset"]))
+    _insert(after["assets"], p["asset"], p.get("index"))
     return after
 
 
@@ -230,7 +233,7 @@ def apply_scale_assets(doc, p):
 
 def apply_create_shot(doc, p):
     after = copy.deepcopy(doc)
-    after["shots"].append(copy.deepcopy(p["shot"]))
+    _insert(after["shots"], p["shot"], p.get("index"))
     return after
 
 
@@ -297,7 +300,7 @@ def apply_replace_shot_camera(doc, p):
 
 def apply_create_saved_camera(doc, p):
     after = copy.deepcopy(doc)
-    after["savedCameras"].append(copy.deepcopy(p["savedCamera"]))
+    _insert(after["savedCameras"], p["savedCamera"], p.get("index"))
     return after
 
 

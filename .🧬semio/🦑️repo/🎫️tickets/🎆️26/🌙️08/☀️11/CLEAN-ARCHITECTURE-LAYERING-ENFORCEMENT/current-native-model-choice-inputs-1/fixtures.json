@@ -1,0 +1,127 @@
+[
+  {
+    "id": "valid",
+    "mutation": "none",
+    "accepted": true
+  },
+  {
+    "id": "duplicate-role",
+    "mutation": "duplicate-role",
+    "accepted": false
+  },
+  {
+    "id": "wrong-total",
+    "mutation": "wrong-total",
+    "accepted": false
+  },
+  {
+    "id": "missing-role",
+    "mutation": "missing-role",
+    "accepted": false
+  },
+  {
+    "id": "extra-role",
+    "mutation": "extra-role",
+    "accepted": false
+  },
+  {
+    "id": "outside-receipt",
+    "mutation": "outside-receipt",
+    "accepted": false
+  },
+  {
+    "id": "extra-key",
+    "mutation": "extra-key",
+    "accepted": false
+  },
+  {
+    "id": "choice-body",
+    "mutation": "choice-body",
+    "accepted": false
+  },
+  {
+    "id": "choice-symlink",
+    "mutation": "choice-symlink",
+    "accepted": false
+  },
+  {
+    "id": "choice-directory",
+    "mutation": "choice-directory",
+    "accepted": false
+  },
+  {
+    "id": "expected-hash",
+    "mutation": "expected-hash",
+    "accepted": false
+  },
+  {
+    "id": "choice-path-map",
+    "mutation": "choice-path-map",
+    "accepted": false
+  },
+  {
+    "id": "receipt-role",
+    "mutation": "receipt-role",
+    "accepted": false
+  },
+  {
+    "id": "receipt-path",
+    "mutation": "receipt-path",
+    "accepted": false
+  },
+  {
+    "id": "receipt-hash",
+    "mutation": "receipt-hash",
+    "accepted": false
+  },
+  {
+    "id": "receipt-body",
+    "mutation": "receipt-body",
+    "accepted": false
+  },
+  {
+    "id": "receipt-count",
+    "mutation": "receipt-count",
+    "accepted": false
+  },
+  {
+    "id": "pair-body",
+    "mutation": "pair-body",
+    "accepted": false
+  },
+  {
+    "id": "pair-missing",
+    "mutation": "pair-missing",
+    "accepted": false
+  },
+  {
+    "id": "pair-duplicate",
+    "mutation": "pair-duplicate",
+    "accepted": false
+  },
+  {
+    "id": "outside-choice",
+    "mutation": "outside-choice",
+    "accepted": false
+  },
+  {
+    "id": "after-unrelated-file",
+    "mutation": "after-unrelated-file",
+    "accepted": true
+  },
+  {
+    "id": "cancel",
+    "mutation": "cancel",
+    "accepted": false
+  },
+  {
+    "id": "owner-count",
+    "mutation": "owner-count",
+    "accepted": false
+  },
+  {
+    "id": "owner-choice-drift",
+    "mutation": "owner-choice-drift",
+    "accepted": false
+  }
+]

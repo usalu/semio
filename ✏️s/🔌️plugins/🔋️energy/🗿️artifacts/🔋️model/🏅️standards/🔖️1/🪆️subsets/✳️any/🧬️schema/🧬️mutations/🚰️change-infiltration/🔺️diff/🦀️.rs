@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeInfiltrationDischargeCoefficient` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, InfiltrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -19,10 +19,6 @@ pub fn diff(payload: &super::ChangeInfiltrationDischargeCoefficient, base: &Ener
     if existing.discharge_coefficient == payload.new_discharge_coefficient {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this the orifice discharge coefficient: {}.", payload.id.0, payload.new_discharge_coefficient));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {
-        item.discharge_coefficient = payload.new_discharge_coefficient;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { infiltrations: Rows::modifying(InfiltrationPatch { discharge_coefficient: Some(payload.new_discharge_coefficient), ..InfiltrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

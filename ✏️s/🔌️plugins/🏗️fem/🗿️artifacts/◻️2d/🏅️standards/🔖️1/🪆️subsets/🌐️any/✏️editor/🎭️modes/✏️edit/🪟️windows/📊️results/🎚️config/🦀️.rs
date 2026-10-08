@@ -52,14 +52,14 @@ impl store::ArtifactPack for Fem2dResultsWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(Fem2dResultsWindowConfig);
+impl store::ConfigRecord for Fem2dResultsWindowConfig {}
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Fem2dResultsWindowConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "update")]
+    Update {
         #[dsl(block)]
-        config: Box<Fem2dResultsWindowConfig>,
+        patch: Box<Fem2dResultsWindowConfigPatch>,
     },
 }
 
@@ -82,14 +82,14 @@ impl protocol::OpBinary for Fem2dResultsWindowConfigMutation {
 }
 
 impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMutation {
-    type Diff = Fem2dResultsWindowConfig;
+    type Diff = Fem2dResultsWindowConfigPatch;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config",
         semantic_kind: "set-window-config",
         display_name: "Set FEM 2D Results Window Configuration",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "Update",
         payload_schema: "fem.2d.resultswindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -103,17 +103,19 @@ impl protocol::Mutation<Fem2dResultsWindowConfig> for Fem2dResultsWindowConfigMu
         &Self::DESCRIPTORS[0]
     }
     fn diff(&self, base: &Fem2dResultsWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { config } if config.as_ref() == base => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "FEM window configuration is already current."),
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()),
+        let Self::Update { patch } = self;
+        let changed = patch.against(base);
+        if changed == Fem2dResultsWindowConfigPatch::default() {
+            protocol::MutationOutcome::new(changed).warning("mutation.no-op", "Window configuration is already current.")
+        } else {
+            protocol::MutationOutcome::new(changed)
         }
     }
     fn inverse(&self, base: &Fem2dResultsWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: Box::new(base.clone()) }]
-    
-    })())
-}
+        let Self::Update { patch } = self;
+        let changed = patch.against(base);
+        Ok(if changed == Fem2dResultsWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: Box::new(protocol::DiffAlgebra::inverse(&changed, base)) }] })
+    }
 }
 
 pub struct Fem2dResultsWindowConfigOwner;
@@ -200,7 +202,7 @@ pub fn addressed_window_id<C>(
 
 /// 🎚️ The whole-record publication into one exact results-window partition.
 pub fn addressed_to(window_id: &str, config: Fem2dResultsWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
-    semio_framework_plugin::WindowConfigMutation::of::<Fem2dResultsWindowConfigOwner>(window_id, Fem2dResultsWindowConfigMutation::Snapshot { config: Box::new(config) })
+    semio_framework_plugin::WindowConfigMutation::of::<Fem2dResultsWindowConfigOwner>(window_id, Fem2dResultsWindowConfigMutation::Update { patch: Box::new(Fem2dResultsWindowConfigPatch::replacing(&config)) })
 }
 
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem2dResultsWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {

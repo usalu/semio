@@ -1,2 +1,0 @@
-# 📸️ Whole SemioGraphSnapshot replacement.
-input SetSnapshot { snapshot: SemioGraphSnapshot! }

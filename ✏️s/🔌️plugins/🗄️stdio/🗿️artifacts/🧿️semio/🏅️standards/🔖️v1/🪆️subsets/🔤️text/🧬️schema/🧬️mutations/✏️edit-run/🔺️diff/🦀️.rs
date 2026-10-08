@@ -1,9 +1,11 @@
 //! 🔺️ Diff for `EditRun`.
 
-use crate::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunList};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunDiff};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
+/// 🧮️ Sets one run's `content`: a sparse `modified` row naming only the new content.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::EditRun, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     let Some(existing) = base.runs.get(payload.index) else {
@@ -12,8 +14,6 @@ pub fn diff(payload: &super::EditRun, base: &SemioTextSnapshot) -> protocol::Mut
     if existing.content == payload.new_content {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content));
     }
-    let mut runs = base.runs.clone();
-    runs[payload.index].content = payload.new_content.clone();
-    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) })
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(IndexedTripleDiff { modified: vec![IndexModified { index: payload.index, diff: SemioTextRunDiff { content: Some(payload.new_content.clone()), ..Default::default() } }], ..Default::default() }) })
 }
 //#endregion 🔖️Diff

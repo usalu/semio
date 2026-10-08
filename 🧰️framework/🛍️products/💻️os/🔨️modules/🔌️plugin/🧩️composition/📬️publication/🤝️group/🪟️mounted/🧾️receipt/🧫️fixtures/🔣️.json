@@ -1,0 +1,17 @@
+{
+  "schema": "semio.mounted.receipt-bytes/v1",
+  "maximumCapacityBytes": 1048576,
+  "copyBytes": 64,
+  "cancellationFrontiers": ["after-birth", "after-partial-copy", "after-full-copy"],
+  "operationHeader": [1, 7],
+  "operationHexModes": [false, true],
+  "operationLists": [[], [0], [0, 1, 2, 3]],
+  "artifactHandles": ["cbf29ce48422232555c5e55dfb685f30", "7168c73df7afcc70a576dff0b38dd990", "f7fd8710d928177fc117879886747a90", "cbf29ce48422232555c5e55dfb685f30"],
+  "receiptMetadata": { "mutationId": "mutation:📐雪", "invocationId": "group:original-雪", "schema": "semio.fixture", "schemaSeparator": ".", "schemaSuffix": "operation", "author": "actor:📐", "dependencies": ["dependency:one", "dependency:雪", "dependency:three"], "baseVersion": 17, "clockActor": 5, "physicalMs": 23, "logical": 7 },
+  "cases": [
+    { "id": "empty", "text": "", "initialCapacity": 0 },
+    { "id": "ascii", "text": "semio:original-edit", "initialCapacity": 0 },
+    { "id": "unicode", "text": "group:📐雪 original-owned-parent-and-child original-owned-parent-and-child original-owned-parent-and-child", "initialCapacity": 64 },
+    { "id": "empty-original-backing", "text": "", "initialCapacity": 8194 }
+  ]
+}

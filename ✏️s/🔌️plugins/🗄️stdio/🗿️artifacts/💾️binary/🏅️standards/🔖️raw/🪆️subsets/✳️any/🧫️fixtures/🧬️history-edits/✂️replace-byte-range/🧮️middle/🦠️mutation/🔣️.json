@@ -1,0 +1,31 @@
+{
+  "mutation": {
+    "mutation": "replaceByteRange",
+    "offset": 1,
+    "remove_len": 2,
+    "insert": [
+      17,
+      0,
+      255
+    ]
+  },
+  "before": {
+    "schema": "stdio.binary",
+    "bytes": [
+      0,
+      64,
+      128,
+      255
+    ]
+  },
+  "after": {
+    "schema": "stdio.binary",
+    "bytes": [
+      0,
+      17,
+      0,
+      255,
+      255
+    ]
+  }
+}

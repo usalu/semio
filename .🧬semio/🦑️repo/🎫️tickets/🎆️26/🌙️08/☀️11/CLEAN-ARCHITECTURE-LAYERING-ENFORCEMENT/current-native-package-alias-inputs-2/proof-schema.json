@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ready",
+    "root",
+    "snapshot",
+    "ticket",
+    "nodeModules",
+    "capturedManifests",
+    "requiredAliases",
+    "entries",
+    "namespaces",
+    "sourceWritesOutsideTicket",
+    "rootNamespaceFrozen"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ticket": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capturedManifests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "requiredAliases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "ready": {
+      "const": true
+    },
+    "nodeModules": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "target",
+          "packageDir",
+          "manifestHash",
+          "dangling",
+          "denialHash"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "captured",
+              "external",
+              "denied"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packageDir": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manifestHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dangling": {
+            "type": "boolean"
+          },
+          "denialHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "namespaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "names"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "sourceWritesOutsideTicket": {
+      "const": false
+    },
+    "rootNamespaceFrozen": {
+      "const": false
+    }
+  }
+}

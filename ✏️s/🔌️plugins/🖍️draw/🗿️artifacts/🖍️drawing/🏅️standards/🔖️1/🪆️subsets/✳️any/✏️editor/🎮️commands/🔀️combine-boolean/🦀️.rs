@@ -18,10 +18,10 @@ pub struct CombineBoolean {
 
 pub fn handle(payload: &CombineBoolean, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let ids: Vec<String> = if payload.ids.is_empty() { session.interaction.ids.clone() } else { payload.ids.clone() };
+    let ids = if payload.ids.is_empty() { &session.interaction.ids } else { &payload.ids };
     if ids.len() < 2 {
         return Ok(Emit::default());
     }
-    let layer = create_drawing_boolean_layer("Boolean", &payload.operation, ids);
+    let layer = create_drawing_boolean_layer("Boolean", &payload.operation, ids.iter().map(|id| id.as_str().into()).collect());
     Ok(Emit { artifact_mutations: vec![crate::mutations::create_layer(None, Some(document.layers.len()), layer)], ..Default::default() })
 }

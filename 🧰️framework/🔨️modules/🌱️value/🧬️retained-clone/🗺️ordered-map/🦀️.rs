@@ -1,6 +1,6 @@
 //! 🗺️ Fixed-page ordered owners with resumable native key comparison and insertion.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement, admit_retained_clone_scaffold_retirement};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, admit_retained_clone_retirement, admit_retained_clone_scaffold_retirement, close_retained_binding};
 use crate::{SnapshotRetirementStep, retirement::RetireOwned};
 use serde::{Serialize, Serializer, ser::SerializeMap};
 use std::{cmp::Ordering, mem::size_of, sync::Arc};
@@ -125,8 +125,8 @@ impl<K: RetainedClone, V: RetainedClone> Default for RetainedOrderedMapCloneCurs
 
 impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
     fn progress_from_close(step: SnapshotRetirementStep, terminal_is_empty: bool, grant: RetainedCloneGrant, label: &str) -> Result<RetainedCloneStep, crate::ValueError> {
-        match admit_retained_clone_scaffold_retirement(step, grant.maximum_items, grant.maximum_copy_bytes, &format!("retained ordered-map {label} scaffold close"))? {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
+        match admit_retained_clone_scaffold_retirement(step, grant.maximum_items, grant.maximum_release_bytes, &format!("retained ordered-map {label} scaffold close"))? {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes })),
             SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold close blocked"))),
             SnapshotRetirementStep::Complete if terminal_is_empty => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
             SnapshotRetirementStep::Complete => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("retained ordered-map {label} scaffold completed with a live owner"))),
@@ -151,7 +151,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             0 => {
                 let planned_pages = source_value.pages.len().checked_add(1).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory page count overflow"))?;
                 let planned_capacity = planned_pages.checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory capacity overflow"))?;
-                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned_capacity };
+                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned_capacity, released_bytes: 0 };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
@@ -195,7 +195,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                     return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page violates its fixed capacity"));
                 }
                 let planned = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map page capacity overflow"))?;
-                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };
+                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
@@ -225,7 +225,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             }
             3 => {
                 if !self.key_cursor.terminal_is_empty() {
-                    let step = self.key_cursor.close_step(grant.maximum_items, grant.maximum_copy_bytes)?;
+                    let step = self.key_cursor.close_step(grant.maximum_items, grant.maximum_release_bytes)?;
                     return Self::progress_from_close(step, self.key_cursor.terminal_is_empty(), grant, "key");
                 }
                 if grant.maximum_items == 0 {
@@ -250,7 +250,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
             }
             5 => {
                 if !self.value_cursor.terminal_is_empty() {
-                    let step = self.value_cursor.close_step(grant.maximum_items, grant.maximum_copy_bytes)?;
+                    let step = self.value_cursor.close_step(grant.maximum_items, grant.maximum_release_bytes)?;
                     return Self::progress_from_close(step, self.value_cursor.terminal_is_empty(), grant, "value");
                 }
                 if grant.maximum_items == 0 {
@@ -351,6 +351,30 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         }
         self.source = None;
         Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "ordered map must begin close before granted retirement")); }
+        if !self.key_cursor.terminal_is_empty() {
+            if self.key_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            let step = self.key_cursor.close_granted(grant)?;
+            return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.key_cursor.terminal_is_empty(), "retained ordered-map key close")?.progress()));
+        }
+        if !self.value_cursor.terminal_is_empty() {
+            if self.value_cursor.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            let step = self.value_cursor.close_granted(grant)?;
+            return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.value_cursor.terminal_is_empty(), "retained ordered-map value close")?.progress()));
+        }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.key, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.value, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.page_output, grant)? { return Ok(step); }
+        if !self.pages.is_empty() || self.pages.capacity() != 0 {
+            if let Some(step) = self.close.begin_default_granted(&mut self.pages, grant)? { return Ok(step); }
+        }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        close_retained_binding(&mut self.source, grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -849,6 +873,11 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned> RetainedOrderedMapInsertCursor
         }
         self.closing = true;
         true
+    }
+
+    /// 🗺️ Observes the insertion's current cold physical frontier independently of comparison work.
+    pub fn next_close_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        Ok(self.close.next_cold_byte_demand()?.max(usize::from(!self.terminal_is_empty())))
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {

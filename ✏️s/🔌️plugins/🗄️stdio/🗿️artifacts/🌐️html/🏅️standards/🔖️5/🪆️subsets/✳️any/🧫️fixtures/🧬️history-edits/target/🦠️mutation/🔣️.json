@@ -1,0 +1,123 @@
+{
+  "mutation": {
+    "mutation": "setAttribute",
+    "path": [
+      1,
+      0
+    ],
+    "name": "class",
+    "value": "note"
+  },
+  "before": {
+    "schema": "stdio.html",
+    "doctype": "DOCTYPE html",
+    "root": {
+      "kind": "element",
+      "name": "html",
+      "attributes": [],
+      "children": [
+        {
+          "kind": "element",
+          "name": "head",
+          "attributes": [],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "name": "body",
+          "attributes": [],
+          "children": [
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "lead"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "One"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "tail"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Two"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.html",
+    "doctype": "DOCTYPE html",
+    "root": {
+      "kind": "element",
+      "name": "html",
+      "attributes": [],
+      "children": [
+        {
+          "kind": "element",
+          "name": "head",
+          "attributes": [],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "name": "body",
+          "attributes": [],
+          "children": [
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "note"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "One"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "tail"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Two"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -244,7 +244,7 @@ pub fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimiti
 
 //#region 🔖️Apply
 impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
-    fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
+    fn apply(&self, base: &SemioMeshSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;

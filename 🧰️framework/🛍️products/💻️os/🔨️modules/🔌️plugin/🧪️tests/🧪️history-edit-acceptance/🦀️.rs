@@ -231,7 +231,8 @@ pub fn acceptance_changes(inputs: &[ActionArgDef], value: &DslValue) -> Vec<(Str
 
 /// 🪣️ The schema-valid changes of one draft per input-control kind ([`ACCEPTANCE_CONTROL_KINDS`]): every number input moved by its
 /// step (then to its bounds and their midpoint), every boolean flipped, every option switched, every vector's first axis moved,
-/// every free text extended — each a JSON pointer and the value to draft there. Reference, array and opaque inputs are never changed.
+/// every free text extended — each a JSON pointer and the value to draft there. Existing array slots expose their item controls;
+/// reference and opaque inputs are never changed.
 pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [Vec<(String, DslValue)>; 5] {
     fn at<'a>(value: &'a DslValue, pointer: &str) -> Option<&'a DslValue> {
         pointer.split('/').skip(1).try_fold(value, |current, segment| current.get(&segment.replace("~1", "/").replace("~0", "~")))
@@ -281,6 +282,14 @@ pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [
                     }
                 }
                 ArgSchema::Object { fields } => collect(fields, value, &pointer, buckets),
+                ArgSchema::Array { items, .. } => {
+                    if let Some(values) = current.and_then(DslValue::as_array) {
+                        for index in 0..values.len().min(ACCEPTANCE_CHANGES_PER_LEAF) {
+                            let item = ActionArgDef { id: format!("{}/{index}", input.id), schema: items.as_ref().clone(), required: true, nullable: false, default: None, ..input.clone() };
+                            collect(std::slice::from_ref(&item), value, prefix, buckets);
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -450,6 +459,14 @@ where
         }
         acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new()).await.map_err(AcceptanceVerdict::Fail)?;
         acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying)).await.map_err(AcceptanceVerdict::Fail)?;
+        if change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked)) {
+            acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new()).await.map_err(AcceptanceVerdict::Fail)?;
+            acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work()).await.map_err(AcceptanceVerdict::Fail)?;
+            if store.is_none() && app.store.supersessions().iter().any(|(id, _)| id.0 == target) {
+                return Err(AcceptanceVerdict::Fail("discarding a blocked trial left a supersession of the mutation".into()));
+            }
+            continue;
+        }
         if app.time_travel.status().is_some() {
             drafted = Some(candidate);
             break;
@@ -1875,3 +1892,7 @@ macro_rules! composed_child_history_law {
         }
     };
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔎️array-controls/🦀️.rs"]
+mod array_controls;

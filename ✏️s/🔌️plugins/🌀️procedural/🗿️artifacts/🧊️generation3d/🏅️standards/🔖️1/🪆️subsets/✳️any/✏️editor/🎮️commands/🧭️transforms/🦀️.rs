@@ -11,11 +11,10 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::sca
 use crate::standards::v1::subsets::any::schema::transforms::{compose_scale, AxisAngle};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, gumball_identity, record_input_leaves, with_host, GumballRefusal};
+use crate::standards::v1::subsets::any::schema::{gumball_identity, record_input_leaves, with_host, GraphEditor, GumballRefusal};
 use crate::standards::v1::subsets::any::io::text::snapshot::{ensure_gumball_node};
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
-use semio_framework_os_flow::FlowHost;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
 use semio_framework_ui_locale::LocalizedLabel;
 pub use semio_framework_tool_machine::GesturePhase;
@@ -431,15 +430,16 @@ pub fn component_gesture_inputs(mode: &str, components: &[u32], operation: &str)
 /// component operator for the whole component set; an operator that exists already gets no input row.
 pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operation: &str) -> Result<(Vec<Generation3dMutation>, Vec<String>, GumballSelection), Fault> {
     with_host(host_snapshot, |host| {
+        let mut editor = GraphEditor::new(host);
         let (targets, selection, mut wanted) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
-            let (id, mode, components) = ensure_component_node(host, ids, operation)?;
+            let (id, mode, components) = ensure_component_node(&mut editor, ids, operation)?;
             let wanted = component_gesture_inputs(&mode, &components, operation);
             let addressed = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
             (vec![id.clone()], GumballSelection { nodes: vec![id], components: Some((mode, addressed)) }, wanted)
         } else {
             let mut targets: Vec<String> = Vec::new();
             for id in ids {
-                let next = ensure_gumball_node(host, id, operation)?;
+                let next = ensure_gumball_node(&mut editor, id, operation)?;
                 if !targets.contains(&next) {
                     targets.push(next);
                 }
@@ -447,15 +447,17 @@ pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operatio
             (targets.clone(), GumballSelection { nodes: targets, components: None }, Vec::new())
         };
         wanted.extend(gumball_identity(operation));
-        let mut rows = commit_host_snapshot(host_snapshot, &host.host_snapshot);
+        let mut inputs = Vec::new();
         for target in &targets {
             if host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == target.as_str()) {
                 continue;
             }
-            if let Some(record) = host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == target.as_str()) {
-                rows.extend(record_input_leaves(record, &wanted));
+            if let Some(record) = editor.snapshot().widgets.iter().find(|widget| crate::widget_id(widget) == target.as_str()) {
+                inputs.extend(record_input_leaves(record, &wanted));
             }
         }
+        let mut rows = editor.finish();
+        rows.extend(inputs);
         Ok((rows, targets, selection))
     })
 }
@@ -580,42 +582,38 @@ pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion,
 
 /// 🪡️ Splices an adjustable component transform with its DEFAULT params (the gesture's channels follow as
 /// `change-widget-input` leaves, [`gumball_splice`]) and reuses it only for its own component set.
-pub fn ensure_component_node(host: &mut FlowHost, ids: &[String], operation: &str) -> Result<(String, String, Vec<u32>), GumballRefusal> {
+pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], operation: &str) -> Result<(String, String, Vec<u32>), GumballRefusal> {
     let (target, components) = component_group(ids).map_err(GumballRefusal::ComponentSelection)?;
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
     if target.index != 0 { return Err(GumballRefusal::ListOutput); }
-    let kind = host.host_snapshot.widgets.iter().find_map(|widget| match widget {
-        Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind),
+    let kind = editor.snapshot().widgets.iter().find_map(|widget| match widget {
+        Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()),
         _ => None,
     }).ok_or(GumballRefusal::MeshMissing)?;
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    let source = infos.get(kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
+    let source = infos.get(&kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
         return Err(GumballRefusal::NotIndexedMesh);
     }
     let next_kind = format!("brep.mesh.{operation}Components");
     let selection = serde_json::to_string(&components).map_err(|error| GumballRefusal::ComponentSelection(error.to_string()))?;
-    let current = crate::standards::v1::subsets::any::schema::gumball_widget_json(host, target.widget);
+    let current = crate::standards::v1::subsets::any::schema::gumball_widget_json(editor.host(), target.widget);
     let params = current.as_ref().and_then(|value| value.get("params"));
     let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str);
-    let inputs = host.host_snapshot.synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
-    if kind == &next_kind && parameter("mode") == Some(target.granularity) && parameter("selection") == Some(selection.as_str()) && (operation == "translate" || parameter("pivot") == Some("selection")) && inputs.len() == 1 && inputs[0].to_port == "mesh" {
+    let inputs = editor.snapshot().synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
+    if kind == next_kind && parameter("mode") == Some(target.granularity) && parameter("selection") == Some(selection.as_str()) && (operation == "translate" || parameter("pivot") == Some("selection")) && inputs.len() == 1 && inputs[0].to_port == "mesh" {
         return Ok((target.widget.into(), target.granularity.into(), components));
     }
     let output = infos.get(&next_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(next_kind.clone()))?;
     let base = format!("{}__{operation}Components", target.widget);
     let mut id = base.clone();
     let mut suffix = 2;
-    while host.host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
-    let (x, y) = host.host_snapshot.layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    host.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(|error| GumballRefusal::HostEdit(error.to_string()))?;
-    host.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(|error| GumballRefusal::HostEdit(error.to_string()))?;
-    for widget in &mut host.host_snapshot.widgets {
-        if let Widget::Neuron { id: widget_id, preview, .. } = widget {
-            if widget_id == &id { *preview = true; }
-            if widget_id == target.widget { *preview = false; }
-        }
-    }
+    while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
+    let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
+    editor.add_widget(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(GumballRefusal::HostEdit)?;
+    editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(GumballRefusal::HostEdit)?;
+    editor.set_preview(&id, true);
+    editor.set_preview(target.widget, false);
     Ok((id, target.granularity.into(), components))
 }
 

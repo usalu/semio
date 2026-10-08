@@ -1,4 +1,9 @@
 //! 🧬️ ProgramSnapshot diff schema — sparse field delta over the artifact.
+//!
+//! Every collection is an identified `added / removed / patched / reordered` delta, every singleton section
+//! (`meta`, `project`, `governance`) a `set / patch` edit, and `knowledge` / `benchmarks` are deltas over the rows their
+//! composed child tables are derived from. The diff never carries a whole after-snapshot; `apply` derives the composed
+//! child handles from the patched rows.
 
 use crate::kernel::*;
 use crate::registers::*;
@@ -6,18 +11,16 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the program artifact.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::ProgramArtifact>>,
-    #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
-    pub meta: Option<ProgramMeta>,
+    pub meta: Option<ProgramMetaEdit>,
     #[state(artifact)]
-    pub project: Option<ProjectDefinition>,
+    pub project: Option<ProjectDefinitionEdit>,
     #[state(artifact)]
     pub stakeholders: Option<ProgramStakeholdersDelta>,
     #[state(artifact)]
@@ -144,30 +147,22 @@ pub struct ProgramDiff {
     pub audit_events: Option<ProgramAuditEventsDelta>,
     #[state(artifact)]
     pub templates: Option<ProgramTemplatesDelta>,
-    /// 📚️ Replacement rows for the composed knowledge table — the persisted payload the
-    /// replacement handle below was minted from; they travel together so an applied diff leaves the
-    /// parent able to re-derive its child through `crate::genesis_program_child_pack`.
+    /// 📚️ Row delta of the composed knowledge table — `apply` re-derives the child handle from the patched rows.
     #[state(artifact)]
-    pub knowledge_payload: Option<Vec<crate::KnowledgeRecord>>,
-    /// 🧩️ Replacement handle for the composed knowledge table.
+    pub knowledge: Option<ProgramKnowledgeDelta>,
+    /// 🏁️ Row delta of the composed benchmarks table — `apply` re-derives the child handle from the patched rows.
     #[state(artifact)]
-    pub knowledge: Option<crate::ProgramKnowledgeChild>,
-    /// 🏁️ Replacement rows for the composed benchmarks table — see [`ProgramDiff::knowledge_payload`].
-    #[state(artifact)]
-    pub benchmarks_payload: Option<Vec<crate::BenchmarkRecord>>,
-    /// 🧩️ Replacement handle for the composed benchmarks table.
-    #[state(artifact)]
-    pub benchmarks: Option<crate::ProgramBenchmarksChild>,
+    pub benchmarks: Option<ProgramBenchmarksDelta>,
     #[state(artifact)]
     pub traces: Option<ProgramTracesDelta>,
     #[state(artifact)]
-    pub governance: Option<Governance>,
+    pub governance: Option<GovernanceEdit>,
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -176,7 +171,7 @@ pub struct ProgramStringList {
 }
 
 /// 🧩 Identified-collection delta for `stakeholders`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -188,7 +183,7 @@ pub struct ProgramStakeholdersDelta {
 }
 
 /// 🩹 One patched `Stakeholder` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -198,7 +193,7 @@ pub struct ProgramStakeholdersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `users`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -210,7 +205,7 @@ pub struct ProgramUsersDelta {
 }
 
 /// 🩹 One patched `UserProfile` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -220,7 +215,7 @@ pub struct ProgramUsersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `activities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -232,7 +227,7 @@ pub struct ProgramActivitiesDelta {
 }
 
 /// 🩹 One patched `Activity` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -242,7 +237,7 @@ pub struct ProgramActivitiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `functions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -254,7 +249,7 @@ pub struct ProgramFunctionsDelta {
 }
 
 /// 🩹 One patched `Function` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -264,7 +259,7 @@ pub struct ProgramFunctionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `elements`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -276,7 +271,7 @@ pub struct ProgramElementsDelta {
 }
 
 /// 🩹 One patched `ProgramElement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -286,7 +281,7 @@ pub struct ProgramElementsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `quantities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -298,7 +293,7 @@ pub struct ProgramQuantitiesDelta {
 }
 
 /// 🩹 One patched `QuantityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -308,7 +303,7 @@ pub struct ProgramQuantitiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `relationships`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -320,7 +315,7 @@ pub struct ProgramRelationshipsDelta {
 }
 
 /// 🩹 One patched `Relationship` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -330,7 +325,7 @@ pub struct ProgramRelationshipsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `adjacencies`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -342,7 +337,7 @@ pub struct ProgramAdjacenciesDelta {
 }
 
 /// 🩹 One patched `Adjacency` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -352,7 +347,7 @@ pub struct ProgramAdjacenciesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `processes`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -364,7 +359,7 @@ pub struct ProgramProcessesDelta {
 }
 
 /// 🩹 One patched `Process` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -374,7 +369,7 @@ pub struct ProgramProcessesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `flows`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -386,7 +381,7 @@ pub struct ProgramFlowsDelta {
 }
 
 /// 🩹 One patched `FlowRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -396,7 +391,7 @@ pub struct ProgramFlowsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `access_rules`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -408,7 +403,7 @@ pub struct ProgramAccessRulesDelta {
 }
 
 /// 🩹 One patched `AccessRule` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -418,7 +413,7 @@ pub struct ProgramAccessRulesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `operations`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -430,7 +425,7 @@ pub struct ProgramOperationsDelta {
 }
 
 /// 🩹 One patched `OperationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -440,7 +435,7 @@ pub struct ProgramOperationsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `equipment`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -452,7 +447,7 @@ pub struct ProgramEquipmentDelta {
 }
 
 /// 🩹 One patched `Equipment` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -462,7 +457,7 @@ pub struct ProgramEquipmentPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `resources`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -474,7 +469,7 @@ pub struct ProgramResourcesDelta {
 }
 
 /// 🩹 One patched `Resource` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -484,7 +479,7 @@ pub struct ProgramResourcesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `storage`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -496,7 +491,7 @@ pub struct ProgramStorageDelta {
 }
 
 /// 🩹 One patched `StorageRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -506,7 +501,7 @@ pub struct ProgramStoragePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `environmental`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -518,7 +513,7 @@ pub struct ProgramEnvironmentalDelta {
 }
 
 /// 🩹 One patched `EnvironmentalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -528,7 +523,7 @@ pub struct ProgramEnvironmentalPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `human_factors`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -540,7 +535,7 @@ pub struct ProgramHumanFactorsDelta {
 }
 
 /// 🩹 One patched `HumanFactorRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -550,7 +545,7 @@ pub struct ProgramHumanFactorsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `accessibility`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -562,7 +557,7 @@ pub struct ProgramAccessibilityDelta {
 }
 
 /// 🩹 One patched `AccessibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -572,7 +567,7 @@ pub struct ProgramAccessibilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `privacy`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -584,7 +579,7 @@ pub struct ProgramPrivacyDelta {
 }
 
 /// 🩹 One patched `PrivacyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -594,7 +589,7 @@ pub struct ProgramPrivacyPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `safety`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -606,7 +601,7 @@ pub struct ProgramSafetyDelta {
 }
 
 /// 🩹 One patched `SafetyRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -616,7 +611,7 @@ pub struct ProgramSafetyPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `security`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -628,7 +623,7 @@ pub struct ProgramSecurityDelta {
 }
 
 /// 🩹 One patched `SecurityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -638,7 +633,7 @@ pub struct ProgramSecurityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `regulatory`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -650,7 +645,7 @@ pub struct ProgramRegulatoryDelta {
 }
 
 /// 🩹 One patched `RegulatoryRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -660,7 +655,7 @@ pub struct ProgramRegulatoryPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `site_context`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -672,7 +667,7 @@ pub struct ProgramSiteContextDelta {
 }
 
 /// 🩹 One patched `SiteContext` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -682,7 +677,7 @@ pub struct ProgramSiteContextPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `organizational`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -694,7 +689,7 @@ pub struct ProgramOrganizationalDelta {
 }
 
 /// 🩹 One patched `OrganizationalRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -704,7 +699,7 @@ pub struct ProgramOrganizationalPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `services`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -716,7 +711,7 @@ pub struct ProgramServicesDelta {
 }
 
 /// 🩹 One patched `ServiceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -726,7 +721,7 @@ pub struct ProgramServicesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `infrastructure`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -738,7 +733,7 @@ pub struct ProgramInfrastructureDelta {
 }
 
 /// 🩹 One patched `InfrastructureRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -748,7 +743,7 @@ pub struct ProgramInfrastructurePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `information`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -760,7 +755,7 @@ pub struct ProgramInformationDelta {
 }
 
 /// 🩹 One patched `InformationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -770,7 +765,7 @@ pub struct ProgramInformationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `communication`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -782,7 +777,7 @@ pub struct ProgramCommunicationDelta {
 }
 
 /// 🩹 One patched `CommunicationRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -792,7 +787,7 @@ pub struct ProgramCommunicationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `wayfinding`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -804,7 +799,7 @@ pub struct ProgramWayfindingDelta {
 }
 
 /// 🩹 One patched `WayfindingRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -814,7 +809,7 @@ pub struct ProgramWayfindingPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `schedules`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -826,7 +821,7 @@ pub struct ProgramSchedulesDelta {
 }
 
 /// 🩹 One patched `ScheduleRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -836,7 +831,7 @@ pub struct ProgramSchedulesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `flexibility`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -848,7 +843,7 @@ pub struct ProgramFlexibilityDelta {
 }
 
 /// 🩹 One patched `FlexibilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -858,7 +853,7 @@ pub struct ProgramFlexibilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `growth`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -870,7 +865,7 @@ pub struct ProgramGrowthDelta {
 }
 
 /// 🩹 One patched `GrowthPlan` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -880,7 +875,7 @@ pub struct ProgramGrowthPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `sustainability`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -892,7 +887,7 @@ pub struct ProgramSustainabilityDelta {
 }
 
 /// 🩹 One patched `SustainabilityRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -902,7 +897,7 @@ pub struct ProgramSustainabilityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `resilience`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -914,7 +909,7 @@ pub struct ProgramResilienceDelta {
 }
 
 /// 🩹 One patched `ResilienceRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -924,7 +919,7 @@ pub struct ProgramResiliencePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `costs`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -936,7 +931,7 @@ pub struct ProgramCostsDelta {
 }
 
 /// 🩹 One patched `CostRequirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -946,7 +941,7 @@ pub struct ProgramCostsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `delivery`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -958,7 +953,7 @@ pub struct ProgramDeliveryDelta {
 }
 
 /// 🩹 One patched `DeliveryConstraint` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -968,7 +963,7 @@ pub struct ProgramDeliveryPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `risks`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -980,7 +975,7 @@ pub struct ProgramRisksDelta {
 }
 
 /// 🩹 One patched `Risk` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -990,7 +985,7 @@ pub struct ProgramRisksPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `conflicts`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1002,7 +997,7 @@ pub struct ProgramConflictsDelta {
 }
 
 /// 🩹 One patched `Conflict` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1012,7 +1007,7 @@ pub struct ProgramConflictsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `requirements`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1024,7 +1019,7 @@ pub struct ProgramRequirementsDelta {
 }
 
 /// 🩹 One patched `Requirement` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1034,7 +1029,7 @@ pub struct ProgramRequirementsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `priorities`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1046,7 +1041,7 @@ pub struct ProgramPrioritiesDelta {
 }
 
 /// 🩹 One patched `PriorityRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1056,7 +1051,7 @@ pub struct ProgramPrioritiesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `scenarios`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1068,7 +1063,7 @@ pub struct ProgramScenariosDelta {
 }
 
 /// 🩹 One patched `Scenario` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1078,7 +1073,7 @@ pub struct ProgramScenariosPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `options`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1090,7 +1085,7 @@ pub struct ProgramOptionsDelta {
 }
 
 /// 🩹 One patched `OptionEvaluation` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1100,7 +1095,7 @@ pub struct ProgramOptionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `decisions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1112,7 +1107,7 @@ pub struct ProgramDecisionsDelta {
 }
 
 /// 🩹 One patched `Decision` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1122,7 +1117,7 @@ pub struct ProgramDecisionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `validations`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1134,7 +1129,7 @@ pub struct ProgramValidationsDelta {
 }
 
 /// 🩹 One patched `ValidationRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1144,7 +1139,7 @@ pub struct ProgramValidationsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `performance`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1156,7 +1151,7 @@ pub struct ProgramPerformanceDelta {
 }
 
 /// 🩹 One patched `PerformanceCriterion` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1166,7 +1161,7 @@ pub struct ProgramPerformancePatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `quality`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1178,7 +1173,7 @@ pub struct ProgramQualityDelta {
 }
 
 /// 🩹 One patched `QualityRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1188,7 +1183,7 @@ pub struct ProgramQualityPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `documents`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1200,7 +1195,7 @@ pub struct ProgramArtifactsDelta {
 }
 
 /// 🩹 One patched `ArtifactRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1210,7 +1205,7 @@ pub struct ProgramArtifactsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `assumptions`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1222,7 +1217,7 @@ pub struct ProgramAssumptionsDelta {
 }
 
 /// 🩹 One patched `Assumption` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1232,7 +1227,7 @@ pub struct ProgramAssumptionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `constraints`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1244,7 +1239,7 @@ pub struct ProgramConstraintsDelta {
 }
 
 /// 🩹 One patched `ConstraintRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1254,7 +1249,7 @@ pub struct ProgramConstraintsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `compliance_records`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1266,7 +1261,7 @@ pub struct ProgramComplianceRecordsDelta {
 }
 
 /// 🩹 One patched `ComplianceRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1276,7 +1271,7 @@ pub struct ProgramComplianceRecordsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `approvals`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1288,7 +1283,7 @@ pub struct ProgramApprovalsDelta {
 }
 
 /// 🩹 One patched `ApprovalRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1298,7 +1293,7 @@ pub struct ProgramApprovalsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `meetings`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1310,7 +1305,7 @@ pub struct ProgramMeetingsDelta {
 }
 
 /// 🩹 One patched `MeetingRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1320,7 +1315,7 @@ pub struct ProgramMeetingsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `changes`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1332,7 +1327,7 @@ pub struct ProgramChangesDelta {
 }
 
 /// 🩹 One patched `ChangeRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1342,7 +1337,7 @@ pub struct ProgramChangesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `collaboration`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1354,7 +1349,7 @@ pub struct ProgramCollaborationDelta {
 }
 
 /// 🩹 One patched `CollaborationRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1364,7 +1359,7 @@ pub struct ProgramCollaborationPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `analyses`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1376,7 +1371,7 @@ pub struct ProgramAnalysesDelta {
 }
 
 /// 🩹 One patched `AnalysisRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1386,7 +1381,7 @@ pub struct ProgramAnalysesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `reports`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1398,7 +1393,7 @@ pub struct ProgramReportsDelta {
 }
 
 /// 🩹 One patched `ReportRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1408,7 +1403,7 @@ pub struct ProgramReportsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `search_filters`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1420,7 +1415,7 @@ pub struct ProgramSearchFiltersDelta {
 }
 
 /// 🩹 One patched `SearchFilter` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1430,7 +1425,7 @@ pub struct ProgramSearchFiltersPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `status_records`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1442,7 +1437,7 @@ pub struct ProgramStatusRecordsDelta {
 }
 
 /// 🩹 One patched `StatusRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1452,7 +1447,7 @@ pub struct ProgramStatusRecordsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `workshops`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1464,7 +1459,7 @@ pub struct ProgramWorkshopsDelta {
 }
 
 /// 🩹 One patched `Workshop` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1474,7 +1469,7 @@ pub struct ProgramWorkshopsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `surveys`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1486,7 +1481,7 @@ pub struct ProgramSurveysDelta {
 }
 
 /// 🩹 One patched `Survey` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1496,7 +1491,7 @@ pub struct ProgramSurveysPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `issues`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1508,7 +1503,7 @@ pub struct ProgramIssuesDelta {
 }
 
 /// 🩹 One patched `Issue` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1518,7 +1513,7 @@ pub struct ProgramIssuesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `audit_events`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1530,7 +1525,7 @@ pub struct ProgramAuditEventsDelta {
 }
 
 /// 🩹 One patched `AuditEvent` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1540,7 +1535,7 @@ pub struct ProgramAuditEventsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `templates`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1552,7 +1547,7 @@ pub struct ProgramTemplatesDelta {
 }
 
 /// 🩹 One patched `TemplateRecord` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1562,7 +1557,7 @@ pub struct ProgramTemplatesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `traces`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -1574,7 +1569,7 @@ pub struct ProgramTracesDelta {
 }
 
 /// 🩹 One patched `TraceLink` entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1583,1178 +1578,480 @@ pub struct ProgramTracesPatchEntry {
     pub patch: TraceLinkPatch,
 }
 
+/// 🧩 Identified-collection delta for `knowledge`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ProgramKnowledgeDelta {
+    pub added: Vec<KnowledgeRecord>,
+    pub removed: Vec<String>,
+    pub patched: Vec<ProgramKnowledgePatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `KnowledgeRecord` entry.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct ProgramKnowledgePatchEntry {
+    pub id: String,
+    pub patch: KnowledgeRecordPatch,
+}
+
+/// 🧩 Identified-collection delta for `benchmarks`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ProgramBenchmarksDelta {
+    pub added: Vec<BenchmarkRecord>,
+    pub removed: Vec<String>,
+    pub patched: Vec<ProgramBenchmarksPatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `BenchmarkRecord` entry.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct ProgramBenchmarksPatchEntry {
+    pub id: String,
+    pub patch: BenchmarkRecordPatch,
+}
+
+/// ✏️ Edit of the `meta` section: `set` replaces the whole section (a `replace-meta` kind), `patch` then rewrites only the
+/// patched fields (a `rename-meta` kind); a patch cannot clear an optional field, so a clear travels as `set`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ProgramMetaEdit {
+    pub set: Option<ProgramMeta>,
+    pub patch: Option<ProgramMetaPatch>,
+}
+
+/// ✏️ Edit of the `project` section: `set` replaces the whole section (a `replace-project` kind), `patch` then rewrites only the
+/// patched fields (a `rename-project` kind); a patch cannot clear an optional field, so a clear travels as `set`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ProjectDefinitionEdit {
+    pub set: Option<ProjectDefinition>,
+    pub patch: Option<ProjectDefinitionPatch>,
+}
+
+/// ✏️ Edit of the `governance` section: `set` replaces the whole section (a `replace-governance` kind), `patch` then rewrites only the
+/// patched fields (a `rename-governance` kind); a patch cannot clear an optional field, so a clear travels as `set`.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct GovernanceEdit {
+    pub set: Option<Governance>,
+    pub patch: Option<GovernancePatch>,
+}
+
 //#endregion 🔖️DeltaHelpers
 
-use crate::schema::ProgramArtifact;
+#[path = "🧮️algebra/🦀️.rs"]
+pub mod algebra;
+
 use crate::ProgramSnapshot;
-use protocol::Identified;
-use protocol::MutationDiff;
-use protocol::Patchable;
+use algebra::{CollectionDelta, PatchEntry};
+use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff, Patchable};
 
-impl ProgramDiff {
-    /// 🧬️ Apply every field entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
+//#region 🔖️CollectionDeltaImpls
+macro_rules! impl_collection_delta {
+    ($delta:ty, $row:ty, $patch:ty, $entry:ty) => {
+        impl PatchEntry<$patch> for $entry {
+            fn new(id: String, patch: $patch) -> Self {
+                Self { id, patch }
             }
-            let mut next = artifact.clone();
-            if let Some(v) = &self.schema {
-                next.schema = v.clone();
+            fn id(&self) -> &str {
+                &self.id
             }
-            if let Some(v) = &self.meta {
-                next.meta = v.clone();
+            fn patch(&self) -> &$patch {
+                &self.patch
             }
-            if let Some(v) = &self.project {
-                next.project = v.clone();
+            fn patch_mut(&mut self) -> &mut $patch {
+                &mut self.patch
             }
-            if let Some(v) = &self.governance {
-                next.governance = v.clone();
+            fn into_parts(self) -> (String, $patch) {
+                (self.id, self.patch)
+            }
+        }
+
+        impl CollectionDelta for $delta {
+            type Row = $row;
+            type Patch = $patch;
+            type Entry = $entry;
+            fn from_parts(added: Vec<$row>, removed: Vec<String>, patched: Vec<$entry>, reordered: Option<Vec<String>>) -> Self {
+                Self { added, removed, patched, reordered }
+            }
+            fn into_parts(self) -> algebra::DeltaParts<Self> {
+                (self.added, self.removed, self.patched, self.reordered)
+            }
+            fn parts(&self) -> (&[$row], &[String], &[$entry], Option<&[String]>) {
+                (&self.added, &self.removed, &self.patched, self.reordered.as_deref())
+            }
+        }
+    };
+}
+
+impl_collection_delta!(ProgramStakeholdersDelta, Stakeholder, StakeholderPatch, ProgramStakeholdersPatchEntry);
+impl_collection_delta!(ProgramUsersDelta, UserProfile, UserProfilePatch, ProgramUsersPatchEntry);
+impl_collection_delta!(ProgramActivitiesDelta, Activity, ActivityPatch, ProgramActivitiesPatchEntry);
+impl_collection_delta!(ProgramFunctionsDelta, Function, FunctionPatch, ProgramFunctionsPatchEntry);
+impl_collection_delta!(ProgramElementsDelta, ProgramElement, ProgramElementPatch, ProgramElementsPatchEntry);
+impl_collection_delta!(ProgramQuantitiesDelta, QuantityRequirement, QuantityRequirementPatch, ProgramQuantitiesPatchEntry);
+impl_collection_delta!(ProgramRelationshipsDelta, Relationship, RelationshipPatch, ProgramRelationshipsPatchEntry);
+impl_collection_delta!(ProgramAdjacenciesDelta, Adjacency, AdjacencyPatch, ProgramAdjacenciesPatchEntry);
+impl_collection_delta!(ProgramProcessesDelta, Process, ProcessPatch, ProgramProcessesPatchEntry);
+impl_collection_delta!(ProgramFlowsDelta, FlowRequirement, FlowRequirementPatch, ProgramFlowsPatchEntry);
+impl_collection_delta!(ProgramAccessRulesDelta, AccessRule, AccessRulePatch, ProgramAccessRulesPatchEntry);
+impl_collection_delta!(ProgramOperationsDelta, OperationalRequirement, OperationalRequirementPatch, ProgramOperationsPatchEntry);
+impl_collection_delta!(ProgramEquipmentDelta, Equipment, EquipmentPatch, ProgramEquipmentPatchEntry);
+impl_collection_delta!(ProgramResourcesDelta, Resource, ResourcePatch, ProgramResourcesPatchEntry);
+impl_collection_delta!(ProgramStorageDelta, StorageRequirement, StorageRequirementPatch, ProgramStoragePatchEntry);
+impl_collection_delta!(ProgramEnvironmentalDelta, EnvironmentalRequirement, EnvironmentalRequirementPatch, ProgramEnvironmentalPatchEntry);
+impl_collection_delta!(ProgramHumanFactorsDelta, HumanFactorRequirement, HumanFactorRequirementPatch, ProgramHumanFactorsPatchEntry);
+impl_collection_delta!(ProgramAccessibilityDelta, AccessibilityRequirement, AccessibilityRequirementPatch, ProgramAccessibilityPatchEntry);
+impl_collection_delta!(ProgramPrivacyDelta, PrivacyRequirement, PrivacyRequirementPatch, ProgramPrivacyPatchEntry);
+impl_collection_delta!(ProgramSafetyDelta, SafetyRequirement, SafetyRequirementPatch, ProgramSafetyPatchEntry);
+impl_collection_delta!(ProgramSecurityDelta, SecurityRequirement, SecurityRequirementPatch, ProgramSecurityPatchEntry);
+impl_collection_delta!(ProgramRegulatoryDelta, RegulatoryRequirement, RegulatoryRequirementPatch, ProgramRegulatoryPatchEntry);
+impl_collection_delta!(ProgramSiteContextDelta, SiteContext, SiteContextPatch, ProgramSiteContextPatchEntry);
+impl_collection_delta!(ProgramOrganizationalDelta, OrganizationalRequirement, OrganizationalRequirementPatch, ProgramOrganizationalPatchEntry);
+impl_collection_delta!(ProgramServicesDelta, ServiceRequirement, ServiceRequirementPatch, ProgramServicesPatchEntry);
+impl_collection_delta!(ProgramInfrastructureDelta, InfrastructureRequirement, InfrastructureRequirementPatch, ProgramInfrastructurePatchEntry);
+impl_collection_delta!(ProgramInformationDelta, InformationRequirement, InformationRequirementPatch, ProgramInformationPatchEntry);
+impl_collection_delta!(ProgramCommunicationDelta, CommunicationRequirement, CommunicationRequirementPatch, ProgramCommunicationPatchEntry);
+impl_collection_delta!(ProgramWayfindingDelta, WayfindingRequirement, WayfindingRequirementPatch, ProgramWayfindingPatchEntry);
+impl_collection_delta!(ProgramSchedulesDelta, ScheduleRequirement, ScheduleRequirementPatch, ProgramSchedulesPatchEntry);
+impl_collection_delta!(ProgramFlexibilityDelta, FlexibilityRequirement, FlexibilityRequirementPatch, ProgramFlexibilityPatchEntry);
+impl_collection_delta!(ProgramGrowthDelta, GrowthPlan, GrowthPlanPatch, ProgramGrowthPatchEntry);
+impl_collection_delta!(ProgramSustainabilityDelta, SustainabilityRequirement, SustainabilityRequirementPatch, ProgramSustainabilityPatchEntry);
+impl_collection_delta!(ProgramResilienceDelta, ResilienceRequirement, ResilienceRequirementPatch, ProgramResiliencePatchEntry);
+impl_collection_delta!(ProgramCostsDelta, CostRequirement, CostRequirementPatch, ProgramCostsPatchEntry);
+impl_collection_delta!(ProgramDeliveryDelta, DeliveryConstraint, DeliveryConstraintPatch, ProgramDeliveryPatchEntry);
+impl_collection_delta!(ProgramRisksDelta, Risk, RiskPatch, ProgramRisksPatchEntry);
+impl_collection_delta!(ProgramConflictsDelta, Conflict, ConflictPatch, ProgramConflictsPatchEntry);
+impl_collection_delta!(ProgramRequirementsDelta, Requirement, RequirementPatch, ProgramRequirementsPatchEntry);
+impl_collection_delta!(ProgramPrioritiesDelta, PriorityRecord, PriorityRecordPatch, ProgramPrioritiesPatchEntry);
+impl_collection_delta!(ProgramScenariosDelta, Scenario, ScenarioPatch, ProgramScenariosPatchEntry);
+impl_collection_delta!(ProgramOptionsDelta, OptionEvaluation, OptionEvaluationPatch, ProgramOptionsPatchEntry);
+impl_collection_delta!(ProgramDecisionsDelta, Decision, DecisionPatch, ProgramDecisionsPatchEntry);
+impl_collection_delta!(ProgramValidationsDelta, ValidationRecord, ValidationRecordPatch, ProgramValidationsPatchEntry);
+impl_collection_delta!(ProgramPerformanceDelta, PerformanceCriterion, PerformanceCriterionPatch, ProgramPerformancePatchEntry);
+impl_collection_delta!(ProgramQualityDelta, QualityRecord, QualityRecordPatch, ProgramQualityPatchEntry);
+impl_collection_delta!(ProgramArtifactsDelta, ArtifactRecord, ArtifactRecordPatch, ProgramArtifactsPatchEntry);
+impl_collection_delta!(ProgramAssumptionsDelta, Assumption, AssumptionPatch, ProgramAssumptionsPatchEntry);
+impl_collection_delta!(ProgramConstraintsDelta, ConstraintRecord, ConstraintRecordPatch, ProgramConstraintsPatchEntry);
+impl_collection_delta!(ProgramComplianceRecordsDelta, ComplianceRecord, ComplianceRecordPatch, ProgramComplianceRecordsPatchEntry);
+impl_collection_delta!(ProgramApprovalsDelta, ApprovalRecord, ApprovalRecordPatch, ProgramApprovalsPatchEntry);
+impl_collection_delta!(ProgramMeetingsDelta, MeetingRecord, MeetingRecordPatch, ProgramMeetingsPatchEntry);
+impl_collection_delta!(ProgramChangesDelta, ChangeRecord, ChangeRecordPatch, ProgramChangesPatchEntry);
+impl_collection_delta!(ProgramCollaborationDelta, CollaborationRecord, CollaborationRecordPatch, ProgramCollaborationPatchEntry);
+impl_collection_delta!(ProgramAnalysesDelta, AnalysisRecord, AnalysisRecordPatch, ProgramAnalysesPatchEntry);
+impl_collection_delta!(ProgramReportsDelta, ReportRecord, ReportRecordPatch, ProgramReportsPatchEntry);
+impl_collection_delta!(ProgramSearchFiltersDelta, SearchFilter, SearchFilterPatch, ProgramSearchFiltersPatchEntry);
+impl_collection_delta!(ProgramStatusRecordsDelta, StatusRecord, StatusRecordPatch, ProgramStatusRecordsPatchEntry);
+impl_collection_delta!(ProgramWorkshopsDelta, Workshop, WorkshopPatch, ProgramWorkshopsPatchEntry);
+impl_collection_delta!(ProgramSurveysDelta, Survey, SurveyPatch, ProgramSurveysPatchEntry);
+impl_collection_delta!(ProgramIssuesDelta, Issue, IssuePatch, ProgramIssuesPatchEntry);
+impl_collection_delta!(ProgramAuditEventsDelta, AuditEvent, AuditEventPatch, ProgramAuditEventsPatchEntry);
+impl_collection_delta!(ProgramTemplatesDelta, TemplateRecord, TemplateRecordPatch, ProgramTemplatesPatchEntry);
+impl_collection_delta!(ProgramTracesDelta, TraceLink, TraceLinkPatch, ProgramTracesPatchEntry);
+impl_collection_delta!(ProgramKnowledgeDelta, KnowledgeRecord, KnowledgeRecordPatch, ProgramKnowledgePatchEntry);
+impl_collection_delta!(ProgramBenchmarksDelta, BenchmarkRecord, BenchmarkRecordPatch, ProgramBenchmarksPatchEntry);
+//#endregion 🔖️CollectionDeltaImpls
+
+//#region 🔖️SectionEdits
+macro_rules! impl_section_edit {
+    ($edit:ty, $value:ty, $patch:ty) => {
+        impl $edit {
+            /// 🎯️ A whole-section replacement.
+            pub fn replacing(value: $value) -> Self {
+                Self { set: Some(value), patch: None }
             }
 
-            if let Some(delta) = &self.stakeholders {
-                apply_collection_delta(&mut next.stakeholders, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["stakeholders"]))?;
-            }
-            if let Some(delta) = &self.users {
-                apply_collection_delta(&mut next.users, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["users"]))?;
-            }
-            if let Some(delta) = &self.activities {
-                apply_collection_delta(&mut next.activities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["activities"]))?;
-            }
-            if let Some(delta) = &self.functions {
-                apply_collection_delta(&mut next.functions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["functions"]))?;
-            }
-            if let Some(delta) = &self.elements {
-                apply_collection_delta(&mut next.elements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["elements"]))?;
-            }
-            if let Some(delta) = &self.quantities {
-                apply_collection_delta(&mut next.quantities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["quantities"]))?;
-            }
-            if let Some(delta) = &self.relationships {
-                apply_collection_delta(&mut next.relationships, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["relationships"]))?;
-            }
-            if let Some(delta) = &self.adjacencies {
-                apply_collection_delta(&mut next.adjacencies, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["adjacencies"]))?;
-            }
-            if let Some(delta) = &self.processes {
-                apply_collection_delta(&mut next.processes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["processes"]))?;
-            }
-            if let Some(delta) = &self.flows {
-                apply_collection_delta(&mut next.flows, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["flows"]))?;
-            }
-            if let Some(delta) = &self.access_rules {
-                apply_collection_delta(&mut next.access_rules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["accessRules"]))?;
-            }
-            if let Some(delta) = &self.operations {
-                apply_collection_delta(&mut next.operations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["operations"]))?;
-            }
-            if let Some(delta) = &self.equipment {
-                apply_collection_delta(&mut next.equipment, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["equipment"]))?;
-            }
-            if let Some(delta) = &self.resources {
-                apply_collection_delta(&mut next.resources, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["resources"]))?;
-            }
-            if let Some(delta) = &self.storage {
-                apply_collection_delta(&mut next.storage, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["storage"]))?;
-            }
-            if let Some(delta) = &self.environmental {
-                apply_collection_delta(&mut next.environmental, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["environmental"]))?;
-            }
-            if let Some(delta) = &self.human_factors {
-                apply_collection_delta(&mut next.human_factors, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["humanFactors"]))?;
-            }
-            if let Some(delta) = &self.accessibility {
-                apply_collection_delta(&mut next.accessibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["accessibility"]))?;
-            }
-            if let Some(delta) = &self.privacy {
-                apply_collection_delta(&mut next.privacy, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["privacy"]))?;
-            }
-            if let Some(delta) = &self.safety {
-                apply_collection_delta(&mut next.safety, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["safety"]))?;
-            }
-            if let Some(delta) = &self.security {
-                apply_collection_delta(&mut next.security, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["security"]))?;
-            }
-            if let Some(delta) = &self.regulatory {
-                apply_collection_delta(&mut next.regulatory, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["regulatory"]))?;
-            }
-            if let Some(delta) = &self.site_context {
-                apply_collection_delta(&mut next.site_context, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["siteContext"]))?;
-            }
-            if let Some(delta) = &self.organizational {
-                apply_collection_delta(&mut next.organizational, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["organizational"]))?;
-            }
-            if let Some(delta) = &self.services {
-                apply_collection_delta(&mut next.services, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["services"]))?;
-            }
-            if let Some(delta) = &self.infrastructure {
-                apply_collection_delta(&mut next.infrastructure, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["infrastructure"]))?;
-            }
-            if let Some(delta) = &self.information {
-                apply_collection_delta(&mut next.information, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["information"]))?;
-            }
-            if let Some(delta) = &self.communication {
-                apply_collection_delta(&mut next.communication, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["communication"]))?;
-            }
-            if let Some(delta) = &self.wayfinding {
-                apply_collection_delta(&mut next.wayfinding, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["wayfinding"]))?;
-            }
-            if let Some(delta) = &self.schedules {
-                apply_collection_delta(&mut next.schedules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["schedules"]))?;
-            }
-            if let Some(delta) = &self.flexibility {
-                apply_collection_delta(&mut next.flexibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["flexibility"]))?;
-            }
-            if let Some(delta) = &self.growth {
-                apply_collection_delta(&mut next.growth, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["growth"]))?;
-            }
-            if let Some(delta) = &self.sustainability {
-                apply_collection_delta(&mut next.sustainability, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["sustainability"]))?;
-            }
-            if let Some(delta) = &self.resilience {
-                apply_collection_delta(&mut next.resilience, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["resilience"]))?;
-            }
-            if let Some(delta) = &self.costs {
-                apply_collection_delta(&mut next.costs, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["costs"]))?;
-            }
-            if let Some(delta) = &self.delivery {
-                apply_collection_delta(&mut next.delivery, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["delivery"]))?;
-            }
-            if let Some(delta) = &self.risks {
-                apply_collection_delta(&mut next.risks, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["risks"]))?;
-            }
-            if let Some(delta) = &self.conflicts {
-                apply_collection_delta(&mut next.conflicts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["conflicts"]))?;
-            }
-            if let Some(delta) = &self.requirements {
-                apply_collection_delta(&mut next.requirements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["requirements"]))?;
-            }
-            if let Some(delta) = &self.priorities {
-                apply_collection_delta(&mut next.priorities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["priorities"]))?;
-            }
-            if let Some(delta) = &self.scenarios {
-                apply_collection_delta(&mut next.scenarios, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["scenarios"]))?;
-            }
-            if let Some(delta) = &self.options {
-                apply_collection_delta(&mut next.options, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["options"]))?;
-            }
-            if let Some(delta) = &self.decisions {
-                apply_collection_delta(&mut next.decisions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["decisions"]))?;
-            }
-            if let Some(delta) = &self.validations {
-                apply_collection_delta(&mut next.validations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["validations"]))?;
-            }
-            if let Some(delta) = &self.performance {
-                apply_collection_delta(&mut next.performance, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["performance"]))?;
-            }
-            if let Some(delta) = &self.quality {
-                apply_collection_delta(&mut next.quality, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["quality"]))?;
-            }
-            if let Some(delta) = &self.artifacts {
-                apply_collection_delta(&mut next.artifacts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["artifacts"]))?;
-            }
-            if let Some(delta) = &self.assumptions {
-                apply_collection_delta(&mut next.assumptions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["assumptions"]))?;
-            }
-            if let Some(delta) = &self.constraints {
-                apply_collection_delta(&mut next.constraints, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["constraints"]))?;
-            }
-            if let Some(delta) = &self.compliance_records {
-                apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered)
-                    .map_err(|error| error.under(["complianceRecords"]))?;
-            }
-            if let Some(delta) = &self.approvals {
-                apply_collection_delta(&mut next.approvals, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["approvals"]))?;
-            }
-            if let Some(delta) = &self.meetings {
-                apply_collection_delta(&mut next.meetings, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["meetings"]))?;
-            }
-            if let Some(delta) = &self.changes {
-                apply_collection_delta(&mut next.changes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["changes"]))?;
-            }
-            if let Some(delta) = &self.collaboration {
-                apply_collection_delta(&mut next.collaboration, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["collaboration"]))?;
-            }
-            if let Some(delta) = &self.analyses {
-                apply_collection_delta(&mut next.analyses, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["analyses"]))?;
-            }
-            if let Some(delta) = &self.reports {
-                apply_collection_delta(&mut next.reports, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["reports"]))?;
-            }
-            if let Some(delta) = &self.search_filters {
-                apply_collection_delta(&mut next.search_filters, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["searchFilters"]))?;
-            }
-            if let Some(delta) = &self.status_records {
-                apply_collection_delta(&mut next.status_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["statusRecords"]))?;
-            }
-            if let Some(delta) = &self.workshops {
-                apply_collection_delta(&mut next.workshops, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["workshops"]))?;
-            }
-            if let Some(delta) = &self.surveys {
-                apply_collection_delta(&mut next.surveys, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["surveys"]))?;
-            }
-            if let Some(delta) = &self.issues {
-                apply_collection_delta(&mut next.issues, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["issues"]))?;
-            }
-            if let Some(delta) = &self.audit_events {
-                apply_collection_delta(&mut next.audit_events, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["auditEvents"]))?;
-            }
-            if let Some(delta) = &self.templates {
-                apply_collection_delta(&mut next.templates, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["templates"]))?;
-            }
-            if let Some(records) = &self.knowledge_payload {
-                next.knowledge_payload = records.clone();
-            }
-            if let Some(child) = &self.knowledge {
-                next.knowledge = child.clone();
-            }
-            if let Some(records) = &self.benchmarks_payload {
-                next.benchmarks_payload = records.clone();
-            }
-            if let Some(child) = &self.benchmarks {
-                next.benchmarks = child.clone();
-            }
-            if let Some(delta) = &self.traces {
-                apply_collection_delta(&mut next.traces, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["traces"]))?;
-            }
-            next
-        })
+            /// 🩹 A sparse field patch.
+            pub fn patching(patch: $patch) -> Self {
+                Self { set: None, patch: Some(patch) }
+            }
+
+            /// 🔑️ Writes the edit into `value`: the replacement first, then the patched fields.
+            fn write(&self, value: &mut $value) {
+                if let Some(set) = &self.set {
+                    *value = set.clone();
+                }
+                if let Some(patch) = &self.patch {
+                    value.apply_patch(patch);
+                }
+            }
+
+            /// ➕️ Composes this edit with a later one: a later replacement wins, a later patch folds into the replacement or merges into the patch.
+            fn compose(mut self, later: Self) -> Self {
+                if later.set.is_some() {
+                    return later;
+                }
+                if let (Some(set), Some(patch)) = (self.set.as_mut(), self.patch.take()) {
+                    set.apply_patch(&patch);
+                }
+                if let Some(patch) = later.patch {
+                    match (&mut self.set, &mut self.patch) {
+                        (Some(set), _) => set.apply_patch(&patch),
+                        (None, Some(existing)) => existing.merge(patch),
+                        (None, slot) => *slot = Some(patch),
+                    }
+                }
+                self
+            }
+
+            /// 🔁️ The edit that puts the edited fields of `base` back.
+            fn undo(&self, base: &$value) -> Self {
+                match (&self.set, &self.patch) {
+                    (None, Some(patch)) => match patch.restore(base) {
+                        Some(restored) => Self::patching(restored),
+                        None => Self::replacing(base.clone()),
+                    },
+                    _ => Self::replacing(base.clone()),
+                }
+            }
+
+            /// 🧭️ The edit that turns `base` into `other` (`None` when equal).
+            fn between(base: &$value, other: &$value) -> Option<Self> {
+                if base == other {
+                    return None;
+                }
+                Some(match base.diff_patch(other) {
+                    Some(patch) if !patch.is_empty() && { let mut candidate = base.clone(); candidate.apply_patch(&patch); candidate == *other } => Self::patching(patch),
+                    _ => Self::replacing(other.clone()),
+                })
+            }
+
+            fn is_empty(&self) -> bool {
+                self.set.is_none() && self.patch.as_ref().is_none_or(|patch| RowPatch::<$value>::is_empty(patch))
+            }
+        }
+    };
+}
+
+impl_section_edit!(ProgramMetaEdit, ProgramMeta, ProgramMetaPatch);
+impl_section_edit!(ProjectDefinitionEdit, ProjectDefinition, ProjectDefinitionPatch);
+impl_section_edit!(GovernanceEdit, Governance, GovernancePatch);
+
+fn compose_edit<E>(first: Option<E>, later: Option<E>, compose: impl FnOnce(E, E) -> E) -> Option<E> {
+    match (first, later) {
+        (Some(first), Some(later)) => Some(compose(first, later)),
+        (first, None) => first,
+        (None, later) => later,
     }
+}
+//#endregion 🔖️SectionEdits
+
+//#region 🔖️CollectionList
+/// 🗂️ Expands `$each!(context.. field "wire")` once per identified collection of the diff.
+macro_rules! program_collections {
+    ($each:ident, $($context:tt)*) => {
+        $each!($($context)* stakeholders "stakeholders");
+        $each!($($context)* users "users");
+        $each!($($context)* activities "activities");
+        $each!($($context)* functions "functions");
+        $each!($($context)* elements "elements");
+        $each!($($context)* quantities "quantities");
+        $each!($($context)* relationships "relationships");
+        $each!($($context)* adjacencies "adjacencies");
+        $each!($($context)* processes "processes");
+        $each!($($context)* flows "flows");
+        $each!($($context)* access_rules "accessRules");
+        $each!($($context)* operations "operations");
+        $each!($($context)* equipment "equipment");
+        $each!($($context)* resources "resources");
+        $each!($($context)* storage "storage");
+        $each!($($context)* environmental "environmental");
+        $each!($($context)* human_factors "humanFactors");
+        $each!($($context)* accessibility "accessibility");
+        $each!($($context)* privacy "privacy");
+        $each!($($context)* safety "safety");
+        $each!($($context)* security "security");
+        $each!($($context)* regulatory "regulatory");
+        $each!($($context)* site_context "siteContext");
+        $each!($($context)* organizational "organizational");
+        $each!($($context)* services "services");
+        $each!($($context)* infrastructure "infrastructure");
+        $each!($($context)* information "information");
+        $each!($($context)* communication "communication");
+        $each!($($context)* wayfinding "wayfinding");
+        $each!($($context)* schedules "schedules");
+        $each!($($context)* flexibility "flexibility");
+        $each!($($context)* growth "growth");
+        $each!($($context)* sustainability "sustainability");
+        $each!($($context)* resilience "resilience");
+        $each!($($context)* costs "costs");
+        $each!($($context)* delivery "delivery");
+        $each!($($context)* risks "risks");
+        $each!($($context)* conflicts "conflicts");
+        $each!($($context)* requirements "requirements");
+        $each!($($context)* priorities "priorities");
+        $each!($($context)* scenarios "scenarios");
+        $each!($($context)* options "options");
+        $each!($($context)* decisions "decisions");
+        $each!($($context)* validations "validations");
+        $each!($($context)* performance "performance");
+        $each!($($context)* quality "quality");
+        $each!($($context)* artifacts "artifacts");
+        $each!($($context)* assumptions "assumptions");
+        $each!($($context)* constraints "constraints");
+        $each!($($context)* compliance_records "complianceRecords");
+        $each!($($context)* approvals "approvals");
+        $each!($($context)* meetings "meetings");
+        $each!($($context)* changes "changes");
+        $each!($($context)* collaboration "collaboration");
+        $each!($($context)* analyses "analyses");
+        $each!($($context)* reports "reports");
+        $each!($($context)* search_filters "searchFilters");
+        $each!($($context)* status_records "statusRecords");
+        $each!($($context)* workshops "workshops");
+        $each!($($context)* surveys "surveys");
+        $each!($($context)* issues "issues");
+        $each!($($context)* audit_events "auditEvents");
+        $each!($($context)* templates "templates");
+        $each!($($context)* traces "traces");
+    };
+}
+//#endregion 🔖️CollectionList
+
+//#region 🔖️ProgramDiffAlgebra
+macro_rules! apply_collection {
+    ($diff:expr, $next:ident, $field:ident $wire:literal) => {
+        if let Some(delta) = &$diff.$field {
+            algebra::apply(delta, &mut $next.$field).map_err(|error| error.under([$wire]))?;
+        }
+    };
+}
+
+macro_rules! absorb_collection {
+    ($first:expr, $later:ident, $field:ident $wire:literal) => {
+        if let Some(later) = $later.$field {
+            let merged = algebra::absorb($first.$field.take().unwrap_or_default(), later);
+            $first.$field = (!algebra::is_empty(&merged)).then_some(merged);
+        }
+    };
+}
+
+macro_rules! inverse_collection {
+    ($diff:expr, $base:ident, $undo:ident, $field:ident $wire:literal) => {
+        if let Some(delta) = &$diff.$field {
+            let inverse = algebra::inverse(delta, &$base.$field);
+            $undo.$field = (!algebra::is_empty(&inverse)).then_some(inverse);
+        }
+    };
+}
+
+macro_rules! between_collection {
+    ($base:ident, $other:ident, $out:ident, $field:ident $wire:literal) => {
+        let delta = algebra::between(&$base.$field, &$other.$field);
+        $out.$field = (!algebra::is_empty(&delta)).then_some(delta);
+    };
+}
+
+macro_rules! empty_collection {
+    ($diff:expr, $verdict:ident, $field:ident $wire:literal) => {
+        $verdict &= $diff.$field.as_ref().is_none_or(algebra::is_empty);
+    };
 }
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
-        self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone())).map(|artifact| artifact.to_snapshot()).map_err(|error| error.under(["artifact"]))
+    fn apply(&self, base: &ProgramSnapshot, _capability: ApplyCapability) -> MutationApplyResult<ProgramSnapshot> {
+        let mut next = base.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(edit) = &self.meta {
+            edit.write(&mut next.meta);
+        }
+        if let Some(edit) = &self.project {
+            edit.write(&mut next.project);
+        }
+        if let Some(edit) = &self.governance {
+            edit.write(&mut next.governance);
+        }
+        program_collections!(apply_collection, self, next,);
+        if let Some(delta) = &self.knowledge {
+            algebra::apply(delta, &mut next.knowledge_payload).map_err(|error| error.under(["knowledge"]))?;
+            next.knowledge = crate::knowledge_child_from_records(&next.knowledge_payload);
+        }
+        if let Some(delta) = &self.benchmarks {
+            algebra::apply(delta, &mut next.benchmarks_payload).map_err(|error| error.under(["benchmarks"]))?;
+            next.benchmarks = crate::benchmarks_child_from_records(&next.benchmarks_payload);
+        }
+        Ok(next)
     }
+
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
-        macro_rules! absorb_opt {
-            ($f:ident) => {
-                if other.$f.is_some() {
-                    self.$f = other.$f;
-                }
-            };
-        }
-        absorb_opt!(schema);
-        absorb_opt!(meta);
-        absorb_opt!(project);
-        absorb_opt!(governance);
-
-        if let Some(delta) = other.stakeholders {
-            match &mut self.stakeholders {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.stakeholders = Some(delta),
-            }
-        }
-        if let Some(delta) = other.users {
-            match &mut self.users {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.users = Some(delta),
-            }
-        }
-        if let Some(delta) = other.activities {
-            match &mut self.activities {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.activities = Some(delta),
-            }
-        }
-        if let Some(delta) = other.functions {
-            match &mut self.functions {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.functions = Some(delta),
-            }
-        }
-        if let Some(delta) = other.elements {
-            match &mut self.elements {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.elements = Some(delta),
-            }
-        }
-        if let Some(delta) = other.quantities {
-            match &mut self.quantities {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.quantities = Some(delta),
-            }
-        }
-        if let Some(delta) = other.relationships {
-            match &mut self.relationships {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.relationships = Some(delta),
-            }
-        }
-        if let Some(delta) = other.adjacencies {
-            match &mut self.adjacencies {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.adjacencies = Some(delta),
-            }
-        }
-        if let Some(delta) = other.processes {
-            match &mut self.processes {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.processes = Some(delta),
-            }
-        }
-        if let Some(delta) = other.flows {
-            match &mut self.flows {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.flows = Some(delta),
-            }
-        }
-        if let Some(delta) = other.access_rules {
-            match &mut self.access_rules {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.access_rules = Some(delta),
-            }
-        }
-        if let Some(delta) = other.operations {
-            match &mut self.operations {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.operations = Some(delta),
-            }
-        }
-        if let Some(delta) = other.equipment {
-            match &mut self.equipment {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.equipment = Some(delta),
-            }
-        }
-        if let Some(delta) = other.resources {
-            match &mut self.resources {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.resources = Some(delta),
-            }
-        }
-        if let Some(delta) = other.storage {
-            match &mut self.storage {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.storage = Some(delta),
-            }
-        }
-        if let Some(delta) = other.environmental {
-            match &mut self.environmental {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.environmental = Some(delta),
-            }
-        }
-        if let Some(delta) = other.human_factors {
-            match &mut self.human_factors {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.human_factors = Some(delta),
-            }
-        }
-        if let Some(delta) = other.accessibility {
-            match &mut self.accessibility {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.accessibility = Some(delta),
-            }
-        }
-        if let Some(delta) = other.privacy {
-            match &mut self.privacy {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.privacy = Some(delta),
-            }
-        }
-        if let Some(delta) = other.safety {
-            match &mut self.safety {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.safety = Some(delta),
-            }
-        }
-        if let Some(delta) = other.security {
-            match &mut self.security {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.security = Some(delta),
-            }
-        }
-        if let Some(delta) = other.regulatory {
-            match &mut self.regulatory {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.regulatory = Some(delta),
-            }
-        }
-        if let Some(delta) = other.site_context {
-            match &mut self.site_context {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.site_context = Some(delta),
-            }
-        }
-        if let Some(delta) = other.organizational {
-            match &mut self.organizational {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.organizational = Some(delta),
-            }
-        }
-        if let Some(delta) = other.services {
-            match &mut self.services {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.services = Some(delta),
-            }
-        }
-        if let Some(delta) = other.infrastructure {
-            match &mut self.infrastructure {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.infrastructure = Some(delta),
-            }
-        }
-        if let Some(delta) = other.information {
-            match &mut self.information {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.information = Some(delta),
-            }
-        }
-        if let Some(delta) = other.communication {
-            match &mut self.communication {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.communication = Some(delta),
-            }
-        }
-        if let Some(delta) = other.wayfinding {
-            match &mut self.wayfinding {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.wayfinding = Some(delta),
-            }
-        }
-        if let Some(delta) = other.schedules {
-            match &mut self.schedules {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.schedules = Some(delta),
-            }
-        }
-        if let Some(delta) = other.flexibility {
-            match &mut self.flexibility {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.flexibility = Some(delta),
-            }
-        }
-        if let Some(delta) = other.growth {
-            match &mut self.growth {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.growth = Some(delta),
-            }
-        }
-        if let Some(delta) = other.sustainability {
-            match &mut self.sustainability {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.sustainability = Some(delta),
-            }
-        }
-        if let Some(delta) = other.resilience {
-            match &mut self.resilience {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.resilience = Some(delta),
-            }
-        }
-        if let Some(delta) = other.costs {
-            match &mut self.costs {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.costs = Some(delta),
-            }
-        }
-        if let Some(delta) = other.delivery {
-            match &mut self.delivery {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.delivery = Some(delta),
-            }
-        }
-        if let Some(delta) = other.risks {
-            match &mut self.risks {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.risks = Some(delta),
-            }
-        }
-        if let Some(delta) = other.conflicts {
-            match &mut self.conflicts {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.conflicts = Some(delta),
-            }
-        }
-        if let Some(delta) = other.requirements {
-            match &mut self.requirements {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.requirements = Some(delta),
-            }
-        }
-        if let Some(delta) = other.priorities {
-            match &mut self.priorities {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.priorities = Some(delta),
-            }
-        }
-        if let Some(delta) = other.scenarios {
-            match &mut self.scenarios {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.scenarios = Some(delta),
-            }
-        }
-        if let Some(delta) = other.options {
-            match &mut self.options {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.options = Some(delta),
-            }
-        }
-        if let Some(delta) = other.decisions {
-            match &mut self.decisions {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.decisions = Some(delta),
-            }
-        }
-        if let Some(delta) = other.validations {
-            match &mut self.validations {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.validations = Some(delta),
-            }
-        }
-        if let Some(delta) = other.performance {
-            match &mut self.performance {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.performance = Some(delta),
-            }
-        }
-        if let Some(delta) = other.quality {
-            match &mut self.quality {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.quality = Some(delta),
-            }
-        }
-        if let Some(delta) = other.artifacts {
-            match &mut self.artifacts {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.artifacts = Some(delta),
-            }
-        }
-        if let Some(delta) = other.assumptions {
-            match &mut self.assumptions {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.assumptions = Some(delta),
-            }
-        }
-        if let Some(delta) = other.constraints {
-            match &mut self.constraints {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.constraints = Some(delta),
-            }
-        }
-        if let Some(delta) = other.compliance_records {
-            match &mut self.compliance_records {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.compliance_records = Some(delta),
-            }
-        }
-        if let Some(delta) = other.approvals {
-            match &mut self.approvals {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.approvals = Some(delta),
-            }
-        }
-        if let Some(delta) = other.meetings {
-            match &mut self.meetings {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.meetings = Some(delta),
-            }
-        }
-        if let Some(delta) = other.changes {
-            match &mut self.changes {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.changes = Some(delta),
-            }
-        }
-        if let Some(delta) = other.collaboration {
-            match &mut self.collaboration {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.collaboration = Some(delta),
-            }
-        }
-        if let Some(delta) = other.analyses {
-            match &mut self.analyses {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.analyses = Some(delta),
-            }
-        }
-        if let Some(delta) = other.reports {
-            match &mut self.reports {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.reports = Some(delta),
-            }
-        }
-        if let Some(delta) = other.search_filters {
-            match &mut self.search_filters {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.search_filters = Some(delta),
-            }
-        }
-        if let Some(delta) = other.status_records {
-            match &mut self.status_records {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.status_records = Some(delta),
-            }
-        }
-        if let Some(delta) = other.workshops {
-            match &mut self.workshops {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.workshops = Some(delta),
-            }
-        }
-        if let Some(delta) = other.surveys {
-            match &mut self.surveys {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.surveys = Some(delta),
-            }
-        }
-        if let Some(delta) = other.issues {
-            match &mut self.issues {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.issues = Some(delta),
-            }
-        }
-        if let Some(delta) = other.audit_events {
-            match &mut self.audit_events {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.audit_events = Some(delta),
-            }
-        }
-        if let Some(delta) = other.templates {
-            match &mut self.templates {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.templates = Some(delta),
-            }
-        }
-        if other.knowledge_payload.is_some() {
-            self.knowledge_payload = other.knowledge_payload;
-        }
-        if other.knowledge.is_some() {
-            self.knowledge = other.knowledge;
-        }
-        if other.benchmarks_payload.is_some() {
-            self.benchmarks_payload = other.benchmarks_payload;
-        }
-        if other.benchmarks.is_some() {
-            self.benchmarks = other.benchmarks;
-        }
-        if let Some(delta) = other.traces {
-            match &mut self.traces {
-                Some(existing) => {
-                    existing.added.extend(delta.added);
-                    existing.removed.extend(delta.removed);
-                    existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() {
-                        existing.reordered = delta.reordered;
-                    }
-                }
-                None => self.traces = Some(delta),
-            }
+        if other.schema.is_some() {
+            self.schema = other.schema;
+        }
+        self.meta = compose_edit(self.meta.take(), other.meta, ProgramMetaEdit::compose);
+        self.project = compose_edit(self.project.take(), other.project, ProjectDefinitionEdit::compose);
+        self.governance = compose_edit(self.governance.take(), other.governance, GovernanceEdit::compose);
+        program_collections!(absorb_collection, self, other,);
+        if let Some(delta) = other.knowledge {
+            let merged = algebra::absorb(self.knowledge.take().unwrap_or_default(), delta);
+            self.knowledge = (!algebra::is_empty(&merged)).then_some(merged);
+        }
+        if let Some(delta) = other.benchmarks {
+            let merged = algebra::absorb(self.benchmarks.take().unwrap_or_default(), delta);
+            self.benchmarks = (!algebra::is_empty(&merged)).then_some(merged);
         }
     }
 }
 
-fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>) -> protocol::MutationApplyResult<()>
-where
-    T: Identified<EntityId> + Clone + Patchable<P>,
-    P: Clone,
-{
-    for (index, id) in removed.iter().enumerate() {
-        let eid = EntityId(id.clone());
-        if !items.iter().any(|item| item.id() == &eid) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed entity does not exist").at(["removed".to_string(), index.to_string()]));
+impl DiffAlgebra<ProgramSnapshot> for ProgramDiff {
+    fn inverse(&self, base: &ProgramSnapshot) -> Self {
+        let mut undo = Self::default();
+        undo.schema = self.schema.as_ref().map(|_| base.schema.clone());
+        undo.meta = self.meta.as_ref().map(|edit| edit.undo(&base.meta));
+        undo.project = self.project.as_ref().map(|edit| edit.undo(&base.project));
+        undo.governance = self.governance.as_ref().map(|edit| edit.undo(&base.governance));
+        program_collections!(inverse_collection, self, base, undo,);
+        if let Some(delta) = &self.knowledge {
+            let inverse = algebra::inverse(delta, &base.knowledge_payload);
+            undo.knowledge = (!algebra::is_empty(&inverse)).then_some(inverse);
         }
-        if removed[..index].contains(id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "entity is removed more than once").at(["removed".to_string(), index.to_string()]));
+        if let Some(delta) = &self.benchmarks {
+            let inverse = algebra::inverse(delta, &base.benchmarks_payload);
+            undo.benchmarks = (!algebra::is_empty(&inverse)).then_some(inverse);
         }
+        undo
     }
-    for (index, item) in added.iter().enumerate() {
-        if items.iter().any(|existing| existing.id() == item.id()) || added[..index].iter().any(|existing| existing.id() == item.id()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added entity identity already exists").at(["added".to_string(), index.to_string()]));
-        }
+
+    fn between(base: &ProgramSnapshot, other: &ProgramSnapshot) -> Self {
+        let mut out = Self::default();
+        out.schema = (base.schema != other.schema).then(|| other.schema.clone());
+        out.meta = ProgramMetaEdit::between(&base.meta, &other.meta);
+        out.project = ProjectDefinitionEdit::between(&base.project, &other.project);
+        out.governance = GovernanceEdit::between(&base.governance, &other.governance);
+        program_collections!(between_collection, base, other, out,);
+        let knowledge = algebra::between(&base.knowledge_payload, &other.knowledge_payload);
+        out.knowledge = (!algebra::is_empty(&knowledge)).then_some(knowledge);
+        let benchmarks = algebra::between(&base.benchmarks_payload, &other.benchmarks_payload);
+        out.benchmarks = (!algebra::is_empty(&benchmarks)).then_some(benchmarks);
+        out
     }
-    // 🧲️ A patch may address an entity this SAME delta adds: `MutationDiff::absorb` folds a
-    // `create` and a later `patch` of that entity into one delta (`added` + `patched`), and the
-    // `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))` law only holds if the fold's own
-    // additions are visible to its own patches — hence `added` is applied BEFORE `patched` below too.
-    for (index, (id, _)) in patched.iter().enumerate() {
-        let eid = EntityId(id.clone());
-        if !items.iter().any(|item| item.id() == &eid) && !added.iter().any(|item| item.id() == &eid) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), index.to_string()]));
-        }
-        if removed.contains(id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "entity cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
-        }
-        if patched[..index].iter().any(|(prior, _)| prior == id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "entity is patched more than once").at(["patched".to_string(), index.to_string()]));
-        }
+
+    fn is_empty(&self) -> bool {
+        let mut verdict = self.schema.is_none() && self.meta.as_ref().is_none_or(ProgramMetaEdit::is_empty) && self.project.as_ref().is_none_or(ProjectDefinitionEdit::is_empty) && self.governance.as_ref().is_none_or(GovernanceEdit::is_empty);
+        program_collections!(empty_collection, self, verdict,);
+        verdict && self.knowledge.as_ref().is_none_or(algebra::is_empty) && self.benchmarks.as_ref().is_none_or(algebra::is_empty)
     }
-    let mut candidate = items.clone();
-    for id in removed {
-        let eid = EntityId(id.clone());
-        candidate.retain(|item| item.id() != &eid);
-    }
-    candidate.extend(added.iter().cloned());
-    for (id, patch) in patched {
-        let eid = EntityId(id.clone());
-        candidate.iter_mut().find(|item| item.id() == &eid).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), id.clone()]))?.apply_patch(patch);
-    }
-    for (index, item) in candidate.iter().enumerate() {
-        if candidate[..index].iter().any(|prior| prior.id() == item.id()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patch produced a duplicate entity identity").at(["patched"]));
-        }
-    }
-    if let Some(order) = reordered {
-        if order.len() != candidate.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !candidate.iter().any(|item| item.id().0 == *id)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "entity reorder must be a complete unique permutation").at(["reordered"]));
-        }
-        let mut map: std::collections::BTreeMap<String, T> = std::collections::BTreeMap::new();
-        for item in candidate.drain(..) {
-            map.insert(item.id().0.clone(), item);
-        }
-        for id in order {
-            candidate.push(map.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered entity does not exist").at(["reordered".to_string(), id.clone()]))?);
-        }
-    }
-    *items = candidate;
-    Ok(())
 }
+//#endregion 🔖️ProgramDiffAlgebra
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

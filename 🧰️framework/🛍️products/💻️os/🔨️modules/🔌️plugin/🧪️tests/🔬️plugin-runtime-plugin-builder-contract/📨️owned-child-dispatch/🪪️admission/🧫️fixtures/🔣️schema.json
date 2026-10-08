@@ -1,0 +1,139 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slots",
+    "routes",
+    "cases",
+    "producerBeforeReservation",
+    "sameOperationIdentity",
+    "foreignReservationsPreserved",
+    "refusals",
+    "completionRefusals"
+  ],
+  "properties": {
+    "slots": {
+      "const": 64
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "lanes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "lanes": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "HostOnly",
+                "Artifact",
+                "Child"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "occupied",
+          "admitted"
+        ],
+        "properties": {
+          "occupied": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "producerBeforeReservation": {
+      "const": false
+    },
+    "sameOperationIdentity": {
+      "const": true
+    },
+    "foreignReservationsPreserved": {
+      "const": true
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "completedOriginal",
+          "retained",
+          "cancelled"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "completedOriginal": {
+            "type": "boolean"
+          },
+          "retained": {
+            "type": "boolean"
+          },
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "completionRefusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sameOperation",
+          "retainedCompletion",
+          "cancelled"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "busy",
+              "poisoned",
+              "wrong-download"
+            ]
+          },
+          "sameOperation": {
+            "const": true
+          },
+          "retainedCompletion": {
+            "const": true
+          },
+          "cancelled": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

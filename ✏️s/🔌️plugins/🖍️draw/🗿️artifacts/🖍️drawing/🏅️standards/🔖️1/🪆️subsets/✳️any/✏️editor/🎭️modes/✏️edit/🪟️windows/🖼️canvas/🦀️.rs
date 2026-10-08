@@ -89,7 +89,7 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
         for node in &mut scene_nodes {
             let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|crate::schema::geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();
             if points.is_empty() {continue;}
-            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(&node.segments,&points,node.transform,movement.delta) {node.segments=std::borrow::Cow::Owned(segments);}
+            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(node.segments.iter(),&points,node.transform,movement.delta) {node.segments=std::borrow::Cow::Owned(segments);}
         }
     }
     let artboard_records = artboard_scene_records(document);

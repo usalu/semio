@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ordinaryGrantBytes", "maximumAdmissionBytes", "maximumItems", "allocationBytes", "refusedAllocationBytes", "refusedWorkItems", "reportedPhysicalEqualsActual"],
+  "properties": {
+    "ordinaryGrantBytes": {"const": 32768},
+    "maximumAdmissionBytes": {"const": 262144},
+    "maximumItems": {"const": 1},
+    "allocationBytes": {"const": [32769, 65536, 262144]},
+    "refusedAllocationBytes": {"const": 262145},
+    "refusedWorkItems": {"const": 0},
+    "reportedPhysicalEqualsActual": {"const": true}
+  }
+}

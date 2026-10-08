@@ -52,10 +52,6 @@ pub mod set_sample_flags;
 /// `Vec<SemioVideoStream>`-of-`Vec<SemioVideoSample>` nesting the diff side's own doc comment
 /// documents as blocking a derive attempt; `OpText`/`OpBinary` are hand-rolled below instead.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "📋set-stream-meta/🦀️.rs"]
 pub mod set_stream_meta;
 //#endregion 🔖️Leaves
@@ -64,8 +60,6 @@ pub mod set_stream_meta;
 #[mutations(snapshot = SemioVideoSnapshot, diff = SemioVideoDiff, schema = "SemioVideoMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioVideoMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `stream` at `index` (FINAL state).
     InsertStream(insert_stream::InsertStream),
     /// ➖️ Removes the stream at `index` (BASE-state index).
@@ -86,23 +80,21 @@ pub enum SemioVideoMutation {
 /// order — what the `🎥️mutate-semio-video` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags", "patch-snapshot"];
+pub const KINDS: &[&str] = &["insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
-/// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
-/// apply path (apply-and-capture is banned).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<SemioVideoDiff> {
+    <SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Free-function face of [`SemioVideoMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
 /// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
-/// generated test host being the concrete case. Paired with [`apply_semio_video_mutation`] it makes the
+/// generated test host being the concrete case. Paired with `diff_semio_*_mutation` it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
@@ -127,66 +119,9 @@ fn sample_at(base: &SemioVideoSnapshot, stream_index: usize, index: usize) -> Op
 }
 //#endregion 🔖️Helpers
 
-//#region 🔖️MutationTrait
-/// ↩️ An index that no longer exists in `base` has nothing to restore, so those arms return the
-/// empty inverse rather than a sentinel no-op mutation — the convention this migration adopted once
-/// `NoMutation` stopped being an available payload.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<SemioVideoDiff> {
-    protocol::MutationOutcome::new(match this {
-        SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        SemioVideoMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation>>::diff(patch, base),
-        SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => diff_insert_stream(*index, stream.clone()),
-        SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => diff_remove_stream(*index),
-        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => match stream_at(base, *index) {
-            Some(old) => diff_set_stream_meta(old, *index, *kind, codec, *width, *height, *rate),
-            None => SemioVideoDiff::default(),
-        },
-        SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index, index, sample }) => diff_insert_sample(*stream_index, *index, sample.clone()),
-        SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index, index }) => diff_remove_sample(*stream_index, *index),
-        SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index, index, data }) => match sample_at(base, *stream_index, *index) {
-            Some(old) => diff_set_sample_data(old, *stream_index, *index, data.clone()),
-            None => SemioVideoDiff::default(),
-        },
-        SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index, index, pts, key }) => match sample_at(base, *stream_index, *index) {
-            Some(old) => diff_set_sample_flags(old, *stream_index, *index, *pts, *key),
-            None => SemioVideoDiff::default(),
-        },
-    })
-}
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
-    Ok({
-    vec![match this {
-        SemioVideoMutation::SetSnapshot(_) => SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        SemioVideoMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation>>::inverse(patch, base)?),
-        SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, .. }) => SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: *index }),
-        SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => match stream_at(base, *index) {
-            Some(stream) => SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: *index, stream: stream.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, .. }) => match stream_at(base, *index) {
-            Some(stream) => SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: *index, kind: stream.kind, codec: stream.codec.clone(), width: stream.width, height: stream.height, rate: stream.rate }),
-            None => return Ok(Vec::new()),
-        },
-        SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index, index, .. }) => SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: *stream_index, index: *index }),
-        SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index, index }) => match sample_at(base, *stream_index, *index) {
-            Some(sample) => SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: *stream_index, index: *index, sample: sample.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index, index, .. }) => match sample_at(base, *stream_index, *index) {
-            Some(sample) => SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: *stream_index, index: *index, data: sample.data.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index, index, .. }) => match sample_at(base, *stream_index, *index) {
-            Some(sample) => SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: *stream_index, index: *index, pts: sample.pts, key: sample.key }),
-            None => return Ok(Vec::new()),
-        },
-    }]
 
-    })
-}
+
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -223,15 +158,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⏱️retimes/🦀️.rs"]
-mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

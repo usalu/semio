@@ -11,7 +11,7 @@ fn admit_values(snapshot:&WriterSnapshot,control:&mut SqliteSnapshotControl<'_>,
  let document=super::document_cells(snapshot);let child=super::child_cells(snapshot);let mut total=0usize;
  for(index,cells)in[document.as_slice(),child.as_slice()].into_iter().enumerate(){
   total=total.checked_add(8).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Writer semantic identity bytes overflow"))?;
-  for cell in cells{let size=match cell{store::sqlite_snapshot::artifact::Cell::Null=>0,store::sqlite_snapshot::artifact::Cell::Integer(_)|store::sqlite_snapshot::artifact::Cell::Real(_)|store::sqlite_snapshot::artifact::Cell::Float32(_)=>8,store::sqlite_snapshot::artifact::Cell::Text(value)=>value.len(),store::sqlite_snapshot::artifact::Cell::Blob(value)=>value.len()};total=total.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Writer semantic value bytes overflow"))?;control.check_value_bytes(total)?;}
+  for cell in cells{let size=match cell{store::sqlite_snapshot::artifact::Cell::Null=>0,store::sqlite_snapshot::artifact::Cell::Integer(_)|store::sqlite_snapshot::artifact::Cell::Real(_)|store::sqlite_snapshot::artifact::Cell::Float32(_)=>8,store::sqlite_snapshot::artifact::Cell::Text(value)=>value.len(),store::sqlite_snapshot::artifact::Cell::PagedText(value)=>value.text_bytes(),store::sqlite_snapshot::artifact::Cell::Blob(value)=>value.len()};total=total.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Writer semantic value bytes overflow"))?;control.check_value_bytes(total)?;}
   control.checkpoint(phase,index+1,2)?;
  }Ok(())
 }

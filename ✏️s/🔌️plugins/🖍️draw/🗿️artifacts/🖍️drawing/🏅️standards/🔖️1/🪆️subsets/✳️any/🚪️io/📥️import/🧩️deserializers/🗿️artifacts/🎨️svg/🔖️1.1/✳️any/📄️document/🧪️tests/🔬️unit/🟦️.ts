@@ -5,11 +5,23 @@ import {SVGLoader} from "three/addons/loaders/SVGLoader.js";
 import sharp from "sharp";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
+import {readFileSync} from "node:fs";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import {SvgImportJob} from "../../🟦️.ts";
 import {drawingTransformToMatrix} from "../../../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 import {multiply,type Matrix} from "../../../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
 function withParser<T>(run:()=>T):T {const before=Reflect.get(globalThis,"DOMParser");Reflect.set(globalThis,"DOMParser",DOMParser);try{return run();}finally{if(before===undefined)Reflect.deleteProperty(globalThis,"DOMParser");else Reflect.set(globalThis,"DOMParser",before);}}
+test("SVG native import consumes decoded attribute owners directly",()=>withParser(()=>{
+  for(const row of fixture.filter(row=>row.after!==null)){
+    expect(new Ajv({strict:true}).compile(schema)({source:row.source,id:"import"})).toBe(true);
+    const job=new SvgImportJob(row.source,"import");while(!job.step(1).done){}
+    expect(job.take()).toEqual(row.after);
+    expect(new DOMParser().parseFromString(row.source,"image/svg+xml").documentElement.localName).toBe("svg");
+  }
+  const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+  expect(native.includes("SvgAttributeValue")).toBe(true);
+  expect(native.includes("XmlNode")).toBe(false);
+}));
 for(const row of fixture)test(`editable SVG document: ${row.name}`,()=>withParser(()=>{
   expect(new Ajv({strict:true}).compile(schema)({source:row.source,id:"import"})).toBe(true);
   const load=()=>{const job=new SvgImportJob(row.source,"import");while(!job.step(1).done){}return job.take();};

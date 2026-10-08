@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌑️change-scene-shadow/🌑️switches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌑️change-scene-shadow/🌑️switches/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-scene-shadow-enabled diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-scene-shadow-enabled diff applies")
 }
 
 /// ▶️ `change-scene-shadow-enabled` toggles `scene.shadow.enabled` only — the shadow's `opacity`
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_switching_off_twice_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "change-scene-shadow-enabled/switches-scene-shadows-off: switching already-off shadows off is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "change-scene-shadow-enabled/switches-scene-shadows-off: the equality guard's frozen code");
-    let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "change-scene-shadow-enabled/switches-scene-shadows-off: a no-op toggle applies an empty diff");
 }
 
@@ -91,9 +91,9 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-scene-shadow-enabled/switches-scene-shadows-off: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["scene"]["shadow"]["enabled"], false, "change-scene-shadow-enabled/switches-scene-shadows-off: the edited field inside the cloned scene");
-    assert_eq!(committed["scene"]["sun"]["enabled"], true, "change-scene-shadow-enabled/switches-scene-shadows-off: the sun that casts the shadow stays on in the same delta");
-    assert_eq!(committed["scene"]["shadow"]["opacity"], 0.35, "change-scene-shadow-enabled/switches-scene-shadows-off: opacity rides along so the old look returns on re-enable");
+    assert_eq!(committed["scene"]["shadowEnabled"], false, "change-scene-shadow-enabled/switches-scene-shadows-off: the edited field inside the cloned scene");
+    assert!(committed["scene"]["sunEnabled"].is_null(), "change-scene-shadow-enabled/switches-scene-shadows-off: the sun that casts the shadow is not part of the delta");
+    assert!(committed["scene"]["shadowOpacity"].is_null(), "change-scene-shadow-enabled/switches-scene-shadows-off: opacity is untouched, so the old look returns on re-enable");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed whole-scene block round-trips through `ShootingDiff` unchanged.
@@ -109,6 +109,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-scene-shadow-enabled/switches-scene-shadows-off: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

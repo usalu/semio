@@ -91,8 +91,20 @@ pub(crate) struct TxnDiff {
     count: Option<i32>,
 }
 
+impl protocol::DiffAlgebra<TxnSnapshot> for TxnDiff {
+    fn inverse(&self, base: &TxnSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
+    }
+    fn between(base: &TxnSnapshot, other: &TxnSnapshot) -> Self {
+        Self { count: (base.count != other.count).then_some(other.count) }
+    }
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
+}
+
 impl MutationDiff<TxnSnapshot> for TxnDiff {
-    fn apply(&self, snapshot: &TxnSnapshot) -> protocol::MutationApplyResult<TxnSnapshot> {
+    fn apply(&self, snapshot: &TxnSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<TxnSnapshot> {
         Ok(TxnSnapshot { count: self.count.unwrap_or(snapshot.count) })
     }
     fn absorb(&mut self, other: Self) {

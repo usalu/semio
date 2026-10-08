@@ -25,12 +25,39 @@ impl Default for DrawingPresence {
 }
 
 
-impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
-    fn apply(&self, _base: &DrawingPresence) -> protocol::MutationApplyResult<DrawingPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse delta of the shareable presence: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct DrawingPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<store::Viewport2d>,
+}
+
+impl protocol::MutationDiff<DrawingPresence> for DrawingPresenceDiff {
+    fn apply(&self, base: &DrawingPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DrawingPresence> {
+        Ok(DrawingPresence { engagement_input: self.engagement_input.clone().unwrap_or_else(|| base.engagement_input.clone()), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
+    fn inverse(&self, base: &DrawingPresence) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
+    }
+    fn between(base: &DrawingPresence, other: &DrawingPresence) -> Self {
+        Self { engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera.is_none()
     }
 }
 
@@ -96,34 +123,41 @@ impl ArtifactPack for DrawingPresence {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum DrawingPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
+        engagement_input: String,
         #[dsl(block)]
-        presence: DrawingPresence,
+        camera: store::Viewport2d,
     },
 }
 
 impl semio_framework_value::retirement::RetireOwned for DrawingPresenceMutation {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { presence } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(presence)]),
+            Self::Set { engagement_input, camera: store::Viewport2d { x, y, zoom } } => semio_framework_value::retirement::sequence(vec![
+                semio_framework_value::retirement::leaf(0u8),
+                semio_framework_value::retirement::RetireOwned::retirement(engagement_input),
+                semio_framework_value::retirement::leaf(x),
+                semio_framework_value::retirement::leaf(y),
+                semio_framework_value::retirement::leaf(zoom),
+            ]),
         }
     }
 }
 
 impl Mutation<DrawingPresence> for DrawingPresenceMutation {
-    type Diff = DrawingPresence;
+    type Diff = DrawingPresenceDiff;
 
     /// 🧷️ Hand-written: `dsl::DslOps` supplies `DslVariants` only, not this trait's leaf metadata.
     /// ⚠️ PROVISIONAL: the `owner` leaf directory does not exist on disk — a placeholder that
     /// satisfies `protocol::Mutation`, not a real registration.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
+        owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+        semantic_kind: "set-presence",
+        display_name: "Set Presence",
+        emoji: "👥️",
+        aggregate_variant: "Set",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -136,22 +170,19 @@ impl Mutation<DrawingPresence> for DrawingPresenceMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
 
-    fn diff(&self, _base: &DrawingPresence) -> protocol::MutationOutcome<DrawingPresence> {
+    fn diff(&self, base: &DrawingPresence) -> protocol::MutationOutcome<DrawingPresenceDiff> {
         match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
+            Self::Set { engagement_input, camera } => protocol::MutationOutcome::new(DrawingPresenceDiff { engagement_input: (&base.engagement_input != engagement_input).then(|| engagement_input.clone()), camera: (&base.camera != camera).then(|| camera.clone()) }),
         }
     }
 
     fn inverse(&self, base: &DrawingPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::Set { engagement_input: base.engagement_input.clone(), camera: base.camera.clone() }])
+    }
 }
 
 impl protocol::OpText for DrawingPresenceMutation {
@@ -189,3 +220,9 @@ impl protocol::OpBinary for DrawingPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

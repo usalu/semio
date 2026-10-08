@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -66,55 +65,50 @@
   "issues": null,
   "auditEvents": null,
   "templates": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "template-record-a",
-        "patch": {
-          "name": "Template Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "templateType": "Replaced Template Record A",
-          "sector": null,
-          "projectType": null,
-          "version": "",
-          "contentRef": null,
-          "entityKinds": [],
-          "defaultFields": [],
-          "checklists": [],
-          "standards": [],
-          "applicability": [],
-          "authorId": null,
-          "approvalStatus": "pending",
-          "usageCount": 0,
-          "lastApplied": null,
-          "customizationNotes": [],
-          "relatedKnowledgeIds": [],
-          "benchmarkIds": [],
-          "license": null,
-          "sourceOrganization": null
-        }
+        "name": "Template Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "templateType": "Replaced Template Record A",
+        "sector": null,
+        "projectType": null,
+        "version": "",
+        "contentRef": null,
+        "entityKinds": [],
+        "defaultFields": [],
+        "checklists": [],
+        "standards": [],
+        "applicability": [],
+        "authorId": null,
+        "approvalStatus": "pending",
+        "usageCount": 0,
+        "lastApplied": null,
+        "customizationNotes": [],
+        "relatedKnowledgeIds": [],
+        "benchmarkIds": [],
+        "license": null,
+        "sourceOrganization": null
       }
     ],
+    "removed": [
+      "template-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

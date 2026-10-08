@@ -1,0 +1,1278 @@
+{
+  "category": {
+    "id": "math.vector",
+    "emoji": "➡️",
+    "order": 420,
+    "label": {
+      "en": "Vectors, points and planes",
+      "de": "Vektoren, Punkte und Ebenen"
+    },
+    "description": {
+      "en": "Build, take apart and combine vectors, points and planes.",
+      "de": "Vektoren, Punkte und Ebenen aufbauen, zerlegen und kombinieren."
+    }
+  },
+  "kinds": [
+    {
+      "id": "math.vectorFromComponents",
+      "category": "math.vector",
+      "emoji": "🧱️",
+      "label": {
+        "en": "Vector from components",
+        "de": "Vektor aus Komponenten"
+      },
+      "description": {
+        "en": "Builds a vector from three numbers.",
+        "de": "Baut einen Vektor aus drei Zahlen."
+      },
+      "inputs": [
+        {
+          "name": "x",
+          "label": {
+            "en": "X",
+            "de": "X"
+          },
+          "description": {
+            "en": "The X component of the vector.",
+            "de": "Die X-Komponente des Vektors."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "y",
+          "label": {
+            "en": "Y",
+            "de": "Y"
+          },
+          "description": {
+            "en": "The Y component of the vector.",
+            "de": "Die Y-Komponente des Vektors."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "z",
+          "label": {
+            "en": "Z",
+            "de": "Z"
+          },
+          "description": {
+            "en": "The Z component of the vector.",
+            "de": "Die Z-Komponente des Vektors."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector.",
+            "de": "Der Vektor."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.pointFromComponents",
+      "category": "math.vector",
+      "emoji": "📍️",
+      "label": {
+        "en": "Point from coordinates",
+        "de": "Punkt aus Koordinaten"
+      },
+      "description": {
+        "en": "Builds a point from three coordinates.",
+        "de": "Baut einen Punkt aus drei Koordinaten."
+      },
+      "inputs": [
+        {
+          "name": "x",
+          "label": {
+            "en": "X",
+            "de": "X"
+          },
+          "description": {
+            "en": "The X component of the point.",
+            "de": "Die X-Komponente des Punkts."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "y",
+          "label": {
+            "en": "Y",
+            "de": "Y"
+          },
+          "description": {
+            "en": "The Y component of the point.",
+            "de": "Die Y-Komponente des Punkts."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "z",
+          "label": {
+            "en": "Z",
+            "de": "Z"
+          },
+          "description": {
+            "en": "The Z component of the point.",
+            "de": "Die Z-Komponente des Punkts."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point.",
+            "de": "Der Punkt."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorComponents",
+      "category": "math.vector",
+      "emoji": "🧩️",
+      "label": {
+        "en": "Vector components",
+        "de": "Vektorkomponenten"
+      },
+      "description": {
+        "en": "Splits a vector into its three components.",
+        "de": "Zerlegt einen Vektor in seine drei Komponenten."
+      },
+      "inputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector to split.",
+            "de": "Der zu zerlegende Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "x",
+          "label": {
+            "en": "X",
+            "de": "X"
+          },
+          "description": {
+            "en": "The X component of the vector.",
+            "de": "Die X-Komponente des Vektors."
+          },
+          "type": "number"
+        },
+        {
+          "name": "y",
+          "label": {
+            "en": "Y",
+            "de": "Y"
+          },
+          "description": {
+            "en": "The Y component of the vector.",
+            "de": "Die Y-Komponente des Vektors."
+          },
+          "type": "number"
+        },
+        {
+          "name": "z",
+          "label": {
+            "en": "Z",
+            "de": "Z"
+          },
+          "description": {
+            "en": "The Z component of the vector.",
+            "de": "Die Z-Komponente des Vektors."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.pointComponents",
+      "category": "math.vector",
+      "emoji": "📌️",
+      "label": {
+        "en": "Point coordinates",
+        "de": "Punktkoordinaten"
+      },
+      "description": {
+        "en": "Splits a point into its three coordinates.",
+        "de": "Zerlegt einen Punkt in seine drei Koordinaten."
+      },
+      "inputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point to split.",
+            "de": "Der zu zerlegende Punkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "x",
+          "label": {
+            "en": "X",
+            "de": "X"
+          },
+          "description": {
+            "en": "The X component of the point.",
+            "de": "Die X-Komponente des Punkts."
+          },
+          "type": "number"
+        },
+        {
+          "name": "y",
+          "label": {
+            "en": "Y",
+            "de": "Y"
+          },
+          "description": {
+            "en": "The Y component of the point.",
+            "de": "Die Y-Komponente des Punkts."
+          },
+          "type": "number"
+        },
+        {
+          "name": "z",
+          "label": {
+            "en": "Z",
+            "de": "Z"
+          },
+          "description": {
+            "en": "The Z component of the point.",
+            "de": "Die Z-Komponente des Punkts."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorAdd",
+      "category": "math.vector",
+      "emoji": "➕️",
+      "label": {
+        "en": "Add vectors",
+        "de": "Vektoren addieren"
+      },
+      "description": {
+        "en": "Adds two vectors.",
+        "de": "Addiert zwei Vektoren."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Vector A",
+            "de": "Vektor A"
+          },
+          "description": {
+            "en": "The first vector.",
+            "de": "Der erste Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Vector B",
+            "de": "Vektor B"
+          },
+          "description": {
+            "en": "The second vector.",
+            "de": "Der zweite Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Sum",
+            "de": "Summe"
+          },
+          "description": {
+            "en": "The sum of A and B.",
+            "de": "Die Summe aus A und B."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorSubtract",
+      "category": "math.vector",
+      "emoji": "➖️",
+      "label": {
+        "en": "Subtract vectors",
+        "de": "Vektoren subtrahieren"
+      },
+      "description": {
+        "en": "Subtracts vector B from vector A.",
+        "de": "Subtrahiert Vektor B von Vektor A."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Vector A",
+            "de": "Vektor A"
+          },
+          "description": {
+            "en": "The first vector.",
+            "de": "Der erste Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Vector B",
+            "de": "Vektor B"
+          },
+          "description": {
+            "en": "The second vector.",
+            "de": "Der zweite Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Difference",
+            "de": "Differenz"
+          },
+          "description": {
+            "en": "The difference A minus B.",
+            "de": "Die Differenz A minus B."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorScale",
+      "category": "math.vector",
+      "emoji": "✖️",
+      "label": {
+        "en": "Scale vector",
+        "de": "Vektor skalieren"
+      },
+      "description": {
+        "en": "Multiplies a vector by a number.",
+        "de": "Multipliziert einen Vektor mit einer Zahl."
+      },
+      "inputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector to scale.",
+            "de": "Der zu skalierende Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "factor",
+          "label": {
+            "en": "Factor",
+            "de": "Faktor"
+          },
+          "description": {
+            "en": "The multiplier.",
+            "de": "Der Multiplikator."
+          },
+          "type": "number",
+          "default": 2,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Scaled vector",
+            "de": "Skalierter Vektor"
+          },
+          "description": {
+            "en": "The scaled vector.",
+            "de": "Der skalierte Vektor."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorLength",
+      "category": "math.vector",
+      "emoji": "📏️",
+      "label": {
+        "en": "Vector length",
+        "de": "Vektorlänge"
+      },
+      "description": {
+        "en": "Measures the length of a vector.",
+        "de": "Misst die Länge eines Vektors."
+      },
+      "inputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector to measure.",
+            "de": "Der zu messende Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "length",
+          "label": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "description": {
+            "en": "The length of the vector.",
+            "de": "Die Länge des Vektors."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorNormalize",
+      "category": "math.vector",
+      "emoji": "🎛️",
+      "label": {
+        "en": "Normalize vector",
+        "de": "Vektor normieren"
+      },
+      "description": {
+        "en": "Scales a vector to length one; the zero vector has no direction.",
+        "de": "Skaliert einen Vektor auf Länge eins; der Nullvektor hat keine Richtung."
+      },
+      "inputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector to normalize; it must not be zero.",
+            "de": "Der zu normierende Vektor; er darf nicht null sein."
+          },
+          "type": "vector",
+          "default": [
+            2,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Unit vector",
+            "de": "Einheitsvektor"
+          },
+          "description": {
+            "en": "The vector with length one.",
+            "de": "Der Vektor mit Länge eins."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorDot",
+      "category": "math.vector",
+      "emoji": "⚫️",
+      "label": {
+        "en": "Dot product",
+        "de": "Skalarprodukt"
+      },
+      "description": {
+        "en": "Computes the dot product of two vectors.",
+        "de": "Berechnet das Skalarprodukt zweier Vektoren."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Vector A",
+            "de": "Vektor A"
+          },
+          "description": {
+            "en": "The first vector.",
+            "de": "Der erste Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Vector B",
+            "de": "Vektor B"
+          },
+          "description": {
+            "en": "The second vector.",
+            "de": "Der zweite Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "label": {
+            "en": "Dot product",
+            "de": "Skalarprodukt"
+          },
+          "description": {
+            "en": "Sum of the component products; zero when the vectors are perpendicular.",
+            "de": "Summe der Komponentenprodukte; null bei senkrechten Vektoren."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorCross",
+      "category": "math.vector",
+      "emoji": "❌️",
+      "label": {
+        "en": "Cross product",
+        "de": "Kreuzprodukt"
+      },
+      "description": {
+        "en": "Computes the vector perpendicular to two vectors.",
+        "de": "Berechnet den Vektor senkrecht zu zwei Vektoren."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Vector A",
+            "de": "Vektor A"
+          },
+          "description": {
+            "en": "The first vector.",
+            "de": "Der erste Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Vector B",
+            "de": "Vektor B"
+          },
+          "description": {
+            "en": "The second vector.",
+            "de": "Der zweite Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Cross product",
+            "de": "Kreuzprodukt"
+          },
+          "description": {
+            "en": "The perpendicular vector following the right-hand rule.",
+            "de": "Der senkrechte Vektor nach der Rechte-Hand-Regel."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorAngle",
+      "category": "math.vector",
+      "emoji": "📐️",
+      "label": {
+        "en": "Angle between vectors",
+        "de": "Winkel zwischen Vektoren"
+      },
+      "description": {
+        "en": "Measures the angle between two vectors.",
+        "de": "Misst den Winkel zwischen zwei Vektoren."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Vector A",
+            "de": "Vektor A"
+          },
+          "description": {
+            "en": "The first vector.",
+            "de": "Der erste Vektor."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Vector B",
+            "de": "Vektor B"
+          },
+          "description": {
+            "en": "The second vector.",
+            "de": "Der zweite Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "The angle from 0 to 180 degrees.",
+            "de": "Der Winkel von 0 bis 180 Grad."
+          },
+          "type": "angle"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.pointOffset",
+      "category": "math.vector",
+      "emoji": "🛫️",
+      "label": {
+        "en": "Offset point",
+        "de": "Punkt versetzen"
+      },
+      "description": {
+        "en": "Moves a point by a vector.",
+        "de": "Verschiebt einen Punkt um einen Vektor."
+      },
+      "inputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The starting position.",
+            "de": "Die Ausgangsposition."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Versatz"
+          },
+          "description": {
+            "en": "The displacement.",
+            "de": "Die Verschiebung."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The moved point.",
+            "de": "Der verschobene Punkt."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.pointDistance",
+      "category": "math.vector",
+      "emoji": "↔️",
+      "label": {
+        "en": "Distance between points",
+        "de": "Abstand zwischen Punkten"
+      },
+      "description": {
+        "en": "Measures the straight distance between two points.",
+        "de": "Misst den geraden Abstand zwischen zwei Punkten."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Point A",
+            "de": "Punkt A"
+          },
+          "description": {
+            "en": "The first point.",
+            "de": "Der erste Punkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Point B",
+            "de": "Punkt B"
+          },
+          "description": {
+            "en": "The second point.",
+            "de": "Der zweite Punkt."
+          },
+          "type": "point",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "The distance between the points.",
+            "de": "Der Abstand zwischen den Punkten."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.pointInterpolate",
+      "category": "math.vector",
+      "emoji": "🎚️",
+      "label": {
+        "en": "Point between",
+        "de": "Punkt dazwischen"
+      },
+      "description": {
+        "en": "Finds the point at a fraction of the way between two points.",
+        "de": "Findet den Punkt bei einem Bruchteil des Wegs zwischen zwei Punkten."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "From",
+            "de": "Von"
+          },
+          "description": {
+            "en": "The point at 0.",
+            "de": "Der Punkt bei 0."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "To",
+            "de": "Nach"
+          },
+          "description": {
+            "en": "The point at 1.",
+            "de": "Der Punkt bei 1."
+          },
+          "type": "point",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "t",
+          "label": {
+            "en": "Fraction",
+            "de": "Anteil"
+          },
+          "description": {
+            "en": "Position between the points; 0.5 is the midpoint.",
+            "de": "Position zwischen den Punkten; 0,5 ist die Mitte."
+          },
+          "type": "number",
+          "default": 0.5,
+          "step": 0.05
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The interpolated point.",
+            "de": "Der interpolierte Punkt."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vectorBetween",
+      "category": "math.vector",
+      "emoji": "🏹️",
+      "label": {
+        "en": "Vector between points",
+        "de": "Vektor zwischen Punkten"
+      },
+      "description": {
+        "en": "Builds the vector that leads from one point to another.",
+        "de": "Baut den Vektor, der von einem Punkt zu einem anderen führt."
+      },
+      "inputs": [
+        {
+          "name": "from",
+          "label": {
+            "en": "From",
+            "de": "Von"
+          },
+          "description": {
+            "en": "The starting point.",
+            "de": "Der Startpunkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "to",
+          "label": {
+            "en": "To",
+            "de": "Nach"
+          },
+          "description": {
+            "en": "The target point.",
+            "de": "Der Zielpunkt."
+          },
+          "type": "point",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vector",
+          "label": {
+            "en": "Vector",
+            "de": "Vektor"
+          },
+          "description": {
+            "en": "The vector from the first to the second point.",
+            "de": "Der Vektor vom ersten zum zweiten Punkt."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.planeFromPointNormal",
+      "category": "math.vector",
+      "emoji": "🔳️",
+      "label": {
+        "en": "Plane from point and normal",
+        "de": "Ebene aus Punkt und Normale"
+      },
+      "description": {
+        "en": "Builds a plane through a point with a given normal.",
+        "de": "Baut eine Ebene durch einen Punkt mit gegebener Normale."
+      },
+      "inputs": [
+        {
+          "name": "origin",
+          "label": {
+            "en": "Origin",
+            "de": "Ursprung"
+          },
+          "description": {
+            "en": "A point on the plane.",
+            "de": "Ein Punkt auf der Ebene."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "Direction perpendicular to the plane.",
+            "de": "Richtung senkrecht zur Ebene."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane.",
+            "de": "Die Ebene."
+          },
+          "type": "plane"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.planeFromPoints",
+      "category": "math.vector",
+      "emoji": "🔺️",
+      "label": {
+        "en": "Plane from three points",
+        "de": "Ebene aus drei Punkten"
+      },
+      "description": {
+        "en": "Builds the plane through three points that do not lie on a line.",
+        "de": "Baut die Ebene durch drei Punkte, die nicht auf einer Geraden liegen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Point A",
+            "de": "Punkt A"
+          },
+          "description": {
+            "en": "The first point; it becomes the origin.",
+            "de": "Der erste Punkt; er wird zum Ursprung."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Point B",
+            "de": "Punkt B"
+          },
+          "description": {
+            "en": "The second point.",
+            "de": "Der zweite Punkt."
+          },
+          "type": "point",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "c",
+          "label": {
+            "en": "Point C",
+            "de": "Punkt C"
+          },
+          "description": {
+            "en": "The third point.",
+            "de": "Der dritte Punkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane through the points.",
+            "de": "Die Ebene durch die Punkte."
+          },
+          "type": "plane"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.planeComponents",
+      "category": "math.vector",
+      "emoji": "🪓️",
+      "label": {
+        "en": "Plane components",
+        "de": "Ebenenkomponenten"
+      },
+      "description": {
+        "en": "Splits a plane into its origin and normal.",
+        "de": "Zerlegt eine Ebene in Ursprung und Normale."
+      },
+      "inputs": [
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The plane to split.",
+            "de": "Die zu zerlegende Ebene."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "origin",
+          "label": {
+            "en": "Origin",
+            "de": "Ursprung"
+          },
+          "description": {
+            "en": "A point on the plane.",
+            "de": "Ein Punkt auf der Ebene."
+          },
+          "type": "point"
+        },
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "The unit normal of the plane.",
+            "de": "Die Einheitsnormale der Ebene."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    }
+  ]
+}

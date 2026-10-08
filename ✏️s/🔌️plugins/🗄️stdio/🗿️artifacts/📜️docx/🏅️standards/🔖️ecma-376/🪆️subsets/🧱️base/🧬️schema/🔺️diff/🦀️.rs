@@ -1010,7 +1010,7 @@ fn inverse_xml_parts(base: &DocxXmlParts, diff: &DocxXmlPartsDiff) -> DocxXmlPar
 
 //#region 🔖️Apply
 impl MutationDiff<DocxSnapshot> for DocxDiff {
-    fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
+    fn apply(&self, base: &DocxSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
         if let Some(diff) = &self.opc {
             let mut opc = next.opc.materialize_package_exact().map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.to_string()).under(["opc"]))?;

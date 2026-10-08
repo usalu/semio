@@ -74,3 +74,6 @@ impl Default for Puzzle2dSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
 mod retained_clone_tests;
+
+#[path = "🔎️lookup/🦀️.rs"]
+pub mod lookup;

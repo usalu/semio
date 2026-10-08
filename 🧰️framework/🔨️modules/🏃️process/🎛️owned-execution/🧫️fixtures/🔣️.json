@@ -34,5 +34,6 @@
     "label": "artifact-rust:fixture:build",
     "intervalMs": 1,
     "pattern": "^\\[artifact-rust:fixture:build\\] running elapsedMs=[0-9]+$"
-  }
+  },
+  "reportExecutionBudgetMs": 10000
 }

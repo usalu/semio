@@ -406,7 +406,7 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
 
 //#region 🔖️Apply
 impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
-    fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
+    fn apply(&self, base: &SemioVideoSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
             crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;

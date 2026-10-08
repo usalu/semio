@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn language_neutral_mutations_match_json_oracle_and_restore_base() {
@@ -10,7 +10,7 @@ fn language_neutral_mutations_match_json_oracle_and_restore_base() {
         let oracle: DagConfigMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();
         assert_eq!(mutation, oracle);
         assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-        let next = mutation.diff(&base).diff().apply(&base).unwrap();
+        let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
         let expected: DagConfig = serde_json::from_value(vector["after"].clone()).unwrap();
         assert_eq!(next, expected);
         let encoded = mutation.encode_op().unwrap();
@@ -18,7 +18,7 @@ fn language_neutral_mutations_match_json_oracle_and_restore_base() {
         assert_eq!(DagConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let mut restored = next;
         for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-            restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
+            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap();
         }
         assert_eq!(restored, base);
     }

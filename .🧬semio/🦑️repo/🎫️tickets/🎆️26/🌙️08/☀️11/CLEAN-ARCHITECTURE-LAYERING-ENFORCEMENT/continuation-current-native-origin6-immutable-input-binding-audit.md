@@ -1,0 +1,3 @@
+# Current Origin Six Immutable Model Inputs
+
+Source6 is already bound by its closed laws and stays byte exact. Model input receipts bind complete full pairs and the helper/authority hashes they were actually validated against. At capture, every receipt binding is checked against actual current bytes; later immutable initial/model/prepared bodies and receipts retain the authority rather than asserting live Root identity. No later re-execution of a model source helper occurs, so the exact receipt and complete endpoint bodies are the current held model authority. Independent complete joins are required before diagnostic release.

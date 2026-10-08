@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePeopleGainLatentFraction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PeopleGainPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangePeopleGainLatentFraction, base: &EnergyModelS
     if existing.latent_fraction == payload.new_latent_fraction {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("People Gain {} already carries this latent fraction: {}.", payload.id.0, payload.new_latent_fraction));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.people.iter_mut().find(|item| item.id == payload.id) {
-        item.latent_fraction = payload.new_latent_fraction;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { people: Rows::modifying(PeopleGainPatch { latent_fraction: Some(payload.new_latent_fraction), ..PeopleGainPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

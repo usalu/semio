@@ -123,7 +123,7 @@ fn go_implementation_projects_process_leaves_at_the_go_binary() {
             assert_eq!(spec.cmd, go_binary_path(&tmp).display().to_string());
             assert_eq!(spec.args, vec!["statute", "list"]);
         }
-        CommandLeaf::Repo(action) => panic!("expected a process leaf, got {action:?}"),
+        leaf => panic!("expected a process leaf, got {leaf:?}"),
     }
     fs::remove_dir_all(&tmp).ok();
 }
@@ -191,6 +191,48 @@ fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
     let mut trie = TrieNode::default(); collect_inferred_targets(&root, &mut trie, &std::sync::atomic::AtomicBool::new(false));
     writer.join().unwrap();
     let node = trie.into_command_node("root", "semio");
-    assert_eq!(node.children.iter().map(|child| child.key.as_str()).collect::<Vec<_>>(), ["build", "component-dev", "materialize-dev"]);
+    assert_eq!(node.children.iter().map(|child| child.key.as_str()).collect::<Vec<_>>(), ["build", "task"]);
     fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn launch_configurations_targets_and_scripts_are_filed_under_their_verb() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🚀️launch-configurations/🔣️.json")).unwrap();
+    let root = temp_root("launch");
+    fs::create_dir_all(root.join(".vscode")).unwrap();
+    fs::write(root.join(LAUNCH_CONFIGURATIONS), fixture["launch"].as_str().unwrap()).unwrap();
+    let manifest = root.join(fixture["project"]["path"].as_str().unwrap());
+    fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+    let targets: serde_json::Map<String, serde_json::Value> = fixture["project"]["targets"].as_array().unwrap().iter().map(|target| (target.as_str().unwrap().to_string(), serde_json::json!({}))).collect();
+    fs::write(&manifest, serde_json::json!({ "name": fixture["project"]["name"], "targets": targets }).to_string()).unwrap();
+    fs::write(root.join("package.json"), serde_json::json!({ "scripts": fixture["scripts"] }).to_string()).unwrap();
+    let tree = discover(&root);
+    let commands = crate::inventory::commands(&tree);
+    let verbs: Vec<&str> = fixture["verbs"].as_array().unwrap().iter().map(|verb| verb.as_str().unwrap()).collect();
+    assert_eq!(tree.children.iter().take(verbs.len()).map(|child| child.key.as_str()).collect::<Vec<_>>(), verbs);
+    let prefix = root.display().to_string();
+    let relative = |value: &str| value.replace(&format!("{prefix}/"), "").replace(&prefix, "");
+    let project = |spec: &CommandSpec| {
+        let env: serde_json::Map<String, serde_json::Value> = spec.env.iter().filter(|pair| !nx_env().contains(pair)).map(|(key, value)| (key.clone(), relative(value).into())).collect();
+        let cwd = relative(&spec.cwd.display().to_string());
+        if spec.cmd == "sh" || spec.cmd == "cmd.exe" { serde_json::json!({ "shell": relative(spec.args.last().unwrap()), "cwd": cwd, "env": env }) } else { serde_json::json!({ "cmd": spec.cmd, "args": spec.args.iter().map(|arg| relative(arg)).collect::<Vec<_>>(), "cwd": cwd, "env": env }) }
+    };
+    for expected in fixture["launched"].as_array().unwrap() {
+        let (_, leaf) = commands.iter().find(|(label, _)| label == expected["label"].as_str().unwrap()).unwrap_or_else(|| panic!("missing {}", expected["label"]));
+        let processes: Vec<_> = match leaf { CommandLeaf::Process(spec) => vec![project(spec)], CommandLeaf::Compound(specs) => specs.iter().map(project).collect(), CommandLeaf::Repo(action) => panic!("unexpected {action:?}") };
+        assert_eq!(serde_json::Value::Array(processes), expected["processes"], "{}", expected["label"]);
+        if let CommandLeaf::Process(spec) = leaf { assert!(nx_env().iter().all(|pair| spec.env.contains(pair))); }
+    }
+    for omitted in fixture["omitted"].as_array().unwrap() { assert!(commands.iter().all(|(label, _)| !label.contains(omitted.as_str().unwrap())), "{omitted} must not be offered"); }
+    for search in fixture["searches"].as_array().unwrap() {
+        let state = ui_tui::tui::widget::WizardState { filter: search["filter"].as_str().unwrap().into(), ..ui_tui::tui::widget::WizardState::new(commands.iter().map(|(label, _)| label.clone()).collect()) };
+        let labels: Vec<&str> = state.visible_indices().into_iter().map(|index| state.options[index].as_str()).collect();
+        assert_eq!(labels, search["labels"].as_array().unwrap().iter().map(|label| label.as_str().unwrap()).collect::<Vec<_>>(), "{}", search["filter"]);
+    }
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn launch_documents_tolerate_comments_and_trailing_commas() {
+    assert_eq!(strip_jsonc("{ // note\n \"a\": \"// kept, \\\" */\", /* gone */ \"b\": [1, 2, ], }"), "{ \n \"a\": \"// kept, \\\" */\",  \"b\": [1, 2]}");
 }

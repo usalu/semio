@@ -86,7 +86,7 @@ impl Default for GisTerrainSnapshot {
 //#endregion 🌉️IdentityBridge
 
 #[path="🧮️row-admission/🦀️.rs"]
-mod row_admission;
+pub(crate) mod row_admission;
 #[path="🧮️value-admission/🦀️.rs"]
-mod value_admission;
+pub(crate) mod value_admission;
 

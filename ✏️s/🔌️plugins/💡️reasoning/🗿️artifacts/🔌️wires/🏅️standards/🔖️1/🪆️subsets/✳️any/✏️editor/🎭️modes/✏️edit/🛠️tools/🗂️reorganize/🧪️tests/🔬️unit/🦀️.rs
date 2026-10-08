@@ -22,7 +22,7 @@ fn identity() -> ToolRunIdentity {
 }
 
 fn metabolism() -> DslValue {
-    let snapshot = crate::schema::metabolism_wires_example_snapshot().expect("metabolism example");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("metabolism example");
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("declared metabolism child");
     let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
     crate::wires_composed(&snapshot, &content).board

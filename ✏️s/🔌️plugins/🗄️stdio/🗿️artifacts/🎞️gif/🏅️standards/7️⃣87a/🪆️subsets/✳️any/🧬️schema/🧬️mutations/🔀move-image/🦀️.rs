@@ -1,6 +1,5 @@
-//! 🔀️ `move-image` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔀️ `move-image` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +15,23 @@ pub struct MoveImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "image", kind: "move-image", record: "MoveImage" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::MoveImage(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { from, to } = self;
+        let Some(image) = base.images.get(*from) else { return protocol::MutationOutcome::new(GifDiff::default()) };
+        let at = (*to).min(base.images.len() - 1);
+        if at == *from {
+            return protocol::MutationOutcome::new(GifDiff::default());
+        }
+        protocol::MutationOutcome::new(GifDiff { images: Some(GifImagesDiff { removed: vec![*from], added: vec![GifImageAdded { index: at, image: image.clone() }], ..Default::default() }), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::MoveImage(self.clone()), base)?
-    
-    })
-}
+        let Self { from, to } = self;
+        if *from >= base.images.len() {
+            return Ok(Vec::new());
+        }
+        let at = (*to).min(base.images.len() - 1);
+        Ok(if at == *from { Vec::new() } else { vec![GifMutation::MoveImage(move_image::MoveImage { from: at, to: *from })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Move image", "Bild verschieben")
     }

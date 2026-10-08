@@ -57,7 +57,7 @@ pub struct DwgDiff {
 }
 
 impl MutationDiff<DwgSnapshot> for DwgDiff {
-    fn apply(&self, base: &DwgSnapshot) -> MutationApplyResult<DwgSnapshot> {
+    fn apply(&self, base: &DwgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<DwgSnapshot> {
         Ok(DwgSnapshot {
             schema: base.schema.clone(),
             version: self.version.clone().unwrap_or_else(|| base.version.clone()),

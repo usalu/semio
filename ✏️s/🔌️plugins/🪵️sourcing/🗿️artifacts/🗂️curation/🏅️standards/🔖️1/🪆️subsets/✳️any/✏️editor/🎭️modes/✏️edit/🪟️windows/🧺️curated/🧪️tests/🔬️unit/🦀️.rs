@@ -8,7 +8,7 @@ use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, render as 
 /// 🧫️ The demo stock with its two first kinds curated at different counts — the only fixture these
 /// tests need to see the curated table's ordering and its row actions.
 fn curated_document() -> CurationSnapshot {
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let ids: Vec<String> = crate::stock_of(&document).iter().take(2).map(|kind| kind.id.clone()).collect();
     crate::schema::curation_set(&mut document, &ids[0], 3);
     crate::schema::curation_set(&mut document, &ids[1], 1);

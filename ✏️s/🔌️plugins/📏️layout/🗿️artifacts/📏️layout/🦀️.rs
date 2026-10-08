@@ -56,6 +56,17 @@ pub struct LayoutDrawingChild {
     pub content: SemioDrawingSnapshot,
 }
 
+impl semio_framework_dsl_record::BorrowedDslRecord for LayoutDrawingChild {
+    const RECORD: semio_framework_dsl_record::BorrowedRecordSpec = semio_framework_dsl_record::BorrowedRecordSpec { keyword: None, layout: semio_framework_dsl_record::RecordLayout::Inline, fields: &[
+        semio_framework_dsl_record::BorrowedFieldSpec { id: 0, key: "handle", position: None, shape: <store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::BorrowedDslField>::SHAPE, optional: false, flatten: false, defines: None, is_call_name: false },
+        semio_framework_dsl_record::BorrowedFieldSpec { id: 1, key: "content", position: None, shape: semio_framework_dsl_record::BorrowedShape::Value, optional: false, flatten: false, defines: None, is_call_name: false },
+    ] };
+}
+
+impl semio_framework_dsl_record::BorrowedDslField for LayoutDrawingChild {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);
+}
+
 impl semio_framework_schema_composition::ChildFieldRefs for LayoutDrawingChild {
     const MANY: bool = false;
     fn visit_child_field<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
@@ -558,18 +569,18 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("layout.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "layout.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("layout.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -588,8 +599,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("layout.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -598,8 +609,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("layout.spr"),
                 },
             ]
@@ -872,10 +883,11 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> fo
 
 /// 🌱️ Sparse "one frame was inserted into this page" fragment of a {@link PagePatch} — carries the
 /// `create-frame` semantic mutation's payload verbatim plus the FINAL-state insertion index.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageFrameAdded {
+    #[dsl(statements)]
     pub frame: Frame,
     pub index: Option<usize>,
     pub layer_id: Option<String>,
@@ -884,7 +896,7 @@ pub struct PageFrameAdded {
 /// 🩹️ Sparse "one frame inside this page was field-patched" fragment of a {@link PagePatch} — carries
 /// the `move-frame`/`resize-frame`/`change-frame-*` semantic mutations' shared payload shape, and one entry per
 /// frame a frame-selection leaf (`drag-frames`/`rotate-frames`/`scale-frames`) moves.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageFramePatched {
@@ -893,7 +905,7 @@ pub struct PageFramePatched {
 }
 
 /// 🩹 One layer on a page changed its name or flags.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageLayerPatched {
@@ -903,12 +915,8 @@ pub struct PageLayerPatched {
     pub locked: Option<bool>,
 }
 
-/// 📄️ Sparse scalar patch for a {@link Page} (name, size, margins, columns, one nested frame
-/// add/remove, every field-patched frame in page order). Never derives `dsl::DslRecord` — `frames_patched[].patch` nests a
-/// {@link FramePatch}, which itself can't bind (its doubly-optional `fill`/`stroke` fields have no
-/// direct DSL-field mapping; see `🧬️mutations/📝️text/🦀️.rs`'s doc comment), so this type is
-/// JSON-only like `FramePatch` itself.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+/// 📄️ Sparse page patch with borrowed nested roles and unchanged, cleared or replaced optional fields.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PagePatch {
@@ -942,7 +950,7 @@ pub struct PagePatch {
     pub frame_order: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageFrameLayer {
@@ -1268,7 +1276,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
 /// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
 /// patches above it has no `Patchable` impl.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct FramePatch {

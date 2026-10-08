@@ -41,12 +41,16 @@ fn close_store(mut store: Process3dStore) {
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..1_048_576 {
-        match disposer.close_step(&mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close step") {
+        let grant = semio_framework_plugin::app::artifact_close_release_grant(store.next_close_byte_demand(), store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture admits exact close allocation");
+        match disposer.close_step(&mut store, 1, grant).expect("Process3d fixture store close step") {
             semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                assert!(released_bytes <= grant);
             }
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } | semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("Process3d fixture store close blocked: {reason}"),
+            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("Process3d fixture store close awaits input: {reason}"),
+            semio_framework_plugin::PluginCloseStep::Blocked { reason } => {
+                assert!(store.next_close_byte_demand() > grant, "Process3d fixture store close blocked without a newly retained physical demand: {reason}");
+            }
             semio_framework_plugin::PluginCloseStep::Complete => {
                 assert!(disposer.terminal_is_empty(&store));
                 return;

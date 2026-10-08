@@ -260,8 +260,22 @@ impl semio_framework_value::FromValue for ProbeSnapshot {
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ProbeDiff(pub serde_json::Value);
 
+impl store::DiffAlgebra<ProbeSnapshot> for ProbeDiff {
+    fn inverse(&self, base: &ProbeSnapshot) -> Self {
+        ProbeDiff(base.0.clone())
+    }
+
+    fn between(_base: &ProbeSnapshot, other: &ProbeSnapshot) -> Self {
+        ProbeDiff(other.0.clone())
+    }
+
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
 impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
-    fn apply(&self, _base: &ProbeSnapshot) -> store::MutationApplyResult<ProbeSnapshot> {
+    fn apply(&self, _base: &ProbeSnapshot, _capability: store::ApplyCapability) -> store::MutationApplyResult<ProbeSnapshot> {
         Ok(ProbeSnapshot(self.0.clone()))
     }
 
@@ -417,14 +431,18 @@ impl<T: Send> store::ErasedSnapshotRetirement for ProbeOwnedRetirement<T> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ProbeSnapshotRetirementFactory;
 
 impl store::SnapshotRetirementFactory<ProbeSnapshot> for ProbeSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<ProbeSnapshot>) -> usize { std::mem::size_of::<ProbeOwnedRetirement<Arc<ProbeSnapshot>>>() }
+
     fn retire(&self, snapshot: Arc<ProbeSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(ProbeOwnedRetirement(Some(snapshot)))
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ProbeInitialSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<ProbeSnapshot> for ProbeInitialSnapshotRetirementFactory {
@@ -433,6 +451,7 @@ impl store::ArtifactOwnedValueRetirementFactory<ProbeSnapshot> for ProbeInitialS
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ProbeMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<ProbeMutation> for ProbeMutationRetirementFactory {

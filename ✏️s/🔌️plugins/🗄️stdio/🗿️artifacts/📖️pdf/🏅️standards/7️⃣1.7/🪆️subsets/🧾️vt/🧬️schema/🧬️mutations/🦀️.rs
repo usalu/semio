@@ -96,7 +96,7 @@ pub enum PdfVtMutation {
 pub fn apply_vt_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfVtMutation) -> protocol::MutationOutcome<PdfDiff> {
     use protocol::Mutation;
     let outcome = mutation.diff(snapshot);
-    outcome.apply_to(snapshot)
+    crate::standards::v1_7::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
 }
 
 /// 🧾️ Returns the derive-owned semantic catalog.

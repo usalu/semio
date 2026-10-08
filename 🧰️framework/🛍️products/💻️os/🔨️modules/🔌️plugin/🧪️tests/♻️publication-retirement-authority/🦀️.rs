@@ -107,6 +107,7 @@ impl<T: Send + Sync + 'static> store::ErasedSnapshotRetirement for FixtureRootRe
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FixtureRootRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
 impl<T> Default for FixtureRootRetirementFactory<T> {
@@ -116,6 +117,8 @@ impl<T> Default for FixtureRootRetirementFactory<T> {
 }
 
 impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for FixtureRootRetirementFactory<T> {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { std::mem::size_of::<FixtureRootRetirement<T>>() }
+
     fn retire(&self, snapshot: Arc<T>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(FixtureRootRetirement(Some(snapshot)))
     }
@@ -630,7 +633,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         publication_lanes: &[crate::app::ArtifactToolPublicationLane::WindowTransient],
         session: None,
         session_rejected: None,
-        completion: None,
+        reserved_producer: None, completion: None,
         raw_input: None,
         output_chunks: None,
         cancellation_lease: Some(lease),
@@ -639,6 +642,9 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         publication: Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(crate::app::Emit::default()), crate::app::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
         pending_artifact_publication: None,
         pending_child_publication: None,
+        owned_child_group: None,
+        owned_child_committed: false,
+        owned_child_result_pending: false,
         captured_child_content: Some(Arc::new(crate::app::ChildContentView::EMPTY)),
         captured_child_content_generation: 0,
         result_page: None,

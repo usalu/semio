@@ -1,7 +1,7 @@
 //! 🧭️ Fem3d mutation — `MoveSelection` payload + `MutationKind` impl.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{Fem3dSnapshot, FemSolid};
+use crate::{Fem3dSnapshot, FemNode, FemSolid};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -53,6 +53,35 @@ impl MoveSelection {
     /// 🫥️ Whether the transform is the identity: no offset, no angle, unit factors.
     pub fn is_identity(&self) -> bool {
         (self.dx, self.dy, self.dz, self.angle, self.sx, self.sy, self.sz) == (0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    }
+
+    /// 🛡️ The hard-bound breach of this payload, as its `mutation.invariant` message and address: a non-finite number, a factor that is not positive, a rotation about the zero axis, or a target named twice.
+    pub fn breach(&self) -> Option<(String, Vec<String>)> {
+        let targets: Vec<String> = self.node_ids.iter().chain(&self.solid_ids).cloned().collect();
+        let numbers = [self.pivot_x, self.pivot_y, self.pivot_z, self.dx, self.dy, self.dz, self.axis_x, self.axis_y, self.axis_z, self.angle, self.sx, self.sy, self.sz];
+        if numbers.iter().any(|value| !value.is_finite()) {
+            return Some(("A move-selection carries a non-finite number.".to_string(), targets));
+        }
+        if self.sx <= 0.0 || self.sy <= 0.0 || self.sz <= 0.0 {
+            return Some((format!("A move-selection needs positive scale factors, got ({}, {}, {}).", self.sx, self.sy, self.sz), targets));
+        }
+        if self.angle != 0.0 && self.unit_axis().is_none() {
+            return Some(("A move-selection cannot rotate about the zero axis.".to_string(), targets));
+        }
+        let repeated = |ids: &[String]| ids.iter().enumerate().find(|(at, id)| ids[..*at].contains(id)).map(|(_, id)| id.clone());
+        repeated(&self.node_ids).or_else(|| repeated(&self.solid_ids)).map(|twice| (format!("A move-selection names \"{twice}\" twice."), vec![twice]))
+    }
+
+    /// 📍️ `node` carried through the transform, or `None` when it does not move.
+    pub fn moved_node(&self, node: &FemNode) -> Option<FemNode> {
+        let [x, y, z] = self.map([node.x, node.y, node.z]);
+        let moved = FemNode { x, y, z, ..node.clone() };
+        (moved != *node).then_some(moved)
+    }
+
+    /// 🧊️ `solid` carried through the transform, or `None` when it does not move or cannot follow.
+    pub fn moved_solid(&self, solid: &FemSolid) -> Option<FemSolid> {
+        self.map_solid(solid).filter(|moved| moved != solid)
     }
 
     /// 🧊️ `solid` re-drawn through [`Self::map`]: every outline and hole point lifted into the world at the solid's

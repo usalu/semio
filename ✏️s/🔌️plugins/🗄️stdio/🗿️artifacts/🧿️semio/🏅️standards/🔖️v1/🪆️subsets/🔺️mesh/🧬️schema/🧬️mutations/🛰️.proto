@@ -3,7 +3,6 @@ syntax = "proto3";
 // truth. Seventeen-verb mesh vocabulary; `ReplacePrimitiveGeometry` is SMO's approved rename of
 // the old `SetPrimitiveGeometry`, completed by DKM after SMO wound down.
 package semio.s_stdio_semio_mesh.mutations;
-import "📸️set-snapshot/🛰️.proto";
 
 import "../📸️snapshot/🛰️.proto";
 
@@ -52,6 +51,5 @@ message SemioMeshMutation {
     ChangeTextureMime change_texture_mime = 15;
     ReplaceTextureBytes replace_texture_bytes = 16;
     MoveVertex move_vertex = 17;
-      SetSnapshot set_snapshot = 18;
   }
 }

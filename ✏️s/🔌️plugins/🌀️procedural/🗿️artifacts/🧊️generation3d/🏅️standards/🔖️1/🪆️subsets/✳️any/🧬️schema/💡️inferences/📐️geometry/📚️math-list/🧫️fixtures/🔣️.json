@@ -1,0 +1,24 @@
+{
+  "description": "Language-agnostic laws of the math.list geometry widgets. Plain numbers are numbers; every value of an `any` port is typed as { type, value } so integers and numbers stay distinguishable. Outputs match to `tolerance` (absolute, relative above magnitude one). Rust and TypeScript run the same cases; TypeScript recomputes every outcome with three's MathUtils.",
+  "tolerance": 1e-12,
+  "cases": [
+    { "name": "range of five", "kind": "math.range", "inputs": { "start": 0, "end": 1, "count": 5 }, "outputs": { "numbers": [0, 0.25, 0.5, 0.75, 1] } },
+    { "name": "range keeps the end exactly", "kind": "math.range", "inputs": { "start": 0, "end": 0.3, "count": 4 }, "outputs": { "numbers": [0, 0.1, 0.2, 0.3] } },
+    { "name": "range of equal ends", "kind": "math.range", "inputs": { "start": 5, "end": 5, "count": 3 }, "outputs": { "numbers": [5, 5, 5] } },
+    { "name": "range descending", "kind": "math.range", "inputs": { "start": 10, "end": 0, "count": 3 }, "outputs": { "numbers": [10, 5, 0] } },
+    { "name": "range of two", "kind": "math.range", "inputs": { "start": -1, "end": 1, "count": 2 }, "outputs": { "numbers": [-1, 1] } },
+    { "name": "range overflows", "kind": "math.range", "inputs": { "start": -1.7e308, "end": 1.7e308, "count": 3 }, "fault": { "code": "generation3d.geometry.math-overflow" } },
+    { "name": "series ascending", "kind": "math.series", "inputs": { "start": 1, "step": 2, "count": 4 }, "outputs": { "numbers": [1, 3, 5, 7] } },
+    { "name": "series descending", "kind": "math.series", "inputs": { "start": 0, "step": -0.5, "count": 3 }, "outputs": { "numbers": [0, -0.5, -1] } },
+    { "name": "series of one", "kind": "math.series", "inputs": { "start": 7, "step": 3, "count": 1 }, "outputs": { "numbers": [7] } },
+    { "name": "series overflows", "kind": "math.series", "inputs": { "start": 0, "step": 1e308, "count": 3 }, "fault": { "code": "generation3d.geometry.math-overflow" } },
+    { "name": "list item first", "kind": "math.listItem", "inputs": { "list": [{ "type": "number", "value": 10 }, { "type": "number", "value": 20 }, { "type": "number", "value": 30 }], "index": 0 }, "outputs": { "item": { "type": "number", "value": 10 } } },
+    { "name": "list item last", "kind": "math.listItem", "inputs": { "list": [{ "type": "number", "value": 10 }, { "type": "number", "value": 20 }, { "type": "number", "value": 30 }], "index": 2 }, "outputs": { "item": { "type": "number", "value": 30 } } },
+    { "name": "list item keeps the variant", "kind": "math.listItem", "inputs": { "list": [{ "type": "text", "value": "a" }, { "type": "point", "value": [1, 2, 3] }, { "type": "integer", "value": 4 }], "index": 1 }, "outputs": { "item": { "type": "point", "value": [1, 2, 3] } } },
+    { "name": "list item beyond the end", "kind": "math.listItem", "inputs": { "list": [{ "type": "integer", "value": 1 }, { "type": "integer", "value": 2 }], "index": 2 }, "fault": { "code": "generation3d.geometry.list-index", "port": "index" } },
+    { "name": "list item of an empty list", "kind": "math.listItem", "inputs": { "list": [], "index": 0 }, "fault": { "code": "generation3d.geometry.list-index", "port": "index" } },
+    { "name": "list item with a negative index", "kind": "math.listItem", "inputs": { "list": [{ "type": "integer", "value": 1 }], "index": -1 }, "fault": { "code": "generation3d.geometry.list-index", "port": "index" } },
+    { "name": "list length of three", "kind": "math.listLength", "inputs": { "list": [{ "type": "boolean", "value": true }, { "type": "boolean", "value": false }, { "type": "text", "value": "x" }] }, "outputs": { "count": 3 } },
+    { "name": "list length of an empty list", "kind": "math.listLength", "inputs": { "list": [] }, "outputs": { "count": 0 } }
+  ]
+}

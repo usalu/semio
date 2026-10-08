@@ -495,5 +495,7 @@ export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfe
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
   await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload, mergeMeshTransfers }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerAnalysisOracleTests } = await import("./🧪️tests/🧪️analysis-oracles/🟦️.ts");
+  await registerAnalysisOracleTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

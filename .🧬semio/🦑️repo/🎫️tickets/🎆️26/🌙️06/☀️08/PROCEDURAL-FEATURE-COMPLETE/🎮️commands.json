@@ -1,0 +1,190 @@
+{
+  "tools": [
+    {
+      "id": "test-authored-import-gltf",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/procedural-generation3d-rs:test",
+        "--skip-nx-cache",
+        "--args=long --offline --test io-round-trip -E \"test(gltf_import_declared_domains_are_admitted_before_allocation) | test(gltf_authored_attribute_palettes_restore_editable_source_domains) | test(gltf_authored_surface_metadata_enters_the_editable_constructor)\""
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-03/gltf-authored-import-native"
+      }
+    },
+    {
+      "id": "test-closest-point-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "semio-framework-3d:test",
+        "--skip-nx-cache",
+        "--args=long --offline --lib -E \"test(brep_closest_point_supports_profiles_and_compounds) | test(brep_closest_point_honors_curved_face_trims)\""
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-03/brep-closest-point"
+      }
+    },
+    {
+      "id": "test-component-retirement-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-spatial-kernel-semio-session-rs:test",
+        "--skip-nx-cache",
+        "--args=component-retirement --offline"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-03/session-component-retirement"
+      }
+    },
+    {
+      "id": "test-live-selected-solid-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-composition-laws-rs:test",
+        "--",
+        "--test",
+        "generation3d-app-laws",
+        "--law-filter",
+        "mesh_brep_live_scoped_selection_"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "2",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-controls-exact"
+      }
+    },
+    {
+      "id": "test-measurements-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "semio-framework-3d:test",
+        "--skip-nx-cache",
+        "--args=long --offline --lib -E \"test(brep_length_measures_profiles_and_topological_boundaries) | test(brep_area_measures_compound_surface_topology) | test(brep_volume_measures_compound_solid_topology)\""
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-03/brep-measurements"
+      }
+    },
+    {
+      "id": "test-mesh-controls-app-generation3d",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-composition-laws-rs:test",
+        "--",
+        "--test",
+        "generation3d-app-laws",
+        "--law-filter",
+        "mesh_"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-controls-exact"
+      }
+    },
+    {
+      "id": "test-metadata-controls-app-generation3d",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-composition-laws-rs:test",
+        "--",
+        "--test",
+        "generation3d-app-laws",
+        "--law-filter",
+        "widget_input_metadata_"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "2",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-controls-exact"
+      }
+    },
+    {
+      "id": "test-selected-controls-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-composition-laws-rs:test",
+        "--",
+        "--test",
+        "generation3d-app-laws",
+        "--law-filter",
+        "inspector_brep_controls_"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-controls-exact"
+      }
+    },
+    {
+      "id": "test-topology-widgets-brep",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/flow-extension-brep-rust:test",
+        "--skip-nx-cache",
+        "--args=long --offline --lib -E \"test(brep_component_deconstructs_solid_topology) | test(topology_family_shells_compound_explode_and_label) | test(topology_widget_exposes_every_shape_kind_and_exact_labels) | test(portable_channel_identity_fixtures_match_live_widgets) | test(packaged_widget_descriptor_matches_live_registration) | test(every_brep_port_has_explicit_types_and_distinct_identifiers) | test(bundle_identity_matches_catalogue_fixture)\""
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-03/brep-topology-widget"
+      }
+    },
+    {
+      "id": "test-widget-controls-app-generation3d",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/s-composition-laws-rs:test",
+        "--",
+        "--test",
+        "generation3d-app-laws",
+        "--law-filter",
+        "widget_input_"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-controls-exact"
+      }
+    }
+  ]
+}

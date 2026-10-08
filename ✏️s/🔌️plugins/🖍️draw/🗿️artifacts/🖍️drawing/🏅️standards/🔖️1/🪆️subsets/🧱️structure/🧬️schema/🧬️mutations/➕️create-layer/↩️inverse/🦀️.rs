@@ -6,9 +6,6 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::CreateLayer, _base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    vec![crate::mutations::delete_layer(layer_id(&payload.layer).to_string().into())]
-
-    })())
+    Ok(vec![crate::mutations::delete_layer(layer_id(&payload.layer).to_string().into())])
 }
 //#endregion 🔖️Inverse

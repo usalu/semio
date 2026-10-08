@@ -62,7 +62,7 @@ pub struct SpatialNode {
 /// (never a lying black-hole variant).
 /// 🧪️ `Default` (first variant, `Wall`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ElementClass {
     #[default]
@@ -83,7 +83,7 @@ pub enum ElementClass {
 /// 📐️ Owned by `model`: geometry reference resolved BY ID into a sibling subset's own snapshot
 /// (`brep`/`mesh`) — never inline duplication (w1b-type-ownership.md cross-reuse summary). Named
 /// variants throughout, never a bare tuple (f6-final-summary.md §4.3).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum GeometryRef {
     #[default]
@@ -98,7 +98,7 @@ pub enum GeometryRef {
 
 /// 🏷️ IFC property-set value — weak value type, whole-value replaced in diffs, never sub-diffed
 /// (schema-design.md's strong/weak entity split).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PsetValue {
     Text { value: String },
@@ -148,7 +148,7 @@ pub struct SemioModelElement {
 /// `Other{label}` catch-all, same rationale as `ElementClass::Other`.
 /// 🧪️ `Default` (first variant, `Aggregates`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RelationKind {
     #[default]

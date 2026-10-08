@@ -10,6 +10,7 @@
 use crate::editor::cad::config::CadConfigMutation;
 use crate::{cad_pane_model, cad_pane_model_slot, CadMutation, CadPaneId, CadSnapshot};
 use machine::Command;
+use semio_framework_diagnostic::{Fault, FaultFrom};
 use semio_framework_plugin::app::ChildEmitPreparation;
 use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
 use std::collections::VecDeque;
@@ -145,7 +146,7 @@ pub fn cad_child_leaves_emit(models: &CadPaneModels, transaction: Option<protoco
             let (owned, rest): (Vec<CadToolLeaf>, Vec<CadToolLeaf>) = std::mem::take(&mut remaining).into_iter().partition(|leaf| leaf.pane == *pane);
             remaining = rest;
             let ops: Vec<SemioModelMutation> = owned.into_iter().map(|leaf| leaf.leaf).collect();
-            (!ops.is_empty()).then(|| ChildEmitPreparation::of::<SemioModelSnapshot, SemioModelMutation>(cad_pane_model_slot(*pane), child_id.clone(), ops))
+            (!ops.is_empty()).then(|| ChildEmitPreparation::of_owned::<SemioModelSnapshot, SemioModelMutation>(cad_pane_model_slot(*pane), child_id.clone(), ops))
         })
         .collect();
     match child_preparations.is_empty() {
@@ -267,6 +268,29 @@ pub fn cad_transform_tool_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, 
         Some((_, leaves)) => cad_child_leaves_emit(&models, None, leaves),
         None => Emit::default(),
     }
+}
+
+/// 🧊️ Publishes actual topology and its model reference in the same exact tool transaction.
+pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPaneId, verb: &str, mut imported: crate::standards::v1::subsets::any::io::CadImportedObject) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::{schema::{snapshot::SemioBrepSnapshot, mutations::{SemioBrepMutation, set_snapshot::SetSnapshot}}};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef;
+    let refused = |message| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.import-object-refused"), message);
+    let operation = doc.operation_optional().filter(|operation| !operation.authoring_seed.is_empty()).ok_or_else(|| refused("geometry import requires exact operation authoring authority"))?;
+    let id = semio_framework_os_kernel::content_id("cad-geometry", format!("{}:{pane:?}", operation.authoring_seed).as_bytes());
+    let child_id = format!("brep-{id}");
+    if doc.snapshot.breps.iter().any(|child| child.child_id == child_id) { return Err(refused("geometry import requires a fresh topology identity")); }
+    let index = u32::try_from(doc.snapshot.breps.len()).map_err(|_| refused("topology sibling count exceeds the portable u32 domain"))?;
+    imported.element.id = format!("object-{id}");
+    imported.element.geometry = GeometryRef::Brep { brep_id: child_id.clone() };
+    let mut emit = cad_transform_tool_emit(doc, verb, vec![CadToolEntry::Create { pane, element: imported.element }]);
+    if emit.child_preparations.is_empty() {
+        return Err(refused("geometry import requires an available composed model"));
+    }
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
+    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&SemioBrepSnapshot::default())};
+    emit.artifact_mutations.push(CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
+    emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, vec![SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot: imported.geometry })]));
+    Ok(emit)
 }
 //#endregion 🛠️TransformTool
 

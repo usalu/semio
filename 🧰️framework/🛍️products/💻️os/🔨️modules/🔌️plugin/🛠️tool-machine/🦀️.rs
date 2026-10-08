@@ -57,7 +57,7 @@ pub(crate) fn fold_leaf<P, M: Mutation<P>>(committed: &Arc<P>, running: &mut Opt
     let outcome = leaf.diff(base);
     let applicable = outcome.is_applicable(protocol::MergePolicy::default());
     let (diff, _) = outcome.into_parts();
-    let applied = applicable.then(|| diff.apply(base));
+    let applied = applicable.then(|| protocol::apply_diff(&diff, base));
     MutationDiff::retire_cold(diff);
     match applied {
         Some(Ok(next)) => {

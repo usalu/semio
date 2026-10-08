@@ -6227,6 +6227,7 @@ dependencies = [
  "semio-framework-2d",
  "semio-framework-3d",
  "semio-framework-actor",
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-dsl-record",
  "semio-framework-editor",
@@ -6797,6 +6798,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
@@ -7072,6 +7074,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-tool-machine",
+ "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
@@ -7085,6 +7088,7 @@ dependencies = [
  "semio-s-artifact-stdio-xml",
  "serde",
  "serde_json",
+ "siphasher",
 ]
 
 [[package]]
@@ -7564,6 +7568,7 @@ name = "semio-s-artifact-norm-contract"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-artifact-reference",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
@@ -8260,6 +8265,7 @@ dependencies = [
 name = "semio-s-artifact-process-process3d"
 version = "0.1.0"
 dependencies = [
+ "leb128",
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
@@ -10971,10 +10977,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-process-process3d",
+ "serde_json",
 ]
 
 [[package]]
@@ -10983,10 +10990,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-process-process3d",
+ "serde_json",
 ]
 
 [[package]]
@@ -10995,10 +11003,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-process-process3d",
+ "serde_json",
 ]
 
 [[package]]
@@ -11007,10 +11016,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-process-process3d",
+ "serde_json",
 ]
 
 [[package]]
@@ -11019,10 +11029,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-sourcing-curation",
+ "serde_json",
 ]
 
 [[package]]
@@ -11031,10 +11042,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-sourcing-curation",
+ "serde_json",
 ]
 
 [[package]]
@@ -11043,10 +11055,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
- "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-sourcing-curation",
+ "serde_json",
 ]
 
 [[package]]

@@ -7598,6 +7598,38 @@ pub struct PackageDescriptor {
     pub hashes: PackageHashes,
 }
 
+/// 🔤️ Descriptor value with every object ordered by UTF-8 key bytes at every depth.
+/// Shared by guest descriptions, emitted packs and exact freshness projections.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDescriptorValue(semio_framework_value::DslValue);
+
+impl CanonicalDescriptorValue {
+    /// 🔃️ Orders the members of every object by key bytes; members of equal keys keep their authored order.
+    pub fn new(value: semio_framework_value::DslValue) -> Self {
+        Self(canonical_members(value))
+    }
+
+    /// 👁️ The canonical value itself.
+    pub fn value(&self) -> &semio_framework_value::DslValue {
+        &self.0
+    }
+}
+
+/// 🪜️ [`CanonicalDescriptorValue::new`] through every array and object of `value`.
+fn canonical_members(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+    use semio_framework_value::DslValue;
+    match value {
+        DslValue::Array(items) => DslValue::Array(items.into_iter().map(canonical_members).collect()),
+        DslValue::Object(entries) => {
+            let mut entries: Vec<(String, DslValue)> = entries.into_iter().map(|(key, entry)| (key, canonical_members(entry))).collect();
+            entries.sort_by(|left, right| left.0.as_bytes().cmp(right.0.as_bytes()));
+            DslValue::Object(entries)
+        }
+        scalar => scalar,
+    }
+}
+
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️package-descriptor-value-codec/🦀️.rs"]
 mod package_descriptor_value_codec_tests;

@@ -219,8 +219,83 @@ pub struct SpaceDiff {
     pub set_extension_enabled: Option<bool>,
 }
 
+impl protocol::DiffAlgebra<SpaceSnapshot> for SpaceDiff {
+    fn inverse(&self, base: &SpaceSnapshot) -> Self {
+        let mut inverse = Self::default();
+        inverse.name = self.name.as_ref().map(|_| base.name.clone());
+        inverse.kind = self.kind.map(|_| base.kind);
+        inverse.visibility = self.visibility.map(|_| base.visibility);
+        if let Some(user) = &self.upsert_user {
+            match base.users.iter().find(|existing| existing.id == user.id) {
+                Some(prior) => inverse.upsert_user = Some(prior.clone()),
+                None => inverse.remove_user_id = Some(user.id.clone()),
+            }
+        }
+        if let Some(user_id) = &self.remove_user_id {
+            inverse.upsert_user = base.users.iter().find(|existing| &existing.id == user_id).cloned().or(inverse.upsert_user);
+        }
+        if let Some(collection) = &self.add_collection {
+            inverse.remove_collection_id = Some(collection.id.clone());
+        }
+        if let Some(collection_id) = &self.remove_collection_id {
+            inverse.add_collection = base.collections.iter().find(|existing| &existing.id == collection_id).cloned();
+        }
+        if let Some(collection_id) = &self.rename_collection_id {
+            inverse.rename_collection_id = Some(collection_id.clone());
+            inverse.rename_collection_name = base.collections.iter().find(|existing| &existing.id == collection_id).map(|existing| existing.name.clone());
+        }
+        inverse.uninstall_program = self.install_program.clone();
+        inverse.install_program = self.uninstall_program.clone();
+        if let Some(extension) = &self.install_extension {
+            match base.extensions.iter().find(|existing| existing.extension_id == extension.extension_id) {
+                Some(prior) => inverse.install_extension = Some(prior.clone()),
+                None => inverse.uninstall_extension_id = Some(extension.extension_id.clone()),
+            }
+        }
+        if let Some(extension_id) = &self.uninstall_extension_id {
+            inverse.install_extension = base.extensions.iter().find(|existing| &existing.extension_id == extension_id).cloned().or(inverse.install_extension);
+        }
+        if let Some(extension_id) = &self.set_extension_enabled_id {
+            inverse.set_extension_enabled_id = Some(extension_id.clone());
+            inverse.set_extension_enabled = base.extensions.iter().find(|existing| &existing.extension_id == extension_id).map(|existing| existing.enabled);
+        }
+        inverse
+    }
+
+    fn between(base: &SpaceSnapshot, other: &SpaceSnapshot) -> Self {
+        let mut diff = Self::default();
+        diff.name = (base.name != other.name).then(|| other.name.clone());
+        diff.kind = (base.kind != other.kind).then_some(other.kind);
+        diff.visibility = (base.visibility != other.visibility).then_some(other.visibility);
+        diff.upsert_user = other.users.iter().find(|user| base.users.iter().find(|existing| existing.id == user.id) != Some(*user)).cloned();
+        diff.remove_user_id = base.users.iter().find(|user| !other.users.iter().any(|existing| existing.id == user.id)).map(|user| user.id.clone());
+        diff.add_collection = other.collections.iter().find(|collection| !base.collections.iter().any(|existing| existing.id == collection.id)).cloned();
+        diff.remove_collection_id = base.collections.iter().find(|collection| !other.collections.iter().any(|existing| existing.id == collection.id)).map(|collection| collection.id.clone());
+        if let Some(renamed) = other.collections.iter().find(|collection| base.collections.iter().any(|existing| existing.id == collection.id && existing.name != collection.name)) {
+            diff.rename_collection_id = Some(renamed.id.clone());
+            diff.rename_collection_name = Some(renamed.name.clone());
+        }
+        diff.install_program = other.programs.iter().find(|program| !base.programs.contains(program)).cloned();
+        diff.uninstall_program = base.programs.iter().find(|program| !other.programs.contains(program)).cloned();
+        let same_package = |left: &InstalledExtension, right: &InstalledExtension| left.version == right.version && left.source_uri == right.source_uri && left.package_hash == right.package_hash;
+        diff.install_extension = other.extensions.iter().find(|extension| base.extensions.iter().find(|existing| existing.extension_id == extension.extension_id).is_none_or(|existing| !same_package(existing, extension))).cloned();
+        diff.uninstall_extension_id = base.extensions.iter().find(|extension| !other.extensions.iter().any(|existing| existing.extension_id == extension.extension_id)).map(|extension| extension.extension_id.clone());
+        if diff.install_extension.is_none() {
+            if let Some(toggled) = other.extensions.iter().find(|extension| base.extensions.iter().any(|existing| existing.extension_id == extension.extension_id && existing.enabled != extension.enabled)) {
+                diff.set_extension_enabled_id = Some(toggled.extension_id.clone());
+                diff.set_extension_enabled = Some(toggled.enabled);
+            }
+        }
+        diff
+    }
+
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
 impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
-    fn apply(&self, base: &SpaceSnapshot) -> protocol::MutationApplyResult<SpaceSnapshot> {
+    fn apply(&self, base: &SpaceSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceSnapshot> {
         let mut next = base.clone();
         if self.rename_collection_id.is_some() != self.rename_collection_name.is_some() {
             return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "collection rename requires both id and name").at(["collections"]));

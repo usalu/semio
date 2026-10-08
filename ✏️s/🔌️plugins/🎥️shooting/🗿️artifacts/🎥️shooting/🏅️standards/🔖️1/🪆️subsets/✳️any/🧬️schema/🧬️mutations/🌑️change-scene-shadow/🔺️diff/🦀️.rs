@@ -8,7 +8,5 @@ pub fn diff(payload: &ChangeSceneShadowEnabled, base: &ShootingSnapshot) -> prot
     if base.scene.shadow.enabled == payload.new_enabled {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shadows are already {}.", if payload.new_enabled { "enabled" } else { "disabled" }));
     }
-    let mut scene = base.scene.clone();
-    scene.shadow.enabled = payload.new_enabled;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { shadow_enabled: Some(payload.new_enabled), ..Default::default() }), ..Default::default() })
 }

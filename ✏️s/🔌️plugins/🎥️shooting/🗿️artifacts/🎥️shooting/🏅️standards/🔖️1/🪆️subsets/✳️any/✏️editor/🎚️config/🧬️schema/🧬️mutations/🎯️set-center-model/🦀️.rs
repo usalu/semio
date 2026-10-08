@@ -12,16 +12,14 @@ pub struct SetCenterModel {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCenterModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "center-model", kind: "set-center-model", record: "SetCenterModel" };
-    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfig> {
-        let mut next = base.clone();
-        next.center_model = self.value;
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
+        match base.center_model == self.value {
+            true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Center model is unchanged."),
+            false => protocol::MutationOutcome::new(ShootingConfigDiff { center_model: Some(self.value), ..Default::default() }),
+        }
     }
     fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    
-    })())
+    Ok(vec![ShootingConfigMutation::SetCenterModel(Self { value: base.center_model })])
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Center Model", "Modellzentrierung setzen")

@@ -1,5 +1,5 @@
-//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches `meta.kindCatalogs`.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — sets `meta.kindCatalogs`.
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dMetaPatch};
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_catalogs_invariant;
 
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> pr
     if payload.new_catalogs == base.meta.kind_catalogs {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Kind catalogs are unchanged.");
     }
-    let mut meta = base.meta.clone();
-    meta.kind_catalogs = payload.new_catalogs.clone();
-    protocol::MutationOutcome::new(Puzzle2dDiff { meta: Some(meta), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle2dDiff { meta: Some(Puzzle2dMetaPatch { kind_catalogs: Some(payload.new_catalogs.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

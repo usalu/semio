@@ -141,20 +141,18 @@
       "subsetDirectoryName": "🧱️base",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
+          "mutationId": "set-frame-delay",
+          "sourceMutationDirectoryName": "⏱️set-frame-delay",
+          "mutationDirectoryName": "⏱️set-frame-delay",
           "scenarios": [
             {
-              "id": "slows-the-second-frame-and-marks-it-do-not-dispose",
+              "id": "slows-the-second-frame",
               "directoryName": "⏱️slows"
             }
           ]
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-screen-size",
         "set-global-color-table",
         "set-background-color-index",
@@ -177,69 +175,6 @@
       "standardDirectoryName": "9️⃣89a",
       "subsetDirectoryName": "🧱️base",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "gif-89a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-89a-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-89a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
         {
           "id": "set-screen-size",
           "capability": "gif-89a-mutate",
@@ -956,106 +891,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Identity — before and after bytes are the same document; no-mutation's diff is unconditionally a no-op."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.gif",
-        "standard": "89a",
-        "subset": "base"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-gif",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
-          "bytes": 149
-        },
-        {
-          "role": "expected-after-gif",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:fbf1a5882c5f710945c94b3d615ad38b2ab387fec5d95f2183cffac023b51a77",
-          "bytes": 72
-        }
-      ],
-      "generator": {
-        "oracle": "gif-89a-any-mutate-reader",
-        "packageVersion": "0.13.3",
-        "engineFamily": "gif",
-        "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-snapshot-applied",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT OR Apache-2.0 (gif)",
-        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-gif-89a-reader-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-document replace: screen size, palette, background index, loop count and frames all change together."
-    },
-    {
-      "id": "set-snapshot-no-op",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.gif",
-        "standard": "89a",
-        "subset": "base"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "no-op",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-gif",
-          "path": "../🧫️fixtures/🪞️set-snapshot-no-op/⬅️before.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
-          "bytes": 149
-        },
-        {
-          "role": "expected-after-gif",
-          "path": "../🧫️fixtures/🪞️set-snapshot-no-op/➡️after.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:16b92f04551d8cf8ddeb501db7ca2a5d70ee20d0a31bb6fa7400faa2a8988cc8",
-          "bytes": 149
-        }
-      ],
-      "generator": {
-        "oracle": "gif-89a-any-mutate-reader",
-        "packageVersion": "0.13.3",
-        "engineFamily": "gif",
-        "engineVersion": "0.13.3",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/📜️script.ts build --only set-snapshot-no-op",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT OR Apache-2.0 (gif)",
-        "attribution": "Generated with gif (MIT OR Apache-2.0) via the standalone reader binary in 🏭️generator/🧫️fixtures/📖️reader/🦀️.rs",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-gif-89a-reader-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Replacement snapshot is byte-identical to the current one — the dispatch's own documented no-op/warn branch."
     },
     {
       "id": "set-screen-size-applied",

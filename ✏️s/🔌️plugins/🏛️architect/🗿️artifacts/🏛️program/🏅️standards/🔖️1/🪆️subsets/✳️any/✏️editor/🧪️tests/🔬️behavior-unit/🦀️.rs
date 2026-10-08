@@ -3,9 +3,13 @@ mod tests {
     use crate::sample_plugin;
     use crate::standards::v1::subsets::any::schema::inferences::{export_registers_csv, export_registers_tsv};
 
+    fn fold(program: &ProgramSnapshot, mutations: &[ProgramMutation]) -> ProgramSnapshot {
+        use protocol::Mutation;
+        mutations.iter().fold(program.clone(), |state, mutation| protocol::apply_diff(mutation.diff(&state).diff(), &state).expect("mutation applies through the central applier"))
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn apply_template_returns_plugin_operations() {
-        let mut program = crate::empty_plugin();
         let template = TemplateRecord {
             header: EntityHeader::new(EntityId::new_serial("template", "Clinic Starter"), "Clinic Starter"),
             template_type: "sector".into(),
@@ -28,8 +32,9 @@ mod tests {
             license: None,
             source_organization: Some("Semio".into()),
         };
-        let operations = apply_template(&mut program, &template);
+        let operations = apply_template(&template);
         assert!(!operations.is_empty());
+        let program = fold(&crate::empty_plugin(), &operations);
         assert_eq!(program.stakeholders.len(), 1);
         assert_eq!(program.elements.len(), 1);
         assert_eq!(program.requirements.len(), 1);
@@ -37,7 +42,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn template_ops_replay_on_empty_plugin() {
-        let mut source = crate::empty_plugin();
         let template = TemplateRecord {
             header: EntityHeader::new(EntityId::new_serial("template", "Replay"), "Replay"),
             template_type: "sector".into(),
@@ -60,44 +64,39 @@ mod tests {
             license: None,
             source_organization: None,
         };
-        let operations = apply_template(&mut source, &template);
-        let mut target = crate::empty_plugin();
-        for operation in &operations {
-            use protocol::{Mutation, MutationDiff};
-            target = operation.diff(&target).diff().apply(&target).expect("template operation applies");
-        }
+        let operations = apply_template(&template);
+        let target = fold(&crate::empty_plugin(), &operations);
         assert_eq!(target.functions.len(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn build_report_and_record_persists() {
-        let mut program = sample_plugin();
+        let program = sample_plugin();
         let before = program.reports.len();
-        build_report_and_record(&mut program, ReportKind::AdjacencyMatrix);
-        assert_eq!(program.reports.len(), before + 1);
+        let (_, record) = build_report_and_record(&program, ReportKind::AdjacencyMatrix);
+        assert_eq!(fold(&program, &[record]).reports.len(), before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn run_analysis_and_record_persists() {
-        let mut program = sample_plugin();
+        let program = sample_plugin();
         let before = program.analyses.len();
-        run_analysis_and_record(&mut program, AnalysisKind::Risk);
-        assert_eq!(program.analyses.len(), before + 1);
+        let (_, record) = run_analysis_and_record(&program, AnalysisKind::Risk);
+        assert_eq!(fold(&program, &[record]).analyses.len(), before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn csv_round_trip_preserves_element_names() {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("csv export");
-        let mut reloaded = crate::empty_plugin();
-        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
+        let reloaded = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.elements.len(), program.elements.len());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quoted_csv_parses_commas_in_name() {
         let csv = "register,id,name,status,priority,tags,source\nelements,e1,\"Room, A\",Draft,Preferred,,src\n";
-        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
+        let snapshot = stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with(csv, true);
         let rows = csv_snapshot_to_rows(&snapshot).expect("parse");
         assert_eq!(rows[0].name, "Room, A");
         assert_eq!(rows[0].source, "src");
@@ -106,26 +105,24 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn duplicate_import_is_rejected() {
         let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
-        let mut program = crate::empty_plugin();
-        assert!(import_registers_csv(&mut program, csv, MergeStrategy::Upsert).is_err());
+        assert!(import_registers_csv(&crate::empty_plugin(), csv, MergeStrategy::Upsert).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn tsv_round_trip_preserves_element_names() {
         let program = sample_plugin();
         let tsv = export_registers_tsv(&program).expect("tsv export");
-        let mut reloaded = crate::empty_plugin();
-        import_registers_tsv(&mut reloaded, &tsv, MergeStrategy::Upsert).expect("tsv import");
+        let reloaded = import_registers_tsv(&crate::empty_plugin(), &tsv, MergeStrategy::Upsert).expect("tsv import").snapshot;
         assert_eq!(reloaded.elements.len(), program.elements.len());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trace_chain_follows_links() {
-        let mut program = sample_plugin();
+        let program = sample_plugin();
         let a = program.elements[0].header.id.clone();
         let b = program.elements[1].header.id.clone();
-        add_trace_link(&mut program, a.clone(), b.clone(), TraceKind::FunctionToProgramElement);
-        let chain = trace_chain(&mut program, &a);
+        let program = fold(&program, &[add_trace_link(a.clone(), b.clone(), TraceKind::FunctionToProgramElement)]);
+        let chain = trace_chain(&program, &a);
         assert_eq!(chain.links.len(), 1);
         assert_eq!(chain.links[0].to_id, b);
     }
@@ -135,11 +132,8 @@ mod tests {
         let program = sample_plugin();
         assert!(!program.adjacencies.is_empty(), "sample_plugin must carry adjacencies for this fidelity case");
         let csv = export_registers_csv(&program).expect("csv export");
-        let mut reloaded = crate::empty_plugin();
-        for element in &program.elements {
-            reloaded.elements.push(element.clone());
-        }
-        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
+        let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element.clone() })).collect();
+        let reloaded = import_registers_csv(&fold(&crate::empty_plugin(), &elements), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());
         for expected in &program.adjacencies {
             let got = reloaded.adjacencies.iter().find(|a| a.header.id == expected.header.id).expect("adjacency id");
@@ -155,8 +149,7 @@ mod tests {
         assert!(!program.knowledge_payload.is_empty());
         assert!(!program.benchmarks_payload.is_empty());
         let csv = export_registers_csv(&program).expect("csv export");
-        let mut reloaded = crate::empty_plugin();
-        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
+        let reloaded = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.knowledge_payload.len(), program.knowledge_payload.len());
         assert_eq!(reloaded.benchmarks_payload.len(), program.benchmarks_payload.len());
         assert_eq!(reloaded.knowledge_payload[0].header.name, program.knowledge_payload[0].header.name);
@@ -165,11 +158,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn csv_import_creates_relationship_via_mutation_with_endpoints() {
-        let mut program = sample_plugin();
+        let program = sample_plugin();
         let a = program.elements[0].header.id.clone();
         let b = program.elements[1].header.id.clone();
         let csv = format!("register,id,name,status,priority,tags,source\nrelationships,rel-1,Link AB,Draft,Preferred,,{a}>{b}\n");
-        import_registers_csv(&mut program, &csv, MergeStrategy::Upsert).expect("relationship import");
+        let program = import_registers_csv(&program, &csv, MergeStrategy::Upsert).expect("relationship import").snapshot;
         let got = program.relationships.iter().find(|r| r.header.id.0 == "rel-1").expect("created");
         assert_eq!(got.header.name, "Link AB");
         assert_eq!(got.source_id, a);
@@ -178,14 +171,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn csv_upsert_renames_existing_adjacency_via_mutation() {
-        let mut program = sample_plugin();
+        let program = sample_plugin();
         let id = program.adjacencies[0].header.id.clone();
         let csv = format!(
             "register,id,name,status,priority,tags,source\nadjacencies,{id},Renamed Pair,Draft,Preferred,,{}>{}\n",
             program.adjacencies[0].element_a_id,
             program.adjacencies[0].element_b_id
         );
-        import_registers_csv(&mut program, &csv, MergeStrategy::Upsert).expect("rename import");
+        let program = import_registers_csv(&program, &csv, MergeStrategy::Upsert).expect("rename import").snapshot;
         assert_eq!(program.adjacencies.iter().find(|a| a.header.id == id).expect("row").header.name, "Renamed Pair");
     }
 }

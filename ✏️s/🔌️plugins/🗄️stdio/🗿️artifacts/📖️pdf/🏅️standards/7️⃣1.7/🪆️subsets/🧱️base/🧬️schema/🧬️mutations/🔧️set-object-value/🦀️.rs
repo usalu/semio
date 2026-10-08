@@ -21,7 +21,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetObjectValue {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "object-value", kind: "set-object-value", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_set_object_value(base, self.id, self.value.clone())))
+        MutationOutcome::new(diff::graph_edit(diff::diff_set_object_value(base, self.id, self.value.clone())))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

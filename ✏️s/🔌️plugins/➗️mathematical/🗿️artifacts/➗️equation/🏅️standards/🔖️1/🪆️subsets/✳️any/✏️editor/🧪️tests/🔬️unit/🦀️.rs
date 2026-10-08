@@ -204,7 +204,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     for _ in 0..9 {
         assert!(matches!(
             uninterrupted
-                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+                .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
@@ -231,7 +231,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     assert!(matches!(
         cancelled_after
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
+            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))
             .expect("cancel after admission"),
         ArtifactCommandWorkStep::Progress { .. }
     ));

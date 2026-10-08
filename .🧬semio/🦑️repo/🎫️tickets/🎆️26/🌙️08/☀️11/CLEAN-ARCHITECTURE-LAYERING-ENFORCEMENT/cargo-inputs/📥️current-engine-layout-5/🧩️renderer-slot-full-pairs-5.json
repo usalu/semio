@@ -1,0 +1,432 @@
+{
+  "version": 5,
+  "ready": false,
+  "scope": "Current Renderer unchanged two-descriptor held proposal coupled to World7 and fresh current Store; fresh all-owner whole sizeof and bounded constructor required",
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json",
+      "before": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+      "after": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+      "beforeHash": "f2dac3de322be116e4e8563d502d90364f618d3f64a638274c266c4864f6ad1f",
+      "afterHash": "4032df701f8d242253465d4bd1e7cac5d081fbde22c4f89c422d1c43cd48d68a",
+      "forward": {
+        "start": 0,
+        "delete": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+        "insert": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n"
+      },
+      "inverse": {
+        "start": 0,
+        "delete": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28440,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 90264,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n",
+        "insert": "{\n  \"law\": \"Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.\",\n  \"provenance\": \".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md\",\n  \"boundedThreadStackBytes\": 1048576,\n  \"workerPoolStackBytes\": 2097152,\n  \"conversionThresholdBytes\": 65536,\n  \"tables\": [\n    {\n      \"guard\": \"renderer::scenes\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"scenes::AdmittedSurfaceMap<World3dState>\",\n      \"capacityConstant\": \"SCENE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<AdmittedSurfaceEntry<World3dState>>\",\n      \"elementSizeBytes\": 28400,\n      \"ownerSizeBytes\": 3136\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineSurfaceRegistry\",\n      \"capacityConstant\": \"ENGINE_SURFACE_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"EngineSurfaceSlot\",\n      \"elementSizeBytes\": 86544,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::StagedEngineScenes\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<StagedEngineScene>\",\n      \"elementSizeBytes\": 352,\n      \"ownerSizeBytes\": 24\n    },\n    {\n      \"guard\": \"renderer::engine_canvas\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"engine_canvas::EngineCanvasBuildContext\",\n      \"capacityConstant\": \"ENGINE_CANVAS_FRAME_PACKET_CAPACITY\",\n      \"capacity\": 256,\n      \"elementType\": \"Option<EngineCanvasPacket>\",\n      \"elementSizeBytes\": 384,\n      \"ownerSizeBytes\": 72\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::RetainedSurfaceRegistry\",\n      \"capacityConstant\": \"RETAINED_SURFACE_CAPACITY\",\n      \"capacity\": 64,\n      \"elementType\": \"Option<RetainedSurfaceSlot>\",\n      \"elementSizeBytes\": 24488,\n      \"ownerSizeBytes\": 32\n    },\n    {\n      \"guard\": \"renderer::kernel_runtime\",\n      \"crate\": \"semio-framework-os-renderer-wgpu\",\n      \"owner\": \"kernel_runtime::CommandDocumentRetirementRegistry\",\n      \"capacityConstant\": \"COMMAND_DOCUMENT_RETIREMENT_CAPACITY\",\n      \"capacity\": 512,\n      \"elementType\": \"Option<CommandDocumentRetirementState>\",\n      \"elementSizeBytes\": 584,\n      \"ownerSizeBytes\": 4112\n    }\n  ]\n}\n"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json",
+      "sha256": "f2dac3de322be116e4e8563d502d90364f618d3f64a638274c266c4864f6ad1f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "043bb7d108d2fa2b0907b18f37ca568586d6a2889243a8e8e06c57281397a03c"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs",
+      "sha256": "a6ddf65548737c98d125ac4318e64aa72d352b9382ab70d6d51652e6d734f1e6"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "0309524f62ef6ae5d0bca51985b1da335aa172e74348ece38fb758e86e3a0290"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "d15c17b3d53b5f66e954bd738db58182ce39f1321b02989bc03acd13ef5c8edb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🦀️.rs",
+      "sha256": "bdd036ccd3689cda2e15221105297a020b35818863a919a4f188afad59c10e59"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+      "sha256": "499910c65c35c1310509401f85e69c8cf3d6eeefebd1bf12c4b6979bc78c4dcb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
+      "sha256": "ce60f081c65823bc80e76b9adcf61b644e5bcfe3315bfc639b7f952aa51b1061"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "sha256": "5bc7a5153581aa804cb55c7a5a724d4a234b757b5a5a2953abfb8264f71176f5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "c0bb08da0a587142728c408a8382f4b8e7122fd79158d929872cf646bbbfd549"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "sha256": "0cc53e00ed803ebeadf3e9b7b5d258bc1a68de97091097c77bcc21037098542e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "sha256": "eb801a0a2baae4d7c221bdd3db03956d4845a64613e1bddcd55d033a87d89fba"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/Cargo.toml",
+      "sha256": "8cbec0c3fa580693648ddb2d09fc60fa62631a8caffa24e5396b5060314a39a5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/Cargo.lock",
+      "sha256": "b7305f4727a8888ceb8f4af4be3f358b66d7a751b71295f17d0c958079eb5774"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "f43c0d3a97047f7f64c37f3d93d4c1ffb18535df13dfc87673902f750e875c7d"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "81f1c2f6307d44bb2696401379bc5fe7fa3393d29ad1d8810830807305fe2c43"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🔬️wgpu-admitted-surface-map/🦀️.rs",
+      "sha256": "719594b4cf80703c64e0077e4cb43bfe097fc124fcbedcf76022a51f83d069f2"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-kernel-runtime-semantic-document/🦀️.rs",
+      "sha256": "0548b3824695e07fdfd73046439240ae40aa87c63aa0f3726dd33a2ccea3f5c5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️.rs",
+      "sha256": "d8077874973a2c12763d33f718fe05685e9e21d1ce5e0d3b36ae5377e10d3efe"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-5/admission.json",
+      "sha256": "7b6668dae5e9aa0981474b684efe5978aababd61d134a7148b37a977c9cf7c16"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/held-model-input/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "sha256": "2a58ad3c24802238ffde605670c09875e295718aa0e1a3ae60d39e74f6827731"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/plan.json",
+      "sha256": "11b86893d802eabf92ae190698cea3ccd51f6a23ba91eb7311326de7234553bb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/artifacts/semio-nextest-HzTy1k/binaries-metadata.json",
+      "sha256": "bd033315686a2a7de22fb8ca38cca0be0e95ac4ccc039a438c96d94f37aa6380"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/target/debug/build/semio-framework-os-renderer-wgpu/8ab75bf45212f2e4/out/semio_framework_os_renderer_wgpu-8ab75bf45212f2e4",
+      "sha256": "d0509cd5303ec8ccf46eb4d266345d66107274d3f83106b09eff63da7b8d8681"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-1.json",
+      "sha256": "debfcda6bd81138eae1b54fd060b610a9bc92f50461f547caa81fac6cfb7a472"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-2.json",
+      "sha256": "db959791a58f7cd6e1b45435916ec614c74eacb11040e7a2b41e2e0e95ef427b"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/case-3.json",
+      "sha256": "c6832ec1efda07d0567bba5374acdf0b7fdfc640b7c5d5663ccb9fa7b3b58aab"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/gui-run.log",
+      "sha256": "a342702f0b41d73de7afa6f6652ded7d1b6ab9a1c1ac210706bb8febee54c229"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/terminal.json",
+      "sha256": "ada15226d8329dd41afc832c2027628a82eedd094d7587db567427cdef8dd048"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-product-layout-diagnostic/one/laws.json",
+      "sha256": "ae1b4babe456205031de77ba06eb63e073db45cfbe9853f0f482b81023c085e4"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-7/admission.json",
+      "sha256": "a3636dcd24a280b6760a41f7841e7290c889d5185f54089d0ba81f5ea12f1714"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-engine-layout-5/🧩️declared-world-after.json",
+      "sha256": "2786f5bce50d4940be3f6e6fff7796f4f6f6c936b4f5fe0480bd5c1d3bdba724"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-world-source-model-inputs-7/full-pairs.json",
+      "sha256": "bc4aa55a5f2bbe91dda2ccf152a1a46d933b6b97363dd860ea74f7ece3e6b0a6"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-9/product/initial-captured-input/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "40ce3f8c33a56fa74b59866b5c97f7b683ff647bbe8c45bd275dd071c0d35ef0"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "e2ffb24cd54e5ec263e7cbf6bc6f91eab220a4f9ba3a7239a8f946da1162385a"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "a51897f27ba16072ae73c886834ea600371bbb2b03edd09191ba7b260c81201a"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "sha256": "5c89dcb6ee5cdf6ad18bf1ecbee12a9e7f60aca7d025a5d7d805eab20e3d92e5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "sha256": "8a8cdb14868ecfa11c62bdfc5091546738d302127bd663734b907a0ff5b777f9"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "sha256": "bf3f7b8a889dda036627e3dc587b497421777cc35f8df3b47c7cdf1851a09910"
+    }
+  ],
+  "sourceWritesOutsideTicket": false,
+  "nativeExecuted": false,
+  "publicationReady": false,
+  "coupledWorld": {
+    "receiptPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-7/admission.json",
+    "receiptHash": "a3636dcd24a280b6760a41f7841e7290c889d5185f54089d0ba81f5ea12f1714",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+    "beforeHash": "f43c0d3a97047f7f64c37f3d93d4c1ffb18535df13dfc87673902f750e875c7d",
+    "afterHash": "a0c1fe1ba30f5d07c2a6ed5d0c177104e837a54fe79e5ee1e7c1b7c11101bd0d",
+    "declaredModelPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-engine-layout-5/🧩️declared-world-after.json",
+    "measuredCapturedModelPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-7/product/held-model-input/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+    "measuredCapturedModelHash": "2a58ad3c24802238ffde605670c09875e295718aa0e1a3ae60d39e74f6827731",
+    "measuredReceiptPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-world/source-model-5/admission.json",
+    "measuredReceiptHash": "7b6668dae5e9aa0981474b684efe5978aababd61d134a7148b37a977c9cf7c16",
+    "methodOnlyRecipe": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+      "base": "world5After",
+      "replacements": [
+        {
+          "before": "(ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then_some(a.add(b).scale(0.5))",
+          "after": "(ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then(|| ui_wgpu::wgpu::ray_segment_closest_pair(self.origin, self.direction, a, b).map(|(ray, _)| ray)).flatten()"
+        }
+      ],
+      "append": ""
+    }
+  },
+  "measurements": [
+    {
+      "owner": "engine_canvas::EngineSurfaceRegistry",
+      "beforeBytes": 86544,
+      "afterBytes": 90264,
+      "capacity": 256,
+      "ownerBytes": 32
+    },
+    {
+      "owner": "scenes::AdmittedSurfaceMap<World3dState>",
+      "beforeBytes": 28400,
+      "afterBytes": 28440,
+      "capacity": 256,
+      "ownerBytes": 3136
+    }
+  ],
+  "conditions": [
+    "Exact current authorities and original assertion bodies",
+    "Joint held model with World7 and DAG successor",
+    "All three original whole runs on one fresh selected closure",
+    "Exact post custody and independent publication admission"
+  ],
+  "historicalCauseAttribution": false,
+  "liveIdentity": false,
+  "atomicity": false,
+  "storeTransition": {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "capturedBeforePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeHash": "e2ffb24cd54e5ec263e7cbf6bc6f91eab220a4f9ba3a7239a8f946da1162385a",
+    "afterHash": "d15c17b3d53b5f66e954bd738db58182ce39f1321b02989bc03acd13ef5c8edb",
+    "statementReplacements": [
+      {
+        "before": "                if stage.edit.id.is_empty() || stage.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count != self.applied_edit_ids.len() {\n                    return Err(VcsError::ValidationFailed(\"domain-prepared batched candidate failed its live cursor authority\".into()));\n                }\n                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;\n                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))\n            }\n",
+        "after": "                if stage.edit.id.is_empty() || stage.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count != self.applied_edit_ids.len() {\n                    return Err(VcsError::ValidationFailed(\"domain-prepared batched candidate failed its live cursor authority\".into()));\n                }\n                if let Some(edit_id) = self.batch_amend_target(publication.transaction.as_ref()) {\n                    let existing = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::ValidationFailed(\"batched cursor preparation lost its open edit\".into()))?;\n                    let capacity = existing.inverse.len().checked_add(stage.edit.inverse.len()).ok_or_else(|| VcsError::ValidationFailed(\"batched inverse capacity overflow\".into()))?;\n                    if let Some(bytes) = existing.inverse.next_capacity_allocation_bytes(capacity).map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {\n                        if bytes > grant.maximum_bytes {\n                            return Err(VcsError::ValidationFailed(\"batched inverse backing cannot fit the admitted allocation grant\".into()));\n                        }\n                        let step = existing.inverse.reserve_capacity_one(capacity, grant.maximum_bytes).map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;\n                        if !step.progressed || step.allocated_bytes > grant.maximum_bytes {\n                            return Err(VcsError::ValidationFailed(\"batched inverse backing failed its exact allocation admission\".into()));\n                        }\n                        return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));\n                    }\n                }\n                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;\n                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))\n            }\n"
+      },
+      {
+        "before": "        }\n        if publication.stage.is_none() {\n            let mut staged = Box::new(Self::empty_batch_stage(&authority));\n            staged.mutation_retirement = (*self.mutation_retirement_factory).clone();\n            staged.snapshot_retirement = (*self.snapshot_retirement_factory).clone();\n            if staged.mutation_retirement.is_none() || staged.snapshot_retirement.is_none() {\n",
+        "after": "        }\n        if publication.stage.is_none() {\n            let mut staged = Box::new(Self::empty_batch_stage(&authority));\n            staged.edit.inverse = semio_framework_value::list::PagedList::with_payload_page_bytes(grant.maximum_bytes).map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;\n            staged.mutation_retirement = (*self.mutation_retirement_factory).clone();\n            staged.snapshot_retirement = (*self.snapshot_retirement_factory).clone();\n            if staged.mutation_retirement.is_none() || staged.snapshot_retirement.is_none() {\n"
+      },
+      {
+        "before": "            publication.stage = Some(staged);\n        }\n        let inverse = &mut publication.stage.as_mut().expect(\"validated staged batch edit\").edit.inverse;\n        if let Some(bytes) = inverse.next_exact_capacity_allocation_bytes(publication.footprint.work_items).map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {\n            if bytes > grant.maximum_bytes {\n                return Ok(ArtifactStoreOneItemAdvance::Blocked);\n            }\n            inverse.reserve_exact_capacity_one(publication.footprint.work_items, grant.maximum_bytes).map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;\n            return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));\n        }\n        let owner = publication.preparation.as_mut().expect(\"validated batched fold preparation owner\");\n",
+        "after": "            publication.stage = Some(staged);\n        }\n        let inverse = &mut publication.stage.as_mut().expect(\"validated staged batch edit\").edit.inverse;\n        let backing = if publication.transaction_open { inverse.next_capacity_allocation_bytes(publication.footprint.work_items) } else { inverse.next_exact_capacity_allocation_bytes(publication.footprint.work_items) };\n        if let Some(bytes) = backing.map_err(|error| VcsError::ValidationFailed(error.reason.into()))? {\n            if bytes > grant.maximum_bytes {\n                return Err(VcsError::ValidationFailed(\"batched inverse backing cannot fit the admitted allocation grant\".into()));\n            }\n            let step = if publication.transaction_open { inverse.reserve_capacity_one(publication.footprint.work_items, grant.maximum_bytes) } else { inverse.reserve_exact_capacity_one(publication.footprint.work_items, grant.maximum_bytes) }.map_err(|error| VcsError::ValidationFailed(error.reason.into()))?;\n            if !step.progressed || step.allocated_bytes > grant.maximum_bytes {\n                return Err(VcsError::ValidationFailed(\"batched inverse backing failed its exact allocation admission\".into()));\n            }\n            return Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()));\n        }\n        let owner = publication.preparation.as_mut().expect(\"validated batched fold preparation owner\");\n"
+      }
+    ],
+    "physicalLayoutAccepted": false,
+    "scope": "Actual Product11 captured source→current physical Root statements; no physical layout acceptance"
+  },
+  "retainedCloneTransition": {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+    "capturedBeforePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+    "beforeHash": "a51897f27ba16072ae73c886834ea600371bbb2b03edd09191ba7b260c81201a",
+    "afterHash": "c0bb08da0a587142728c408a8382f4b8e7122fd79158d929872cf646bbbfd549",
+    "statementReplacements": [
+      {
+        "before": "    /// 🔗️ Retains a projected native field through the actual immutable root lease.\n    pub fn project_owned<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F) -> RetainedOwnedProjection<U>\n    where F: for<'source> FnOnce(&'source T) -> &'source U {\n        RetainedOwnedProjection::from_source(self.borrow().project(discriminator, project))\n    }\n}\n\n",
+        "after": "    /// 🔗️ Retains a projected native field through the actual immutable root lease.\n    pub fn project_owned<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F) -> RetainedOwnedProjection<U>\n    where F: for<'source> FnOnce(&'source T) -> &'source U {\n        unsafe { RetainedOwnedProjection::from_source(self.borrow().project(discriminator, project)) }\n    }\n}\n\n"
+      },
+      {
+        "before": "#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]\npub struct RetainedCloneGrant {\n    pub maximum_items: usize,\n    /// 🧮️ Bounds payload copying and completed-child scaffold release within one clone turn.\n    pub maximum_copy_bytes: usize,\n    pub maximum_capacity_bytes: usize,\n    pub maximum_depth: usize,\n}\n\nimpl RetainedCloneGrant {\n    /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.\n    pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {\n        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_depth }\n    }\n\n    /// 🎟️ Admits one payload turn while reserving no allocation-capacity credit.\n    pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {\n        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_depth }\n    }\n}\n\n",
+        "after": "#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]\npub struct RetainedCloneGrant {\n    pub maximum_items: usize,\n    /// 🧮️ Bounds payload copying within one clone turn.\n    pub maximum_copy_bytes: usize,\n    pub maximum_capacity_bytes: usize,\n    /// ♻️ Bounds physical owner and scaffold release independently of copying.\n    pub maximum_release_bytes: usize,\n    pub maximum_depth: usize,\n}\n\nimpl RetainedCloneGrant {\n    /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.\n    pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {\n        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: 0, maximum_depth }\n    }\n\n    /// 🎟️ Admits one payload turn while reserving no allocation-capacity credit.\n    pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {\n        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth }\n    }\n    /// ♻️ Admits one release turn without copy or allocation credit.\n    pub fn one_release_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {\n        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth }\n    }\n}\n\n"
+      },
+      {
+        "before": "    pub copied_items: usize,\n    pub copied_bytes: usize,\n    pub retained_capacity_bytes: usize,\n}\n\nimpl RetainedCloneProgress {\n",
+        "after": "    pub copied_items: usize,\n    pub copied_bytes: usize,\n    pub retained_capacity_bytes: usize,\n    pub released_bytes: usize,\n}\n\nimpl RetainedCloneProgress {\n"
+      },
+      {
+        "before": "        Ok(Self {\n            copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, \"retained clone item progress overflow\"))?,\n            copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, \"retained clone byte progress overflow\"))?,\n            retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, \"retained clone capacity progress overflow\"))?,\n        })\n    }\n\n    pub fn fits(self, grant: RetainedCloneGrant) -> bool {\n        self.copied_items <= grant.maximum_items && self.copied_bytes <= grant.maximum_copy_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes\n    }\n}\n\npub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, scope: &str) -> Result<RetainedCloneProgress, crate::ValueError> {\n    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!(\"{scope} exceeded its retained clone item, copy, or capacity grant\"))) }\n}\n\n/// 🛡️ Checks both granted closure work and the child's exact terminal ownership witness.\n",
+        "after": "        Ok(Self {\n            copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, \"retained clone item progress overflow\"))?,\n            copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, \"retained clone byte progress overflow\"))?,\n            released_bytes: self.released_bytes.checked_add(other.released_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, \"retained clone release progress overflow\"))?,\n            retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, \"retained clone capacity progress overflow\"))?,\n        })\n    }\n\n    pub fn fits(self, grant: RetainedCloneGrant) -> bool {\n        self.copied_items <= grant.maximum_items && self.copied_bytes <= grant.maximum_copy_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes && self.released_bytes <= grant.maximum_release_bytes\n    }\n}\n\npub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, scope: &str) -> Result<RetainedCloneProgress, crate::ValueError> {\n    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!(\"{scope} exceeded its retained clone item, copy, capacity, or release grant\"))) }\n}\n\n/// 🛡️ Checks both granted closure work and the child's exact terminal ownership witness.\n"
+      },
+      {
+        "before": "        let Some(retirement) = self.controlled.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };\n        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        if retirement.terminal_is_empty() {\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: self.controlled_bytes, retained_capacity_bytes: 0 };\n            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }\n            self.controlled = None;\n            self.controlled_bytes = 0;\n",
+        "after": "        let Some(retirement) = self.controlled.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };\n        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        if retirement.terminal_is_empty() {\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: self.controlled_bytes };\n            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }\n            self.controlled = None;\n            self.controlled_bytes = 0;\n"
+      },
+      {
+        "before": "pub fn close_retained_binding(binding: &mut Option<RetainedCloneBinding>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {\n    match RetainedCloneBinding::close_one(binding, grant.maximum_items)? {\n        SnapshotRetirementStep::Complete => Ok(RetainedCloneStep::Complete(Default::default())),\n        SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),\n        SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained binding close blocked\")),\n    }\n}\n",
+        "after": "pub fn close_retained_binding(binding: &mut Option<RetainedCloneBinding>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {\n    match RetainedCloneBinding::close_one(binding, grant.maximum_items)? {\n        SnapshotRetirementStep::Complete => Ok(RetainedCloneStep::Complete(Default::default())),\n        SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes })),\n        SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained binding close blocked\")),\n    }\n}\n"
+      },
+      {
+        "before": "        if self.spent {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained scalar clone cursor is spent\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        if self.value.is_some() {\n            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), retained_capacity_bytes: 0 };\n        if !progress.fits(grant) {\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n        }\n",
+        "after": "        if self.spent {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained scalar clone cursor is spent\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        if self.value.is_some() {\n            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), retained_capacity_bytes: 0, released_bytes: 0 };\n        if !progress.fits(grant) {\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n        }\n"
+      },
+      {
+        "before": "        if self.closing {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained string clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source = source.get();\n        match self.phase {\n            0 => {\n                let planned = source.len();\n                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };\n                if !progress.fits(grant) {\n                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n                }\n",
+        "after": "        if self.closing {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained string clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source = source.get();\n        match self.phase {\n            0 => {\n                let planned = source.len();\n                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };\n                if !progress.fits(grant) {\n                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n                }\n"
+      },
+      {
+        "before": "                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n                }\n                output.push_str(&source[start..end]);\n                let progress = RetainedCloneProgress { copied_items: 0, copied_bytes: end - start, retained_capacity_bytes: 0 };\n                Ok(RetainedCloneStep::Progress(progress))\n            }\n            2 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),\n",
+        "after": "                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n                }\n                output.push_str(&source[start..end]);\n                let progress = RetainedCloneProgress { copied_items: 0, copied_bytes: end - start, retained_capacity_bytes: 0, released_bytes: 0 };\n                Ok(RetainedCloneStep::Progress(progress))\n            }\n            2 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),\n"
+      },
+      {
+        "before": "        if self.closing {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained vector clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source_value = source.get();\n        if self.phase == 0 {\n            let planned = source_value.len().checked_mul(size_of::<T>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, \"retained vector clone capacity overflow\"))?;\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n",
+        "after": "        if self.closing {\n            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained vector clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source_value = source.get();\n        if self.phase == 0 {\n            let planned = source_value.len().checked_mul(size_of::<T>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, \"retained vector clone capacity overflow\"))?;\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n"
+      },
+      {
+        "before": "                maximum_items: grant.maximum_items.saturating_sub(used.copied_items),\n                maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(used.copied_bytes),\n                maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(used.retained_capacity_bytes),\n                maximum_depth: grant.maximum_depth,\n            };\n            if let Some(child) = self.child.as_mut() {\n                if self.child_value.is_some() {\n                    if !child.terminal_is_empty() {\n",
+        "after": "                maximum_items: grant.maximum_items.saturating_sub(used.copied_items),\n                maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(used.copied_bytes),\n                maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(used.retained_capacity_bytes),\n                maximum_depth: grant.maximum_depth, maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(used.released_bytes) };\n            if let Some(child) = self.child.as_mut() {\n                if self.child_value.is_some() {\n                    if !child.terminal_is_empty() {\n"
+      },
+      {
+        "before": "                used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;\n                return Ok(RetainedCloneStep::Complete(used));\n            }\n            if remaining.maximum_items == 0 && remaining.maximum_copy_bytes == 0 && remaining.maximum_capacity_bytes == 0 {\n                return Ok(RetainedCloneStep::Progress(used));\n            }\n            let child = self.child.get_or_insert_with(T::retained_clone_cursor);\n",
+        "after": "                used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;\n                return Ok(RetainedCloneStep::Complete(used));\n            }\n            if remaining.maximum_items == 0 && remaining.maximum_copy_bytes == 0 && remaining.maximum_capacity_bytes == 0 && remaining.maximum_release_bytes == 0 {\n                return Ok(RetainedCloneStep::Progress(used));\n            }\n            let child = self.child.get_or_insert_with(T::retained_clone_cursor);\n"
+      },
+      {
+        "before": "            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        let first = self.source.is_none();\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source_value = source.get();\n        if first {\n",
+        "after": "            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        let first = self.source.is_none();\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        let source_value = source.get();\n        if first {\n"
+      },
+      {
+        "before": "        if self.output.is_some() {\n            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        if self.value.is_some() {\n            if let Some(child) = self.child.as_mut() {\n",
+        "after": "        if self.output.is_some() {\n            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        if self.value.is_some() {\n            if let Some(child) = self.child.as_mut() {\n"
+      },
+      {
+        "before": "                let bytes = size_of::<T::Cursor>();\n                if bytes > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }\n                self.child = None;\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0 }));\n            }\n            let capacity = size_of::<T>();\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n",
+        "after": "                let bytes = size_of::<T::Cursor>();\n                if bytes > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }\n                self.child = None;\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }));\n            }\n            let capacity = size_of::<T>();\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity, released_bytes: 0 };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n"
+      },
+      {
+        "before": "                return Err(crate::ValueError::new(crate::ValueRefusalKind::DepthLimit, \"retained box clone structural depth limit exceeded\"));\n            }\n            let capacity = size_of::<T::Cursor>();\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n",
+        "after": "                return Err(crate::ValueError::new(crate::ValueRefusalKind::DepthLimit, \"retained box clone structural depth limit exceeded\"));\n            }\n            let capacity = size_of::<T::Cursor>();\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity, released_bytes: 0 };\n            if !progress.fits(grant) {\n                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));\n            }\n"
+      },
+      {
+        "before": "        if let Some(child) = self.child.as_mut() {\n            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }\n            if !child.terminal_is_empty() { let step = child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), \"retained child close\")?.progress())); }\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T::Cursor>(), retained_capacity_bytes: 0 };\n            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }\n            self.child = None;\n            return Ok(RetainedCloneStep::Progress(progress));\n",
+        "after": "        if let Some(child) = self.child.as_mut() {\n            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }\n            if !child.terminal_is_empty() { let step = child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), \"retained child close\")?.progress())); }\n            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: size_of::<T::Cursor>() };\n            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }\n            self.child = None;\n            return Ok(RetainedCloneStep::Progress(progress));\n"
+      },
+      {
+        "before": "                if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained tuple clone cursor is closing\")); }\n                if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained tuple clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n                if self.draining {\n                    match self.phase {\n",
+        "after": "                if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained tuple clone cursor is closing\")); }\n                if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, \"retained tuple clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n                if self.draining {\n                    match self.phase {\n"
+      }
+    ],
+    "declarationChanges": [
+      {
+        "owner": "RetainedCloneGrant",
+        "field": "maximum_release_bytes",
+        "type": "usize"
+      },
+      {
+        "owner": "RetainedCloneProgress",
+        "field": "released_bytes",
+        "type": "usize"
+      }
+    ],
+    "physicalLayoutAccepted": false,
+    "scope": "Actual Product11 captured full source to current physical Root; explicit declaration changes observed, no physical layout acceptance"
+  },
+  "currentAuthorityTransitions": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "capturedBeforePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "beforeHash": "5c89dcb6ee5cdf6ad18bf1ecbee12a9e7f60aca7d025a5d7d805eab20e3d92e5",
+      "afterHash": "5bc7a5153581aa804cb55c7a5a724d4a234b757b5a5a2953abfb8264f71176f5",
+      "statementReplacements": [
+        {
+          "before": "            let demand = destination.chunks.next_allocation_bytes()?;\n            if demand > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }\n            let progress = destination.chunks.reserve_one(demand).map_err(|error| ValueError::from(error.refusal()))?;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, copied_bytes: 0 }));\n        }\n        if self.pending.is_none() {\n            let mut end = (self.position + PAGED_UTF8_CHUNK_BYTES).min(source.len());\n",
+          "after": "            let demand = destination.chunks.next_allocation_bytes()?;\n            if demand > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }\n            let progress = destination.chunks.reserve_one(demand).map_err(|error| ValueError::from(error.refusal()))?;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, copied_bytes: 0, released_bytes: 0 }));\n        }\n        if self.pending.is_none() {\n            let mut end = (self.position + PAGED_UTF8_CHUNK_BYTES).min(source.len());\n"
+        },
+        {
+          "before": "            self.pending = Some(pending);\n            if capacity > grant.maximum_capacity_bytes { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"native UTF-8 append allocator exceeded its admitted chunk\")); }\n            self.end = end;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity }));\n        }\n        if self.position < self.end {\n            let mut end = self.position.saturating_add(grant.maximum_copy_bytes).min(self.end);\n",
+          "after": "            self.pending = Some(pending);\n            if capacity > grant.maximum_capacity_bytes { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"native UTF-8 append allocator exceeded its admitted chunk\")); }\n            self.end = end;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity, released_bytes: 0 }));\n        }\n        if self.position < self.end {\n            let mut end = self.position.saturating_add(grant.maximum_copy_bytes).min(self.end);\n"
+        },
+        {
+          "before": "            let bytes = end - self.position;\n            self.pending.as_mut().expect(\"native append chunk owner\").push_str(&source[self.position..end]);\n            self.position = end;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0 }));\n        }\n        let bytes = std::mem::size_of::<String>();\n        if bytes > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }\n",
+          "after": "            let bytes = end - self.position;\n            self.pending.as_mut().expect(\"native append chunk owner\").push_str(&source[self.position..end]);\n            self.position = end;\n            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }));\n        }\n        let bytes = std::mem::size_of::<String>();\n        if bytes > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }\n"
+        },
+        {
+          "before": "        if let Err(pending) = destination.chunks.push_reserved(pending) { self.pending = Some(pending); return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"native UTF-8 append lost its admitted slot\")); }\n        destination.byte_len += length;\n        self.destination = Some((destination_identity, destination.byte_len));\n        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0 }))\n    }\n    pub fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }\n    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n",
+          "after": "        if let Err(pending) = destination.chunks.push_reserved(pending) { self.pending = Some(pending); return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"native UTF-8 append lost its admitted slot\")); }\n        destination.byte_len += length;\n        self.destination = Some((destination_identity, destination.byte_len));\n        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }))\n    }\n    pub fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }\n    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {\n"
+        }
+      ],
+      "declarationChanges": [],
+      "physicalLayoutAccepted": false,
+      "scope": "Actual Product11 captured full source to current physical Root; explicit declaration changes observed, no physical layout acceptance"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "capturedBeforePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "beforeHash": "8a8cdb14868ecfa11c62bdfc5091546738d302127bd663734b907a0ff5b777f9",
+      "afterHash": "0cc53e00ed803ebeadf3e9b7b5d258bc1a68de97091097c77bcc21037098542e",
+      "statementReplacements": [
+        {
+          "before": "                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct clone cursor is closing\")); }\n                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                source.bind(&mut self.source)?;\n                if self.draining {\n                    return match self.phase { #(#drain_arms,)* _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct drain state is invalid\")) };\n",
+          "after": "                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct clone cursor is closing\")); }\n                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                source.bind(&mut self.source)?;\n                if self.draining {\n                    return match self.phase { #(#drain_arms,)* _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained struct drain state is invalid\")) };\n"
+        },
+        {
+          "before": "                        if bytes > grant.maximum_copy_bytes { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                        self.output = Some(#construct);\n                        self.phase += 1;\n                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0 }))\n                    }\n                    _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone state is invalid\")),\n                }\n",
+          "after": "                        if bytes > grant.maximum_copy_bytes { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                        self.output = Some(#construct);\n                        self.phase += 1;\n                        Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(::semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }))\n                    }\n                    _ => Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone state is invalid\")),\n                }\n"
+        },
+        {
+          "before": "                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone cursor is closing\")); }\n                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                source.bind(&mut self.source)?;\n                if self.variant.is_none() {\n                    if grant.maximum_items == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n",
+          "after": "                if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone cursor is closing\")); }\n                if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, \"retained enum clone cursor is spent\")); }\n                if self.output.is_some() { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())); }\n                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n                source.bind(&mut self.source)?;\n                if self.variant.is_none() {\n                    if grant.maximum_items == 0 { return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }\n"
+        }
+      ],
+      "declarationChanges": [],
+      "physicalLayoutAccepted": false,
+      "scope": "Actual Product11 captured full source to current physical Root; explicit declaration changes observed, no physical layout acceptance"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "capturedBeforePath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/initial-captured-input/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "beforeHash": "bf3f7b8a889dda036627e3dc587b497421777cc35f8df3b47c7cdf1851a09910",
+      "afterHash": "eb801a0a2baae4d7c221bdd3db03956d4845a64613e1bddcd55d033a87d89fba",
+      "statementReplacements": [
+        {
+          "before": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => {\n",
+          "after": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => {\n"
+        },
+        {
+          "before": "                    for index in start..start + count {\n                        self.bytes.push_reserved(*source.get(index).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet clone source changed\"))?).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet clone lost its reserved capacity\"))?;\n                    }\n                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: count, retained_capacity_bytes: 0 }));\n                }\n                if grant.maximum_items == 0 {\n                    return Ok(RetainedCloneStep::Progress(Default::default()));\n",
+          "after": "                    for index in start..start + count {\n                        self.bytes.push_reserved(*source.get(index).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet clone source changed\"))?).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged octet clone lost its reserved capacity\"))?;\n                    }\n                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: count, retained_capacity_bytes: 0, released_bytes: 0 }));\n                }\n                if grant.maximum_items == 0 {\n                    return Ok(RetainedCloneStep::Progress(Default::default()));\n"
+        },
+        {
+          "before": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => match self.inner.advance(source.project(1, PagedUtf8::retained_chunks), grant)? {\n",
+          "after": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => match self.inner.advance(source.project(1, PagedUtf8::retained_chunks), grant)? {\n"
+        },
+        {
+          "before": "                }\n                self.output = Some(PagedUtf8::from_retained_chunks_cloned(self.chunks.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone lost its chunks\"))?, source.get().len()));\n                self.phase = 3;\n                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), retained_capacity_bytes: 0 }))\n            }\n            3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),\n            _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone cursor is spent\")),\n",
+          "after": "                }\n                self.output = Some(PagedUtf8::from_retained_chunks_cloned(self.chunks.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone lost its chunks\"))?, source.get().len()));\n                self.phase = 3;\n                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), retained_capacity_bytes: 0, released_bytes: 0 }))\n            }\n            3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),\n            _ => Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged UTF-8 retained clone cursor is spent\")),\n"
+        },
+        {
+          "before": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged map retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => match self.inner.advance(source.project(1, PagedMap::retained_entries), grant)? {\n",
+          "after": "        if self.closing {\n            return Err(ValueError::new(ValueRefusalKind::InvariantViolated, \"paged map retained clone cursor is closing\"));\n        }\n        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }\n        source.bind(&mut self.source)?;\n        match self.phase {\n            0 => match self.inner.advance(source.project(1, PagedMap::retained_entries), grant)? {\n"
+        }
+      ],
+      "declarationChanges": [],
+      "physicalLayoutAccepted": false,
+      "scope": "Actual Product11 captured full source to current physical Root; explicit declaration changes observed, no physical layout acceptance"
+    }
+  ]
+}

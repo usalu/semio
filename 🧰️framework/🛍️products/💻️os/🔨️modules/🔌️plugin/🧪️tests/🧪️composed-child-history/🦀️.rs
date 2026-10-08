@@ -1,8 +1,8 @@
 //! 🧩️ Composed-child history laws of the plugin runtime (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12), driven
 //! by the language-agnostic fixture `🧫️fixtures/🧫️composed-child-history/🔣️.json` whose cases the TypeScript twin (`🟦️.ts`
 //! beside this file) derives independently: a reload backfills every unlogged member edit — joined to the parent row its
-//! transaction also landed, else one row per transaction (or per edit without one), in moment order, labelled from its first
-//! leaf.
+//! transaction also landed, else one row per transaction (or per edit without one), in moment order, labelled from its
+//! declared intent or first leaf.
 
 use super::*;
 use std::collections::{HashMap, HashSet};
@@ -43,6 +43,7 @@ fn history(value: &Value) -> time_travel::MemberEditHistory {
         started_at: text(&value["startedAt"]).to_string(),
         timestamp: Some(protocol::HybridLogicalTimestamp { actor: 0, physical_ms: value["at"].as_u64().expect("moment"), logical: 0 }),
         transaction: value["transaction"].as_str().map(|id| protocol::TransactionRef { id: id.to_string(), tool: "s.test@1/*#editor#drag".into() }),
+        intent_label: value.get("intentLabel").map(label),
         op_count: value["opCount"].as_u64().expect("operation count") as usize,
         op_lines: value["opLines"].as_array().expect("operation lines").iter().map(|line| text(line).to_string()).collect(),
         mutations: mutations.into_iter().collect(),
@@ -50,7 +51,7 @@ fn history(value: &Value) -> time_travel::MemberEditHistory {
 }
 
 /// ⚖️ LAW: every fixture case backfills exactly its expected attachments and rows, in moment order, labelled in English and
-/// German from the first leaf or the first printed operation.
+/// German from declared intent, the first leaf or the first printed operation.
 #[test]
 fn member_backfill_answers_every_fixture_case() {
     let fixture: Value = serde_json::from_str(COMPOSED_CHILD_HISTORY_FIXTURE_JSON).expect("composed-child history fixture parses");
@@ -72,5 +73,6 @@ fn member_backfill_answers_every_fixture_case() {
             assert_eq!(resolved(&group.label), resolved(&label(&expected["label"])), "{id}: label");
             assert_eq!(group.started_at, text(&expected["startedAt"]), "{id}: start");
         }
+        eprintln!("[DEBUG] composed-child-history neutral case={id} bilingual-labels=true");
     }
 }

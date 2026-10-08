@@ -2,7 +2,7 @@
 //! when already at that width, Fatal `invariant` when the width is zero.
 
 use super::ChangeShotWidth;
-use crate::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingShotPatch;
 use crate::ShootingSnapshot;
 
@@ -16,8 +16,5 @@ pub fn diff(payload: &ChangeShotWidth, base: &ShootingSnapshot) -> protocol::Mut
     if existing.width == payload.new_width {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has width {}.", payload.id, payload.new_width));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { width: Some(payload.new_width), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::shot_patches([(payload.id.clone(), ShootingShotPatch { width: Some(payload.new_width), ..Default::default() })]))
 }

@@ -33,10 +33,6 @@ record create-edge tag=9
 field payload bytes
 record delete-edge tag=10
 field payload bytes
-record set-snapshot tag=11
-field payload bytes
-record patch-snapshot tag=12
-field payload bytes
 record drag-nodes tag=13
 field payload bytes
 record set-node-property tag=14

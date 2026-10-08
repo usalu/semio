@@ -9,6 +9,59 @@ use crate::test_app_mutation_fixture::{TestMutation, TestSnapshot};
 /// 📜️ The document schema the reloaded envelope carries — the single-document app shape of `🧾️document-archive-load-legs`.
 const RELOAD_DOCUMENT_SCHEMA: &str = "semio.test.single-document/v1";
 
+/// 🧳️ Retain a real backing allocation through the public erased initializer job.
+struct PhysicalInitializerAuthority {
+    buffer: Option<Vec<u8>>,
+}
+
+impl ArtifactStoreInitializationAuthority<TestSnapshot, TestMutation> for PhysicalInitializerAuthority {
+    fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome { semio_framework_job::StepOutcome::Yield }
+    fn request_cancel(&mut self) {}
+    fn take_candidate(&mut self) -> Option<store::ArtifactStore<TestSnapshot, TestMutation>> { None }
+    fn next_close_byte_demand(&self) -> usize { self.buffer.as_ref().map_or(0, Vec::capacity) }
+    fn begin_close(&mut self) {}
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        let Some(buffer) = self.buffer.as_ref() else { return Ok(PluginCloseStep::Complete) };
+        if maximum_items == 0 || maximum_bytes < buffer.capacity() { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        let bytes = self.buffer.take().unwrap().capacity();
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
+    }
+    fn terminal_is_empty(&self) -> bool { self.buffer.is_none() }
+}
+
+#[test]
+fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded() {
+    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
+    for row in fixture["cases"].as_array().unwrap() {
+        let extent = row["physicalBytes"].as_u64().unwrap() as usize;
+        let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap();
+        assert_eq!(buffer.capacity(), extent);
+        let mut job = ArtifactStoreInitializationJob::new(Box::new(PhysicalInitializerAuthority { buffer: Some(buffer) }));
+        let demand = job.next_close_byte_demand();
+        let first = job.close_step(1, row["callerBytes"].as_u64().unwrap() as usize);
+        if row["releasedBytes"].as_u64().unwrap() == 0 { job.close_step(1, admission); }
+        assert!(job.accept_terminal_failure());
+        assert!(job.authority.is_some());
+        assert!(!job.terminal_is_empty());
+        let box_bytes = std::mem::size_of::<PhysicalInitializerAuthority>();
+        let terminal_demand = job.next_close_byte_demand();
+        let denied = job.close_step(1, box_bytes - 1);
+        let retained = job.authority.is_some();
+        let released = job.close_step(1, box_bytes);
+        for _ in 0..8 { if job.terminal_is_empty() { break; } job.close_step(1, admission); }
+        assert!(job.terminal_is_empty());
+        assert_eq!(demand, extent);
+        assert_eq!(first, InteractiveJobCloseStep::Pending { released_items: usize::from(row["releasedBytes"].as_u64().unwrap() != 0), released_bytes: row["releasedBytes"].as_u64().unwrap() as usize });
+        assert_eq!(terminal_demand, box_bytes);
+        assert_eq!(denied, InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert!(retained);
+        assert_eq!(released, InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: box_bytes });
+        eprintln!("[DEBUG] initializer job physical backing={extent} erased-authority-box={box_bytes} retained-denied-owner=true");
+    }
+}
+
 std::thread_local! {
     static RELOAD_FOLDS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
@@ -136,13 +189,24 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     assert_eq!(job.progress(), (240, 240), "the initializer reports every applied operation folded");
     assert!(steps < 16 * 240, "a constant number of steps per edit: validation and lookup are linear in the history, not pairwise ({steps} steps)");
     let mut reloaded = job.take_candidate().expect("the reloaded store");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
+    let authority_bytes = std::mem::size_of::<BoundedStoreInitializationAuthority<TestSnapshot, ReloadCountedOp>>();
+    let handoff_demand = job.next_close_byte_demand();
+    assert!(job.authority.is_some());
+    assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut job, 1, authority_bytes - 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
     for _ in 0..65_536 {
         if job.terminal_is_empty() {
             break;
         }
-        let _ = semio_framework_job::InteractiveJob::close_step(&mut job, 1, 4096);
+        let maximum_bytes = job.next_close_byte_demand().max(4096);
+        let step = semio_framework_job::InteractiveJob::close_step(&mut job, 1, maximum_bytes);
+        if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step { assert!(released_items <= 1 && released_bytes <= admission); }
     }
     assert!(job.terminal_is_empty(), "the initializer hands its store off and closes");
+    assert_eq!(handoff_demand, authority_bytes);
+    assert!(authority_bytes <= admission, "initializer frame fits its explicit physical admission ceiling");
+    eprintln!("[DEBUG] bounded reload candidate handoff retains authority-frame={authority_bytes} until its exact physical grant; admission={admission}");
     assert_eq!(reloaded.snapshot().expect("reloaded head"), source.snapshot().expect("source head"));
     assert_eq!(reloaded.snapshot().expect("reloaded head").count, 240);
     assert_eq!(reloaded.supersessions(), source.supersessions());

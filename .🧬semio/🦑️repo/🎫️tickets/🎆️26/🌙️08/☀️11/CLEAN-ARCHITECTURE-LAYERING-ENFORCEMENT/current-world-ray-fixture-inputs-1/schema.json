@@ -1,0 +1,1 @@
+{"type": "object", "required": ["local_x", "local_y", "viewport", "view_projection", "projection_spec", "primitive"], "properties": {"local_x": {"const": true}, "local_y": {"const": true}, "viewport": {"const": true}, "view_projection": {"const": true}, "projection_spec": {"const": true}, "primitive": {"const": true}}, "additionalProperties": false}

@@ -100,12 +100,6 @@ pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenc
     store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))
 }
 
-/// 🔎 The `benchmarks` rows this document persists for its composed child — the single read call site
-/// every mutation-diff/panel/report call path in this artifact now uses instead of a direct
-/// `.benchmarks` field — the persisted payload, never the handle's serialization-skipped local owner.
-pub fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
-    snapshot.benchmarks_payload.clone()
-}
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️Knowledge
@@ -166,11 +160,6 @@ pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowl
     store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))
 }
 
-/// 🔎 The `knowledge` rows this document persists for its composed child — see
-/// [`program_benchmarks`].
-pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
-    snapshot.knowledge_payload.clone()
-}
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Knowledge
 

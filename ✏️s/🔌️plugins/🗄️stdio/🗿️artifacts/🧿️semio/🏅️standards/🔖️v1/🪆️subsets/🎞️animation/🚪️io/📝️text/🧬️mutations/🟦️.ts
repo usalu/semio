@@ -1,6 +1,5 @@
 /** 📝️ Text representation for `stdio.semio.animation.mutations`. */
 export type SemioAnimationMutation =
-  | { mutation: 'setSnapshot'; snapshot: unknown }
   | { mutation: 'insertTimeline'; index: number; timeline: unknown }
   | { mutation: 'removeTimeline'; index: number }
   | { mutation: 'setTimelineName'; index: number; name: string | null }

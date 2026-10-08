@@ -6,6 +6,13 @@ import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {parseEditableSvgPath} from "../../🟦️.ts";
+import {readFileSync} from "node:fs";
+
+test("decoded native SVG path uses the same semantic command authority",()=>{
+  for(const row of fixture.filter(row=>row.after!==null))expect(parseEditableSvgPath(row.source)).toEqual(row.after);
+  const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+  expect(native.includes("pub fn editable_svg_path_commands")).toBe(true);
+});
 
 for(const row of fixture)test(`editable SVG path: ${row.name}`,()=>{
   expect(new Ajv({strict:true}).compile(schema)(row.source)).toBe(true);

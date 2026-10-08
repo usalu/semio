@@ -1,0 +1,9 @@
+{
+  "const": {
+    "id": "semio-framework-os-renderer-wgpu",
+    "kind": "lib",
+    "platform": "target",
+    "insideTarget": true,
+    "caseCount": 3
+  }
+}

@@ -4,13 +4,13 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
 //! leaf's own `🔺️diff/🦀️.rs`, which reads the live `knowledge` rows off the working-scene cache — which a fresh test process has never populated — finds no `knowledge-record-a`, and rejects with `mutation.target-missing`.
 //!
-//! That leaf's own contract line reads: 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else removes the target row from the working-scene cache and re-mints a fresh content-addressed `table` child handle over the remaining rows.
+//! That leaf's own contract line reads: 🗑️ Error `mutation.target-missing` if the id is absent (empty diff); else `removed = [id]` — `apply` re-derives the composed child handle from the remaining rows.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📚️knowledge-record/🗑️delete/🚫️absent-a/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn delete_knowledge_record_leaves_the_before_snapshot_untouched() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("delete-knowledge-record/rejects-deleting-absent-knowledge-record-a: the empty rejection diff still applies");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("delete-knowledge-record/rejects-deleting-absent-knowledge-record-a: the empty rejection diff still applies");
     assert_eq!(applied, expected_after(), "delete-knowledge-record/rejects-deleting-absent-knowledge-record-a: a rejected delete-knowledge-record must leave the snapshot exactly as committed");
 }
 

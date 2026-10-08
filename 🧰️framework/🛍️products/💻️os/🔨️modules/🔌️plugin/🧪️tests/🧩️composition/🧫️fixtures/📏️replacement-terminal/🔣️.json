@@ -1,0 +1,9 @@
+{
+  "maximumAdmissionBytes": 262144,
+  "maximumItems": 1,
+  "undergrantOffset": 1,
+  "undergrantReleasedBytes": 0,
+  "terminalFrameSeparate": true,
+  "reportedPhysicalEqualsActual": true,
+  "oracleExtents": [24, 4098, 43024]
+}

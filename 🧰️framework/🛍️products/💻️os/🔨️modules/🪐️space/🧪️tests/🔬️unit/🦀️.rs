@@ -258,7 +258,7 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
     deleted_entries.sort();
     assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
 
-    let after = diff.apply(&collection).expect("valid collection diff");
+    let after = protocol::apply_diff(&diff, &collection).expect("valid collection diff");
     assert!(after.folders.is_empty());
     assert!(after.entries.is_empty());
 }

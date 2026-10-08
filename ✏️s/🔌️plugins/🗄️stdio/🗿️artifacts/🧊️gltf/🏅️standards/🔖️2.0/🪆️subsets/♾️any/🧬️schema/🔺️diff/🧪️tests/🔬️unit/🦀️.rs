@@ -142,7 +142,7 @@ fn absorb_law_holds_over_curated_ops() {
     let mut d1 = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &mid);
     let d2 = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
-    assert_eq!(MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
 }
 //#endregion 🔖️AbsorbCanonicalCases
 
@@ -155,9 +155,9 @@ fn between_roundtrip_law_holds_on_synthetic_fixture() {
     b.document.asset.generator = Some("other-tool".into());
     b.source_form = GltfSourceForm::Glb;
     let ab = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&a, &b);
-    assert_eq!(MutationDiff::apply(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
     let ba = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&b, &a);
-    assert_eq!(MutationDiff::apply(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&a, &a).is_empty());
 }
 //#endregion 🔖️BetweenRoundtripLaw
@@ -176,9 +176,9 @@ fn inverse_law_diff_level_round_trips() {
         s
     };
     let d = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &next);
-    let mutated = MutationDiff::apply(&d, &base).expect("apply must succeed for a well-formed fixture");
+    let mutated = protocol::apply_diff(&d, &base).expect("apply must succeed for a well-formed fixture");
     let inv = <GltfDiff as DiffAlgebra<GltfSnapshot>>::inverse(&d, &base);
-    assert_eq!(MutationDiff::apply(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
 }
 //#endregion 🔖️InverseLaw
 
@@ -261,7 +261,7 @@ fn field_sweep_covers_every_mutable_field() {
     let sweep_b = sweep_b();
 
     let ab = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(MutationDiff::apply(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
+    assert_eq!(protocol::apply_diff(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
     assert!(ab.asset.is_some());
     assert_eq!(ab.scene, Some(None), "scene going Some->None must be tri-state Some(None)");
     assert!(ab.scenes.is_some());
@@ -288,7 +288,7 @@ fn field_sweep_covers_every_mutable_field() {
     assert!(!nodes_ab.added.is_empty(), "sweep must exercise an added node (b is longer)");
 
     let ba = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(MutationDiff::apply(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
+    assert_eq!(protocol::apply_diff(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
     let nodes_ba = ba.nodes.as_ref().unwrap();
     assert!(!nodes_ba.removed.is_empty(), "reverse direction must exercise a removed node (a is shorter, b is longer)");
     let cameras_ba = ba.cameras.as_ref().unwrap();

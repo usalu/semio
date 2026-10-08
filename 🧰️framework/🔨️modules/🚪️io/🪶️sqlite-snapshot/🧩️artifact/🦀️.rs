@@ -351,6 +351,16 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
     }
     /// 🔤️ Checks the aggregate native byte bound before copying one borrowed text field.
     pub fn text(&mut self, text: &str) -> Result<String, ValueError> { self.reserve(text.len())?; copy_text(text, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
+    /// 🧵️ Constructs native paged text with each actual chunk and backing page admitted independently.
+    pub fn paged_text(&mut self, text: &str) -> Result<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, ValueError> {
+        self.reserve(text.len())?;
+        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress| {
+            let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
+            let mut native = semio_framework_value::NativeDecodeControl::new(remaining, &mut callback);
+            let result = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(text, &mut native);
+            (result, native.owned_bytes())
+        })?
+    }
     /// 📦️ Checks the aggregate native byte bound before copying one borrowed binary field.
     pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, ValueError> { self.reserve(blob.len())?; copy_blob(blob, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
     /// 🔢️ Accounts for one explicitly restored numeric or boolean field.

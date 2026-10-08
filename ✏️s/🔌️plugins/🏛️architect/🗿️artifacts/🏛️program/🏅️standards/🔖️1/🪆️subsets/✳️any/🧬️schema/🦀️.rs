@@ -7,7 +7,7 @@ use graph::{orient_endpoints, Undirected};
 
 //#region 🔖️Artifact
 /// 🧬️ program document artifact state.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramArtifact {

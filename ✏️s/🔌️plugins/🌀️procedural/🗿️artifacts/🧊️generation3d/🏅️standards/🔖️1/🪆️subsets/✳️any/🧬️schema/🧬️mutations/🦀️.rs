@@ -3,21 +3,19 @@
 //! Derived from `Generation3dSnapshot`'s shape per `📓️derivation-rules.md`: an id-keyed widget
 //! collection (`create`/`update`/`delete-widget`), a relationship/edge collection of synapses
 //! (`connect`/`update`/`disconnect-synapse`), a per-widget position map (`move-widget` /
-//! `delete-widget-position`), two document-level scalars (`update-camera`, `change-schema`), and an
+//! `delete-widget-position`), two document-level scalars (`update-camera`, `change-schema`), an
 //! id-keyed generation collection bridged from `semio_framework_artifact_playbook_playbook::GenerationMutation`
-//! (`create`/`delete`/`rename-generation`, `change-generation-value`). Every variant wraps exactly
+//! (`create`/`delete`/`rename-generation`, `change-generation-value`) with its two document-level scalars
+//! (`select-generation`, `change-generation-preview`), and six gesture intents (`change-slider-value`,
+//! `drag`/`rotate`/`scale-transforms`, `move-nodes`, `change-widget-input`). Every variant wraps exactly
 //! one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
 //! `protocol::MutationKind<Generation3dSnapshot, Generation3dMutation>`; `#[derive(dsl::Mutations)]`
 //! below generates `impl protocol::Mutation`/`impl protocol::SemanticMutation` by delegating to each
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs` for the reference shape.
 //!
-//! `SetWidget`/`RemoveWidget`/`SetSynapse`/`RemoveSynapse`/`SetLayout`/`RemoveLayout`/`SetCamera`/
-//! `SetSchema`/`Generation(GenerationMutation)` — the pre-migration generic vocabulary — are gone.
-//! Eight triad-leaf directories keep their pre-migration `➖remove-*`/`🎛set-*` names: glue.rs
-//! path-includes those exact files and this facet's writable boundary excludes glue.rs, so the
-//! directories couldn't be renamed alongside their content — see the migration report's
-//! `sharedFileRequests` for the exact rename once a later pass can touch glue.rs.
+//! Every leaf folder's stem equals its `semanticKind` and every leaf is wired by [`Leaves`](self) below, in enum
+//! order — no other file path-includes a leaf.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -42,12 +40,8 @@ pub(crate) fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Optio
 }
 //#endregion 🔖️AddressHelpers
 
-//#region 🔖️NewLeaves
-// 🌱️ Triad leaves that needed a fresh directory (no pre-migration slot to repurpose) — self-wired
-// here since glue.rs is outside this facet's writable boundary; the eight leaves already carrying a
-// semantic name (`delete_widget_position`/`disconnect_synapse`/`delete_widget`/`update_camera`/
-// `move_widget`/`change_schema`/`update_synapse`/`update_widget`) stay wired by glue.rs's existing
-// sibling `pub mod` blocks, unchanged — imported by those names just below.
+//#region 🔖️Leaves
+// 🌱️ One self-wired module per mutation leaf folder, in enum order. A leaf folder's stem is its `semanticKind`.
 #[path = "."]
 pub mod create_widget {
     #[path = "🌱️create-widget/🦀️.rs"]
@@ -63,6 +57,34 @@ pub mod create_widget {
 }
 
 #[path = "."]
+pub mod update_widget {
+    #[path = "🩹update-widget/🦀️.rs"]
+    mod component;
+    #[path = "🩹update-widget/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🩹update-widget/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "🩹update-widget/🧪️tests/🎚️retunes/🦀️.rs"]
+    mod tests_retunes_the_knob_slider_value;
+}
+
+#[path = "."]
+pub mod delete_widget {
+    #[path = "❌delete-widget/🦀️.rs"]
+    mod component;
+    #[path = "❌delete-widget/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "❌delete-widget/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "❌delete-widget/🧪️tests/🚫️removes/🦀️.rs"]
+    mod tests_removes_node_a_and_leaves_wire_ab_dangling;
+}
+
+#[path = "."]
 pub mod connect_synapse {
     #[path = "🔗️connect-synapse/🦀️.rs"]
     mod component;
@@ -74,6 +96,90 @@ pub mod connect_synapse {
     #[cfg(test)]
     #[path = "🔗️connect-synapse/🧪️tests/🔌️wires/🦀️.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
+}
+
+#[path = "."]
+pub mod update_synapse {
+    #[path = "🔄️update-synapse/🦀️.rs"]
+    mod component;
+    #[path = "🔄️update-synapse/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔄️update-synapse/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "🔄️update-synapse/🧪️tests/📡️repoints/🦀️.rs"]
+    mod tests_repoints_wire_ab_onto_the_cap_port;
+}
+
+#[path = "."]
+pub mod disconnect_synapse {
+    #[path = "✂️disconnect-synapse/🦀️.rs"]
+    mod component;
+    #[path = "✂️disconnect-synapse/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "✂️disconnect-synapse/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "✂️disconnect-synapse/🧪️tests/✂️cuts/🦀️.rs"]
+    mod tests_cuts_wire_ab_leaving_both_nodes;
+}
+
+#[path = "."]
+pub mod move_widget {
+    #[path = "📍️move-widget/🦀️.rs"]
+    mod component;
+    #[path = "📍️move-widget/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "📍️move-widget/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "📍️move-widget/🧪️tests/📍️repositions/🦀️.rs"]
+    mod tests_repositions_node_a_in_the_graph;
+}
+
+#[path = "."]
+pub mod delete_widget_position {
+    #[path = "🧹️delete-widget-position/🦀️.rs"]
+    mod component;
+    #[path = "🧹️delete-widget-position/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🧹️delete-widget-position/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "🧹️delete-widget-position/🧪️tests/🧹️unpins/🦀️.rs"]
+    mod tests_unpins_the_node_a_position;
+}
+
+#[path = "."]
+pub mod update_camera {
+    #[path = "📷️update-camera/🦀️.rs"]
+    mod component;
+    #[path = "📷️update-camera/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "📷️update-camera/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "📷️update-camera/🧪️tests/🔍️frames/🦀️.rs"]
+    mod tests_frames_the_graph_at_double_zoom;
+}
+
+#[path = "."]
+pub mod change_schema {
+    #[path = "🔤️change-schema/🦀️.rs"]
+    mod component;
+    #[path = "🔤️change-schema/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔤️change-schema/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "🔤️change-schema/🧪️tests/🏷️restamps/🦀️.rs"]
+    mod tests_restamps_the_fixture_schema_id;
 }
 
 #[path = "."]
@@ -92,43 +198,43 @@ pub mod create_generation {
 
 #[path = "."]
 pub mod delete_generation {
-    #[path = "🗑️delete/🦀️.rs"]
+    #[path = "🗑️delete-generation/🦀️.rs"]
     mod component;
-    #[path = "🗑️delete/🔺️diff/🦀️.rs"]
+    #[path = "🗑️delete-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🗑️delete/↩️inverse/🦀️.rs"]
+    #[path = "🗑️delete-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
+    #[path = "🗑️delete-generation/🧪️tests/🚫️removes/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
 #[path = "."]
 pub mod rename_generation {
-    #[path = "🏷️rename/🦀️.rs"]
+    #[path = "🏷️rename-generation/🦀️.rs"]
     mod component;
-    #[path = "🏷️rename/🔺️diff/🦀️.rs"]
+    #[path = "🏷️rename-generation/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🏷️rename/↩️inverse/🦀️.rs"]
+    #[path = "🏷️rename-generation/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🏷️rename/🧪️tests/🏷️retitles/🦀️.rs"]
+    #[path = "🏷️rename-generation/🧪️tests/🏷️retitles/🦀️.rs"]
     mod tests_retitles_generation_1_via_new_name;
 }
 
 #[path = "."]
 pub mod change_generation_value {
-    #[path = "🔧️change/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🦀️.rs"]
     mod component;
-    #[path = "🔧️change/🔺️diff/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔧️change/↩️inverse/🦀️.rs"]
+    #[path = "🔧️change-generation-value/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔧️change/🧪️tests/🏢️raises/🦀️.rs"]
+    #[path = "🔧️change-generation-value/🧪️tests/🏢️raises/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
 
@@ -141,6 +247,9 @@ pub mod change_slider_value {
     #[path = "🎚️change-slider-value/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "🎚️change-slider-value/🧪️tests/🎚️sets/🦀️.rs"]
+    mod tests_sets_the_knob_slider_within_its_range;
 }
 
 #[path = "."]
@@ -152,6 +261,9 @@ pub mod drag_transforms {
     #[path = "✋️drag-transforms/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "✋️drag-transforms/🧪️tests/✋️drags/🦀️.rs"]
+    mod tests_drags_the_translate_operator_by_the_gesture_offset;
 }
 
 #[path = "."]
@@ -163,6 +275,9 @@ pub mod rotate_transforms {
     #[path = "🔃️rotate-transforms/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "🔃️rotate-transforms/🧪️tests/🔃️turns/🦀️.rs"]
+    mod tests_turns_the_rotate_operator_half_a_radian_about_z;
 }
 
 #[path = "."]
@@ -174,6 +289,9 @@ pub mod scale_transforms {
     #[path = "📏️scale-transforms/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "📏️scale-transforms/🧪️tests/📏️scales/🦀️.rs"]
+    mod tests_scales_the_scale_operator_per_axis;
 }
 
 #[path = "."]
@@ -185,6 +303,9 @@ pub mod move_nodes {
     #[path = "🚚️move-nodes/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "🚚️move-nodes/🧪️tests/🚚️shifts/🦀️.rs"]
+    mod tests_shifts_both_nodes_by_the_drag_offset;
 }
 
 #[path = "."]
@@ -196,24 +317,40 @@ pub mod change_widget_input {
     #[path = "🎛️change-widget-input/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
+    #[cfg(test)]
+    #[path = "🎛️change-widget-input/🧪️tests/🎛️sets/🦀️.rs"]
+    mod tests_sets_the_extrude_distance_input;
 }
-//#endregion 🔖️NewLeaves
 
-//#region 🔖️RepurposedLeaves
-// 🌱️ Triad leaves that repurpose a pre-migration `➖remove-*`/`🎛set-*` directory glue.rs already
-// path-includes as a sibling of `component` (this file) under `pub mod mutations { ... }` — brought
-// into this file's own scope the same way `cad`'s already-migrated `🧬️mutations/🦀️.rs`
-// reaches its own siblings (`use super::create_object;` etc.): `pub use component::*` only lifts
-// `component`'s items UP into `mutations`, it doesn't inject `mutations`'s OTHER children back down.
-use super::change_schema;
-use super::delete_widget;
-use super::delete_widget_position;
-use super::disconnect_synapse;
-use super::move_widget;
-use super::update_camera;
-use super::update_synapse;
-use super::update_widget;
-//#endregion 🔖️RepurposedLeaves
+#[path = "."]
+pub mod select_generation {
+    #[path = "👆️select-generation/🦀️.rs"]
+    mod component;
+    #[path = "👆️select-generation/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "👆️select-generation/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "👆️select-generation/🧪️tests/👆️picks/🦀️.rs"]
+    mod tests_selects_generation_2;
+}
+
+#[path = "."]
+pub mod change_generation_preview {
+    #[path = "📝️change-generation-preview/🦀️.rs"]
+    mod component;
+    #[path = "📝️change-generation-preview/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "📝️change-generation-preview/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+    #[cfg(test)]
+    #[path = "📝️change-generation-preview/🧪️tests/📝️retexts/🦀️.rs"]
+    mod tests_restores_the_imported_preview_text;
+}
+
+//#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
@@ -242,6 +379,8 @@ pub enum Generation3dMutation {
     ScaleTransforms(scale_transforms::ScaleTransforms),
     MoveNodes(move_nodes::MoveNodes),
     ChangeWidgetInput(change_widget_input::ChangeWidgetInput),
+    SelectGeneration(select_generation::SelectGeneration),
+    ChangeGenerationPreview(change_generation_preview::ChangeGenerationPreview),
 }
 
 //#region 🏷️Kinds
@@ -270,6 +409,8 @@ pub const KINDS: &[&str] = &[
     "scale-transforms",
     "move-nodes",
     "change-widget-input",
+    "select-generation",
+    "change-generation-preview",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -447,100 +588,126 @@ pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Gen
 }
 //#endregion 🔖️GenerationBridge
 
-//#region 🔖️HostSnapshotDiffing
-/// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable semantic mutation set — signature
-/// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
-/// via `crate::standards::v1::subsets::any::schema::commit_host_snapshot`, unchanged) but every pushed
-/// mutation is now a real semantic variant.
-///
-/// ⚠️ Order is load-bearing: every orphaned layout override is retired FIRST, while its widget is
-/// still present. `delete_widget` leaves the widget's `layout` entry behind, and
-/// `delete_widget_position` fail-closes with `mutation.target-missing` once the widget is gone — so
-/// authoring the position removals after the widget removals silently kept every stale override, and
-/// an example swap accumulated the previous example's layout keys forever
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn generation3d_host_snapshot_operations(before: &FlowHostSnapshot, after: &FlowHostSnapshot) -> Vec<Generation3dMutation> {
-    let mut operations = Vec::new();
-    for id in before.layout.keys() {
-        if !after.layout.contains_key(id) {
-            operations.push(Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.clone() }));
-        }
+//#region 🔖️Cascades
+/// 🗑️ The leaves that remove widget `id` with everything that hangs on it, in replay order: the `disconnect-synapse` of every
+/// wire naming it, the `delete-widget-position` of its layout entry (before the widget goes — the position leaf addresses a
+/// live widget) and the `delete-widget`. `delete-widget` itself does not cascade; this is where the cascade is spelled. No
+/// leaves when the document holds no such widget.
+pub fn generation3d_widget_removal(host_snapshot: &FlowHostSnapshot, id: &str) -> Vec<Generation3dMutation> {
+    if widget_index(host_snapshot, id).is_none() {
+        return Vec::new();
     }
-    let before_widget_ids: Vec<&str> = before.widgets.iter().map(widget_id).collect();
-    let after_widget_ids: Vec<&str> = after.widgets.iter().map(widget_id).collect();
-    let rebuilt_widgets = reordered_survivors(&before_widget_ids, &after_widget_ids);
-    for widget in &before.widgets {
-        let id = widget_id(widget);
-        if !after_widget_ids.contains(&id) || rebuilt_widgets.contains(id) {
-            operations.push(Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: id.to_string() }));
-        }
+    let mut leaves: Vec<Generation3dMutation> = host_snapshot.synapses.iter().filter(|synapse| synapse.from == id || synapse.to == id).map(|synapse| Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: synapse.id.clone() })).collect();
+    if host_snapshot.layout.contains_key(id) {
+        leaves.push(Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.to_string() }));
     }
-    for (index, widget) in after.widgets.iter().enumerate() {
-        let id = widget_id(widget);
-        let prior = if rebuilt_widgets.contains(id) { None } else { before.widgets.iter().find(|entry| widget_id(entry) == id) };
-        match prior {
-            Some(previous) if previous != widget => operations.push(Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() })),
-            None => operations.push(Generation3dMutation::CreateWidget(create_widget::CreateWidget { index, widget: widget.clone() })),
-            _ => {}
-        }
-    }
-    let before_synapse_ids: Vec<&str> = before.synapses.iter().map(|entry| entry.id.as_str()).collect();
-    let after_synapse_ids: Vec<&str> = after.synapses.iter().map(|entry| entry.id.as_str()).collect();
-    let rebuilt_synapses = reordered_survivors(&before_synapse_ids, &after_synapse_ids);
-    for synapse in &before.synapses {
-        if !after_synapse_ids.contains(&synapse.id.as_str()) || rebuilt_synapses.contains(synapse.id.as_str()) {
-            operations.push(Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: synapse.id.clone() }));
-        }
-    }
-    for (index, synapse) in after.synapses.iter().enumerate() {
-        let prior = if rebuilt_synapses.contains(synapse.id.as_str()) { None } else { before.synapses.iter().find(|entry| entry.id == synapse.id) };
-        match prior {
-            Some(previous) if previous != synapse => operations.push(Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: synapse.clone() })),
-            None => operations.push(Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index, synapse: synapse.clone() })),
-            _ => {}
-        }
-    }
-    for (id, layout) in &after.layout {
-        if before.layout.get(id) != Some(layout) {
-            operations.push(Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: id.clone(), layout: layout.clone() }));
-        }
-    }
-    if before.schema != after.schema {
-        operations.push(Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: after.schema.clone() }));
-    }
-    operations
+    leaves.push(Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: id.to_string() }));
+    leaves
 }
 
-/// 🔢️ Ids of the entries that survive into `after` but must be RE-CREATED to reach its order:
-/// every survivor outside a longest run whose target positions already ascend. The mutation
-/// vocabulary has no reorder verb — `update-widget`/`update-synapse` replace in place — so a survivor
-/// that crossed another survivor is authored as a delete plus a create at its target index. Without
-/// this a fixture swap silently kept the PREVIOUS fixture's entry order
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn reordered_survivors(before_ids: &[&str], after_ids: &[&str]) -> std::collections::BTreeSet<String> {
-    let survivors: Vec<(usize, &str)> = before_ids.iter().filter_map(|id| after_ids.iter().position(|entry| entry == id).map(|index| (index, *id))).collect();
-    let mut run = vec![1usize; survivors.len()];
-    let mut previous = vec![usize::MAX; survivors.len()];
-    let mut longest = usize::MAX;
-    for index in 0..survivors.len() {
-        for candidate in 0..index {
-            if survivors[candidate].0 < survivors[index].0 && run[candidate] + 1 > run[index] {
-                run[index] = run[candidate] + 1;
-                previous[index] = candidate;
+/// 🗑️ The leaves that delete a selection of wires and widgets: every selected wire is cut first, then every selected widget
+/// goes with the wires it still holds; an id the document does not hold is skipped and no wire is cut twice.
+pub fn generation3d_selection_removal(host_snapshot: &FlowHostSnapshot, selected: &[String]) -> Vec<Generation3dMutation> {
+    let mut cut: Vec<String> = Vec::new();
+    let mut leaves = Vec::new();
+    for id in selected {
+        if synapse_index(host_snapshot, id).is_some() && !cut.contains(id) {
+            cut.push(id.clone());
+            leaves.push(Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: id.clone() }));
+        }
+    }
+    let mut removed: Vec<&String> = Vec::new();
+    for id in selected {
+        if removed.contains(&id) {
+            continue;
+        }
+        removed.push(id);
+        for leaf in generation3d_widget_removal(host_snapshot, id) {
+            if let Generation3dMutation::DisconnectSynapse(wire) = &leaf {
+                if cut.contains(&wire.id) {
+                    continue;
+                }
+                cut.push(wire.id.clone());
             }
-        }
-        if longest == usize::MAX || run[index] > run[longest] {
-            longest = index;
+            leaves.push(leaf);
         }
     }
-    let mut kept = std::collections::BTreeSet::new();
-    while longest != usize::MAX {
-        kept.insert(survivors[longest].1);
-        longest = previous[longest];
-    }
-    survivors.iter().filter(|(_, id)| !kept.contains(id)).map(|(_, id)| (*id).to_string()).collect()
+    leaves
 }
-//#endregion 🔖️FixtureDiffing
+//#endregion 🔖️Cascades
+
+//#region 🔖️DocumentReplacement
+/// 📦️ Whether the entries two keyed sequences share keep their relative order — the one condition under which the
+/// vocabulary's in-place `update-*` leaves reach the target order. When they do not, the shared entries are taken down
+/// and put up again: the vocabulary has no reorder verb, and a rule that is all-or-nothing needs no heuristic to choose
+/// which of them to keep.
+fn survivors_keep_their_order<'a>(before: impl Iterator<Item = &'a str>, after: impl Iterator<Item = &'a str>) -> bool {
+    let (before, after): (Vec<&str>, Vec<&str>) = (before.collect(), after.collect());
+    let kept_before: Vec<&str> = before.iter().copied().filter(|id| after.contains(id)).collect();
+    let kept_after: Vec<&str> = after.iter().copied().filter(|id| before.contains(id)).collect();
+    kept_before == kept_after
+}
+
+/// 📦️ The explicit leaves that carry the document `before` to the document `after` — the intent of loading an example or an
+/// imported file, spelled entity by entity, never read off a scratch host. The vocabulary has no snapshot-replacement verb
+/// on purpose (`protocol::APPROVED_VERBS`) and a document load must not rewrite what it shares with the document in front
+/// of the user, so the plan names only what differs, in an order that replays:
+///
+/// 1. `delete-widget-position` of every position whose widget goes unpositioned (the position leaf addresses a live widget,
+///    so it comes before the widget is deleted), `disconnect-synapse` of every wire that goes, `delete-widget` of every
+///    widget that goes;
+/// 2. `change-schema`, then per widget (`update-widget` where the body differs, `create-widget` at its index where it is new),
+///    per wire (`update-synapse` / `connect-synapse` at its index, after both ends exist) and per position (`move-widget`);
+/// 3. the generations: when the roster differs, every generation is deleted and the target's created (`create-generation`
+///    appends and selects), then `select-generation` and `change-generation-preview` where the target says otherwise.
+///
+/// Entries the two documents share in another relative order are rebuilt whole ([`survivors_keep_their_order`]). The
+/// document camera is not authored here: it rides the config lane with the rest of the view.
+pub fn generation3d_document_replacement(before: &Generation3dSnapshot, after: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+    let (old, new) = (&before.host_snapshot, &after.host_snapshot);
+    let mut leaves = Vec::new();
+    let rebuild_widgets = !survivors_keep_their_order(old.widgets.iter().map(widget_id), new.widgets.iter().map(widget_id));
+    let rebuild_synapses = !survivors_keep_their_order(old.synapses.iter().map(|synapse| synapse.id.as_str()), new.synapses.iter().map(|synapse| synapse.id.as_str()));
+    let rebuilt_widget = |id: &str| rebuild_widgets && widget_index(new, id).is_some();
+    let rebuilt_synapse = |id: &str| rebuild_synapses && synapse_index(new, id).is_some();
+    leaves.extend(old.layout.keys().filter(|id| !new.layout.contains_key(id) && widget_index(old, id).is_some()).map(|id| Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: id.clone() })));
+    leaves.extend(old.synapses.iter().filter(|synapse| synapse_index(new, &synapse.id).is_none() || rebuilt_synapse(&synapse.id)).map(|synapse| Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: synapse.id.clone() })));
+    leaves.extend(old.widgets.iter().map(widget_id).filter(|id| widget_index(new, id).is_none() || rebuilt_widget(id)).map(|id| Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: id.to_string() })));
+    if old.schema != new.schema {
+        leaves.push(Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: new.schema.clone() }));
+    }
+    for (index, widget) in new.widgets.iter().enumerate() {
+        let id = widget_id(widget);
+        match widget_index(old, id).filter(|_| !rebuilt_widget(id)).map(|at| &old.widgets[at]) {
+            Some(prior) if prior != widget => leaves.push(Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: widget.clone() })),
+            Some(_) => {}
+            None => leaves.push(Generation3dMutation::CreateWidget(create_widget::CreateWidget { index, widget: widget.clone() })),
+        }
+    }
+    for (index, synapse) in new.synapses.iter().enumerate() {
+        match synapse_index(old, &synapse.id).filter(|_| !rebuilt_synapse(&synapse.id)).map(|at| &old.synapses[at]) {
+            Some(prior) if prior != synapse => leaves.push(Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: synapse.clone() })),
+            Some(_) => {}
+            None => leaves.push(Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index, synapse: synapse.clone() })),
+        }
+    }
+    leaves.extend(new.layout.iter().filter(|(id, layout)| widget_index(new, id).is_some() && old.layout.get(id) != Some(*layout)).map(|(id, layout)| Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: id.clone(), layout: layout.clone() })));
+    let roster_equal = before.generation.generations == after.generation.generations;
+    if !roster_equal {
+        leaves.extend(before.generation.generations.iter().map(|generation| Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: generation.id.clone() })));
+        leaves.extend(after.generation.generations.iter().map(|generation| Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: generation.clone() })));
+    }
+    let left_selected = if roster_equal { before.generation.selected_generation_id.clone() } else { after.generation.generations.last().map(|generation| generation.id.clone()) };
+    let selected = after.generation.selected_generation_id.clone();
+    if left_selected != selected && selected.as_ref().is_none_or(|id| after.generation.generations.iter().any(|generation| &generation.id == id)) {
+        leaves.push(Generation3dMutation::SelectGeneration(select_generation::SelectGeneration { generation_id: selected }));
+    }
+    if before.generation.preview_text != after.generation.preview_text {
+        leaves.push(Generation3dMutation::ChangeGenerationPreview(change_generation_preview::ChangeGenerationPreview { text: after.generation.preview_text.clone() }));
+    }
+    leaves
+}
+//#endregion 🔖️DocumentReplacement
 
 pub type Generation3dEnvelope = ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>;
 pub type Generation3dStore = ArtifactStore<Generation3dSnapshot, Generation3dMutation>;

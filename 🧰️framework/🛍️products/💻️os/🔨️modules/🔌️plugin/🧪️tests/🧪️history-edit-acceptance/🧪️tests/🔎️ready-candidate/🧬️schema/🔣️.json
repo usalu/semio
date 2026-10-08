@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "History Acceptance Ready Candidate Search",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "mode",
+          "attempts",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "search",
+              "fixed"
+            ]
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "blocked",
+                "ready"
+              ]
+            }
+          },
+          "expected": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,6 +10,7 @@ import {
   parseCadReferences,
   type ArtifactChild,
   type CadArtifact,
+  type CadBrepChild,
   type CadNode,
   type CadReferenceList,
 } from "../🟦️.ts";
@@ -18,6 +19,7 @@ export interface CadNodePatch { label?: string | null }
 export interface CadNodePatchEntry { id: string; patch: CadNodePatch }
 export interface CadNodesDelta { added: CadNode[]; removed: string[]; patched: CadNodePatchEntry[]; reordered: string[] | null }
 export interface CadDrawingChildList { values: ArtifactChild[] }
+export interface CadBrepChildList { values: CadBrepChild[] }
 
 export interface CadDiff {
   /** @state artifact */ artifact?: CadArtifact | null;
@@ -28,6 +30,7 @@ export interface CadDiff {
   /** @state artifact @child kind=s.stdio.semio */ energyModel?: ArtifactChild | null;
   /** @state artifact @child kind=s.stdio.semio */ structureClassicModel?: ArtifactChild | null;
   /** @state artifact @child kind=s.stdio.semio many */ drawings?: CadDrawingChildList | null;
+  /** @state artifact @child kind=s.stdio.semio many */ breps?: CadBrepChildList | null;
   /** @state artifact */ referencesByModelDefinitionId?: Record<string, CadReferenceList> | null;
   /** @state artifact */ nodes?: CadNodesDelta | null;
 }
@@ -57,7 +60,7 @@ function parseNodesDelta(value: unknown, at: string): CadNodesDelta {
 /** 🪪️ Parses only the sparse fields implemented by native CadDiff. */
 export function parseCadDiff(value: unknown, at = "$"): CadDiff {
   const row = cadContractObject(value, at);
-  const keys = ["artifact", "schema", "id", "shapeModel", "buildingModel", "energyModel", "structureClassicModel", "drawings", "referencesByModelDefinitionId", "nodes"];
+  const keys = ["artifact", "schema", "id", "shapeModel", "buildingModel", "energyModel", "structureClassicModel", "drawings", "breps", "referencesByModelDefinitionId", "nodes"];
   cadContractExact(row, keys, [], at);
   const result: CadDiff = {};
   if (Object.hasOwn(row, "artifact")) result.artifact = row.artifact === null ? null : parseCadArtifact(row.artifact, `${at}.artifact`);
@@ -72,6 +75,14 @@ export function parseCadDiff(value: unknown, at = "$"): CadDiff {
       const wrapper = cadContractObject(row.drawings, `${at}.drawings`);
       cadContractExact(wrapper, ["values"], ["values"], `${at}.drawings`);
       result.drawings = { values: cadContractArray(wrapper.values, `${at}.drawings.values`).map((item, index) => parseCadChild(item, "drawing", `${at}.drawings.values[${index}]`)) };
+    }
+  }
+  if (Object.hasOwn(row, "breps")) {
+    if (row.breps === null) result.breps = null;
+    else {
+      const wrapper = cadContractObject(row.breps, `${at}.breps`);
+      cadContractExact(wrapper, ["values"], ["values"], `${at}.breps`);
+      result.breps = { values: cadContractArray(wrapper.values, `${at}.breps.values`).map((item, index) => parseCadChild(item, "brep", `${at}.breps.values[${index}]`)) };
     }
   }
   if (Object.hasOwn(row, "referencesByModelDefinitionId")) result.referencesByModelDefinitionId = row.referencesByModelDefinitionId === null ? null : parseCadReferences(row.referencesByModelDefinitionId, `${at}.referencesByModelDefinitionId`);

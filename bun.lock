@@ -43,6 +43,7 @@
         "nx": "23.2.0",
         "picomatch": "^4.0.7",
         "playwright": "^1.57.0",
+        "protobufjs": "^8.8.0",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
         "storybook": "^10.4.0",
@@ -276,6 +277,10 @@
     },
     "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-surface-rs",
+    },
+    "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-artifact-reference-rs",
+      "version": "0.1.0",
     },
     "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-io-schema-rs",
@@ -1685,6 +1690,8 @@
 
     "@semio-tech/framework-actor-rs": ["@semio-tech/framework-actor-rs@workspace:🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"],
 
+    "@semio-tech/framework-artifact-reference-rs": ["@semio-tech/framework-artifact-reference-rs@workspace:🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"],
+
     "@semio-tech/framework-async": ["@semio-tech/framework-async@workspace:🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-compiler-rs": ["@semio-tech/framework-compiler-rs@workspace:🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust"],
@@ -3067,6 +3074,8 @@
 
     "log-symbols": ["log-symbols@4.1.0", "", { "dependencies": { "chalk": "^4.1.0", "is-unicode-supported": "^0.1.0" } }, "sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg=="],
 
+    "long": ["long@5.3.2", "", {}, "sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA=="],
+
     "longest-streak": ["longest-streak@3.1.0", "", {}, "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="],
 
     "loupe": ["loupe@3.2.1", "", {}, "sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ=="],
@@ -3406,6 +3415,8 @@
     "property-graph": ["property-graph@4.1.0", "", {}, "sha512-AvPcP7XECNWy4LGmFQ77k7un4lSKM4eS29PTvW4ck95uYeLxXPWJM7hLuBqK91FaHqCcgJvIUCuNJjjxKE7VKQ=="],
 
     "property-information": ["property-information@7.2.0", "", {}, "sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg=="],
+
+    "protobufjs": ["protobufjs@8.8.0", "", { "dependencies": { "long": "^5.3.2" } }, "sha512-N3xhQ5yyBx3vQq4gubBfASzYhJGNzeDbjqBpu61g7UVylsN/qyffU96TKWD3GbbLOKF82VGNRNvv1+BFgE31Eg=="],
 
     "proxy-addr": ["proxy-addr@2.0.7", "", { "dependencies": { "forwarded": "0.2.0", "ipaddr.js": "1.9.1" } }, "sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg=="],
 

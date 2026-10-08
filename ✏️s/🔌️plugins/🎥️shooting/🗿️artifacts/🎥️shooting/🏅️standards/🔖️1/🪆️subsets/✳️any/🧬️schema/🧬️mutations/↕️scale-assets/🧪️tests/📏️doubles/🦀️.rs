@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️scale-assets/📏️doubles/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/↕️scale-assets/📏️doubles/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("scale-assets diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("scale-assets diff applies")
 }
 
 /// ▶️ `scale-assets` MULTIPLIES each factor into the asset's existing scale rather than replacing
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_a_non_positive_factor_is_fatal() {
     assert_eq!(rejected.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "scale-assets/doubles-asset-hero-scale: collapsing an axis to zero must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "scale-assets/doubles-asset-hero-scale: the positivity guard's frozen code");
     assert_eq!(rejected.messages()[0].target, vec!["asset-hero".to_string()], "scale-assets/doubles-asset-hero-scale: the invariant is reported against the whole addressed selection");
-    let unchanged = rejected.into_parts().0.apply(&before()).expect("a Fatal outcome carries the default diff");
+    let unchanged = rejected.into_parts().protocol::apply_diff(&0, &before()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, before(), "scale-assets/doubles-asset-hero-scale: a Fatal scale must leave the snapshot untouched");
 }
 
@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-assets/doubles-asset-hero-scale: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["assets"]["patched"][0]["patch"]["scale"][0], 4.0, "scale-assets/doubles-asset-hero-scale: the delta stores the resolved product, not the factor");
+    assert_eq!(committed["assets"]["patched"][0]["patch"]["scale"]["value"][0], 4.0, "scale-assets/doubles-asset-hero-scale: the delta stores the resolved product, not the factor");
     assert!(committed["assets"]["patched"][0]["patch"]["origin"].is_null() && committed["assets"]["patched"][0]["patch"]["orientation"].is_null(), "scale-assets/doubles-asset-hero-scale: a scale fills only the `scale` slot");
     assert!(committed["shots"].is_null() && committed["savedCameras"].is_null(), "scale-assets/doubles-asset-hero-scale: a transform never leaves the `assets` collection");
 }
@@ -110,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-assets/doubles-asset-hero-scale: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

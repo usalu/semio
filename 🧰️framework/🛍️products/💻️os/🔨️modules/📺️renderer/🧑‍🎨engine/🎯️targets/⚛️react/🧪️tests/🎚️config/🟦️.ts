@@ -156,6 +156,7 @@ const engineTestSuites = [
   elementSuite("🧭️TiledMapHost", "🧩️component"),
   elementSuite("🧭️TiledMapHost", "🤏️pinch-gesture", "tsx"),
   elementSuite("🌐️World3dHost", "🧩️component", "tsx"),
+  elementSuite("🌐️World3dHost", "📏️modelling", "tsx"),
   elementSuite("🌐️World3dHost", "🔀️projection-pane", "tsx"),
   elementSuite("🌐️World3dHost", "🤏️multi-touch", "tsx"),
   elementSuite("🌐️World3dHost/⏯️tool-run-trace", "🧩️component"),

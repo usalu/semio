@@ -379,7 +379,7 @@
       "id": "retained grant overrun",
       "operation": "cloneGrantOverrun",
       "kind": "invariantViolated",
-      "message": "refusal corpus exceeded its retained clone item, copy, or capacity grant",
+      "message": "refusal corpus exceeded its retained clone item, copy, capacity, or release grant",
       "path": [
         "body",
         3,
@@ -387,7 +387,7 @@
       ],
       "expected": {
         "kind": "invariantViolated",
-        "display": "body.3.field.refusal corpus exceeded its retained clone item, copy, or capacity grant"
+        "display": "body.3.field.refusal corpus exceeded its retained clone item, copy, capacity, or release grant"
       }
     },
     {

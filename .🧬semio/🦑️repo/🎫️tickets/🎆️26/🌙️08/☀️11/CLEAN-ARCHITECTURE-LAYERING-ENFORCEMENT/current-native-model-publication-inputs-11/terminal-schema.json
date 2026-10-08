@@ -1,0 +1,61 @@
+{
+  "oneOf": [
+    {
+      "const": {
+        "owner": "ui",
+        "planOwner": "ui",
+        "terminalOwner": "ui",
+        "dispatcherOwner": "ui",
+        "terminalRouteExact": true,
+        "dispatcherRouteExact": true,
+        "owningExitCode": 0,
+        "owningRefusal": null,
+        "sourcePostUnavailable": false,
+        "owningPostRefusal": null,
+        "owningCancelled": false,
+        "dispatcherExitCode": 0,
+        "dispatcherRefusal": null,
+        "dispatcherPostRefusal": null,
+        "dispatcherCancelled": false
+      }
+    },
+    {
+      "const": {
+        "owner": "board",
+        "planOwner": "board",
+        "terminalOwner": "board",
+        "dispatcherOwner": "board",
+        "terminalRouteExact": true,
+        "dispatcherRouteExact": true,
+        "owningExitCode": 0,
+        "owningRefusal": null,
+        "sourcePostUnavailable": false,
+        "owningPostRefusal": null,
+        "owningCancelled": false,
+        "dispatcherExitCode": 0,
+        "dispatcherRefusal": null,
+        "dispatcherPostRefusal": null,
+        "dispatcherCancelled": false
+      }
+    },
+    {
+      "const": {
+        "owner": "product",
+        "planOwner": "product",
+        "terminalOwner": "product",
+        "dispatcherOwner": "product",
+        "terminalRouteExact": true,
+        "dispatcherRouteExact": true,
+        "owningExitCode": 0,
+        "owningRefusal": null,
+        "sourcePostUnavailable": false,
+        "owningPostRefusal": null,
+        "owningCancelled": false,
+        "dispatcherExitCode": 0,
+        "dispatcherRefusal": null,
+        "dispatcherPostRefusal": null,
+        "dispatcherCancelled": false
+      }
+    }
+  ]
+}

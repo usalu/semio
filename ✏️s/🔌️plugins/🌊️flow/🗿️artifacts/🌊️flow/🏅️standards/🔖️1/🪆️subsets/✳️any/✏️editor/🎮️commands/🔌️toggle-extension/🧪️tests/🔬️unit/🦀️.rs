@@ -11,7 +11,8 @@ async fn toggle_extension_and_run_action_reorganizes_fixture() {
     let refused = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() })).await;
     assert!(refused.mutations.is_empty(), "a disabled automation action publishes nothing");
     let refusal = settle_refusal(&mut app).await;
-    assert!(refusal.contains("flow.extension-disabled"), "a disabled automation action is refused by name: {refusal}");
+    assert_eq!(refusal.code.0, "flow.extension-disabled", "{refusal:?}");
+    assert!(refusal.message.contains("auto-layout"), "{refusal:?}");
     dispatch(&mut app, FlowCommand::ToggleExtension(ToggleExtension { id: "auto-layout".into(), enabled: true })).await;
     settle(&mut app).await;
     dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() })).await;
@@ -27,5 +28,6 @@ async fn an_unknown_extension_action_id_is_refused_by_name() {
     let result = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "third.party.nope".into() })).await;
     assert!(result.mutations.is_empty());
     let refusal = settle_refusal(&mut app).await;
-    assert!(refusal.contains("flow.extension-action-unknown") && refusal.contains("third.party.nope"), "{refusal}");
+    assert_eq!(refusal.code.0, "flow.extension-action-unknown", "{refusal:?}");
+    assert!(refusal.message.contains("third.party.nope"), "{refusal:?}");
 }

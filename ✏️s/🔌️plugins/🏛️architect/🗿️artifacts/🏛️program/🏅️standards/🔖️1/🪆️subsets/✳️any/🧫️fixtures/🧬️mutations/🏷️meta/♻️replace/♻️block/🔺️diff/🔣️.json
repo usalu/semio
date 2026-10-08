@@ -1,27 +1,29 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": {
-    "schema": "architect.program",
-    "documentId": "document-fixture",
-    "title": "Fixture Program",
-    "subtitle": null,
-    "purpose": {
-      "text": ""
+    "set": {
+      "schema": "architect.program",
+      "documentId": "document-fixture",
+      "title": "Fixture Program",
+      "subtitle": null,
+      "purpose": {
+        "text": ""
+      },
+      "terminology": [],
+      "classification": [],
+      "industrySector": "healthcare",
+      "projectType": "",
+      "locale": "en",
+      "revision": "0",
+      "authorIds": [],
+      "sourceSystem": null,
+      "exportProfile": null,
+      "timestamps": {
+        "created": "1970-01-01T00:00:00Z",
+        "updated": "1970-01-01T00:00:00Z"
+      }
     },
-    "terminology": [],
-    "classification": [],
-    "industrySector": "healthcare",
-    "projectType": "",
-    "locale": "en",
-    "revision": "0",
-    "authorIds": [],
-    "sourceSystem": null,
-    "exportProfile": null,
-    "timestamps": {
-      "created": "1970-01-01T00:00:00Z",
-      "updated": "1970-01-01T00:00:00Z"
-    }
+    "patch": null
   },
   "project": null,
   "stakeholders": null,
@@ -87,9 +89,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

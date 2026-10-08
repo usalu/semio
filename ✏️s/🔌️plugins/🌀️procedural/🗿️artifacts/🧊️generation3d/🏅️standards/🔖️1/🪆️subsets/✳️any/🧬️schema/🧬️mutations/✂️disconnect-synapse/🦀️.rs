@@ -1,7 +1,4 @@
 //! ✂️ `disconnect-synapse` payload — severs a [`SynapseSpec`] edge by id.
-//!
-//! Directory kept at its pre-migration `➖remove-synapse` path — see `➖remove-widget/🦠️mutation`'s
-//! docstring for why.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;

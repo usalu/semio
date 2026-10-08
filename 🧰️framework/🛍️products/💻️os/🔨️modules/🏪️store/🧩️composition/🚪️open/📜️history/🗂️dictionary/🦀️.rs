@@ -59,6 +59,7 @@ impl DictionaryOwners {
     fn terminal_is_empty(&self) -> bool {
         self.input.is_none() && self.index.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { if self.index.is_some() { 1 } else { self.input.as_ref().map_or(0, ErasedSnapshotRetirement::next_close_byte_demand) } }
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.terminal_is_empty() {
             return Ok(SnapshotRetirementStep::Complete);
@@ -494,6 +495,10 @@ impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
     fn terminal_is_empty(&self) -> bool {
         self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize {
+        if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return 1; }
+        self.owners.as_ref().map_or(0, DictionaryOwners::next_close_byte_demand)
+    }
 }
 
 impl Drop for MemberHistoryDictionaryOwner {
@@ -560,6 +565,7 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
     fn terminal_is_empty(&self) -> bool {
         self.owners.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.owners.as_ref().map_or(0, DictionaryOwners::next_close_byte_demand) }
 }
 
 impl Drop for VerifiedMemberHistoryDictionary {

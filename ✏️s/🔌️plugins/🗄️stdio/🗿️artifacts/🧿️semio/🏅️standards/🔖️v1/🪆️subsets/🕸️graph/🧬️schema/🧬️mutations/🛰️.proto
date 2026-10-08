@@ -1,7 +1,6 @@
 syntax = "proto3";
 // 🧬️ SemioGraphMutation schema — real facet mirror of the Rust `🦀️.rs` sibling.
 package semio.s_stdio_semio_graph.mutations;
-import "📸️set-snapshot/🛰️.proto";
 
 import "../📸️snapshot/🛰️.proto";
 

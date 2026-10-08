@@ -1,0 +1,22 @@
+{
+  "owners": [
+    {
+      "owner": "ui",
+      "directory": "🗑️generated/current-native-origin/epoch-17/ui",
+      "dispatcherTerminal": "dispatcher19-terminal.json"
+    },
+    {
+      "owner": "board",
+      "directory": "🗑️generated/current-native-origin/epoch-17/board",
+      "dispatcherTerminal": "dispatcher19-terminal.json"
+    },
+    {
+      "owner": "product",
+      "directory": "🗑️generated/current-native-origin/epoch-17/product",
+      "dispatcherTerminal": "dispatcher19-terminal.json"
+    }
+  ],
+  "independentPublication": "🗑️generated/current-native-origin/epoch-17/independent-model-publication12.json",
+  "applicabilityProof": "🗑️generated/current-native-live-applicability-8/capture/proof.json",
+  "applicabilityLaws": "🗑️generated/current-native-live-applicability-8/laws-green/receipt.json"
+}

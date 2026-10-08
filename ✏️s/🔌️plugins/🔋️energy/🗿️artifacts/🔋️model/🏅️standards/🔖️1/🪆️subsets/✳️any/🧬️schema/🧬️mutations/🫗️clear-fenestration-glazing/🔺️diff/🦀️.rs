@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ClearFenestrationGlazingConstruction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, OptionChange, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::ClearFenestrationGlazingConstruction, base: &Energy
     if existing.glazing_construction_id.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} has no glazing construction to clear.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {
-        item.glazing_construction_id = None;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::modifying(FenestrationPatch { glazing_construction_id: OptionChange::assign(None), ..FenestrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

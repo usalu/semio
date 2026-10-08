@@ -4,7 +4,6 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSy
 import { createHash } from "node:crypto";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
-import { parse as parseJsonc } from "jsonc-parser";
 import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
@@ -129,16 +128,12 @@ test("literal predicates keep identifier tokens reachable under strict TypeScrip
   }
 });
 
-test("registers the physical Rust reference gate through Nx and both launch catalogs", () => {
-  const expected = golden.execution;
-  const project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+test("registers the physical Rust reference gate through Nx with its neutral artifact route and cache refusal", () => {
+  const expected = golden.execution, packagePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
+  const project = JSON.parse(readFileSync(join(root, packagePath, "📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(root, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
+  expect(project.targets[expected.target]?.cache).toBe(expected.cache);
+  expect(readFileSync(join(root, packagePath, "📜️script.ts"), "utf8")).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, ' + JSON.stringify(expected.artifactRoute) + ') });');
 });
 
 test("manifest-relative joins require immutable lexical bindings and exact loop ownership", () => {

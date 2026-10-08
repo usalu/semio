@@ -1,7 +1,7 @@
 use super::EnergyModelMutation;
 use crate::diff::EnergyModelDiff;
 use crate::EnergyModelSnapshot;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 use semio_framework_value::ToValue;
 
 /// 🧫️ One committed specification vector and the typed scenario it was generated from.
@@ -193,7 +193,7 @@ pub fn write_when_requested(case: &Case) {
     }
     let (before, mutation) = (case.scenario)();
     let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &before);
-    let after = MutationDiff::apply(outcome.diff(), &before).expect("the scenario's forward diff applies");
+    let after = protocol::apply_diff(outcome.diff(), &before).expect("the scenario's forward diff applies");
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations").join(case.directory);
     let json = |value: semio_framework_pack_json::Value| semio_framework_pack_json::to_string_pretty(&value);
     write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(semio_framework_pack_json::from_dsl_value(&before.to_value())));
@@ -211,7 +211,7 @@ pub fn write_when_requested(case: &Case) {
 /// after-snapshot exactly, composed child handles included.
 pub fn assert_forward(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
-    let applied = MutationDiff::apply(built(case).diff(), &base).expect("committed mutation applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(built(case).diff(), &base).expect("committed mutation applies to its committed before-snapshot");
     assert_eq!(applied, decode(case, "after-snapshot", case.after), "{}/{}: the applied document is not the committed after-snapshot", case.kind, case.directory);
     assert_eq!((applied.structure.child_id.as_str(), applied.zones.child_id.as_str()), (base.structure.child_id.as_str(), base.zones.child_id.as_str()), "{}/{}: structure and zones must stay one scene", case.kind, case.directory);
 }
@@ -224,11 +224,11 @@ pub fn assert_forward(case: &Case) {
 pub fn assert_inverse(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
     let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
-    let mut snapshot = MutationDiff::apply(built(case).diff(), &base).expect("committed mutation applies");
+    let mut snapshot = protocol::apply_diff(built(case).diff(), &base).expect("committed mutation applies");
     for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &snapshot);
         assert!(!outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: an inverse step was itself refused", case.kind, case.directory);
-        snapshot = MutationDiff::apply(outcome.diff(), &snapshot).expect("the inverse step applies");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("the inverse step applies");
     }
     assert_eq!(snapshot, base, "{}/{}: undoing did not land back on the committed before-snapshot", case.kind, case.directory);
 }
@@ -291,7 +291,7 @@ pub fn assert_diff_canonical(case: &Case) {
 /// 🩹 The committed delta ALONE carries the before-document to the after-document.
 pub fn assert_diff_applies(case: &Case) {
     let decoded: EnergyModelDiff = semio_framework_pack_json::from_json_str(case.diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = MutationDiff::apply(&decoded, &decode(case, "before-snapshot", case.before)).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff(&decoded, &decode(case, "before-snapshot", case.before)).expect("committed diff applies to the before-document");
     assert_eq!(produced, decode(case, "after-snapshot", case.after), "{}/{}: the committed diff did not carry before to after", case.kind, case.directory);
 }
 

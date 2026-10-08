@@ -125,7 +125,7 @@ pub fn tile_media_png_data_url(media: &Wfc2dTileMedia) -> Option<String> {
         let colour = palette.get(usize::from(index)).copied().unwrap_or_default();
         rgba.extend_from_slice(&[colour.r.min(255) as u8, colour.g.min(255) as u8, colour.b.min(255) as u8, colour.a.min(255) as u8]);
     }
-    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::{io::{author_png_projection, PngProjection}, schema::snapshot::{PngChunkMarker, PngColorType}};
+    use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::{io::{author_png_projection, PngProjection, PngChunkMarker}, schema::snapshot::PngColorType};
     let raster = PngProjection { width, height, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false, plte: None, trns: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None, text_chunks: Vec::new(), pixels: rgba, chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend], unknown_chunks: Vec::new() };
     let bytes = author_png_projection(&raster).ok()?;
     Some(format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(bytes)))
@@ -140,7 +140,6 @@ pub type Wfc2dSnapshotBinary = Vec<u8>;
 mod native_codec {
 use super::*;
 use crate::schema::snapshot::{Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
-pub(crate)use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};
 use crate::standards::v1::subsets::any::io::text::snapshot::{Wfc2dSnapshotDsl,wfc2d_document_to_dsl,wfc2d_document_from_dsl};
 
 impl store::ArtifactPack for Wfc2dSnapshotDsl {

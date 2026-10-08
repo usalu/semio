@@ -14,10 +14,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
-          "iconId": "zap",
+          "moduleId": "aec-building-energy",
           "label": "AEC Building Energy",
-          "moduleId": "aec-building-energy"
+          "iconId": "zap",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}"
         }
       }
     ],
@@ -32,7 +32,7 @@
   },
   "execution": "declarative",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -41,17 +41,17 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
-          "iconId": "zap",
+          "moduleId": "aec-building-energy",
           "label": "AEC Building Energy",
-          "moduleId": "aec-building-energy"
+          "iconId": "zap",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}"
         }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "c99524a9d1d007932620d1bc1528ec0dae579d585a5af4f5cd43ab65dc31e2bf",
-    "coreWasmSha256": "fb1fe1ccb15509d0f36103f2654634fd936cfc6bb7fd1c5943e07ea8878957cd",
-    "descriptorSha256": "5c1f5f306319952412cb58f72f718479777047a68675c064de0fc48ad25864ed"
+    "wasmSha256": "6e741f51950c7ece561b8a2abfde85660b03b4199b631a5f5b94b365994f6c0c",
+    "coreWasmSha256": "a53b0b565d47f75473f9bb1222e406578123dcc39431599df75ebc69f22f771f",
+    "descriptorSha256": "f56968b18006d44b59055358d984b97c8a9369fa9f37b4e5773750f0844961e4"
   }
 }

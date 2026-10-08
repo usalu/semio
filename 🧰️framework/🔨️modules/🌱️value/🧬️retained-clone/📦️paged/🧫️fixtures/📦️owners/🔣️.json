@@ -3,6 +3,7 @@
     "maximumItems": 5,
     "maximumCopyBytes": 64,
     "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096,
     "maximumDepth": 32
   },
   "text": {

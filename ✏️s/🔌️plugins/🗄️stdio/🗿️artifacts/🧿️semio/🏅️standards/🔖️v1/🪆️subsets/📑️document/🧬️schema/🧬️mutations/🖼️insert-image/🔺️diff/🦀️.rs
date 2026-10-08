@@ -1,0 +1,13 @@
+//! 🔺️ Diff for `InsertImage`.
+
+use super::super::*;
+
+//#region 🔖️Diff
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff(payload: &super::InsertImage, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
+    let super::InsertImage { image } = payload;
+    protocol::MutationOutcome::new({
+        SemioDocumentDiff { styles: None, images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![image.clone()], ..Default::default() }), blocks: None }
+    })
+}
+//#endregion 🔖️Diff

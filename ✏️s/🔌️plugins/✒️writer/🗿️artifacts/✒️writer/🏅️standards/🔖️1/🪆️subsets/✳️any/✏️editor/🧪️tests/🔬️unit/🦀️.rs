@@ -222,16 +222,16 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
 #[test]
 fn writer_artifact_store_preparation_is_exact_bounded_and_reversible() {
     let base = crate::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", "before");
-    let mutation = WriterMutation::EditText(crate::op::EditText { text: "after".into() });
+    let mutation = WriterMutation::EditText(crate::schema::mutations::EditText { text: "after".into() });
     let footprint = admit_writer_artifact_mutation(&mutation).expect("bounded Writer Artifact mutation");
     assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, "one point-invertible EditText declares its forward AND its inverse row");
     assert_eq!(footprint.retained_bytes, 5);
     let (post, inverse, forward) = prepare_writer_artifact(&base, mutation.clone()).expect("exact Writer Artifact preparation");
     assert_eq!(writer_text(&post), "after");
     assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![WriterMutation::EditText(crate::op::EditText { text: "before".into() })]);
-    assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::op::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
-    assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::op::RenameWriter { new_id: "other".into() })).is_err());
+    assert_eq!(inverse, vec![WriterMutation::EditText(crate::schema::mutations::EditText { text: "before".into() })]);
+    assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::schema::mutations::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
+    assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: "other".into() })).is_err());
 }
 
 #[test]
@@ -881,8 +881,8 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
 #[test]
 fn the_artifact_preflight_declares_room_for_the_inverse_it_will_stage() {
     let base = jack_snapshot();
-    let mutation = WriterMutation::EditText(crate::op::EditText { text: format!("{}\nsemio", crate::writer_text(&base)) });
-    let inverse = crate::op::inverse_writer_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let mutation = WriterMutation::EditText(crate::schema::mutations::EditText { text: format!("{}\nsemio", crate::writer_text(&base)) });
+    let inverse = crate::schema::mutations::inverse_writer_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let footprint = admit_writer_artifact_mutation(&mutation).expect("an EditText inside the retained envelope is admitted");
     assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(1 + inverse.len() <= footprint.work_items, "declared {} rows for 1 forward + {} inverse", footprint.work_items, inverse.len());

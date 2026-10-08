@@ -3,7 +3,7 @@ input PatchPixelsMutation { revision: String! x: Int! y: Int! width: Int! height
 enum PngNativeProfile { INDEXED GRAYSCALE GRAYSCALE_ALPHA RGB RGBA }
 input PngNativeRegion { x: Int! y: Int! width: Int! height: Int! }
 input PngNativePaint { profile: PngNativeProfile! first: Int! second: Int! third: Int! fourth: Int! }
-input PaintNativeSamplesMutation { revision: String! region: PngNativeRegion! paint: PngNativePaint! result: PngSnapshotInput! }
+input PaintNativeSamplesMutation { revision: String! region: PngNativeRegion! paint: PngNativePaint! }
 input SetSnapshotMutation { snapshot: PngSnapshotInput! }
 input PatchSnapshotMutation { patch: SnapshotPatchInput! }
 input PngMutation @oneOf { setSnapshot: SetSnapshotMutation patchSnapshot: PatchSnapshotMutation patchPixels: PatchPixelsMutation changeGamma: ChangeGammaMutation paintNativeSamples: PaintNativeSamplesMutation }

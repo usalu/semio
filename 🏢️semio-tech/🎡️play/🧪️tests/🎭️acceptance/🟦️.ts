@@ -1,15 +1,15 @@
 // #region 🧲️Header
 // 💻️ 🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts
-// Specs: End-to-end acceptance coverage for semio-tech play — every app of the grid boots AND shows content.
+// Specs: End-to-end acceptance coverage for every Play editor, curated example command and viewer round trip.
 // Summary: The overview must list one card per authored pane. Then, for every pane, deep-links to
 // `/#<paneId>` (which boots exactly that pane immediately), waits for its own `FrameworkOsShell` to report
 // an outcome through the per-shell `data-shell-ready`/`data-shell-error`/`data-shell-not-found` beacon,
 // requires "ready", lets the boot example announcement settle, requires the pane's error boundary to stay
-// silent and fails on any page error, non-404 console error or refused input. It then requires VISIBLE
+// silent and fails on any page error, console error, HTTP error or refused input. It then requires VISIBLE
 // content: the curated example's own rendered label in the pane's chrome, and a main window that actually
 // paints — a non-uniform pixel census of the largest canvas, or a non-empty main region for a DOM window.
 // Across the whole run no asset request may be answered by the SPA fallback. The overview button must
-// return to the overview.
+// return to the overview after clearing and restoring its curated document and switching viewer/editor roles.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -17,7 +17,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../../🔨️modules/🧪️e2e/📦️release/🎭️fixture/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🪪️PlayPanes
@@ -28,11 +28,19 @@ function playPanes(): readonly PlayPane[] {
   const catalog = JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "🔨️modules", "🧩️runtime", "🔣️.json"), "utf8")) as { readonly groups: readonly { readonly panes: readonly PlayPane[] }[] };
   return catalog.groups.flatMap(group => group.panes);
 }
+
+type SurfaceRole = "editor" | "viewer";
+const roleContract = JSON.parse(readFileSync(join(import.meta.dirname, "🧫️fixtures/🔀️roles/🔣️.json"), "utf8")) as {
+  readonly initialRole: SurfaceRole;
+  readonly dismissControlId: string;
+  readonly settlement: { readonly controlId: string; readonly busy: boolean; readonly beforePaint: boolean };
+  readonly steps: readonly { readonly role: SurfaceRole; readonly controlId: string; readonly painted: boolean }[];
+};
 //#endregion 🪪️PlayPanes
 
 /** ⏱️ Cold wasm plugin boots can be slow — generous so the suite reports real defects, not infrastructure latency. */
 const SHELL_READY_TIMEOUT_MS = 120_000;
-const TEST_TIMEOUT_MS = 180_000;
+const TEST_TIMEOUT_MS = 240_000;
 
 /** 🕊️ Quiet window after the network settles: the shell announces the boot example after "ready",
  * and a refused announcement is only logged once the guest answers. */
@@ -54,21 +62,26 @@ const MINIMUM_IMAGE_ASSET_EDGE = 8;
 const PAINT_WITNESS_DEADLINE_MS = 4_000;
 const PAINT_WITNESS_POLL_MS = 250;
 
-/** 🔇️ Drops resource 404s and the repo's `[TRACE] `-prefixed temporary diagnostics. */
-function significantConsoleErrors(messages: readonly string[]): string[] {
-  return messages.filter(text => !/Failed to load resource:.*\b40[0-9]\b/i.test(text) && !text.startsWith("[TRACE] "));
-}
-
 /** 👂️ Collects page errors, console errors and refused inputs — a refused input is the shell's
  * "The input could not be delivered" notice, logged only as a warning. */
-function collectErrors(page: Page): { readonly pageErrors: string[]; readonly consoleErrors: string[]; readonly refusedInputs: string[] } {
-  const pageErrors: string[] = [], consoleErrors: string[] = [], refusedInputs: string[] = [];
-  page.on("pageerror", error => pageErrors.push(`${error.name}: ${error.message}`));
+function collectErrors(page: Page): { readonly pageErrors: string[]; readonly consoleErrors: string[]; readonly refusedInputs: string[]; readonly resourceErrors: string[]; readonly stop: () => void } {
+  const pageErrors: string[] = [], consoleErrors: string[] = [], refusedInputs: string[] = [], resourceErrors: string[] = [];
+  let collecting = true;
+  const stop = () => { collecting = false; };
+  page.on("close", stop);
+  page.on("pageerror", error => { if (collecting) pageErrors.push(`${error.name}: ${error.message}`); });
   page.on("console", message => {
+    if (!collecting) return;
     if (message.type() === "error") consoleErrors.push(message.text());
     else if (/^input #\d+ .* refused: /.test(message.text())) refusedInputs.push(message.text());
   });
-  return { pageErrors, consoleErrors, refusedInputs };
+  page.on("response", response => {
+    if (collecting && response.status() >= 400) resourceErrors.push(`${response.status()} ${response.url()}`);
+  });
+  page.on("requestfailed", request => {
+    if (collecting && !page.isClosed()) resourceErrors.push(`${request.failure()?.errorText ?? "network request failed"} ${request.method()} ${request.url()}`);
+  });
+  return { pageErrors, consoleErrors, refusedInputs, resourceErrors, stop };
 }
 
 //#region 🖼️VisibleContent
@@ -129,15 +142,20 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
       if (typeof text !== "string" || text.length === 0) return 0;
       try { const value = JSON.parse(text); return Array.isArray(value) ? value.length : value && typeof value === "object" ? Object.keys(value).length : 0; } catch { return 0; }
     };
+    const domWitness = (region: Element, surface: string): WindowWitness => {
+      const content = region.querySelector(':scope > [data-slot="pane-host-root"]');
+      if (!content || area(content) === 0) return { surface, kind: "dom", painted: false, detail: "the window mounted no visible content host" };
+      const clone = content.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('[data-slot="pane-host"], [role="status"][aria-busy="true"], [hidden], [aria-hidden="true"]').forEach((element) => element.remove());
+      const text = (clone.textContent ?? "").trim().length;
+      const elements = clone.querySelectorAll("*").length;
+      return { surface, kind: "dom", painted: text > 0 || elements >= minimumElements, detail: `${text} content characters, ${elements} content elements` };
+    };
     // 🪟️ A pane whose windows are plain documents (the `norm` codes, `stdio-json`, `block2d`, `home`)
     // mounts no `[data-surface-id]` host at all — its content is the window body itself.
     const surfaces = [...pane.querySelectorAll("[data-surface-id]")];
     if (surfaces.length === 0) {
-      return [...pane.querySelectorAll('[data-slot="window-body"]')].sort((a, b) => area(b) - area(a)).map((body, index) => {
-        const text = (body instanceof HTMLElement ? body.innerText : body.textContent ?? "").trim().length;
-        const elements = body.querySelectorAll("*").length;
-        return { surface: `(window body ${index})`, kind: "dom" as const, painted: text > 0 || elements >= minimumElements, detail: `${text} characters, ${elements} elements` };
-      });
+      return [...pane.querySelectorAll('[data-slot="window-body"]')].sort((a, b) => area(b) - area(a)).map((body, index) => domWitness(body, `(window body ${index})`));
     }
     return surfaces.sort((a, b) => area(b) - area(a)).map((element): { surface: string; kind: "world3d" | "paint2d" | "dom"; painted: boolean; detail: string } => {
       const surface = element.getAttribute("data-surface-id") ?? "(unnamed)";
@@ -159,9 +177,7 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
         return { surface, kind: "paint2d", painted: painted.length > 0, detail: `${layers.length} layers, ${Object.keys(assets).length} assets: ${shown}` };
       }
       const region = element.closest('[data-slot="window-body"]') ?? element;
-      const text = (region instanceof HTMLElement ? region.innerText : region.textContent ?? "").trim().length;
-      const elements = region.querySelectorAll("*").length;
-      return { surface, kind: "dom", painted: text > 0 || elements >= minimumElements, detail: `window: ${text} characters, ${elements} elements` };
+      return domWitness(region, surface);
     });
   }, { id: variant, minimumElements: MINIMUM_MAIN_REGION_ELEMENTS, minimumEdge: MINIMUM_IMAGE_ASSET_EDGE });
 }
@@ -194,6 +210,71 @@ async function waitForPaneShellOutcome(page: Page, paneId: string): Promise<Shel
   }, paneId) as Promise<ShellOutcome>;
 }
 
+/** 🎓️ Closes an app's first-use tour through its own published control before exercising its document. */
+async function dismissPaneIntroduction(page: Page, pane: PlayPane): Promise<void> {
+  const shell = page.locator(`[data-shell-id="${pane.variant}"]`);
+  const dismiss = shell.locator(`[id="${roleContract.dismissControlId}"]`);
+  if (await dismiss.count() === 0) return;
+  await dismiss.click();
+  await expect(shell).not.toHaveAttribute("data-introduction-active", "true");
+}
+
+/** 🧪️ Delivers a blank example command and restores the curated document through the actual picker. */
+async function exerciseCuratedExample(page: Page, pane: PlayPane): Promise<void> {
+  if (pane.exampleLabel === undefined) return;
+  const picker = page.locator(`[data-layered-pane="${pane.variant}"] [id="playground.navbar.fixture"]`);
+  await expect(picker).toBeVisible();
+  await expect(picker).toHaveText(pane.exampleLabel);
+  await picker.click();
+  const blank = page.getByRole("option").first();
+  const blankLabel = (await blank.innerText()).trim();
+  await blank.click();
+  await expect(picker).toHaveText(blankLabel);
+  await page.waitForTimeout(BOOT_SETTLE_MS);
+  await picker.click();
+  await page.getByRole("option", { name: pane.exampleLabel, exact: true }).click();
+  await expect(picker).toHaveText(pane.exampleLabel);
+  await page.waitForTimeout(BOOT_SETTLE_MS);
+  const witness = await paintWitness(page, pane.variant);
+  expect(witness.painted, `${pane.variant} restoring its curated example paints nothing — ${witness.detail}`).toBe(true);
+}
+
+/** 🚦️ Awaits the role transaction's guest refresh before inspecting its published window bodies. */
+async function waitForSurfaceSettlement(page: Page, pane: PlayPane): Promise<void> {
+  const shell = page.locator(`[data-shell-id="${pane.variant}"]`);
+  const group = shell.locator(`[id="${roleContract.settlement.controlId}"]`);
+  await expect(group).toBeVisible();
+  await expect.poll(async () => await group.getAttribute("aria-busy") === "true", { timeout: SHELL_READY_TIMEOUT_MS }).toBe(roleContract.settlement.busy);
+  expect(await waitForPaneShellOutcome(page, pane.variant)).toBe("ready");
+  await expect(shell).not.toHaveAttribute("data-shell-error");
+  await expect(page.locator(`[data-layered-pane="${pane.variant}"] [data-layered-pane-error]`)).toHaveCount(0);
+}
+
+/** 🔀️ Reopens the same dialect on each surface and verifies the active application independently. */
+async function exerciseSurfaceRoundTrip(page: Page, pane: PlayPane): Promise<void> {
+  const shell = page.locator(`[data-shell-id="${pane.variant}"]`);
+  const chip = shell.locator('[data-slot="surface-role-chip"]');
+  await expect(chip).toHaveAttribute("data-role", roleContract.initialRole);
+  const appId = await chip.getAttribute("data-app-id");
+  expect(appId).toMatch(/#editor$/);
+  const dialect = appId!.slice(0, appId!.lastIndexOf("#"));
+  for (const step of roleContract.steps) {
+    const control = shell.locator(`[id="${step.controlId}"]`);
+    await expect(control).toBeVisible();
+    await expect(control).toBeEnabled();
+    await control.click();
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+    await expect(chip).toHaveAttribute("data-role", step.role);
+    await expect(chip).toHaveAttribute("data-app-id", `${dialect}#${step.role}`);
+    await waitForSurfaceSettlement(page, pane);
+    await expect(chip).toHaveAttribute("data-app-id", `${dialect}#${step.role}`);
+    await dismissPaneIntroduction(page, pane);
+    const witness = await paintWitness(page, pane.variant);
+    expect(witness.painted, `${pane.variant} ${step.role} paints nothing — ${witness.detail}`).toBe(step.painted);
+    console.log(`[DEBUG] ${pane.variant} ${step.role} ${dialect}#${step.role}: ${witness.detail}`);
+  }
+}
+
 test.describe("semio-tech play", () => {
   test("lists one overview card per app", async ({ page }) => {
     const errors = collectErrors(page);
@@ -204,8 +285,10 @@ test.describe("semio-tech play", () => {
     await expect(page.locator("[data-layered-card]")).toHaveCount(panes.length);
     await expect(page.locator('[data-slot="play-app-count"]')).toHaveText(`${panes.length} apps`);
     for (const pane of panes) await expect(page.locator(`[data-layered-card="${pane.variant}"] [data-overview-card]`)).toHaveAttribute("aria-label", new RegExp(`^Open ${pane.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: `));
+    errors.stop();
     expect(errors.pageErrors).toEqual([]);
-    expect(significantConsoleErrors(errors.consoleErrors)).toEqual([]);
+    expect(errors.consoleErrors).toEqual([]);
+    expect(errors.resourceErrors).toEqual([]);
     expect(fallbackAssets, "assets answered by the SPA fallback").toEqual([]);
   });
 
@@ -223,7 +306,8 @@ test.describe("semio-tech play", () => {
       await expect(page.locator(`[data-layered-pane="${pane.variant}"] [data-layered-pane-error]`)).toHaveCount(0);
       await expect(page.locator("[data-layered-overview-button]")).toBeVisible();
       expect(errors.pageErrors).toEqual([]);
-      expect(significantConsoleErrors(errors.consoleErrors)).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
       expect(errors.refusedInputs).toEqual([]);
 
       // 🏷️ The chrome must SAY which document it opened, in the words that document publishes. The trigger
@@ -241,10 +325,17 @@ test.describe("semio-tech play", () => {
       // the defect class `📓️audit-visual-2.md` had to find by eye on 69 screenshots.
       const witness = await paintWitness(page, pane.variant);
       expect(witness.painted, `${pane.variant} paints nothing — ${witness.detail}`).toBe(true);
-      expect(fallbackAssets, `${pane.variant} assets answered by the SPA fallback`).toEqual([]);
-
+      await dismissPaneIntroduction(page, pane);
+      await exerciseCuratedExample(page, pane);
+      await exerciseSurfaceRoundTrip(page, pane);
       await page.locator("[data-layered-overview-button]").click();
       await expect(page.locator("[data-layered-overlay]")).toBeVisible();
+      errors.stop();
+      expect(errors.pageErrors).toEqual([]);
+      expect(errors.consoleErrors).toEqual([]);
+      expect(errors.refusedInputs).toEqual([]);
+      expect(errors.resourceErrors).toEqual([]);
+      expect(fallbackAssets, `${pane.variant} assets answered by the SPA fallback`).toEqual([]);
     });
   }
 });

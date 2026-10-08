@@ -6,6 +6,8 @@ import type { IconName } from "@semio-tech/assets";
 import type { ActionDescriptor, PluginContextMenuRequest } from "../../🛂️manifest/🟦️.ts";
 import type { Viewport2d } from "../🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
 export * from "./✂️text-splice/🟦️.ts";
+import type { World3dAnnotationLayer, World3dModellingOptions, World3dScalarField } from "./📏️world3d-modelling/🟦️.ts";
+export * from "./📏️world3d-modelling/🟦️.ts";
 
 //#region ComponentSceneProtocol
 /** 🖼️ A 2D canvas surface scene payload — mirrors the wasm `componentScene` node's `canvas2d` field. */
@@ -355,6 +357,15 @@ export type World3dScene = {
   /** ☁️ Point-cloud rendering layers (10^5-10^6 points) — an array of `{ id, positionsB64 (base64 le
    * f32 xyz), colorsB64? (base64 u8 rgb), size, sizeAttenuation }`, consumed by `WorldPointCloudLayer`. */
   readonly pointsJson?: string;
+  /** 📏️ The annotation layer (linear dimensions, angles, point markers, leader labels) — a typed lane, see
+   * {@link World3dAnnotationLayer}; read it through `parseWorld3dAnnotationLayer`. */
+  readonly annotations?: World3dAnnotationLayer;
+  /** 🌡️ The scalar analysis field painted as a heatmap with a legend — a typed lane, see
+   * {@link World3dScalarField}; read it through `parseWorld3dScalarField`. */
+  readonly scalarField?: World3dScalarField;
+  /** ⚙️ Pick granularity filter, section plane and sub-element highlight tokens — a typed lane, see
+   * {@link World3dModellingOptions}; read it through `parseWorld3dModellingOptions`. */
+  readonly modellingOptions?: World3dModellingOptions;
   /** ⏳️ Off-main-thread compute status shown as an overlay while a `flowEvalTick` chain resolves the
    * meshes this scene renders — see {@link World3dComputeStatusV1} for the full declared shape and
    * {@link world3dComputeStatusV1} for the one parser every surface reads it through. */
@@ -528,7 +539,7 @@ export type World3dSceneLane = SceneLane<World3dScene>;
  * collide with an app-authored node id. */
 export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
 
-/** 🚚️ The twenty-two world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/** 🚚️ The twenty-five world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
  * its own retained, individually paged text carrier. `SurfaceDoc.bytes` is a hard 32 KiB
  * `UiFixedBytes` ceiling that cannot page, so a world whose payload scales with its document (a
  * measured 57 281-byte Nakagin Capsule Tower) can only publish with the payload split out; keeping the
@@ -560,6 +571,9 @@ export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "points", field: "pointsJson", bodyKey: "framework.scene.world3d.points", optional: true },
   { lane: "status", field: "statusJson", bodyKey: "framework.scene.world3d.status", optional: true },
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.world3d.toolRunTrace", optional: true },
+  { lane: "annotations", field: "annotations", bodyKey: "framework.scene.world3d.annotations", optional: true, encoding: "json" },
+  { lane: "scalarField", field: "scalarField", bodyKey: "framework.scene.world3d.scalarField", optional: true, encoding: "json" },
+  { lane: "modellingOptions", field: "modellingOptions", bodyKey: "framework.scene.world3d.modellingOptions", optional: true, encoding: "json" },
 ];
 
 /** 🚚️ Resolves a retained node key back to the lane it carries, `undefined` for every other key. */

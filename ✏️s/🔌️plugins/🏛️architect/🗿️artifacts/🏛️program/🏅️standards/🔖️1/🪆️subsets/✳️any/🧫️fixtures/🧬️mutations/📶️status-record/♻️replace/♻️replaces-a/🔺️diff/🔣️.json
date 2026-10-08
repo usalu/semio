@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -61,49 +60,46 @@
   "reports": null,
   "searchFilters": null,
   "statusRecords": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "status-record-a",
-        "patch": {
-          "name": "Status Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "subjectId": "",
-          "subjectKind": "Replaced Status Record A",
-          "recordStatus": "draft",
-          "previousStatus": null,
-          "changedBy": null,
-          "changedAt": null,
-          "reason": null,
-          "blockers": [],
-          "nextActions": [],
-          "dueDate": null,
-          "progressPercent": null,
-          "health": null,
-          "escalationLevel": null,
-          "relatedIssueIds": [],
-          "relatedRiskIds": [],
-          "milestoneId": null,
-          "reportingPeriod": null,
-          "statusNotes": []
-        }
+        "name": "Status Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "subjectId": "",
+        "subjectKind": "Replaced Status Record A",
+        "recordStatus": "draft",
+        "previousStatus": null,
+        "changedBy": null,
+        "changedAt": null,
+        "reason": null,
+        "blockers": [],
+        "nextActions": [],
+        "dueDate": null,
+        "progressPercent": null,
+        "health": null,
+        "escalationLevel": null,
+        "relatedIssueIds": [],
+        "relatedRiskIds": [],
+        "milestoneId": null,
+        "reportingPeriod": null,
+        "statusNotes": []
       }
     ],
+    "removed": [
+      "status-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "workshops": null,
@@ -111,9 +107,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

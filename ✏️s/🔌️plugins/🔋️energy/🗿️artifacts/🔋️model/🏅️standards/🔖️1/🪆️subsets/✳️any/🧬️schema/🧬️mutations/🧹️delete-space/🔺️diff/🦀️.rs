@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteSpace` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SpacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::DeleteSpace, base: &EnergyModelSnapshot) -> protoco
     if base.model.space_lists.iter().any(|item| item.space_ids.contains(&payload.id)) {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Space {} is still a member of a space list.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.spaces.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { spaces: Rows::removing(&base.model.spaces, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

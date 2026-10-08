@@ -449,9 +449,7 @@
     "command": "bun ./📜️script.ts test rust-finite-target-consumption",
     "route": "rust-finite-target-consumption",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
-    "launchName": "🧹clean🧩️taxonomy🥤️rust-finite-target-consumption",
-    "launchOrder": 410.193,
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-finite-target-consumption --skip-nx-cache"
+    "cache": false
   },
   "retention": {
     "parentSegments": [

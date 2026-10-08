@@ -1,5 +1,95 @@
+// 🧬️ Din4108 diff
 syntax = "proto3";
 package semio.s.norm.din4108.diff;
+
+enum Din4108RowOp {
+  DIN4108_ROW_OP_INSERT = 0;
+  DIN4108_ROW_OP_REMOVE = 1;
+  DIN4108_ROW_OP_REPLACE = 2;
+  DIN4108_ROW_OP_PATCH = 3;
+}
+
+message Din4108ZoneEdit {
+  Din4108RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din4108ZonePatch patch = 5;
+}
+
+message Din4108ElementEdit {
+  Din4108RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din4108ElementPatch patch = 5;
+}
+
+message Din4108ThermalBridgeEdit {
+  Din4108RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din4108ThermalBridgePatch patch = 5;
+}
+
+message Din4108WindowEdit {
+  Din4108RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din4108WindowPatch patch = 5;
+}
+
+message Din4108LayerEdit {
+  Din4108RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+  optional Din4108LayerPatch patch = 5;
+}
+
+message Din4108ZonePatch {
+  optional double floor_area_m2 = 1;
+  optional string heaviness = 2;
+  optional string night_ventilation = 3;
+  repeated Din4108WindowEdit windows = 4;
+}
+
+message Din4108ElementPatch {
+  optional string kind = 1;
+  optional double orientation_deg = 2;
+  optional double inclination_deg = 3;
+  optional string adjacent = 4;
+  optional double area_m2 = 5;
+  optional double delta_u_g = 6;
+  optional double delta_u_f = 7;
+  optional double delta_u_r = 8;
+  repeated Din4108LayerEdit layers = 9;
+}
+
+message Din4108ThermalBridgePatch {
+  optional double psi = 1;
+  optional double length_m = 2;
+  optional string bb2_type = 3;
+}
+
+message Din4108WindowPatch {
+  optional string orientation = 1;
+  optional double inclination_deg = 2;
+  optional double area_m2 = 3;
+  optional double g_value = 4;
+  optional double shading_fc = 5;
+}
+
+message Din4108LayerPatch {
+  optional string material_id = 1;
+  optional double thickness_m = 2;
+  optional double lambda = 3;
+  optional double mu = 4;
+  optional string application_type = 5;
+  optional string compressive_class = 6;
+}
 
 message Din4108Diff {
   // @state artifact
@@ -17,21 +107,9 @@ message Din4108Diff {
   // @state artifact
   optional bool bb2_details_conform = 7;
   // @state artifact
-  optional Din4108ZoneList zones = 8;
+  repeated Din4108ZoneEdit zones = 8;
   // @state artifact
-  optional Din4108ElementList elements = 9;
+  repeated Din4108ElementEdit elements = 9;
   // @state artifact
-  optional Din4108ThermalBridgeList thermal_bridges = 10;
-}
-
-message Din4108ZoneList {
-  repeated bytes values = 1;
-}
-
-message Din4108ElementList {
-  repeated bytes values = 1;
-}
-
-message Din4108ThermalBridgeList {
-  repeated bytes values = 1;
+  repeated Din4108ThermalBridgeEdit thermal_bridges = 10;
 }

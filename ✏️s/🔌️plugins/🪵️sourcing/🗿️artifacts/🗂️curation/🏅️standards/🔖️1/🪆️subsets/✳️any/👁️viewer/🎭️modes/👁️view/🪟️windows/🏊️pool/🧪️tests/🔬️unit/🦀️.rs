@@ -10,7 +10,7 @@ async fn definition_uses_the_framework_table_window_kit() {
 
 #[semio_framework_async_macros::async_test]
 async fn view_model_lists_every_stock_row_with_five_columns() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let stock = stock_of(&document);
     let view = view_model(&document);
     assert_eq!(view.columns.len(), 5);
@@ -19,7 +19,7 @@ async fn view_model_lists_every_stock_row_with_five_columns() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_table_ui_node() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("bounded table"))).expect("bounded retained fixture projection");
     assert!(json.contains("table"), "expected a table UiNode: {json}");
 }

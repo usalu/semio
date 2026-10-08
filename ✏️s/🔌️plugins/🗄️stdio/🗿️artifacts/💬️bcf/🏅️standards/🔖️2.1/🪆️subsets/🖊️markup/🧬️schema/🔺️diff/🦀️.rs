@@ -325,7 +325,7 @@ pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfView
 
 //#region 🔖️Apply
 impl MutationDiff<BcfSnapshot> for BcfDiff {
-    fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
+    fn apply(&self, base: &BcfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<BcfSnapshot> {
         validate_bcf_diff(self, base)?;
         let mut next = base.clone();
         if let Some(v) = &self.version {

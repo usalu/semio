@@ -156,7 +156,7 @@ pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<HtmlSnapshot> for HtmlDiff {
-    fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
+    fn apply(&self, base: &HtmlSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<HtmlSnapshot> {
         if let Some(root) = &self.root {
             validate_html_node(&base.root, root)?;
         }

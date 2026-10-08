@@ -2,7 +2,8 @@
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::standards::v1::subsets::any::io::{export_process3d_model, import_process3d_model};
-use crate::{op::Process3dMutation, Process3dSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use crate::{Process3dSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

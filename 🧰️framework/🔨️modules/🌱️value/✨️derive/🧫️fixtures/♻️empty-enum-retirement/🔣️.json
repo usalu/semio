@@ -1,0 +1,8 @@
+{
+  "kind": "enum",
+  "name": "EmptyExternal",
+  "variants": [],
+  "inhabited": false,
+  "borrowedReferenceInhabited": true,
+  "controlledRetirement": true
+}

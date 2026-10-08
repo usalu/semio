@@ -159,5 +159,3 @@ impl store::ArtifactSqliteSnapshot for Iso16757Snapshot{
 mod tests;
 
 
-#[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;

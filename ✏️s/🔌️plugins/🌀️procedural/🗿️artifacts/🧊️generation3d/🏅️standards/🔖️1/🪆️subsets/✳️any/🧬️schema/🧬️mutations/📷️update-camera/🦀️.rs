@@ -1,9 +1,6 @@
 //! 🔁 `update-camera` payload — document-level scalar facet: `CameraJson { x, y, zoom }` is a
 //! single inseparable viewport facet, never meaningfully set one-field-at-a-time
 //! (`📓️derivation-rules.md` rule 1's `update-<facet>` exception).
-//!
-//! Directory kept at its pre-migration `🎛️set-camera` path — see `➖remove-widget/🦠️mutation`'s
-//! docstring for why.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;

@@ -1,0 +1,32 @@
+{
+  "nodes": {
+    "ticket-engine-layout-source-control": {
+      "name": "ticket-engine-layout-source-control",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "ticket-engine-layout-source-control",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "ticket-engine-layout-source-control",
+            "packageVersion": "0.0.0",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {},
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "ticket-engine-layout-source-control": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791340830905
+}

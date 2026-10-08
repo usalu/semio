@@ -6,6 +6,7 @@
     "maximumItems": 5,
     "maximumCopyBytes": 32,
     "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096,
     "maximumDepth": 64
   },
   "cancellationAfterEntries": 173,

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateMechanicalVentilation` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MechanicalVentilationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -23,18 +23,13 @@ pub fn diff(payload: &super::CreateMechanicalVentilation, base: &EnergyModelSnap
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.mechanical_ventilations.insert(
-        payload.index as usize,
-        crate::model::MechanicalVentilation {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { mechanical_ventilations: Rows::inserting(payload.index as usize, crate::model::MechanicalVentilation {
             id: payload.id,
             zone_id: payload.zone_id,
             schedule_id: payload.schedule_id,
             design_flow_m3_s: payload.design_flow_m3_s,
             fan_total_efficiency: payload.fan_total_efficiency,
             fan_delta_pressure_pa: payload.fan_delta_pressure_pa,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

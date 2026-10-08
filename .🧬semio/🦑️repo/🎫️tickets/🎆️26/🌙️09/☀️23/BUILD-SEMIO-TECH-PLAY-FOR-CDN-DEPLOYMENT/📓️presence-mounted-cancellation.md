@@ -1,0 +1,11 @@
+# Presence Mounted Cancellation
+
+The broad current Store gate50048 reached native assertions:546run543pass3fail681outside. The assigned case failed at the unchanged terminal assertion, observing false while neutral localCapture.expectedWorkerTerminal is true. Its store remains open expectation, captured value23, final one snapshot and1item/4096byte local retirement policy are preserved.
+
+The source has a4096-turn mounted close loop with constant4096bytes but the mounted session now exposes phase-exact next_close_byte_demand. A diagnostic assertion identifies the real parked phase/demand without changing behavior; focused native session is pending. No production lifecycle repair is claimed. Existing neutral retirement fixture and serde_json witness remain the oracle baseline.
+
+The focused diagnostic33006 reached native assertions and failed exactly at PreadmittedFault with demand16384 and local read maintenance idle. This is the canonical indivisible Job fault page, not a stuck Presence reader. A4096-byte grant must retain the page and report zero released items/bytes.
+
+The language-neutral localCapture fixture now declares that page and zero-release undergrant output before changing its caller. The focused native case compares actual release accounting via independent serde_json, verifies unchanged phase/demand under the original4096-byte grant, then funds the worker's exact query. Presence maintenance and domain retirement continue with1item/4096bytes, and the open value23 plus final one snapshot assertions are unchanged. No Job or Presence production behavior changed; current focused proof is pending.
+
+Current focused retry11973 actually exited0 through uncached Nx in3m55s. One named native case passed;1228 tests were outside selection. Runtime verified exact whole worker fault page demand16384, undergrant4096 released0items/0bytes with unchanged phase/demand, complete mounted session while Presence store remained open/value23, idle local read registry, then exact final one snapshot retirement under unchanged1item/4096bytes. No production source or close contract changed, and diagnostic-only terminal assertion text was removed. The broader Store gate must still wait for root/editor remaining two failures.

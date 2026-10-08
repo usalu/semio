@@ -1,5 +1,3 @@
-type SetSnapshotMutation { SetSnapshot: SetSnapshot! }
-# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # import SemioPoint3, SemioQuaternion from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
 # import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
 # import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"

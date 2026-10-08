@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "maximumReleaseItems",
+    "maximumReleaseBytes",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "maximumReleaseItems": {
+      "const": 1
+    },
+    "maximumReleaseBytes": {
+      "const": 4096
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "fuel",
+          "allocationBytes",
+          "readers",
+          "cancelled",
+          "expired",
+          "called",
+          "releasedBytes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "fuel": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allocationBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "readers": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "called": {
+            "type": "boolean"
+          },
+          "releasedBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          }
+        }
+      }
+    }
+  }
+}

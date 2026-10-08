@@ -2,22 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📊performance` per Wave C.
 
 use super::ReplacePerformanceCriterion;
-use crate::diff::{ProgramPerformanceDelta, ProgramPerformancePatchEntry};
+use crate::diff::ProgramPerformanceDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplacePerformanceCriterion, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.performance.iter().find(|row| row.header.id == payload.performance_criterion.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No performance criterion exists with this id.", [payload.performance_criterion.header.id.0.clone()]);
+    let id = &payload.performance_criterion.header.id;
+    let Some(position) = base.performance.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No performance criterion exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.performance_criterion {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This performance criterion already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.performance[position] == payload.performance_criterion {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This performance criterion already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.performance_criterion).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff {
-        performance: Some(ProgramPerformanceDelta { patched: vec![ProgramPerformancePatchEntry { id: payload.performance_criterion.header.id.0.clone(), patch }], ..Default::default() }),
-        ..Default::default()
-    })
+    let reordered = (position + 1 != base.performance.len()).then(|| base.performance.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { performance: Some(ProgramPerformanceDelta { removed: vec![id.0.clone()], added: vec![payload.performance_criterion.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

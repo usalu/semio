@@ -79,7 +79,7 @@ fn remote_edit(name: &str, index: usize, operation: DemoMutation, physical_ms: u
 async fn publish_batch(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, operation: u64, mutations: Vec<DemoMutation>, reference: Option<&protocol::TransactionRef>, open: bool) {
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
     let mut publication = store
-        .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), "retained-test".into(), mutations, Some(&factory), reference.cloned())
+        .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), store.local_actor_id().0.clone(), mutations, Some(&factory), reference.cloned())
         .unwrap_or_else(|rejected| panic!("batch admission: {}", rejected.reason));
     publication.set_transaction_open(open);
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };

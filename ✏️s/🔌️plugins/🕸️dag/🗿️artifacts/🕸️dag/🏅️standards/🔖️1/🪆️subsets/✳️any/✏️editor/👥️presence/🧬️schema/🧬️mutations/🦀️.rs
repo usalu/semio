@@ -10,7 +10,7 @@ pub use replace_presence::ReplacePresence;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
-#[mutations(snapshot = DagPresence, diff = DagPresence, schema = "dag.presence")]
+#[mutations(snapshot = DagPresence, diff = DagPresenceDiff, schema = "dag.presence")]
 pub enum DagPresenceMutation {
     ReplacePresence(ReplacePresence),
 }

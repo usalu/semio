@@ -1,0 +1,34 @@
+{
+  "schema": "owned-retirement-physical-work/v1",
+  "maximumItems": 1,
+  "maximumCopyBytes": 64,
+  "maximumCapacityBytes": 4096,
+  "maximumReleaseBytes": 4096,
+  "cases": [
+    {
+      "id": "scalar",
+      "kind": "u32",
+      "value": 17,
+      "processedBytes": 4
+    },
+    {
+      "id": "utf8",
+      "kind": "text",
+      "value": "Grüße\u0000🧬",
+      "processedBytes": 12
+    },
+    {
+      "id": "ordered-numbers",
+      "kind": "u32-list",
+      "value": [
+        17,
+        1,
+        65535,
+        9
+      ],
+      "processedBytes": 16
+    }
+  ],
+  "zeroWorkInert": true,
+  "physicalReleaseMatchesAllocator": true
+}

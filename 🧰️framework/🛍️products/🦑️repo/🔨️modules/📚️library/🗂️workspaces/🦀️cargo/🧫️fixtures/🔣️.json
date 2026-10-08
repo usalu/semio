@@ -246,5 +246,18 @@
         "skipMissing": true
       }
     ]
+  },
+  "discoveryWork": {
+    "members": [
+      "packages/**"
+    ],
+    "exclude": [
+      "**/ignored/**"
+    ],
+    "noiseFiles": 128,
+    "maximumMatchers": 4,
+    "expectedNames": [
+      "owned-member"
+    ]
   }
 }

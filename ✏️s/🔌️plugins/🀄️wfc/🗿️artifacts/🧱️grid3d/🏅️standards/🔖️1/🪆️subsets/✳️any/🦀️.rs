@@ -17,7 +17,7 @@ fn examples() -> &'static [ExampleSource] {
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::grid3d_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![crate::host::inferences::grid3d_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🚪️ This subset's io surface. `entries` is empty on purpose: `s.wfc.grid3d` ships no foreign

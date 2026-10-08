@@ -1,0 +1,5 @@
+> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️verification-registration/📜️script.ts"
+
+[DEBUG] isolated Nx verification test-owner-command
+[DEBUG] fixture verification profiles launch.json added=3
+[DEBUG] fixture verification profiles 🧩️launch.seed.jsonc added=3

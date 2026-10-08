@@ -48,8 +48,7 @@ use semio_framework_value::ToValue;
         if let Some(template_id) = payload.template_id.as_ref().filter(|id| !id.is_empty()) {
             let id = EntityId(template_id.clone());
             let template = program.templates.iter().find(|row| row.header.id == id).cloned().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.template-missing"), format!("addRegisterItem found no template \"{template_id}\"")))?;
-            let mut scratch = program.clone();
-            return Ok(Emit::mutations(apply_template(&mut scratch, &template)));
+            return Ok(Emit::mutations(apply_template(&template)));
         }
         let (operation, _id) = add_register_item_operation(program, &payload.register_id, &payload.name).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.register-not-addable"), format!("addRegisterItem cannot add a row named \"{}\" to register \"{}\"", payload.name, payload.register_id)))?;
         Ok(Emit::mutations(vec![operation]))

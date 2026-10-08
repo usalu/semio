@@ -1,6 +1,6 @@
 import { cpSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, publishedPageUrl } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 /** 📦 One CDN deployment of play. Each page stays under {@link PLAY_PAGE_BUDGET_BYTES}. */
@@ -76,11 +76,11 @@ function directoryBytes(directory: string): number {
 
 /** 📄 Moves a monolithic `dist/site` into one folder per CDN page and deletes the monolith. */
 
-export function publishPlayPages(siteDir: string, pagesDir: string, apex: string): readonly PlayPublishedPage[] {
+export function publishPlayPages(siteDir: string, pagesDir: string, apex: string, budget = PLAY_PAGE_BUDGET_BYTES): readonly PlayPublishedPage[] {
   const entries: PlayDirectoryEntry[] = readdirSync(siteDir, { withFileTypes: true })
     .filter((entry) => entry.name !== ".DS_Store")
     .map((entry) => ({ name: entry.name, bytes: entry.isDirectory() ? directoryBytes(join(siteDir, entry.name)) : statSync(join(siteDir, entry.name)).size }));
-  const { pages, origins } = assignPlayPages(entries, apex);
+  const { pages, origins } = assignPlayPages(entries, apex, budget);
   rmSync(pagesDir, { recursive: true, force: true });
   for (const pageEntry of pages) {
     const destination = join(pagesDir, pageEntry.name);
@@ -88,18 +88,18 @@ export function publishPlayPages(siteDir: string, pagesDir: string, apex: string
     for (const name of pageEntry.directories) renameSync(join(siteDir, name), join(destination, name));
     writeFileSync(join(destination, "CNAME"), `${pageEntry.host}\n`);
     writeFileSync(join(destination, ".nojekyll"), "");
-    if (pageEntry.name !== "play") {
-      writeFileSync(join(destination, "_headers"), "/*\n  Access-Control-Allow-Origin: *\n");
-    }
+    writeFileSync(join(destination, "_headers"), `/*\n  Cache-Control: no-cache\n${pageEntry.name === "play" ? "" : "  Access-Control-Allow-Origin: *\n"}`);
   }
   for (const pageEntry of pages) rewritePublishedStyleUrls(join(pagesDir, pageEntry.name), origins);
   const modulesPage = pages.find((entry) => entry.name === "modules");
   const playPage = pages.find((entry) => entry.name === "play");
   if (modulesPage) installShardWorkerAssetFetch(join(pagesDir, modulesPage.name), origins);
   if (modulesPage && playPage) retainSameOriginShardWorker(join(pagesDir, modulesPage.name), join(pagesDir, playPage.name));
+  const published = pages.map(entry => ({ ...entry, bytes: directoryBytes(join(pagesDir, entry.name)) }));
+  for (const entry of published) if (entry.bytes >= budget) throw new Error(`Play page ${entry.name} is ${entry.bytes} bytes, at or above the ${budget} byte CDN page limit`);
   rmSync(siteDir, { recursive: true, force: true });
-  for (const pageEntry of pages) console.log(`Play page ${pageEntry.host}: ${pageEntry.bytes} bytes`);
-  return pages;
+  for (const pageEntry of published) console.log(`Play page ${pageEntry.host}: ${pageEntry.bytes} bytes`);
+  return published;
 }
 
 
@@ -138,8 +138,10 @@ function installShardWorkerAssetFetch(directory: string, origins: Readonly<Recor
       const path = join(current, entry.name);
       if (entry.isDirectory()) visit(path);
       else if (entry.name.endsWith("shard-worker.js")) {
-        const prelude = `const __semioPageOrigins = ${JSON.stringify(origins)};\nconst __semioNativeFetch = globalThis.fetch.bind(globalThis);\nfunction __semioRelocate(url) {\n  let path = url;\n  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {\n    let parsed;\n    try { parsed = new URL(url); } catch { return url; }\n    if (parsed.origin !== self.location.origin) return url;\n    path = parsed.pathname + parsed.search + parsed.hash;\n  }\n  const key = Object.keys(__semioPageOrigins).sort((a, b) => b.length - a.length).find((prefix) => path === prefix || path.startsWith(prefix + "/"));\n  return key ? __semioPageOrigins[key].replace(/\\/$/, "") + path : url;\n}\nglobalThis.fetch = (input, init) => {\n  if (typeof Request !== "undefined" && input instanceof Request) {\n    if (input.method !== "GET" && input.method !== "HEAD") return __semioNativeFetch(input, init);\n    const next = __semioRelocate(input.url);\n    return next === input.url ? __semioNativeFetch(input, init) : __semioNativeFetch(new Request(next, input), init);\n  }\n  const raw = typeof input === "string" ? input : input instanceof URL ? input.href : "";\n  const next = raw ? __semioRelocate(raw) : "";\n  return __semioNativeFetch(next || input, init);\n};\n`;
-        writeFileSync(path, prelude + readFileSync(path, "utf8"));
+        const prelude = `const __semioPageOrigins = ${JSON.stringify(origins)};\nconst __semioNativeFetch = globalThis.fetch.bind(globalThis);\nfunction __semioRelocate(url) {\n  let path = url;\n  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {\n    let parsed;\n    try { parsed = new URL(url); } catch { return url; }\n    if (parsed.origin !== self.location.origin) return url;\n    path = parsed.pathname + parsed.search + parsed.hash;\n  }\n  if (!path.startsWith("/") || path.startsWith("//")) return url;\n  const encoded = path.split(/[?#]/, 1)[0];\n  if (/%(?:2f|5c)/iu.test(encoded)) return url;\n  let pathname;\n  try { pathname = decodeURIComponent(encoded); } catch { return url; }\n  const key = Object.keys(__semioPageOrigins).sort((a, b) => b.length - a.length).find((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));\n  return key ? __semioPageOrigins[key].replace(/\\/$/, "") + path : url;\n}\nglobalThis.fetch = (input, init) => {\n  if (typeof Request !== "undefined" && input instanceof Request) {\n    if (input.method !== "GET" && input.method !== "HEAD") return __semioNativeFetch(input, init);\n    const next = __semioRelocate(input.url);\n    return next === input.url ? __semioNativeFetch(input, init) : __semioNativeFetch(new Request(next, input), init);\n  }\n  const raw = typeof input === "string" ? input : input instanceof URL ? input.href : "";\n  const next = raw ? __semioRelocate(raw) : "";\n  return __semioNativeFetch(next || input, init);\n};\n`;
+        const workerUrl = publishedPageUrl(`/${relative(directory, path).replaceAll("\\", "/")}`, origins);
+        const source = readFileSync(path, "utf8").replace(/(\bimport\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*)?)(["'])(\.\.?\/[^"']+)\2/gu, (_, prefix: string, quote: string, specifier: string) => `${prefix}${quote}${new URL(specifier, workerUrl).href}${quote}`);
+        writeFileSync(path, prelude + source);
       }
     }
   };
@@ -166,5 +168,5 @@ function retainSameOriginShardWorker(modulesDir: string, playDir: string): void 
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../../🧪️tests/🧪️playpages/🟦️.ts");
-  await registerTests1(import.meta.vitest, { assignPlayPages, playPageOrigins, PLAY_PAGE_BUDGET_BYTES });
+  await registerTests1(import.meta.vitest, { assignPlayPages, playPageOrigins, publishPlayPages, PLAY_PAGE_BUDGET_BYTES });
 }

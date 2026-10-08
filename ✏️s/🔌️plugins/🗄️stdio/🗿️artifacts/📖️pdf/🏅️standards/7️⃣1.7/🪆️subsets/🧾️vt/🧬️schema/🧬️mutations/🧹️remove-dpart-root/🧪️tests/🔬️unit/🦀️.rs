@@ -1,14 +1,20 @@
 use super::*;
-use protocol::MutationDiff;
+use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
-    let mut base = PdfSnapshot::default();
-    support::insert_object(&mut base, support::dict(vec![("Type", PdfObject::Name("Catalog".to_string()))]));
-    support::set_dpart_root(&mut base, "run 4711");
+    let catalog = support::document_of(vec![support::catalog_object()]);
+    let base = support::after_rows(&catalog, support::dpart_root_rows(&catalog, "run 4711"));
     let mutation = RemoveDpartRoot {};
-    let outcome = <RemoveDpartRoot as MutationKind<PdfSnapshot, PdfVtMutation>>::diff(&mutation, &base);
-    let next = outcome.diff().apply(&base).unwrap();
+    let next = applied(&base, &PdfVtMutation::RemoveDpartRoot(mutation.clone()));
     assert!(support::catalog_entry(&next, "DPartRoot").is_none());
+    assert_eq!(next, catalog, "the partition objects leave with the root entry");
     assert_eq!(<RemoveDpartRoot as MutationKind<PdfSnapshot, PdfVtMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: "run 4711".to_string() })]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = applied(&support::document(), &PdfVtMutation::SetDpartRoot(SetDpartRoot { job: "run 4711".to_string() }));
+    assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {}), &base).await;
 }

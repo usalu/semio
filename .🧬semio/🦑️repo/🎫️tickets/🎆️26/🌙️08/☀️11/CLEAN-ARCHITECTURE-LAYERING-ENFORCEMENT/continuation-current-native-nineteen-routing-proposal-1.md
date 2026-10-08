@@ -1,0 +1,3 @@
+# Current Native Nineteen Routing Proposal
+
+Unsealed routing-only successor Source19/runtime23/dispatcher21/Pub14 preserves independently admitted18 early source authority, SAME framecopy/custody guards and fullsource lifecycle. Cardinal33/Guard8/proof8 unchanged. Model inputs replace currently refusedUI5 with future UI6 green receipt; Renderer9 and other4 receipts unchanged. Source GUI250001–015, Pub251001–002, futureBuilder14GUI252. Source18 did not invoke capture because immediate UI5 authority drift preflight declined before spawn. All18 method proofs and17 actualnegativepartials preserved. Source19 controls wait finalUI6receiptpath/current Low admission before sealing; no capture/native/live publication.

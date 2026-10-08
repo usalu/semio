@@ -18,7 +18,7 @@ pub struct PatchLayers {
 
 pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let json_value = crate::mutations::parse_layer_field_input(&payload.field, &payload.value);
+    let json_value = crate::standards::v1::subsets::any::io::text::mutations::parse_layer_field_input(&payload.field, &payload.value);
     let ids = if payload.layer_ids.is_empty() { &session.interaction.ids } else { &payload.layer_ids };
     let selected = crate::schema::selected_drawing_layers(document, ids);
     let mut operations = Vec::with_capacity(selected.len());

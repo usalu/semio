@@ -37,7 +37,3 @@ record replace-surface tag=11
 field payload bytes
 record move-vertex tag=12
 field payload bytes
-record set-snapshot tag=13
-field payload bytes
-record patch-snapshot tag=14
-field payload bytes

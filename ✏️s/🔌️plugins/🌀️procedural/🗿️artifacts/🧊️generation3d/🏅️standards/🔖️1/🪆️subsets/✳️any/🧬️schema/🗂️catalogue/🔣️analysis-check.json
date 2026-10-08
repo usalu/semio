@@ -1,0 +1,501 @@
+{
+  "category": {
+    "id": "analysis.check",
+    "emoji": "✅️",
+    "order": 310,
+    "label": {
+      "en": "Check",
+      "de": "Prüfen"
+    },
+    "description": {
+      "en": "Validity, topology counts, interference and mesh quality.",
+      "de": "Gültigkeit, Topologiezahlen, Durchdringung und Netzqualität."
+    }
+  },
+  "kinds": [
+    {
+      "id": "analysis.validity",
+      "category": "analysis.check",
+      "emoji": "✅️",
+      "label": {
+        "en": "Validity",
+        "de": "Gültigkeit"
+      },
+      "description": {
+        "en": "Checks a shape for geometric and topological errors and reports closed and watertight status.",
+        "de": "Prüft eine Form auf geometrische und topologische Fehler und meldet geschlossenen und wasserdichten Zustand."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "valid",
+          "label": {
+            "en": "Valid",
+            "de": "Gültig"
+          },
+          "description": {
+            "en": "True when no error was found.",
+            "de": "Wahr, wenn kein Fehler gefunden wurde."
+          },
+          "type": "boolean"
+        },
+        {
+          "name": "watertight",
+          "label": {
+            "en": "Watertight",
+            "de": "Wasserdicht"
+          },
+          "description": {
+            "en": "True when every edge is shared by exactly two faces.",
+            "de": "Wahr, wenn jede Kante von genau zwei Flächen geteilt wird."
+          },
+          "type": "boolean"
+        },
+        {
+          "name": "report",
+          "label": {
+            "en": "Report",
+            "de": "Bericht"
+          },
+          "description": {
+            "en": "The detailed findings as JSON text.",
+            "de": "Die ausführlichen Befunde als JSON-Text."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.topologyCounts",
+      "category": "analysis.check",
+      "emoji": "🔢️",
+      "label": {
+        "en": "Topology counts",
+        "de": "Topologiezahlen"
+      },
+      "description": {
+        "en": "Counts vertices, edges, faces, shells and solids and derives the Euler characteristic.",
+        "de": "Zählt Eckpunkte, Kanten, Flächen, Schalen und Körper und leitet die Euler-Charakteristik ab."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "Number of vertices.",
+            "de": "Anzahl der Eckpunkte."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "Number of edges.",
+            "de": "Anzahl der Kanten."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "Number of faces.",
+            "de": "Anzahl der Flächen."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "shells",
+          "label": {
+            "en": "Shells",
+            "de": "Schalen"
+          },
+          "description": {
+            "en": "Number of shells.",
+            "de": "Anzahl der Schalen."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "solids",
+          "label": {
+            "en": "Solids",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "Number of solids.",
+            "de": "Anzahl der Körper."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "euler",
+          "label": {
+            "en": "Euler characteristic",
+            "de": "Euler-Charakteristik"
+          },
+          "description": {
+            "en": "Vertices minus edges plus faces.",
+            "de": "Eckpunkte minus Kanten plus Flächen."
+          },
+          "type": "integer"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.interference",
+      "category": "analysis.check",
+      "emoji": "💥️",
+      "label": {
+        "en": "Interference",
+        "de": "Durchdringung"
+      },
+      "description": {
+        "en": "Tests whether two solids overlap and measures the shared volume.",
+        "de": "Prüft, ob sich zwei Körper überlappen, und misst das gemeinsame Volumen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Solid A",
+            "de": "Körper A"
+          },
+          "description": {
+            "en": "The first solid.",
+            "de": "Der erste Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Solid B",
+            "de": "Körper B"
+          },
+          "description": {
+            "en": "The second solid.",
+            "de": "Der zweite Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "interferes",
+          "label": {
+            "en": "Interferes",
+            "de": "Durchdringt"
+          },
+          "description": {
+            "en": "True when the solids share volume.",
+            "de": "Wahr, wenn die Körper Volumen teilen."
+          },
+          "type": "boolean"
+        },
+        {
+          "name": "volume",
+          "label": {
+            "en": "Shared volume",
+            "de": "Gemeinsames Volumen"
+          },
+          "description": {
+            "en": "The volume both solids occupy.",
+            "de": "Das von beiden Körpern eingenommene Volumen."
+          },
+          "type": "number",
+          "unit": "length³"
+        },
+        {
+          "name": "shape",
+          "label": {
+            "en": "Overlap",
+            "de": "Überlappung"
+          },
+          "description": {
+            "en": "The overlapping region as a solid; absent when the solids are apart.",
+            "de": "Der überlappende Bereich als Körper; entfällt, wenn die Körper getrennt sind."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ],
+          "optional": true
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.meshQuality",
+      "category": "analysis.check",
+      "emoji": "🥽️",
+      "label": {
+        "en": "Mesh quality",
+        "de": "Netzqualität"
+      },
+      "description": {
+        "en": "Counts mesh elements, finds open, non-manifold and degenerate parts, and measures area, volume and bounds.",
+        "de": "Zählt Netzelemente, findet offene, nicht-mannigfaltige und entartete Teile und misst Fläche, Volumen und Ausdehnung."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to analyze.",
+            "de": "Das zu analysierende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "Number of vertices.",
+            "de": "Anzahl der Eckpunkte."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "Number of polygon faces.",
+            "de": "Anzahl der Polygonflächen."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "Number of edges.",
+            "de": "Anzahl der Kanten."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "triangles",
+          "label": {
+            "en": "Triangles",
+            "de": "Dreiecke"
+          },
+          "description": {
+            "en": "Number of triangles after triangulation.",
+            "de": "Anzahl der Dreiecke nach der Triangulation."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "boundaryEdges",
+          "label": {
+            "en": "Boundary edges",
+            "de": "Randkanten"
+          },
+          "description": {
+            "en": "Edges used by only one face; they mark holes.",
+            "de": "Kanten, die nur von einer Fläche genutzt werden; sie markieren Löcher."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "nonManifoldEdges",
+          "label": {
+            "en": "Non-manifold edges",
+            "de": "Nicht-mannigfaltige Kanten"
+          },
+          "description": {
+            "en": "Edges shared by more than two faces.",
+            "de": "Kanten, die von mehr als zwei Flächen geteilt werden."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "inconsistentEdges",
+          "label": {
+            "en": "Inconsistent edges",
+            "de": "Inkonsistente Kanten"
+          },
+          "description": {
+            "en": "Edges whose neighbouring faces disagree on orientation.",
+            "de": "Kanten, bei denen sich die Nachbarflächen in der Orientierung widersprechen."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "degenerateTriangles",
+          "label": {
+            "en": "Degenerate triangles",
+            "de": "Entartete Dreiecke"
+          },
+          "description": {
+            "en": "Triangles with zero area.",
+            "de": "Dreiecke ohne Flächeninhalt."
+          },
+          "type": "integer"
+        },
+        {
+          "name": "closed",
+          "label": {
+            "en": "Closed",
+            "de": "Geschlossen"
+          },
+          "description": {
+            "en": "True when the mesh has no boundary and no non-manifold edge.",
+            "de": "Wahr, wenn das Netz keinen Rand und keine nicht-mannigfaltige Kante hat."
+          },
+          "type": "boolean"
+        },
+        {
+          "name": "area",
+          "label": {
+            "en": "Area",
+            "de": "Flächeninhalt"
+          },
+          "description": {
+            "en": "The total surface area.",
+            "de": "Der gesamte Oberflächeninhalt."
+          },
+          "type": "number",
+          "unit": "length²"
+        },
+        {
+          "name": "volume",
+          "label": {
+            "en": "Volume",
+            "de": "Volumen"
+          },
+          "description": {
+            "en": "The enclosed volume; only for closed, consistently oriented meshes.",
+            "de": "Das eingeschlossene Volumen; nur für geschlossene, einheitlich orientierte Netze."
+          },
+          "type": "number",
+          "unit": "length³",
+          "optional": true
+        },
+        {
+          "name": "minimum",
+          "label": {
+            "en": "Minimum corner",
+            "de": "Minimale Ecke"
+          },
+          "description": {
+            "en": "The corner of the bounds with the smallest coordinates.",
+            "de": "Die Ecke der Ausdehnung mit den kleinsten Koordinaten."
+          },
+          "type": "point"
+        },
+        {
+          "name": "maximum",
+          "label": {
+            "en": "Maximum corner",
+            "de": "Maximale Ecke"
+          },
+          "description": {
+            "en": "The corner of the bounds with the largest coordinates.",
+            "de": "Die Ecke der Ausdehnung mit den größten Koordinaten."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": false
+    }
+  ]
+}

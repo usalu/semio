@@ -1,10 +1,8 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": null,
   "savedCameras": {
-    "added": [],
-    "removed": [],
+    "edits": [],
     "patched": [
       {
         "id": "cam-close",
@@ -13,8 +11,7 @@
           "camera": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "scene": null,
   "shots": null,

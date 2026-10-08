@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=0
-field payload bytes
 record insert-node tag=1
 field payload bytes
 record remove-node tag=2
@@ -36,6 +34,4 @@ field payload bytes
 record set-edge-kind tag=11
 field payload bytes
 record drag-nodes tag=12
-field payload bytes
-record patch-snapshot tag=13
 field payload bytes

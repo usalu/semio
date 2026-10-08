@@ -729,7 +729,7 @@ fn absorb_xml_part(mut first: XlsxXmlPartDiff, second: XlsxXmlPartDiff) -> XlsxX
 
 //#region 🔖️Apply
 impl MutationDiff<XlsxSnapshot> for XlsxDiff {
-    fn apply(&self, base: &XlsxSnapshot) -> MutationApplyResult<XlsxSnapshot> {
+    fn apply(&self, base: &XlsxSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<XlsxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
             apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;

@@ -1628,13 +1628,15 @@ pub enum RetainedPackSegmentEvent {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedVarintStep {
+/// 🔢️ One admitted byte of the canonical unsigned wire integer.
+pub enum RetainedVarintStep {
     Pending,
     Complete(u64),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedVarintFault{Overlong{offset:u64},NonMinimal{offset:u64}}
+/// 🚨️ Fixed native noncanonical-varint refusal retaining the original wire offset.
+pub enum RetainedVarintFault{Overlong{offset:u64},NonMinimal{offset:u64}}
 
 impl RetainedVarintFault{
     fn into_pack_refusal(self)->PackRefusal{match self{Self::Overlong{offset}=>PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"varint",offset,detail:"overlong retained varint"},Self::NonMinimal{..}=>PackRefusal::NonCanonical("non-minimal retained varint")}}
@@ -1642,13 +1644,14 @@ impl RetainedVarintFault{
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-struct RetainedVarintCursor {
+/// 🔢️ Incrementally validates the existing canonical unsigned wire format.
+pub struct RetainedVarintCursor {
     value: u64,
     bytes: u8,
 }
 
 impl RetainedVarintCursor {
-    fn admit(&mut self, byte: u8, offset: u64) -> Result<RetainedVarintStep, RetainedVarintFault> {
+    pub fn admit(&mut self, byte: u8, offset: u64) -> Result<RetainedVarintStep, RetainedVarintFault> {
         if self.bytes >= 10 || (self.bytes == 9 && ((byte & 0x80) != 0 || byte & 0x7f > 1)) {
             return Err(RetainedVarintFault::Overlong{offset:offset-self.bytes as u64});
         }
@@ -2229,14 +2232,15 @@ impl RetainedManifestCursor {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-struct RetainedUtf8Cursor {
+/// 🔤️ Validates UTF8 scalars incrementally without retaining a text allocation.
+pub struct RetainedUtf8Cursor {
     value: u32,
     minimum: u32,
     remaining: u8,
 }
 
 impl RetainedUtf8Cursor {
-    fn admit(&mut self,byte:u8,offset:u64)->Result<Option<char>,RetainedPackCatalogFault>{
+    pub fn admit(&mut self,byte:u8,offset:u64)->Result<Option<char>,RetainedPackCatalogFault>{
         if self.remaining == 0 {
             match byte {
                 0x00..=0x7f => return Ok(Some(byte as char)),
@@ -2274,7 +2278,7 @@ impl RetainedUtf8Cursor {
         char::from_u32(value).map(Some).ok_or(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvalidValue,"retained-pack.catalog-utf8-scalar",offset))
     }
 
-    fn complete(&self) -> bool {
+    pub fn complete(&self) -> bool {
         self.remaining == 0
     }
 

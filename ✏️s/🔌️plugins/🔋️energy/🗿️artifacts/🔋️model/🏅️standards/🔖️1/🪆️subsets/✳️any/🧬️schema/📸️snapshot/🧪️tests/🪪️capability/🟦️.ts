@@ -6,8 +6,9 @@ test("Energy owning source facade exposes its explicit relational capability",()
 });
 
 import {readFileSync} from "node:fs";
-import {parse as parseJsonc} from "jsonc-parser";
-test("Energy exact owning commands are present in both developer launch surfaces",()=>{
- const expected=["@semio-tech/energy-model-rs:test-snapshot-sqlite ","@semio-tech/energy-model-rs:test-snapshot-sqlite-native ","@semio-tech/energy-model-rs:test-snapshot-sqlite-source ","@semio-tech/energy-model-rs:build ","@semio-tech/energy-model-rs:check ","@semio-tech/energy-model-rs:test ","@semio-tech/energy-model:build ","@semio-tech/energy-model:check ","@semio-tech/energy-model:test "];
- for(const path of[".vscode/🧩️launch.seed.jsonc",".vscode/launch.json"]){const launch=parseJsonc(readFileSync(path,"utf8"))as{configurations:{command?:string;env?:{SEMIO_TEST_LEVEL?:string};presentation?:{order?:number}}[]};for(let n=0;n<expected.length;n++){const entries=launch.configurations.filter(entry=>entry.command?.includes(expected[n]!));expect(entries.length).toBe(1);expect(entries[0]!.presentation?.order).toBe(Number((408.623+n/1000).toFixed(3)));if(n!==3&&n!==4)expect(entries[0]!.env?.SEMIO_TEST_LEVEL).toBe("quick")}expect(launch.configurations.find(entry=>entry.command?.includes(expected[5]!))!.command).toContain("-- quick --no-fail-fast")}
+import {fileURLToPath} from "node:url";
+test("Energy exact owning commands are declared by their owner Nx targets",()=>{
+ const packages=fileURLToPath(new URL("../../../../../../../../📦️packages/",import.meta.url));
+ const expected:[string,string,[string,string][]][]=[["🦀️rust","@semio-tech/energy-model-rs",[["test-snapshot-sqlite","test-snapshot-sqlite"],["test-snapshot-sqlite-native","test-snapshot-sqlite native"],["test-snapshot-sqlite-source","test-snapshot-sqlite source"],["build","build"],["check","check"],["test","test"]]],["🟦️typescript","@semio-tech/energy-model",[["build","build"],["check","check"],["test","test"]]]];
+ for(const[language,name,targets]of expected){const manifest=JSON.parse(readFileSync(`${packages}${language}/📋️project.json`,"utf8"));expect(manifest.name).toBe(name);for(const[target,verb]of targets){expect(manifest.targets[target].executor).toBe("nx:run-commands");expect(manifest.targets[target].options.command).toBe(`bun ./📜️script.ts ${verb}`);expect(manifest.targets[target].options.forwardAllArgs).toBe(true);}}
 });

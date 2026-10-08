@@ -42,7 +42,7 @@ fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  let mut snapshot=native_fixture();snapshot.wires_snapshot=semio_framework_value::DslValue::Null;snapshot.meta=semio_framework_value::DslValue::Null;
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
- for _ in 0..identity_snapshot["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
+ for _ in 0..fixture["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
  for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))]{
   let restored=match payload{store::os_io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!("owned native encoding")};
   let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(restored,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);

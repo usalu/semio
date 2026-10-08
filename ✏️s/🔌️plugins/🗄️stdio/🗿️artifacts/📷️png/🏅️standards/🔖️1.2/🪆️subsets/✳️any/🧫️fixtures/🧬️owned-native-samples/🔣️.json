@@ -77,8 +77,17 @@
           ],
           "ancillaryChunks": [
             {
-              "kind": [115, 116, 69, 103],
-              "data": [3, 2, 1],
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
               "afterRaster": false
             },
             {
@@ -230,6 +239,884 @@
         257
       ],
       "oracleRasterHex": "00010100ffff800102000101"
+    }
+  ],
+  "paintIntent": {
+    "authoredFields": [
+      "revision",
+      "region",
+      "paint"
+    ],
+    "discriminators": [
+      "revision",
+      "paint/profile"
+    ],
+    "derivedFields": []
+  },
+  "metadataEdits": [
+    {
+      "name": "interlace-layout",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      },
+      "patch": {
+        "operation": "set",
+        "path": "/image/interlace",
+        "value": true
+      },
+      "expected": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": true,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "srgb-rendering-intent",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "perceptual",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      },
+      "patch": {
+        "operation": "set",
+        "path": "/image/srgb",
+        "value": "saturation"
+      },
+      "expected": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "saturation",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "srgb-intent-cleared",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      },
+      "patch": {
+        "operation": "set",
+        "path": "/image/srgb",
+        "value": null
+      },
+      "expected": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": null,
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "native-sample-precision",
+      "snapshot": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            32769
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      },
+      "patch": {
+        "operation": "set",
+        "path": "/image/samples/1",
+        "value": 65535
+      },
+      "expected": {
+        "schema": "stdio.png",
+        "image": {
+          "width": 2,
+          "height": 1,
+          "bitDepth": 16,
+          "colorType": "grayscale",
+          "interlace": false,
+          "samples": [
+            257,
+            65535
+          ],
+          "palette": null,
+          "transparency": {
+            "colorType": "grayscale",
+            "gray": 257
+          },
+          "gamma": 45455,
+          "chromaticities": {
+            "whiteX": 31270,
+            "whiteY": 32900,
+            "redX": 64000,
+            "redY": 33000,
+            "greenX": 30000,
+            "greenY": 60000,
+            "blueX": 15000,
+            "blueY": 6000
+          },
+          "srgb": "relativeColorimetric",
+          "physicalDims": {
+            "ppuX": 12345,
+            "ppuY": 67890,
+            "unitIsMeter": false
+          },
+          "timestamp": {
+            "year": 2026,
+            "month": 10,
+            "day": 7,
+            "hour": 0,
+            "minute": 30,
+            "second": 12
+          },
+          "background": {
+            "colorType": "grayscale",
+            "gray": 32769
+          },
+          "textChunks": [
+            {
+              "keyword": "author",
+              "value": "André",
+              "compressed": false,
+              "kind": "text",
+              "languageTag": "",
+              "translatedKeyword": ""
+            },
+            {
+              "keyword": "language",
+              "value": "日本語🙂",
+              "compressed": false,
+              "kind": "iText",
+              "languageTag": "ja",
+              "translatedKeyword": "言語"
+            },
+            {
+              "keyword": "description",
+              "value": "precise native sample",
+              "compressed": true,
+              "kind": "zText",
+              "languageTag": "",
+              "translatedKeyword": ""
+            }
+          ],
+          "ancillaryChunks": [
+            {
+              "kind": [
+                115,
+                116,
+                69,
+                103
+              ],
+              "data": [
+                3,
+                2,
+                1
+              ],
+              "afterRaster": false
+            },
+            {
+              "kind": [
+                118,
+                112,
+                65,
+                103
+              ],
+              "data": [
+                0,
+                255,
+                17
+              ],
+              "afterRaster": true
+            }
+          ]
+        }
+      }
     }
   ]
 }

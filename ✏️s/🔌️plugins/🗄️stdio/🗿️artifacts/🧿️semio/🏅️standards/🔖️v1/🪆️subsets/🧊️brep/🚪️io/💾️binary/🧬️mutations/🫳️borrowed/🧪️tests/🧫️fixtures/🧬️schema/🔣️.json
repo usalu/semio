@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "header",
+    "prefix",
+    "maximumDepth",
+    "copyBytes",
+    "cancelStops",
+    "rootKeys",
+    "curveKinds",
+    "curve2Kinds",
+    "surfaceKinds",
+    "snapshot",
+    "importedObj"
+  ],
+  "properties": {
+    "header": {
+      "const": [
+        1,
+        13
+      ]
+    },
+    "prefix": {
+      "const": "snapshot="
+    },
+    "maximumDepth": {
+      "const": 64
+    },
+    "copyBytes": {
+      "const": [
+        1,
+        3,
+        7,
+        64,
+        256
+      ]
+    },
+    "cancelStops": {
+      "const": [
+        0,
+        1,
+        2,
+        17,
+        64
+      ]
+    },
+    "rootKeys": {
+      "const": [
+        "schema",
+        "vertices",
+        "edges",
+        "loops",
+        "faces",
+        "shells",
+        "solids",
+        "coedges",
+        "nextLabel"
+      ]
+    },
+    "curveKinds": {
+      "const": [
+        "line",
+        "circle",
+        "ellipse",
+        "nurbs"
+      ]
+    },
+    "curve2Kinds": {
+      "const": [
+        "line",
+        "circle",
+        "ellipse",
+        "nurbs"
+      ]
+    },
+    "surfaceKinds": {
+      "const": [
+        "plane",
+        "cylinder",
+        "cone",
+        "sphere",
+        "torus",
+        "nurbs"
+      ]
+    },
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json"
+    },
+    "importedObj": {
+      "const": {
+        "text": "v 0 0 0\nv 1 0 0\nv 0 1 0\nv 0 0 1\nf 1 3 2\nf 1 2 4\nf 1 4 3\nf 2 3 4\n",
+        "tolerance": 1e-07,
+        "counts": {
+          "vertices": 4,
+          "edges": 6,
+          "loops": 4,
+          "faces": 4,
+          "shells": 1,
+          "solids": 1,
+          "coedges": 12
+        }
+      }
+    }
+  }
+}

@@ -1,24 +1,17 @@
-//! 🔺️ `insert-element` diff — inserts the envelope element at its position, a whole-list rewrite through the `Din4108Diff` list
-//! wrappers; a position past the list's end inserts it last as a `mutation.clamped` warning, and an id the document
-//! already holds is a `mutation.duplicate-id`.
+//! 🏠️ `insert-element` diff — inserts the row at its position; a position past the list's end inserts it last as a
+//! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertElement;
-use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108RowEdit as _;
+use crate::diff::{Din4108Diff, Din4108ElementEdit};
+use crate::Din4108Snapshot;
 
 pub fn diff(payload: &InsertElement, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.elements.iter().any(|existing| existing.id == payload.element.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An envelope element with id '{}' already exists.", payload.element.id), [payload.element.id.clone()]);
     }
-    let mut elements = base.elements.clone();
-    let index = payload.index.min(elements.len());
-    elements.insert(index, payload.element.clone());
-    let outcome = protocol::MutationOutcome::new(Din4108Diff {
-        zones: Some(Din4108ZoneList { values: base.zones.clone() }),
-        elements: Some(Din4108ElementList { values: elements }),
-        thermal_bridges: Some(Din4108ThermalBridgeList { values: base.thermal_bridges.clone() }),
-        ..Default::default()
-    });
+    let index = payload.index.min(base.elements.len());
+    let outcome = protocol::MutationOutcome::new(Din4108Diff { elements: vec![Din4108ElementEdit::insert(index, payload.element.clone())], ..Default::default() });
     if index == payload.index {
         return outcome;
     }

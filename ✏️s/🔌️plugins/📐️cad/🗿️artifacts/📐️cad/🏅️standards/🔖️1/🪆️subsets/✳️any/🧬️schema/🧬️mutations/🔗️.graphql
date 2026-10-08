@@ -1,23 +1,26 @@
-# 🧬️ CadMutation schema.
-
-type CadMutation {
-  schema: String! @state(class: ARTIFACT)
-  id: String! @state(class: ARTIFACT)
-  objects: [CadObject!]! @state(class: ARTIFACT)
-  buildingObjects: [CadObject!]! @state(class: ARTIFACT)
-  energyObjects: [CadObject!]! @state(class: ARTIFACT)
-  structureClassicObjects: [CadObject!]! @state(class: ARTIFACT)
-  referencesByModelDefinitionId: [CadReferenceListEntry!]! @state(class: ARTIFACT)
-  nodes: [CadNode!]! @state(class: ARTIFACT)
-  shapeGeometry: CadGeometry @state(class: ARTIFACT)
-  buildingGeometry: CadGeometry @state(class: ARTIFACT)
-  energyGeometry: CadGeometry @state(class: ARTIFACT)
-  structureClassicGeometry: CadGeometry @state(class: ARTIFACT)
-}
-
-type CadObject { id: String! }
-type CadNode { id: String! }
-type CadReferenceList { values: [String!]! }
-type CadReferenceListEntry { key: String! value: CadReferenceList! }
-type CadGeometry { anchorsJson: String }
-type CadCamera { zoom: Float }
+# 🧬️ Canonical Cad direct-event union over explicit owned children.
+# import ArtifactRef from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql"
+# import CadNode,CadReference from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+scalar UInt32
+union CadMutation = CreateShapeModel | DeleteShapeModel | CreateBuildingModel | DeleteBuildingModel | CreateEnergyModel | DeleteEnergyModel | CreateStructureClassicModel | DeleteStructureClassicModel | CreateDrawing | DeleteDrawing | CreateNode | DeleteNode | RenameNode | ChangeReferenceHidden | ChangeReferenceLocked | ChangeReferenceWidth | MoveReference | ReplaceReferenceMedia | ReplaceReferences | CreateBrep | DeleteBrep
+type CreateShapeModel { mutation: String! childId: String! target: ArtifactRef! }
+type DeleteShapeModel { mutation: String!  }
+type CreateBuildingModel { mutation: String! childId: String! target: ArtifactRef! }
+type DeleteBuildingModel { mutation: String!  }
+type CreateEnergyModel { mutation: String! childId: String! target: ArtifactRef! }
+type DeleteEnergyModel { mutation: String!  }
+type CreateStructureClassicModel { mutation: String! childId: String! target: ArtifactRef! }
+type DeleteStructureClassicModel { mutation: String!  }
+type CreateDrawing { mutation: String! childId: String! target: ArtifactRef! }
+type DeleteDrawing { mutation: String! childId: String! }
+type CreateNode { mutation: String! node: CadNode! }
+type DeleteNode { mutation: String! nodeId: String! }
+type RenameNode { mutation: String! nodeId: String! newLabel: String! }
+type ChangeReferenceHidden { mutation: String! modelDefinitionId: String! referenceId: String! newHidden: Boolean! }
+type ChangeReferenceLocked { mutation: String! modelDefinitionId: String! referenceId: String! newLocked: Boolean! }
+type ChangeReferenceWidth { mutation: String! modelDefinitionId: String! referenceId: String! newWidthWorld: Float! }
+type MoveReference { mutation: String! modelDefinitionId: String! referenceId: String! newOrigin: [Float!]! }
+type ReplaceReferenceMedia { mutation: String! modelDefinitionId: String! referenceId: String! newSourceUrl: String! newMediaKind: String! newOrientation: [Float!] newScale: Float newOpacity: Float }
+type ReplaceReferences { mutation: String! modelDefinitionId: String! references: [CadReference!]! }
+type CreateBrep { mutation: String! childId: String! target: ArtifactRef! index: UInt32! }
+type DeleteBrep { mutation: String! childId: String! }

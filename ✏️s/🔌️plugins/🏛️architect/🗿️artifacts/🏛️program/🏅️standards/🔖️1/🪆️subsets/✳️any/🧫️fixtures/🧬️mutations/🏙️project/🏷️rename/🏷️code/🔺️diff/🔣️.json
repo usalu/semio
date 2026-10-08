@@ -1,56 +1,36 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": {
-    "id": "project-fixture",
-    "code": "CLN-001",
-    "clientName": "",
-    "ownerOrganization": "",
-    "briefSummary": {
-      "text": ""
-    },
-    "problemStatement": {
-      "text": ""
-    },
-    "vision": {
-      "text": ""
-    },
-    "mission": {
-      "text": ""
-    },
-    "objectives": [],
-    "successCriteria": [],
-    "projectPriorities": [],
-    "completionCriteria": [],
-    "decisionCriteria": [],
-    "scopeInclusions": [],
-    "scopeExclusions": [],
-    "assumptions": [],
-    "constraintsSummary": [],
-    "dependencies": [],
-    "deliverables": [],
-    "phases": [],
-    "geographicContext": {
-      "text": ""
-    },
-    "developmentContext": {
-      "text": ""
-    },
-    "operationalContext": {
-      "text": ""
-    },
-    "regulatoryContext": [],
-    "fundingModel": "",
-    "ownership": {
-      "ownerId": null,
-      "authorityId": null,
-      "consultantIds": [],
-      "participantIds": []
-    },
-    "timestamps": {
-      "created": "1970-01-01T00:00:00Z",
-      "updated": "1970-01-01T00:00:00Z"
+    "set": null,
+    "patch": {
+      "id": null,
+      "code": "CLN-001",
+      "clientName": null,
+      "ownerOrganization": null,
+      "briefSummary": null,
+      "problemStatement": null,
+      "vision": null,
+      "mission": null,
+      "objectives": null,
+      "successCriteria": null,
+      "projectPriorities": null,
+      "completionCriteria": null,
+      "decisionCriteria": null,
+      "scopeInclusions": null,
+      "scopeExclusions": null,
+      "assumptions": null,
+      "constraintsSummary": null,
+      "dependencies": null,
+      "deliverables": null,
+      "phases": null,
+      "geographicContext": null,
+      "developmentContext": null,
+      "operationalContext": null,
+      "regulatoryContext": null,
+      "fundingModel": null,
+      "ownership": null,
+      "timestamps": null
     }
   },
   "stakeholders": null,
@@ -116,9 +96,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

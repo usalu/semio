@@ -1,0 +1,36 @@
+{
+  "pageHost": "play.semio-tech.com",
+  "workerPath": "🔌️plugin-modules/🧵️shard/🟨️routing-worker.js",
+  "assets": [
+    {
+      "page": "map",
+      "host": "map.assets.semio-tech.com",
+      "path": "osm/🧪️routing/🌍️map.json",
+      "content": {
+        "token": "map-route-proof"
+      }
+    },
+    {
+      "page": "media",
+      "host": "media.assets.semio-tech.com",
+      "path": "🖼️assets/🧪️routing/🖼️media.json",
+      "content": {
+        "token": "media-route-proof"
+      }
+    },
+    {
+      "page": "modules",
+      "host": "modules.assets.semio-tech.com",
+      "path": "🔌️plugin-modules/🧪️routing/📦️module.json",
+      "content": {
+        "token": "module-route-proof"
+      }
+    }
+  ],
+  "module": {
+    "page": "modules",
+    "host": "modules.assets.semio-tech.com",
+    "path": "🔌️plugin-modules/🧪️routing/🧩️import.js",
+    "token": "dynamic-import-proof"
+  }
+}

@@ -319,6 +319,8 @@ pub mod describe;
 
 #[path="🧩️composition/📨️emission/📦️preparation/🦀️.rs"]
 mod child_emit_preparation;
+#[path="🧩️composition/📨️emission/🌱️genesis/📄️input/🦀️.rs"]
+mod private_child_input;
 
 #[path = "🧵️retained-command/🦀️.rs"]
 pub mod retained_command;
@@ -381,13 +383,13 @@ pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
 
-    pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep};
+    pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
     pub use super::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
         bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigSnapshot,
     };
-    pub use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
+    pub use super::window_transient::{TransientDiff, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
     use semio_framework_value::DslValue;
     use protocol::{OpBinary, OpText};
     use semio_framework::kernel::{FixedCommandPage, UiDirtyScope};
@@ -8081,12 +8083,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 if app.close_terminal_is_empty() {
                     return;
                 }
-                match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close") {
+                let grant = crate::app::artifact_close_release_grant(app.next_close_byte_demand(), store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture admitted physical allocation");
+                match app.close_step(1, grant).expect("registered fixture close") {
                     super::PluginCloseStep::Pending { released_items, released_bytes } => {
                         assert!(
-                            released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
+                            released_items <= 1 && released_bytes <= grant,
                             "registered fixture close turn {close_turn} exceeded its exact grant: released {released_items} items / {released_bytes} bytes against 1 item / {} bytes",
-                            store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+                            grant
                         );
                         if released_items == 0 && released_bytes == 0 {
                             std::thread::yield_now();
@@ -10488,6 +10491,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }
 
+        fn next_close_byte_demand(&self) -> usize {
+            if let Some(request) = self.request.as_ref() { return request.next_close_byte_demand(); }
+            let Some((_, reference, owner)) = self.identity.as_ref() else { return 0 };
+            let fields = [&reference.artifact_id, &reference.dialect.artifact_kind, &reference.dialect.standard, &reference.dialect.subset, &owner.parent.artifact_id, &owner.parent.dialect.artifact_kind, &owner.parent.dialect.standard, &owner.parent.dialect.subset, &owner.slot, &owner.child_id];
+            fields.get(usize::from(self.identity_field)).map_or(1, |field| field.capacity().max(1))
+        }
+
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -10504,16 +10514,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     store::SnapshotRetirementStep::Complete => Err(plugin_sdk_fault("member ingress request returned false terminal")),
                 };
             }
-            while self.identity_field < 10 && self.identity_string_mut().is_some_and(|field| field.is_empty()) {
-                self.identity_field += 1;
-            }
             if let Some(field) = self.identity_string_mut() {
-                let bytes = field.chars().next_back().map_or(0, char::len_utf8);
+                let bytes = field.capacity();
                 if bytes > maximum_bytes {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                field.pop();
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: bytes });
+                drop(std::mem::take(field));
+                self.identity_field += 1;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
             }
             if let Some(identity) = self.identity.take() {
                 drop(identity);
@@ -10533,8 +10541,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
+    const OWNED_DOCUMENT_INGRESS_PAGE_SLOTS: usize = 8;
+
     struct OwnedDocumentMemberIngressRegistry {
-        slots: Box<[std::mem::MaybeUninit<OwnedDocumentMemberIngress>]>,
+        pages: Vec<Option<Box<[std::mem::MaybeUninit<OwnedDocumentMemberIngress>]>>>,
         occupied: [u64; CHILD_CONTENT_SLOTS / 64],
         expected: usize,
         len: usize,
@@ -10548,10 +10558,43 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if expected > store::OWNED_DOCUMENT_MAXIMUM_MEMBERS {
                 return Err(plugin_sdk_fault("owned document member ingress exceeds the recursive closure member limit"));
             }
-            let mut slots = Vec::new();
-            slots.try_reserve_exact(expected).map_err(|_| plugin_sdk_fault("owned document member ingress allocation was not admitted"))?;
-            slots.resize_with(expected, std::mem::MaybeUninit::uninit);
-            Ok(Self { slots: slots.into_boxed_slice(), occupied: [0; CHILD_CONTENT_SLOTS / 64], expected, len: 0, generation: 0, sealed: false, close_cursor: 0 })
+            let count = expected.div_ceil(OWNED_DOCUMENT_INGRESS_PAGE_SLOTS);
+            let mut pages = Vec::new();
+            pages.try_reserve_exact(count).map_err(|_| plugin_sdk_fault("owned document member ingress page directory was not admitted"))?;
+            for index in 0..count {
+                let length = (expected - index * OWNED_DOCUMENT_INGRESS_PAGE_SLOTS).min(OWNED_DOCUMENT_INGRESS_PAGE_SLOTS);
+                let mut slots = Vec::new();
+                slots.try_reserve_exact(length).map_err(|_| plugin_sdk_fault("owned document member ingress page allocation was not admitted"))?;
+                slots.resize_with(length, std::mem::MaybeUninit::uninit);
+                pages.push(Some(slots.into_boxed_slice()));
+            }
+            Ok(Self { pages, occupied: [0; CHILD_CONTENT_SLOTS / 64], expected, len: 0, generation: 0, sealed: false, close_cursor: 0 })
+        }
+
+        fn entry(&self, ordinal: usize) -> Option<&OwnedDocumentMemberIngress> {
+            if ordinal >= self.expected || self.occupied[ordinal / 64] & (1 << (ordinal % 64)) == 0 { return None; }
+            let page = self.pages.get(ordinal / OWNED_DOCUMENT_INGRESS_PAGE_SLOTS)?.as_ref()?;
+            Some(unsafe { page[ordinal % OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].assume_init_ref() })
+        }
+
+        fn entry_mut(&mut self, ordinal: usize) -> Option<&mut OwnedDocumentMemberIngress> {
+            if ordinal >= self.expected || self.occupied[ordinal / 64] & (1 << (ordinal % 64)) == 0 { return None; }
+            let page = self.pages.get_mut(ordinal / OWNED_DOCUMENT_INGRESS_PAGE_SLOTS)?.as_mut()?;
+            Some(unsafe { page[ordinal % OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].assume_init_mut() })
+        }
+
+        fn next_occupied(&self) -> Option<usize> {
+            let first = self.close_cursor / 64;
+            for index in first..self.occupied.len() {
+                let word = self.occupied[index] & if index == first { u64::MAX << (self.close_cursor % 64) } else { u64::MAX };
+                if word != 0 { return Some(index * 64 + word.trailing_zeros() as usize); }
+            }
+            None
+        }
+
+        fn empty_backing_byte_demand(&self) -> usize {
+            if let Some(page) = self.pages.iter().find_map(Option::as_ref) { return std::mem::size_of_val(page.as_ref()); }
+            self.pages.capacity() * std::mem::size_of::<Option<Box<[std::mem::MaybeUninit<OwnedDocumentMemberIngress>]>>>()
         }
 
         #[expect(clippy::result_large_err, reason = "Refusal returns the exact retained member ingress owner unchanged.")]
@@ -10563,7 +10606,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let Some(generation) = self.generation.checked_add(1) else {
                 return Err((plugin_sdk_fault("owned document member ingress generation exhausted"), ingress));
             };
-            self.slots[ordinal].write(ingress);
+            self.pages[ordinal / OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].as_mut().expect("open ingress ordinal retains its original page")[ordinal % OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].write(ingress);
             self.occupied[ordinal / 64] |= 1 << (ordinal % 64);
             self.len += 1;
             self.generation = generation;
@@ -10584,27 +10627,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             self.occupied[ordinal / 64] &= !(1 << (ordinal % 64));
             self.len -= 1;
-            Some(unsafe { self.slots[ordinal].assume_init_read() })
+            Some(unsafe { self.pages[ordinal / OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].as_mut().expect("occupied ingress ordinal retains its original page")[ordinal % OWNED_DOCUMENT_INGRESS_PAGE_SLOTS].assume_init_read() })
         }
 
-        /// ♻️ Closes the occupied slots in place, ordinal by ordinal, under the caller's
-        /// grant. The ingress being retired is never lifted into a field of this registry: one
-        /// `MemberOpenRequest` inline would put the whole registry shell past a kilobyte of stack,
-        /// while the 1,024 request slots themselves are already behind the single `slots` heap
-        /// owner. The slot is detached only once its own `close_step` answers `Complete` with a
-        /// truthful terminal witness, so a refusal leaves the request exactly where it was.
-        ///
-        /// SAFETY: the occupancy bit is set only after `write` and cleared before `assume_init_read`.
+        /// ♻️ Retires original occupied slots, indivisible pages, and the separate directory.
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            while self.close_cursor < self.expected {
-                let ordinal = self.close_cursor;
-                if self.occupied[ordinal / 64] & (1 << (ordinal % 64)) == 0 {
-                    self.close_cursor += 1;
-                    continue;
-                }
-                let active = unsafe { self.slots[ordinal].assume_init_mut() };
+            if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
+            if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if let Some(ordinal) = self.next_occupied() {
+                let active = self.entry_mut(ordinal).expect("occupied ingress keeps its original page");
                 let step = active.close_step(maximum_items, maximum_bytes)?;
                 if step != PluginCloseStep::Complete {
+                    if matches!(step, PluginCloseStep::Pending { released_items: 1.., .. }) { self.sealed = true; }
                     return Ok(step);
                 }
                 if !active.terminal_is_empty() {
@@ -10612,14 +10646,27 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 let retired = self.take(ordinal).ok_or_else(|| plugin_sdk_fault("member ingress close lost its exact occupied ordinal"))?;
                 drop(retired);
-                self.close_cursor += 1;
+                self.sealed = true;
+                self.close_cursor = ordinal + 1;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
-            Ok(PluginCloseStep::Complete)
+            let bytes = self.empty_backing_byte_demand();
+            if bytes > maximum_bytes { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            self.sealed = true;
+            if let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) {
+                drop(page.take());
+            } else {
+                drop(std::mem::take(&mut self.pages));
+            }
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
+        }
+
+        fn next_close_byte_demand(&self) -> usize {
+            self.next_occupied().and_then(|ordinal| self.entry(ordinal)).map_or_else(|| self.empty_backing_byte_demand(), OwnedDocumentMemberIngress::next_close_byte_demand)
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.len == 0
+            self.len == 0 && self.pages.is_empty() && self.pages.capacity() == 0
         }
     }
 
@@ -10694,6 +10741,104 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
+    pub(crate) struct PreparedChildContentIdentity {
+        pub(crate) key: MemberKey,
+        pub(crate) reference: ArtifactRef,
+    }
+
+    include!("🧩️composition/🪪️metadata/🦀️.rs");
+    include!("🧩️composition/📬️publication/🤝️group/🦀️.rs");
+    mod mounted_child_group_identity { use super::*; include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/🪪️identity/🦀️.rs"); }
+    use mounted_child_group_identity::{MountedChildGroupIdentityIssuer, MountedChildGroupIdentitySource};
+    mod mounted_child_group_receipt { use super::*; include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs"); }
+    use mounted_child_group_receipt::MountedReceiptBytes;
+    mod mounted_child_group_receipt_group { use super::*; use super::mounted_child_group_receipt::*; include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🦀️.rs"); }
+    use mounted_child_group_receipt_group::{PagedCommandLog, CommandAppend, CommandPrune};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🦀️.rs");
+    include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs");
+    #[cfg(test)]
+    include!("🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🦀️.rs");
+
+    pub(crate) struct PreparedChildContentEntry {
+        entry: std::mem::ManuallyDrop<Option<ChildContentEntry>>,
+        metadata: std::mem::ManuallyDrop<Option<[String; 7]>>,
+        metadata_cursor: usize,
+        visibility: std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>,
+        generation: u64,
+    }
+
+    pub(crate) struct PreparedChildContentSlot {
+        index: usize,
+        identity: usize,
+        visibility: std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>,
+        generation: u64,
+        taken: bool,
+    }
+
+    impl PreparedChildContentEntry {
+        /// 🧳️ Moves admitted identity owners into an exact private candidate read.
+        pub(crate) fn prepare<M: SpaceMember>(identity: &mut Option<PreparedChildContentIdentity>, member: &M, publication: &mut dyn store::ErasedMemberStoreOneItemPublication, visibility: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::ArtifactStoreOneItemGrant) -> Result<Option<Self>, Fault> {
+            let retained = identity.as_ref().ok_or_else(|| plugin_sdk_fault("prepared child identity has already transferred"))?;
+            ChildContentView::hash(retained.key.borrowed())?;
+            if !grant.permits_one() || grant.maximum_bytes < store::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES { return Ok(None); }
+            let (generation, revision, snapshot) = member.snapshot_read_erased_for_publication(publication, visibility, grant).map_err(plugin_sdk_fault)?;
+            let PreparedChildContentIdentity { key, reference } = identity.take().expect("admitted child identity remains caller-owned until the exact read exists");
+            Ok(Some(Self { entry: std::mem::ManuallyDrop::new(Some(ChildContentEntry { owner: key.owner, slot: key.slot, child_id: key.child_id, artifact_id: reference.artifact_id, dialect: reference.dialect, revision, snapshot })), metadata: std::mem::ManuallyDrop::new(None), metadata_cursor: 0, visibility: visibility.clone(), generation }))
+        }
+
+        pub(crate) fn next_close_byte_demand(&self) -> usize {
+            if self.entry.is_some() { store::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES }
+            else { self.metadata.as_ref().map_or(0, |fields| fields.get(self.metadata_cursor).map_or(1, |field| field.capacity().max(1))) }
+        }
+
+        /// 🪃️ Returns the lease to its private member before separately freeing each identity allocation.
+        pub(crate) fn close_step<M: SpaceMember>(&mut self, member: &M, publication: &mut dyn store::ErasedMemberStoreOneItemPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<PluginCloseStep, Fault> {
+            if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
+            if !grant.permits_one() || grant.maximum_bytes < self.next_close_byte_demand() { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if let Some(entry) = self.entry.take() {
+                let ChildContentEntry { owner, slot, child_id, artifact_id, dialect, revision, snapshot } = entry;
+                match member.return_prepared_snapshot_read_erased(publication, &self.visibility, snapshot, grant) {
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes }) if released_bytes == store::ErasedSnapshotRead::LEASE_ALLOCATION_BYTES => {
+                        *self.metadata = Some([owner, slot, child_id, artifact_id, dialect.artifact_kind, dialect.standard, dialect.subset]);
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
+                    }
+                    Ok(_) => {
+                        *self.metadata = Some([owner, slot, child_id, artifact_id, dialect.artifact_kind, dialect.standard, dialect.subset]);
+                        return Err(plugin_sdk_fault("prepared child read return violated its exact lease release authority"));
+                    }
+                    Err(rejected) => {
+                        *self.entry = Some(ChildContentEntry { owner, slot, child_id, artifact_id, dialect, revision, snapshot: rejected.snapshot });
+                        return Err(plugin_sdk_fault(rejected.reason));
+                    }
+                }
+            }
+            self.close_metadata_step(grant)
+        }
+
+        fn close_metadata_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<PluginCloseStep, Fault> {
+            if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
+            if !grant.permits_one() || grant.maximum_bytes < self.next_close_byte_demand() { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            let fields = self.metadata.as_mut().expect("prepared child metadata remains owned until every allocation is released");
+            if let Some(field) = fields.get_mut(self.metadata_cursor) {
+                let released_bytes = field.capacity();
+                drop(std::mem::take(field));
+                self.metadata_cursor += 1;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes });
+            }
+            self.metadata.take();
+            Ok(PluginCloseStep::Complete)
+        }
+
+        pub(crate) fn terminal_is_empty(&self) -> bool { self.entry.is_none() && self.metadata.is_none() }
+    }
+
+    impl Drop for PreparedChildContentEntry {
+        fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "prepared child entry requires exact installation or bounded private return"); }
+    }
+
+    fn child_content_arc_bytes<T>() -> usize { std::mem::size_of::<(std::sync::atomic::AtomicUsize, std::sync::atomic::AtomicUsize, T)>() }
+
     #[derive(Clone)]
     struct ChildContentPage {
         entries: [Option<std::sync::Arc<ChildContentEntry>>; CHILD_CONTENT_PAGE_SLOTS],
@@ -10725,6 +10870,94 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     impl ChildContentView {
         /// 🈳️ The view a document with no children gets.
         pub const EMPTY: Self = Self { root: None };
+
+        pub(crate) fn prepared_entry_birth_bytes() -> usize { child_content_arc_bytes::<ChildContentRoot>() + child_content_arc_bytes::<ChildContentPage>() + child_content_arc_bytes::<ChildContentEntry>() }
+
+        /// 🏗️ Builds the future immutable root before the common visibility decision.
+        pub(crate) fn insert_prepared_entry(&self, prepared: &mut PreparedChildContentEntry, grant: store::ArtifactStoreOneItemGrant) -> Result<Option<(Self, PreparedChildContentSlot)>, Fault> {
+            if !prepared.visibility.pending() { return Err(plugin_sdk_fault("prepared child insertion requires its pending visibility")); }
+            let entry = prepared.entry.as_ref().ok_or_else(|| plugin_sdk_fault("prepared child entry has already transferred"))?;
+            let index = self.admit_member(entry.key())?;
+            if !grant.permits_one() || grant.maximum_bytes < Self::prepared_entry_birth_bytes() { return Ok(None); }
+            let next = self.insert_entry_admitted(index, prepared.entry.take().unwrap());
+            let identity = std::sync::Arc::as_ptr(Self::entry_at(next.root.as_deref().unwrap(), index).unwrap()) as usize;
+            Ok(Some((next, PreparedChildContentSlot { index, identity, visibility: prepared.visibility.clone(), generation: prepared.generation, taken: false })))
+        }
+
+        pub(crate) fn prepared_entry_release_bytes() -> usize { child_content_arc_bytes::<ChildContentEntry>() }
+
+        /// 🪝️ Extracts an unpublished entry under its whole Arc allocation grant, retaining its exact lease owner.
+        pub(crate) fn take_prepared_entry(&mut self, slot: &mut PreparedChildContentSlot, grant: store::ArtifactStoreOneItemGrant) -> Result<Option<(PreparedChildContentEntry, PluginCloseStep)>, Fault> {
+            if slot.taken { return Ok(None); }
+            if slot.visibility.committed() { return Err(plugin_sdk_fault("prepared child extraction cannot change a committed view")); }
+            if !grant.permits_one() || grant.maximum_bytes < Self::prepared_entry_release_bytes() { return Ok(None); }
+            let Some(root) = self.root.as_mut().and_then(std::sync::Arc::get_mut) else { return Ok(None); };
+            let Some(page) = root.pages[slot.index / CHILD_CONTENT_PAGE_SLOTS].as_mut().and_then(std::sync::Arc::get_mut) else { return Ok(None); };
+            let retained = page.entries[slot.index % CHILD_CONTENT_PAGE_SLOTS].as_ref().ok_or_else(|| plugin_sdk_fault("prepared child slot lost its exact entry"))?;
+            if std::sync::Arc::as_ptr(retained) as usize != slot.identity { return Err(plugin_sdk_fault("prepared child slot belongs to a different exact entry")); }
+            if std::sync::Arc::strong_count(retained) != 1 { return Ok(None); }
+            let entry = std::sync::Arc::try_unwrap(page.entries[slot.index % CHILD_CONTENT_PAGE_SLOTS].take().unwrap()).unwrap_or_else(|_| unreachable!("exclusive prepared entry remains exclusive during its bounded move"));
+            root.len -= 1;
+            slot.taken = true;
+            Ok(Some((PreparedChildContentEntry { entry: std::mem::ManuallyDrop::new(Some(entry)), metadata: std::mem::ManuallyDrop::new(None), metadata_cursor: 0, visibility: slot.visibility.clone(), generation: slot.generation }, PluginCloseStep::Pending { released_items: 1, released_bytes: Self::prepared_entry_release_bytes() })))
+        }
+
+        pub(crate) fn prepared_structure_close_byte_demand(&self) -> usize {
+            let Some(root) = self.root.as_ref() else { return 0; };
+            if std::sync::Arc::strong_count(root) != 1 { return 1; }
+            match root.pages.iter().flatten().next() {
+                Some(page) if std::sync::Arc::strong_count(page) == 1 && page.entries.iter().all(Option::is_none) => child_content_arc_bytes::<ChildContentPage>(),
+                Some(_) => 1,
+                None => child_content_arc_bytes::<ChildContentRoot>(),
+            }
+        }
+
+        /// 🧭️ Borrows the known view retaining the exact current root, page, or entry frontier.
+        pub(crate) fn prepared_structure_retainer<'a>(&self, first: &'a Self, second: &'a Self) -> Option<&'a Self> {
+            let Some(root) = self.root.as_ref() else { return Some(first); };
+            if std::sync::Arc::strong_count(root) != 1 {
+                return [first, second].into_iter().find(|view| view.root.as_ref().is_some_and(|retained| std::sync::Arc::ptr_eq(root, retained)));
+            }
+            let Some(index) = root.pages.iter().position(Option::is_some) else { return Some(first); };
+            let page = root.pages[index].as_ref().unwrap();
+            if std::sync::Arc::strong_count(page) != 1 {
+                return [first, second].into_iter().find(|view| ChildContentOwners::view_retains_page(view, index, page));
+            }
+            let Some(entry) = page.entries.iter().flatten().next() else { return Some(first); };
+            [first, second].into_iter().find(|view| view.contains_entry_owner(entry))
+        }
+
+        /// 🪵️ Frees one private view alias or empty scaffold while another exact view retains all remaining entries.
+        pub(crate) fn close_prepared_structure_step(&mut self, retained: &Self, grant: store::ArtifactStoreOneItemGrant) -> Result<PluginCloseStep, Fault> {
+            if self.root.is_none() { return Ok(PluginCloseStep::Complete); }
+            if !grant.permits_one() || grant.maximum_bytes < self.prepared_structure_close_byte_demand() { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if self.root.as_ref().zip(retained.root.as_ref()).is_some_and(|(root, retained)| std::sync::Arc::ptr_eq(root, retained)) {
+                drop(self.root.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            let Some(root) = self.root.as_mut().and_then(std::sync::Arc::get_mut) else { return Ok(PluginCloseStep::Blocked { reason: "private child root remains externally borrowed" }); };
+            if let Some(index) = root.pages.iter().position(Option::is_some) {
+                let page = root.pages[index].as_mut().unwrap();
+                if std::sync::Arc::strong_count(page) != 1 {
+                    if !ChildContentOwners::view_retains_page(retained, index, page) { return Ok(PluginCloseStep::Blocked { reason: "private child page remains externally borrowed" }); }
+                    root.len -= page.entries.iter().flatten().count();
+                    drop(root.pages[index].take());
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                let page = std::sync::Arc::get_mut(page).unwrap();
+                if let Some(entry_index) = page.entries.iter().position(Option::is_some) {
+                    if !retained.contains_entry_owner(page.entries[entry_index].as_ref().unwrap()) { return Ok(PluginCloseStep::Blocked { reason: "private child entry requires exact extraction and member return" }); }
+                    drop(page.entries[entry_index].take());
+                    root.len -= 1;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                drop(root.pages[index].take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: child_content_arc_bytes::<ChildContentPage>() });
+            }
+            assert_eq!(root.len, 0, "private child root closes only after every exact entry transferred");
+            drop(self.root.take());
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: child_content_arc_bytes::<ChildContentRoot>() })
+        }
 
         fn hash(key: MemberKeyRef<'_>) -> Result<usize, Fault> {
             if key.owner.len() > CHILD_CONTENT_ID_BYTES || key.slot.len() > CHILD_CONTENT_ID_BYTES || key.child_id.len() > CHILD_CONTENT_ID_BYTES {
@@ -12069,6 +12302,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
     //#endregion 🔖️InteractionView
 
+    //#region 🔖️NoStateDiff
+    /// 🕳️ The diff of an uninhabited lane (`NoConfig`, `NoPresence`, `NoTransient`): there is no mutation to produce one, so it
+    /// carries nothing and leaves every state as it is.
+    #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct NoStateDiff {}
+    //#endregion 🔖️NoStateDiff
+
     //#region 🔖️NoConfig
     /// 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
     #[derive(Clone, Debug, PartialEq, Default, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
@@ -12137,8 +12378,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     impl store::ConfigRecord for NoConfig {}
 
-    impl ::protocol::MutationDiff<NoConfig> for NoConfig {
-        fn apply(&self, base: &NoConfig) -> protocol::MutationApplyResult<NoConfig> {
+    impl ::protocol::DiffAlgebra<NoConfig> for NoStateDiff {
+        fn inverse(&self, _base: &NoConfig) -> Self {
+            Self {}
+        }
+        fn between(_base: &NoConfig, _other: &NoConfig) -> Self {
+            Self {}
+        }
+        fn is_empty(&self) -> bool {
+            true
+        }
+    }
+
+    impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
+        fn apply(&self, base: &NoConfig, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoConfig> {
             Ok(base.clone())
         }
         fn absorb(&mut self, _other: Self) {}
@@ -12148,14 +12401,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub enum NoConfigMutation {}
 
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
-        type Diff = NoConfig;
+        type Diff = NoStateDiff;
         const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
 
         fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
             match *self {}
         }
 
-        fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
+        fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoStateDiff> {
             match *self {}
         }
 
@@ -12238,8 +12491,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
-    impl ::protocol::MutationDiff<NoPresence> for NoPresence {
-        fn apply(&self, base: &NoPresence) -> protocol::MutationApplyResult<NoPresence> {
+    impl ::protocol::DiffAlgebra<NoPresence> for NoStateDiff {
+        fn inverse(&self, _base: &NoPresence) -> Self {
+            Self {}
+        }
+        fn between(_base: &NoPresence, _other: &NoPresence) -> Self {
+            Self {}
+        }
+        fn is_empty(&self) -> bool {
+            true
+        }
+    }
+
+    impl ::protocol::MutationDiff<NoPresence> for NoStateDiff {
+        fn apply(&self, base: &NoPresence, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoPresence> {
             Ok(base.clone())
         }
         fn absorb(&mut self, _other: Self) {}
@@ -12249,14 +12514,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub enum NoPresenceMutation {}
 
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
-        type Diff = NoPresence;
+        type Diff = NoStateDiff;
         const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
 
         fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
             match *self {}
         }
 
-        fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
+        fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoStateDiff> {
             match *self {}
         }
 
@@ -12328,8 +12593,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
-    impl ::protocol::MutationDiff<NoTransient> for NoTransient {
-        fn apply(&self, base: &NoTransient) -> protocol::MutationApplyResult<NoTransient> {
+    impl ::protocol::DiffAlgebra<NoTransient> for NoStateDiff {
+        fn inverse(&self, _base: &NoTransient) -> Self {
+            Self {}
+        }
+        fn between(_base: &NoTransient, _other: &NoTransient) -> Self {
+            Self {}
+        }
+        fn is_empty(&self) -> bool {
+            true
+        }
+    }
+
+    impl ::protocol::MutationDiff<NoTransient> for NoStateDiff {
+        fn apply(&self, base: &NoTransient, _capability: ::protocol::ApplyCapability) -> protocol::MutationApplyResult<NoTransient> {
             Ok(base.clone())
         }
         fn absorb(&mut self, _other: Self) {}
@@ -12339,14 +12616,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub enum NoTransientMutation {}
 
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
-        type Diff = NoTransient;
+        type Diff = NoStateDiff;
         const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
 
         fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
             match *self {}
         }
 
-        fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
+        fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoStateDiff> {
             match *self {}
         }
 
@@ -12388,25 +12665,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     impl InteractionConfigMutation {
         pub fn set_state(state: protocol::InteractionState) -> Self {
             Self::SetInteractionState(SetInteractionState { state })
-        }
-    }
-
-    /// 🕹️ `MutationDiff`'s supertrait bound — a "no-op" default, never dispatched as a real mutation
-    /// (only `apply`/`absorb` are ever called on a diff value; a `Self::Diff` is never itself the
-    /// starting point of a fresh mutation).
-    impl Default for InteractionConfigMutation {
-        fn default() -> Self {
-            InteractionConfigMutation::set_state(protocol::InteractionState::default())
-        }
-    }
-
-    impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
-        fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
-            let InteractionConfigMutation::SetInteractionState(state) = self;
-            state.apply()
-        }
-        fn absorb(&mut self, other: Self) {
-            *self = other;
         }
     }
 
@@ -12734,9 +12992,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// kind any operation has, so the first leaf labels the row as before.
     // 🚫️async: a pure lookup over the projected operations.
     pub fn history_intent_label<A: ArtifactApp>(tool: &str, ops: &[&store::AppliedMutation<'_, A::Mutation>], mutations: &[MutationView]) -> Option<LocalizedLabel> {
-        let intents = A::tool_intent_kinds(tool);
-        let intent = ops.iter().take(if intents.is_empty() { 0 } else { ops.len() }).find(|op| intents.contains(&protocol::SemanticMutation::<A::Snapshot>::semantics(op.operation).kind))?;
-        Some(mutations.iter().find(|row| row.mutation_id == intent.mutation_id.0).map_or_else(|| time_travel::time_travel_mutation_label::<A>(intent.operation), |row| row.label.clone()))
+        history_intent_label_of::<A::Snapshot, A::Mutation>(A::tool_intent_kinds(tool), ops, mutations)
+    }
+
+    /// 🎯️ Resolves declared intent through a store's concrete mutation authority and effective labels.
+    pub(crate) fn history_intent_label_of<P, Mu: protocol::SemanticMutation<P>>(intents: &[&str], ops: &[&store::AppliedMutation<'_, Mu>], mutations: &[MutationView]) -> Option<LocalizedLabel> {
+        let intent = ops.iter().take(if intents.is_empty() { 0 } else { ops.len() }).find(|op| intents.contains(&protocol::SemanticMutation::<P>::semantics(op.operation).kind))?;
+        Some(mutations.iter().find(|row| row.mutation_id == intent.mutation_id.0).map_or_else(|| protocol::SemanticMutation::<P>::label(intent.operation), |row| row.label.clone()))
     }
 
     /// 🙈️ Whether a dispatch of `kind` is a history row: never an interaction verb, and a `View` only when it edited a
@@ -13220,6 +13482,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// [`ChildEmitPreparation`] encodes each operation before appending its semantic label,
         /// retains refusals and retires typed operation owners before issuing the ready wire group.
         pub child_emits: Vec<ChildEmit>,
+        /// 🪵️ Applying child sources retain their typed operation allocation through group publication.
+        pub owned_child_emits:Vec<OwnedChildEmit>,
         /// 📦️ Owned typed operations awaiting bounded encoding and retirement before publication.
         pub child_preparations: std::collections::VecDeque<ChildEmitPreparation>,
         /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): zero-or-more app-initiated
@@ -13275,6 +13539,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 events: Vec::new(),
                 ui_scope: UiDirtyScope::default(),
                 child_emits: Vec::new(),
+                owned_child_emits:Vec::new(),
                 child_preparations: std::collections::VecDeque::new(),
                 interaction_writes: Vec::new(),
                 tasks: Vec::new(),
@@ -13482,12 +13747,55 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
+    /// 🌱️ Explicit private member input retained until one composed group accepts or retires it.
+    #[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
+    pub struct ChildEmitGenesis {
+        #[serde(serialize_with = "serialize_child_genesis_reference")]
+        pub reference: ArtifactRef,
+        pub initial_pack: Vec<u8>,
+    }
+
+    fn serialize_child_genesis_reference<S: serde::Serializer>(reference: &ArtifactRef, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct BorrowedReference<'a> { artifact_id: &'a str, dialect: &'a ArtifactDialect }
+        BorrowedReference { artifact_id: &reference.artifact_id, dialect: &reference.dialect }.serialize(serializer)
+    }
+
+    impl ChildEmitGenesis {
+        fn next_close_byte_demand(&self) -> usize {
+            if self.initial_pack.capacity() != 0 { return self.initial_pack.capacity(); }
+            [&self.reference.artifact_id, &self.reference.dialect.artifact_kind, &self.reference.dialect.standard, &self.reference.dialect.subset]
+                .into_iter().find_map(|value| (value.capacity() != 0).then_some(value.capacity())).unwrap_or(0)
+        }
+
+        fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 { return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+            let bytes = self.next_close_byte_demand();
+            if bytes > maximum_bytes { return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+            if self.initial_pack.capacity() != 0 { self.initial_pack = Vec::new(); }
+            else if let Some(value) = [&mut self.reference.artifact_id, &mut self.reference.dialect.artifact_kind, &mut self.reference.dialect.standard, &mut self.reference.dialect.subset].into_iter().find(|value| value.capacity() != 0) { *value = String::new(); }
+            else { return PluginCloseStep::Complete; }
+            PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }
+        }
+
+        fn return_one<const N: usize>(&mut self, parent: &mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>) -> Result<PluginCloseStep, semio_framework_value::ValueError> {
+            let pending = |accepted| PluginCloseStep::Pending { released_items: usize::from(accepted), released_bytes: 0 };
+            if self.initial_pack.capacity() != 0 { return parent.return_bytes(&mut self.initial_pack, 1).map(pending); }
+            for value in [&mut self.reference.artifact_id, &mut self.reference.dialect.artifact_kind, &mut self.reference.dialect.standard, &mut self.reference.dialect.subset] {
+                if value.capacity() != 0 { return parent.return_text(value, 1).map(pending); }
+            }
+            Ok(PluginCloseStep::Complete)
+        }
+    }
+
     /// 🧩️ One composed child's ready wire group, issued by [`ChildEmitPreparation`].
     /// Complete encoded operations and their semantic labels share the same accepted prefix.
     /// A refused operation leaves that prefix unchanged and retains its typed owner in preparation.
     /// `owner` is the owner-path text ([`MemberPath`]) of the member that owns the target; empty when the document itself does.
     #[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
     pub struct ChildEmit {
+        pub genesis: Option<ChildEmitGenesis>,
         pub owner: String,
         pub slot: String,
         pub child_id: String,
@@ -13519,7 +13827,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         /// ♻️ Returns one complete physical allocation under its exact byte grant.
         pub(crate) fn close_one(&mut self, maximum_items:usize, maximum_bytes:usize)->PluginCloseStep{
-            if maximum_items==0||maximum_bytes==0{return PluginCloseStep::Pending{released_items:0,released_bytes:0};}
+            if maximum_items==0{return PluginCloseStep::Pending{released_items:0,released_bytes:0};}
+            if let Some(genesis)=self.genesis.as_mut(){
+                let step=genesis.close_one(maximum_items,maximum_bytes);
+                if step==PluginCloseStep::Complete{self.genesis=None;return PluginCloseStep::Pending{released_items:1,released_bytes:0};}
+                return step;
+            }
             if let Some(op)=self.ops.last(){
                 let bytes=op.capacity();
                 if bytes>maximum_bytes{return PluginCloseStep::Pending{released_items:0,released_bytes:0};}
@@ -13559,6 +13872,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn return_one<const N:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>,maximum_items:usize,maximum_bytes:usize)->Result<PluginCloseStep,semio_framework_value::ValueError>{
             let pending=|accepted|PluginCloseStep::Pending{released_items:usize::from(accepted),released_bytes:0};
             if maximum_items==0||maximum_bytes==0{return Ok(pending(false));}
+            if let Some(genesis)=self.genesis.as_mut(){
+                let step=genesis.return_one(parent)?;
+                if step==PluginCloseStep::Complete{self.genesis=None;return Ok(pending(true));}
+                return Ok(step);
+            }
             if let Some(op)=self.ops.last_mut(){if op.capacity()!=0{return parent.return_bytes(op,1).map(pending);}self.ops.pop();return Ok(pending(true));}
             if self.ops.capacity()!=0{return parent.return_empty_vec(&mut self.ops,1).map(pending);}
             if let Some(label)=self.labels.last_mut(){return match label.return_owned_cell_one(parent,1)?{Some(accepted)=>Ok(pending(accepted)),None=>{self.labels.pop();Ok(pending(true))}};}
@@ -13569,6 +13887,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         /// 📏️ A caller reserves the first complete allocation before requesting its return.
         pub(crate) fn next_close_byte_demand(&self)->usize{
+            if let Some(genesis)=self.genesis.as_ref(){return genesis.next_close_byte_demand();}
             if let Some(op)=self.ops.last(){return op.capacity().max(1);}
             if self.ops.capacity()!=0{return self.ops.capacity().checked_mul(std::mem::size_of::<Vec<u8>>()).expect("operation vector layout");}
             if let Some(label)=self.labels.last(){return label.next_owned_close_byte_demand().max(1);}
@@ -13579,7 +13898,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// 🫙️ [`Self::of`] with no op yet and room for `capacity`: a stepped finalize fills one emission across turns through
         /// [`Self::push`].
         pub fn open(slot: impl Into<String>, child_id: impl Into<String>, capacity: usize) -> ChildEmit {
-            ChildEmit { owner: String::new(), slot: slot.into(), child_id: child_id.into(), ops: Vec::with_capacity(capacity), op_schema: SchemaId("child.empty".to_string()), labels: Vec::with_capacity(capacity) }
+            ChildEmit { genesis: None, owner: String::new(), slot: slot.into(), child_id: child_id.into(), ops: Vec::with_capacity(capacity), op_schema: SchemaId("child.empty".to_string()), labels: Vec::with_capacity(capacity) }
         }
 
         /// ➕️ Appends one op, its label captured before encoding; the first op names `op_schema`.
@@ -13596,6 +13915,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
+        /// 🎭️ Preview transfers only the original source cursor into bounded wire preparation.
+        pub fn prepare_child_preview_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,Fault>{
+            if maximum_items!=0&&maximum_bytes>=std::mem::size_of::<Vec<()>>(){
+                if self.child_preparations.front_mut().is_some_and(ChildEmitPreparation::begin_preview){return Ok(ChildEmitPreparationStep::Pending);}
+            }
+            self.prepare_child_one(maximum_items,maximum_bytes)
+        }
         /// 📨️ Advances one owned child preparation before a caller can publish its wire prefix.
         pub fn prepare_child_one(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,Fault>{
             if maximum_items==0||maximum_bytes==0{return Ok(ChildEmitPreparationStep::Pending);}
@@ -13608,18 +13934,29 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 return Ok(ChildEmitPreparationStep::Ready);
             };
-            let output_needs_capacity=self.child_emits.len()==self.child_emits.capacity();
+            let owned_birth=preparation.next_owned_capacity_byte_demand();
+            let owned=owned_birth!=0;
+            let output_needs_capacity=if owned{self.owned_child_emits.len()==self.owned_child_emits.capacity()}else{self.child_emits.len()==self.child_emits.capacity()};
             if output_needs_capacity{
-                let demand=self.child_emits.capacity().checked_add(self.child_emits.len().checked_add(1).ok_or_else(||Fault::from("child-emission-output-layout-overflow"))?).and_then(|cells|cells.checked_mul(std::mem::size_of::<ChildEmit>())).ok_or_else(||Fault::from("child-emission-output-layout-overflow"))?;
+                let(capacity,length,cell)=if owned{(self.owned_child_emits.capacity(),self.owned_child_emits.len(),std::mem::size_of::<OwnedChildEmit>())}else{(self.child_emits.capacity(),self.child_emits.len(),std::mem::size_of::<ChildEmit>())};
+                let demand=capacity.checked_add(length.checked_add(1).ok_or_else(||Fault::from("child-emission-output-layout-overflow"))?).and_then(|cells|cells.checked_mul(cell)).ok_or_else(||Fault::from("child-emission-output-layout-overflow"))?;
                 if demand>maximum_bytes{return Ok(ChildEmitPreparationStep::Pending);}
-                self.child_emits.try_reserve_exact(1).map_err(|_|Fault::from("child-emission-output-allocation-refused"))?;
+                if owned{self.owned_child_emits.try_reserve_exact(1).map_err(|_|Fault::from("child-emission-output-allocation-refused"))?;}else{self.child_emits.try_reserve_exact(1).map_err(|_|Fault::from("child-emission-output-allocation-refused"))?;}
+                return Ok(ChildEmitPreparationStep::Pending);
             }
-            if preparation.owner_cell_bytes()>maximum_bytes{return Ok(ChildEmitPreparationStep::Pending);}
+            if preparation.owner_cell_bytes().saturating_add(owned_birth)>maximum_bytes{return Ok(ChildEmitPreparationStep::Pending);}
             match preparation.step(maximum_items,maximum_bytes)?{
                 ChildEmitPreparationStep::Ready=>{
-                    let child=preparation.take_ready().ok_or_else(||Fault::from("child-emission-ready-without-complete-owned-prefix"))?;
+                    if owned{
+                        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:owned_birth,maximum_release_bytes:0,maximum_depth:64};
+                        let Some((metadata,batch,_))=preparation.take_ready_owned(grant).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending)};
+                        self.owned_child_emits.push(OwnedChildEmit::new(metadata,batch));
+                    }else{
+                        let child=preparation.take_ready().ok_or_else(||Fault::from("child-emission-ready-without-complete-owned-prefix"))?;
+                        self.child_emits.push(child);
+                    }
                     if !preparation.terminal_is_empty(){return Err(Fault::from("child-emission-ready-retains-source-owners"));}
-                    self.child_emits.push(child);self.child_preparations.pop_front();
+                    self.child_preparations.pop_front();
                     Ok(ChildEmitPreparationStep::Pending)
                 },
                 step=>Ok(step),
@@ -13629,8 +13966,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// 📏️ Exact first pending source allocation demand, with its fixed preparation cell.
         pub fn next_child_preparation_byte_demand(&mut self)->usize{
             let backing=self.child_preparations.capacity().checked_mul(std::mem::size_of::<ChildEmitPreparation>()).expect("preparation queue layout");
-            let output=if self.child_emits.len()==self.child_emits.capacity(){self.child_emits.capacity().saturating_add(self.child_emits.len().saturating_add(1)).saturating_mul(std::mem::size_of::<ChildEmit>())}else{0};
-            match self.child_preparations.front_mut(){Some(preparation)=>preparation.next_close_byte_demand().max(preparation.owner_cell_bytes()).max(output),None=>backing}
+            match self.child_preparations.front_mut(){Some(preparation)=>{
+                let birth=preparation.next_owned_capacity_byte_demand();
+                let(capacity,length,cell)=if birth!=0{(self.owned_child_emits.capacity(),self.owned_child_emits.len(),std::mem::size_of::<OwnedChildEmit>())}else{(self.child_emits.capacity(),self.child_emits.len(),std::mem::size_of::<ChildEmit>())};
+                let output=if length==capacity{capacity.saturating_add(length.saturating_add(1)).saturating_mul(cell)}else{0};
+                preparation.next_close_byte_demand().max(preparation.owner_cell_bytes().saturating_add(birth)).max(output)
+            },None=>backing}
         }
 
         /// 🧹️ Retires at most one bounded child-emission step while the concrete app keeps ownership of its typed lanes.
@@ -13657,6 +13998,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 self.child_preparations=std::collections::VecDeque::new();
                 return Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
             }
+            if let Some(child)=self.owned_child_emits.last_mut(){
+                return Some(match child.close_step(maximum_items,maximum_bytes){
+                    Ok(PluginCloseStep::Complete)=>{self.owned_child_emits.pop();PluginCloseStep::Pending{released_items:1,released_bytes:0}},
+                    Ok(step)=>step,
+                    Err(_)=>PluginCloseStep::Blocked{reason:"applying child source retains its exact typed retirement refusal"},
+                });
+            }
+            if self.owned_child_emits.capacity()!=0{
+                let bytes=self.owned_child_emits.capacity().checked_mul(std::mem::size_of::<OwnedChildEmit>()).expect("applying output vector layout");
+                if maximum_items==0||bytes>maximum_bytes{return Some(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+                self.owned_child_emits=Vec::new();
+                return Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+            }
             if let Some(child)=self.child_emits.last_mut(){
                 let step=child.close_one(maximum_items,maximum_bytes);
                 if step==PluginCloseStep::Complete{
@@ -13677,7 +14031,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         /// 🎟️ Returns ready child backing to the caller's persistent parent; typed preparations retain their original physical close contract.
         pub fn return_child_one<const N:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>,maximum_items:usize,maximum_bytes:usize)->Result<Option<PluginCloseStep>,semio_framework_value::ValueError>{
-            if !self.child_preparations.is_empty()||self.child_preparations.capacity()!=0{return Ok(self.close_child_one(maximum_items,maximum_bytes));}
+            if !self.child_preparations.is_empty()||self.child_preparations.capacity()!=0||!self.owned_child_emits.is_empty(){return Ok(self.close_child_one(maximum_items,maximum_bytes));}
+            if self.owned_child_emits.capacity()!=0{return parent.return_empty_vec(&mut self.owned_child_emits,1).map(|accepted|Some(PluginCloseStep::Pending{released_items:usize::from(accepted),released_bytes:0}));}
             if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
             if let Some(child)=self.child_emits.last_mut(){let step=child.return_one(parent,1,maximum_bytes)?;if step==PluginCloseStep::Complete{self.child_emits.pop();return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:0}));}return Ok(Some(step));}
             if self.child_emits.capacity()!=0{return parent.return_empty_vec(&mut self.child_emits,1).map(|accepted|Some(PluginCloseStep::Pending{released_items:usize::from(accepted),released_bytes:0}));}
@@ -14275,6 +14630,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`) are internal action ids
     ///   driving the above.
     pub trait ArtifactApp: Default + Send + 'static {
+        /// 🎟️ Declares the exact first-party scaffold birth for an applying parent mutation source.
+        fn owned_mutation_batch_birth_bytes()->Option<usize>{None}
+        /// 🪵️ Retains the original parent source on every refused or unfunded admission.
+        fn admit_owned_mutation_batch(_values:&mut Option<Vec<Self::Mutation>>,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{Ok(None)}
         /// 🪪️ Exact author-owned coordinate stamped into every document envelope.
         const DIALECT: Dialect;
         /// 🧩️ Projects actual loaded child references; an undeclared owner grants no restore authority.
@@ -15265,6 +15624,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         pub history_edit: Option<protocol::PresenceHistoryEdit>,
     }
 
+    /// 💰️ The close caller admits the exact physical release against the declared store allocation ceiling.
+    pub fn artifact_close_release_grant(demand: usize, ordinary_bytes: usize) -> Result<usize, Fault> {
+        if demand > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES {
+            return Err(plugin_sdk_fault("artifact close physical allocation exceeds its declared admission"));
+        }
+        Ok(ordinary_bytes.max(demand))
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum PluginCloseStep {
         Pending { released_items: usize, released_bytes: usize },
@@ -15286,6 +15653,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// futures its async methods return, which stay `?Send` per the guest ruling.
     #[dyn_enum]
     pub trait PluginApp: Send + 'static {
+        /// 📏️ Exact physical allocation needed by the currently retained close authority.
+        fn next_close_byte_demand(&self) -> usize;
+        /// 🌱️ Exact physical allocation needed by the selected live maintenance authority.
+        fn next_maintenance_byte_demand(&self) -> usize;
         /// 🪪️ Binds the host's live instance identity before any operation-scoped work starts.
         async fn bind_instance_id(&mut self, _instance_id: u32) {}
         /// 🧍️ Binds the actor admitted for this instance at its open: who it acts as from then on — across a reload too —
@@ -16551,6 +16922,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
 
+        fn can_push(&self) -> bool { self.allocation_admitted && self.items.len() < self.capacity }
+
         fn pop(&mut self) -> Option<T> {
             self.items.pop_front()
         }
@@ -17534,6 +17907,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         pub ui_axes: Option<(semio_framework_ui_locale::Locale, semio_framework_ui_locale::Terminology)>,
         pub parent_document_id: String,
         pub canonical_base_revision: [u8; 32],
+        pub authoring_seed: String,
         pub snapshot: std::sync::Arc<A::Snapshot>,
         pub config: std::sync::Arc<A::Config>,
         pub history: std::sync::Arc<HistoryView>,
@@ -17604,6 +17978,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct BoundedConfigRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
     impl<T> BoundedConfigRetirementFactory<T> {
@@ -17619,6 +17994,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<T>) -> usize { std::mem::size_of::<BoundedConfigValueRetirement<std::sync::Arc<T>>>() }
+
         fn retire(&self, snapshot: std::sync::Arc<T>) -> Box<dyn store::ErasedSnapshotRetirement> {
             Box::new(BoundedConfigValueRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
         }
@@ -17650,6 +18027,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         std::sync::Arc::new(BoundedConfigPreparationFactory::<C, M> { prefix, maximum_bytes, marker: std::marker::PhantomData })
     }
 
+    /// 🌱️ Prices the exact bounded preparation factory Arc and original retirement ticket.
+    pub fn bounded_config_store_one_item_preparation_factory_birth_bytes<C: 'static, M: 'static>() -> usize {
+        semio_framework_value::factory_constructor_birth_bytes::<BoundedConfigPreparationFactory<C, M>>(0)
+    }
+
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct BoundedConfigPreparationFactory<C, M> {
         prefix: &'static str,
         maximum_bytes: usize,
@@ -17739,7 +18122,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             admit_bounded_config_mutation::<C, M>(self.prefix, self.maximum_bytes, &mutation)?;
             let inverse = Mutation::inverse(&mutation, base.get()).map_err(semio_framework_value::ValueError::into_message)?;
             let diff = Mutation::diff(&mutation, base.get()).into_parts().0;
-            let post = MutationDiff::apply(&diff, base.get()).map_err(|_| format!("{}-diff-apply-failed", self.prefix))?;
+            let post = protocol::apply_diff(&diff, base.get()).map_err(|_| format!("{}-diff-apply-failed", self.prefix))?;
             let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-missing", self.prefix))?;
             let edit = authority.next_edit(mutation, inverse);
             let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
@@ -17799,6 +18182,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<C> + OpBinary + OpText + Send + 'static,
     {
         Box::new(ArtifactDocumentStoreDisposer::<C, M>::new())
+    }
+
+    /// 🧮️ Prices the exact bounded document constructor without creating a catalog.
+    pub fn bounded_document_store_owners_birth_bytes<P, M>() -> usize
+    where
+        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        store::bounded_artifact_store_owners_birth_bytes::<P, M>()
     }
 
     /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
@@ -17927,11 +18319,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             if self.envelope_retirement.is_none() {
                 if let Some(envelope) = self.envelope.take() {
-                    let mut owners = bounded_document_store_owners::<P, M>();
-                    if owners.close_uninstalled_owners_step(1)? != store::SnapshotRetirementStep::Complete || !owners.uninstalled_owners_terminal_is_empty() {
-                        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "uninstalled bounded document store disposer did not close exactly"));
-                    }
-                    *self.envelope_retirement = Some(owners.retire_envelope(envelope));
+                    let owners = bounded_document_store_owners::<P, M>();
+                    *self.envelope_retirement = Some(owners.retire_envelope_uninstalled(envelope).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message))?);
                     return Ok(false);
                 }
             }
@@ -17968,6 +18357,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + Send + Sync + 'static,
         M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
     {
+        fn next_close_byte_demand(&self) -> usize {
+            self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+        }
+
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             if cx.operation() != self.operation || cx.generation() != self.generation {
                 self.fail(b"bounded-store.initializer-stale-authority");
@@ -18324,7 +18717,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             match owner.close_owned_store_step(maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.document-store-close-over-budget"), "document store close exceeded its exact one-owner grant")),
-                store::SnapshotRetirementStep::Blocked => { static LOGGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false); if !LOGGED.swap(true,std::sync::atomic::Ordering::Relaxed){eprintln!("[DEBUG] document close blocked phase={} displaced={}",owner.close_owned_phase_witness(),owner.close_displaced_witness());} Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }) },
+                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }),
                 store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Complete),
             }
         }
@@ -18354,6 +18747,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn take_boxed_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
             self.take_candidate().map(Box::new)
         }
+        /// 📐️ Exact indivisible physical extent owed by the next retained close action.
+        fn next_close_byte_demand(&self) -> usize;
         fn begin_close(&mut self);
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         fn terminal_is_empty(&self) -> bool;
@@ -18378,6 +18773,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Self { authority: std::mem::ManuallyDrop::new(Some(authority)), cancel_requested: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), terminal_handoff: false }
         }
 
+        /// 📏️ Publish domain allocation demand without spending work or granting its release.
+        pub fn next_close_byte_demand(&self) -> usize {
+            self.authority.as_ref().map_or(0, |authority| if authority.terminal_is_empty() { std::mem::size_of_val(authority.as_ref()) } else { authority.next_close_byte_demand() })
+        }
+
         fn cancel_signal(&self) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
             std::sync::Arc::clone(&self.cancel_requested)
         }
@@ -18389,22 +18789,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn take_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
             let candidate = self.authority.as_mut()?.take_boxed_candidate()?;
             self.terminal_handoff = true;
-            if self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
-                drop(self.authority.take());
-            }
             Some(candidate)
         }
 
-        /// 📈️ The initializer's `(operations folded, operations to fold)`; `(0, 0)` once it handed its store off.
+        /// 📈️ The initializer's `(operations folded, operations to fold)` while its authority is retained.
         pub(crate) fn progress(&self) -> (u64, u64) {
             self.authority.as_ref().map_or((0, 0), |authority| authority.progress())
         }
 
-        fn release_terminal_failure(&mut self) -> bool {
+        fn accept_terminal_failure(&mut self) -> bool {
             if !self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
                 return false;
             }
-            drop(self.authority.take());
             self.terminal_handoff = true;
             true
         }
@@ -18419,6 +18815,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Send,
         Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + Send,
     {
+        fn next_close_byte_demand(&self) -> usize { ArtifactStoreInitializationJob::next_close_byte_demand(self) }
+
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             match self.authority.as_mut() {
                 Some(authority) => {
@@ -18447,16 +18845,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let Some(authority) = self.authority.as_mut() else {
                 return if self.terminal_handoff { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked };
             };
-            match authority.close_step(maximum_items, maximum_bytes) {
-                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            let step = if authority.terminal_is_empty() { Ok(PluginCloseStep::Complete) } else { authority.close_step(maximum_items, maximum_bytes) };
+            match step {
+                Ok(PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= maximum_items && released_bytes <= maximum_bytes => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                Ok(PluginCloseStep::Pending { .. }) => semio_framework_job::InteractiveJobCloseStep::Blocked,
                 Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
                 Ok(PluginCloseStep::Complete) if authority.terminal_is_empty() => {
-                    if maximum_items == 0 {
+                    let released_bytes = std::mem::size_of_val(authority.as_ref());
+                    if maximum_items == 0 || maximum_bytes < released_bytes {
                         return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
                     }
                     drop(self.authority.take());
                     self.terminal_handoff = true;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
                 }
                 Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
             }
@@ -18782,24 +19183,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
 
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            let mut state = self.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-close-busy"), "reserved job close authority is busy or poisoned"))?;
-            let Some(inner) = state.inner.as_mut() else { return Ok(PluginCloseStep::Complete) };
-            let step = ArtifactReservedJob::close_step(&mut **inner, maximum_items, maximum_bytes)?;
-            if step == PluginCloseStep::Complete {
-                if !ArtifactReservedJob::terminal_is_empty(&**inner) {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-terminal-not-empty"), "reserved job reported Complete without an exact terminal-empty witness"));
-                }
-                let terminal = state.inner.take();
-                state.operation = None;
-                drop(state);
-                drop(terminal);
-            }
-            Ok(step)
+        fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<PluginCloseStep,Fault>{
+            let mut state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner(),Err(_)=>return Ok(PluginCloseStep::Blocked{reason:"original reserved producer awaits its owned callback"})};
+            let Some(inner)=state.inner.as_mut()else{state.operation=None;return Ok(PluginCloseStep::Complete);};
+            if ArtifactReservedJob::terminal_is_empty(&**inner){let bytes=std::mem::size_of_val(&**inner);if maximum_items==0||maximum_bytes<bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}drop(state.inner.take());state.operation=None;return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});}
+            let step=ArtifactReservedJob::close_step(&mut**inner,maximum_items,maximum_bytes)?;
+            if step==PluginCloseStep::Complete&&!ArtifactReservedJob::terminal_is_empty(&**inner){return Err(plugin_sdk_fault("reserved producer reported Complete without terminal ownership"));}
+            Ok(if step==PluginCloseStep::Complete{PluginCloseStep::Pending{released_items:1,released_bytes:0}}else{step})
+        }
+
+        fn next_close_byte_demand(&self)->usize{
+            match self.state.try_lock(){Ok(state)=>state.inner.as_ref().map_or(0,|inner|if ArtifactReservedJob::terminal_is_empty(&**inner){std::mem::size_of_val(&**inner)}else{semio_framework_job::InteractiveJob::next_close_byte_demand(&**inner)}),Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner().inner.as_ref().map_or(0,|inner|if ArtifactReservedJob::terminal_is_empty(&**inner){std::mem::size_of_val(&**inner)}else{semio_framework_job::InteractiveJob::next_close_byte_demand(&**inner)}),Err(_)=>usize::MAX}
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.state.try_lock().is_ok_and(|state| state.inner.is_none() && state.operation.is_none())
+            match self.state.try_lock(){Ok(state)=>state.inner.is_none()&&state.operation.is_none(),Err(std::sync::TryLockError::Poisoned(state))=>{let state=state.into_inner();state.inner.is_none()&&state.operation.is_none()},Err(_)=>false}
         }
 
         fn begin_close(&mut self) {
@@ -18834,6 +19232,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }
 
+        fn next_close_byte_demand(&self)->usize{ArtifactReservedToolJob::next_close_byte_demand(self)}
+
         fn terminal_is_empty(&self) -> bool {
             ArtifactReservedToolJob::terminal_is_empty(self)
         }
@@ -18847,7 +19247,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     macro_rules! framework_reserved_job {
-        ($job:ident, $factory:ident, $route:literal, $route_index:literal, $raw:literal, $items:literal, $work:literal, $output:literal) => {
+        ($job:ident, $factory:ident, $route:literal, $route_index:literal, $raw:literal, $items:literal, $work:literal, $output:literal, lanes: [$($lane:ident),+]) => {
             pub struct $job {
                 raw: Vec<u8>,
                 envelope_cursor: usize,
@@ -19014,35 +19414,35 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 type Owner = A;
                 const TOOL_IDS: &'static [&'static str] = &[$route];
                 const DOCUMENT_SCHEMA: &'static str = A::DOCUMENT_SCHEMA;
-                const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: $route, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+                const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: $route, lanes: &[$(ArtifactToolPublicationLane::$lane),+] }];
             }
         };
     }
 
-    framework_reserved_job!(FrameworkUndoJob, FrameworkUndoJobFactory, "undo", 0, 1_024, 16, 1_024, 1_024);
-    framework_reserved_job!(FrameworkRedoJob, FrameworkRedoJobFactory, "redo", 1, 1_024, 16, 1_024, 1_024);
-    framework_reserved_job!(FrameworkCommitCheckpointJob, FrameworkCommitCheckpointJobFactory, "commitCheckpoint", 2, 16_384, 128, 4_096, 16_384);
-    framework_reserved_job!(FrameworkCreateAlternativeJob, FrameworkCreateAlternativeJobFactory, "createAlternative", 3, 8_192, 32, 4_096, 8_192);
-    framework_reserved_job!(FrameworkSwitchAlternativeJob, FrameworkSwitchAlternativeJobFactory, "switchAlternative", 4, 8_192, 32, 4_096, 8_192);
-    framework_reserved_job!(FrameworkCheckoutCheckpointJob, FrameworkCheckoutCheckpointJobFactory, "checkoutCheckpoint", 5, 8_192, 32, 4_096, 8_192);
-    framework_reserved_job!(FrameworkRevertToCommandJob, FrameworkRevertToCommandJobFactory, "revertToCommand", 6, 8_192, 32, 256, 8_192);
-    framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, 1_048_576);
-    framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, 1_048_576);
-    framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, 1_048_576, 4_096, 4_096, 4_194_304);
+    framework_reserved_job!(FrameworkUndoJob, FrameworkUndoJobFactory, "undo", 0, 1_024, 16, 1_024, 1_024, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkRedoJob, FrameworkRedoJobFactory, "redo", 1, 1_024, 16, 1_024, 1_024, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkCommitCheckpointJob, FrameworkCommitCheckpointJobFactory, "commitCheckpoint", 2, 16_384, 128, 4_096, 16_384, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkCreateAlternativeJob, FrameworkCreateAlternativeJobFactory, "createAlternative", 3, 8_192, 32, 4_096, 8_192, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkSwitchAlternativeJob, FrameworkSwitchAlternativeJobFactory, "switchAlternative", 4, 8_192, 32, 4_096, 8_192, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkCheckoutCheckpointJob, FrameworkCheckoutCheckpointJobFactory, "checkoutCheckpoint", 5, 8_192, 32, 4_096, 8_192, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkRevertToCommandJob, FrameworkRevertToCommandJobFactory, "revertToCommand", 6, 8_192, 32, 256, 8_192, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, 1_048_576, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, 1_048_576, lanes: [Artifact, Child]);
+    framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, 1_048_576, 4_096, 4_096, 4_194_304, lanes: [Artifact, Child]);
     // 🔌️ Route ordinal 10. `dispatch_import_media` still resolves `qualified_tool_proof("import-media")`
     // and admits its exact wire against it, so without this registration EVERY app's `import_media`
     // answers `interactive-job.missing-factory` (restored: it was dropped in 860e015bf6 while all
     // four of its call sites stayed — ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608);
-    framework_reserved_job!(FrameworkNoteShellCommandJob, FrameworkNoteShellCommandJobFactory, "noteShellCommand", 11, 65_536, 64, 4_096, 65_536);
-    framework_reserved_job!(FrameworkSetHistoryCommandFilterJob, FrameworkSetHistoryCommandFilterJobFactory, "setHistoryCommandFilter", 12, 4_096, 16, 1_024, 4_096);
-    framework_reserved_job!(FrameworkRecordTutorialJob, FrameworkRecordTutorialJobFactory, "recordTutorial", 13, 4_096, 16, 1_024, 4_096);
-    framework_reserved_job!(FrameworkClearSelectionJob, FrameworkClearSelectionJobFactory, "clearSelection", 14, 4_096, 4_096, 256, 65_536);
-    framework_reserved_job!(FrameworkInteractionHoverJob, FrameworkInteractionHoverJobFactory, "interactionHover", 15, 65_536, 4_096, 256, 65_536);
-    framework_reserved_job!(FrameworkInteractionSelectJob, FrameworkInteractionSelectJobFactory, "interactionSelect", 16, 65_536, 4_096, 256, 65_536);
-    framework_reserved_job!(FrameworkSelectAllJob, FrameworkSelectAllJobFactory, "selectAll", 17, 4_096, 4_096, 256, 65_536);
-    framework_reserved_job!(FrameworkSetInteractionGranularityJob, FrameworkSetInteractionGranularityJobFactory, "setInteractionGranularity", 18, 16_384, 64, 1_024, 16_384);
-    framework_reserved_job!(FrameworkSetSelectionModeJob, FrameworkSetSelectionModeJobFactory, "setSelectionMode", 19, 16_384, 64, 1_024, 16_384);
+    framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608, lanes: [Artifact, Child]);
+    framework_reserved_job!(FrameworkNoteShellCommandJob, FrameworkNoteShellCommandJobFactory, "noteShellCommand", 11, 65_536, 64, 4_096, 65_536, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkSetHistoryCommandFilterJob, FrameworkSetHistoryCommandFilterJobFactory, "setHistoryCommandFilter", 12, 4_096, 16, 1_024, 4_096, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkRecordTutorialJob, FrameworkRecordTutorialJobFactory, "recordTutorial", 13, 4_096, 16, 1_024, 4_096, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkClearSelectionJob, FrameworkClearSelectionJobFactory, "clearSelection", 14, 4_096, 4_096, 256, 65_536, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkInteractionHoverJob, FrameworkInteractionHoverJobFactory, "interactionHover", 15, 65_536, 4_096, 256, 65_536, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkInteractionSelectJob, FrameworkInteractionSelectJobFactory, "interactionSelect", 16, 65_536, 4_096, 256, 65_536, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkSelectAllJob, FrameworkSelectAllJobFactory, "selectAll", 17, 4_096, 4_096, 256, 65_536, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkSetInteractionGranularityJob, FrameworkSetInteractionGranularityJobFactory, "setInteractionGranularity", 18, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
+    framework_reserved_job!(FrameworkSetSelectionModeJob, FrameworkSetSelectionModeJobFactory, "setSelectionMode", 19, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
 
     /// 🎛️ The one place a framework-reserved route id becomes its retained job. Deliberately a plain
     /// non-`async` fn OUTSIDE `dispatch_framework_reserved_action`'s generator: every arm erases into
@@ -20145,6 +20545,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     struct FrameworkReservedCommitPermit {
         operation: semio_framework_job::Operation,
         lease: ToolCancellationLease,
+        producer_fault: Option<ArtifactBoundedToolFault>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -20417,6 +20818,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         pub(crate) fn is_empty(&self) -> bool {
             self.occupied == 0
+        }
+
+        /// 🪵️ Borrows the full backing extent of an already empty retained registry.
+        fn empty_backing_byte_demand(&self) -> Option<usize> { self.is_empty().then_some(std::mem::size_of_val(self.slots.as_ref())) }
+
+        /// 🧺️ Retains every empty slot until its whole original allocation is funded.
+        fn close_empty_backing_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            let Some(bytes) = self.empty_backing_byte_demand() else { return PluginCloseStep::Blocked { reason: "registry backing still owns an exact active slot" }; };
+            if bytes == 0 { return PluginCloseStep::Complete; }
+            if maximum_items == 0 || maximum_bytes < bytes { return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+            self.slots = Box::default();
+            self.allocation_admitted = false;
+            PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }
         }
 
         /// 🔢️ Admitted entries — the occupied mask's population.
@@ -20737,6 +21151,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         ephemeral:Option<EphemeralEmit<A>>,
         completion:Option<ArtifactToolCompletion<A>>,
         maximum_bytes:usize,
+        wire_mode:bool,
         closing:bool,
     }
     impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreviewJob<A>{
@@ -20747,7 +21162,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let Some(emit)=self.emit.as_mut()else{return StepOutcome::Complete(CommitCandidate{state:RetainedJobPayload::empty(JobPayloadStream::CommitState),output:RetainedJobPayload::empty(JobPayloadStream::CommitOutput)})};
             cx.set_stage("agent-child-emission-preparation");
             let demand=emit.next_child_preparation_byte_demand().max(1);
-            let step=if demand>self.maximum_bytes{Err(plugin_sdk_fault("child emission exceeds its captured preview output allocation authority"))}else{emit.prepare_child_one(1,demand)};
+            let step=if demand>self.maximum_bytes{Err(plugin_sdk_fault("child emission exceeds its captured preview output allocation authority"))}else if self.wire_mode{emit.prepare_child_preview_one(1,demand)}else{emit.prepare_child_one(1,demand)};
             cx.consume_fuel(1);
             match step{
                 Ok(ChildEmitPreparationStep::Pending)=>StepOutcome::Yield,
@@ -21352,6 +21767,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Rejected(Fault),
     }
 
+    /// 🧮️ Prices the original native Arc frame without creating a replacement ownership wrapper.
+    fn original_reserved_arc_frame_bytes<T>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("original reserved Arc layout").0.pad_to_align().size()}
+
     struct MountedTypedCommandFullOperation<A: ArtifactApp> {
         verb: String,
         meta: ActionMeta,
@@ -21367,6 +21785,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         publication_lanes: &'static [ArtifactToolPublicationLane],
         session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
         session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
+        reserved_producer: Option<ArtifactReservedToolJob>,
         completion: Option<ArtifactToolCompletion<A>>,
         raw_input: Option<ArtifactToolRawInput>,
         output_chunks: Option<ArtifactOutputChunks>,
@@ -21376,6 +21795,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         publication: Option<ArtifactToolCompletionValue<A>>,
         pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
         pending_child_publication: Option<PendingChildGroupPublication<A>>,
+        owned_child_group: Option<u64>,
+        owned_child_committed: bool,
+        owned_child_result_pending: bool,
         captured_child_content: Option<std::sync::Arc<ChildContentView>>,
         captured_child_content_generation: u64,
         result_page: Option<TypedOperationResultPage>,
@@ -21589,10 +22011,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.artifact-publication-ack"), "artifact-store result ACK lost its exact pending publication authority"));
             }
-            if lane == TypedOperationResultLane::Child && !self.pending_child_publication.as_mut().is_some_and(PendingChildGroupPublication::acknowledge) {
+            if lane == TypedOperationResultLane::Child && !self.owned_child_committed && !self.pending_child_publication.as_mut().is_some_and(PendingChildGroupPublication::acknowledge) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-publication-ack"), "child-group result ACK lost its exact committed publication authority"));
             }
             self.result_page = None;
+            if lane == TypedOperationResultLane::Child && self.owned_child_committed { self.owned_child_result_pending = false; }
             self.result_page_presented = false;
             self.result_sequence = self.result_sequence.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-sequence"), "typed-operation result sequence exhausted"))?;
             self.stage = if matches!(lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault | TypedOperationResultLane::Download) {
@@ -21601,6 +22024,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 MountedTypedCommandFullOperationStage::Publishing
             };
             Ok(true)
+        }
+
+        fn reserved_close_byte_demand(&self)->usize{
+            if let Some(producer)=self.reserved_producer.as_ref(){if !producer.terminal_is_empty(){return producer.next_close_byte_demand();}if std::sync::Arc::strong_count(&producer.state)!=1{return 0;}return original_reserved_arc_frame_bytes::<std::sync::Mutex<ArtifactReservedToolJobState>>();}
+            if self.publication.is_none(){if let Some(completion)=self.completion.as_ref(){if completion.inner.try_lock().is_err(){return 0;}}}
+            if self.publication.is_none(){if let Some(completion)=self.completion.as_ref(){if std::sync::Arc::strong_count(&completion.inner)==1{return original_reserved_arc_frame_bytes::<std::sync::Mutex<Option<ArtifactToolCompletionValue<A>>>>();}}}
+            0
         }
 
         fn retire_string_scalar(value: &mut String, maximum_bytes: usize) -> Option<PluginCloseStep> {
@@ -21647,6 +22077,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 return Ok(step);
             }
+            if let Some(producer)=self.reserved_producer.as_mut(){
+                if !producer.terminal_is_empty(){producer.begin_close();return producer.close_step(maximum_items.min(1),maximum_bytes);}
+                if std::sync::Arc::strong_count(&producer.state)!=1{return Ok(PluginCloseStep::Blocked{reason:"original reserved producer still has its worker alias"});}
+                let bytes=original_reserved_arc_frame_bytes::<std::sync::Mutex<ArtifactReservedToolJobState>>();if maximum_items==0||maximum_bytes<bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}drop(self.reserved_producer.take());return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+            }
+            if self.publication.is_none(){if let Some(completion)=self.completion.as_ref(){let mut value=match completion.inner.try_lock(){Ok(value)=>value,Err(std::sync::TryLockError::Poisoned(value))=>value.into_inner(),Err(_)=>return Ok(PluginCloseStep::Blocked{reason:"original completion remains borrowed during bounded retirement"})};if value.is_some(){if maximum_items==0{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}self.publication=value.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:0});}}}
             if let Some(publication) = self.publication.as_mut() {
                 match publication {
                     ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
@@ -21729,9 +22165,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if maximum_items == 0 && (self.output_chunks.is_some() || self.completion.is_some() || self.cancellation_lease.is_some()) {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            if self.output_chunks.take().is_some() || self.completion.take().is_some() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
+            if self.output_chunks.take().is_some(){return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:0});}
+            if let Some(completion)=self.completion.as_ref(){if std::sync::Arc::strong_count(&completion.inner)!=1{return Ok(PluginCloseStep::Blocked{reason:"original completion still has its producer alias"});}let bytes=original_reserved_arc_frame_bytes::<std::sync::Mutex<Option<ArtifactToolCompletionValue<A>>>>();if maximum_items==0||maximum_bytes<bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}drop(self.completion.take());return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});}
             if self.captured_child_content.take().is_some() {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -21751,10 +22186,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 && self.publication.is_none()
                 && self.pending_artifact_publication.is_none()
                 && self.pending_child_publication.is_none()
+                && self.owned_child_group.is_none()
                 && self.captured_child_content.is_none()
                 && self.result_page.is_none()
                 && self.raw_input.is_none()
                 && self.output_chunks.is_none()
+                && self.reserved_producer.is_none()
                 && self.completion.is_none()
                 && self.cancellation_lease.is_none()
         }
@@ -23268,6 +23705,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
+    fn artifact_store_initialization_release_bytes(demand: usize) -> Result<usize, Fault> {
+        if demand > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-release-admission"), "initializer physical allocation exceeds the admitted document extent"));
+        }
+        Ok(demand.max(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES))
+    }
+
     pub(crate) struct ActiveArtifactStoreReplacement<P, Mutation, M>
     where
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
@@ -23394,6 +23838,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
         }
 
+        /// 🧪️ Borrows the terminal retained store frame through its exact replacement authority.
+        #[cfg(test)]
+        pub(crate) fn terminal_store_frame_bytes(&self) -> Option<usize> {
+            if !matches!(self.state, ActiveArtifactStoreReplacementState::RetiringRejectedCandidate | ActiveArtifactStoreReplacementState::RetiringCommittedStore) { return None; }
+            self.retained_store.as_ref().filter(|owner| owner.close_owned_store_terminal_is_empty()).map(|owner| std::mem::size_of_val(owner.as_ref()))
+        }
+
         fn begin_members(&mut self, expected: usize, expires_at_us: u64) -> Result<bool, Fault> {
             if self.state != ActiveArtifactStoreReplacementState::AwaitingMembers {
                 return Ok(false);
@@ -23430,7 +23881,27 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
 
-        fn drive_member_open(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        fn member_open_birth_bytes(&self) -> Result<usize, store::MemberOpenDiagnostic> {
+            if self.active_member_open.is_some() { return Ok(0); }
+            let ingress = if let Some(ingress) = self.active_member_ingress.as_ref() { Some(ingress) } else {
+                self.member_ingress.as_ref().and_then(|registry| registry.entry(self.next_member_ordinal))
+            };
+            let Some(request) = ingress.and_then(|ingress| ingress.request.as_ref()) else { return Ok(0); };
+            let bytes = M::open_birth_bytes(request)?;
+            if bytes > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(store::MemberOpenDiagnostic::Capacity); }
+            Ok(bytes)
+        }
+
+        fn member_ingress_release_bytes(&self) -> Result<usize, store::MemberOpenDiagnostic> {
+            if self.active_member_open.is_some() || self.active_member_ingress.is_some() { return Ok(0); }
+            let Some(registry) = self.member_ingress.as_ref() else { return Ok(0); };
+            if self.next_member_ordinal != registry.expected { return Ok(0); }
+            let bytes = registry.next_close_byte_demand();
+            if bytes > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES { return Err(store::MemberOpenDiagnostic::Capacity); }
+            Ok(bytes)
+        }
+
+        fn drive_member_open(&mut self, maximum_items: usize, maximum_bytes: usize, constructor_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -23494,35 +23965,40 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }
                 };
             }
-            let Some(registry) = self.member_ingress.as_mut() else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry"));
-            };
-            if self.next_member_ordinal == registry.expected {
-                if !registry.sealed || !registry.terminal_is_empty() {
-                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal"));
+            if self.active_member_ingress.is_none() {
+                let Some(registry) = self.member_ingress.as_mut() else {
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry"));
+                };
+                if self.next_member_ordinal == registry.expected {
+                    if !registry.sealed || registry.len != 0 {
+                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal"));
+                    }
+                    let step = registry.close_step(maximum_items.min(1), constructor_grant.maximum_release_bytes)?;
+                    if step != PluginCloseStep::Complete { return Ok(step); }
+                    if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal")); }
+                    let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
+                    drop(registry);
+                    self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
+                    self.state = ActiveArtifactStoreReplacementState::ValidatingClosure;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
-                drop(registry);
-                self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
-                self.state = ActiveArtifactStoreReplacementState::ValidatingClosure;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                let Some(ingress) = registry.take(self.next_member_ordinal) else {
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open"));
+                };
+                *self.active_member_ingress = Some(ingress);
             }
-            let Some(ingress) = registry.take(self.next_member_ordinal) else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open"));
-            };
-            *self.active_member_ingress = Some(ingress);
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
                 return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member ingress lost its exact retained open request"));
             }
-            let request = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_request).expect("active member request was verified before exact factory handoff");
-            match M::begin_open(request) {
-                Ok(open) => {
+            let ingress = self.active_member_ingress.as_mut().expect("funded factory retains its exact ingress");
+            match M::begin_open(&mut ingress.request, constructor_grant) {
+                Ok(Some(open)) => {
                     *self.active_member_open = Some(open);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                Err(rejected) => {
+                Ok(None) => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                Err(_) => {
                     let ordinal = self.next_member_ordinal;
-                    self.active_member_ingress.as_mut().expect("rejected member ingress remains retained").return_request(rejected.request);
                     self.refuse(ArtifactStoreReplacementRefusal::MemberFactoryRefused { ordinal });
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
@@ -23638,6 +24114,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             *self.candidate_content = Some(prior.insert_entry_admitted(index, ChildContentEntry { owner: key.owner.to_string(), slot: entry.owner.slot.clone(), child_id: entry.owner.child_id.clone(), artifact_id: entry.reference.artifact_id.clone(), dialect: entry.reference.dialect.clone(), revision, snapshot }));
             self.view_member_ordinal += 1;
             Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+
+        /// 🧭️ Queries the exact next member owner selected by [Self::drive_rejected_members].
+        fn next_close_byte_demand(&self) -> usize {
+            if matches!(self.state, ActiveArtifactStoreReplacementState::RetiringRejectedCandidate | ActiveArtifactStoreReplacementState::RetiringCommittedStore) {
+                if let Some(store) = self.retained_store.as_ref() {
+                    return self.retained_disposer.as_ref().map_or_else(|| std::mem::size_of_val(store.as_ref()), |disposer| if disposer.terminal_is_empty(store) { std::mem::size_of_val(disposer.as_ref()) } else { store.next_close_byte_demand() });
+                }
+            }
+            if matches!(self.state, ActiveArtifactStoreReplacementState::RetiringRejectedMembers | ActiveArtifactStoreReplacementState::RetiringCommittedMembers) {
+                if let Some(open) = self.active_member_open.as_ref() { return store::MemberOpenOperation::next_close_byte_demand(open); }
+                if let Some(ingress) = self.active_member_ingress.as_ref() { return ingress.next_close_byte_demand(); }
+                if let Some(registry) = self.member_ingress.as_ref() { return registry.next_close_byte_demand(); }
+            }
+            usize::from(self.state != ActiveArtifactStoreReplacementState::Complete)
         }
 
         fn drive_rejected_members(&mut self, current_content: &ChildContentView, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -23781,7 +24272,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(rejected) = self.session_rejected.as_mut() {
-                return match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                let release_bytes = artifact_store_initialization_release_bytes(rejected.next_close_byte_demand())?;
+                return match rejected.close_step(1, release_bytes) {
                     semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
                     semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
@@ -23816,7 +24308,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if let Some(target) = self.terminal_target {
                 let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "terminal store initializer lost its retained session"))?;
                 session.begin_close();
-                return match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                let Ok(demand) = session.next_close_byte_demand() else { return Ok(PluginCloseStep::Blocked { reason: "terminal store initializer allocation demand awaits worker ownership" }); };
+                let release_bytes = artifact_store_initialization_release_bytes(demand)?;
+                return match session.close_step(1, release_bytes) {
                     semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal store initializer close is temporarily blocked" }),
                     semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
@@ -23853,8 +24347,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         *self.retained_store = Some(candidate);
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::AwaitingMembers);
                     } else if terminal_kind == 2 {
-                        let released = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::release_terminal_failure);
-                        if !released {
+                        let accepted = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::accept_terminal_failure);
+                        if !accepted {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
                         }
                         self.refusal.get_or_insert(ArtifactStoreReplacementRefusal::InitializerFailed(initializer_code));
@@ -23875,19 +24369,28 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(PluginCloseStep::Complete);
             };
             let Some(disposer) = self.retained_disposer.as_mut() else {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-disposer-missing"), "retained replacement store lost its exact disposer"));
+                if !store.close_owned_store_terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-disposer-missing"), "retained replacement store lost its exact disposer"));
+                }
+                let extent = std::mem::size_of_val(store.as_ref());
+                if maximum_items == 0 || maximum_bytes < extent { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+                drop(self.retained_store.take());
+                self.state = ActiveArtifactStoreReplacementState::Complete;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: extent });
             };
+            if disposer.terminal_is_empty(store) {
+                let extent = std::mem::size_of_val(disposer.as_ref());
+                if maximum_items == 0 || maximum_bytes < extent { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+                drop(self.retained_disposer.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: extent });
+            }
             match disposer.close_step(store, maximum_items.min(1), maximum_bytes)? {
                 PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 PluginCloseStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-over-budget"), "retained replacement store exceeded its exact close grant")),
                 PluginCloseStep::AwaitingInput { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-awaiting-input"), "retained replacement store disposer requested application input during close")),
                 step @ PluginCloseStep::Blocked { .. } => Ok(step),
                 PluginCloseStep::Complete if disposer.terminal_is_empty(store) => {
-                    drop(self.retained_disposer.take());
-                    let store = self.retained_store.take().expect("terminal replacement store remains retained");
-                    drop(store);
-                    self.state = ActiveArtifactStoreReplacementState::Complete;
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
                 }
                 PluginCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-false-terminal"), "retained replacement store disposer reported Complete without terminal-empty ownership")),
             }
@@ -24293,6 +24796,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }
 
+        fn next_close_byte_demand(&self) -> usize {
+            if let Some(retained) = self.retained.as_ref() { return store::artifact_retirement_box_byte_demand(retained); }
+            if let Some(hydration) = self.hydration.as_ref() { return store::ErasedSnapshotRetirement::next_close_byte_demand(hydration); }
+            if let Some(ingress) = self.rejected_ingress.as_ref() { return ingress.next_close_byte_demand(); }
+            usize::from(!self.terminal_is_empty())
+        }
+
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -24604,7 +25114,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         delivering_host_event: bool,
         /// 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
         /// truncated: undo/redo/revert push entries, they never remove any.
-        command_log: Vec<CommandLogEntry>,
+        command_log: PagedCommandLog,
+        command_prune_generation: u64,
+        command_prune_processed: u64,
+        pending_command_prune: Option<MountedCommandPrune>,
         next_command_seq: u64,
         /// 🗂️ Bumped by `push_log_entry`/`record_command` on every log mutation (a push OR a fold)
         /// — part of the cache key so a folded ×count bump alone (no store-generation change) still
@@ -24628,6 +25141,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
         /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
         pub(crate) children: ChildMemberRegistry<M>,
+        private_child_groups: ArtifactFixedRegistry<Box<MountedPrivateChildGroup<M>>>,
         pub(crate) child_content_root: std::mem::ManuallyDrop<ChildContentView>,
         pub(crate) child_content_generation: u64,
         pub(crate) child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>,
@@ -25315,10 +25829,121 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             self.tool_cancellations.clone()
         }
 
-        /// 🏃️ On wasm the process pool has no threads: this loop is driven synchronously under
-        /// `drive_self_waking_ready` (one host poll), so a submitted step only runs if the loop pumps
-        /// the pool itself. `resolve_ready` samples once and would drop the first `plugin_job_yield_once`.
+        /// 🎟️ Seals one genuine publication slot and keyed lease before a reserved producer receives source owners.
+        fn admit_reserved_emit_producer(&mut self, verb: &str, meta: &ActionMeta) -> Result<FrameworkReservedCommitPermit, Fault> {
+            let proof = self.qualified_tool_proof(verb)?;
+            if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) { return Err(plugin_sdk_fault("reserved producer lacks its exact registered publication proof")); }
+            let operation_id = self.admit_typed_operation_slot().ok_or_else(|| plugin_sdk_fault("every fixed reserved producer slot already retains an original operation"))?;
+            let revision = self.store.content_revision_now();
+            let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));
+            let generation = semio_framework_job::Generation(self.store.generation_now());
+            let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, operation_id.0);
+            let lease = self.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation })?;
+            self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0);
+            Ok(FrameworkReservedCommitPermit { operation, lease, producer_fault: None })
+        }
+
+        /// 🧷️ Clears only the original reserved publication identity without changing a foreign slot.
+        fn release_reserved_emit_slot(&mut self, operation: u64) {
+            let reservation = &mut self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS];
+            if *reservation == Some(operation) { *reservation = None; }
+        }
+
+        /// 🏁️ Returns a reserved producer's original slot and keyed cancellation authority after ordinary completion.
+        fn finish_reserved_emit_producer(&mut self, permit: FrameworkReservedCommitPermit) {
+            self.release_reserved_emit_slot(permit.operation.operation.0);
+            permit.finish();
+        }
+
+        /// 🔬️ Exercises real reserved slot admission without exporting private producer authority.
+        #[cfg(test)]
+        pub(crate) fn test_reserved_emit_admission_case(&mut self, occupied: usize, meta: &ActionMeta) -> bool {
+            let before = self.typed_operation_reservations;
+            for slot in 0..occupied { self.typed_operation_reservations[slot] = Some((slot + 128) as u64); }
+            let original = self.typed_operation_reservations;
+            let admitted = match self.admit_reserved_emit_producer("cut", meta) {
+                Ok(permit) => {
+                    let id = permit.operation.operation.0;
+                    let slot = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    assert_eq!(slot, occupied);
+                    assert_eq!(self.typed_operation_reservations[slot], Some(id));
+                    assert!(permit.lease.keyed);
+                    assert_eq!(permit.lease.key.operation_id, permit.operation.operation);
+                    assert_eq!(&self.typed_operation_reservations[..occupied], &original[..occupied]);
+                    self.release_reserved_emit_slot(id + ARTIFACT_LIVE_OUTPUT_SLOTS as u64);
+                    assert_eq!(self.typed_operation_reservations[slot], Some(id));
+                    self.finish_reserved_emit_producer(permit);
+                    assert_eq!(self.typed_operation_reservations, original);
+                    true
+                }
+                Err(_) => { assert_eq!(self.typed_operation_reservations, original); false }
+            };
+            self.typed_operation_reservations = before;
+            admitted
+        }
+
+        /// 🧪️ Keeps cancelled worker completion tied to the actual original permit through handoff.
+        #[cfg(test)]
+        pub(crate) async fn test_reserved_emit_cancelled_worker_handoff(&mut self, meta: &ActionMeta) -> bool {
+            let permit = self.admit_reserved_emit_producer("cut", meta).expect("original cut producer admission");
+            let id = permit.operation.operation;
+            permit.lease.cancel();
+            let job = ArtifactReservedToolJob::new(FrameworkCutJob::new(Vec::new(), 0));
+            match self.run_framework_reserved_job("cut", &[], 0, job, meta, None, Some(permit)).await {
+                Ok(permit) => { assert_eq!(permit.operation.operation, id); assert_eq!(self.typed_operation_reservations[id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS], Some(id.0)); self.finish_reserved_emit_producer(permit); true }
+                Err(_) => false,
+            }
+        }
+
+        /// 🧫️ Observes busy original completion retention without exposing producer authority.
+        #[cfg(test)]
+        pub(crate) async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta) -> bool {
+            let permit=self.admit_reserved_emit_producer("cut",meta).expect("fixture cut admission");
+            let id=permit.operation.operation.0;
+            let completion=ArtifactToolCompletion::<A>::new();
+            let mut emit=Emit::default();emit.artifact_mutations=Vec::with_capacity(3);
+            completion.complete(Ok(emit),EphemeralEmit::default()).expect("fixture original completion");
+            let original=completion.inner.clone();
+            let guard=original.lock().expect("fixture original lock");
+            let result=self.commit_framework_clipboard_completion("cut",Some(completion),meta,permit).await;
+            let retained=result.is_ok()&&self.tool_operations.get(id).is_some_and(|owner|owner.completion.as_ref().is_some_and(|cell|std::sync::Arc::ptr_eq(&cell.inner,&original))&&owner.terminal_fault.is_some()&&owner.cancellation_lease.as_ref().is_some_and(|lease|lease.token.is_cancelled_now()));
+            drop(guard);drop(original);
+            if !retained {self.release_reserved_emit_slot(id);}
+            retained
+        }
+
+        /// 🛡️ Keeps producer admission failures tied to the original reserved identity.
         async fn run_framework_reserved_job<J: semio_framework_job::InteractiveJob + Send + 'static>(
+            &mut self, verb: &str, raw: &[u8], decoded_items: usize, job: J, meta: &ActionMeta,
+            supplied_admission: Option<semio_framework::ToolWireAdmission>,
+            supplied_authority: Option<FrameworkReservedCommitPermit>,
+        ) -> Result<FrameworkReservedCommitPermit, Fault> {
+            let supplied = supplied_authority.is_some();
+            let mut permit = match supplied_authority {
+                Some(permit) => permit,
+                None => {
+                    let revision = self.store.content_revision();
+                    let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")));
+                    let generation = semio_framework_job::Generation(self.store.generation());
+                    let seed = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
+                    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), base_revision, generation, (seed.0 as u64) ^ ((seed.0 >> 64) as u64));
+                    let key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id: operation.operation, base_revision, generation };
+                    FrameworkReservedCommitPermit { operation, lease: self.tool_cancellations.begin(key)?, producer_fault: None }
+                }
+            };
+            match self.run_framework_reserved_job_inner(verb, raw, decoded_items, job, meta, supplied_admission, &permit).await {
+                Ok(()) => Ok(permit),
+                Err(fault) if supplied => { permit.lease.cancel(); permit.producer_fault = Some(ArtifactBoundedToolFault::from_fault(&fault)); Ok(permit) }
+                Err(fault) => Err(fault),
+            }
+        }
+
+        async fn run_framework_reserved_job_inner<J: semio_framework_job::InteractiveJob + Send + 'static>(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:J,meta:&ActionMeta,supplied_admission:Option<semio_framework::ToolWireAdmission>,supplied_authority:&FrameworkReservedCommitPermit)->Result<(),Fault>{
+            if supplied_authority.lease.keyed && (self.typed_operation_reservations[supplied_authority.operation.operation.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(supplied_authority.operation.operation.0)||supplied_authority.lease.key.operation_id!=supplied_authority.operation.operation){return Err(plugin_sdk_fault("reserved producer lost its original keyed slot admission"));}
+            self.drive_framework_reserved_worker(verb,raw,decoded_items,job,meta,supplied_admission,supplied_authority.operation,supplied_authority.lease.cancel_token(),false).await
+        }
+
+        async fn drive_framework_reserved_worker<J: semio_framework_job::InteractiveJob + Send + 'static>(
             &mut self,
             verb: &str,
             raw: &[u8],
@@ -25326,7 +25951,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             job: J,
             meta: &ActionMeta,
             supplied_admission: Option<semio_framework::ToolWireAdmission>,
-        ) -> Result<FrameworkReservedCommitPermit, Fault> {
+            operation: semio_framework_job::Operation,
+            cancel: semio_framework_job::CancelToken,
+            mounted_owner: bool,
+        ) -> Result<(), Fault> {
             let proof = self.qualified_tool_proof(verb)?;
             if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory")));
@@ -25339,23 +25967,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission")));
             }
-            let canonical_base_revision = self.store.content_revision();
-            let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
-            let generation = semio_framework_job::Generation(self.store.generation());
-            let _parent_document_id = self.store.envelope().id.clone();
-            let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
-            let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
+            let generation = operation.generation;
+            if mounted_owner && !self.tool_operations.get(operation.operation.0).is_some_and(|owner| owner.operation.operation == operation.operation && owner.operation.base_revision == operation.base_revision && owner.operation.generation == operation.generation) { return Err(plugin_sdk_fault("reserved producer lost its original mounted operation authority")); }
             let operation_id = operation.operation;
             let dispatch = self
                 .tool_jobs
                 .dispatch(semio_framework::ToolOperationSpec::new(key.controller_id, key.tool_id, proof.schema_id(), job, operation))
                 .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
-            let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
-            let cancellation_lease = self.tool_cancellations.begin(operation_key)?;
+
             let params = semio_framework_job::BatchJobParams {
                 operation: operation_id,
                 generation,
-                cancel: cancellation_lease.cancel_token(),
+                cancel: cancel.clone(),
                 config: semio_framework_job::BatchDriveConfig {
                     site: "plugin_framework_reserved_route",
                     stage: semio_framework_job::InteractiveStage::InteractiveStep,
@@ -25440,11 +26063,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 if !terminal {
                     if let Some(code) = protocol_fault {
-                        cancellation_lease.cancel();
+                        cancel.cancel_now();
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' returned an invalid retained checkpoint")));
                     }
                     if overrun {
-                        cancellation_lease.cancel();
+                        cancel.cancel_now();
                     }
                     session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved outcome lost its exact resume authority"))?;
                     continue;
@@ -25477,7 +26100,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.terminal-kind"), "framework reserved session closed without a terminal outcome")),
                 }
             }
-            if cancellation_lease.is_cancelled().await {
+            if cancel.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled-or-output"), format!("framework route '{verb}' was cancelled before commit")));
             }
             let live_revision_bytes = self.store.content_revision();
@@ -25486,7 +26109,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if !matches!(semio_framework_job::validate_commit(&operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("framework route '{verb}' completed against a stale revision or generation")));
             }
-            Ok(FrameworkReservedCommitPermit { operation, lease: cancellation_lease })
+            Ok(())
         }
 
         async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
@@ -25872,7 +26495,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 host_event_roster: Vec::new(),
                 host_event_operations: HashSet::new(),
                 delivering_host_event: false,
-                command_log: Vec::new(),
+                command_log: PagedCommandLog::new(),
+                command_prune_generation: 0,
+                command_prune_processed: 0,
+                pending_command_prune: None,
                 next_command_seq: 0,
                 log_generation: 0,
                 history_dirty_sequences: HashSet::new(),
@@ -25882,6 +26508,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 shell_redo: Vec::new(),
                 history_filter: HistoryCommandFilter::default(),
                 children: ChildMemberRegistry::new(),
+                private_child_groups: ArtifactFixedRegistry::new(),
                 child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
                 child_content_generation: 0,
                 child_content_retirements: ArtifactFixedRegistry::new(),
@@ -26585,7 +27212,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if state == ActiveArtifactStoreReplacementState::OpeningMembers {
-                return self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("opening owned document replacement changed before one member step"))?.drive_member_open(maximum_items, maximum_bytes);
+                let active = self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("opening owned document replacement changed before one member step"))?;
+                let capacity = match active.member_open_birth_bytes() {
+                    Ok(capacity) => capacity,
+                    Err(_) => { active.refuse(ArtifactStoreReplacementRefusal::MemberFactoryRefused { ordinal: active.next_member_ordinal }); return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }); }
+                };
+                let release = match active.member_ingress_release_bytes() {
+                    Ok(release) => release,
+                    Err(_) => { active.refuse(ArtifactStoreReplacementRefusal::MemberFactoryRefused { ordinal: active.next_member_ordinal }); return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }); }
+                };
+                let constructor_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: maximum_items.min(1), maximum_copy_bytes: 64, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };
+                return active.drive_member_open(maximum_items, maximum_bytes, constructor_grant);
             }
             if state == ActiveArtifactStoreReplacementState::ClosingRejectedMember {
                 let active = self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("rejected member open changed before bounded close"))?;
@@ -27693,6 +28330,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         #[inline(never)]
         fn retire_typed_operation_unit(&mut self, operation_id: u64, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if let Some(group) = self.tool_operations.get(operation_id).and_then(|operation| operation.owned_child_group) {
+                if self.private_child_groups.get(group).is_some() { return self.close_private_child_group_operation_step(group,maximum_items,maximum_bytes); }
+                if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items:0,released_bytes:0 }); }
+                self.tool_operations.get_mut(operation_id).unwrap().owned_child_group = None;
+                return Ok(PluginCloseStep::Pending { released_items:1,released_bytes:0 });
+            }
             self.record_settled_typed_operation_command(operation_id);
             let operation = self
                 .tool_operations
@@ -27727,7 +28370,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 if !self.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
                     return Ok(());
                 }
-                if matches!(self.retire_typed_operation_unit(operation_id, 1, TYPED_OPERATION_RESULT_PAGE_BYTES)?, PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. }) {
+                let bytes = self.tool_operations.get(operation_id).and_then(|operation| operation.owned_child_group).map_or(Ok(TYPED_OPERATION_RESULT_PAGE_BYTES),|group|self.private_child_group_operation_close_byte_demand(group).map(|bytes|bytes.max(TYPED_OPERATION_RESULT_PAGE_BYTES)))?;
+                let bytes=bytes.max(self.tool_operations.get(operation_id).map_or(0,MountedTypedCommandFullOperation::reserved_close_byte_demand));
+                mounted_private_child_grant(0,bytes)?;
+                if matches!(self.retire_typed_operation_unit(operation_id, 1, bytes)?, PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. }) {
                     return Ok(());
                 }
                 if started_us.is_some_and(|started_us| semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US)) {
@@ -28185,7 +28831,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn push_log_entry(&mut self, append: CommandLogAppend<'_>) {
             let CommandLogAppend { action_id, label, kind, edit_id, transition_id, timestamp, inverse } = append;
             self.next_command_seq += 1;
-            self.command_log.push(CommandLogEntry {
+            let mut record = Some(CommandLogEntry {
                 seq: self.next_command_seq,
                 action_id: action_id.to_string(),
                 label,
@@ -28197,6 +28843,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 count: 1,
                 inverse,
             });
+            let mut page = self.command_log.prepare_append().expect("live command history admits its exact next record");
+            page.admit_step(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: page.next_capacity_byte_demand(), maximum_copy_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 });
+            self.command_log.commit_append(&mut page, &mut record).expect("preborn command page retains its original live prefix");
             self.history_dirty_sequences.insert(self.next_command_seq);
             self.log_generation += 1;
         }
@@ -28263,13 +28912,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let prefix = mark.edits <= edits.len() && (mark.edits == 0 || edits.iter().rev().nth(edits.len() - mark.edits).map(|edit| &edit.id) == mark.last_edit.as_ref());
                 prefix && mark.supersede_records == self.supersedes.records.len() && members_held && ledgers.iter().all(|(_, tail)| tail.fresh.is_some())
             });
-            let (log_from, edits_from, records_from) = scope.map_or((0, 0, 0), |mark| (self.command_log.partition_point(|entry| entry.seq < mark.log_seq), mark.edits, mark.supersede_records));
+            let (log_from, edits_from, records_from) = scope.map_or((0, 0, 0), |mark| (self.command_log.len() - self.command_log.iter().rev().take_while(|entry| entry.seq >= mark.log_seq).count(), mark.edits, mark.supersede_records));
             let wanted_members: Option<HashSet<&str>> = scope.map(|_| ledgers.iter().flat_map(|(_, tail)| tail.fresh.iter().flatten().map(String::as_str)).collect());
-            let rows = &self.command_log[log_from..];
-            let logged: HashSet<&str> = rows.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
-            let logged_transitions: HashSet<&str> = rows.iter().filter_map(|entry| entry.transition_id.as_deref()).collect();
+            let rows = || self.command_log.iter().rev().take(self.command_log.len() - log_from).rev();
+            let logged: HashSet<&str> = rows().filter_map(|entry| entry.edit_id.as_deref()).collect();
+            let logged_transitions: HashSet<&str> = rows().filter_map(|entry| entry.transition_id.as_deref()).collect();
             let mut transitions = self.supersedes.records.iter().enumerate().skip(records_from).filter(|(_, record)| !logged_transitions.contains(record.transition_id.as_str())).map(|(index, record)| (index, record.timestamp)).peekable();
-            let logged_children: HashSet<&str> = rows.iter().flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
+            let logged_children: HashSet<&str> = rows().flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
             let fresh_edits: Vec<&protocol::Edit<A::Mutation>> = {
                 let mut fresh: Vec<&protocol::Edit<A::Mutation>> = edits.iter().rev().take(edits.len() - edits_from).filter(|edit| !logged.contains(edit.id.as_str())).collect();
                 fresh.reverse();
@@ -28342,7 +28991,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }),
                 }
             }
-            self.history_backfill = Some(HistoryBackfillMark { log_seq: self.command_log.last().map_or(0, |entry| entry.seq), ..mark });
+            self.history_backfill = Some(HistoryBackfillMark { log_seq: self.command_log.iter().next_back().map_or(0, |entry| entry.seq), ..mark });
         }
 
         /// 🧩️ Every live child's TAIL applied edit id, plus whether any child has an edit on
@@ -28495,12 +29144,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let app_id = self.app.instance_id().await.to_string();
             let (rows, fresh, stacks) = {
                 let held = |seq: &u64| view.commands.binary_search_by(|row| seq.cmp(&row.seq)).ok().map(|index| &view.commands[index]);
-                let logged = |seq: &u64| self.command_log.binary_search_by(|entry| entry.seq.cmp(seq)).ok().map(|index| &self.command_log[index]);
+                let logged = |seq: &u64| self.command_log.iter().rev().find(|entry| entry.seq == *seq);
                 let previous: HashMap<u64, &CommandView> = patch.rebuild.iter().filter_map(|seq| held(seq).map(|row| (*seq, row))).collect();
                 let labelled: HashMap<&str, &MutationView> = previous.values().flat_map(|row| row.mutations.iter()).filter(|mutation| !mutation.superseded).map(|mutation| (mutation.mutation_id.as_str(), mutation)).collect();
                 let rebuilt: Vec<&CommandLogEntry> = patch.rebuild.iter().filter_map(logged).collect();
-                let fresh = &self.command_log[patch.fresh_from..];
-                let wanted: HashSet<&str> = rebuilt.iter().copied().chain(fresh.iter()).flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
+                let fresh = || self.command_log.iter().rev().take(self.command_log.len() - patch.fresh_from).rev();
+                let wanted: HashSet<&str> = rebuilt.iter().copied().chain(fresh()).flat_map(|entry| entry.child_edit_ids.iter().map(String::as_str)).collect();
                 let members = self.member_edit_histories(&labelled, Some(&wanted));
                 let reads = HistoryRowReads {
                     full: false,
@@ -28514,7 +29163,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     app_id,
                 };
                 let rows: Vec<(u64, CommandView)> = rebuilt.iter().map(|entry| (entry.seq, self.history_row(entry, &reads))).collect();
-                let fresh: Vec<CommandView> = fresh.iter().rev().map(|entry| self.history_row(entry, &reads)).collect();
+                let fresh: Vec<CommandView> = fresh().rev().map(|entry| self.history_row(entry, &reads)).collect();
                 (rows, fresh, self.history_view_stacks(&reads.child_applied_tails, child_has_redo_tail, inverse_rows))
             };
             let mut changed: Vec<u64> = fresh.iter().map(|row| row.seq).collect();
@@ -28542,23 +29191,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if before.supersede_records != after.supersede_records || before.members.len() != members.len() || before.members.iter().zip(members).any(|((held, _), (member, _, _))| held != member) {
                 return None;
             }
-            let fresh_from = self.command_log.partition_point(|entry| entry.seq <= before.newest_seq);
-            if fresh_from != before.rows || (fresh_from > 0 && self.command_log[fresh_from - 1].seq != before.newest_seq) {
+            let fresh_count = self.command_log.iter().rev().take_while(|entry| entry.seq > before.newest_seq).count();
+            let fresh_from = self.command_log.len() - fresh_count;
+            if fresh_from != before.rows || (fresh_from > 0 && self.command_log.iter().rev().nth(fresh_count).map(|entry| entry.seq) != Some(before.newest_seq)) {
                 return None;
             }
             let positions = time_travel::history_store_change(&before.document, &after.document, self.store.applied_edit_ids())?;
-            let fresh = &self.command_log[fresh_from..];
+            let fresh = || self.command_log.iter().rev().take(fresh_count);
             let mut children: HashSet<&str> = HashSet::new();
             for (_, _, change) in members {
                 children.extend(change.as_ref()?.iter().map(|(edit_id, _)| edit_id.as_str()));
             }
-            children.retain(|edit_id| !fresh.iter().any(|entry| entry.child_edit_ids.iter().any(|child| child == edit_id)));
-            let mut edits: HashSet<&str> = positions.iter().map(|(edit_id, _)| edit_id.as_str()).filter(|edit_id| !fresh.iter().any(|entry| entry.edit_id.as_deref() == Some(*edit_id))).collect();
+            children.retain(|edit_id| !fresh().any(|entry| entry.child_edit_ids.iter().any(|child| child == edit_id)));
+            let mut edits: HashSet<&str> = positions.iter().map(|(edit_id, _)| edit_id.as_str()).filter(|edit_id| !fresh().any(|entry| entry.edit_id.as_deref() == Some(*edit_id))).collect();
             let mut rebuild: BTreeSet<u64> = BTreeSet::new();
             if fresh_from > 0 {
                 rebuild.insert(before.newest_seq);
             }
-            for entry in self.command_log[..fresh_from].iter().rev() {
+            for entry in self.command_log.iter().rev().skip(fresh_count) {
                 if edits.is_empty() && children.is_empty() {
                     break;
                 }
@@ -28569,7 +29219,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
             }
             if before.shell_undone != after.shell_undone {
-                rebuild.extend(self.history_dirty_sequences.iter().copied().filter(|seq| self.command_log.binary_search_by(|entry| entry.seq.cmp(seq)).is_ok_and(|index| self.command_log[index].inverse.is_some())));
+                rebuild.extend(self.history_dirty_sequences.iter().copied().filter(|seq| self.command_log.iter().rev().find(|entry| entry.seq == *seq).is_some_and(|entry| entry.inverse.is_some())));
             }
             Some(HistoryViewPatch { fresh_from, rebuild, positions })
         }
@@ -28637,16 +29287,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let tool_run_label = transaction.as_ref().and_then(|transaction| self.tool_run_transaction_label(&reads.app_id, transaction));
             let leaf_label = ops.first().map(|op| op.operation).or_else(|| edit.and_then(|edit| edit.forwards.first())).map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
             let verb_label = edit.and_then(|edit| edit.verb.as_deref()).and_then(|verb| self.verb_label(verb));
+            let intent = transaction.as_ref().and_then(|transaction| history_intent_label::<A>(&transaction.tool, &ops, &mutations)).or_else(|| child_edits.iter().find_map(|child| child.intent_label.clone()));
             let label = match (edit, mutations.first()) {
                 _ if tool_run_label.is_some() => tool_run_label.expect("tool run label checked above"),
                 (Some(_), Some(first)) if transaction.is_some() => {
-                    let intent = transaction.as_ref().and_then(|transaction| history_intent_label::<A>(&transaction.tool, &ops, &mutations));
                     history_leaf_row_label(intent.as_ref().unwrap_or(&first.label), op_count)
                 }
                 (Some(_), _) if op_count == 1 && leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
                 (Some(_), _) if verb_label.is_some() => verb_label.expect("verb label checked above"),
                 (Some(_), _) if leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
-                (None, Some(first)) if !child_edits.is_empty() => history_leaf_row_label(&first.label, op_count),
+                (None, Some(first)) if !child_edits.is_empty() => history_leaf_row_label(intent.as_ref().unwrap_or(&first.label), op_count),
                 _ => entry.label.clone(),
             };
             CommandView {
@@ -28731,7 +29381,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut stamp = HistoryViewStamp {
                 document: time_travel::history_store_stamp(&self.store),
                 members: members.iter().map(|(member, stamp, _)| (member.clone(), stamp.clone())).collect(),
-                newest_seq: self.command_log.last().map_or(0, |entry| entry.seq),
+                newest_seq: self.command_log.iter().next_back().map_or(0, |entry| entry.seq),
                 rows: self.command_log.len(),
                 inverse_rows: 0,
                 shell_undone: self.shell_undone.len(),
@@ -28740,7 +29390,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let patch = retained.as_ref().and_then(|cache| self.history_view_patch(&cache.stamp, &stamp, &members).map(|patch| (patch, cache.stamp.inverse_rows)));
             let (view, changed) = match (retained, patch) {
                 (Some(HistoryViewCache { mut view, .. }), Some((patch, inverse_rows))) => {
-                    stamp.inverse_rows = inverse_rows + self.command_log[patch.fresh_from..].iter().filter(|entry| entry.inverse.is_some()).count();
+                    stamp.inverse_rows = inverse_rows + self.command_log.iter().rev().take(self.command_log.len() - patch.fresh_from).filter(|entry| entry.inverse.is_some()).count();
                     let changed = self.patch_history_view(std::sync::Arc::make_mut(&mut view), patch, stamp.inverse_rows).await;
                     (view, changed)
                 }
@@ -28826,6 +29476,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// 🧾️ The history view is patched, not rebuilt ([`Self::refresh_history_view`], design §20.14): the cache's own
         /// share of it is dropped first, so the retained view stays the only owner and is patched in its own allocation.
         async fn refresh_cache(&mut self) -> Result<(), Fault> {
+            while self.command_prune_requested() || self.pending_command_prune.is_some() {
+                let demand = self.command_prune_next_release_byte_demand();
+                let grant = artifact_close_release_grant(demand, crate::plugin_runtime::RUNTIME_CLOSE_BYTES_PER_STEP)?;
+                self.advance_command_prune_step(1, grant, false)?;
+                plugin_job_yield_once().await;
+            }
             let key = (self.store.generation(), self.config_store.generation(), self.log_generation, self.history_filter);
             if self.cache.as_ref().map(|(cached_key, _, _, _)| *cached_key) == Some(key) {
                 return Ok(());
@@ -29067,14 +29723,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
         /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
         async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            if !emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
-                let contract=self.qualified_tool_proof(verb)?.contract();
-                let completion=ArtifactToolCompletion::<A>::new();
-                let job=ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(EphemeralEmit::default()),completion:Some(completion.clone()),maximum_bytes:contract.max_output_bytes,closing:false};
-                let permit=self.run_framework_reserved_job(verb,&[],1,job,meta,None).await?;
-                self.validate_framework_reserved_commit(verb,&permit).await?;
-                let (prepared,_)=completion.take_emit()?.ok_or_else(||plugin_sdk_fault("registered child preparation lost its complete owned output"))?;
-                emit=prepared?;permit.finish();
+            if !emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||!emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
+                return self.mount_original_emit_publication(verb, emit, meta, None).await;
             }
             let folded = take_inline_interaction_verbs(&mut emit.effects);
             let mut result = self.dispatch_emit_inner(verb, emit, meta).await?;
@@ -29109,7 +29759,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         ///
         /// 🔀️ Composite-mutation proposal (contract §5.1): when any artifact mutation carries
         /// foreign steps (folded forward exactly like `ArtifactStore::replay_mutations` folds its
-        /// own snapshot, via the same public `Mutation::diff`/`MutationDiff::apply` pair — the
+        /// own snapshot, via the same public `Mutation::diff`/`protocol::apply_diff` pair — the
         /// private `apply_mutation` helper lives across the crate boundary in `store`), apply
         /// NOTHING — stash a `TransactionProposalDraft` instead, drained once by `plugin_exchange`
         /// (`take_pending_transaction_proposal`) and framed as `AppFrame::TransactionProposal`
@@ -29163,7 +29813,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
         async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
-            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, transaction, transaction_phase, effects, extension_invocations, events, ui_scope, child_emits, child_preparations, interaction_writes, tasks } = emit;
+            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, transaction, transaction_phase, effects, extension_invocations, events, ui_scope, child_emits, owned_child_emits, child_preparations, interaction_writes, tasks } = emit;
+            assert!(owned_child_emits.is_empty()&&owned_child_emits.capacity()==0,"applying retained children require their staged publication owner");
             assert!(child_preparations.is_empty()&&child_preparations.capacity()==0,"dispatch owns only completely prepared child operation groups");
             if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), transaction_phase, !child_emits.is_empty(), !artifact_mutations.is_empty(), artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
                 return Err(fault);
@@ -29208,7 +29859,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     if !outcome.is_applicable(protocol::MergePolicy::default()) {
                         return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                     }
-                    running = outcome.diff().apply(&running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                    running = protocol::apply_diff(outcome.diff(), &running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                 }
                 if !foreign.is_empty() {
                     let mut local_ops = Vec::with_capacity(artifact_mutations.len());
@@ -30494,6 +31145,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 ui_axes: meta.view_state.as_ref().map(|view| (view.locale, view.terminology)),
                 parent_document_id,
                 canonical_base_revision,
+                authoring_seed: self.authoring_seed(&meta.actor),
                 snapshot,
                 config,
                 history,
@@ -30519,6 +31171,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 ui_axes: meta.view_state.as_ref().map(|view| (view.locale, view.terminology)),
                 parent_document_id: self.store.envelope().id.clone(),
                 canonical_base_revision: self.store.content_revision(),
+                authoring_seed: self.authoring_seed(&meta.actor),
                 snapshot,
                 config,
                 history,
@@ -30865,19 +31518,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let raw = semio_framework_pack_json::to_json_string(&(action, wire_args)).into_bytes();
             let work_items = self.framework_reserved_work_items(action, args).await?;
             if CLIPBOARD_ACTION_IDS.contains(&action) {
+                let authority = self.admit_reserved_emit_producer(action, meta)?;
+                let producer = match self.build_artifact_reserved_action_job(action, args, raw.clone(), meta).await { Ok(producer) => producer, Err(fault) => { self.finish_reserved_emit_producer(authority); return Err(fault); } };
                 let mut app_completion = None;
-                let job = match self.build_artifact_reserved_action_job(action, args, raw.clone(), meta).await? {
+                let job = match producer {
                     Some((job, completion)) => {
                         app_completion = Some(completion);
                         job
                     }
-                    None => framework_reserved_route_job(action, raw.clone(), work_items)?,
+                    None => { self.finish_reserved_emit_producer(authority); return Err(plugin_sdk_fault("clipboard producer has no exact installed reserved builder")); },
                 };
-                let permit = self.run_framework_reserved_job(action, &raw, decoded_items, job, meta, None).await?;
-                self.validate_framework_reserved_commit(action, &permit).await?;
-                let result = self.commit_framework_clipboard_completion(action, app_completion, meta, &permit).await;
-                permit.finish();
-                return result;
+                return self.dispatch_reserved_original_producer(action,&raw,decoded_items,job,app_completion.expect("installed clipboard producer owns its original completion"),meta,None,authority).await;
             }
             initialize_framework_reserved_jobs();
             let mut permit = self.admit_framework_reserved_spawn(action, &raw, decoded_items, meta).await?;
@@ -30927,7 +31578,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let operation_id = operation.operation;
             let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
             let lease = self.tool_cancellations.begin(operation_key)?;
-            Ok(FrameworkReservedCommitPermit { operation, lease })
+            Ok(FrameworkReservedCommitPermit { operation, lease, producer_fault: None })
         }
 
         /// 🕰️ Hands one finished framework-reserved spawn-job to the app's commit queue. Nothing here
@@ -31240,19 +31891,38 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
 
-        async fn commit_framework_clipboard_completion(&mut self, action: &str, completion: Option<ArtifactToolCompletion<A>>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
-            if permit.is_cancelled().await {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("clipboard route '{action}' was cancelled before output commit")));
-            }
-            let Some(completion) = completion else {
-                return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
+        async fn commit_framework_clipboard_completion(&mut self,action:&str,completion:Option<ArtifactToolCompletion<A>>,meta:&ActionMeta,permit:FrameworkReservedCommitPermit)->Result<InvocationResult,Fault>{
+            let id=permit.operation.operation.0;
+            let started=self.mount_original_reserved_owners(action,None,None,completion,meta,Some((permit.operation,permit.lease))).await?;
+            if let Some(fault)=permit.producer_fault{let mounted=self.tool_operations.get_mut(id).expect("original completion owns its admitted slot");mounted.terminal_fault.get_or_insert(fault);mounted.cancellation_lease.as_ref().expect("original completion lease").cancel();}
+            self.finish_mounted_reserved_completion(id);
+            Ok(started)
+        }
+
+        /// 📥️ Keeps the original producer and completion in their fixed slot through every fallible worker boundary.
+        async fn dispatch_reserved_original_producer(&mut self,verb:&str,raw:&[u8],decoded_items:usize,job:ArtifactReservedToolJob,completion:ArtifactToolCompletion<A>,meta:&ActionMeta,admission:Option<semio_framework::ToolWireAdmission>,permit:FrameworkReservedCommitPermit)->Result<InvocationResult,Fault>{
+            let id=permit.operation.operation.0;
+            let started=self.mount_original_reserved_owners(verb,None,Some(job),Some(completion),meta,Some((permit.operation,permit.lease))).await?;
+            let(operation,cancel,job)={let mounted=self.tool_operations.get(id).expect("original producer owns its admitted slot");(mounted.operation,mounted.cancellation_lease.as_ref().expect("original producer lease").cancel_token(),mounted.reserved_producer.as_ref().expect("original producer job").clone())};
+            if let Err(fault)=self.drive_framework_reserved_worker(verb,raw,decoded_items,job,meta,admission,operation,cancel,true).await{let mounted=self.tool_operations.get_mut(id).expect("refused original producer remains mounted");mounted.terminal_fault.get_or_insert_with(||ArtifactBoundedToolFault::from_fault(&fault));mounted.cancellation_lease.as_ref().expect("original producer lease").cancel();}
+            self.finish_mounted_reserved_completion(id);
+            Ok(started)
+        }
+
+        /// 📨️ Moves the original completion enum before validating its route-specific output kind.
+        fn finish_mounted_reserved_completion(&mut self,id:u64){
+            let mounted=self.tool_operations.get_mut(id).expect("original reserved completion retains its exact operation");
+            let taken=mounted.completion.as_ref().map_or(Ok(None),ArtifactToolCompletion::take);
+            let fault=match taken{
+                Ok(Some(publication))=>{mounted.publication=Some(publication);match mounted.publication.as_ref().expect("original completion enum is retained"){
+                    ArtifactToolCompletionValue::Emit(Ok(_),_)=>None,
+                    ArtifactToolCompletionValue::Emit(Err(fault),_)=>Some(ArtifactBoundedToolFault{bytes:fault.bytes,len:fault.len}),
+                    ArtifactToolCompletionValue::Download(_,_)=>Some(ArtifactBoundedToolFault::from_fault(&plugin_sdk_fault("reserved producer completed with original download output"))),
+                }},
+                Ok(None)=>Some(ArtifactBoundedToolFault::from_fault(&plugin_sdk_fault("reserved producer has no completed original output"))),
+                Err(fault)=>Some(ArtifactBoundedToolFault::from_fault(&fault)),
             };
-            let (emit, ephemeral) = completion.take_emit()?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-output"), format!("clipboard route '{action}' completed without producer output")))?;
-            let emit = emit?;
-            Self::ensure_reserved_emit_bounded(action, &emit, self.qualified_tool_proof(action)?.contract()).await?;
-            self.presence_store.apply(&ephemeral.presence).await.map_err(|error| Fault::from(error.to_string()))?;
-            self.transient_store.apply(&ephemeral.transient).await.map_err(|error| Fault::from(error.to_string()))?;
-            self.dispatch_emit(action, emit, meta).await
+            if let Some(fault)=fault{mounted.terminal_fault.get_or_insert(fault);mounted.cancellation_lease.as_ref().expect("original reserved completion lease").cancel();}
         }
 
         async fn commit_framework_shared_host_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
@@ -31728,7 +32398,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             match completion.take()? {
                 Some(ArtifactToolCompletionValue::Emit(emit,ephemeral))=>{
                     let emit=emit.map_err(ArtifactBoundedToolFault::into_fault)?;
-                    let prepared=drive_agent_lane_preview(ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(ephemeral),completion:Some(completion.clone()),maximum_bytes:contract.max_output_bytes,closing:false},child_params,&verb);
+                    let prepared=drive_agent_lane_preview(ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(ephemeral),completion:Some(completion.clone()),maximum_bytes:contract.max_output_bytes,wire_mode:true,closing:false},child_params,&verb);
                     lease.finish();
                     let prepared_steps=prepared?;
                     match completion.take()?{
@@ -32085,7 +32755,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         async fn publish_mounted_typed_operation_run(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
             let started_us = semio_framework_job::default_now_us();
             for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
-                if mounted.pending_child_publication.is_some() {
+                if mounted.owned_child_group.is_some() {
+                    record_typed_operation_unit(TypedOperationUnitKind::Store);
+                    self.publish_mounted_owned_child_operation_unit(mounted).await?;
+                } else if mounted.pending_child_publication.is_some() {
                     record_typed_operation_unit(TypedOperationUnitKind::Store);
                     self.publish_mounted_typed_child_operation_unit(mounted).await?;
                 } else if Self::mounted_typed_interaction_writes_are_next(mounted) {
@@ -32107,7 +32780,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
                     return Ok(());
                 }
-                if mounted.publication.is_none() && mounted.pending_artifact_publication.is_none() && mounted.pending_child_publication.is_none() {
+                if mounted.publication.is_none() && mounted.pending_artifact_publication.is_none() && mounted.pending_child_publication.is_none() && mounted.owned_child_group.is_none() {
                     return Ok(());
                 }
                 let Some(started_us) = started_us else { return Ok(()) };
@@ -32132,10 +32805,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             };
             !emit.interaction_writes.is_empty()
                 && mounted.pending_artifact_publication.is_none()
+                && mounted.owned_child_group.is_none()
                 && emit.artifact_mutations.is_empty()
                 && emit.config_mutations.is_empty()
                 && emit.draft_mutations.is_empty()
                 && emit.child_emits.is_empty()
+                && emit.owned_child_emits.is_empty()
                 && ephemeral.presence.is_empty()
                 && ephemeral.transient.is_empty()
         }
@@ -32185,11 +32860,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             (parked || emit.effects.iter().any(is_inline_interaction_verb))
                 && emit.interaction_writes.is_empty()
                 && mounted.pending_artifact_publication.is_none()
+                && mounted.owned_child_group.is_none()
                 && emit.artifact_mutations.is_empty()
                 && emit.config_mutations.is_empty()
                 && emit.window_config_mutations.is_empty()
                 && emit.draft_mutations.is_empty()
                 && emit.child_emits.is_empty()
+                && emit.owned_child_emits.is_empty()
                 && ephemeral.presence.is_empty()
                 && ephemeral.transient.is_empty()
                 && ephemeral.window_transient.is_empty()
@@ -32285,6 +32962,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     publication_lanes: &[],
                     session: None,
                     session_rejected: None,
+                    reserved_producer: None,
                     completion: None,
                     raw_input: None,
                     output_chunks: None,
@@ -32294,6 +32972,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     publication: None,
                     pending_artifact_publication: None,
                     pending_child_publication: None,
+                    owned_child_group: None,
+                    owned_child_committed: false,
+                    owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     result_page: None,
@@ -32840,12 +33521,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         || (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
                         || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
                         || (!ephemeral.window_transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
-                        || (!emit.child_emits.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Child))
+                        || ((!emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty()) && !publication_lanes.contains(&ArtifactToolPublicationLane::Child))
                         || (!emit.interaction_writes.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Interaction))
                     {
                         return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
                     }
-                    if !emit.artifact_mutations.is_empty() {
+                    if !emit.artifact_mutations.is_empty() || !emit.owned_child_emits.is_empty() {
                         self.require_operation_emitting_kind(&mounted.verb, self.declared_dispatch_kind(&mounted.verb))?;
                         if A::ROLE == AppRole::Viewer {
                             return Err(viewer_read_only_fault(&mounted.verb));
@@ -32865,7 +33546,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                                 if !outcome.is_applicable(protocol::MergePolicy::default()) {
                                     return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                                 }
-                                running = outcome.diff().apply(&running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                                running = protocol::apply_diff(outcome.diff(), &running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                             }
                             if !foreign.is_empty() {
                                 let mut local_ops = Vec::with_capacity(emit.artifact_mutations.len());
@@ -32882,17 +33563,26 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         &mounted.verb,
                         emit.transaction.as_ref(),
                         emit.transaction_phase,
-                        !emit.child_emits.is_empty(),
+                        !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty(),
                         !emit.artifact_mutations.is_empty(),
                         emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps),
                     ) {
                         return Err(fault);
                     }
-                    if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
+                    if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
                         return Err(time_travel_frozen_fault(&mounted.verb));
                     }
                     self.close_streamed_transaction_unit(emit)?;
-                    if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
+                    if !emit.owned_child_emits.is_empty() {
+                        if !emit.child_emits.is_empty() || emit.owned_child_emits.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN { return Err(plugin_sdk_fault("mounted owned child group requires its one exact admitted typed source family")); }
+                        let operation = mounted.operation.operation.0;
+                        let bytes = MountedPrivateChildGroup::<M>::frame_birth_bytes();
+                        let captured_millis = i64::try_from(store::now_ms()).map_err(|_|plugin_sdk_fault("mounted child publication requires its original UTC clock capture"))?;
+                        self.admit_private_child_group_frame(operation, captured_millis, u64::MAX, mounted_private_child_grant(bytes,0)?)?;
+                        mounted.owned_child_group = Some(operation);
+                        return Ok(());
+                    }
+                    if emit.child_emits.is_empty() && emit.owned_child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                         if let Some(fault) = self.open_transaction_admission_fault(emit.transaction.as_ref()) {
                             return Err(fault);
                         }
@@ -33445,6 +34135,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     publication_lanes,
                     session,
                     session_rejected,
+                    reserved_producer: None,
                     completion: Some(completion),
                     raw_input: (!app_owned_retained_route).then_some(raw_input),
                     output_chunks: Some(output_chunks),
@@ -33454,6 +34145,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     publication: None,
                     pending_artifact_publication: None,
                     pending_child_publication: None,
+                    owned_child_group: None,
+                    owned_child_committed: false,
+                    owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::clone(&children)),
                     captured_child_content_generation: self.child_content_generation,
                     result_page: None,
@@ -33513,18 +34207,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if !proof.admits::<A>(&admission) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.factory-identity"), "media import resolved outside its exact controller/owner/factory/tool/schema proof"));
             }
-            let (job, completion) = self.build_artifact_reserved_media_job(port, media, meta).await?;
+            let authority = self.admit_reserved_emit_producer("import-media", meta)?;
+            let (job, completion) = match self.build_artifact_reserved_media_job(port, media, meta).await { Ok(producer) => producer, Err(fault) => { self.finish_reserved_emit_producer(authority); return Err(fault); } };
             let raw = Vec::new();
-            let permit = self.run_framework_reserved_job("import-media", &raw, 1, job, meta, Some(admission)).await?;
-            self.validate_framework_reserved_commit("import-media", &permit).await?;
-            let (emit, ephemeral) = completion.take_emit()?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-output"), format!("media import port '{port}' completed without producer output")))?;
-            let emit = emit?;
-            Self::ensure_reserved_emit_bounded("import-media", &emit, self.qualified_tool_proof("import-media")?.contract()).await?;
-            self.presence_store.apply(&ephemeral.presence).await.map_err(|error| Fault::from(error.to_string()))?;
-            self.transient_store.apply(&ephemeral.transient).await.map_err(|error| Fault::from(error.to_string()))?;
-            let result = self.dispatch_emit("import-media", emit, meta).await;
-            permit.finish();
-            result
+            self.dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority).await
         }
 
         /// 🧮️ B1: dispatches a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` against
@@ -33534,7 +34220,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let raw = command_bytes.to_vec();
             let decoded = std::sync::Arc::new(std::sync::Mutex::new(None));
             let job = FrameworkConfigurationBinaryJob::<A> { raw: raw.clone(), cursor: 0, stage: FrameworkConfigurationBinaryStage::Envelope, operation: None, decoded: std::mem::ManuallyDrop::new(Some(decoded.clone())), closing: false };
-            let permit = self.run_framework_reserved_job("configuration-binary", &raw, 1, job, meta, None).await?;
+            let permit = self.run_framework_reserved_job("configuration-binary", &raw, 1, job, meta, None, None).await?;
             self.validate_framework_reserved_commit("configuration-binary", &permit).await?;
             let command = decoded
                 .lock()
@@ -33776,35 +34462,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            if let Some(entry) = self.command_log.last_mut() {
-                if let Some(value) = entry.child_edit_ids.last_mut() {
-                    if let Some(step) = Self::close_retained_string_page(value, maximum_bytes) {
-                        return step;
-                    }
-                    drop(entry.child_edit_ids.pop());
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                for field in [&mut entry.action_id, &mut entry.timestamp] {
-                    if let Some(step) = Self::close_retained_string_page(field, maximum_bytes) {
-                        return step;
-                    }
-                }
-                for cell in entry.label.texts_mut() {
-                    if let Some(step) = Self::close_retained_string_page(cell, maximum_bytes) {
-                        return step;
-                    }
-                }
-                if let Some(value) = entry.edit_id.as_mut() {
-                    if let Some(step) = Self::close_retained_string_page(value, maximum_bytes) {
-                        return step;
-                    }
-                    drop(entry.edit_id.take());
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-            }
-            if let Some(entry) = self.command_log.pop() {
-                drop(entry);
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            if !self.command_log.terminal_is_empty() {
+                return match self.command_log.close_step(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: 0, maximum_copy_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth: 64 }) {
+                    Ok(step) => PluginCloseStep::Pending { released_items: step.progress().copied_items, released_bytes: step.progress().released_bytes },
+                    Err(_) => PluginCloseStep::Blocked { reason: "command inverse exceeds its declared retained structural depth" },
+                };
             }
             if let Some(sequence) = self.history_dirty_sequences.iter().next().copied() {
                 self.history_dirty_sequences.remove(&sequence);
@@ -33939,7 +34601,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             self.cache.is_none()
                 && self.history_view.is_none()
                 && self.close_cache.as_ref().is_none_or(ArtifactCacheRetirement::terminal_is_empty)
-                && self.command_log.is_empty()
+                && self.command_log.terminal_is_empty()
                 && self.history_dirty_sequences.is_empty()
                 && self.children.is_empty()
                 && self.pending_child_pins.is_empty()
@@ -34588,6 +35250,37 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
+        fn next_maintenance_byte_demand(&self) -> usize { if self.command_prune_requested() || self.pending_command_prune.is_some() || !self.command_log.pruned_terminal_is_empty() { self.command_prune_next_release_byte_demand() } else { self.next_closing_private_child_group().map_or(0,|operation|self.private_child_group_operation_close_byte_demand(operation).unwrap_or(1)) } }
+        fn next_close_byte_demand(&self) -> usize {
+            if self.close_cancellation_cursor>=TOOL_CANCELLATION_SLOTS+ARTIFACT_LIVE_OUTPUT_SLOTS&&self.latest_wins_keys.terminal_is_empty()&&self.latest_wins_order.items.is_empty(){if let Some((_,id))=self.tool_operations.next_id_from(self.close_typed_operation_cursor){if let Some(operation)=self.tool_operations.get(id){let bytes=operation.reserved_close_byte_demand();if bytes!=0{return bytes;}}}}
+            if self.pending_command_prune.is_some() || self.command_prune_requested() { return 0; }
+            if !self.command_log.pruned_terminal_is_empty() { return self.command_log.next_pruned_close_byte_demand().unwrap_or(1); }
+            if !self.private_child_groups_terminal_is_empty() { return self.private_child_group_close_byte_demand(); }
+            if self.close_envelope_completed_records_drained && !self.close_store_replacement_jobs_drained {
+                if let Some((_, operation)) = self.store_replacement_jobs.next_id_from(self.close_store_replacement_cursor) {
+                    if let Some(active) = self.store_replacement_jobs.get(operation) { return active.next_close_byte_demand(); }
+                }
+            }
+            if self.close_store_replacement_jobs_drained && !self.close_document_archive_loads_drained {
+                if let Some((_, operation)) = self.document_archive_loads.next_id_from(self.close_document_archive_cursor) {
+                    if let Some(active) = self.document_archive_loads.get(operation) { return active.next_close_byte_demand(); }
+                }
+            }
+            if self.close_owned_stage >= 8 && !self.command_log.terminal_is_empty() {
+                return self.command_log.next_close_byte_demand().unwrap_or(1);
+            }
+            if self.close_owned_stage >= 8 && self.command_log.terminal_is_empty() && self.history_dirty_sequences.is_empty() && self.pending_child_pins.is_empty() && !self.composition.terminal_is_empty() {
+                return self.composition.next_close_byte_demand();
+            }
+            match self.close_owned_stage {
+                0 => self.store.next_close_byte_demand(),
+                1 => self.config_store.next_close_byte_demand(),
+                2 => self.draft_store.next_close_byte_demand(),
+                7 => self.interaction_store.next_close_byte_demand(),
+                _ => usize::from(!self.close_terminal_is_empty()),
+            }
+        }
+
         async fn bind_instance_id(&mut self, instance_id: u32) {
             self.live_runtime_instance_id = Some(instance_id);
         }
@@ -34611,6 +35304,34 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.pending_command_prune.is_some() || self.command_prune_requested() || !self.command_log.pruned_terminal_is_empty() {
+                return self.advance_command_prune_step(maximum_items, maximum_bytes, true);
+            }
+            if !self.private_child_groups_terminal_is_empty() { return self.close_private_child_group_step(maximum_items, maximum_bytes); }
+            #[cfg(not(target_arch = "wasm32"))]
+            if std::env::var_os("SEMIO_DEBUG_CLOSE_PHASE").is_some() {
+                std::thread_local! { static CLOSE_PHASE_DIAGNOSTIC: std::cell::Cell<(u8, Option<std::time::Instant>)> = const { std::cell::Cell::new((0, None)) }; }
+                CLOSE_PHASE_DIAGNOSTIC.with(|state| {
+                    let (count, previous) = state.get();
+                    if count < 8 && previous.is_none_or(|time| time.elapsed() >= std::time::Duration::from_secs(10)) {
+                        state.set((count + 1, Some(std::time::Instant::now())));
+                        eprintln!("[DEBUG] app close phase app={:p} stage={} grant={} query={} timeTravelEmpty={} localQuery={} returnedReadsEmpty={} documentPump={:?} configPump={:?} interactionPump={:?} documentPhase={}", self as *const Self, self.close_owned_stage, maximum_bytes, self.next_close_byte_demand(), self.time_travel.terminal_is_empty(), self.local_interaction_query.is_some(), self.snapshot_read_returns_terminal_is_empty(), self.document_snapshot_read_returns.active.as_ref().map(|owner| (owner.terminal_is_empty(), store::artifact_retirement_box_byte_demand(owner))), self.config_snapshot_read_returns.active.as_ref().map(|owner| (owner.terminal_is_empty(), store::artifact_retirement_box_byte_demand(owner))), self.interaction_snapshot_read_returns.active.as_ref().map(|owner| (owner.terminal_is_empty(), store::artifact_retirement_box_byte_demand(owner))), self.store.close_owned_phase_witness());
+                        eprintln!("[DEBUG] app close earlier ladder toolRunsEmpty={} presenceIdle={} liveInstance={:?} cancelCursor={} latestEmpty={} orderCount={} typedEmpty={} instanceDrained={} mediaCursor={} mediaCleanup={} segmentCursor={} segmentCleanup={} snapshotCursor={} childMembersEmpty={} childRootsEmpty={} childDetached={} childMemberActive={} childrenEmpty={} peerPublicationsEmpty={}", self.tool_runs.terminal_is_empty(), self.presence_store.local_read_maintenance_is_idle(), self.live_runtime_instance_id, self.close_cancellation_cursor, self.latest_wins_keys.terminal_is_empty(), self.latest_wins_order.items.len(), self.tool_operations.is_empty(), self.close_instance_operation_owner_drained, self.close_media_cursor, self.close_media_cleanup_cursor, self.close_segment_cursor, self.close_segment_cleanup_cursor, self.close_snapshot_cursor, self.child_member_retirements.is_empty(), self.child_content_retirements.is_empty(), self.close_child_root_detached, self.close_child_member.is_some(), self.children.is_empty(), self.peer_roster_publications.is_empty());
+                        eprintln!("[DEBUG] app close later ladder peerDetached={} ingressDrained={} decodeJobsDrained={} fieldDecodersDrained={} completedRecordsDrained={} replacementJobsDrained={} archiveLoadsDrained={} snapshotReadsDrained={}", self.close_peer_presence_detached, self.close_envelope_ingress_drained, self.close_envelope_decode_jobs_drained, self.close_envelope_field_decoders_drained, self.close_envelope_completed_records_drained, self.close_store_replacement_jobs_drained, self.close_document_archive_loads_drained, self.close_snapshot_reads_drained);
+                        if let Some((_, operation)) = self.store_replacement_jobs.next_id_from(self.close_store_replacement_cursor) {
+                            if let Some(active) = self.store_replacement_jobs.get(operation) {
+                                eprintln!("[DEBUG] replacement close owner operation={} state={:?} retainedStore={:?} disposer={} open={:?} ingress={:?} registry={:?} contentRetirement={} content={} children={} composition={} childRetirement={} session={} rejectedSession={} outcome={}", operation, active.state, active.retained_store.as_ref().map(|owner| (owner.next_close_byte_demand(), owner.close_owned_phase_witness())), active.retained_disposer.is_some(), active.active_member_open.as_ref().map(store::MemberOpenOperation::next_close_byte_demand), active.active_member_ingress.as_ref().map(OwnedDocumentMemberIngress::next_close_byte_demand), active.member_ingress.as_ref().map(OwnedDocumentMemberIngressRegistry::next_close_byte_demand), active.candidate_content_retirement.is_some(), active.candidate_content.is_some(), active.candidate_children.is_some(), active.candidate_composition.is_some(), active.retiring_child.is_some(), active.session.is_some(), active.session_rejected.is_some(), active.retained_outcome.is_some());
+                            }
+                        }
+                        if let Some((_, operation)) = self.document_archive_loads.next_id_from(self.close_document_archive_cursor) {
+                            if let Some(active) = self.document_archive_loads.get(operation) {
+                                if let Some(hydration) = active.hydration.as_ref() { eprintln!("[DEBUG] archive hydration {}", hydration.close_phase_witness()); }
+                                eprintln!("[DEBUG] archive close owner operation={} state={:?} phase={:?} target={:?} retained={:?} hydration={} ingress={} member={} history={} decodedHistory={} replacement={:?} archive={:?}", operation, active.state, active.phase, active.terminal_target, active.retained.as_ref().map(|owner| (owner.terminal_is_empty(), store::artifact_retirement_box_byte_demand(owner))), active.hydration.is_some(), active.rejected_ingress.is_some(), active.member.is_some(), active.history.is_some(), active.decoded_history.is_some(), active.replacement.map(|handle| handle.operation.0), active.archive.as_ref().map(|archive| (archive.members.len(), archive.parent_spr.len(), archive.parent_spr.capacity(), archive.parent_pack.len(), archive.parent_pack.capacity())));
+                            }
+                        }
+                    }
+                });
             }
             if !self.close_started {
                 self.tool_cancellations.cancel_scope_generation();
@@ -35146,6 +35867,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         fn close_terminal_is_empty(&self) -> bool {
             self.close_started
+                && self.pending_command_prune.is_none()
+                && !self.command_prune_requested()
+                && self.command_log.pruned_terminal_is_empty()
                 && self.tool_runs.terminal_is_empty()
                 && self.time_travel.terminal_is_empty()
                 && self.close_owned_stage >= 8
@@ -35160,6 +35884,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 && self.close_interaction_disposer.is_none()
                 && self.tool_cancellations.active_operation_count() == 0
                 && self.tool_operations.is_empty()
+                && self.private_child_groups_terminal_is_empty()
                 && self.latest_wins_commands.is_empty()
                 && self.typed_operation_reservations.iter().all(Option::is_none)
                 && self.latest_wins_order.len() == 0
@@ -35211,6 +35936,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
+            if self.command_prune_requested() || self.pending_command_prune.is_some() || !self.command_log.pruned_terminal_is_empty() {
+                return self.advance_command_prune_step(maximum_items, maximum_bytes, false);
+            }
+            if let Some(operation) = self.next_closing_private_child_group() { return self.close_private_child_group_operation_step(operation,maximum_items,maximum_bytes); }
             if self.tool_operations.is_empty()
                 && self.tool_cancellations.active_operation_count() == 0
                 && self.latest_wins_commands.is_empty()
@@ -35275,7 +36004,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
 
         fn maintenance_under_pressure(&self) -> bool {
-            self.store.maintenance_retirements_under_pressure()
+            self.command_prune_requested() || self.pending_command_prune.is_some() || !self.command_log.pruned_terminal_is_empty()
+                || self.next_closing_private_child_group().is_some()
+                || self.store.maintenance_retirements_under_pressure()
                 || self.config_store.maintenance_retirements_under_pressure()
                 || self.draft_store.maintenance_retirements_under_pressure()
                 || self.window_config_store.maintenance_retirements_under_pressure()
@@ -35747,7 +36478,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 if !outcome.is_applicable(protocol::MergePolicy::default()) {
                     return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
                 }
-                running = match outcome.diff().apply(&running) {
+                running = match protocol::apply_diff(outcome.diff(), &running) {
                     Ok(next) => next,
                     Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string())) },
                 };
@@ -38355,6 +39086,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub type ViewerSurfaceApp<V> = VcsArtifactApp<ViewerApp<V>, <V as ArtifactViewer>::Members>;
 
     pub trait ArtifactEditor: Default + Send + 'static {
+        /// 📐️ Declares the physical authority frame needed to retain this editor's original mutation batch.
+        fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
+
+        /// 🫱️ Admits the original editor batch only when its first-party retirement authority is funded.
+        fn admit_owned_mutation_batch(_values: &mut Option<Vec<Self::Mutation>>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { Ok(None) }
+
         /// 🎭️ Always `Editor` in practice — defaulted so implementors never restate it.
         const ROLE: AppRole = AppRole::Editor;
         /// 🧩️ The closed member roster every surface of this editor runs over — the ONE place a bundle
@@ -39084,6 +39821,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// edits an `ArtifactEditor` made) but `handle` returns `ViewEmit`, which cannot structurally
     /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
     pub trait ArtifactViewer: Default + Send + 'static {
+        /// 🧮️ Declares the physical authority frame for this viewer's decoded editor-authored mutation batch.
+        fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
+
+        /// 📥️ Admits a decoded original batch through the viewer's explicit first-party owner.
+        fn admit_owned_mutation_batch(_values: &mut Option<Vec<Self::Mutation>>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { Ok(None) }
+
         /// 🧩️ Read-only twin of `ArtifactEditor::Members` — the roster this viewer's composed children
         /// are opened through, carried by the app rather than by whoever registers it.
         type Members: store::SpaceMember + store::MemberFactory + Send + 'static = store::NoMembers;
@@ -39826,6 +40569,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
+        fn owned_mutation_batch_birth_bytes() -> Option<usize> { E::owned_mutation_batch_birth_bytes() }
+
+        fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { E::admit_owned_mutation_batch(values, grant) }
+
         const DIALECT: Dialect = E::DIALECT;
         fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
             E::child_restore_projection(snapshot)
@@ -40199,6 +40946,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
+        fn owned_mutation_batch_birth_bytes() -> Option<usize> { V::owned_mutation_batch_birth_bytes() }
+
+        fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { V::admit_owned_mutation_batch(values, grant) }
+
         fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
             V::build_envelope_decode_owner_bundle()
         }
@@ -41155,7 +41906,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// snapshot value and the ordinary `Mutation`/`MutationDiff` algebra, so a trivial subset writes
     /// zero builder boilerplate (Task 3): `type Construction = SnapshotBuilder<Snapshot, Mutation>;`
     /// where old code hand-wrote its own `empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/
-    /// `absorb`/`build`. `mutate` reuses `MutationOutcome::apply_to` (this crate's own established
+    /// `absorb`/`build`. `mutate` reuses `store::apply_outcome` (this crate's own established
     /// "apply once, fold a rejection into a Fatal message" idiom) rather than re-deriving it, matching
     /// the trait's own doc: "the builder applies `outcome.diff()` once and returns that outcome intact".
     pub struct SnapshotBuilder<S, M> {
@@ -41192,13 +41943,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(Self::wrap(S::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
-            let mut snapshot = self.snapshot;
-            let diff = mutation.diff(&snapshot);
-            let outcome = diff.apply_to(&mut snapshot);
+            let (snapshot, outcome) = store::apply_outcome(&self.snapshot, mutation.diff(&self.snapshot));
             (Self::wrap(snapshot), outcome)
         }
         fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
-            match diff.apply(&self.snapshot) {
+            match protocol::apply_diff(&diff, &self.snapshot) {
                 Ok(snapshot) => Ok(Self::wrap(snapshot)),
                 Err(error) => Err(error),
             }
@@ -42126,7 +42875,7 @@ use semio_framework_value::ToValue;
         let value = store::pack_rt::decode_wire_value(bytes).ok()?;
         let mut descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(value).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
-        Some(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)))
+        Some(store::pack_rt::encode_wire_value(semio_framework::CanonicalDescriptorValue::new(semio_framework_value::ToValue::to_value(&descriptor)).value()))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -42382,6 +43131,15 @@ use semio_framework_value::ToValue;
         }
     }
 
+    /// 💰️ Executes the selected live owner within the runtime's one-item maintenance turn.
+    fn runtime_live_maintenance_step(demand: usize, maintenance: impl FnOnce(usize, usize) -> Result<crate::app::PluginCloseStep, Fault>) -> Result<(crate::app::PluginCloseStep, usize), Fault> {
+        if demand > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES {
+            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), "live maintenance physical allocation exceeds its declared admission"));
+        }
+        let bytes = crate::app::artifact_close_release_grant(demand, RUNTIME_CLOSE_BYTES_PER_STEP)?;
+        maintenance(1, bytes).map(|step| (step, bytes))
+    }
+
     struct RuntimeLiveCleanupJob<PA: PluginApp> {
         instance_id: u32,
         cell: Option<std::sync::Weak<RuntimeAppCell<PA>>>,
@@ -42416,7 +43174,8 @@ use semio_framework_value::ToValue;
             cell.maintenance_probe_entries.fetch_add(1, Ordering::Relaxed);
             let traced = semio_framework_trace::runtime_diagnostics_enabled();
             let maintenance_started_us = traced.then(semio_framework_job::default_now_us).flatten();
-            let maintenance = instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP);
+            let demand = instance.app.next_maintenance_byte_demand();
+            let maintenance = runtime_live_maintenance_step(demand, |items, bytes| instance.app.maintenance_step(items, bytes));
             cell.maintenance_pressure.store(instance.app.maintenance_under_pressure(), Ordering::Relaxed);
             if let (Some(started_us), Some(finished_us)) = (maintenance_started_us, maintenance_started_us.and_then(|_| semio_framework_job::default_now_us())) {
                 if finished_us.saturating_sub(started_us) >= 2_000 {
@@ -42424,25 +43183,25 @@ use semio_framework_value::ToValue;
                 }
             }
             match maintenance {
-                Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
+                Ok((progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }, granted_bytes)) if released_items <= 1 && released_bytes <= granted_bytes => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
                         state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.instance_id.to_le_bytes()),
                         applied_progress: released_items as u64,
                     })
                 }
-                Ok(crate::app::PluginCloseStep::Pending { .. }) => {
+                Ok((crate::app::PluginCloseStep::Pending { .. }, _)) => {
                     semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup step exceeded its exact item or byte contract") })
                 }
-                Ok(progress @ crate::app::PluginCloseStep::Blocked { .. }) => {
+                Ok((progress @ crate::app::PluginCloseStep::Blocked { .. }, _)) => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::Yield
                 }
-                Ok(progress @ crate::app::PluginCloseStep::AwaitingInput { .. }) => {
+                Ok((progress @ crate::app::PluginCloseStep::AwaitingInput { .. }, _)) => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::Yield
                 }
-                Ok(crate::app::PluginCloseStep::Complete) => {
+                Ok((crate::app::PluginCloseStep::Complete, _)) => {
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
                     semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                         state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitState, &self.instance_id.to_le_bytes()),
@@ -42706,10 +43465,14 @@ use semio_framework_value::ToValue;
             runtime_close_phase(&state, 12);
             #[cfg(test)]
             state.physical_close_calls.fetch_add(1, Ordering::SeqCst);
-            let progress = instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, RUNTIME_CLOSE_BYTES_PER_STEP);
+            let release_grant = match crate::app::artifact_close_release_grant(instance.app.next_close_byte_demand(), RUNTIME_CLOSE_BYTES_PER_STEP) {
+                Ok(grant) => grant,
+                Err(fault) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, fault.message.as_bytes()) }),
+            };
+            let progress = instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, release_grant);
             runtime_close_phase(&state, 13);
             let outcome = match progress {
-                Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= RUNTIME_CLOSE_ITEMS_PER_STEP && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
+                Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= RUNTIME_CLOSE_ITEMS_PER_STEP && released_bytes <= release_grant => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
                         state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state.instance_id.to_le_bytes()),
@@ -47339,7 +48102,7 @@ pub mod world3d_host {
     // `ActionDescriptor`/`MeasureSelectItem`/`WindowMeasure` were not part of that move and stay here.
     use semio_framework_ui_scene::world3d_default_selection_json;
     pub use semio_framework_ui_scene::{
-        scene_lane_hash, SceneLanePayload, SceneLaneRef, World3dScene, World3dSceneLane, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
+        scene_lane_hash, SceneLanePayload, SceneLaneRef, World3dScene, World3dSceneLane, World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
     };
     use ui_wgpu::wgpu::{world3d_camera_json, ActionDescriptor, MeasureSelectItem, WindowMeasure};
 
@@ -48399,7 +49162,7 @@ pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, scene_lane_hash, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json,
     world3d_mesh_id_from_url, world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose,
     world3d_projection_spec_json, world3d_scene, world3d_selection_json, world3d_selection_json_with_granularity, world3d_sun_measures, SceneLanePayload, SceneLaneRef, SelectionSet, World3dScene, World3dSceneLane, WorldProjectionConfig,
-    WorldSunConfig, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
+    World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WorldSunConfig, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
 // 🧩️ Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so
 // apps keep the flat `semio_framework_plugin::*` import surface with zero Cargo.toml churn.

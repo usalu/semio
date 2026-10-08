@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePeopleGainPeoplePerArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PeopleGainPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangePeopleGainPeoplePerArea, base: &EnergyModelSn
     if existing.people_per_area == payload.new_people_per_area {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("People Gain {} already carries this occupant density (people/m²): {}.", payload.id.0, payload.new_people_per_area));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.people.iter_mut().find(|item| item.id == payload.id) {
-        item.people_per_area = payload.new_people_per_area;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { people: Rows::modifying(PeopleGainPatch { people_per_area: Some(payload.new_people_per_area), ..PeopleGainPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

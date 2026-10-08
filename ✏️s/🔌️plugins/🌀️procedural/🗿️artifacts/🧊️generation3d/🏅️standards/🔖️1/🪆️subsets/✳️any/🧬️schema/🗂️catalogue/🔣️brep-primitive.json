@@ -1,0 +1,417 @@
+{
+  "category": {
+    "id": "brep.primitive",
+    "emoji": "🧊️",
+    "order": 10,
+    "label": {
+      "en": "Primitives",
+      "de": "Grundkörper"
+    },
+    "description": {
+      "en": "Ready-made solids: box, sphere, cylinder, cone, torus and convex hull.",
+      "de": "Fertige Körper: Quader, Kugel, Zylinder, Kegel, Torus und konvexe Hülle."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.primitive.box",
+      "category": "brep.primitive",
+      "emoji": "📦️",
+      "label": {
+        "en": "Box",
+        "de": "Quader"
+      },
+      "description": {
+        "en": "Creates an axis-aligned box with its corner at the origin.",
+        "de": "Erzeugt einen achsenparallelen Quader mit einer Ecke im Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "width",
+          "label": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "description": {
+            "en": "Size along the X axis.",
+            "de": "Ausdehnung entlang der X-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "depth",
+          "label": {
+            "en": "Depth",
+            "de": "Tiefe"
+          },
+          "description": {
+            "en": "Size along the Y axis.",
+            "de": "Ausdehnung entlang der Y-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Size along the Z axis.",
+            "de": "Ausdehnung entlang der Z-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The box as a closed solid.",
+            "de": "Der Quader als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.primitive.sphere",
+      "category": "brep.primitive",
+      "emoji": "⚪️",
+      "label": {
+        "en": "Sphere",
+        "de": "Kugel"
+      },
+      "description": {
+        "en": "Creates a sphere centered at the origin.",
+        "de": "Erzeugt eine Kugel mit dem Mittelpunkt im Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The sphere as a closed solid.",
+            "de": "Die Kugel als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.primitive.cylinder",
+      "category": "brep.primitive",
+      "emoji": "🛢️",
+      "label": {
+        "en": "Cylinder",
+        "de": "Zylinder"
+      },
+      "description": {
+        "en": "Creates a cylinder standing on the XY plane around the Z axis.",
+        "de": "Erzeugt einen Zylinder, der auf der XY-Ebene um die Z-Achse steht."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Distance from the center to the outline.",
+            "de": "Abstand vom Mittelpunkt zum Rand."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Size along the Z axis.",
+            "de": "Ausdehnung entlang der Z-Achse."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The cylinder as a closed solid.",
+            "de": "Der Zylinder als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.primitive.cone",
+      "category": "brep.primitive",
+      "emoji": "🔺️",
+      "label": {
+        "en": "Cone",
+        "de": "Kegel"
+      },
+      "description": {
+        "en": "Creates a cone with its base on the XY plane and its apex on the Z axis.",
+        "de": "Erzeugt einen Kegel mit der Grundfläche auf der XY-Ebene und der Spitze auf der Z-Achse."
+      },
+      "inputs": [
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Radius of the base circle.",
+            "de": "Radius des Grundkreises."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "height",
+          "label": {
+            "en": "Height",
+            "de": "Höhe"
+          },
+          "description": {
+            "en": "Distance from the base to the apex.",
+            "de": "Abstand von der Grundfläche zur Spitze."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The cone as a closed solid.",
+            "de": "Der Kegel als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.primitive.torus",
+      "category": "brep.primitive",
+      "emoji": "🍩️",
+      "label": {
+        "en": "Torus",
+        "de": "Torus"
+      },
+      "description": {
+        "en": "Creates a torus around the Z axis; the tube radius must stay below the ring radius.",
+        "de": "Erzeugt einen Torus um die Z-Achse; der Röhrenradius muss kleiner als der Ringradius bleiben."
+      },
+      "inputs": [
+        {
+          "name": "major",
+          "label": {
+            "en": "Ring radius",
+            "de": "Ringradius"
+          },
+          "description": {
+            "en": "Distance from the torus center to the center of the tube.",
+            "de": "Abstand vom Torusmittelpunkt zur Mitte der Röhre."
+          },
+          "type": "length",
+          "default": 2,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "minor",
+          "label": {
+            "en": "Tube radius",
+            "de": "Röhrenradius"
+          },
+          "description": {
+            "en": "Radius of the tube itself.",
+            "de": "Radius der Röhre selbst."
+          },
+          "type": "length",
+          "default": 0.5,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The torus as a closed solid.",
+            "de": "Der Torus als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.primitive.convexHull",
+      "category": "brep.primitive",
+      "emoji": "🔷️",
+      "label": {
+        "en": "Convex hull",
+        "de": "Konvexe Hülle"
+      },
+      "description": {
+        "en": "Wraps the smallest convex solid around a set of points.",
+        "de": "Umhüllt eine Punktmenge mit dem kleinsten konvexen Körper."
+      },
+      "inputs": [
+        {
+          "name": "points",
+          "label": {
+            "en": "Points",
+            "de": "Punkte"
+          },
+          "description": {
+            "en": "The points to enclose; at least four, not all in one plane.",
+            "de": "Die einzuhüllenden Punkte; mindestens vier, nicht alle in einer Ebene."
+          },
+          "type": "point",
+          "list": true,
+          "minItems": 4,
+          "default": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The convex hull as a closed solid.",
+            "de": "Die konvexe Hülle als geschlossener Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    }
+  ]
+}

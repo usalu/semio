@@ -4,8 +4,13 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_transform_list};
 pub fn parse_editable_svg_transform(source:&str)->Result<DrawingTransform,String> {
     validate_transform_grammar(source)?;
+    editable_svg_transform_operations(&parse_transform_list(source)?)
+}
+
+/// ↗️ Consumes the native operation authority without printing and parsing transform text.
+pub fn editable_svg_transform_operations(operations:&[TransformOp])->Result<DrawingTransform,String> {
     let mut matrix=Matrix2D::identity();
-    for mut operation in parse_transform_list(source)? {
+    for mut operation in operations.iter().cloned() {
         match &mut operation {
             TransformOp::Rotate {angle,..} => {*angle%=360.0;},
             TransformOp::SkewX {angle}|TransformOp::SkewY {angle} => {

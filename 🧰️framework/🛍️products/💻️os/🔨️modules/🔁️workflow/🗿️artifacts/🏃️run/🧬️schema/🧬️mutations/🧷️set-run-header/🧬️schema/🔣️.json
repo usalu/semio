@@ -1,0 +1,312 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/mutation/set-run-header/schema.json",
+  "title": "SetRunHeader",
+  "propertyNames": {
+    "enum": [
+      "inputCollectionRef",
+      "inputSnapshotId",
+      "operation",
+      "outputCollectionRef",
+      "parameterValues",
+      "startedAt",
+      "status",
+      "trigger",
+      "workflowCheckpointId",
+      "workflowRef"
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "workflowRef",
+    "workflowCheckpointId",
+    "inputCollectionRef",
+    "inputSnapshotId",
+    "parameterValues",
+    "outputCollectionRef",
+    "trigger",
+    "status",
+    "startedAt"
+  ],
+  "properties": {
+    "operation": {
+      "const": "setRunHeader"
+    },
+    "workflowRef": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Workflow",
+          "de": "Workflow"
+        },
+        "group": "source",
+        "order": 10
+      }
+    },
+    "workflowCheckpointId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Workflow checkpoint",
+          "de": "Workflow-Checkpoint"
+        },
+        "group": "source",
+        "order": 20
+      }
+    },
+    "inputCollectionRef": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Input collection",
+          "de": "Eingabesammlung"
+        },
+        "group": "source",
+        "order": 30
+      }
+    },
+    "inputSnapshotId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Input snapshot",
+          "de": "Eingabe-Momentaufnahme"
+        },
+        "group": "source",
+        "order": 40
+      }
+    },
+    "parameterValues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parameterId",
+          "value"
+        ],
+        "properties": {
+          "parameterId": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Parameter",
+                "de": "Parameter"
+              },
+              "group": "identity",
+              "order": 10
+            }
+          },
+          "value": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Value",
+                "de": "Wert"
+              },
+              "group": "value",
+              "order": 20
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Parameter values",
+          "de": "Parameterwerte"
+        },
+        "group": "record",
+        "order": 50
+      }
+    },
+    "outputCollectionRef": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Output collection",
+          "de": "Ausgabesammlung"
+        },
+        "group": "source",
+        "order": 60
+      }
+    },
+    "trigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "actor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "manual",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Trigger kind",
+                  "de": "Auslöserart"
+                }
+              }
+            },
+            "actor": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Actor",
+                  "de": "Akteur"
+                },
+                "group": "identity",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Manual",
+              "de": "Manuell"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "automationRef",
+            "eventFingerprint"
+          ],
+          "properties": {
+            "kind": {
+              "const": "automation",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Trigger kind",
+                  "de": "Auslöserart"
+                }
+              }
+            },
+            "automationRef": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Automation",
+                  "de": "Automatisierung"
+                },
+                "group": "source",
+                "order": 20
+              }
+            },
+            "eventFingerprint": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Event fingerprint",
+                  "de": "Ereignis-Fingerabdruck"
+                },
+                "group": "fingerprint",
+                "order": 30
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Automation",
+              "de": "Automatisierung"
+            }
+          }
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Trigger",
+          "de": "Auslöser"
+        },
+        "group": "record",
+        "order": 70
+      }
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "canceled"
+      ],
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Run status",
+          "de": "Laufstatus"
+        },
+        "options": {
+          "pending": {
+            "en": "Pending",
+            "de": "Ausstehend"
+          },
+          "running": {
+            "en": "Running",
+            "de": "Läuft"
+          },
+          "succeeded": {
+            "en": "Succeeded",
+            "de": "Erfolgreich"
+          },
+          "failed": {
+            "en": "Failed",
+            "de": "Fehlgeschlagen"
+          },
+          "canceled": {
+            "en": "Canceled",
+            "de": "Abgebrochen"
+          }
+        },
+        "group": "state",
+        "order": 80
+      }
+    },
+    "startedAt": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Started at",
+          "de": "Gestartet um"
+        },
+        "group": "state",
+        "order": 90
+      }
+    }
+  }
+}

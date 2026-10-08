@@ -1,0 +1,49 @@
+{
+  "maximumTurnBytes": 4096,
+  "constructorBytes": 0,
+  "nativeChildBytes": 64,
+  "turns": [
+    {
+      "capacity": 0,
+      "release": 0,
+      "terminal": false,
+      "birth": 0,
+      "free": 0
+    },
+    {
+      "capacity": 63,
+      "release": 0,
+      "terminal": false,
+      "birth": 0,
+      "free": 0
+    },
+    {
+      "capacity": 64,
+      "release": 0,
+      "terminal": false,
+      "birth": 64,
+      "free": 0
+    },
+    {
+      "capacity": 0,
+      "release": 64,
+      "terminal": false,
+      "birth": 0,
+      "free": 0
+    },
+    {
+      "capacity": 0,
+      "release": 63,
+      "terminal": true,
+      "birth": 0,
+      "free": 0
+    },
+    {
+      "capacity": 0,
+      "release": 64,
+      "terminal": true,
+      "birth": 0,
+      "free": 64
+    }
+  ]
+}

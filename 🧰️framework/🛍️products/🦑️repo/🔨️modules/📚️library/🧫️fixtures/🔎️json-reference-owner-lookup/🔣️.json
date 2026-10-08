@@ -157,15 +157,10 @@
   "corpus": [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    ".vscode/🧩️launch.seed.jsonc",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"
   ],
   "execution": {
     "target": "test-json-reference-owner-lookup",
-    "command": "bun ./📜️script.ts test json-reference-owner-lookup",
-    "launchName": "🧹clean🧩️taxonomy🔎️json-reference-owner-lookup",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-json-reference-owner-lookup --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.12
+    "command": "bun ./📜️script.ts test json-reference-owner-lookup"
   }
 }

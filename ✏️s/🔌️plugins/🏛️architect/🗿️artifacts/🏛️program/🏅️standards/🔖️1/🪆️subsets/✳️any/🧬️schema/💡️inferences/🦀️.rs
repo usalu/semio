@@ -406,10 +406,10 @@ fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     for e in &program.templates {
         register("templates", &e.header.id, &e.header.name);
     }
-    for e in &crate::program_knowledge(program) {
+    for e in &program.knowledge_payload {
         register("knowledge", &e.header.id, &e.header.name);
     }
-    for e in &crate::program_benchmarks(program) {
+    for e in &program.benchmarks_payload {
         register("benchmarks", &e.header.id, &e.header.name);
     }
     register("project", &program.project.id, &program.project.code);
@@ -1289,9 +1289,9 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     collect("issues", program.issues.iter().map(|e| &e.header).collect());
     collect("audit_events", program.audit_events.iter().map(|e| &e.header).collect());
     collect("templates", program.templates.iter().map(|e| &e.header).collect());
-    let knowledge_records = crate::program_knowledge(program);
+    let knowledge_records = program.knowledge_payload;
     collect("knowledge", knowledge_records.iter().map(|e| &e.header).collect());
-    let benchmark_records = crate::program_benchmarks(program);
+    let benchmark_records = program.benchmarks_payload;
     collect("benchmarks", benchmark_records.iter().map(|e| &e.header).collect());
 
     let mut compliance_status = Vec::new();
@@ -1458,8 +1458,8 @@ pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Opt
     search_register!("issues", &program.issues);
     search_register!("audit_events", &program.audit_events);
     search_register!("templates", &program.templates);
-    search_register!("knowledge", &crate::program_knowledge(program));
-    search_register!("benchmarks", &crate::program_benchmarks(program));
+    search_register!("knowledge", &program.knowledge_payload);
+    search_register!("benchmarks", &program.benchmarks_payload);
     hits.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
     hits
 }
@@ -1998,7 +1998,7 @@ fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
 
 /// 📤️ Flattens all registers into a `CsvSnapshot`, encoded by stdio's real RFC 4180 codec.
 pub fn export_registers_csv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(stdio_csv::schema::snapshot::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
+    Ok(stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(&rows_to_csv_snapshot(&collect_rows(program))))
 }
 
 /// ↔ Exports relationships as a CSV table preserving endpoints, encoded by stdio's real RFC 4180
@@ -2009,7 +2009,7 @@ pub fn export_relationships_csv(program: &ProgramSnapshot) -> Result<String, Plu
         records.push(csv_record(&[&rel.header.id.to_string(), &rel.source_id.to_string(), &rel.target_id.to_string(), &format!("{:?}", rel.kind), &rel.header.name]));
     }
     let snapshot = stdio_csv::CsvSnapshot { schema: stdio_csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
-    Ok(stdio_csv::schema::snapshot::encode_csv(&snapshot))
+    Ok(stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(&snapshot))
 }
 
 fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
@@ -2023,7 +2023,7 @@ fn rows_to_csv_snapshot(rows: &[RegisterCsvRow]) -> stdio_csv::CsvSnapshot {
 
 /// 📤️ Flattens all registers into a `TsvSnapshot`, encoded by stdio's real IANA TSV codec.
 pub fn export_registers_tsv(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(stdio_tsv_engine::encode_tsv(&rows_to_tsv_snapshot(&collect_rows(program))))
+    Ok(stdio_tsv::standards::iana::subsets::any::io::text::snapshot::encode_tsv(&rows_to_tsv_snapshot(&collect_rows(program))))
 }
 
 fn rows_to_tsv_snapshot(rows: &[RegisterCsvRow]) -> stdio_tsv::TsvSnapshot {
@@ -2119,8 +2119,8 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     push_rows!("issues", &program.issues);
     push_rows!("audit_events", &program.audit_events);
     push_rows!("templates", &program.templates);
-    push_rows!("knowledge", &crate::program_knowledge(program));
-    push_rows!("benchmarks", &crate::program_benchmarks(program));
+    push_rows!("knowledge", &program.knowledge_payload);
+    push_rows!("benchmarks", &program.benchmarks_payload);
     rows
 }
 

@@ -1,3 +1,3 @@
 
-#[path = "../../📸️set-snapshot/🧪️tests/⏱️slows/🦀️.rs"]
-mod tests_set_snapshot_slows_the_second_frame_and_marks_it_do_not_dispose;
+#[path = "../../⏱️set-frame-delay/🧪️tests/⏱️slows/🦀️.rs"]
+mod tests_set_frame_delay_slows_the_second_frame;

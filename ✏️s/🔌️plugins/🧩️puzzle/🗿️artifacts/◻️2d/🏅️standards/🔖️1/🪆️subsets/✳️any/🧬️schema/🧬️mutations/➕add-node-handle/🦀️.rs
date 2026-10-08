@@ -43,7 +43,7 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for AddNodeHandl
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
-        vec![self.node_id.clone(), self.handle.id.clone()]
+        vec![self.node_id.to_string_owner(), self.handle.id.to_string_owner()]
     }
 }
 //#endregion 🔖️Mutation

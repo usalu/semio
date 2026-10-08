@@ -1,0 +1,14 @@
+{
+  "defaultPayloadPageBytes": 4096,
+  "ownerPayloadPageBytes": 512,
+  "elementBytes": 8,
+  "capacity": 200,
+  "input": [9, 2, 7, 2, 0, 255, 41],
+  "append": [3, 1, 3],
+  "expected": [9, 2, 7, 2, 0, 255, 41, 3, 1, 3],
+  "sum": 323,
+  "boundaryCounts": [0, 1, 63, 64, 65, 127, 128, 129, 199, 200],
+  "invalidPayloadPageBytes": [0, 1, 7],
+  "grantOneBelowMustAllocate": false,
+  "cancelReturnsAllAllocatedBytes": true
+}

@@ -1,0 +1,263 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 32,
+    "largePrefix": "😀\u0000界",
+    "largeRepeats": 2050
+  },
+  "allocation": {
+    "advance": 0,
+    "close": 0
+  },
+  "inverseOwnership": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128,
+    "journeys": [
+      "inverseBeforeRefusal",
+      "noOpInverse",
+      "targetMissingEmptyInverse",
+      "borrowedIdOnly",
+      "largeUtf8",
+      "zeroGrant",
+      "cancelDuringIdCopy",
+      "takeOnce",
+      "controlledRetirement"
+    ]
+  },
+  "cases": [
+    {
+      "id": "changed",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "newX": 3,
+        "newY": 4
+      },
+      "status": "changed",
+      "index": 0,
+      "after": [
+        {
+          "id": "a",
+          "x": 3,
+          "y": 4
+        }
+      ],
+      "inverse": {
+        "id": "a",
+        "newX": 1,
+        "newY": 2
+      }
+    },
+    {
+      "id": "first-duplicate",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "a",
+          "x": 8,
+          "y": 9
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "newX": 3,
+        "newY": 4
+      },
+      "status": "changed",
+      "index": 0,
+      "after": [
+        {
+          "id": "a",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "id": "a",
+          "x": 8,
+          "y": 9
+        }
+      ],
+      "inverse": {
+        "id": "a",
+        "newX": 1,
+        "newY": 2
+      }
+    },
+    {
+      "id": "no-op",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "newX": 1,
+        "newY": 2
+      },
+      "status": "no-op",
+      "index": 0,
+      "after": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "inverse": {
+        "id": "a",
+        "newX": 1,
+        "newY": 2
+      }
+    },
+    {
+      "id": "missing",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "mutation": {
+        "id": "b",
+        "newX": 3,
+        "newY": 4
+      },
+      "status": "target-missing",
+      "index": null,
+      "after": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "invalid-x",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "mutation": {
+        "id": "a",
+        "newX": "nan",
+        "newY": 4
+      },
+      "status": "nonfinite-x",
+      "index": 0,
+      "after": [
+        {
+          "id": "a",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "inverse": {
+        "id": "a",
+        "newX": 1,
+        "newY": 2
+      }
+    },
+    {
+      "id": "invalid-y-missing",
+      "nodes": [],
+      "mutation": {
+        "id": "a",
+        "newX": 3,
+        "newY": "positive-infinity"
+      },
+      "status": "nonfinite-y",
+      "index": null,
+      "after": [],
+      "inverse": null
+    },
+    {
+      "id": "large-prefix",
+      "nodes": [
+        {
+          "id": "$large:a",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "$large:b",
+          "x": 8,
+          "y": 9
+        }
+      ],
+      "mutation": {
+        "id": "$large:b",
+        "newX": 3,
+        "newY": 4
+      },
+      "status": "changed",
+      "index": 1,
+      "after": [
+        {
+          "id": "$large:a",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "$large:b",
+          "x": 3,
+          "y": 4
+        }
+      ],
+      "inverse": {
+        "id": "$large:b",
+        "newX": 8,
+        "newY": 9
+      }
+    }
+  ],
+  "journeys": [
+    "zeroGrant",
+    "firstDuplicate",
+    "inverseBeforeRefusal",
+    "nonfinitePriority",
+    "largeUtf8",
+    "sourceSwap",
+    "cancelDuringComparison",
+    "takeOnce",
+    "boundedClose"
+  ],
+  "forwardOwnership": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "cancelAfterBodyBytes": 128,
+    "changedOwner": "nativePagedSnapshot",
+    "unchangedOwner": "retainedOriginal",
+    "journeys": [
+      "changedCandidate",
+      "firstDuplicateOnly",
+      "noOpRetainsOriginal",
+      "refusalRetainsOriginal",
+      "borrowedPayload",
+      "allUntouchedOwners",
+      "zeroGrant",
+      "cancelDuringSnapshotCopy",
+      "takeOnce",
+      "controlledRetirement"
+    ]
+  }
+}

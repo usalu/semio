@@ -1,0 +1,9 @@
+# Current Guard7 Canonical Order Controls
+
+Exact registered red Nx1 had precisely one causal failure: a reversed-but-consistent proof model list and immutable owner-plan projection were accepted despite publication requiring canonical pair order. Normative controls agreed. After explicit proof order refusal and canonical seven-key source-plan projection, green Nx0 closed59 applicability guard controls,8depfile grammar,4 schema,11 selected-unit and6 language-neutral ordering own/AJV outcomes. {"helperHash": "1751f5129f2cbee6365fdf294ef96037cb87ad981f08efe82412c5728f9dab72", "receiptHash": "196ebf748b990284f701014fec27b3a9ceda333ce34cc8c7d8003e27aada44e5", "bindings": 13, "guard": 59, "parser": 8, "schema": 4, "units": 11, "ordering": 6}
+
+Canonical order is portable UTF8 byte ordering: Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)); the neutral fixture includes BMP private-use U+E000 versus emoji (which differs from UTF16 order), variation suffixes/prefixes and duplicate/invalid-UTF8 refusal. Plan raw arrays remain immutable/full-hash bound; each is projected to exactly seven pair keys and sorted for comparison. The proof model array itself must already be canonical. No localeCompare or locale dependence is used.
+
+The generic current28 schema, pure exported assertLiveApplicabilityV1(proof,phase,{signal,progress}), negative declared Bun config and all phase/body/membership/absence controls are conserved. Guard6 cardinality method and earlier methods remain immutable; inherited unregistered capture code is absent. No native execution, Root write, proof capture or publication acceptance. Builder10 and Pub10 must use the same byte comparator and fresh owning source/metadata/runtime/whole proofs.
+
+Future proof target generated/current-native-live-applicability-7/capture/proof.json.

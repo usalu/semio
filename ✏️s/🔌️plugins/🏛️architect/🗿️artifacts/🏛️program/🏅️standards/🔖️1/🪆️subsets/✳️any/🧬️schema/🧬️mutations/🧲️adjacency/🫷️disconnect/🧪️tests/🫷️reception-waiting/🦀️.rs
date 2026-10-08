@@ -10,7 +10,7 @@
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn disconnect_adjacency_applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("disconnect-adjacency/disconnects-reception-from-waiting: disconnect-adjacency applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("disconnect-adjacency/disconnects-reception-from-waiting: disconnect-adjacency applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "disconnect-adjacency/disconnects-reception-from-waiting: applied state differs from the committed after-snapshot");
 }
 
@@ -46,9 +46,9 @@ async fn disconnect_adjacency_inverse_restores_before() {
     let forward = mutation();
     let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
-    let mut state = forward.diff(&base).diff().apply(&base).expect("disconnect-adjacency/disconnects-reception-from-waiting: forward diff applies");
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("disconnect-adjacency/disconnects-reception-from-waiting: forward diff applies");
     for step in &undo {
-        state = step.diff(&state).diff().apply(&state).expect("disconnect-adjacency/disconnects-reception-from-waiting: inverse step applies");
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("disconnect-adjacency/disconnects-reception-from-waiting: inverse step applies");
     }
     assert_eq!(state, base, "disconnect-adjacency/disconnects-reception-from-waiting: connect-adjacency (the inverse of a disconnect) did not restore the removed edge");
 }
@@ -76,7 +76,7 @@ async fn disconnect_adjacency_declared_outcome_holds() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert!(outcome.messages().is_empty(), "disconnect-adjacency/disconnects-reception-from-waiting: disconnect-adjacency raised a diagnostic on a fixture that declares a clean apply");
-    assert!(outcome.diff().apply(&base).is_ok(), "disconnect-adjacency/disconnects-reception-from-waiting: disconnect-adjacency was rejected by apply on its own before-snapshot");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "disconnect-adjacency/disconnects-reception-from-waiting: disconnect-adjacency was rejected by apply on its own before-snapshot");
 }
 
 /// 🔺️ The sparse delta disconnect-adjacency produces is exactly the committed diff — this pins WHICH collection
@@ -102,6 +102,12 @@ async fn disconnect_adjacency_committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn disconnect_adjacency_committed_diff_applies_to_after() {
     let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("disconnect-adjacency/disconnects-reception-from-waiting: committed diff decodes");
-    let produced = decoded.apply(&before()).expect("disconnect-adjacency/disconnects-reception-from-waiting: committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("disconnect-adjacency/disconnects-reception-from-waiting: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "disconnect-adjacency/disconnects-reception-from-waiting: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of disconnect-adjacency's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn disconnect_adjacency_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -23,5 +23,13 @@
   },
   "borrowedAllocationBytes": 0,
   "semanticIdentityBytes": 8,
-  "storageClass": "text"
+  "storageClass": "text",
+  "reconstruction": {
+    "nativeOwner": "PagedUtf8",
+    "chunkBytes": 1024,
+    "constructorAllocationBytes": 0,
+    "cancelAfterBytes": 8192,
+    "refusedAllocationDelta": 1,
+    "aggregateCopies": 2
+  }
 }

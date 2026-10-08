@@ -119,7 +119,6 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation,inverse_puzzle2d_mutation,puzzle2d_document_delta_operations,Puzzle2dMutation,Puzzle2dPlaySnapshot};
 pub use mutations_codec::*;
-pub use mutations_wire_codec::*;
 
 impl protocol::OpBinary for Puzzle2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -1,6 +1,7 @@
 //! 📤️ `RetireLocalDocument` is the authoritative direct Rust leaf for unlisting one document from this device's local catalog.
 
-use super::admit_local_document::{admit_local_document, LocalCatalog};
+use super::super::KeyedEdit;
+use super::admit_local_document::{admit_local_document, LocalCatalog, LocalCatalogDiff};
 use super::LocalCatalogConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,11 +25,11 @@ pub fn retire_local_document(document_id: &str) -> LocalCatalogConfigMutation {
 impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "local-document", kind: "retire-local-document", record: "Cleared" };
 
-    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalog> {
+    fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         if !base.documents.iter().any(|entry| entry.document_id == self.document_id) {
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));
+            return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));
         }
-        MutationOutcome::new(LocalCatalog { documents: base.documents.iter().filter(|entry| entry.document_id != self.document_id).cloned().collect() })
+        MutationOutcome::new(LocalCatalogDiff { documents: vec![KeyedEdit::new(self.document_id.clone(), None)] })
     }
 
     fn inverse(&self, base: &LocalCatalog) -> Result<Vec<LocalCatalogConfigMutation>, semio_framework_value::ValueError> {

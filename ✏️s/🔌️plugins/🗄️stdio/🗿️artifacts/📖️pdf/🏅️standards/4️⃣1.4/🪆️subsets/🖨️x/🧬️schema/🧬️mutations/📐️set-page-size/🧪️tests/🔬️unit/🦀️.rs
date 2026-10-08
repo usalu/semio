@@ -26,7 +26,7 @@ fn language_neutral_forward_and_concrete_inverse() {
     let mutation: PdfX1Mutation = semio_framework_value::FromValue::from_value((fixture["mutation"].clone()).into()).unwrap();
     assert_json_shape(&serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).unwrap(), &fixture["mutation"]);
     let mut state = base.clone();
-    let outcome = mutation.diff(&state).apply_to(&mut state);
+    let outcome = crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(mutation.diff(&state), &mut state);
     assert!(outcome.messages().is_empty());
     let expected: PdfSnapshot = semio_framework_value::FromValue::from_value((fixture["expected"].clone()).into()).unwrap();
     assert_eq!(state, expected);
@@ -39,7 +39,7 @@ fn language_neutral_forward_and_concrete_inverse() {
         assert_eq!(<PdfX1Mutation as semio_framework_value::FromValue>::from_value((serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&step)).unwrap()).into()).unwrap(), step);
     }
     for step in inverse {
-        assert!(step.diff(&state).apply_to(&mut state).messages().is_empty());
+        assert!(crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(step.diff(&state), &mut state).messages().is_empty());
     }
     assert_eq!(state, base);
 }
@@ -50,7 +50,7 @@ fn missing_page_refuses_without_inverse_or_state_change() {
     let mutation: PdfX1Mutation = semio_framework_value::FromValue::from_value((fixture["mutation"].clone()).into()).unwrap();
     let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
     let mut state = base.clone();
-    assert!(!mutation.diff(&state).apply_to(&mut state).messages().is_empty());
+    assert!(crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(!mutation.diff(&state), &mut state).messages().is_empty());
     assert_eq!(state, base);
     assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }

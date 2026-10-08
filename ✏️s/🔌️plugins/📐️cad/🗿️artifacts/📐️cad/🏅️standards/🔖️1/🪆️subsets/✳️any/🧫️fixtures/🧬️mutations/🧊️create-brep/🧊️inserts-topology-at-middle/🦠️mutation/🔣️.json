@@ -1,0 +1,13 @@
+{
+  "mutation": "createBrep",
+  "childId": "brep-middle",
+  "target": {
+    "artifactId": "topology-middle",
+    "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep"
+    }
+  },
+  "index": 1
+}

@@ -1,0 +1,68 @@
+{
+  "maximumRows": 65,
+  "maximumCopyBytes": 64,
+  "admissionBytes": 1048576,
+  "acknowledgment": "original-pointer-token",
+  "cases": [
+    {
+      "name": "parent-two-operations",
+      "parent": true,
+      "children": 0,
+      "operations": [
+        2
+      ],
+      "editIds": [
+        "parent-exact"
+      ],
+      "groupId": "group-parent",
+      "actor": "actor-a"
+    },
+    {
+      "name": "two-children",
+      "parent": false,
+      "children": 2,
+      "operations": [
+        1,
+        2
+      ],
+      "editIds": [
+        "child-α",
+        "child-β"
+      ],
+      "groupId": "group-α",
+      "actor": "actor-β"
+    },
+    {
+      "name": "parent-and-two-children",
+      "parent": true,
+      "children": 2,
+      "operations": [
+        2,
+        1,
+        2
+      ],
+      "editIds": [
+        "parent-exact",
+        "child-α",
+        "child-β"
+      ],
+      "groupId": "group-α 🧪️",
+      "actor": "actor-β"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    7,
+    31,
+    127,
+    257
+  ],
+  "denied": [
+    "zero-items",
+    "one-below-birth",
+    "one-below-release"
+  ],
+  "finalTransfer": "original-owners-zero-heap"
+}

@@ -244,6 +244,19 @@ impl TessellationJob {
         let edge_order=distinct_face_edges(body,&faces)?;Ok(Self::seeded(deflection,edge_order,faces))
     }
 
+    /// 🧩 A resumable tessellation of every face of every solid in `solids` (a compound).
+    pub fn for_solids(body: &Body, solids: &[SolidId], deflection: f64) -> Result<Self, KernelError> {
+        if let Some(missing) = solids.iter().find(|solid| body.solids.get(**solid).is_none()) {
+            return Err(KernelError::MissingEntity(missing.to_string()));
+        }
+        let faces: Vec<FaceId> = solids.iter().flat_map(|solid| body.solid_faces(*solid)).collect();
+        if faces.is_empty() {
+            return Err(KernelError::InvalidInput("compound has no faces".into()));
+        }
+        let edge_order = distinct_face_edges(body, &faces)?;
+        Ok(Self::seeded(deflection, edge_order, faces))
+    }
+
     /// 🧩 A resumable tessellation of one face.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn for_face(body: &Body, face: FaceId, deflection: f64) -> Result<Self, KernelError> {

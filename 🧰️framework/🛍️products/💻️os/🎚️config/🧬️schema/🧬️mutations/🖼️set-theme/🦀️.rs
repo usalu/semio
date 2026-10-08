@@ -1,5 +1,5 @@
 //! 🖼️ Sets or clears the OS-wide theme selection.
-use super::super::super::{UiPreferences, UiPreferencesDiff};
+use super::super::super::{SettingEdit, UiPreferences, UiPreferencesDiff};
 use super::super::UiPreferencesConfigMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
@@ -11,7 +11,28 @@ pub struct SetTheme {
 pub fn set_theme(theme_id: Option<String>) -> UiPreferencesConfigMutation {
     UiPreferencesConfigMutation::SetTheme(SetTheme { theme_id })
 }
-optional_setting_impl!(SetTheme, SetTheme, theme_id, "set-theme", "theme", "theme", "theme-id");
+impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetTheme {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "theme", kind: "set-theme", record: "Set" };
+
+    fn diff(&self, base: &UiPreferences) -> protocol::MutationOutcome<UiPreferencesDiff> {
+        if base.theme_id == self.theme_id {
+            return protocol::MutationOutcome::new(UiPreferencesDiff::default()).warning("mutation.no-op", "theme is already selected.");
+        }
+        protocol::MutationOutcome::new(UiPreferencesDiff { theme_id: Some(SettingEdit::new(self.theme_id.clone())), ..UiPreferencesDiff::default() })
+    }
+
+    fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
+        Ok(vec![UiPreferencesConfigMutation::Theme(Self { theme_id: base.theme_id.clone() })])
+    }
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set theme to {:?}", self.theme_id), &format!("Design auf {:?} setzen", self.theme_id))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec!["theme-id".to_string()]
+    }
+}
 
 //#region 🧪️Tests
 #[cfg(test)]

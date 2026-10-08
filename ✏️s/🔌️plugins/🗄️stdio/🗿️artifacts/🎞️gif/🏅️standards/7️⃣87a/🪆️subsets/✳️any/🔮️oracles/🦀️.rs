@@ -28,7 +28,7 @@
 //! `write_global_palette` then sets the Global Color Table Flag unconditionally and writes
 //! `check_color_table`'s two-entry padding for an empty slice (gif 0.14.2 `src/encoder.rs:183-195`,
 //! `303-311`). A document declaring no global table therefore came back carrying a phantom
-//! two-colour one, so `set-snapshot {"gct": null}` was silently discarded the same way. `oracle_encode`
+//! two-colour one, so `set-global-color-table {"gct": null}` was silently discarded the same way. `oracle_encode`
 //! clears the flag and drops those six bytes; see its own comment for why the result stays conformant.
 //!
 //! `project` (below) is this subset's OWN projection rather than the shared `raster::project_gif`:
@@ -147,33 +147,6 @@ mod live {
         ])
     }
 
-    fn doc_from_json(json: &Json) -> Result<OracleDoc, String> {
-        let gct = match json.get("gct") {
-            Some(Json::Null) | None => Vec::new(),
-            Some(gct) => palette_from_json(gct)?,
-        };
-        let images = json.array("images").iter().map(image_from_json).collect::<Result<Vec<_>, _>>()?;
-        Ok(OracleDoc {
-            width: num(json, "width").ok_or("snapshot missing width")? as u16,
-            height: num(json, "height").ok_or("snapshot missing height")? as u16,
-            gct,
-            background_color_index: num(json, "backgroundColorIndex").unwrap_or(0.0) as u8,
-            pixel_aspect_ratio: num(json, "pixelAspectRatio").unwrap_or(0.0) as u8,
-            images,
-        })
-    }
-
-    fn doc_to_json(doc: &OracleDoc) -> Json {
-        Json::Object(vec![
-            ("schema".to_string(), Json::String("stdio.gif".to_string())),
-            ("width".to_string(), Json::Number(doc.width as f64)),
-            ("height".to_string(), Json::Number(doc.height as f64)),
-            ("gct".to_string(), if doc.gct.is_empty() { Json::Null } else { palette_to_json(&doc.gct) }),
-            ("backgroundColorIndex".to_string(), Json::Number(doc.background_color_index as f64)),
-            ("pixelAspectRatio".to_string(), Json::Number(doc.pixel_aspect_ratio as f64)),
-            ("images".to_string(), Json::Array(doc.images.iter().map(image_to_json).collect())),
-        ])
-    }
     //#endregion 🔖️JsonBridge
 
     //#region 🔖️Codec
@@ -238,7 +211,7 @@ mod live {
         // `flags |= 0b1000_0000` UNCONDITIONALLY and writes `check_color_table`'s padding — for an
         // empty slice, `flag_size(0) = 0`, so `2 << 0 = 2` all-zero entries. A document that
         // declares no Global Color Table therefore comes back out of the reference writer carrying
-        // a phantom two-entry one, and `set-snapshot {"gct": null}` is silently discarded exactly
+        // a phantom two-entry one, and `set-global-color-table {"gct": null}` is silently discarded exactly
         // the way the background index and aspect ratio were before their patches. Undone here:
         // clear the Global Color Table Flag (GIF87a §18, bit 7 of the packed byte 10) and drop the
         // six table bytes that follow the Logical Screen Descriptor. Every image is guaranteed to
@@ -263,8 +236,6 @@ mod live {
     /// subject's own `apply_gif_mutation`.
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => *doc = doc_from_json(params.get("snapshot").ok_or("set-snapshot: missing snapshot")?)?,
-            "patch-snapshot" => *doc = doc_from_json(&semio_repo_test_host::law::patched_snapshot(&doc_to_json(doc), params.get("patch").ok_or("patch-snapshot: missing patch")?)?)?,
             "set-screen-size" => {
                 doc.width = num(params, "width").ok_or("set-screen-size: missing width")? as u16;
                 doc.height = num(params, "height").ok_or("set-screen-size: missing height")? as u16;
@@ -351,7 +322,6 @@ mod live {
         };
         let targeted = || num(params, "index").map(|index| index as usize).filter(|index| *index < doc.images.len());
         match kind {
-            "set-snapshot" | "patch-snapshot" => (0..doc.images.len()).find_map(|index| fits(index).or_else(|| covers(index)).or_else(|| colored(index))),
             "set-screen-size" => (0..doc.images.len()).find_map(fits),
             "set-global-color-table" => (0..doc.images.len()).filter(|index| doc.images[*index].palette.is_none()).find_map(colored),
             "insert-image" => {
@@ -387,7 +357,6 @@ mod live {
     fn inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> Result<Option<(&'static str, Json)>, String> {
         let original = oracle_decode(original_bytes)?;
         Ok(Some(match kind {
-            "set-snapshot" | "patch-snapshot" => ("set-snapshot", Json::Object(vec![("snapshot".to_string(), doc_to_json(&original))])),
             "set-screen-size" => ("set-screen-size", Json::Object(vec![("width".to_string(), Json::Number(original.width as f64)), ("height".to_string(), Json::Number(original.height as f64))])),
             "set-global-color-table" => ("set-global-color-table", Json::Object(vec![("gct".to_string(), if original.gct.is_empty() { Json::Null } else { palette_to_json(&original.gct) })])),
             "set-background-color-index" => ("set-background-color-index", Json::Object(vec![("index".to_string(), Json::Number(original.background_color_index as f64))])),
@@ -481,13 +450,13 @@ mod live {
     }
 
     /// 👁️ The surface every scenario compares through, read back with the SAME independent `gif`
-    /// reader `oracle_decode` uses. Every one of the twelve declared kinds moves at least one
+    /// reader `oracle_decode` uses. Every one of the ten declared kinds moves at least one
     /// member of it: screen geometry (`set-screen-size`), the Global Color Table
     /// (`set-global-color-table`), the two Logical Screen Descriptor scalars
     /// (`set-background-color-index`, `set-pixel-aspect-ratio`), the image list's length and order
     /// (`insert-image`/`remove-image`/`move-image`), each image's rectangle
     /// (`set-image-geometry`), its interlace flag (`set-image-interlace`), its local table and its
-    /// raw index buffer (`set-image-pixels`), and all of them at once (`set-snapshot`).
+    /// raw index buffer (`set-image-pixels`).
     ///
     /// Interlace is read back from the FILE (`raster::gif_image_interlace_flags`), never from
     /// `Frame::interlaced`: the reference decoder de-interlaces every image and then reports that

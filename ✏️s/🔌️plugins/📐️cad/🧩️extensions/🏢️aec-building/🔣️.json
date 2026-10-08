@@ -14,10 +14,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}",
-          "iconId": "building",
+          "moduleId": "aec-building",
           "label": "AEC Building",
-          "moduleId": "aec-building"
+          "iconId": "building",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}"
         }
       }
     ],
@@ -63,7 +63,7 @@
   },
   "execution": "declarative",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -72,10 +72,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}",
-          "iconId": "building",
+          "moduleId": "aec-building",
           "label": "AEC Building",
-          "moduleId": "aec-building"
+          "iconId": "building",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}"
         }
       }
     ],
@@ -112,8 +112,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "2a49a3ced1cb3cc73c47fd34fb107dfde09e60d40d38d27f49c73b69b3236561",
-    "coreWasmSha256": "44cb598949d7f2383815078a99d9703b2deb9926993cea21f664948cd7f41768",
-    "descriptorSha256": "b4967ddd432dda05637ad96b8673589cfd81157295894f99c46b65d7fcddb29a"
+    "wasmSha256": "5320ebcb9c7843a1d7b35d66c7d5d79e87e7f46afa203b6ce77106c6c5a18237",
+    "coreWasmSha256": "8899d047802a25fade7af954a76074ec3d9b2fefc9f4f150796e2531704bee8e",
+    "descriptorSha256": "af69ce609823b6e449d9a34d2c6a8cea047fcaf10508ef899f46e391785f6962"
   }
 }

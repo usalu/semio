@@ -1,6 +1,5 @@
-//! 🖼️ `insert-image` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🖼️ `insert-image` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +16,23 @@ pub struct InsertImage {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertImage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "image", kind: "insert-image", record: "InsertImage" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::InsertImage(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let screen = (base.width, base.height);
+        let Self { index, image } = self;
+        if let Some((message, target)) = {
+            let at = (*index).min(base.images.len());
+            image_fits(at, image, screen).or_else(|| image_covers(at, image)).or_else(|| image_colored(at, image, base.gct.as_ref()))
+        } {
+            return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, target);
+        }
+        protocol::MutationOutcome::new({
+            GifDiff { images: Some(GifImagesDiff { added: vec![GifImageAdded { index: (*index).min(base.images.len()), image: image.clone() }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::InsertImage(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(vec![GifMutation::RemoveImage(remove_image::RemoveImage { index: (*index).min(base.images.len()) })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert image", "Bild einfügen")
     }

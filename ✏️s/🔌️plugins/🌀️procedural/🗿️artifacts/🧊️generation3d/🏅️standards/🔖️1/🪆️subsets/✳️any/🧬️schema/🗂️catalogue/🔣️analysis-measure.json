@@ -1,0 +1,837 @@
+{
+  "category": {
+    "id": "analysis.measure",
+    "emoji": "📐️",
+    "order": 300,
+    "label": {
+      "en": "Measure",
+      "de": "Messen"
+    },
+    "description": {
+      "en": "Volumes, areas, lengths, centers, distances, angles and mass properties of shapes.",
+      "de": "Volumen, Flächeninhalte, Längen, Schwerpunkte, Abstände, Winkel und Masseneigenschaften von Formen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "analysis.volume",
+      "category": "analysis.measure",
+      "emoji": "🧊️",
+      "label": {
+        "en": "Volume",
+        "de": "Volumen"
+      },
+      "description": {
+        "en": "Measures the volume enclosed by a solid.",
+        "de": "Misst das von einem Körper eingeschlossene Volumen."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "volume",
+          "label": {
+            "en": "Volume",
+            "de": "Volumen"
+          },
+          "description": {
+            "en": "The enclosed volume.",
+            "de": "Das eingeschlossene Volumen."
+          },
+          "type": "number",
+          "unit": "length³"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.area",
+      "category": "analysis.measure",
+      "emoji": "🟦️",
+      "label": {
+        "en": "Surface area",
+        "de": "Oberfläche"
+      },
+      "description": {
+        "en": "Measures the total area of all faces of a shape.",
+        "de": "Misst den Gesamtflächeninhalt aller Flächen einer Form."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "area",
+          "label": {
+            "en": "Area",
+            "de": "Flächeninhalt"
+          },
+          "description": {
+            "en": "The total surface area.",
+            "de": "Der gesamte Oberflächeninhalt."
+          },
+          "type": "number",
+          "unit": "length²"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.length",
+      "category": "analysis.measure",
+      "emoji": "📏️",
+      "label": {
+        "en": "Length",
+        "de": "Länge"
+      },
+      "description": {
+        "en": "Measures the length of a curve, wire or edge.",
+        "de": "Misst die Länge einer Kurve, eines Kantenzugs oder einer Kante."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve, wire or edge to measure.",
+            "de": "Die zu messende Kurve, der Kantenzug oder die Kante."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "length",
+          "label": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "description": {
+            "en": "The total length.",
+            "de": "Die Gesamtlänge."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.centroid",
+      "category": "analysis.measure",
+      "emoji": "⚖️",
+      "label": {
+        "en": "Centroid",
+        "de": "Schwerpunkt"
+      },
+      "description": {
+        "en": "Finds the center of mass of a shape, assuming uniform density.",
+        "de": "Bestimmt den Massenschwerpunkt einer Form bei gleichmäßiger Dichte."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "centroid",
+          "label": {
+            "en": "Centroid",
+            "de": "Schwerpunkt"
+          },
+          "description": {
+            "en": "The center of mass.",
+            "de": "Der Massenschwerpunkt."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.boundingBox",
+      "category": "analysis.measure",
+      "emoji": "📦️",
+      "label": {
+        "en": "Bounding box",
+        "de": "Umgebender Quader"
+      },
+      "description": {
+        "en": "Finds the smallest axis-aligned box around a shape.",
+        "de": "Bestimmt den kleinsten achsenparallelen Quader um eine Form."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "box",
+          "label": {
+            "en": "Box",
+            "de": "Quader"
+          },
+          "description": {
+            "en": "The bounding box as a solid.",
+            "de": "Der umgebende Quader als Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "min",
+          "label": {
+            "en": "Minimum corner",
+            "de": "Minimale Ecke"
+          },
+          "description": {
+            "en": "The corner with the smallest coordinates.",
+            "de": "Die Ecke mit den kleinsten Koordinaten."
+          },
+          "type": "point"
+        },
+        {
+          "name": "max",
+          "label": {
+            "en": "Maximum corner",
+            "de": "Maximale Ecke"
+          },
+          "description": {
+            "en": "The corner with the largest coordinates.",
+            "de": "Die Ecke mit den größten Koordinaten."
+          },
+          "type": "point"
+        },
+        {
+          "name": "size",
+          "label": {
+            "en": "Size",
+            "de": "Größe"
+          },
+          "description": {
+            "en": "The extent along X, Y and Z.",
+            "de": "Die Ausdehnung entlang X, Y und Z."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.massProperties",
+      "category": "analysis.measure",
+      "emoji": "🏋️",
+      "label": {
+        "en": "Mass properties",
+        "de": "Masseneigenschaften"
+      },
+      "description": {
+        "en": "Computes mass, centroid, inertia tensor and principal axes of a solid of uniform density.",
+        "de": "Berechnet Masse, Schwerpunkt, Trägheitstensor und Hauptachsen eines Körpers gleichmäßiger Dichte."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "density",
+          "label": {
+            "en": "Density",
+            "de": "Dichte"
+          },
+          "description": {
+            "en": "Mass per unit volume.",
+            "de": "Masse pro Volumeneinheit."
+          },
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mass",
+          "label": {
+            "en": "Mass",
+            "de": "Masse"
+          },
+          "description": {
+            "en": "Volume times density.",
+            "de": "Volumen mal Dichte."
+          },
+          "type": "number",
+          "unit": "mass"
+        },
+        {
+          "name": "volume",
+          "label": {
+            "en": "Volume",
+            "de": "Volumen"
+          },
+          "description": {
+            "en": "The enclosed volume.",
+            "de": "Das eingeschlossene Volumen."
+          },
+          "type": "number",
+          "unit": "length³"
+        },
+        {
+          "name": "centroid",
+          "label": {
+            "en": "Centroid",
+            "de": "Schwerpunkt"
+          },
+          "description": {
+            "en": "The center of mass.",
+            "de": "Der Massenschwerpunkt."
+          },
+          "type": "point"
+        },
+        {
+          "name": "inertia",
+          "label": {
+            "en": "Inertia tensor",
+            "de": "Trägheitstensor"
+          },
+          "description": {
+            "en": "The nine tensor entries row by row, taken about the centroid.",
+            "de": "Die neun Tensoreinträge zeilenweise, bezogen auf den Schwerpunkt."
+          },
+          "type": "number",
+          "list": true
+        },
+        {
+          "name": "principalMoments",
+          "label": {
+            "en": "Principal moments",
+            "de": "Hauptträgheitsmomente"
+          },
+          "description": {
+            "en": "The three principal moments of inertia, ascending.",
+            "de": "Die drei Hauptträgheitsmomente in aufsteigender Reihenfolge."
+          },
+          "type": "vector"
+        },
+        {
+          "name": "principalAxes",
+          "label": {
+            "en": "Principal axes",
+            "de": "Hauptachsen"
+          },
+          "description": {
+            "en": "The three principal axes matching the moments.",
+            "de": "Die drei zu den Momenten gehörenden Hauptachsen."
+          },
+          "type": "vector",
+          "list": true
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.distance",
+      "category": "analysis.measure",
+      "emoji": "↔️",
+      "label": {
+        "en": "Distance",
+        "de": "Abstand"
+      },
+      "description": {
+        "en": "Measures the shortest distance between two shapes.",
+        "de": "Misst den kürzesten Abstand zwischen zwei Formen."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "Shape A",
+            "de": "Form A"
+          },
+          "description": {
+            "en": "The first operand.",
+            "de": "Der erste Operand."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Shape B",
+            "de": "Form B"
+          },
+          "description": {
+            "en": "The second operand.",
+            "de": "Der zweite Operand."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "The shortest distance; zero when the shapes touch.",
+            "de": "Der kürzeste Abstand; null bei Berührung."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.closestPoint",
+      "category": "analysis.measure",
+      "emoji": "🎯️",
+      "label": {
+        "en": "Closest point",
+        "de": "Nächster Punkt"
+      },
+      "description": {
+        "en": "Finds the point on a shape that is closest to a given point.",
+        "de": "Findet den Punkt einer Form, der einem gegebenen Punkt am nächsten liegt."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point to measure from.",
+            "de": "Der Punkt, von dem aus gemessen wird."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Closest point",
+            "de": "Nächster Punkt"
+          },
+          "description": {
+            "en": "The closest position on the shape.",
+            "de": "Die nächste Position auf der Form."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.classifyPoint",
+      "category": "analysis.measure",
+      "emoji": "🧭️",
+      "label": {
+        "en": "Classify point",
+        "de": "Punkt klassifizieren"
+      },
+      "description": {
+        "en": "Tells whether a point lies inside, outside or on the boundary of a solid.",
+        "de": "Gibt an, ob ein Punkt innerhalb, außerhalb oder auf dem Rand eines Körpers liegt."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point to classify.",
+            "de": "Der zu klassifizierende Punkt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "classification",
+          "label": {
+            "en": "Position",
+            "de": "Lage"
+          },
+          "description": {
+            "en": "Where the point lies relative to the solid.",
+            "de": "Wo der Punkt relativ zum Körper liegt."
+          },
+          "type": "enum",
+          "options": [
+            {
+              "value": "inside",
+              "label": {
+                "en": "Inside",
+                "de": "Innen"
+              }
+            },
+            {
+              "value": "outside",
+              "label": {
+                "en": "Outside",
+                "de": "Außen"
+              }
+            },
+            {
+              "value": "boundary",
+              "label": {
+                "en": "On boundary",
+                "de": "Auf dem Rand"
+              }
+            }
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.angle",
+      "category": "analysis.measure",
+      "emoji": "📐️",
+      "label": {
+        "en": "Angle between",
+        "de": "Winkel zwischen"
+      },
+      "description": {
+        "en": "Measures the angle between two planar faces or two straight edges.",
+        "de": "Misst den Winkel zwischen zwei ebenen Flächen oder zwei geraden Kanten."
+      },
+      "inputs": [
+        {
+          "name": "a",
+          "label": {
+            "en": "First",
+            "de": "Erstes"
+          },
+          "description": {
+            "en": "The first planar face or straight edge.",
+            "de": "Die erste ebene Fläche oder gerade Kante."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face",
+            "edge"
+          ]
+        },
+        {
+          "name": "b",
+          "label": {
+            "en": "Second",
+            "de": "Zweites"
+          },
+          "description": {
+            "en": "The second planar face or straight edge.",
+            "de": "Die zweite ebene Fläche oder gerade Kante."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face",
+            "edge"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "The angle between the two, from 0 to 180 degrees.",
+            "de": "Der Winkel zwischen beiden, von 0 bis 180 Grad."
+          },
+          "type": "angle"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "a"
+          },
+          {
+            "component": "edge",
+            "port": "a"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "analysis.selectionArea",
+      "category": "analysis.measure",
+      "emoji": "🔲️",
+      "label": {
+        "en": "Area of selection",
+        "de": "Fläche der Auswahl"
+      },
+      "description": {
+        "en": "Adds up the area of the selected faces.",
+        "de": "Summiert den Flächeninhalt der ausgewählten Flächen."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to measure.",
+            "de": "Die zu messenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "shape",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "area",
+          "label": {
+            "en": "Area",
+            "de": "Flächeninhalt"
+          },
+          "description": {
+            "en": "The combined area of the selected faces.",
+            "de": "Der gemeinsame Flächeninhalt der gewählten Flächen."
+          },
+          "type": "number",
+          "unit": "length²"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": false
+    }
+  ]
+}

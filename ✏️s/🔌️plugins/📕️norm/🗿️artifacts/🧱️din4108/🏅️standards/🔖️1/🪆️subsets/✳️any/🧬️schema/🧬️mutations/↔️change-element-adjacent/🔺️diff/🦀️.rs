@@ -1,26 +1,14 @@
-//! 🔺️ `change-element-adjacent` diff — whole-list rewrite via Din4108Diff list wrappers.
+//! ↔️ `change-element-adjacent` diff — patches the row's `adjacent`; an id the document does not hold is a `mutation.invariant`.
 
 use super::ChangeElementAdjacent;
-use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108RowEdit as _;
+use crate::diff::{Din4108Diff, Din4108ElementEdit, Din4108ElementPatch};
+use crate::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeElementAdjacent, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    let mut next = base.clone();
-    if let Err(msg) = apply_in_place(payload, &mut next) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", msg, Vec::<String>::new());
-    }
-    protocol::MutationOutcome::new(Din4108Diff {
-        zones: Some(Din4108ZoneList { values: next.zones }),
-        elements: Some(Din4108ElementList { values: next.elements }),
-        thermal_bridges: Some(Din4108ThermalBridgeList { values: next.thermal_bridges }),
-        ..Default::default()
-    })
-}
-
-fn apply_in_place(payload: &ChangeElementAdjacent, snap: &mut Din4108Snapshot) -> Result<(), String> {
-    
-    let e = snap.elements.iter_mut().find(|e| e.id == payload.element_id).ok_or("element not found")?;
-    e.adjacent = payload.new_adjacent.clone();
-
-    Ok(())
+    let Some((index, row)) = base.elements.iter().enumerate().find(|(_, row)| row.id == payload.element_id) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "element not found", Vec::<String>::new());
+    };
+    let patch = Din4108ElementPatch { adjacent: Some(payload.new_adjacent.clone()), ..Default::default() };
+    protocol::MutationOutcome::new(Din4108Diff { elements: vec![Din4108ElementEdit::patch(index, row.id.clone(), patch)], ..Default::default() })
 }

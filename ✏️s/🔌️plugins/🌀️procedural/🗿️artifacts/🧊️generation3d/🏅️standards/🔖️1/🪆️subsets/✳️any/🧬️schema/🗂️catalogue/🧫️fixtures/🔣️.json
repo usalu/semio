@@ -1,0 +1,1912 @@
+{
+  "description": "Language-agnostic laws of the generation3d geometry widget catalogue. Rust and TypeScript run the same cases: coverage tables, lookups, semantic findings of mutated copies of base, and (TypeScript, via a third-party JSON Schema validator) schema rejections.",
+  "unexposedKernelMethods": [
+    "scale",
+    "kind",
+    "tessellate",
+    "dispose",
+    "retain",
+    "registry_len",
+    "export_gltf"
+  ],
+  "kernelCoverage": [
+    {
+      "method": "deconstruct",
+      "kind": "brep.topology.deconstruct"
+    },
+    {
+      "method": "box_prim",
+      "kind": "brep.primitive.box"
+    },
+    {
+      "method": "sphere_prim",
+      "kind": "brep.primitive.sphere"
+    },
+    {
+      "method": "cylinder_prim",
+      "kind": "brep.primitive.cylinder"
+    },
+    {
+      "method": "cone_prim",
+      "kind": "brep.primitive.cone"
+    },
+    {
+      "method": "torus_prim",
+      "kind": "brep.primitive.torus"
+    },
+    {
+      "method": "convex_hull",
+      "kind": "brep.primitive.convexHull"
+    },
+    {
+      "method": "line_curve",
+      "kind": "brep.curve.line"
+    },
+    {
+      "method": "circle_curve",
+      "kind": "brep.curve.circle"
+    },
+    {
+      "method": "arc_curve",
+      "kind": "brep.curve.arc"
+    },
+    {
+      "method": "ellipse_curve",
+      "kind": "brep.curve.ellipse"
+    },
+    {
+      "method": "polyline_wire",
+      "kind": "brep.curve.polyline"
+    },
+    {
+      "method": "rectangle_wire",
+      "kind": "brep.curve.rectangle"
+    },
+    {
+      "method": "regular_polygon_wire",
+      "kind": "brep.curve.polygon"
+    },
+    {
+      "method": "interpolate_curve",
+      "kind": "brep.curve.interpolate"
+    },
+    {
+      "method": "approximate_curve",
+      "kind": "brep.curve.approximate"
+    },
+    {
+      "method": "helix_curve",
+      "kind": "brep.curve.helix"
+    },
+    {
+      "method": "plane_surface",
+      "kind": "brep.surface.plane"
+    },
+    {
+      "method": "planar_face_from_points",
+      "kind": "brep.surface.planarFace"
+    },
+    {
+      "method": "planar_face_from_wire",
+      "kind": "brep.surface.planarFaceFromWire"
+    },
+    {
+      "method": "nurbs_surface_from_grid",
+      "kind": "brep.surface.nurbsGrid"
+    },
+    {
+      "method": "coons_patch",
+      "kind": "brep.surface.coons"
+    },
+    {
+      "method": "offset_face",
+      "kind": "brep.surface.offset"
+    },
+    {
+      "method": "thicken_face",
+      "kind": "brep.feature.thicken"
+    },
+    {
+      "method": "extrude_wire",
+      "kind": "brep.solid.extrudeWire"
+    },
+    {
+      "method": "extrude",
+      "kind": "brep.solid.extrudeFace"
+    },
+    {
+      "method": "revolve",
+      "kind": "brep.solid.revolve"
+    },
+    {
+      "method": "loft",
+      "kind": "brep.solid.loft"
+    },
+    {
+      "method": "sweep",
+      "kind": "brep.solid.sweep"
+    },
+    {
+      "method": "pipe",
+      "kind": "brep.solid.pipe"
+    },
+    {
+      "method": "helical_sweep",
+      "kind": "brep.solid.helicalSweep"
+    },
+    {
+      "method": "fuse",
+      "kind": "brep.boolean.fuse"
+    },
+    {
+      "method": "cut",
+      "kind": "brep.boolean.cut"
+    },
+    {
+      "method": "intersect",
+      "kind": "brep.boolean.intersect"
+    },
+    {
+      "method": "compound_cut",
+      "kind": "brep.boolean.compoundCut"
+    },
+    {
+      "method": "translate",
+      "kind": "brep.transform.translate"
+    },
+    {
+      "method": "rotate",
+      "kind": "brep.transform.rotate"
+    },
+    {
+      "method": "rotate_about",
+      "kind": "brep.transform.rotateAbout"
+    },
+    {
+      "method": "scale_axes",
+      "kind": "brep.transform.scale"
+    },
+    {
+      "method": "mirror",
+      "kind": "brep.transform.mirror"
+    },
+    {
+      "method": "copy_shape",
+      "kind": "brep.transform.copy"
+    },
+    {
+      "method": "linear_pattern",
+      "kind": "brep.transform.linearPattern"
+    },
+    {
+      "method": "circular_pattern",
+      "kind": "brep.transform.circularPattern"
+    },
+    {
+      "method": "grid_pattern",
+      "kind": "brep.transform.gridPattern"
+    },
+    {
+      "method": "fillet",
+      "kind": "brep.feature.fillet"
+    },
+    {
+      "method": "fillet_variable",
+      "kind": "brep.feature.filletVariable"
+    },
+    {
+      "method": "chamfer",
+      "kind": "brep.feature.chamfer"
+    },
+    {
+      "method": "chamfer_asymmetric",
+      "kind": "brep.feature.chamferAsymmetric"
+    },
+    {
+      "method": "fillet_edges",
+      "kind": "brep.feature.filletEdges"
+    },
+    {
+      "method": "chamfer_edges",
+      "kind": "brep.feature.chamferEdges"
+    },
+    {
+      "method": "shell",
+      "kind": "brep.feature.shell"
+    },
+    {
+      "method": "draft",
+      "kind": "brep.feature.draft"
+    },
+    {
+      "method": "offset_solid",
+      "kind": "brep.feature.offsetSolid"
+    },
+    {
+      "method": "defeature",
+      "kind": "brep.feature.defeature"
+    },
+    {
+      "method": "section",
+      "kind": "brep.intersect.section"
+    },
+    {
+      "method": "split",
+      "kind": "brep.intersect.split"
+    },
+    {
+      "method": "curve_curve_intersect",
+      "kind": "brep.intersect.curveCurve"
+    },
+    {
+      "method": "curve_surface_intersect",
+      "kind": "brep.intersect.curveSurface"
+    },
+    {
+      "method": "surface_surface_intersect",
+      "kind": "brep.intersect.surfaceSurface"
+    },
+    {
+      "method": "curve_point",
+      "kind": "brep.evaluate.curvePoint"
+    },
+    {
+      "method": "curve_tangent",
+      "kind": "brep.evaluate.curveTangent"
+    },
+    {
+      "method": "curve_domain",
+      "kind": "brep.evaluate.curveDomain"
+    },
+    {
+      "method": "curve_curvature",
+      "kind": "brep.evaluate.curveCurvature"
+    },
+    {
+      "method": "surface_point",
+      "kind": "brep.evaluate.surfacePoint"
+    },
+    {
+      "method": "surface_normal",
+      "kind": "brep.evaluate.surfaceNormal"
+    },
+    {
+      "method": "curve_closest_parameter",
+      "kind": "brep.evaluate.curveClosestParameter"
+    },
+    {
+      "method": "surface_closest_uv",
+      "kind": "brep.evaluate.surfaceClosestUv"
+    },
+    {
+      "method": "volume",
+      "kind": "analysis.volume"
+    },
+    {
+      "method": "area",
+      "kind": "analysis.area"
+    },
+    {
+      "method": "length",
+      "kind": "analysis.length"
+    },
+    {
+      "method": "center_of_mass",
+      "kind": "analysis.centroid"
+    },
+    {
+      "method": "bounding_box",
+      "kind": "analysis.boundingBox"
+    },
+    {
+      "method": "distance",
+      "kind": "analysis.distance"
+    },
+    {
+      "method": "closest_point",
+      "kind": "analysis.closestPoint"
+    },
+    {
+      "method": "classify_point",
+      "kind": "analysis.classifyPoint"
+    },
+    {
+      "method": "validate",
+      "kind": "analysis.validity"
+    },
+    {
+      "method": "vertex",
+      "kind": "brep.topology.vertex"
+    },
+    {
+      "method": "face_from_wire",
+      "kind": "brep.surface.faceFromWire"
+    },
+    {
+      "method": "sew_faces",
+      "kind": "brep.topology.sew"
+    },
+    {
+      "method": "heal_solid",
+      "kind": "brep.topology.heal"
+    },
+    {
+      "method": "convert_to_nurbs",
+      "kind": "brep.topology.convertToNurbs"
+    },
+    {
+      "method": "solid_shells",
+      "kind": "brep.topology.shells"
+    },
+    {
+      "method": "compound",
+      "kind": "brep.topology.compound"
+    },
+    {
+      "method": "explode",
+      "kind": "brep.topology.explode"
+    },
+    {
+      "method": "label",
+      "kind": "brep.topology.label"
+    },
+    {
+      "method": "export_step",
+      "kind": "brep.interchange.exportStep"
+    },
+    {
+      "method": "export_stl",
+      "kind": "brep.interchange.exportStl"
+    },
+    {
+      "method": "export_obj",
+      "kind": "brep.interchange.exportObj"
+    },
+    {
+      "method": "import_step",
+      "kind": "brep.interchange.importStep"
+    },
+    {
+      "method": "import_stl",
+      "kind": "brep.interchange.importStl"
+    },
+    {
+      "method": "import_obj",
+      "kind": "brep.interchange.importObj"
+    },
+    {
+      "method": "export_mesh",
+      "kind": "brep.interchange.exportDwg"
+    },
+    {
+      "method": "import_mesh",
+      "kind": "brep.interchange.importDwg"
+    }
+  ],
+  "meshCoverage": [
+    {
+      "operation": "construct",
+      "kind": "mesh.primitive.construct"
+    },
+    {
+      "operation": "box",
+      "kind": "mesh.primitive.box"
+    },
+    {
+      "operation": "plane",
+      "kind": "mesh.primitive.plane"
+    },
+    {
+      "operation": "sphere",
+      "kind": "mesh.primitive.sphere"
+    },
+    {
+      "operation": "cylinder",
+      "kind": "mesh.primitive.cylinder"
+    },
+    {
+      "operation": "cone",
+      "kind": "mesh.primitive.cone"
+    },
+    {
+      "operation": "fromBrep",
+      "kind": "mesh.convert.fromBrep"
+    },
+    {
+      "operation": "toBrep",
+      "kind": "mesh.convert.toBrep"
+    },
+    {
+      "operation": "translate",
+      "kind": "mesh.transform.translate"
+    },
+    {
+      "operation": "transform",
+      "kind": "mesh.transform.matrix"
+    },
+    {
+      "operation": "rotate",
+      "kind": "mesh.transform.rotate"
+    },
+    {
+      "operation": "scale",
+      "kind": "mesh.transform.scale"
+    },
+    {
+      "operation": "moveVertices",
+      "kind": "mesh.component.moveVertices"
+    },
+    {
+      "operation": "translateComponents",
+      "kind": "mesh.component.translate"
+    },
+    {
+      "operation": "rotateComponents",
+      "kind": "mesh.component.rotate"
+    },
+    {
+      "operation": "scaleComponents",
+      "kind": "mesh.component.scale"
+    },
+    {
+      "operation": "bevel",
+      "kind": "mesh.edit.bevel"
+    },
+    {
+      "operation": "dissolveEdges",
+      "kind": "mesh.edit.dissolveEdges"
+    },
+    {
+      "operation": "dissolveVertices",
+      "kind": "mesh.edit.dissolveVertices"
+    },
+    {
+      "operation": "mergeVertices",
+      "kind": "mesh.edit.mergeVertices"
+    },
+    {
+      "operation": "moveProportional",
+      "kind": "mesh.component.moveProportional"
+    },
+    {
+      "operation": "snapVertices",
+      "kind": "mesh.component.snapToGrid"
+    },
+    {
+      "operation": "mirror",
+      "kind": "mesh.transform.mirror"
+    },
+    {
+      "operation": "decimate",
+      "kind": "mesh.repair.decimate"
+    },
+    {
+      "operation": "mergeCoplanar",
+      "kind": "mesh.repair.mergeCoplanar"
+    },
+    {
+      "operation": "loopCut",
+      "kind": "mesh.edit.loopCut"
+    },
+    {
+      "operation": "knifeCut",
+      "kind": "mesh.edit.knifeCut"
+    },
+    {
+      "operation": "extrude",
+      "kind": "mesh.edit.extrude"
+    },
+    {
+      "operation": "inset",
+      "kind": "mesh.edit.inset"
+    },
+    {
+      "operation": "subdivide",
+      "kind": "mesh.edit.subdivide"
+    },
+    {
+      "operation": "flip",
+      "kind": "mesh.edit.flip"
+    },
+    {
+      "operation": "deleteFaces",
+      "kind": "mesh.edit.deleteFaces"
+    },
+    {
+      "operation": "triangulate",
+      "kind": "mesh.edit.triangulate"
+    },
+    {
+      "operation": "weld",
+      "kind": "mesh.repair.weld"
+    },
+    {
+      "operation": "orient",
+      "kind": "mesh.repair.orient"
+    },
+    {
+      "operation": "fillHoles",
+      "kind": "mesh.repair.fillHoles"
+    },
+    {
+      "operation": "inspectVertex",
+      "kind": "mesh.inspect.vertex"
+    },
+    {
+      "operation": "inspectEdge",
+      "kind": "mesh.inspect.edge"
+    },
+    {
+      "operation": "inspectFace",
+      "kind": "mesh.inspect.face"
+    },
+    {
+      "operation": "analyze",
+      "kind": "analysis.meshQuality"
+    },
+    {
+      "operation": "exportObj",
+      "kind": "mesh.interchange.exportObj"
+    },
+    {
+      "operation": "exportJson",
+      "kind": "mesh.interchange.exportJson"
+    }
+  ],
+  "minimumKinds": 190,
+  "lookups": [
+    {
+      "kind": "brep.primitive.box",
+      "label": {
+        "en": "Box",
+        "de": "Quader"
+      },
+      "quality": "exact-analytic",
+      "inputs": [
+        "width",
+        "depth",
+        "height"
+      ],
+      "outputs": [
+        "shape"
+      ],
+      "defaults": {
+        "width": 1,
+        "depth": 1,
+        "height": 1
+      }
+    },
+    {
+      "kind": "brep.feature.filletEdges",
+      "label": {
+        "en": "Fillet edges",
+        "de": "Kanten verrunden"
+      },
+      "quality": "exact-analytic",
+      "inputs": [
+        "shape",
+        "edges",
+        "radius"
+      ],
+      "outputs": [
+        "shape"
+      ],
+      "defaults": {
+        "radius": 0.1
+      }
+    },
+    {
+      "kind": "mesh.edit.loopCut",
+      "label": {
+        "en": "Cut edge loops",
+        "de": "Kantenschleifen schneiden"
+      },
+      "quality": "polygon-mesh",
+      "inputs": [
+        "mesh",
+        "edges",
+        "cuts"
+      ],
+      "outputs": [
+        "mesh"
+      ],
+      "defaults": {
+        "cuts": 1
+      }
+    },
+    {
+      "kind": "analysis.massProperties",
+      "label": {
+        "en": "Mass properties",
+        "de": "Masseneigenschaften"
+      },
+      "quality": "exact-numerical",
+      "inputs": [
+        "solid",
+        "density"
+      ],
+      "outputs": [
+        "mass",
+        "volume",
+        "centroid",
+        "inertia",
+        "principalMoments",
+        "principalAxes"
+      ],
+      "defaults": {
+        "density": 1
+      }
+    },
+    {
+      "kind": "math.add",
+      "label": {
+        "en": "Add",
+        "de": "Addieren"
+      },
+      "quality": "exact-analytic",
+      "inputs": [
+        "a",
+        "b"
+      ],
+      "outputs": [
+        "result"
+      ],
+      "defaults": {
+        "a": 0,
+        "b": 0
+      }
+    }
+  ],
+  "base": {
+    "category": {
+      "id": "brep.demo",
+      "emoji": "🧪️",
+      "order": 1,
+      "label": {
+        "en": "Demo",
+        "de": "Demo"
+      },
+      "description": {
+        "en": "Demonstration category.",
+        "de": "Demonstrationskategorie."
+      }
+    },
+    "kinds": [
+      {
+        "id": "brep.demo.cut",
+        "category": "brep.demo",
+        "emoji": "✂️",
+        "label": {
+          "en": "Cut",
+          "de": "Schneiden"
+        },
+        "description": {
+          "en": "Cuts edges of a shape.",
+          "de": "Schneidet Kanten einer Form."
+        },
+        "inputs": [
+          {
+            "name": "shape",
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            },
+            "description": {
+              "en": "The shape to cut.",
+              "de": "Die zu schneidende Form."
+            },
+            "type": "shape",
+            "shapeKinds": [
+              "solid"
+            ]
+          },
+          {
+            "name": "edges",
+            "label": {
+              "en": "Edges",
+              "de": "Kanten"
+            },
+            "description": {
+              "en": "The edges to cut.",
+              "de": "Die zu schneidenden Kanten."
+            },
+            "type": "selection",
+            "selection": {
+              "component": "edge",
+              "source": "shape",
+              "multiple": true
+            },
+            "default": [],
+            "minItems": 1
+          },
+          {
+            "name": "size",
+            "label": {
+              "en": "Size",
+              "de": "Größe"
+            },
+            "description": {
+              "en": "The size of the cut.",
+              "de": "Die Größe des Schnitts."
+            },
+            "type": "length",
+            "default": 1,
+            "min": 0,
+            "exclusiveMin": true,
+            "max": 10,
+            "step": 0.1
+          },
+          {
+            "name": "count",
+            "label": {
+              "en": "Count",
+              "de": "Anzahl"
+            },
+            "description": {
+              "en": "How many cuts.",
+              "de": "Wie viele Schnitte."
+            },
+            "type": "integer",
+            "default": 3,
+            "min": 1,
+            "max": 9,
+            "step": 1
+          },
+          {
+            "name": "mode",
+            "label": {
+              "en": "Mode",
+              "de": "Modus"
+            },
+            "description": {
+              "en": "Which axis to cut along.",
+              "de": "Entlang welcher Achse geschnitten wird."
+            },
+            "type": "enum",
+            "default": "x",
+            "options": [
+              {
+                "value": "x",
+                "label": {
+                  "en": "X axis",
+                  "de": "X-Achse"
+                }
+              },
+              {
+                "value": "y",
+                "label": {
+                  "en": "Y axis",
+                  "de": "Y-Achse"
+                }
+              }
+            ]
+          },
+          {
+            "name": "offset",
+            "label": {
+              "en": "Offset",
+              "de": "Versatz"
+            },
+            "description": {
+              "en": "Displacement of the cut.",
+              "de": "Verschiebung des Schnitts."
+            },
+            "type": "vector",
+            "default": [
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "name": "angle",
+            "label": {
+              "en": "Angle",
+              "de": "Winkel"
+            },
+            "description": {
+              "en": "Tilt of the cut.",
+              "de": "Neigung des Schnitts."
+            },
+            "type": "angle",
+            "default": 0.5,
+            "step": 0.017453292519943295,
+            "unit": "rad"
+          },
+          {
+            "name": "points",
+            "label": {
+              "en": "Points",
+              "de": "Punkte"
+            },
+            "description": {
+              "en": "Guide points.",
+              "de": "Führungspunkte."
+            },
+            "type": "point",
+            "list": true,
+            "minItems": 2,
+            "default": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "plane",
+            "label": {
+              "en": "Plane",
+              "de": "Ebene"
+            },
+            "description": {
+              "en": "Cutting plane.",
+              "de": "Schnittebene."
+            },
+            "type": "plane",
+            "default": {
+              "origin": [
+                0,
+                0,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "flag",
+            "label": {
+              "en": "Flag",
+              "de": "Schalter"
+            },
+            "description": {
+              "en": "Switches the cut on.",
+              "de": "Schaltet den Schnitt ein."
+            },
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "note",
+            "label": {
+              "en": "Note",
+              "de": "Notiz"
+            },
+            "description": {
+              "en": "A free note.",
+              "de": "Eine freie Notiz."
+            },
+            "type": "text",
+            "default": ""
+          }
+        ],
+        "outputs": [
+          {
+            "name": "shape",
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            },
+            "description": {
+              "en": "The cut shape.",
+              "de": "Die geschnittene Form."
+            },
+            "type": "shape",
+            "shapeKinds": [
+              "solid"
+            ]
+          }
+        ],
+        "quality": "exact-analytic",
+        "interaction": {
+          "pick": [
+            {
+              "component": "shape",
+              "port": "shape"
+            },
+            {
+              "component": "edge",
+              "port": "edges"
+            }
+          ],
+          "gumball": [
+            {
+              "motion": "translate",
+              "port": "offset"
+            },
+            {
+              "motion": "rotate",
+              "port": "angle",
+              "axisPort": "offset"
+            },
+            {
+              "motion": "translate",
+              "port": "size",
+              "along": "normal"
+            }
+          ]
+        },
+        "preview": true
+      },
+      {
+        "id": "brep.demo.copy",
+        "category": "brep.demo",
+        "emoji": "📋️",
+        "label": {
+          "en": "Copy",
+          "de": "Kopieren"
+        },
+        "description": {
+          "en": "Copies a shape.",
+          "de": "Kopiert eine Form."
+        },
+        "inputs": [
+          {
+            "name": "shape",
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            },
+            "description": {
+              "en": "The shape to copy.",
+              "de": "Die zu kopierende Form."
+            },
+            "type": "shape"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "shape",
+            "label": {
+              "en": "Shape",
+              "de": "Form"
+            },
+            "description": {
+              "en": "The copy.",
+              "de": "Die Kopie."
+            },
+            "type": "shape"
+          }
+        ],
+        "quality": "exact-analytic",
+        "preview": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "valid base has no findings",
+      "patches": [],
+      "expected": []
+    },
+    {
+      "name": "duplicate kind id",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            1,
+            "id"
+          ],
+          "value": "brep.demo.cut"
+        }
+      ],
+      "expected": [
+        {
+          "code": "duplicate-kind-id",
+          "owner": "brep.demo.cut"
+        }
+      ]
+    },
+    {
+      "name": "duplicate category id across files",
+      "patches": [],
+      "appendFile": [
+        {
+          "path": [
+            "category",
+            "label",
+            "en"
+          ],
+          "value": "Demo two"
+        },
+        {
+          "path": [
+            "kinds",
+            0,
+            "id"
+          ],
+          "value": "brep.demo.cut2"
+        },
+        {
+          "path": [
+            "kinds",
+            0,
+            "emoji"
+          ],
+          "value": "🔪"
+        },
+        {
+          "path": [
+            "kinds",
+            1,
+            "id"
+          ],
+          "value": "brep.demo.copy2"
+        },
+        {
+          "path": [
+            "kinds",
+            1,
+            "emoji"
+          ],
+          "value": "🧾"
+        }
+      ],
+      "expected": [
+        {
+          "code": "duplicate-category-id",
+          "owner": "brep.demo"
+        }
+      ]
+    },
+    {
+      "name": "id outside the category",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            1,
+            "id"
+          ],
+          "value": "brep.other.copy"
+        }
+      ],
+      "expected": [
+        {
+          "code": "kind-id-malformed",
+          "owner": "brep.other.copy"
+        }
+      ]
+    },
+    {
+      "name": "kind category differs from the file",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            1,
+            "category"
+          ],
+          "value": "mesh.demo"
+        }
+      ],
+      "expected": [
+        {
+          "code": "kind-category-mismatch",
+          "owner": "brep.demo.copy"
+        }
+      ]
+    },
+    {
+      "name": "emoji reused inside a category",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            1,
+            "emoji"
+          ],
+          "value": "✂️"
+        }
+      ],
+      "expected": [
+        {
+          "code": "emoji-duplicate",
+          "owner": "brep.demo.copy"
+        }
+      ]
+    },
+    {
+      "name": "kind label without German",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "label",
+            "de"
+          ],
+          "value": ""
+        }
+      ],
+      "expected": [
+        {
+          "code": "text-missing",
+          "owner": "brep.demo.cut"
+        }
+      ]
+    },
+    {
+      "name": "kind description copied across languages",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "description",
+            "de"
+          ],
+          "value": "Cuts edges of a shape."
+        }
+      ],
+      "expected": [
+        {
+          "code": "text-identical",
+          "owner": "brep.demo.cut"
+        }
+      ]
+    },
+    {
+      "name": "port description without English",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "description",
+            "en"
+          ],
+          "value": " "
+        }
+      ],
+      "expected": [
+        {
+          "code": "text-missing",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "duplicate input name",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            3,
+            "name"
+          ],
+          "value": "size"
+        }
+      ],
+      "expected": [
+        {
+          "code": "duplicate-port-name",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "output without ports",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            1,
+            "outputs"
+          ],
+          "value": []
+        }
+      ],
+      "expected": [
+        {
+          "code": "no-outputs",
+          "owner": "brep.demo.copy"
+        }
+      ]
+    },
+    {
+      "name": "default below an exclusive minimum",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "default"
+          ],
+          "value": 0
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-out-of-range",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "default above the maximum",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            3,
+            "default"
+          ],
+          "value": 12
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-out-of-range",
+          "owner": "brep.demo.cut",
+          "port": "count"
+        }
+      ]
+    },
+    {
+      "name": "fraction as integer default",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            3,
+            "default"
+          ],
+          "value": 2.5
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-type-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "count"
+        }
+      ]
+    },
+    {
+      "name": "vector default with two components",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            5,
+            "default"
+          ],
+          "value": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-type-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "offset"
+        }
+      ]
+    },
+    {
+      "name": "list default shorter than the minimum",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            7,
+            "default"
+          ],
+          "value": [
+            [
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-length-out-of-range",
+          "owner": "brep.demo.cut",
+          "port": "points"
+        }
+      ]
+    },
+    {
+      "name": "input without default",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            6,
+            "default"
+          ],
+          "delete": true
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-missing",
+          "owner": "brep.demo.cut",
+          "port": "angle"
+        }
+      ]
+    },
+    {
+      "name": "default on an output",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "outputs",
+            0,
+            "default"
+          ],
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "code": "default-misplaced",
+          "owner": "brep.demo.cut",
+          "port": "shape"
+        }
+      ]
+    },
+    {
+      "name": "enum default is not an option",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            4,
+            "default"
+          ],
+          "value": "z"
+        }
+      ],
+      "expected": [
+        {
+          "code": "enum-default-not-option",
+          "owner": "brep.demo.cut",
+          "port": "mode"
+        }
+      ]
+    },
+    {
+      "name": "enum with duplicate option values",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            4,
+            "options",
+            1,
+            "value"
+          ],
+          "value": "x"
+        }
+      ],
+      "expected": [
+        {
+          "code": "enum-options-invalid",
+          "owner": "brep.demo.cut",
+          "port": "mode"
+        }
+      ]
+    },
+    {
+      "name": "bounds on a vector",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            5,
+            "min"
+          ],
+          "value": 0
+        }
+      ],
+      "expected": [
+        {
+          "code": "constraint-misplaced",
+          "owner": "brep.demo.cut",
+          "port": "offset"
+        }
+      ]
+    },
+    {
+      "name": "zero step",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "step"
+          ],
+          "value": 0
+        }
+      ],
+      "expected": [
+        {
+          "code": "bounds-inverted",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "list flag on a shape",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            0,
+            "list"
+          ],
+          "value": true
+        }
+      ],
+      "expected": [
+        {
+          "code": "list-misplaced",
+          "owner": "brep.demo.cut",
+          "port": "shape"
+        }
+      ]
+    },
+    {
+      "name": "shape kinds on a number",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "shapeKinds"
+          ],
+          "value": [
+            "solid"
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "code": "shape-kinds-misplaced",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "item bounds on text",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            10,
+            "minItems"
+          ],
+          "value": 1
+        }
+      ],
+      "expected": [
+        {
+          "code": "item-bounds-misplaced",
+          "owner": "brep.demo.cut",
+          "port": "note"
+        }
+      ]
+    },
+    {
+      "name": "selection from a missing source",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            1,
+            "selection",
+            "source"
+          ],
+          "value": "missing"
+        }
+      ],
+      "expected": [
+        {
+          "code": "selection-source-invalid",
+          "owner": "brep.demo.cut",
+          "port": "edges"
+        }
+      ]
+    },
+    {
+      "name": "selection mode without a mode port",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            1,
+            "selection",
+            "component"
+          ],
+          "value": "mode"
+        }
+      ],
+      "expected": [
+        {
+          "code": "selection-mode-invalid",
+          "owner": "brep.demo.cut",
+          "port": "edges"
+        },
+        {
+          "code": "pick-component-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "edges"
+        }
+      ]
+    },
+    {
+      "name": "single selection without a single-item cap",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            1,
+            "selection",
+            "multiple"
+          ],
+          "value": false
+        }
+      ],
+      "expected": [
+        {
+          "code": "selection-multiplicity-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "edges"
+        }
+      ]
+    },
+    {
+      "name": "selection on an output",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "outputs",
+            0,
+            "selection"
+          ],
+          "value": {
+            "component": "edge",
+            "source": "shape",
+            "multiple": true
+          }
+        }
+      ],
+      "expected": [
+        {
+          "code": "selection-on-output",
+          "owner": "brep.demo.cut",
+          "port": "shape"
+        }
+      ]
+    },
+    {
+      "name": "pick of a missing port",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "pick",
+            0,
+            "port"
+          ],
+          "value": "nowhere"
+        }
+      ],
+      "expected": [
+        {
+          "code": "pick-port-missing",
+          "owner": "brep.demo.cut",
+          "port": "nowhere"
+        }
+      ]
+    },
+    {
+      "name": "pick of the wrong component",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "pick",
+            1,
+            "component"
+          ],
+          "value": "face"
+        }
+      ],
+      "expected": [
+        {
+          "code": "pick-component-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "edges"
+        }
+      ]
+    },
+    {
+      "name": "gumball on a missing port",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "gumball",
+            0,
+            "port"
+          ],
+          "value": "nowhere"
+        }
+      ],
+      "expected": [
+        {
+          "code": "gumball-port-missing",
+          "owner": "brep.demo.cut",
+          "port": "nowhere"
+        }
+      ]
+    },
+    {
+      "name": "gumball on an enum",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "gumball",
+            0,
+            "port"
+          ],
+          "value": "mode"
+        }
+      ],
+      "expected": [
+        {
+          "code": "gumball-type-mismatch",
+          "owner": "brep.demo.cut",
+          "port": "mode"
+        }
+      ]
+    },
+    {
+      "name": "scalar translate without a direction",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "gumball",
+            2,
+            "along"
+          ],
+          "delete": true
+        }
+      ],
+      "expected": [
+        {
+          "code": "gumball-along-invalid",
+          "owner": "brep.demo.cut",
+          "port": "size"
+        }
+      ]
+    },
+    {
+      "name": "rotate with a non-vector axis",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "interaction",
+            "gumball",
+            1,
+            "axisPort"
+          ],
+          "value": "size"
+        }
+      ],
+      "expected": [
+        {
+          "code": "gumball-axis-invalid",
+          "owner": "brep.demo.cut",
+          "port": "angle"
+        }
+      ]
+    }
+  ],
+  "schemaRejections": [
+    {
+      "name": "unknown property",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "surprise"
+          ],
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "kind id outside the namespaces",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "id"
+          ],
+          "value": "solid.demo.cut"
+        }
+      ]
+    },
+    {
+      "name": "missing German label",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "label",
+            "de"
+          ],
+          "delete": true
+        }
+      ]
+    },
+    {
+      "name": "unknown port type",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "type"
+          ],
+          "value": "decimal"
+        }
+      ]
+    },
+    {
+      "name": "selection port without descriptor",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            1,
+            "selection"
+          ],
+          "delete": true
+        }
+      ]
+    },
+    {
+      "name": "enum port without options",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            4,
+            "options"
+          ],
+          "delete": true
+        }
+      ]
+    },
+    {
+      "name": "shape kinds on a number port",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "inputs",
+            2,
+            "shapeKinds"
+          ],
+          "value": [
+            "solid"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown quality",
+      "patches": [
+        {
+          "path": [
+            "kinds",
+            0,
+            "quality"
+          ],
+          "value": "perfect"
+        }
+      ]
+    },
+    {
+      "name": "empty kind list",
+      "patches": [
+        {
+          "path": [
+            "kinds"
+          ],
+          "value": []
+        }
+      ]
+    }
+  ]
+}

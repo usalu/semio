@@ -1,0 +1,13 @@
+{
+  "schema": "job-close-demand.v1",
+  "admissionBytes": 262144,
+  "pageBytes": 16384,
+  "cases": [
+    { "name": "One Byte", "physicalBytes": 1, "callerBytes": 0, "releasedBytes": 0 },
+    { "name": "One Page Refused", "physicalBytes": 16384, "callerBytes": 16383, "releasedBytes": 0 },
+    { "name": "One Page Released", "physicalBytes": 16384, "callerBytes": 16384, "releasedBytes": 16384 },
+    { "name": "Large Backing Refused", "physicalBytes": 65536, "callerBytes": 16384, "releasedBytes": 0 },
+    { "name": "Large Backing Released", "physicalBytes": 65536, "callerBytes": 65536, "releasedBytes": 65536 },
+    { "name": "Admission Boundary", "physicalBytes": 262144, "callerBytes": 262144, "releasedBytes": 262144 }
+  ]
+}

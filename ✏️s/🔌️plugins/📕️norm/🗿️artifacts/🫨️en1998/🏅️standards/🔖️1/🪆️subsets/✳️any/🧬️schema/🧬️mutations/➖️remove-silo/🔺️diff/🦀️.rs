@@ -1,12 +1,13 @@
-//! Diff for `remove-silo`.
+//! ➖️ `remove-silo` diff — removes the row at the index, guarded by the row's own id; an index past the collection's end is a `mutation.target-missing`.
+
 use super::RemoveSilo;
-use crate::{En1998Diff, En1998Snapshot};
+use crate::diff::En1998RowEdit as _;
+use crate::diff::{En1998Diff, En1998SiloEdit};
+use crate::En1998Snapshot;
 
 pub fn diff(payload: &RemoveSilo, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    if payload.index >= base.silos.len() {
+    let Some(row) = base.silos.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("silo #{}", payload.index), [payload.index.to_string()]);
-    }
-    let mut items = base.silos.clone();
-    items.remove(payload.index);
-    protocol::MutationOutcome::new(En1998Diff { silos: Some(items), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(En1998Diff { silos: vec![En1998SiloEdit::remove(payload.index, row.id.clone())], ..Default::default() })
 }

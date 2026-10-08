@@ -552,7 +552,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "rust-physical-reference-context") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts");
       const { rest } = resolveTestLevel(segments.slice(1));
-      await runRepositoryTestCommand(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot });
+      await runRepositoryTestCommand(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-physical-reference-context") });
       return;
     }
     if (segments[0] === "taxonomy-cli-cancellation") {
@@ -657,7 +657,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "rust-finite-target-consumption") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-finite-target-consumption") });
       return;
     }
     if (segments[0] === "readme-current-source-revision") {

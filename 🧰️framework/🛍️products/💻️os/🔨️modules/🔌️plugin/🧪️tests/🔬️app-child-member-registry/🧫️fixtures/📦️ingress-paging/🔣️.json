@@ -1,0 +1,10 @@
+{
+  "schema": "semio.owned-document.ingress-paging/v1",
+  "pageSlots": 8,
+  "maximumAdmissionBytes": 262144,
+  "cases": [
+    { "id": "empty", "entries": 0, "frames": [], "pointerSlots": 0 },
+    { "id": "partial-last-page", "entries": 17, "frames": [8, 8, 1], "pointerSlots": 3 },
+    { "id": "maximum-original-members", "entries": 1024, "frames": [8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8], "pointerSlots": 128 }
+  ]
+}

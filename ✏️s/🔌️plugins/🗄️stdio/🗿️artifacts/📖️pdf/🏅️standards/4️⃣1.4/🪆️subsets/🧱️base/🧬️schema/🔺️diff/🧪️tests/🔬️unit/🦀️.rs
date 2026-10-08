@@ -19,8 +19,8 @@ fn one(width: f64, height: f64, text: &str) -> PdfSnapshot {
 async fn between_roundtrip_law() {
     let a = one(612.0, 792.0, "hello");
     let b = one(300.0, 400.0, "world");
-    assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&b, &a), &b).unwrap(), a);
     assert!(PdfDiff::between(&a, &a).is_empty());
 }
 
@@ -28,8 +28,8 @@ async fn between_roundtrip_law() {
 async fn between_roundtrip_law_across_a_growing_and_shrinking_page_tree() {
     let one_page = snap(vec![page(612.0, 792.0, "a")]);
     let three_pages = snap(vec![page(612.0, 792.0, "a"), page(595.276, 841.89, "b"), page(200.0, 300.0, "")]);
-    assert_eq!(PdfDiff::between(&one_page, &three_pages).apply(&one_page).unwrap(), three_pages);
-    assert_eq!(PdfDiff::between(&three_pages, &one_page).apply(&three_pages).unwrap(), one_page);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&one_page, &three_pages), &one_page).unwrap(), three_pages);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&three_pages, &one_page), &three_pages).unwrap(), one_page);
 }
 //#endregion between_roundtrip_law
 
@@ -39,9 +39,9 @@ async fn inverse_law_diff_level() {
     let a = snap(vec![page(612.0, 792.0, "hello"), page(10.0, 20.0, "second")]);
     let b = snap(vec![page(300.0, 400.0, "world")]);
     let diff = PdfDiff::between(&a, &b);
-    let mid = diff.apply(&a).unwrap();
+    let mid = protocol::apply_diff(&diff, &a).unwrap();
     assert_eq!(mid, b);
-    assert_eq!(diff.inverse(&a).apply(&mid).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&diff.inverse(&a), &mid).unwrap(), a);
 }
 //#endregion inverse_law
 
@@ -53,10 +53,10 @@ async fn absorb_law_sequential_composition() {
     let s2 = one(300.0, 400.0, "b");
     let d1 = PdfDiff::between(&s0, &s1);
     let d2 = PdfDiff::between(&s1, &s2);
-    let sequential = d2.apply(&d1.apply(&s0).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &s0).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&s0).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &s0).unwrap(), sequential);
     assert_eq!(sequential, s2);
 }
 
@@ -67,11 +67,11 @@ async fn absorb_law_sequential_composition_over_page_insertion_and_removal() {
     let s2 = snap(vec![page(1.0, 1.0, "a"), page(3.0, 3.0, "c!")]);
     let d1 = PdfDiff::between(&s0, &s1);
     let d2 = PdfDiff::between(&s1, &s2);
-    let sequential = d2.apply(&d1.apply(&s0).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &s0).unwrap()).unwrap();
     assert_eq!(sequential, s2);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&s0).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &s0).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -90,8 +90,8 @@ async fn absorb_law_associativity() {
     right_tail.absorb(d3.clone());
     let mut right = d1.clone();
     right.absorb(right_tail);
-    assert_eq!(left.apply(&s0).unwrap(), s3);
-    assert_eq!(right.apply(&s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).unwrap(), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law
@@ -101,7 +101,7 @@ async fn absorb_law_associativity() {
 async fn a_removal_of_a_page_the_base_does_not_have_is_refused() {
     let base = one(612.0, 792.0, "a");
     let diff = PdfDiff { pages: Some(PdfPagesDiff { removed: vec![7], ..Default::default() }) };
-    assert!(diff.apply(&base).is_err());
+    assert!(protocol::apply_diff(&diff, &base).is_err());
 }
 //#endregion validation
 
@@ -118,8 +118,8 @@ fn sweep_b() -> PdfSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn field_sweep_between_roundtrips_both_directions() {
     let (a, b) = (sweep_a(), sweep_b());
-    assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&PdfDiff::between(&b, &a), &b).unwrap(), a);
     assert!(PdfDiff::between(&a, &a).is_empty());
 }
 

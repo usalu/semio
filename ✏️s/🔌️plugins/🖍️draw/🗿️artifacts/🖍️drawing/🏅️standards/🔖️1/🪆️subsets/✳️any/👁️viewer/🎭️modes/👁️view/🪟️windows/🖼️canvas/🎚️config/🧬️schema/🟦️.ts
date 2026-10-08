@@ -6,8 +6,8 @@ export interface DrawingViewerCanvasWindowConfig {
   framed: boolean;
 }
 
-/** 🧬️ Whole-record Drawing Canvas window configuration mutation. */
-export type DrawingViewerCanvasWindowConfigMutation = { kind: "snapshot"; config: DrawingViewerCanvasWindowConfig };
+/** 🧬️ Drawing Canvas window configuration set-fields mutation. */
+export type DrawingViewerCanvasWindowConfigMutation = { kind: "set"; viewport: Viewport2d; framed: boolean };
 
 /** 🚪️ Parses one exact Drawing Canvas window configuration. */
 export function parseDrawingViewerCanvasWindowConfig(value: unknown): DrawingViewerCanvasWindowConfig {
@@ -20,5 +20,5 @@ export function parseDrawingViewerCanvasWindowConfig(value: unknown): DrawingVie
 
 /** 🔁️ Applies one exact Drawing Canvas configuration mutation. */
 export function applyDrawingViewerCanvasWindowConfigMutation(_base: DrawingViewerCanvasWindowConfig, mutation: DrawingViewerCanvasWindowConfigMutation): DrawingViewerCanvasWindowConfig {
-  return parseDrawingViewerCanvasWindowConfig(mutation.config);
+  return parseDrawingViewerCanvasWindowConfig({ viewport: mutation.viewport, framed: mutation.framed });
 }

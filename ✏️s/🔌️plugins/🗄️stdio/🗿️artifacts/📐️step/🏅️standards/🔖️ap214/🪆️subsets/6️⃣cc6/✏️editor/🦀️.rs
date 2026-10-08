@@ -4,7 +4,7 @@
 
 use crate::editor::step_cc6::modes::edit;
 use crate::editor::step_cc6::modes::edit::windows::main;
-use crate::standards::v_ap214::subsets::cc6::schema::mutations::StepMutation;
+use crate::standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation;
 use crate::standards::v_ap214::subsets::cc6::schema::snapshot::StepSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -43,8 +43,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v_ap214::subsets::base::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
-use crate::standards::v_ap214::subsets::base::schema::mutations::patch_snapshot;
+use crate::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
 
 //#region 🔖️Dialect
 pub const STEP_CC6_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc6") };
@@ -124,7 +123,7 @@ fn stepCc6Editor_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<StepCc6Editor>>>,
     _operation: &AppOperationContext,
-) -> Result<Emit<StepMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<StepCc6Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         StepCc6EditCommand::SetActiveExample { example_id } => Ok(Emit {
             effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&stepCc6Editor_example_snapshot(example_id), STEP_CC6_DOCUMENT_SCHEMA)],
@@ -178,7 +177,7 @@ impl ArtifactEditor for StepCc6Editor {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = StepSnapshot;
-    type Mutation = StepMutation;
+    type Mutation = StepCc6Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -290,7 +289,7 @@ impl editing::SnapshotEditingEditor for StepCc6Editor {
         match command { StepCc6EditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| StepMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        editing::snapshot_edit_net(event, snapshot, |base, next| if base == next { Vec::new() } else { vec![StepCc6Mutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next.clone() })] })
     }
 }
 

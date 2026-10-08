@@ -28,7 +28,7 @@ async fn render_world_scene_contains_processed_mesh() {
 /// document that carries no stock at all, so a unit-box extent here means the replay silently failed.
 #[semio_framework_async_macros::async_test]
 async fn render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box() {
-    let snapshot = crate::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let scene = crate::process_working_scene_from_snapshot(&snapshot);
     assert!(matches!(scene.stock.solid, crate::WorkingSolid::Box { width, .. } if (width - 3.0).abs() < 1e-9), "timber fixture stock: {:?}", scene.stock.solid);
     let mesh = processed_mesh(&scene, None).expect("timber replay tessellates");

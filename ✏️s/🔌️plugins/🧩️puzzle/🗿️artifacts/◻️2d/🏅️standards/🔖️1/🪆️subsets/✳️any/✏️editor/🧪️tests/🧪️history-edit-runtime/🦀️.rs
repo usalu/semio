@@ -69,12 +69,16 @@ fn session(app: &mut Puzzle2dApp) -> Option<HistoryTimeTravel> {
 
 /// ⏯️ Driver turns until `done` holds.
 fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&mut Puzzle2dApp) -> bool) {
-    for _ in 0..100_000 {
+    for turn in 0usize..100_000 {
         if done(app) {
             return;
         }
         block_on(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
         while app.take_typed_operation_ui_progress().is_some() {}
+        if what == "the remote change is adopted" && turn + 1 >= 1024 && (turn + 1).is_power_of_two() {
+            let patch = block_on(app.history_snapshot()).expect("remote replay progress history");
+            eprintln!("[DEBUG] Puzzle2d remote adoption turn={} reprojection={:?} session={:?} ledgerPending={} authoringPending={}", turn + 1, patch.reprojection, patch.time_travel, app.time_travel_ledger().has_pending_work(), app.time_travel_ledger().authoring_pending());
+        }
     }
     panic!("{what} never settled: {:?}", session(app));
 }
@@ -344,6 +348,7 @@ fn every_corpus_scenario_reaches_its_session_outcomes_rows_and_heads() {
             }
         }
         close_app(&mut app);
+        eprintln!("[DEBUG] Puzzle2d history runtime scenario {id} preserved every authored row, outcome and head through real reserved actions");
     }
 }
 
@@ -451,12 +456,18 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     block_on(remote.detach_backbone()).expect("remote releases its backbone");
     close_app(&mut local);
     close_app(&mut remote);
+    eprintln!("[DEBUG] Puzzle2d remote history replay preserved bounded progress, pause, resume and replica head adoption");
 }
 /// 🧮️ The board's head and history as a history step may change them: the painted nodes, the active alternative and the
 /// history rows.
 fn board_trace(app: &mut Puzzle2dApp) -> (Vec<Value>, Option<String>, usize) {
     let patch = block_on(app.history_snapshot()).expect("history");
-    (board_snapshot_nodes(&fixture_of(app)).to_vec(), patch.active_alternative_id, patch.upserts.len())
+    (board_snapshot_nodes(&fixture_of(app)).to_vec(), current_line(app), patch.upserts.len())
+}
+
+/// 🌳️ Borrows the projected current line, including the implicit trunk represented by an absent branch id.
+fn current_line(app: &mut Puzzle2dApp) -> Option<String> {
+    block_on(semio_framework_plugin::app::artifact_app_laws::with_document_view(app, |view| view.history.active_alternative_id.clone())).expect("current line projection")
 }
 
 /// ⚖️ LAW (gap N17): switching to an alternative whose 360 drags are not applied is a local history step, which the
@@ -474,7 +485,8 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         let mut app = seeded_app(&corpus["board"]);
         let seed = edits(&mut app).len();
         run(&mut app, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "trunk drag");
-        let trunk = block_on(app.history_snapshot()).expect("history").active_alternative_id.expect("the trunk line has an id");
+        assert_eq!(current_line(&mut app), None, "the canonical trunk is an implicit viewer head");
+        let trunk = store::canonical_check_in_line(&app.document_identity().expect("the seeded board has a document identity"));
         dispatch(&mut app, "createAlternative", Some(&json!({ "name": "Long" })), None).expect("a new alternative");
         let long = block_on(app.history_snapshot()).expect("history").active_alternative_id.expect("the new alternative is current");
         assert_ne!(long, trunk);
@@ -485,7 +497,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": trunk })), None).expect("back to the trunk");
         pump(&mut app, "the trunk is shown", |app| !app.time_travel_ledger().has_pending_work() && block_on(app.history_snapshot()).expect("history").reprojection.is_none());
         let before = board_trace(&mut app);
-        assert_eq!(before.1.as_deref(), Some(trunk.as_str()));
+        assert_eq!(before.1, None, "the trunk viewer head stays implicit after checkout");
         dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": long })), None).expect("the switch answers at once");
         let waiting = block_on(app.history_snapshot()).expect("history").reprojection.expect("the switch waits for its replay");
         assert!(waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Step && waiting.total >= 360 && waiting.fault.is_none(), "{waiting:?}");
@@ -518,6 +530,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
             assert_eq!((nodes, active.as_deref(), rows), (long_nodes, Some(long.as_str()), before.2 + 1), "the adoption shows the alternative and records the switch row");
         }
         close_app(&mut app);
+        eprintln!("[DEBUG] Puzzle2d alternative history replay cancel={cancel} preserved actual board, current line and row trace");
     }
 }
 //#endregion ⏪️Laws

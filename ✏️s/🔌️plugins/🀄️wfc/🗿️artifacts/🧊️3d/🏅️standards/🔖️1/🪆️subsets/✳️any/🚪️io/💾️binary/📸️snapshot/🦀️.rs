@@ -111,7 +111,6 @@ pub type Wfc3dSnapshotBinary = Vec<u8>;
 mod native_codec {
 use super::*;
 use crate::schema::snapshot::{GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d, Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
-pub(crate)use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};
 use crate::standards::v1::subsets::any::io::text::snapshot::{Wfc3dSnapshotDsl,wfc3d_document_to_dsl,wfc3d_document_from_dsl};
 
 impl store::ArtifactPack for Wfc3dSnapshotDsl {

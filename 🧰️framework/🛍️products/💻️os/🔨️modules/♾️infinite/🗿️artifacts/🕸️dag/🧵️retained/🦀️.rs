@@ -398,14 +398,18 @@ impl Drop for DagSnapshotRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct DagSnapshotRetirementFactory;
 
 impl SnapshotRetirementFactory<DagSnapshot> for DagSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<DagSnapshot>) -> usize { std::mem::size_of::<DagSnapshotRetirement>() }
+
     fn retire(&self, snapshot: Arc<DagSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(DagSnapshotRetirement { snapshot: Some(snapshot), retirement: None })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagOwnedSnapshotRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<DagSnapshot> for DagOwnedSnapshotRetirementFactory {
@@ -414,6 +418,7 @@ impl ArtifactOwnedValueRetirementFactory<DagSnapshot> for DagOwnedSnapshotRetire
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagMutationRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementFactory {
@@ -463,6 +468,14 @@ impl MemberStoreOwner<DagMutation> for DagSnapshot {
     /// `Rejected(MemberOpenDiagnostic::Decode)` at step 0 — so every composed replacement and every
     /// document archive carrying a real DAG member was refused before it began.
     type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
+
+    fn member_store_owners_birth_bytes() -> usize {
+        crate::os_store::document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, DagMutation>>([
+            semio_framework_value::factory_constructor_birth_bytes::<DagSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DagOwnedSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DagMutationRetirementFactory>(0),
+        ])
+    }
 
     fn member_store_owners() -> DocumentStoreOwners<Self, DagMutation> {
         DocumentStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))

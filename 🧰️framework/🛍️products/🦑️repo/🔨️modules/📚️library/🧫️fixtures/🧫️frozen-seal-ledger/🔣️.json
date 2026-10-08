@@ -48,7 +48,8 @@
     "readme-authored-correction-vector-v1": { "seal": "1044f4a170f113d5c07314bcf6de9e54d324614d00952e9267c0e17e838fb6e8" },
     "readme-current-source-revision-input": { "seal": "b0e8738bb09a05691270e20d79d7c2791e071ae17b939399ef0a5169c77f18ce", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "reseals": [
       { "seal": "391975e42f0fdf2b3210b184bf3260478d789a8cff8864be220fe25f489a2157", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "ebbace9b320", "reason": "License-owner catalog and testing-readme expectations moved from `🧫️fixtures` to `🖼️assets`; input paths and digests re-pinned." },
-      { "seal": "4e9e941da04772c48096c4bc94980058653e1aa6a7c1c313d7398b65cfdb8ffa", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "8add1df1473", "reason": "Fixture-input manifest and license-owner catalog digests re-pinned after their upstream edits." }
+      { "seal": "4e9e941da04772c48096c4bc94980058653e1aa6a7c1c313d7398b65cfdb8ffa", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "8add1df1473", "reason": "Fixture-input manifest and license-owner catalog digests re-pinned after their upstream edits." },
+      { "seal": "5c63712df095b212637097827659996a200cbe32d89e9856caf4054128fd8184", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "reason": "Editor launch registration keys removed from the revision gate `execution` block; the fixture digest re-pinned." }
     ] },
     "readme-reviewed-expectation-input": { "seal": "9cd32b7ec16ebcfb30b537da157add640847dd434fa496bac8950da806497ff4", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "reseals": [
       { "seal": "1d587dbf013d3462143e20f5f459964e33ace67697bbd59f451d1f8428d6907e", "coordinates": "unchanged", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "recordedBy": "ebbace9b320", "reason": "License-owner catalog moved from `🧫️fixtures` to `🖼️assets`; its path re-pinned." },
@@ -142,6 +143,16 @@
             "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest/🧬️schema/🧪️world/📜️.wit",
             "revision": "d4597d0410a"
           }
+        ]
+      },
+      {
+        "seal": "e2749b7d7a44bb1f48019e1b22275c5caf87909f9e94f4b329aa8fe080bb242b",
+        "recordedBy": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT",
+        "evidence": { "revision": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "date": "2026-10-07" },
+        "reason": "The dashboard is the only developer control plane: the plugin registry generator stops rendering the editor launch file and reading its seed, and the recording ticket deletes both files. The two reference-consumer rows naming them leave the catalog; packages, mappings, adapters, token transforms and every other consumer row stay byte-for-byte unchanged.",
+        "consumerDeletions": [
+          { "path": ".vscode/launch.json", "reason": "Generated editor launch file: `plugin-registry:generate` no longer renders it and the recording ticket deletes it.", "revision": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "index": 1, "row": {"packageId":"wgpu-renderer","path":".vscode/launch.json","transformId":"wgpu-root","occurrenceCount":65,"ownership":"generated","generatorOwnerPaths":[".vscode/🧩️launch.seed.jsonc","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts"]} },
+          { "path": ".vscode/🧩️launch.seed.jsonc", "reason": "Authored seed of the removed editor launch file: no generator reads it and the recording ticket deletes it.", "revision": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "index": 2, "row": {"packageId":"wgpu-renderer","path":".vscode/🧩️launch.seed.jsonc","transformId":"wgpu-root","occurrenceCount":42,"ownership":"authored"} }
         ]
       }
     ] },

@@ -9,6 +9,14 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-member-group-publication-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-member-group-publication-source"
+      }
+    },
     "test-snapshot-sqlite-admission": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -96,6 +104,56 @@
       "outputs": []
     },
     "reopen-storm-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "law",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "all",
+                    "args": [
+                      "all"
+                    ]
+                  },
+                  {
+                    "id": "unit",
+                    "args": [
+                      "unit"
+                    ]
+                  },
+                  {
+                    "id": "fs",
+                    "args": [
+                      "fs"
+                    ]
+                  },
+                  {
+                    "id": "sqlite",
+                    "args": [
+                      "sqlite"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -232,6 +290,38 @@
       "outputs": []
     },
     "wal-writer-fence-live": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "lane",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "sqlite",
+                    "args": [
+                      "sqlite"
+                    ]
+                  },
+                  {
+                    "id": "postgres",
+                    "args": [
+                      "postgres"
+                    ]
+                  },
+                  {
+                    "id": "neo4j",
+                    "args": [
+                      "neo4j"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -397,6 +487,14 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "test-member-input-census-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-member-input-census-source"
+      }
     },
     "test-member-dialect-source": {
       "executor": "nx:run-commands",

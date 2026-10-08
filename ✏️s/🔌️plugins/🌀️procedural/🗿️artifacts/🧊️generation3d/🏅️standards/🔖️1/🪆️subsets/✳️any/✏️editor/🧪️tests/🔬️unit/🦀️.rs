@@ -78,7 +78,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     for index in 0..fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap(){incoming.host_snapshot.widgets.push(Widget::InputNote{id:format!("incoming-group-{index}"),text:format!("Group {index}")});}
     let export=crate::standards::v1::subsets::any::io::document_io::export_document(&incoming).unwrap();
     let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
-    let expected=crate::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations(&snapshot.host_snapshot,&incoming.host_snapshot);
+    let expected=crate::standards::v1::subsets::any::schema::mutations::generation3d_document_replacement(&snapshot,&incoming);
     let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());
     let extent=work.extent(&command,&snapshot,&protocol::InteractionState::default(),None).unwrap();let required=GENERATION3D_RETAINED_CAPACITY.rows(expected.len());
     work.begin_close();while !matches!(work.close_step(1,3),semio_framework_job::InteractiveJobCloseStep::Complete){}

@@ -12,16 +12,14 @@ pub struct SetFitRevision {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRevision {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "fit-revision", kind: "set-fit-revision", record: "SetFitRevision" };
-    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfig> {
-        let mut next = base.clone();
-        next.fit_revision = self.value;
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
+        match base.fit_revision == self.value {
+            true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Fit revision is unchanged."),
+            false => protocol::MutationOutcome::new(ShootingConfigDiff { fit_revision: Some(self.value), ..Default::default() }),
+        }
     }
     fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    
-    })())
+    Ok(vec![ShootingConfigMutation::SetFitRevision(Self { value: base.fit_revision })])
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")

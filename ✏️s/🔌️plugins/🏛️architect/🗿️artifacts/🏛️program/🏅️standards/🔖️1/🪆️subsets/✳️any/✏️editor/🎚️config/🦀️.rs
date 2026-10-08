@@ -89,12 +89,73 @@ impl Default for ArchitectConfig {
 
 impl store::ConfigRecord for ArchitectConfig {}
 
-impl MutationDiff<ArchitectConfig> for ArchitectConfig {
-    fn apply(&self, _base: &ArchitectConfig) -> protocol::MutationApplyResult<ArchitectConfig> {
-        Ok(self.clone())
+/// 🔺️ Sparse field diff of the architect config: each present field is written, the rest of the config is untouched.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ArchitectConfigDiff {
+    pub search_query: Option<String>,
+    pub search_history_json: Option<String>,
+    pub last_result_json: Option<String>,
+    pub last_analysis_json: Option<String>,
+}
+
+impl MutationDiff<ArchitectConfig> for ArchitectConfigDiff {
+    fn apply(&self, base: &ArchitectConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.search_query {
+            next.search_query = value.clone();
+        }
+        if let Some(value) = &self.search_history_json {
+            next.search_history_json = value.clone();
+        }
+        if let Some(value) = &self.last_result_json {
+            next.last_result_json = value.clone();
+        }
+        if let Some(value) = &self.last_analysis_json {
+            next.last_analysis_json = value.clone();
+        }
+        Ok(next)
     }
+
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.search_query.is_some() {
+            self.search_query = other.search_query;
+        }
+        if other.search_history_json.is_some() {
+            self.search_history_json = other.search_history_json;
+        }
+        if other.last_result_json.is_some() {
+            self.last_result_json = other.last_result_json;
+        }
+        if other.last_analysis_json.is_some() {
+            self.last_analysis_json = other.last_analysis_json;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ArchitectConfig> for ArchitectConfigDiff {
+    fn inverse(&self, base: &ArchitectConfig) -> Self {
+        Self {
+            search_query: self.search_query.as_ref().map(|_| base.search_query.clone()),
+            search_history_json: self.search_history_json.as_ref().map(|_| base.search_history_json.clone()),
+            last_result_json: self.last_result_json.as_ref().map(|_| base.last_result_json.clone()),
+            last_analysis_json: self.last_analysis_json.as_ref().map(|_| base.last_analysis_json.clone()),
+        }
+    }
+
+    fn between(base: &ArchitectConfig, other: &ArchitectConfig) -> Self {
+        Self {
+            search_query: (base.search_query != other.search_query).then(|| other.search_query.clone()),
+            search_history_json: (base.search_history_json != other.search_history_json).then(|| other.search_history_json.clone()),
+            last_result_json: (base.last_result_json != other.last_result_json).then(|| other.last_result_json.clone()),
+            last_analysis_json: (base.last_analysis_json != other.last_analysis_json).then(|| other.last_analysis_json.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
     }
 }
 

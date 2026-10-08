@@ -104,7 +104,7 @@ async fn stock_from_catalogue_merges_built_in_kinds_without_duplicating() {
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
     let loaded = load_document_pack(&emit);
-    let expected: usize = crate::schema::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();
+    let expected: usize = crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();
     assert_eq!(loaded.stock_extra.len(), expected);
 
     let doc2 = ArtifactView::new(&loaded, &history);

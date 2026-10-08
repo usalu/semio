@@ -51,7 +51,6 @@ use crate::standards::v1::subsets::brep::schema::mutations::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
-use crate::standards::v1::subsets::brep::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
@@ -76,8 +75,6 @@ pub(crate) fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
-        SemioBrepMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioBrepMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol)),
@@ -98,16 +95,11 @@ pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioBrepMutation::PatchSnapshot(crate::standards::v1::subsets::brep::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioBrepMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();

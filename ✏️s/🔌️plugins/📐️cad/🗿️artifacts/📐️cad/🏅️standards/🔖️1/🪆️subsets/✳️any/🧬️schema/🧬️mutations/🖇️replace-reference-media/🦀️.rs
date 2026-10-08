@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🖇️ Whole-value swap of a reference overlay's media-identity/appearance bundle
 /// (`source_url`/`media_kind`/`orientation`/`scale`/`opacity`) — the rarely-touched fields no
 /// editor gesture sets independently, unlike `hidden`/`locked`/`width_world`/`origin`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-reference-media")]

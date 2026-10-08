@@ -2,7 +2,7 @@
 //! `no-op` when already at that label.
 
 use super::RenameSavedCamera;
-use crate::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingSavedCameraPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &RenameSavedCamera, base: &ShootingSnapshot) -> protocol::M
     if existing.label == payload.new_label {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Saved camera \"{}\" already has label \"{}\".", payload.id, payload.new_label));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        saved_cameras: Some(ShootingSavedCamerasDelta { patched: vec![ShootingSavedCameraPatchEntry { id: payload.id.clone(), patch: ShootingSavedCameraPatch { label: Some(payload.new_label.clone()), camera: None } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::camera_patches([(payload.id.clone(), ShootingSavedCameraPatch { label: Some(payload.new_label.clone()), camera: None })]))
 }

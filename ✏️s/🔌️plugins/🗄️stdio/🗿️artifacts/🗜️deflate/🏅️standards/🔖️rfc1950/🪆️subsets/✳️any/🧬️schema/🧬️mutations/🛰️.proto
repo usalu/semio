@@ -8,7 +8,6 @@ enum DeflateLevelHint {
   MAXIMUM = 3;
 }
 
-message SetSnapshot { bytes snapshot_pack = 1; } // packed DeflateSnapshot (see snapshot.proto)
 message SetCompressionParams {
   uint32 method = 1;
   uint32 window_bits = 2;
@@ -20,7 +19,6 @@ message SetPayload { bytes payload = 1; }
 message DeflateMutation {
   oneof variant {
     bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
     SetCompressionParams set_compression_params = 3;
     SetPresetDictionary set_preset_dictionary = 4;
     SetPayload set_payload = 5;

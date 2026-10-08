@@ -7,7 +7,7 @@ import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts
  * Nested types
  * re-import the artifact's own root schema (`../🟦️.ts`) rather than re-declaring stubs, so
  * every facet of the drawing artifact agrees on the same `DrawingLayerNode`/`DrawingImageAsset`/
- * `DrawingArtboard`/`DrawingArtifact`. */
+ * `DrawingArtboard`. */
 import {
   parsePathGeometrySegment,
   parseDrawingTransform, parseDrawingFill, parseDrawingStroke, parseDrawingTraceParams,
@@ -15,19 +15,15 @@ import {
   parseBlendMode,
   type BlendMode,
   type PathGeometrySegment,
-  parseDrawingArtifact,
   parseDrawingArtboard,
   parseDrawingImageAsset,
   parseDrawingLayerNode,
-  type DrawingArtifact,
   type DrawingArtboard,
   type DrawingImageAsset,
   type DrawingLayerNode,
 } from "../🟦️.ts";
 
 export interface DrawingDiff {
-  /** @state artifact */
-  artifact?: DrawingArtifact;
   /** @state artifact */
   schema?: string;
   /** @state artifact */
@@ -146,7 +142,6 @@ export const drawingDrawingDiffGuardConstant = <T extends string | number | bool
 export function parseDrawingDiff(value: unknown, at = "$"): DrawingDiff {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
-    ...(Object.hasOwn(row, "artifact") ? { artifact: row["artifact"] == null ? undefined : parseDrawingArtifact(row["artifact"], `${at}.artifact`) } : {}),
     ...(Object.hasOwn(row, "schema") ? { schema: row["schema"] == null ? undefined : drawingDrawingDiffGuardString(row["schema"], `${at}.schema`) } : {}),
     ...(Object.hasOwn(row, "id") ? { id: row["id"] == null ? undefined : drawingDrawingDiffGuardString(row["id"], `${at}.id`) } : {}),
     ...(Object.hasOwn(row, "title") ? { title: row["title"] == null ? null : drawingDrawingDiffGuardString(row["title"], `${at}.title`) } : {}),

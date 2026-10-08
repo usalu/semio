@@ -81,3 +81,17 @@ test("📶️ unsettled diagnostic views keep replay progress below completion",
   expect(finished).toEqual(finishedWork);
   expect(finished.done).toBe(finished.total);
 });
+
+/** 📏️ Physical owner release remains independent from the diagnostic copy grant. */
+test("📏️ settlement copy1/7 keeps whole physical release4096 authority", () => {
+ const extent=new TextEncoder().encode("x".repeat(law.settlement.copyRelease.allocationBytes)).length;
+ for(const copy of law.settlement.copyRelease.copyGrants){
+  let state={copied:0,allocation:extent};
+  while(state.copied<extent)state=applyPatch(state,[{op:"replace",path:"/copied",value:Math.min(extent,state.copied+copy)}],true,false).newDocument;
+  expect(state.allocation).toBe(extent);expect(extent-1).toBeLessThan(state.allocation);
+  expect(law.settlement.copyRelease.oneBelowRetains).toBe(true);expect(extent).toBeLessThanOrEqual(law.settlement.maximumReleaseBytes);
+  state=applyPatch(state,[{op:"replace",path:"/allocation",value:0}],true,false).newDocument;
+  expect(state).toEqual({copied:extent,allocation:0});
+ }
+ console.log("[DEBUG] independent TextEncoder/JSON Patch oracle retains whole1000-byte owner across copy1/7 and underfunded physical release");
+});

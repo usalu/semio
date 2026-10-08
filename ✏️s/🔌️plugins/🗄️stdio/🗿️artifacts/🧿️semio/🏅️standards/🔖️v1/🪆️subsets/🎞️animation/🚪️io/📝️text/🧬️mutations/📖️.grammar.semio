@@ -10,9 +10,8 @@ start op
 # `print_op`, not invented. `SetSnapshot`'s payload was the ONE genuine JSON-transfer-ban violation
 # this wave found and fixed (was hex-of-`serde_json`, now the real `snapshot-lit` production below,
 # per `enc_animation_snapshot`/`dec_animation_snapshot`).
-op = set-snapshot | insert-timeline | remove-timeline | set-timeline-name | insert-channel | remove-channel | set-channel-target | set-channel-interpolation | insert-keyframe | remove-keyframe | set-keyframe-time | set-keyframe-value
+op = insert-timeline | remove-timeline | set-timeline-name | insert-channel | remove-channel | set-channel-target | set-channel-interpolation | insert-keyframe | remove-keyframe | set-keyframe-time | set-keyframe-value
 
-set-snapshot = "S" ":" snapshot-lit
 insert-timeline = "IT" ":" index "," timeline
 remove-timeline = "RT" ":" index
 set-timeline-name = "TN" ":" index "," option-name

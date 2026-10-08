@@ -1,0 +1,3 @@
+# Seventeen Current Method
+
+Actualsource17/runtime21/dispatcher19laws ready,current bound bytes rehashed exact and declaredown/AJVoutcomes agree. Authorityfunction source/dispatcher bodies byte-identical admitted16 duplicate-preserving lazyindex;complete currentRoot→initial andsealedcaptured authority lifecycle retained. Async chunked sourcebody guards/progress/cancel remain reviewed; routes bind exactepoch17helpers. Method-only admission. Notice1actualreceipt absent,currentjoint33heldadmission pending; no capture/native/pub acceptance. Fullcurrentbody/membership/meta/runtime/originalwholes/liveapp remain independent gates.

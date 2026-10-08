@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumAdmissionBytes",
+    "aliasCount",
+    "payloadBytes",
+    "winnerCount",
+    "deniedReleaseBytes",
+    "birthBeforeClose",
+    "weakAliasesRefused",
+    "nestedDepth",
+    "inlineOwnedPayload",
+    "soleSnapshotWeak",
+    "observerGuard"
+  ],
+  "properties": {
+    "maximumAdmissionBytes": {
+      "const": 262144
+    },
+    "aliasCount": {
+      "const": 4
+    },
+    "payloadBytes": {
+      "const": [
+        8194,
+        65536
+      ]
+    },
+    "winnerCount": {
+      "const": 1
+    },
+    "deniedReleaseBytes": {
+      "const": 0
+    },
+    "birthBeforeClose": {
+      "const": true
+    },
+    "weakAliasesRefused": {
+      "const": true
+    },
+    "nestedDepth": {
+      "const": 2
+    },
+    "inlineOwnedPayload": {
+      "const": true
+    },
+    "soleSnapshotWeak": {
+      "const": [
+        {
+          "pointerBytes": 4,
+          "snapshotBytes": 8,
+          "frameBytes": 16
+        },
+        {
+          "pointerBytes": 8,
+          "snapshotBytes": 8,
+          "frameBytes": 24
+        }
+      ]
+    },
+    "observerGuard": {
+      "const": "inline-exclusive"
+    }
+  }
+}

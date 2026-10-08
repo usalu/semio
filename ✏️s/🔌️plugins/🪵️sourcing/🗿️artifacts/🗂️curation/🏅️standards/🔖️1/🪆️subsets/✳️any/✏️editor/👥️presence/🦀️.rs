@@ -165,9 +165,12 @@ impl protocol::OpBinary for SourcingCurationPresenceMutation {
 const SOURCING_PRESENCE_BYTES: usize = 7 * size_of::<f64>();
 const _: () = assert!(size_of::<SourcingCurationPresence>() == SOURCING_PRESENCE_BYTES && !std::mem::needs_drop::<SourcingCurationPresence>());
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SourcingPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<SourcingCurationPresence> for SourcingPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<SourcingCurationPresence>) -> usize { std::mem::size_of::<SourcingPresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<SourcingCurationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(SourcingPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
     }

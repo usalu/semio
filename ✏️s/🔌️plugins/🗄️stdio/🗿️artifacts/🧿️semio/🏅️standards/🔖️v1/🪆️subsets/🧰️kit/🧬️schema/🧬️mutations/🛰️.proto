@@ -1,7 +1,6 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.kit.mutations;
 import "framework/schema/artifact-reference.proto";
-import "📸️set-snapshot/🛰️.proto";
 import "🧰️framework/🔨️modules/🚪️io/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
@@ -41,6 +40,5 @@ message SemioKitMutation {
     AddDesign addDesign = 13 [json_name = "AddDesign"];
     RemoveDesign removeDesign = 14 [json_name = "RemoveDesign"];
     EditDesign editDesign = 15 [json_name = "EditDesign"];
-      SetSnapshot set_snapshot = 1;
   }
 }

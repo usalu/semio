@@ -1,2 +1,0 @@
-# 📸️ Whole SemioKitSnapshot replacement.
-type SetSnapshot { snapshot: SemioKitSnapshot! }

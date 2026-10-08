@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -31,50 +30,47 @@
   "infrastructure": null,
   "information": null,
   "communication": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "communication-requirement-a",
-        "patch": {
-          "name": "Communication Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "channel": "Replaced Communication Requirement A",
-          "audienceIds": [],
-          "messageTypes": [],
-          "frequency": null,
-          "medium": [],
-          "language": [],
-          "accessibility": [],
-          "emergencyUse": false,
-          "twoWay": false,
-          "recordingPolicy": null,
-          "signageLocations": [],
-          "technology": [],
-          "escalationPath": [],
-          "feedbackLoop": false,
-          "privacyControls": [],
-          "elementIds": [],
-          "standards": [],
+        "name": "Communication Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "templates": []
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "channel": "Replaced Communication Requirement A",
+        "audienceIds": [],
+        "messageTypes": [],
+        "frequency": null,
+        "medium": [],
+        "language": [],
+        "accessibility": [],
+        "emergencyUse": false,
+        "twoWay": false,
+        "recordingPolicy": null,
+        "signageLocations": [],
+        "technology": [],
+        "escalationPath": [],
+        "feedbackLoop": false,
+        "privacyControls": [],
+        "elementIds": [],
+        "standards": [],
+        "ownerId": null,
+        "templates": []
       }
     ],
+    "removed": [
+      "communication-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "wayfinding": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

@@ -1,0 +1,14 @@
+{
+  "source": "topology-α\u0000引用😀",
+  "repeatCounts": [1, 257],
+  "maximumCopyBytes": 64,
+  "maximumCapacityBytes": 262144,
+  "pageBytes": 4096,
+  "cancelAt": [0, 1, 2, 3, 65, 257],
+  "required": {
+    "originalSourceUnchanged": true,
+    "exactOrderedBytes": true,
+    "zeroGrantAllocatesNothing": true,
+    "wholeSlotBirthAndRelease": true
+  }
+}

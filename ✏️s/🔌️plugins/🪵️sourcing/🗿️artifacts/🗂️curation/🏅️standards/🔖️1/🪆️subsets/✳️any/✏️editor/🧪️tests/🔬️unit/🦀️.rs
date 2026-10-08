@@ -22,7 +22,7 @@ pub(crate) mod context {
     /// so an empty `AppActionRegistry` rejects every row with `interactive-job.catalog-authority`.
     /// Same reason trinity's `🔌️jack`/`♻️rewriting` editors are registry-backed.
     pub async fn new_app() -> SourcingTestApp {
-        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests).await;
+        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await;
         // 🪪️ `dispatch_typed_command_inner` refuses any command whose `ActionMeta.instance_id` is not the
         // app's bound live runtime instance, and a freshly constructed app has none — so bind the id
         // `artifact_app_laws::meta` stamps. A test that wants another instance rebinds (see
@@ -368,7 +368,7 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     println!("[STATS] sourcing demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(pack.len() > SOURCING_CURATION_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope");
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
-    let distilled = crate::schema::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let distilled = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions { json: distilled }).is_ok());
 }
@@ -563,7 +563,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
         .expect("host configuration")
         .expect("sourcing contribution mutation");
     assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions { json: "[]".into() }, "a pack with nothing this app installs is retained as an empty roster");
-    let pack = crate::schema::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let pack = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");

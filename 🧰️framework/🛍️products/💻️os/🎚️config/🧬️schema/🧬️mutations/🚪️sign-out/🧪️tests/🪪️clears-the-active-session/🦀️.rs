@@ -12,7 +12,7 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
-use super::super::sign_in::{Identity, IdentitySetting};
+use super::super::sign_in::{Identity, IdentityDiff, IdentitySetting};
 use super::super::IdentityConfigMutation;
 
 const BEFORE: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/📸️snapshot/⬅️before/🔣️.json");
@@ -21,6 +21,9 @@ const MUTATION: &str = include_str!("../../🧫️fixtures/🪪️clears-the-act
 const DIFF: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../🧫️fixtures/🪪️clears-the-active-session/🎯️outcome/🔣️.json");
 
+fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
+}
 fn before() -> IdentitySetting {
     serde_json::from_str(BEFORE).expect("before identity setting decodes")
 }
@@ -41,7 +44,7 @@ fn clears_the_whole_active_session() {
     let base = before();
     assert!(base.0.is_some(), "sign-out/clears-the-active-session: the before-setting must carry a session or the clear measures nothing");
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("sign-out applies to its committed before-setting");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("sign-out applies to its committed before-setting");
     assert_eq!(applied, expected_after(), "sign-out/clears-the-active-session: the cleared setting differs from the committed after-snapshot");
     assert!(applied.0.is_none(), "sign-out/clears-the-active-session: a signed-out record must hold no session");
     assert_eq!(applied, IdentitySetting::default(), "sign-out/clears-the-active-session: the signed-out record is the facet's own default");
@@ -59,10 +62,10 @@ fn restoring_the_prior_session_restores_before() {
     };
     assert_eq!(Identity::from(undo), session(&base), "sign-out/clears-the-active-session: the undo must carry BASE's non-secret identity");
     let forward = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward sign-out applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward sign-out applies");
     for step in &inverse {
         let redo = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(redo.diff(), &snapshot).expect("the sign-out inverse step applies");
+        snapshot = protocol::apply_diff(redo.diff(), &snapshot).expect("the sign-out inverse step applies");
     }
     assert_eq!(snapshot, base, "sign-out/clears-the-active-session: restoring the prior session did not restore the before-setting");
 }
@@ -95,30 +98,29 @@ fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "sign-out/clears-the-active-session: an accepted sign-out emits no diagnostics");
 }
 
-/// 🔺️ The committed diff is the whole post-op `IdentitySetting`, which for a sign-out is `null`.
+/// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced sign-out diff encodes");
+    let produced = json_value(outcome.diff());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "sign-out/clears-the-active-session: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `IdentitySetting` and re-encodes unchanged.
+/// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: IdentitySetting = serde_json::from_str(DIFF).expect("committed sign-out diff decodes");
-    assert!(decoded.0.is_none(), "sign-out/clears-the-active-session: the committed diff must carry the cleared record");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-out diff decodes");
+    assert_eq!(decoded.session.as_ref().map(|edit| edit.value.is_none()), Some(true), "sign-out/clears-the-active-session: the committed diff must carry the cleared session");
+    let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "sign-out/clears-the-active-session: committed diff JSON is not canonical");
 }
 
-/// 🩹 The committed diff carries the before-setting to the after-setting — and because this facet's
-/// `apply` ignores `base` outright, the diff IS the after-setting.
+/// 🩹 The committed diff carries the before-setting to the after-setting through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: IdentitySetting = serde_json::from_str(DIFF).expect("committed sign-out diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-setting");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-out diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "sign-out/clears-the-active-session: committed diff did not carry before to after");
 }

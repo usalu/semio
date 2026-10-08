@@ -96,10 +96,6 @@
   "liveRegression": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
   "execution": {
     "target": "test-registry-import-language",
-    "command": "bun ./📜️script.ts test registry-import-language",
-    "launchName": "🧹clean🧩️taxonomy🌐️registry-import-language",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-registry-import-language --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.15
+    "command": "bun ./📜️script.ts test registry-import-language"
   }
 }

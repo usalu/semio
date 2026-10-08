@@ -11,7 +11,5 @@ pub fn diff(payload: &ChangeSceneAmbientIntensity, base: &ShootingSnapshot) -> p
     if base.scene.ambient.intensity == payload.new_intensity {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ambient intensity is already {}.", payload.new_intensity));
     }
-    let mut scene = base.scene.clone();
-    scene.ambient.intensity = payload.new_intensity;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { ambient_intensity: Some(payload.new_intensity), ..Default::default() }), ..Default::default() })
 }

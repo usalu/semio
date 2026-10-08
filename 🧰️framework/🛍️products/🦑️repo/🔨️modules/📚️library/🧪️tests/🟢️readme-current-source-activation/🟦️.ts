@@ -3,7 +3,6 @@ import { afterAll, expect, test } from "bun:test";
 import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, relative, resolve } from "node:path";
-import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
 import { findNodeAtLocation, getNodeValue, parse as parseJson, parseTree, type ParseError } from "jsonc-parser";
 import ts from "typescript";
@@ -63,7 +62,7 @@ const revisionInput = capture(vector.revisionInput), revisionVector = JSON.parse
 const revision = revisionVector.revisions[vector.revisionId], catalogInput = capture(vector.catalogPath), catalogDocument = JSON.parse(catalogInput.bytes.toString("utf8"));
 const fixtureAuthorityInput = capture(revisionVector.fixtureInputs.path), fixtureAuthority: ReviewedFixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
 
-if (fixtureAuthorityInput.sha256 !== revisionVector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile<ReviewedFixtureAuthority>(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed activation fixture authority drift");
+if (fixtureAuthorityInput.sha256 !== revisionVector.fixtureInputs.sha256 || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed activation fixture authority drift");
 
 /** 👀️ The manifest row for one reviewed role, proving the manifest declares it before it is read. */
 function reviewedInputRow(role: "source" | "expectation"): ReviewedFixtureAuthority["inputs"][number] {
@@ -221,7 +220,7 @@ function revisionDigest(): string {
 
 test("neutral activation inputs retain exact baseline provenance and independent JSON and digest parity", () => {
   
-  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("reviewed-readme-source-activation-v1");expect(vector["scope"]).toEqual("isolated-retained-loader-and-planner");expect(vector["execution"]["packageName"]).toEqual("@semio-tech/repo-lib");expect(vector["execution"]["packageCommand"]).toEqual("nx run @semio-tech/repo-lib:test-readme-current-source-activation");expect(vector["execution"]["target"]).toEqual("test-readme-current-source-activation");expect(vector["execution"]["command"]).toEqual("bun ./📜️script.ts test readme-current-source-activation");expect(vector["execution"]["route"]).toEqual("readme-current-source-activation");expect(vector["execution"]["source"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts");expect(vector["execution"]["launchName"]).toEqual("🧹clean🧩️taxonomy🟢️readme-current-source-activation");expect(vector["execution"]["launchCommand"]).toEqual("bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache");expect(vector["execution"]["launchGroup"]).toEqual("4_gate");
+  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("reviewed-readme-source-activation-v1");expect(vector["scope"]).toEqual("isolated-retained-loader-and-planner");expect(vector["execution"]["packageName"]).toEqual("@semio-tech/repo-lib");expect(vector["execution"]["packageCommand"]).toEqual("nx run @semio-tech/repo-lib:test-readme-current-source-activation");expect(vector["execution"]["target"]).toEqual("test-readme-current-source-activation");expect(vector["execution"]["command"]).toEqual("bun ./📜️script.ts test readme-current-source-activation");expect(vector["execution"]["route"]).toEqual("readme-current-source-activation");expect(vector["execution"]["source"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts");expect(vector["execution"]["cache"]).toEqual(false);
   expect(getNodeValue(parseTree(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🟢️readme-current-source-activation/🔣️.json"), "utf8"))!)).toEqual(vector);
   expect(revisionInput.sha256).toBe(vector.revisionInputSha256);
   expect(catalogInput.sha256).toBe(vector.catalogSha256);
@@ -432,12 +431,12 @@ test("activation preparation invokes no producer or apply and preserves producti
   expect(sha(readFileSync(parserPath))).toBe(parserInput.sha256);
 });
 
-test("activation gate registration matches the package router and both launch catalogs", () => {
+test("activation gate registration matches the package router as an owner route that is never replayed from cache", () => {
   const expected = vector.execution, packagePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
-  const parsed = (path: string, jsonc = false): any => {
-    const text = readInput(root, path).bytes.toString("utf8"), errors: ParseError[] = [], value = parseJson(text, errors, { disallowComments: !jsonc, allowTrailingComma: jsonc });
+  const parsed = (path: string): any => {
+    const text = readInput(root, path).bytes.toString("utf8"), errors: ParseError[] = [], value = parseJson(text, errors, { disallowComments: true, allowTrailingComma: false });
     expect(errors, path).toEqual([]);
-    if (!jsonc) expect(value, path).toEqual(JSON.parse(text));
+    expect(value, path).toEqual(JSON.parse(text));
     return value;
   };
   const project = parsed(packagePath + "/📋️project.json"), manifest = parsed(packagePath + "/package.json");
@@ -447,11 +446,7 @@ test("activation gate registration matches the package router and both launch ca
     ts.forEachChild(node, visit);
   };
   visit(tree);
-  const launches = [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"].map((path) => {
-    const configurations = parsed(path, true).configurations;
-    return { path, rows: configurations.filter((row: any) => row.name === expected.launchName), orderRows: configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder).length };
-  });
-  expect({ packageName: manifest.name, packageCommand: manifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length, launches }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } }, branches: 1, launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })) });
+  expect({ packageName: manifest.name, packageCommand: manifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", cache: expected.cache, options: { cwd: packagePath, command: expected.command } }, branches: 1 });
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
   expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "readme-current-source-activation") });');
 });

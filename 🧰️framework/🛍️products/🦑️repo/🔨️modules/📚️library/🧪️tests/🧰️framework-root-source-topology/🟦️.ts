@@ -72,13 +72,4 @@ describe("framework root source topology", () => {
       expect(build.success, `${row.owner}\n${build.logs.join("\n")}`).toBe(true);
     }
   }, 30_000);
-
-  test("registers the portable gate in both editor launch authorities", () => {
-    const name = "🧹clean🧩️taxonomy🧪️framework-root-source-topology";
-    const command = "bun nx run @semio-tech/repo-lib:test-framework-root-source-topology";
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { readonly configurations: readonly { readonly name?: string; readonly command?: string }[] };
-      expect(launch.configurations.filter((row) => row.name === name && row.command === command), path).toHaveLength(1);
-    }
-  });
 });

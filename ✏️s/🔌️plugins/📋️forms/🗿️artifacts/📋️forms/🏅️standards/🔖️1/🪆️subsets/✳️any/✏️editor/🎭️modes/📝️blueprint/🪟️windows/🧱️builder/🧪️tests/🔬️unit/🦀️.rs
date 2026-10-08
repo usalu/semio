@@ -68,7 +68,7 @@ async fn definition_declares_the_block_list_surface_and_body_key() {
 
 #[test]
 fn blueprint_cards_publish_exact_forms_selection_targets() {
-    let spec = crate::schema::default_example_spec();
+    let spec = crate::standards::v1::subsets::any::io::text::snapshot::default_example_spec();
     let node = render(&spec, &FormsConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), Some("name")).unwrap();
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).unwrap();

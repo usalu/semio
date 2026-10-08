@@ -77,7 +77,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 view: &ViewModel,
             ) -> Result<usize, String> {
                 let command_id = command.command_id();
-                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta("gis-map-window-ownership") };
+                let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
                 app.dispatch_typed(command, &meta).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())

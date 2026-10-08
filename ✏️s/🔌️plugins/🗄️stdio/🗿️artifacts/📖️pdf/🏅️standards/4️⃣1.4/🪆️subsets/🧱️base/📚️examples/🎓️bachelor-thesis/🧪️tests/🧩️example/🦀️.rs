@@ -126,7 +126,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
 
     let empty = PdfDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
+    assert_eq!(encode_pdf(protocol::apply_diff(&empty, &original).unwrap()).expect("self-diff logical export"), canonical);
     timing("self diff");
 
     let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }] });
@@ -141,7 +141,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     let restored_diff = PdfDiff::decode_diff(&diff_frame).expect("decode structural diff");
     timing("diff decode");
     assert_eq!(&restored_diff, diff.diff());
-    let dirty = restored_diff.apply(&original).unwrap();
+    let dirty = protocol::apply_diff(&restored_diff, &original).unwrap();
     let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
     assert_ne!(dirty_bytes, canonical);
     let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
@@ -153,7 +153,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     timing("inverse diff encode");
     let restored_inverse = PdfDiff::decode_diff(&inverse_frame).expect("decode inverse diff");
     timing("inverse diff decode");
-    let restored = restored_inverse.apply(&dirty).unwrap();
+    let restored = protocol::apply_diff(&restored_inverse, &dirty).unwrap();
     assert_eq!(restored, original, "diff inverse must restore the complete logical model");
     assert_eq!(encode_pdf(&restored).expect("inverse logical writer export"), canonical);
     timing("inverse diff verification");

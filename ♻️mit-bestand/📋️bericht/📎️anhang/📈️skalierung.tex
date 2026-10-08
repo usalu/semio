@@ -110,21 +110,21 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \begin{VizFigure}[title=Systemkarte Skalierung der Wiederverwendung, width=147]
 
 \begin{VizSection}[rule=false]
-\node[anchor=north west, align=left, text width=143mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-1) {%
+\node[anchor=north west, align=left, text width=143mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,0) {%
   \textbf{SYNTHESE (E2/E3):}\ \ Skalierung entsteht nicht durch eine digitale Plattform allein, sondern aus dem Zusammenspiel von Wiederverwendungsprozessen~(B), digitalen Plattformfunktionen~(C), operativen Diensten~(D) und institutionellen Rahmenbedingungen~(E). Hemmnisse~(F) wirken an den Schnittstellen und bestimmen, ob dauerhaft skaliert wird.};
 \end{VizSection}
 
 \begin{VizSection}[title={A \ SKALIERUNG \ \textperiodcentered\ \ sechs Dimensionen (E3)}]
-\SemioVizCellGrid{sk-dimension}[label=label, columns=6, boxHeight=7.5]
+\SemioVizCellGrid{sk-dimension}[label=label, columns=6, boxHeight=4.4, font=label]
 \end{VizSection}
 
 \begin{VizSection}[title={G \ EVIDENZPFADE \ \textperiodcentered\ \ durchgezogen belegt, gestrichelt analytisch (E3)}]
-\SemioVizStageChain{sk-evidenz}[chip=chip, stages={s1,s2,s3,s4}, boxHeight=4.7]
+\SemioVizStageChain{sk-evidenz}[chip=chip, stages={s1,s2,s3,s4}, boxHeight=4.4, font=label]
 \end{VizSection}
 
 \begin{VizSection}[title={B \ D2R-PROZESSE \ \textperiodcentered\ \ buildingSMART, neun Prozesse, nicht-linear}]
-\node[anchor=north west, align=left, text width=25mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-7.5) {Prozess-Rückgrat};
-\SemioVizCellGrid{sk-prozess}[label=label, key=key, scale=d2r, boxHeight=14.5]
+\node[anchor=north west, align=left, text width=25mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,0) {Prozess-Rückgrat};
+\SemioVizCellGrid{sk-prozess}[label=label, key=key, scale=d2r, boxHeight=4.4, font=label]
 \end{VizSection}
 
 \begin{VizSection}[title={C \ DIGITALE FUNKTIONEN \ \textperiodcentered\ \ neun Gruppen als Spannen (E3)}, aside={H-05 \SemioSlash{} H-09 \SemioSlash{} H-10}]
@@ -136,26 +136,26 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \end{VizSection}
 
 \begin{VizSection}[title={E \ RAHMENBEDINGUNGEN \ \textperiodcentered\ \ Umfeld, keine Plattformfunktionen}, aside={H-01 \SemioSlash{} H-13 \SemioSlash{} H-03 \SemioSlash{} H-12}]
-\SemioVizCellGrid{sk-rahmen}[label=label, columns=5, boxHeight=6.6]
+\SemioVizCellGrid{sk-rahmen}[label=label, columns=5, boxHeight=4.4, font=label]
 \end{VizSection}
 
-\begin{VizSection}[title={H1 \ UNTERSTÜTZUNG (EU26)}]
-\begin{VizColumn}[width=72, note={19 Antworten, 10 Länder; n\,=\,18 abgeleitet}]
-\SemioVizChart{horizontal-bar-chart}[data=sk-h1, x=label, y=value, yMin=0, yMax=100, labels=value, grid=none, padLeft=38]
+\begin{VizSection}[title={H \ EMPIRISCHE INSETS}]
+\begin{VizColumn}[width=52, height=29, title={H1 \ UNTERSTÜTZUNG (EU26)}, note={19 Antworten, 10 Länder; n\,=\,18 abgeleitet}]
+\SemioVizChart{horizontal-bar-chart}[data=sk-h1, x=label, y=value, yMin=0, yMax=100, labels=value, grid=none, ticks=3, padLeft=33, padRight=6, padTop=1, padBottom=5]
 \end{VizColumn}
-\begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}, note={C-Index (Jaccard), sign. Paare, Rakhshan 2020}]
-\SemioVizRunFamily{heatmap}[data=sk-h2, rowcol=zeile, colcol=spalte, valuecol=value, sparse=true, annotate=true, labels=true]
-\coordinate (sk-h2-end) at (0, -26);
-\SemioVizNoteBelow{sk-h2-end}{66}{Zusammenhang, keine Kausalität (eigene Einordnung).}
+\begin{VizColumn}[width=42, height=29, title={H2 \ HEMMNIS-KOPPLUNG}, note={C-Index, Rakhshan 2020}]
+\begin{scope}[xshift=13mm]
+\SemioVizRunFamily{heatmap}[data=sk-h2, rowcol=zeile, colcol=spalte, valuecol=value, sparse=true, annotate=true, labels=true, width=29, height=29]
+\end{scope}
+\end{VizColumn}
+\begin{VizColumn}[width=45, height=29, title={H3 \ MARKTSNAPSHOT 2022}, note={n\,=\,746 Lösungen, Europa}]
+\SemioVizChart{horizontal-bar-chart}[data=sk-h3, x=label, y=value, yMin=0, yMax=50, labels=value, grid=none, ticks=3, padLeft=25, padRight=9, padTop=1, padBottom=5]
 \end{VizColumn}
 \end{VizSection}
 
-\begin{VizSection}[title={H3 \ MARKTSNAPSHOT 2022 \ \textperiodcentered\ \ n\,=\,746 Digital Reuse Market Solutions, Europa}]
-\begin{VizColumn}[width=72]
-\SemioVizChart{horizontal-bar-chart}[data=sk-h3, x=label, y=value, labels=value, grid=none, padLeft=38]
-\end{VizColumn}
-\begin{VizColumn}[width=68, note={Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.}]
-\end{VizColumn}
+\begin{VizSection}[rule=false]
+\node[anchor=north west, align=left, text width=143mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,0) {%
+  \textbf{H2:}\ C-Index (Jaccard), signifikante Paare; Zusammenhang, keine Kausalität (eigene Einordnung). \enskip \textbf{H3:}\ Digital Reuse Market Solutions; Online-Zahlung: 13,4\,\% aller erfassten Lösungen. „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.};
 \end{VizSection}
 
 \end{VizFigure}
@@ -204,6 +204,6 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \noindent{\SemioSans\fontsize{7.2pt}{9pt}\selectfont\color{semio-chrome-text-normal}%
 Die Systemkarte führt Skalierungsdimensionen, digitale Funktionen, operative Dienste und Rahmenbedingungen in einer Darstellung zusammen; die dokumentierte Funktionsabdeckung und die Integrationsreife der Plattformen sind in \appendixref{anlage:nachweismatrix} und \appendixref{anlage:integrationsreife} gesondert belegt.\par
 \vspace{1mm}%
-Das Register folgt der Anlage „Hürden der Wiederverwendung” (Zwischenbericht) und führt die Hemmnisse ausdrücklich ohne Gewichtung. In der Systemkarte erscheinen nur die Kennungen; die Zuordnung einer Kennung zu einer Schnittstelle ist eine analytische Festlegung dieses Projekts (E3) und nicht aus den Quellen abgeleitet. H-02, H-06 und H-08 wirken ebenenübergreifend und sind daher keiner einzelnen Schnittstelle zugeordnet.\par
+Das Register folgt \appendixref[der Anlage „Hürden der Wiederverwendung“ des Zwischenberichts]{anlage:huerden} und führt die Hemmnisse ausdrücklich ohne Gewichtung. In der Systemkarte erscheinen nur die Kennungen; die Zuordnung einer Kennung zu einer Schnittstelle ist eine analytische Festlegung dieses Projekts (E3) und nicht aus den Quellen abgeleitet. H-02, H-06 und H-08 wirken ebenenübergreifend und sind daher keiner einzelnen Schnittstelle zugeordnet.\par
 \vspace{1mm}%
 Quellen der Insets: H1 EU-Umfrage (EU26). H2 Rakhshan et al.\ 2020~\cite{rakhshan-components-reuse-review-2020}, C-Index als Jaccard-Kookkurrenz, signifikante Paare laut Tabelle~4, n\,=\,51 ausgewertete Artikel; die Tabelle listet 16 von 190 möglichen Paaren, also nicht alle bestehenden Zusammenhänge. H3 Sivers, Fröhlich und Fivet 2022~\cite{sivers-froehlich-fivet-digital-market-solutions-2022}; Momentaufnahme Mai 2022, kein aktueller Marktanteil.\par}

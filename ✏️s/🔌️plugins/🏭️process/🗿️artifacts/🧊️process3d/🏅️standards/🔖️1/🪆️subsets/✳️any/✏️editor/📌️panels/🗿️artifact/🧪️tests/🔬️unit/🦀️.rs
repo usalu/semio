@@ -163,8 +163,7 @@ async fn steps_past_the_viewers_cursor_render_pending() {
     use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } };
     let fixture = process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: vec![step("a"), step("b"), step("c")] }, Workshop::default());
-    let windows = semio_framework_plugin::TreeWindows::unhosted();
-    assert_eq!(project_at(&fixture, None, &windows).matches("pending").count(), 0, "an unset cursor resolves every step");
-    assert_eq!(project_at(&fixture, Some(1), &windows).matches("pending").count(), 2);
-    assert_eq!(project_at(&fixture, Some(9), &windows).matches("pending").count(), 0, "a cursor past the timeline clamps to its end");
+    assert_eq!(project_at(&fixture, None, &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "an unset cursor resolves every step");
+    assert_eq!(project_at(&fixture, Some(1), &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 2);
+    assert_eq!(project_at(&fixture, Some(9), &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "a cursor past the timeline clamps to its end");
 }

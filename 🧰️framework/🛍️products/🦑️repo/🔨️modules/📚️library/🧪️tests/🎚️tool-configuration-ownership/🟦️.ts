@@ -39,7 +39,7 @@ type Fixture = Readonly<{
     historicalOwnerPath: string;
     cases: readonly Readonly<{ id: string; source: string; expectedDeclarations: readonly Readonly<{ selector: string; property: string; value: string }>[] }>[];
   }>;
-  registration: Readonly<{ name: string; command: string; target: string }>;
+  registration: Readonly<{ target: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -56,7 +56,7 @@ async function importFresh(path: string): Promise<Record<string, any>> {
 describe("Tool configuration ownership", () => {
   test("validates the exact portable owner map", () => {
     
-    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["name"]).toEqual("🧹clean🧩️taxonomy🎚️tool-configuration-ownership");expect(fixture["registration"]["command"]).toEqual("bun nx run @semio-tech/repo-lib:test-tool-configuration-ownership");expect(fixture["registration"]["target"]).toEqual("test-tool-configuration-ownership");expect(fixture["postcss"]["ownerId"]).toEqual("ui-react-postcss");expect(fixture["postcss"]["packageExport"]).toEqual("./postcss.config");expect(fixture["postcss"]["packageExportTarget"]).toEqual("./🟦️.mts");expect(fixture["postcss"]["standaloneLoader"]["kind"]).toEqual("explicit-search-place");expect(fixture["postcss"]["standaloneLoader"]["searchPlace"]).toEqual("🟦️.mts");expect(fixture["postcss"]["viteLoader"]["kind"]).toEqual("inline-plugin-array");expect(fixture["postcss"]["viteLoader"]["exportName"]).toEqual("uiPostcssInlinePlugins");
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["registration"]["target"]).toEqual("test-tool-configuration-ownership");expect(fixture["postcss"]["ownerId"]).toEqual("ui-react-postcss");expect(fixture["postcss"]["packageExport"]).toEqual("./postcss.config");expect(fixture["postcss"]["packageExportTarget"]).toEqual("./🟦️.mts");expect(fixture["postcss"]["standaloneLoader"]["kind"]).toEqual("explicit-search-place");expect(fixture["postcss"]["standaloneLoader"]["searchPlace"]).toEqual("🟦️.mts");expect(fixture["postcss"]["viteLoader"]["kind"]).toEqual("inline-plugin-array");expect(fixture["postcss"]["viteLoader"]["exportName"]).toEqual("uiPostcssInlinePlugins");
     
     expect(fixture.owners).toHaveLength(12);
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(12);
@@ -226,6 +226,5 @@ describe("Tool configuration ownership", () => {
     for (const path of [ownerById.get(fixture.postcss.ownerId)!.ownerPath, fixture.postcss.packageEntryPath, fixture.postcss.historicalFixturePath]) expect(project.targets[fixture.registration.target].inputs).toContain(`{workspaceRoot}/${path}`);
     const manifest = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"));
     expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) expect(read(path)).toContain(fixture.registration.command);
   });
 });

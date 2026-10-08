@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::note::presence::component::mutations::*;
 use crate::editor::note::presence::component::*;
-use replace_presence::ReplacePresence;
+use crate::editor::note::presence::component::mutations::ReplacePresence;
 
 impl protocol::OpBinary for NotePresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

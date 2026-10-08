@@ -183,6 +183,9 @@ fn the_shared_band_corpus_holds_on_wgpu() {
             let expected = &case["text"][locale.as_str()];
             let actual = serde_json::json!({ "stage": lines.stage, "target": lines.target, "progress": lines.progress, "review": lines.review, "outcome": lines.outcome, "fault": lines.fault, "accepted": lines.accepted });
             assert_eq!(&actual, expected, "{name} / {}", locale.as_str());
+            if let Some(processed) = status.processed {
+                eprintln!("[DEBUG] history processed native band locale={} completed={} text={}", locale.as_str(), processed, actual["progress"]);
+            }
             assert_eq!(time_travel_indicator_text(&status, terminology, locale), case["indicator"][locale.as_str()].as_str().expect("indicator"), "{name} / {}", locale.as_str());
         }
         let controls: Vec<Value> = time_travel_band_controls(&status)
@@ -1736,7 +1739,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
 
 /// ⚖️ LAW (gap N17 + the stepped document load on wgpu, the REAL producer): a history change replaying is the body's
 /// `framework.history.reprojection` section by its `kind` — this replica's own history step ("History step", "Replaying
-/// history: 12 of 400 mutations") and a whole-document load ("Document load", "Loading document: 12 of 400") — with an
+/// history: 12 of 400 steps") and a whole-document load ("Document load", "Loading document: 12 of 400") — with an
 /// enabled Cancel replay that sends `historyEditCancelReplay` without a session generation (the runtime drops the step or
 /// the load with zero trace), and a refused step reads "History step refused: <reason>" with no control, in English and
 /// German.
@@ -1750,8 +1753,8 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
     let mut documents = Vec::new();
     let replaying = |kind: Kind| HistoryReprojection { done: 12, total: 400, processed: None, kind, paused: false, fault: None };
     let cases = [
-        (Locale::En, Kind::Step, "History step", "Replaying history: 12 of 400 mutations", "Cancel replay"),
-        (Locale::De, Kind::Step, "Verlaufsschritt", "Verlauf wird neu angewendet: 12 von 400 Mutationen", "Neuanwendung abbrechen"),
+        (Locale::En, Kind::Step, "History step", "Replaying history: 12 of 400 steps", "Cancel replay"),
+        (Locale::De, Kind::Step, "Verlaufsschritt", "Verlauf wird neu angewendet: 12 von 400 Schritten", "Neuanwendung abbrechen"),
         (Locale::En, Kind::Load, "Document load", "Loading document: 12 of 400", "Cancel replay"),
         (Locale::De, Kind::Load, "Dokument laden", "Dokument wird geladen: 12 von 400", "Neuanwendung abbrechen"),
     ];

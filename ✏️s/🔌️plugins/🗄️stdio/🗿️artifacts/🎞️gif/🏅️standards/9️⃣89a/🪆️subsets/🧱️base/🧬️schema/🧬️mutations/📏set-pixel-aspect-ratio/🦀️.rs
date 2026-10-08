@@ -1,6 +1,5 @@
-//! 📏️ `set-pixel-aspect-ratio` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📏️ `set-pixel-aspect-ratio` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +14,13 @@ pub struct SetPixelAspectRatio {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetPixelAspectRatio {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "pixel-aspect-ratio", kind: "set-pixel-aspect-ratio", record: "SetPixelAspectRatio" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetPixelAspectRatio(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { ratio } = self;
+        protocol::MutationOutcome::new(GifDiff { pixel_aspect_ratio: (*ratio != base.pixel_aspect_ratio).then_some(*ratio), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetPixelAspectRatio(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![GifMutation::SetPixelAspectRatio(set_pixel_aspect_ratio::SetPixelAspectRatio { ratio: base.pixel_aspect_ratio })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set pixel aspect ratio", "Pixel-Seitenverhältnis setzen")
     }

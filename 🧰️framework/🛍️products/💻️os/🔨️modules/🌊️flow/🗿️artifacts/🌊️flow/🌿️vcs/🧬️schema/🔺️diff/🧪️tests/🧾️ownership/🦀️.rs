@@ -37,7 +37,7 @@ fn retained_payload_projection_matches_neutral_vectors() {
         let diff: FlowDiff = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(row.get("diff").unwrap())).unwrap();
         let diff_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&diff));
         let name = row.get("name").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default();
-        match diff.apply(&base) {
+        match crate::os_spr::apply_diff(&diff, &base) {
             Ok(result) => {
                 assert!(row.get("errorCode").is_none(), "{name}");
                 let widget_ids: Vec<String> = result.widgets.iter().map(|widget| widget.id().clone()).collect();

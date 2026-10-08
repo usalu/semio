@@ -3,9 +3,7 @@
   "contract": "adapter-local-reference-coverage-v1",
   "execution": {
     "target": "test-reference-coverage-selection",
-    "route": "reference-coverage-selection",
-    "launchName": "🧹clean🧩️taxonomy🎟️reference-coverage-selection",
-    "launchOrder": 410.208
+    "route": "reference-coverage-selection"
   },
   "nonRustAdapters": [
     { "path": "🧪️case/🟦️.ts", "adapter": "typescript" },

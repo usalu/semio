@@ -723,7 +723,7 @@
   "frozenCoordinateEvidenceContracts": {
     "readme-current-source-revision-input": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json",
-      "sha256": "5eb7fd808e24a1d95e065afd8f37a5990f30cc80b15e7e13ff59e629ccef44fa",
+      "sha256": "2db36a012d6e79f970ea103bb156f7a789ac6fa5d2aa34bcc2252a09dfe9d6e3",
       "schemaVersion": 1,
       "coordinates": [
         {
@@ -3961,6 +3961,22 @@
         "schema"
       ]
     },
+    "schema-catalogue": {
+      "emoji": "🗂️",
+      "slugPattern": "^catalogue$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
+    },
+    "schema-catalogue-category": {
+      "emoji": "🔣️",
+      "slugPattern": "^(brep|mesh|math|analysis)-[a-z]+$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema-catalogue"
+      ]
+    },
     "ui-styling-favicon": {
       "emoji": "🌐️",
       "slugPattern": "^favicon$",
@@ -5893,13 +5909,17 @@
       "emoji": "🖥️",
       "slugPattern": "^host$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["members-of-modules"]
+      "parentKindIds": [
+        "members-of-modules"
+      ]
     },
     "repo-test-host-materialization": {
       "emoji": "🏗️",
       "slugPattern": "^materialization$",
       "allowEmojiOnly": false,
-      "parentKindIds": ["repo-test-host"]
+      "parentKindIds": [
+        "repo-test-host"
+      ]
     },
     "repo-test-execution": {
       "emoji": "🏃️",
@@ -9203,15 +9223,6 @@
       ],
       "memberNames": [
         "📥️installation"
-      ],
-      "source": "registry"
-    },
-    "os-registry-launch": {
-      "ownerKindIds": [
-        "registry"
-      ],
-      "memberNames": [
-        "🚀️launch"
       ],
       "source": "registry"
     },
@@ -13343,6 +13354,13 @@
         "🧲️adds",
         "🧹️drops",
         "🧹️unpins",
+        "✋️drags",
+        "🎚️sets",
+        "🎛️sets",
+        "👆️picks",
+        "📝️retexts",
+        "🔃️turns",
+        "🚚️shifts",
         "🪙️appends-an-9fdced",
         "🏗️hall-new-node-b26700",
         "🚨️dup-node-id-86f2e1",
@@ -14751,15 +14769,6 @@
       ],
       "source": "registry"
     },
-    "members-of-os-registry-launch": {
-      "ownerKindIds": [
-        "os-registry-launch"
-      ],
-      "memberNames": [
-        "🏷️name-prefix"
-      ],
-      "source": "registry"
-    },
     "members-of-members-of-hub-directory": {
       "ownerKindIds": [
         "members-of-hub-directory"
@@ -15954,7 +15963,7 @@
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "2c3f40479689fb2348cc4d3f94a45a3e046ef0bf26b74dc5df1867979c432cee",
+      "authorityCatalogSha256": "e2749b7d7a44bb1f48019e1b22275c5caf87909f9e94f4b329aa8fe080bb242b",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -26962,7 +26971,6 @@
       "previewTarget": "@semio-tech/plugin-registry:preview-generated",
       "checkTarget": "@semio-tech/plugin-registry:check-generated",
       "inputPatterns": [
-        ".vscode/🧩️launch.seed.jsonc",
         "nx.json",
         "package.json",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
@@ -27008,10 +27016,6 @@
         }
       },
       "outputRoots": [
-        {
-          "path": ".vscode/launch.json",
-          "inclusion": "tracked"
-        },
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated",
           "inclusion": "ignored"
@@ -27601,6 +27605,8 @@
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
+            "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+            "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts",
             "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
@@ -27762,6 +27768,8 @@
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+        "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",

@@ -1,12 +1,10 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": null,
   "savedCameras": null,
   "scene": null,
   "shots": {
-    "added": [],
-    "removed": [],
+    "edits": [],
     "patched": [
       {
         "id": "shot-close",
@@ -15,11 +13,12 @@
           "width": 1024,
           "height": null,
           "format": null,
-          "shape": null
+          "shape": null,
+          "background": null,
+          "cameraId": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "activeShotId": null,
   "activeAssetId": null,

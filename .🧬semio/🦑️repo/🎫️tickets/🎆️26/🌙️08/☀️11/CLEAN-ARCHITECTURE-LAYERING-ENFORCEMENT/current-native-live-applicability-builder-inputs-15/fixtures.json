@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "live-law-01",
+      "mutation": "none-before",
+      "accepted": true
+    },
+    {
+      "id": "live-law-02",
+      "mutation": "none-after",
+      "accepted": true
+    },
+    {
+      "id": "live-law-03",
+      "mutation": "unrelated-root",
+      "accepted": true
+    },
+    {
+      "id": "live-law-04",
+      "mutation": "selected-root",
+      "accepted": false
+    },
+    {
+      "id": "live-law-05",
+      "mutation": "model-after-before",
+      "accepted": false
+    },
+    {
+      "id": "live-law-06",
+      "mutation": "model-before-after",
+      "accepted": false
+    },
+    {
+      "id": "live-law-07",
+      "mutation": "new-model-created-before",
+      "accepted": false
+    },
+    {
+      "id": "live-law-08",
+      "mutation": "new-model-missing-after",
+      "accepted": false
+    },
+    {
+      "id": "live-law-09",
+      "mutation": "immutable-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-10",
+      "mutation": "immutable-missing",
+      "accepted": false
+    },
+    {
+      "id": "live-law-11",
+      "mutation": "watch-add",
+      "accepted": false
+    },
+    {
+      "id": "live-law-12",
+      "mutation": "watch-remove",
+      "accepted": false
+    },
+    {
+      "id": "live-law-13",
+      "mutation": "watch-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-14",
+      "mutation": "watch-kind",
+      "accepted": false
+    },
+    {
+      "id": "live-law-15",
+      "mutation": "generated-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-16",
+      "mutation": "external-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-17",
+      "mutation": "external-add",
+      "accepted": false
+    },
+    {
+      "id": "live-law-18",
+      "mutation": "helper-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-19",
+      "mutation": "witness-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-20",
+      "mutation": "missing-source",
+      "accepted": false
+    },
+    {
+      "id": "live-law-21",
+      "mutation": "unknown-phase",
+      "accepted": false
+    },
+    {
+      "id": "live-law-22",
+      "mutation": "extra-proof",
+      "accepted": false
+    },
+    {
+      "id": "live-law-23",
+      "mutation": "missing-model",
+      "accepted": false
+    },
+    {
+      "id": "live-law-24",
+      "mutation": "pair-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-25",
+      "mutation": "pair-forward",
+      "accepted": false
+    },
+    {
+      "id": "live-law-26",
+      "mutation": "pair-inverse",
+      "accepted": false
+    },
+    {
+      "id": "live-law-27",
+      "mutation": "model-absence-kind",
+      "accepted": false
+    },
+    {
+      "id": "live-law-28",
+      "mutation": "binding-symlink",
+      "accepted": false
+    },
+    {
+      "id": "live-law-29",
+      "mutation": "owner-duplicate",
+      "accepted": false
+    },
+    {
+      "id": "live-law-30",
+      "mutation": "owner-missing",
+      "accepted": false
+    },
+    {
+      "id": "live-law-31",
+      "mutation": "join-initial-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-32",
+      "mutation": "join-model-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-33",
+      "mutation": "join-prepared-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-34",
+      "mutation": "join-missing",
+      "accepted": false
+    },
+    {
+      "id": "live-law-35",
+      "mutation": "plan-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-36",
+      "mutation": "dependency-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-37",
+      "mutation": "dependency-missing",
+      "accepted": false
+    },
+    {
+      "id": "live-law-38",
+      "mutation": "dependency-root-map",
+      "accepted": false
+    },
+    {
+      "id": "live-law-39",
+      "mutation": "missing-compiled-dep",
+      "accepted": false
+    },
+    {
+      "id": "live-law-40",
+      "mutation": "depfile-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-41",
+      "mutation": "depfile-unlisted",
+      "accepted": false
+    },
+    {
+      "id": "live-law-42",
+      "mutation": "declared-executed-overlap",
+      "accepted": false
+    },
+    {
+      "id": "live-law-43",
+      "mutation": "watch-empty-directory",
+      "accepted": false
+    },
+    {
+      "id": "live-law-44",
+      "mutation": "external-empty-directory",
+      "accepted": false
+    },
+    {
+      "id": "live-law-45",
+      "mutation": "root-input-duplicate",
+      "accepted": false
+    },
+    {
+      "id": "live-law-46",
+      "mutation": "model-relative-traversal",
+      "accepted": false
+    },
+    {
+      "id": "live-law-47",
+      "mutation": "nonmodel-after-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-48",
+      "mutation": "immutable-root-injection",
+      "accepted": false
+    },
+    {
+      "id": "live-law-49",
+      "mutation": "cancel-before",
+      "accepted": false
+    },
+    {
+      "id": "live-law-50",
+      "mutation": "cancel-during",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-1",
+      "mutation": "negative-file",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-2",
+      "mutation": "negative-file-after",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-3",
+      "mutation": "negative-directory",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-4",
+      "mutation": "negative-directory-after",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-5",
+      "mutation": "negative-symlink",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-6",
+      "mutation": "negative-symlink-after",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-7",
+      "mutation": "negative-model-witness",
+      "accepted": false
+    },
+    {
+      "id": "live-negative-8",
+      "mutation": "negative-prepared-witness",
+      "accepted": false
+    }
+  ],
+  "parserCases": [
+    {
+      "id": "dep-unicode",
+      "source": "/target/unit.d: 🧰️framework/🦀️.rs fixture.json\nfixture.json:\n",
+      "paths": [
+        "🧰️framework/🦀️.rs",
+        "fixture.json"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-space",
+      "source": "/target/unit.d: src/with\\ space.rs\n",
+      "paths": [
+        "src/with space.rs"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-windows",
+      "source": "C:\\target\\unit.d: C:\\repo\\source.rs D:\\asset\\fixture.json\r\n",
+      "paths": [
+        "C:\\repo\\source.rs",
+        "D:\\asset\\fixture.json"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-empty",
+      "source": "/target/unit.d: \n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-missing",
+      "source": "not a rule\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-continuation",
+      "source": "/target/unit.d: source.rs \\\n other.rs\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-dollar",
+      "source": "/target/unit.d: source$unknown.rs\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-comment-symbol",
+      "source": "/target/unit.d: source#unknown.rs\n",
+      "paths": [],
+      "accepted": false
+    }
+  ],
+  "expectations": {
+    "modelCount": 26,
+    "ownerCount": 3,
+    "scope": "Joint modeled before/after; unrelated Root bytes outside selected scope do not fence publication"
+  }
+}

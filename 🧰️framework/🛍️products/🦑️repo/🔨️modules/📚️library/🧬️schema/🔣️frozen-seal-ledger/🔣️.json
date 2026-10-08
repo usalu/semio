@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "FrozenSealLedger",
-  "description": "The recorded history of every frozen coordinate evidence contract since a pin: the seal each contract had at `pinnedAt` and every later re-seal, each with the revision that recorded it, a reason and whether the sealed coordinates changed. `seal` is the sha256 of the canonical JSON of the contract's seal entry (`frozenCoordinateEvidenceSeal`); `coordinatesSha256` is the sha256 of the canonical JSON array of `{pointer, kind, value}` of the coordinates the sealed bytes resolve. A re-seal marked `unchanged` must carry the previous coordinate digest; the last recorded seal must be the live one; a contract registered after the pin is listed in `later` with its reason. Re-sealing without a ledger row fails the law. `catalogs` does the same for every whole-document authority catalog a projection contract pins (`authorityCatalogSha256`): the seal registered at `sealedBy` and every later re-seal, each with its evidence revision and at least one of: directory-segment renames (`renames`, applied to segments followed by `/`), exact-path moves of individually moved files (`moves`, every whole JSON string equal to `to` was `from`) and deletions of rows naming deleted files (`deletions`, each with the removed row and its index); reversing the deletions, then the moves, then the renames on the live catalog must reproduce the previous seal byte for byte.",
+  "description": "The recorded history of every frozen coordinate evidence contract since a pin: the seal each contract had at `pinnedAt` and every later re-seal, each with the revision that recorded it, a reason and whether the sealed coordinates changed. `seal` is the sha256 of the canonical JSON of the contract's seal entry (`frozenCoordinateEvidenceSeal`); `coordinatesSha256` is the sha256 of the canonical JSON array of `{pointer, kind, value}` of the coordinates the sealed bytes resolve. A re-seal marked `unchanged` must carry the previous coordinate digest; the last recorded seal must be the live one; a contract registered after the pin is listed in `later` with its reason. Re-sealing without a ledger row fails the law. `catalogs` does the same for every whole-document authority catalog a projection contract pins (`authorityCatalogSha256`): the seal registered at `sealedBy` and every later re-seal, each with its evidence revision and at least one of: directory-segment renames (`renames`, applied to segments followed by `/`), exact-path moves of individually moved files (`moves`, every whole JSON string equal to `to` was `from`), deletions of mapping rows naming deleted files (`deletions`, each with the removed row and its index in its package's `mappings`) and deletions of reference-consumer rows naming files that left the workspace (`consumerDeletions`, each with the removed row and its index in `referenceConsumers`); reversing the deletions and consumer deletions, then the moves, then the renames on the live catalog must reproduce the previous seal byte for byte.",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -184,6 +184,53 @@
         }
       }
     },
+    "consumerDeletion": {
+      "type": "object",
+      "required": [
+        "path",
+        "reason",
+        "revision",
+        "index",
+        "row"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 3,
+          "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 12
+        },
+        "revision": {
+          "$ref": "#/definitions/revision"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "object",
+          "required": [
+            "packageId",
+            "path"
+          ],
+          "properties": {
+            "packageId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "path": {
+              "type": "string",
+              "minLength": 3,
+              "pattern": "^[^/\\\\:][^\\\\:]*/[^\\\\:]*[^/\\\\:]$"
+            }
+          }
+        }
+      }
+    },
     "catalogReseal": {
       "type": "object",
       "required": [
@@ -241,6 +288,13 @@
           "items": {
             "$ref": "#/definitions/deletion"
           }
+        },
+        "consumerDeletions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/consumerDeletion"
+          }
         }
       },
       "anyOf": [
@@ -272,6 +326,16 @@
           },
           "required": [
             "deletions"
+          ]
+        },
+        {
+          "properties": {
+            "consumerDeletions": {
+              "type": "array"
+            }
+          },
+          "required": [
+            "consumerDeletions"
           ]
         }
       ]

@@ -1,0 +1,44 @@
+{
+  "mutation": {
+    "mutation": "removeBlock",
+    "path": [],
+    "index": 0
+  },
+  "before": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "One."
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  }
+}

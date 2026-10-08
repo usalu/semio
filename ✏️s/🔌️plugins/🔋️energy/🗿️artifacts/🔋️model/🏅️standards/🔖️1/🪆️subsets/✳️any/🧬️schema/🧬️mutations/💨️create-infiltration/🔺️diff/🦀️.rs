@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateInfiltration` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, InfiltrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -23,10 +23,7 @@ pub fn diff(payload: &super::CreateInfiltration, base: &EnergyModelSnapshot) -> 
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.infiltrations.insert(
-        payload.index as usize,
-        crate::model::Infiltration {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { infiltrations: Rows::inserting(payload.index as usize, crate::model::Infiltration {
             id: payload.id,
             zone_id: payload.zone_id,
             schedule_id: payload.schedule_id,
@@ -40,8 +37,6 @@ pub fn diff(payload: &super::CreateInfiltration, base: &EnergyModelSnapshot) -> 
             temperature_term_coefficient: payload.temperature_term_coefficient,
             velocity_term_coefficient: payload.velocity_term_coefficient,
             velocity_squared_term_coefficient: payload.velocity_squared_term_coefficient,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

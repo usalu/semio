@@ -523,16 +523,6 @@ describe("package language semantic handoff", () => {
     expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
     for (const target of expected.wasmTargets) expect((toolchain.toolchain as { targets: string[] }).targets).toContain(target);
     expect(JSON.parse(readFileSync(join(root, expected.ownerPath, "📋️project.json"), "utf8")).name).toBe(expected.existingTs.projectName);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const errors: import("jsonc-parser").ParseError[] = [], launch = parseJsonc(readFileSync(join(root, path), "utf8"), errors, { allowTrailingComma: true });
-      expect(errors).toEqual([]);
-      const rows = launch.configurations as { name: string; presentation?: { order?: number } }[];
-      expect(rows.filter(row => row.name === expected.existingTs.launch.name)).toEqual([expected.existingTs.launch]);
-      for (const row of expected.launch) {
-        expect(rows.filter(entry => entry.name === row.name)).toEqual([row]);
-        expect(rows.filter(entry => entry.presentation?.order === row.presentation.order)).toEqual([row]);
-      }
-    }
     const runs = join(realpathSync(tmpdir()), "semio-native-resident-metadata");
     mkdirSync(runs, { recursive: true });
     const fixture = mkdtempSync(join(runs, "🔖️")), target = join(fixture, "🧫️target");
@@ -672,14 +662,6 @@ describe("package language semantic handoff", () => {
       const toolchainText = read("rust-toolchain.toml").toString("utf8"), toolchain = toml.parse(toolchainText);
       expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
       expect((toolchain.toolchain as { targets: string[] }).targets).toContain("wasm32-unknown-unknown");
-      for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-        const errors: import("jsonc-parser").ParseError[] = [], launch = parseJsonc(read(path).toString("utf8"), errors, { allowTrailingComma: true });
-        expect(errors).toEqual([]);
-        for (const row of expected.launch) {
-          expect(launch.configurations.filter((entry: { name: string }) => entry.name === row.name)).toEqual([row]);
-          expect(launch.configurations.filter((entry: { presentation?: { order?: number } }) => entry.presentation?.order === row.presentation.order)).toEqual([row]);
-        }
-      }
       const workspaceAfter = Buffer.from(semanticOwnedInputFileSnapshot(root, "Cargo.toml")!.bytes), current = readToml<CargoWorkspaceManifest>(workspaceAfter.toString("utf8")).workspace;
       expect(current.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(current.dependencies[expected.cargo.name]).toEqual(workspace.dependencies[expected.cargo.name]);
@@ -4306,7 +4288,6 @@ type DrawSourceScenario = Readonly<{
   contractId: "draw-source-scenario-input-v1";
   producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; runtimeModules: readonly string[]; runtimeData: readonly string[]; runtimeReceiptCatalogs: readonly Readonly<{ manifestPath: string; sourceRoot: string; receiptPathField: string }>[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
   catalogContext: readonly DrawSourceScenarioInput[];
-  launchSeed: DrawSourceScenarioInput;
   cargoModuleRoot: DrawSourceScenarioInput;
   cadConsumerMount: Readonly<{ path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
@@ -4690,35 +4671,6 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(DRAW_SOURCE_SCENARIO.catalogContext.find(({ path }) => path === `${dirname(host.path)}/${(parsedHost.lib as { path: string }).path}`)?.content).toBe("pub fn fixture_host() {}\n");
   });
 
-  test("authored Draw source launch seed matches its host and preserves unknown-variant rejection", async () => {
-    const jsonc = await import("jsonc-parser"), ts = await import("typescript");
-    const seed = DRAW_SOURCE_SCENARIO.launchSeed, errors: import("jsonc-parser").ParseError[] = [];
-    const document = jsonc.parse(seed.content, errors);
-    expect(errors).toEqual([]);
-    expect(ts.parseConfigFileTextToJson(seed.path, seed.content).config).toEqual(document);
-    const host = DRAW_SOURCE_SCENARIO.catalogContext.find(({ format }) => format === "toml")!;
-    const parsed = toml.parse(host.content) as { package: { metadata: { component: { package: string }; semio: { "deployment-directory": string; playground: { variant: string; ports: { react: number; wgpu: number } }[] } } } };
-    const declaration = parsed.package.metadata.semio.playground[0]!;
-    expect(Object.keys(document.devLaunchers)).toEqual([declaration.variant]);
-    const playground = { ...declaration, pluginId: parsed.package.metadata.component.package.slice("semio:".length), cratePath: dirname(host.path), aliases: [], examples: [], engines: [], assets: [] };
-    const isolated = await artifactProjectionIsolatedProducerModule<typeof import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts")>("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts");
-    try {
-      const { generateLaunchJson } = isolated.module;
-      normalizationWriteFiles(isolated.root, Object.fromEntries(DRAW_SOURCE_SCENARIO.catalogContext.map(({ path, content }) => [path, content])));
-      const rendered = generateLaunchJson(isolated.root, [playground], [], () => seed.content), output = jsonc.parse(rendered);
-      expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
-      const directoryName = parsed.package.metadata.semio["deployment-directory"];
-      expect(directoryName).toBe("🧪️draw-fixture-host");
-      expect(output.configurations.map(({ name }: { name: string }) => name)).toEqual([`🛠️dev${directoryName}⚛️react`, `🛠️dev${directoryName}🧊️wgpu🌐️wasm`]);
-      expect(output.configurations.map(({ env }: { env: Record<string, string> }) => env.FIXTURE_PORT)).toEqual([String(declaration.ports.react), String(declaration.ports.wgpu)]);
-      expect(rendered).not.toContain("@generated:");
-      expect(() => generateLaunchJson(isolated.root, [], [], () => seed.content)).toThrow("no matching playground registry entry");
-      expect(() => generateLaunchJson(isolated.root, [playground], [], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
-    } finally {
-      rmSync(isolated.root, { recursive: true, force: true });
-    }
-  });
-
   test("authored Draw source producer context captures actual implementations with independent import parity", async () => {
     const ts = await import("typescript"), { registryStaticImports } = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = loadTaxonomy(), readPaths: string[] = [];
@@ -4730,9 +4682,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     const contract = taxonomy.generatorContracts[DRAW_SOURCE_SCENARIO.producerContext.generatorId]!;
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).toBe(readFileSync(join(getWorkspaceRoot(), contract.ownerPath!, "📜️script.ts"), "utf8"));
     expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).not.toBe("export {};\n");
-    const authored = new Map([DRAW_SOURCE_SCENARIO.launchSeed].map(({ path, content }) => [path, content]));
-    for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(context.files[path]?.content).toBe(authored.get(path) ?? readFileSync(join(getWorkspaceRoot(), path), "utf8"));
-    for (const path of authored.keys()) expect(readPaths).not.toContain(path);
+    for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(context.files[path]?.content).toBe(readFileSync(join(getWorkspaceRoot(), path), "utf8"));
     for (const path of DRAW_SOURCE_SCENARIO.producerContext.runtimeModules) expect(context.modules.some((row) => row.path === path)).toBe(true);
     const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2));
     for (const path of [...DRAW_SOURCE_SCENARIO.producerContext.runtimeModules, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(nxPlugins.some((plugin) => context.files[plugin]!.content.includes(posix.relative(posix.dirname(plugin), path))), path).toBe(true);
@@ -5244,8 +5194,8 @@ function artifactProjectionIgnoreResidue(fixture: NormalizationFixture, residue:
   if (lstatSync(ignorePath).mode !== before.mode || !artifactProjectionReadEvidence(ignorePath).equals(Buffer.concat([bytes, suffix]))) throw new Error("Fixture ignore authority changed after append");
 }
 
-/** 🎛️ Compares actual fixed-budget routes through independent compilers and launch parsers. */
-async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ command: string; target: string; budgetMs: number; bunTimeoutMs: number; testName: string; launchName: string; launchOrder: number }>): Promise<void> {
+/** 🎛️ Compares actual fixed-budget routes through independent compilers. */
+async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ command: string; target: string; budgetMs: number; bunTimeoutMs: number; testName: string }>): Promise<void> {
   const packageRoot = resolve(import.meta.dir, "../../📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
@@ -5264,14 +5214,6 @@ async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ comman
     expect(invocations.map(({ command, args, options }) => ({ command, args, cwd: options.cwd, budgetMs: options.budgetMs }))).toEqual([{ command: process.execPath, args: expectedArgs, cwd: getWorkspaceRoot(), budgetMs: vector.budgetMs }]);
     await expect(router.run([vector.command, "--test-name-pattern=other"])).rejects.toThrow();
     expect(invocations).toHaveLength(1);
-  }
-  const jsonc = await import("jsonc-parser");
-  for (const filename of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const errors: import("jsonc-parser").ParseError[] = [], launch = jsonc.parse(readFileSync(join(getWorkspaceRoot(), filename), "utf8"), errors);
-    expect(errors).toEqual([]);
-    const entries = launch.configurations.filter((row: { name: string }) => row.name === vector.launchName);
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${vector.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: vector.launchOrder } });
   }
 }
 
@@ -5463,9 +5405,7 @@ function artifactProjectionProducerInput(path: string): ArtifactProducerInput {
 function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput, context: DrawSourceScenario["producerContext"] = DRAW_SOURCE_SCENARIO.producerContext) {
   const contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
   if (!contract?.ownerPath || !authority || authority.kind !== "registry-catalog") throw new Error("Authored Draw producer requires exact registry catalog authority");
-  const authored = [DRAW_SOURCE_SCENARIO.launchSeed];
-  if (authored.some(({ path }) => !contract.inputPatterns.includes(path))) throw new Error("Authored producer inputs must be exact declared producer inputs");
-  const files: Record<string, ArtifactProducerInput> = Object.fromEntries(authored.map(({ path, content }) => [path, { content, mode: 0o644, sha256: createHash("sha256").update(content).digest("hex"), origin: "authored-scenario" as const }]));
+  const files: Record<string, ArtifactProducerInput> = {};
   const read = (path: string): ArtifactProducerInput => files[path] ??= readInput(path);
   for (const path of [...context.workspaceInputs, ...context.runtimeData, ...contract.inputPatterns]) {
     if (/[*?[\]]/u.test(path)) throw new Error("Draw producer context requires exact declared input files");
@@ -5502,25 +5442,6 @@ function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: 
     }
   }
   return { files, modules: [...modules.values()].sort((left, right) => projectionByteSort(left.path, right.path)), bindings: authority.workspaceImports };
-}
-
-/** 🧫️ Imports one producer module from an isolated copy of its captured static closure, so authored producer inputs replace live ones in-process. */
-async function artifactProjectionIsolatedProducerModule<T>(entry: string, captured: ReturnType<typeof artifactProjectionProducerInputs> = artifactProjectionProducerInputs(loadTaxonomy())): Promise<Readonly<{ module: T; root: string }>> {
-  const modules = new Map(captured.modules.map((row) => [row.path, row])), closure = new Set<string>(), pending = [entry];
-  while (pending.length) {
-    const path = pending.pop()!, row = modules.get(path);
-    if (closure.has(path)) continue;
-    if (!row) throw new Error("Isolated producer module is outside the captured closure: " + path);
-    closure.add(path);
-    for (const specifier of row.imports) {
-      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
-      if (!specifier.startsWith(".")) throw new Error("Isolated producer module has a workspace import: " + path + " -> " + specifier);
-      pending.push(posix.normalize(posix.join(posix.dirname(path), specifier)));
-    }
-  }
-  const root = mkdtempSync(join(realpathSync(tmpdir()), "semio-draw-producer-"));
-  normalizationWriteFiles(root, Object.fromEntries([...closure].map((path) => [path, captured.files[path]!.content])));
-  return { module: await import(join(root, entry)) as T, root };
 }
 
 /** 🏭️ Produces the fixture baseline through the unchanged Nx generator and freshness commands. */

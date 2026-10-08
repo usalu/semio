@@ -2,7 +2,6 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { transformSync } from "esbuild";
-import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import { isDiscoverySkipDirectory } from "../../🔍️discovery/🟦️.ts";
 
@@ -13,7 +12,7 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtu
   skipped: string[];
   admitted: string[];
   taxonomyDirectoryKind: string;
-  execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number };
+  execution: { target: string; command: string };
 };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
 const discoverySource = readFileSync(join(repoRoot, library, "🔍️discovery/🟦️.ts"), "utf8");
@@ -46,14 +45,8 @@ test("discovery skips every Cargo target root and admits every look-alike, agree
   expect(walkSites).toEqual([]);
 });
 
-test("registers the Cargo target discovery skip gate through Nx and both launch catalogs", () => {
+test("registers the Cargo target discovery skip gate through Nx", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(repoRoot, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
 });

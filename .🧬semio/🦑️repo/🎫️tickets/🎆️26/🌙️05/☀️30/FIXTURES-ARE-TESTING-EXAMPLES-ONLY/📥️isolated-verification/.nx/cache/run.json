@@ -1,21 +1,21 @@
 {
   "run": {
-    "command": "nx run ticket-fixture-verification:runtime-dsl-producer-native --skip-nx-cache --outputStyle=static",
-    "startTime": "2026-10-06T23:42:04.008Z",
-    "endTime": "2026-10-06T23:43:17.864Z",
+    "command": "nx run ticket-fixture-verification:register-current-profiles --skip-nx-cache --outputStyle=static",
+    "startTime": "2026-10-08T00:25:02.423Z",
+    "endTime": "2026-10-08T00:25:09.106Z",
     "inner": false
   },
   "tasks": [
     {
-      "taskId": "ticket-fixture-verification:runtime-dsl-producer-native",
-      "target": "runtime-dsl-producer-native",
+      "taskId": "ticket-fixture-verification:register-current-profiles",
+      "target": "register-current-profiles",
       "projectName": "ticket-fixture-verification",
-      "hash": "14019237574529209875",
-      "startTime": "2026-10-06T23:42:04.062Z",
-      "endTime": "2026-10-06T23:43:17.863Z",
+      "hash": "17239494780414311016",
+      "startTime": "2026-10-08T00:25:03.201Z",
+      "endTime": "2026-10-08T00:25:09.101Z",
       "params": "",
       "cacheStatus": "cache-miss",
-      "status": 1
+      "status": 0
     }
   ]
 }

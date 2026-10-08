@@ -201,7 +201,7 @@ pub struct EpwDiff {
 }
 
 impl MutationDiff<EpwSnapshot> for EpwDiff {
-    fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
+    fn apply(&self, base: &EpwSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<EpwSnapshot> {
         validate_epw_diff(self, base)?;
         Ok(apply_epw_diff_unchecked(self, base))
     }

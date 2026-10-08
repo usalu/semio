@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_document, empty_gis_map_snapshot};
+
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::app::TypedOperationResultLane;
@@ -156,7 +158,7 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
-    let snapshot = crate::schema::empty_gis_map_snapshot();
+    let snapshot = empty_gis_map_snapshot();
     let envelope = store::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
@@ -231,7 +233,7 @@ fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
         }
     };
 
-    for (label, snapshot) in [("empty", crate::schema::empty_gis_map_snapshot()), ("default-document", crate::schema::default_document())] {
+    for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         admit(label, &snapshot);
         admit(&format!("{label} pack round trip"), &GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("{label} parent pack round trip: {error}")));
         admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
@@ -241,7 +243,7 @@ fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
 fn gis_map_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 
-    let snapshot = crate::schema::empty_gis_map_snapshot();
+    let snapshot = empty_gis_map_snapshot();
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
@@ -508,7 +510,7 @@ async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn gis2d_map_media_exports_the_document_descriptor() {
-    let document = crate::schema::default_document();
+    let document = default_document();
     let media = gis2d_map_media(&document);
     let MediaPayload::Intrinsic { schema, value } = media.payload else {
         panic!("expected an intrinsic map:out payload");

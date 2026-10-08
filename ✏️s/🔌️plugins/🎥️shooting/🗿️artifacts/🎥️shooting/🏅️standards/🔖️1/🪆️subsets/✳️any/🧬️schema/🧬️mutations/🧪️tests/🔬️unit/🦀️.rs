@@ -301,7 +301,7 @@ async fn create_asset_obeys_the_inverse_and_absorb_laws() {
     let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a9"), index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).into_parts().0;
-    let after = d1.apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -319,6 +319,42 @@ async fn set_active_shot_obeys_the_inverse_law() {
     let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s2".into()) });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &set).await;
 }
+/// ⚖️ A row deleted from the middle of its list is restored in place, and the inverse diffs sum to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn deleting_a_middle_row_is_undone_in_place() {
+    let base = representative_snapshot();
+    let delete = ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "s1".into() });
+    let restored = round_trip(&base, &delete);
+    assert_eq!(restored.shots.iter().map(|shot| shot.id.as_str()).collect::<Vec<_>>(), vec!["s2"]);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;
+}
+
+/// ⚖️ A create with an index inserts at that position (clamped to the length), and undoing it removes exactly that row.
+#[semio_framework_async_macros::async_test]
+async fn create_at_an_index_inserts_there() {
+    let base = representative_snapshot();
+    for (index, expected) in [(Some(0), vec!["a9", "a1", "a2"]), (Some(1), vec!["a1", "a9", "a2"]), (Some(99), vec!["a1", "a2", "a9"]), (None, vec!["a1", "a2", "a9"])] {
+        let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a9"), index });
+        let created = round_trip(&base, &create);
+        assert_eq!(created.assets.iter().map(|asset| asset.id.as_str()).collect::<Vec<_>>(), expected);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
+    }
+}
+
+/// ⚖️ The relative gestures (drag, scale, half-turn) sum to the negative diff on exactly representable operands.
+#[semio_framework_async_macros::async_test]
+async fn gestures_obey_the_inverse_sum_law() {
+    let mut base = representative_snapshot();
+    base.assets[0].orientation = Some([0.0, 0.0, 0.0, 1.0]);
+    base.assets[0].scale = Some([1.0, 2.0, 4.0]);
+    let drag = ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 0.5, dy: -2.0, dz: 4.0 });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&drag, &base).await;
+    let scale = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 0.5, sz: 4.0 });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&scale, &base).await;
+    let half_turn = ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::PI });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&half_turn, &base).await;
+}
+
 //#endregion ⚖️SemanticLaws
 
 //#region 🔖️OutcomeLaws

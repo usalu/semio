@@ -6,6 +6,9 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 
+#[path = "🎮️prepare/🦀️.rs"]
+pub mod preparation;
+
 //#region 🔖️Mutation
 /// 📍 `move-node` payload — absolute FINAL-state position.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]

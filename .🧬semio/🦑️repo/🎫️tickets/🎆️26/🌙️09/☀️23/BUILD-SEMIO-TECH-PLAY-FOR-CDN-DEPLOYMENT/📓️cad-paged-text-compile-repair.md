@@ -1,0 +1,25 @@
+# Cad Paged Text Compile Repair
+
+## Confirmed Failure and Ownership
+
+The real cold `release-6Z7Lxu` component-dev compile in `🗑️generated/fresh-release-ship-locked.log` failed with 44 Rust errors. The isolated SQLite failure was E0004 at Cad's snapshot `Census::row`: its `Cell` match did not cover the current `Cell::PagedText` variant. Coordination assigned this snapshot and its co-located tests to publication_fixes; editors_plugins owns the Cad model/schema/DSL/editor compiler roots. No unrelated Cad section was edited.
+
+The applicable root, `✏️s/AGENTS.md` and `✏️s/🔌️plugins/📐️cad/AGENTS.md` instructions were read before these edits. This retains the shared ticket, Bun/Nx execution and co-located domain tests without Git changes or worktrees.
+
+## Canonical Repair
+
+`Cell::PagedText(value) => value.text_bytes()` now contributes the complete UTF-8 byte extent to the existing checked-add row census. This is the exact current shared SQLite `Cell::bytes` behavior and the same handling already used by neighboring PDF/DXF/DWG census implementations. It does not flatten text or allocate an intermediate string in the census, introduce a legacy fallback, add dependencies or alter existing literal-text semantics.
+
+The neutral corpus has empty, ASCII and a 7,800-byte multibyte/NUL case that spans paged chunks. Co-located Rust tests compare literal and paged cells, accept the exact semantic row grant, reject one byte less and verify refusal leaves census bytes unchanged. A co-located TypeScript test independently measures each literal with real SQLite `length(CAST(? AS BLOB))` and TextEncoder, including bytes beyond embedded NUL.
+
+## Verification Boundary
+
+The actual compile failure above is the red baseline. The existing Nx `@semio-tech/cad-cad-rs:test-snapshot-sqlite-source` target completed in the same cold generation with dependency traversal excluded: exit 1, 7 passed and 47 failed across 54 tests. All three new independent SQLite cases passed, with real console evidence `[DEBUG] CAD paged UTF-8 SQLite oracle empty bytes=0`, `ascii bytes=3` and `paged-unicode-nul bytes=7800`. The source suite is therefore not reported green. Its existing failures include absent `cadSnapshotToSqliteDatabase`/`cadSnapshotFromSqliteDatabase` owner facade exports and an undefined `fixture.referenceIndex.ownership` lookup. These are distinct from the new byte-extent oracle and were reported to the parent/editor agents.
+
+The original log is `🗑️generated/cad-paged-text-sqlite-source.log`. After the other Cad compiler-root repairs, the build agent owns a single actual component-dev retry, and the existing `@semio-tech/cad-cad-rs:test-snapshot-sqlite-native` target is now running in that same generation, recorded in `🗑️generated/cad-paged-text-sqlite-native.log`. Neither native result nor full component success is yet claimed. Existing launch entries cover both SQLite source and native targets. No partial publication inventory was scanned.
+
+The parent subsequently owns the separate source-test contract repair: direct projection import and canonical `CadSqliteSnapshot`/`CadSqliteReference` types replace the unsafe schema-owner `Ports` cast, and real reference-index fixture fields replace nonexistent duplicate ownership/table fields. All 54 source tests were retained. The actual whole registered Nx source gate rerun finished exit 0 with 54 passes, no failures and 140 assertions in `🗑️generated/cad-sqlite-contract-green.log`; all three appended byte-oracle cases passed again with 0/3/7,800-byte console proof. Parent report: `📓️cad-sqlite-source-contract-repair.md`. Only the appended three oracle cases are this agent's final contribution to the shared TypeScript test file. Native and component results remain pending.
+
+The native snapshot task subsequently entered real Cargo compilation. A separate Cad document probe found 12 stale test-only contracts; editors_plugins owns and repaired those 11 other test files, preserving their assertions and avoiding this snapshot test. Its full unfiltered Cad library run is active in `🗑️generated/cad-library-native-green.log`. The current snapshot task is preserved, and will only be rerun if its actual compiler/test outcome requires it. These other test-file repairs are not this agent's attribution.
+
+The registered snapshot native target finished with actual exit 0: Nextest profile `fundamental`, run ID `a87c1bf5-d216-4bfd-be25-b78e1dffb95a`, 15 tests run and passed, 440 skipped, 0.842s execution; cold producer compilation took 12m46s and total Nx duration 25m38s. This is scoped snapshot success, not a claim that all 455 native tests passed. Retained generated Nextest artifacts at `🗑️generated/native/semio-nextest-OcfBSE` contain only binaries metadata, so they do not supply a named pass manifest or success stdout. The editor's full run explicitly uses `--nocapture` and pass status; it will retain the census test's named result and debug grants of 8/11/7,808 bytes when available. No additional duplicate native run is being launched solely to recapture output.

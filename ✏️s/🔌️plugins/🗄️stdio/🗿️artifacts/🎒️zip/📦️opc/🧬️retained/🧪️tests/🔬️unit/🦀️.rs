@@ -88,8 +88,7 @@ fn retained_opc_copy_and_materialization_preserve_package_authority() {
         maximum_items: grant_fixture["maximumItems"].as_u64().expect("maximum items") as usize,
         maximum_copy_bytes: grant_fixture["maximumCopyBytes"].as_u64().expect("maximum copy bytes") as usize,
         maximum_capacity_bytes: grant_fixture["maximumCapacityBytes"].as_u64().expect("maximum capacity bytes") as usize,
-        maximum_depth: grant_fixture["maximumDepth"].as_u64().expect("maximum depth") as usize,
-    };
+        maximum_depth: grant_fixture["maximumDepth"].as_u64().expect("maximum depth") as usize, maximum_release_bytes: grant_fixture["maximumReleaseBytes"].as_u64().expect("maximum capacity bytes") as usize };
     let source = RetainedCloneSource::from_authority(Arc::new(retained), ());
     let mut cursor = RetainedOpcPackage::retained_clone_cursor();
     let mut turns = 0usize;

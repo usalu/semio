@@ -23,7 +23,7 @@ use crate::{FillStyle, GradientStop, PathSegment};
 use crate::schema::fill::sampling::PreparedFill;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox};
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{write_svg_xml};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
 fn attr(name: &str, value: impl ToString) -> XmlAttr { XmlAttr { name: name.into(), value: value.to_string() } }
@@ -32,7 +32,7 @@ fn blend(mode: &str) -> &str {
     match mode { "colorDodge" => "color-dodge", "colorBurn" => "color-burn", "hardLight" => "hard-light", "softLight" => "soft-light", "multiply" | "screen" | "overlay" | "darken" | "lighten" | "difference" | "exclusion" | "hue" | "saturation" | "color" | "luminosity" => mode, _ => "normal" }
 }
 
-fn stops(values: &[GradientStop]) -> Vec<SvgElement> {
+fn stops(values: &semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>) -> Vec<SvgElement> {
     let mut values = values.iter().collect::<Vec<_>>();
     values.sort_by(|a,b| a.offset.total_cmp(&b.offset));
     values.into_iter().map(|stop| SvgElement::Stop { common: CommonAttrs::default(), offset: stop.offset.clamp(0.0,1.0).to_string(), stop_color: Some(rgb(&stop.color)), stop_opacity: Some(stop.color[3].to_string()) }).collect()
@@ -99,7 +99,7 @@ fn finite_numbers(node: &DrawingSceneNode) -> bool {
         coordinates && stops.iter().all(|stop| stop.offset.is_finite() && finite(&stop.color))
     });
     geometry && fill && node.opacity.is_finite() && finite(&node.transform)
-        && node.stroke.as_ref().is_none_or(|stroke| stroke.width.is_finite() && finite(&stroke.color) && stroke.dash.as_ref().is_none_or(|dash| finite(dash)))
+        && node.stroke.as_ref().is_none_or(|stroke| stroke.width.is_finite() && finite(&stroke.color) && stroke.dash.as_ref().is_none_or(|dash| dash.iter().all(|value| value.is_finite())))
         && node.text.as_ref().is_none_or(|text| text.size.is_finite())
         && node.image.as_ref().is_none_or(|image| finite(&[image.width,image.height]))
 }
@@ -156,7 +156,7 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Re
     if !defs.is_empty() { children.insert(0,SvgElement::Defs { common:CommonAttrs::default(),children:defs }); }
     let common = CommonAttrs { extra_attrs: vec![attr("version","1.1"),attr("xmlns:xlink","http://www.w3.org/1999/xlink")], ..Default::default() };
     let root = SvgElement::Svg { common,view_box:Some(ViewBox { min_x:x,min_y:y,width,height }),width:Some(width.to_string()),height:Some(height.to_string()),xmlns:Some("http://www.w3.org/2000/svg".into()),children };
-    write_svg_xml(&typed_to_svg_document(&root,None))
+    xml_document_to_text_checked(&typed_to_svg_document(&root,None))
 }
 
 pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String,u32,u32),String> {

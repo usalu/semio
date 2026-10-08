@@ -187,7 +187,7 @@ async fn note_apply_ops_reduces_a_nonempty_batch_and_closes_its_store() {
 /// before a decoded document may replace the store.
 #[test]
 fn the_child_restore_projection_names_every_declared_child_slot() {
-    let snapshot = crate::schema::empty_note_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     let projection = crate::note_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
     assert_eq!(projection.len(), <crate::NoteSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

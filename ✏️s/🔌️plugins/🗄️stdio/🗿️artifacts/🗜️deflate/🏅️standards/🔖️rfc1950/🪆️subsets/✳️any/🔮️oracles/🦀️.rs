@@ -174,8 +174,7 @@ fn object(pairs: Vec<(&str, Json)>) -> Json {
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// Every spec's `params` is the leaf's own wire payload (`DeflateMutation`'s `payload_value()`):
-/// `set-snapshot` reads `{snapshot: {compressionMethod, windowBits, compressionLevelHint, dictId?,
-/// payload}}`, `set-compression-params` reads `{method, window_bits, level_hint}`,
+/// `set-compression-params` reads `{method, window_bits, level_hint}`,
 /// `set-preset-dictionary` reads `{dict_id}` and `set-payload` reads `{payload}`. An unrecognised kind
 /// is an error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
 #[cfg(feature = "oracles")]
@@ -183,16 +182,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = params_of(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
-            let header = Header {
-                method: json_number(snapshot, "compressionMethod")? as u8,
-                window_bits: json_number(snapshot, "windowBits")? as u8,
-                level_hint_bits: level_hint_bits(&snapshot.str("compressionLevelHint"))?,
-                dict_id: json_optional_u32(snapshot, "dictId"),
-            };
-            encode(&header, &json_bytes(snapshot, "payload"))
-        }
         "set-compression-params" => {
             let (original, _) = Header::parse(input)?;
             let payload = independent_inflate(input)?;
@@ -250,19 +239,6 @@ pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> 
     let dict_id = header.dict_id.map(|id| Json::Number(id as f64)).unwrap_or(Json::Null);
     let kind = forward.str("kind");
     let params = match kind.as_str() {
-        "set-snapshot" => {
-            let mut snapshot = vec![
-                ("schema", Json::String("stdio.deflate".to_string())),
-                ("compressionMethod", Json::Number(header.method as f64)),
-                ("windowBits", Json::Number(header.window_bits as f64)),
-                ("compressionLevelHint", Json::String(level_hint_name(header.level_hint_bits).to_string())),
-            ];
-            if let Some(id) = header.dict_id {
-                snapshot.push(("dictId", Json::Number(id as f64)));
-            }
-            snapshot.push(("payload", bytes_json(&payload)));
-            object(vec![("snapshot", object(snapshot))])
-        }
         "set-compression-params" => object(vec![("method", Json::Number(header.method as f64)), ("window_bits", Json::Number(header.window_bits as f64)), ("level_hint", Json::String(level_hint_name(header.level_hint_bits).to_string()))]),
         "set-preset-dictionary" => object(vec![("dict_id", dict_id)]),
         "set-payload" => object(vec![("payload", bytes_json(&payload))]),

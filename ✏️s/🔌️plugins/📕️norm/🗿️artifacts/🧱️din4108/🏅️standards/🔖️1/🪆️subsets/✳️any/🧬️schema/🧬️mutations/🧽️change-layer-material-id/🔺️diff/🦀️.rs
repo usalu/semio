@@ -1,27 +1,17 @@
-//! 🔺️ `change-layer-material-id` diff — whole-list rewrite via Din4108Diff list wrappers.
+//! 🧽️ `change-layer-material-id` diff — patches the layer's `material_id` inside its element; a missing element or layer is a `mutation.invariant`.
 
 use super::ChangeLayerMaterialId;
-use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108RowEdit as _;
+use crate::diff::{Din4108Diff, Din4108ElementEdit, Din4108ElementPatch, Din4108LayerEdit, Din4108LayerPatch};
+use crate::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeLayerMaterialId, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    let mut next = base.clone();
-    if let Err(msg) = apply_in_place(payload, &mut next) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", msg, Vec::<String>::new());
-    }
-    protocol::MutationOutcome::new(Din4108Diff {
-        zones: Some(Din4108ZoneList { values: next.zones }),
-        elements: Some(Din4108ElementList { values: next.elements }),
-        thermal_bridges: Some(Din4108ThermalBridgeList { values: next.thermal_bridges }),
-        ..Default::default()
-    })
-}
-
-fn apply_in_place(payload: &ChangeLayerMaterialId, snap: &mut Din4108Snapshot) -> Result<(), String> {
-    
-    let e = snap.elements.iter_mut().find(|e| e.id == payload.element_id).ok_or("element not found")?;
-    let layer = e.layers.get_mut(payload.index).ok_or("layer index out of range")?;
-    layer.material_id = payload.new_material_id.clone();
-
-    Ok(())
+    let Some((slot, element)) = base.elements.iter().enumerate().find(|(_, element)| element.id == payload.element_id) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "element not found", Vec::<String>::new());
+    };
+    let Some(layer) = element.layers.get(payload.index) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "layer index out of range", Vec::<String>::new());
+    };
+    let nested = vec![Din4108LayerEdit::patch(payload.index, layer.id.clone(), Din4108LayerPatch { material_id: Some(payload.new_material_id.clone()), ..Default::default() })];
+    protocol::MutationOutcome::new(Din4108Diff { elements: vec![Din4108ElementEdit::patch(slot, element.id.clone(), Din4108ElementPatch { layers: nested, ..Default::default() })], ..Default::default() })
 }

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fieldLevelsPerBox",
+    "boxLevelsPerBox",
+    "terminalFieldLevels",
+    "close",
+    "cases"
+  ],
+  "properties": {
+    "fieldLevelsPerBox": {
+      "const": 1
+    },
+    "boxLevelsPerBox": {
+      "const": 1
+    },
+    "terminalFieldLevels": {
+      "const": 1
+    },
+    "close": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumReleaseBytes"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 2
+        },
+        "maximumReleaseBytes": {
+          "const": 65536
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "boxes",
+          "maximumDepth",
+          "requiredDepth",
+          "accepted"
+        ],
+        "properties": {
+          "boxes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maximumDepth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "requiredDepth": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

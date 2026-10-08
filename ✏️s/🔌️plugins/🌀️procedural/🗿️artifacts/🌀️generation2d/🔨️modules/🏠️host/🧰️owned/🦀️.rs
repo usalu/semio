@@ -206,6 +206,10 @@ struct Generation2dStoreInitializationAuthority {
 }
 
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSnapshot, Generation2dMutation> for Generation2dStoreInitializationAuthority {
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+    }
+
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"generation2d-store.initializer-stale-aba");
@@ -629,6 +633,7 @@ pub fn generation2d_release_publication_authority(operation: semio_framework_job
     leases.take(generation2d_publication_key(operation, generation)).is_some()
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dRetainedSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Generation2dSnapshot> for Generation2dRetainedSnapshotRetirementFactory {
@@ -638,6 +643,8 @@ impl store::ArtifactOwnedValueRetirementFactory<Generation2dSnapshot> for Genera
 }
 
 impl store::SnapshotRetirementFactory<Generation2dSnapshot> for Generation2dRetainedSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Generation2dSnapshot>) -> usize { std::mem::size_of::<Generation2dRetainedSnapshotArcRetirement>() }
+
     fn retire(&self, snapshot: std::sync::Arc<Generation2dSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(Generation2dRetainedSnapshotArcRetirement {
             value: std::mem::ManuallyDrop::new(Some(snapshot)),
@@ -646,6 +653,7 @@ impl store::SnapshotRetirementFactory<Generation2dSnapshot> for Generation2dReta
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dRetainedMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<Generation2dMutation> for Generation2dRetainedMutationRetirementFactory {
@@ -1263,6 +1271,10 @@ impl Drop for Generation2dPackSnapshotAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Generation2dMutationDecodeAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        if let Some(session) = self.session.as_ref() { return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0)); }
+        Ok(self.retirement.as_ref().map_or(0, store::artifact_retirement_box_byte_demand))
+    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -1434,17 +1446,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
             return Ok(store::SnapshotRetirementStep::Complete);
         }
         let retirement_fault = self.diagnostic("generation2d-envelope.mutation-retirement-fault", 0);
-        let retirement_false_terminal = self.diagnostic("generation2d-envelope.mutation-retirement-false-terminal", 0);
-        let retirement = self.retirement.as_mut().expect("P2 mutation retirement retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| retirement_fault)? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = Generation2dMutationDecodeState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(retirement_false_terminal),
-            step => Ok(step),
-        }
+        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| retirement_fault)
     }
 
     fn terminal_is_empty(&self) -> bool {

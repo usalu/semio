@@ -19,7 +19,7 @@ async fn renders_canvas_scene_for_the_empty_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_canvas_scene_for_the_metabolism_example() {
-    let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
     let (_, content) = crate::wires_bundled_contents().iter().find(|(id, _)| *id == document.content.child_id).expect("the demo names its bundled board");
     let node = render(&crate::wires_composed(&document, content)).expect("viewer canvas");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };

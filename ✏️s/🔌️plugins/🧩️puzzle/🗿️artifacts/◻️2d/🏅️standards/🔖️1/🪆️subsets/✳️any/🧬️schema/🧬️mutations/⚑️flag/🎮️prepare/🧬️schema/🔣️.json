@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "format",
+    "control",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "control": {
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "rows",
+          "mutation",
+          "status",
+          "index",
+          "previous"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "node-locked",
+              "node-visible",
+              "edge-locked",
+              "edge-visible"
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "mutation": {
+            "type": "object",
+            "required": [
+              "id",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "status": {
+            "enum": [
+              "changed",
+              "no-op",
+              "target-missing"
+            ]
+          },
+          "index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "previous": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

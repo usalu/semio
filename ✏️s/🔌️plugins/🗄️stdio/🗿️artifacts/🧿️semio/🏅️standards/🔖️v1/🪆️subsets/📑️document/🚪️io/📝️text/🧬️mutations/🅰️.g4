@@ -5,7 +5,7 @@ grammar Semio_document_mutations;
 
 op: keywordOp EOF;
 keywordOp: KEYWORD arg*;
-KEYWORD: 'set-snapshot' | 'insert-block' | 'remove-block' | 'set-block-content' | 'set-paragraph-style'
+KEYWORD: 'insert-block' | 'remove-block' | 'set-block-content' | 'set-paragraph-style'
        | 'set-heading-level' | 'set-list-ordered' | 'set-run-text' | 'set-run-style' | 'set-image-block'
        | 'insert-style' | 'remove-style' | 'set-style-name' | 'set-style-based-on' | 'insert-image'
        | 'remove-image' | 'set-image-bytes';

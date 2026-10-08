@@ -4,7 +4,6 @@ op = set snapshot | insert spatial node | remove spatial node | set spatial node
    | insert element | remove element | set element | insert relation | remove relation | set relation
    | drag elements | rotate elements | scale elements ;
 
-set snapshot = 'set-snapshot', 'snapshot', '=', snapshot lit ;
 insert spatial node = 'insert-spatial-node', 'node', '=', spatial node ;
 remove spatial node = 'remove-spatial-node', 'id', '=', hex ;
 set spatial node = 'set-spatial-node', 'id', '=', hex, 'kind', '=', option spatial kind, 'name', '=', option hex, 'parent_id', '=', option option hex, 'placement', '=', option transform ;

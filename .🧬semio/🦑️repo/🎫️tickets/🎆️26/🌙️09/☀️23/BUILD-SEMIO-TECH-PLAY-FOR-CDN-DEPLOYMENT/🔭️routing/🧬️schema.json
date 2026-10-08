@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageHost",
+    "workerPath",
+    "assets",
+    "module"
+  ],
+  "properties": {
+    "pageHost": {
+      "const": "play.semio-tech.com"
+    },
+    "workerPath": {
+      "type": "string",
+      "pattern": "^🔌️plugin-modules/🧵️shard/[^/]+\\.js$"
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "page",
+          "host",
+          "path",
+          "content"
+        ],
+        "properties": {
+          "page": {
+            "enum": [
+              "map",
+              "media",
+              "modules"
+            ]
+          },
+          "host": {
+            "type": "string",
+            "pattern": "^(map|media|modules)\\.assets\\.semio-tech\\.com$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "token"
+            ],
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "page",
+        "host",
+        "path",
+        "token"
+      ],
+      "properties": {
+        "page": {
+          "const": "modules"
+        },
+        "host": {
+          "const": "modules.assets.semio-tech.com"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^🔌️plugin-modules/.+\\.js$"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

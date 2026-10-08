@@ -77,7 +77,7 @@ fn oracle(fixture: &Fixture) -> BTreeMap<String, String> {
 
 fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedMap<String, String> {
     let source = RetainedCloneSource::from_owner(source.clone());
-    let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 7, maximum_capacity_bytes: 65_536, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 2, maximum_copy_bytes: 7, maximum_capacity_bytes: 65_536, maximum_depth: 64, maximum_release_bytes: 65_536 };
     let mut cursor = RetainedOrderedMap::<String, String>::retained_clone_cursor();
     let output = loop {
         let step = cursor.advance(source.borrow(), grant).expect("retained ordered-map clone");
@@ -88,7 +88,9 @@ fn retained_map(source: &RetainedOrderedMap<String, String>) -> RetainedOrderedM
     };
     cursor.begin_close();
     while !cursor.terminal_is_empty() {
-        let step = cursor.close_step(1, 7).expect("retained ordered-map cursor close");
+        let bytes = cursor.close.next_cold_byte_demand().unwrap().max(7);
+        assert!(bytes <= grant.maximum_release_bytes);
+        let step = cursor.close_step(1, bytes).expect("retained ordered-map cursor close");
         if step == SnapshotRetirementStep::Complete {
             assert!(cursor.terminal_is_empty());
         }
@@ -178,7 +180,9 @@ fn bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle() {
                 assert_eq!(serde_json::to_value(&map).expect("map after duplicate"), before_json);
                 assert!(cursor.begin_close());
                 while !cursor.terminal_is_empty() {
-                    let step = cursor.close_step(1, 7).expect("duplicate cursor close");
+                    let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+                    assert!(bytes <= 65_536);
+                    let step = cursor.close_step(1, bytes).expect("duplicate cursor close");
                     if step == SnapshotRetirementStep::Complete {
                         assert!(cursor.terminal_is_empty());
                     }
@@ -264,7 +268,9 @@ fn immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle() {
         oracle.insert(key, value);
         assert!(cursor.begin_close());
         while !cursor.terminal_is_empty() {
-            let step = cursor.close_step(1, 7).expect("grown insertion close");
+            let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+                    assert!(bytes <= 65_536);
+                    let step = cursor.close_step(1, bytes).expect("grown insertion close");
             if step == SnapshotRetirementStep::Complete {
                 assert!(cursor.terminal_is_empty());
             }
@@ -338,9 +344,52 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
 
     assert!(cursor.begin_close());
     while !cursor.terminal_is_empty() {
-        let step = cursor.close_step(1, 7).expect("cancelled insertion cursor close");
+        let bytes = cursor.next_close_byte_demand().unwrap().max(7);
+                    assert!(bytes <= 65_536);
+                    let step = cursor.close_step(1, bytes).expect("cancelled insertion cursor close");
         if step == SnapshotRetirementStep::Complete {
             assert!(cursor.terminal_is_empty());
         }
     }
+}
+
+#[test]
+fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️close/🔣️.json")).unwrap();
+    let admission = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
+    let mut mismatches = 0;
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut text = String::with_capacity(row["capacity"].as_u64().unwrap() as usize);
+        text.push_str(row["text"].as_str().unwrap());
+        let mut close = RetainedCloneClose::default();
+        close.begin(text).unwrap();
+        for _ in 0..10_000 {
+            if close.retirement.as_ref().unwrap().terminal_is_empty() { break; }
+            let bytes = close.next_cold_byte_demand().unwrap().max(7);
+            assert!(bytes <= admission);
+            close.step(1, bytes).unwrap();
+        }
+        assert!(close.retirement.as_ref().unwrap().terminal_is_empty());
+        let pointer = close.retirement.as_ref().unwrap().as_ref() as *const dyn crate::ErasedSnapshotRetirement;
+        let (physical, query_events) = crate::value::observe_retirement_allocations(|| close.next_cold_byte_demand().unwrap());
+        assert_eq!(query_events, (0, 0));
+        assert!(physical > 0 && physical <= admission);
+        for (items, bytes) in [(0, physical), (1, physical - 1)] {
+            let (step, events) = crate::value::observe_retirement_allocations(|| close.step(items, bytes).unwrap());
+            let retained = close.retirement.as_ref().is_some_and(|owner| std::ptr::addr_eq(pointer, owner.as_ref() as *const dyn crate::ErasedSnapshotRetirement));
+            if step != (SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }) || events != (0, 0) || !retained {
+                mismatches += 1;
+                println!("[DEBUG] cold terminal denied items={items} bytes={bytes} query={physical} born={} actual-free={} retained={retained}", events.0, events.1);
+            }
+            if close.is_empty() { break; }
+        }
+        if !close.is_empty() {
+            let (step, events) = crate::value::observe_retirement_allocations(|| close.step(1, physical).unwrap());
+            if step != (SnapshotRetirementStep::Pending { released_items: 1, released_bytes: physical }) || events != (0, physical) { mismatches += 1; }
+        }
+        assert!(close.is_empty());
+        assert_eq!(close.step(0, 0).unwrap(), SnapshotRetirementStep::Complete);
+        println!("[DEBUG] cold terminal original case={} exact-frame={physical} original-admission={admission}", row["id"]);
+    }
+    assert_eq!(mismatches, 0, "cold terminal retirement Box requires its complete same-turn physical grant");
 }

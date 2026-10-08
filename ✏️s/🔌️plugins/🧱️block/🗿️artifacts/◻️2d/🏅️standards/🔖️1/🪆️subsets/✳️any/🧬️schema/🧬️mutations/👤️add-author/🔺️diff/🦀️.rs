@@ -1,15 +1,14 @@
 //! 🔺️ Diff for `AddAuthor`.
 
 use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block2dAuthorList, Block2dDiff};
+use semio_s_plugin_block::BlockAuthorsDelta;
+use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddAuthor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if base.authors.iter().any(|item| item.id == payload.author.id) {
         return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("{} \"{}\" already present", "author", payload.author.id)).at(vec![payload.author.id.clone()])]);
     }
-    let mut values = base.authors.clone();
-    values.push(payload.author.clone());
-    protocol::MutationOutcome::new(Block2dDiff { authors: Some(Block2dAuthorList { values }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { authors: Some(BlockAuthorsDelta { added: vec![payload.author.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

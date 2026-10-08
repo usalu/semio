@@ -4,8 +4,9 @@
 //! extensibility tier: an extension registering mutations/inferences on an artifact it does not own,
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
-use semio_framework_pack_json::{self, Value as JsonValue};
-use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
+use semio_framework_pack_json::{self as json, Value as JsonValue};
+use semio_framework_os_kernel::pack_rt;
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_s_artifact_cad_cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};

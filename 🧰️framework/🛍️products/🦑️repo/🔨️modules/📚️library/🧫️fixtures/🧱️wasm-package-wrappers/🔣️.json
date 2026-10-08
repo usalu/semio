@@ -70,11 +70,7 @@
     "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
     "target": "test-wasm-package-wrappers",
-    "packageScript": "test-wasm-package-wrappers",
-    "launchSeedPath": ".vscode/🧩️launch.seed.jsonc",
-    "launchPath": ".vscode/launch.json",
-    "launchName": "🧱️test📦️wasm-package-wrappers",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-wasm-package-wrappers"
+    "packageScript": "test-wasm-package-wrappers"
   },
   "inputs": [
     "sharedGlobals",
@@ -99,8 +95,6 @@
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-    "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-    "{workspaceRoot}/.vscode/launch.json"
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
   ]
 }

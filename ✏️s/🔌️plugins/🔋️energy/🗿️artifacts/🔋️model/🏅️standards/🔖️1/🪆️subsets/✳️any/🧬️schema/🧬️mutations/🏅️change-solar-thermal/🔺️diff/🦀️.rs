@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSolarThermalSystemEfficiency` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SolarThermalConfigPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeSolarThermalSystemEfficiency, base: &EnergyMo
     if existing.efficiency == payload.new_efficiency {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Solar thermal system {} already carries this collector efficiency: {}.", payload.id.0, payload.new_efficiency));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.solar_thermal_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.efficiency = payload.new_efficiency;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { solar_thermal_systems: Rows::modifying(SolarThermalConfigPatch { efficiency: Some(payload.new_efficiency), ..SolarThermalConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

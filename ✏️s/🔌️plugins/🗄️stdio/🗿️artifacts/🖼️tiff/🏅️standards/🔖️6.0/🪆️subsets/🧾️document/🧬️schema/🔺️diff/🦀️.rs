@@ -393,7 +393,7 @@ pub struct TiffDiff {
 }
 
 impl MutationDiff<TiffSnapshot> for TiffDiff {
-    fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
+    fn apply(&self, base: &TiffSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TiffSnapshot> {
         if let Some(ifds) = &self.ifds {
             validate_tiff_ifds(&base.ifds, ifds)?;
         }

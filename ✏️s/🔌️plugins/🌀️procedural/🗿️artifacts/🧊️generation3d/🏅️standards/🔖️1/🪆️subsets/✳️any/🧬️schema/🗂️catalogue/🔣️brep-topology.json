@@ -1,0 +1,652 @@
+{
+  "category": {
+    "id": "brep.topology",
+    "emoji": "🐚️",
+    "order": 100,
+    "label": {
+      "en": "Topology and repair",
+      "de": "Topologie und Reparatur"
+    },
+    "description": {
+      "en": "Take shapes apart, combine them, and sew, heal or convert them.",
+      "de": "Formen zerlegen, zusammenfassen sowie vernähen, heilen oder umwandeln."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.topology.vertex",
+      "category": "brep.topology",
+      "emoji": "📍️",
+      "label": {
+        "en": "Vertex",
+        "de": "Eckpunkt"
+      },
+      "description": {
+        "en": "Creates a vertex shape at a position.",
+        "de": "Erzeugt eine Eckpunkt-Form an einer Position."
+      },
+      "inputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "A position in space.",
+            "de": "Eine Position im Raum."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Vertex",
+            "de": "Eckpunkt"
+          },
+          "description": {
+            "en": "The vertex.",
+            "de": "Der Eckpunkt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "vertex"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.topology.deconstruct",
+      "category": "brep.topology",
+      "emoji": "🧩️",
+      "label": {
+        "en": "Deconstruct",
+        "de": "Zerlegen"
+      },
+      "description": {
+        "en": "Splits a shape into its vertices, edges, faces and shells, and extracts the selected edges and faces.",
+        "de": "Zerlegt eine Form in Eckpunkte, Kanten, Flächen und Schalen und liefert die ausgewählten Kanten und Flächen."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "Edges to extract as a separate output.",
+            "de": "Kanten, die als eigene Ausgabe extrahiert werden."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "shape",
+            "multiple": true
+          },
+          "default": [],
+          "optional": true
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "Faces to extract as a separate output.",
+            "de": "Flächen, die als eigene Ausgabe extrahiert werden."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "shape",
+            "multiple": true
+          },
+          "default": [],
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "vertices",
+          "label": {
+            "en": "Vertices",
+            "de": "Eckpunkte"
+          },
+          "description": {
+            "en": "All vertices.",
+            "de": "Alle Eckpunkte."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "vertex"
+          ]
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "All edges.",
+            "de": "Alle Kanten."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "edge"
+          ]
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "All faces.",
+            "de": "Alle Flächen."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "face"
+          ]
+        },
+        {
+          "name": "shells",
+          "label": {
+            "en": "Shells",
+            "de": "Schalen"
+          },
+          "description": {
+            "en": "All shells.",
+            "de": "Alle Schalen."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "shell"
+          ]
+        },
+        {
+          "name": "selectedEdges",
+          "label": {
+            "en": "Selected edges",
+            "de": "Gewählte Kanten"
+          },
+          "description": {
+            "en": "The edges picked in the selection.",
+            "de": "Die in der Auswahl gewählten Kanten."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "edge"
+          ],
+          "optional": true
+        },
+        {
+          "name": "selectedFaces",
+          "label": {
+            "en": "Selected faces",
+            "de": "Gewählte Flächen"
+          },
+          "description": {
+            "en": "The faces picked in the selection.",
+            "de": "Die in der Auswahl gewählten Flächen."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "face"
+          ],
+          "optional": true
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.topology.shells",
+      "category": "brep.topology",
+      "emoji": "🐚️",
+      "label": {
+        "en": "Shells of solid",
+        "de": "Schalen eines Körpers"
+      },
+      "description": {
+        "en": "Lists the outer shell and every inner void shell of a solid.",
+        "de": "Listet die äußere Schale und jede innere Hohlraumschale eines Körpers auf."
+      },
+      "inputs": [
+        {
+          "name": "solid",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to operate on.",
+            "de": "Der Körper, auf den der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shells",
+          "label": {
+            "en": "Shells",
+            "de": "Schalen"
+          },
+          "description": {
+            "en": "One shape per shell.",
+            "de": "Eine Form pro Schale."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "shell"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "solid"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.topology.compound",
+      "category": "brep.topology",
+      "emoji": "🗃️",
+      "label": {
+        "en": "Compound",
+        "de": "Verbund"
+      },
+      "description": {
+        "en": "Groups several solids into one compound without merging them.",
+        "de": "Fasst mehrere Körper zu einem Verbund zusammen, ohne sie zu verschmelzen."
+      },
+      "inputs": [
+        {
+          "name": "solids",
+          "label": {
+            "en": "Solids",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solids to group.",
+            "de": "Die zusammenzufassenden Körper."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ],
+          "minItems": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Compound",
+            "de": "Verbund"
+          },
+          "description": {
+            "en": "The compound of all solids.",
+            "de": "Der Verbund aller Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "compound"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.topology.explode",
+      "category": "brep.topology",
+      "emoji": "💥️",
+      "label": {
+        "en": "Explode compound",
+        "de": "Verbund auflösen"
+      },
+      "description": {
+        "en": "Splits a compound into its member solids.",
+        "de": "Zerlegt einen Verbund in seine Einzelkörper."
+      },
+      "inputs": [
+        {
+          "name": "compound",
+          "label": {
+            "en": "Compound",
+            "de": "Verbund"
+          },
+          "description": {
+            "en": "The compound to split.",
+            "de": "Der aufzulösende Verbund."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "compound"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "solids",
+          "label": {
+            "en": "Solids",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "One shape per member solid.",
+            "de": "Eine Form pro enthaltenem Körper."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "compound"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.topology.label",
+      "category": "brep.topology",
+      "emoji": "🏷️",
+      "label": {
+        "en": "Persistent label",
+        "de": "Persistente Kennung"
+      },
+      "description": {
+        "en": "Reads the stable label that identifies a shape across edits.",
+        "de": "Liest die stabile Kennung, die eine Form über Änderungen hinweg identifiziert."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "label",
+          "label": {
+            "en": "Label",
+            "de": "Kennung"
+          },
+          "description": {
+            "en": "The label as a decimal number in text form.",
+            "de": "Die Kennung als Dezimalzahl in Textform."
+          },
+          "type": "text"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.topology.sew",
+      "category": "brep.topology",
+      "emoji": "🧵️",
+      "label": {
+        "en": "Sew faces",
+        "de": "Flächen vernähen"
+      },
+      "description": {
+        "en": "Joins faces that share edges into one closed solid.",
+        "de": "Verbindet Flächen mit gemeinsamen Kanten zu einem geschlossenen Körper."
+      },
+      "inputs": [
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to sew; they must enclose a volume.",
+            "de": "Die zu vernähenden Flächen; sie müssen ein Volumen umschließen."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "face"
+          ],
+          "minItems": 1
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest gap between edges that is still closed.",
+            "de": "Größte Lücke zwischen Kanten, die noch geschlossen wird."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The sewn solid.",
+            "de": "Der vernähte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.topology.heal",
+      "category": "brep.topology",
+      "emoji": "🩹️",
+      "label": {
+        "en": "Heal",
+        "de": "Heilen"
+      },
+      "description": {
+        "en": "Repairs small gaps and inconsistencies in a solid.",
+        "de": "Repariert kleine Lücken und Unstimmigkeiten in einem Körper."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to repair.",
+            "de": "Der zu reparierende Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest gap that is still repaired.",
+            "de": "Größte Lücke, die noch repariert wird."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The repaired solid.",
+            "de": "Der reparierte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.topology.convertToNurbs",
+      "category": "brep.topology",
+      "emoji": "〰️",
+      "label": {
+        "en": "Convert to NURBS",
+        "de": "In NURBS umwandeln"
+      },
+      "description": {
+        "en": "Rewrites every curve and surface of a shape as NURBS without changing its geometry.",
+        "de": "Schreibt jede Kurve und Fläche einer Form als NURBS um, ohne die Geometrie zu ändern."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape in NURBS form.",
+            "de": "Die Form in NURBS-Darstellung."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

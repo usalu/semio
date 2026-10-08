@@ -314,9 +314,7 @@
   "route": {
     "target": "test-cache-command-source",
     "command": "bun ./📜️script.ts test cache-command-source",
-    "namedInput": "cacheCommandSources",
-    "launchName": "🧪️test⚡️cache-command-source",
-    "launchCommand": "bun nx run repo:test-cache-command-source"
+    "namedInput": "cacheCommandSources"
   },
   "coordinates": {
     "policy": "🔣️policy.json",

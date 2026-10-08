@@ -1,6 +1,12 @@
 //! ☑️ Changes the selected compliance result without replacing unrelated config.
 
+use crate::results_window_config::diff::NormResultsWindowConfigDiff;
 use crate::results_window_config::{NormResultsWindowConfig, NormResultsWindowConfigMutation};
+
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[dsl(keyword = "change-selected-check-index")]
@@ -13,19 +19,13 @@ pub struct ChangeSelectedCheckIndex {
 impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMutation> for ChangeSelectedCheckIndex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selected-check-index", kind: "change-selected-check-index", record: "ChangedSelectedCheckIndex" };
 
-    fn diff(&self, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfig> {
-        if base.selected_check_index == self.index {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Selected check index is already this value.");
-        }
-        protocol::MutationOutcome::new(NormResultsWindowConfig { selected_check_index: self.index })
+    fn diff(&self, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfigDiff> {
+        diff::diff(self, base)
     }
 
     fn inverse(&self, base: &NormResultsWindowConfig) -> Result<Vec<NormResultsWindowConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self { index: base.selected_check_index }.into()]
-    
-    })())
-}
+        inverse::inverse(self, base)
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&{
@@ -41,3 +41,7 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
         })
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/✅apply/🦀️.rs"]
+mod named_test;

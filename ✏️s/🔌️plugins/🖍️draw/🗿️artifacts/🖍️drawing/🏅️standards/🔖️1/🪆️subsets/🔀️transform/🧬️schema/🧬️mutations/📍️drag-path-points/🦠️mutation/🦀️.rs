@@ -42,11 +42,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DragPathPoints
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (drawing_label_number(self.dx), drawing_label_number(self.dy));
         let (en, de) = match self.targets.len() {
@@ -56,15 +53,15 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DragPathPoints
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
-        drag_path_points_layers(&self.targets)
+        drag_path_points_layers(&self.targets).iter().map(|id| id.to_string_owner()).collect()
     }
 }
 
 /// 🗂️ The addressed path layer ids in first-seen order, each once.
-pub fn drag_path_points_layers(targets: &[DrawingPathPointTarget]) -> semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}> {
-    let mut layers: Vec<String> = Vec::new();
+pub fn drag_path_points_layers(targets: &semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>) -> semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}> {
+    let mut layers = semio_framework_value::list::PagedList::default();
     for target in targets {
-        if !layers.contains(&target.layer_id) {
+        if !layers.iter().any(|id| id == &target.layer_id) {
             layers.push(target.layer_id.clone());
         }
     }

@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -33,51 +32,48 @@
   "communication": null,
   "wayfinding": null,
   "schedules": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "schedule-requirement-a",
-        "patch": {
-          "name": "Schedule Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "milestone": "Replaced Schedule Requirement A",
-          "phase": "concept",
-          "startDate": null,
-          "endDate": null,
-          "duration": null,
-          "dependencies": [],
-          "predecessors": [],
-          "successors": [],
-          "critical": false,
-          "floatDays": null,
-          "resourceRequirements": [],
-          "occupancyImpact": [],
-          "phasingStrategy": null,
-          "decantRequirements": [],
-          "commissioningWindow": null,
-          "stakeholderIds": [],
-          "riskIds": [],
-          "contingencyDays": null,
-          "reportingCadence": null,
-          "ownerId": null
-        }
+        "name": "Schedule Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "milestone": "Replaced Schedule Requirement A",
+        "phase": "concept",
+        "startDate": null,
+        "endDate": null,
+        "duration": null,
+        "dependencies": [],
+        "predecessors": [],
+        "successors": [],
+        "critical": false,
+        "floatDays": null,
+        "resourceRequirements": [],
+        "occupancyImpact": [],
+        "phasingStrategy": null,
+        "decantRequirements": [],
+        "commissioningWindow": null,
+        "stakeholderIds": [],
+        "riskIds": [],
+        "contingencyDays": null,
+        "reportingCadence": null,
+        "ownerId": null
       }
     ],
+    "removed": [
+      "schedule-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "flexibility": null,
@@ -113,9 +109,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

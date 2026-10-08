@@ -462,7 +462,7 @@ pub struct Mp4Diff {
 }
 
 impl MutationDiff<Mp4Snapshot> for Mp4Diff {
-    fn apply(&self, base: &Mp4Snapshot) -> MutationApplyResult<Mp4Snapshot> {
+    fn apply(&self, base: &Mp4Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Mp4Snapshot> {
         if let Some(diff) = &self.tracks {
             validate_indexed(&base.tracks, diff, validate_track_diff)?;
         }

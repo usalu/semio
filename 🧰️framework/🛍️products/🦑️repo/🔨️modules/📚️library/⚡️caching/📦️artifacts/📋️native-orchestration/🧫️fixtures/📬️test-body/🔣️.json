@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "external-command",
+      "route": "owner-command",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts",
+        "test"
+      ],
+      "expected": [
+        "prepare:1",
+        "owned",
+        "prepare:2",
+        "cargo:2"
+      ]
+    },
+    {
+      "id": "repository-consumer",
+      "route": "repository-test-body",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts",
+        "test",
+        "long",
+        "--lib"
+      ],
+      "expected": [
+        "owned",
+        "prepare:2",
+        "cargo:2"
+      ]
+    },
+    {
+      "id": "unknown-command-refused",
+      "route": "repository-test-body",
+      "command": "node",
+      "args": [
+        "--eval",
+        "1"
+      ],
+      "expected": [
+        "refused"
+      ]
+    },
+    {
+      "id": "custom-script-refused",
+      "route": "repository-test-body",
+      "command": "bun",
+      "args": [
+        "./foreign.ts",
+        "test"
+      ],
+      "expected": [
+        "refused"
+      ]
+    },
+    {
+      "id": "other-command-refused",
+      "route": "repository-test-body",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts",
+        "build"
+      ],
+      "expected": [
+        "refused"
+      ]
+    }
+  ],
+  "targets": [
+    {
+      "id": "external",
+      "target": {
+        "options": {
+          "command": "bun ./📜️script.ts test"
+        }
+      },
+      "expected": "owner-command"
+    },
+    {
+      "id": "explicit-body",
+      "target": {
+        "metadata": {
+          "semio": {
+            "nativePreparation": "cargo-consumer"
+          }
+        },
+        "options": {
+          "command": "bun ./📜️script.ts test"
+        }
+      },
+      "expected": "repository-test-body"
+    },
+    {
+      "id": "level-sibling",
+      "target": {
+        "metadata": {
+          "semio": {
+            "nativePreparation": "cargo-consumer"
+          }
+        },
+        "options": {
+          "command": "bun \"./📜️script.ts\" test long"
+        }
+      },
+      "expected": "repository-test-body"
+    },
+    {
+      "id": "unknown-declaration",
+      "target": {
+        "metadata": {
+          "semio": {
+            "nativePreparation": "reuse"
+          }
+        },
+        "options": {
+          "command": "bun ./📜️script.ts test"
+        }
+      },
+      "expected": "refused"
+    },
+    {
+      "id": "build-body-refused",
+      "target": {
+        "metadata": {
+          "semio": {
+            "nativePreparation": "cargo-consumer"
+          }
+        },
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        }
+      },
+      "expected": "refused"
+    }
+  ]
+}

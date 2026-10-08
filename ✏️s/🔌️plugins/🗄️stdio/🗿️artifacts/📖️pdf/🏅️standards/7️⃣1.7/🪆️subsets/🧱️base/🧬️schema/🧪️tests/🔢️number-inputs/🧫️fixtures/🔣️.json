@@ -1,0 +1,60 @@
+{
+  "schema": "semio.stdio.pdf.native-number-inputs.v1",
+  "cases": [
+    {
+      "leaf": "📐️set-page-media-box",
+      "field": "mediaBox",
+      "value": [
+        0,
+        0,
+        20,
+        30
+      ],
+      "bits": [
+        "0000000000000000",
+        "0000000000000000",
+        "4034000000000000",
+        "403e000000000000"
+      ],
+      "kind": "vector",
+      "dimensions": 4,
+      "mutation": {
+        "mutation": "setPageMediaBox",
+        "index": 0
+      }
+    },
+    {
+      "leaf": "✂️set-page-crop-box",
+      "field": "cropBox",
+      "value": [
+        0,
+        0,
+        20,
+        30
+      ],
+      "bits": [
+        "0000000000000000",
+        "0000000000000000",
+        "4034000000000000",
+        "403e000000000000"
+      ],
+      "kind": "vector",
+      "dimensions": 4,
+      "mutation": {
+        "mutation": "setPageCropBox",
+        "index": 0
+      }
+    },
+    {
+      "leaf": "📏️set-page-user-unit",
+      "field": "userUnit",
+      "value": 2,
+      "bits": "4000000000000000",
+      "kind": "number",
+      "mutation": {
+        "mutation": "setPageUserUnit",
+        "index": 0
+      }
+    }
+  ]
+}

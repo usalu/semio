@@ -5,12 +5,17 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapsh
 
 pub fn parse_editable_svg_path(source:&str)->Result<Vec<PathSegment>,String> {
     let commands=parse_path_data(source)?;
+    editable_svg_path_commands(&commands)
+}
+
+/// 🛤️ Normalizes already decoded native commands without reconstructing SVG path text.
+pub fn editable_svg_path_commands(commands:&[PathCommand])->Result<Vec<PathSegment>,String> {
     if commands.first().is_some_and(|command|!matches!(command,PathCommand::MoveTo {..})) {return Err("SVG path must start with a move".into());}
     let mut segments=Vec::with_capacity(commands.len());
     let (mut current,mut start)=([0.0;2],[0.0;2]);
     let (mut cubic,mut quad):(Option<[f64;2]>,Option<[f64;2]>)=(None,None);
     let mut closed=false;
-    for command in commands {
+    for command in commands.iter().cloned() {
         if closed && !matches!(command,PathCommand::MoveTo {..}) {segments.push(PathSegment::Move {to:current});}
         let point=|x,y,relative|if relative {[current[0]+x,current[1]+y]} else {[x,y]};
         let (mut next_cubic,mut next_quad)=(None,None);

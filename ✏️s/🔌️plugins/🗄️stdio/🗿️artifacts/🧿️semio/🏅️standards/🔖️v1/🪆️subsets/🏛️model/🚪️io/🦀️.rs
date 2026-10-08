@@ -197,7 +197,7 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::standards::v1::subsets::model::schema::diff::SemioModelDiff;
-    use crate::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, SemioModelMutation};
+    use crate::standards::v1::subsets::model::schema::mutations::{SemioModelMutation};
     use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -222,12 +222,15 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_semio_model_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => (Self { snapshot, ..self }, outcome),
+                Err(error) => (self, protocol::MutationOutcome::fatal(error.code, error.message, error.target)),
+            }
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {

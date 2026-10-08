@@ -186,7 +186,7 @@ mod kinds_catalog;
 pub fn apply_en1990_mutation(base: &En1990Snapshot, mutation: &En1990Mutation) -> Result<(En1990Snapshot, Vec<String>), String> {
     let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.

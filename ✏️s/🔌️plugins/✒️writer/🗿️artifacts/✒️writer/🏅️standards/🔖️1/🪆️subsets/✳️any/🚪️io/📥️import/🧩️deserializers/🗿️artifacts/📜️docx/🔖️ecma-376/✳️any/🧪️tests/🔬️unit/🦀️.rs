@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_docx::engine::build_minimal_docx;
+use semio_s_artifact_stdio_docx::schema::construction::build_minimal_docx;
 use semio_s_artifact_stdio_docx::schema::snapshot::DocxDocument;
 
 #[semio_framework_async_macros::async_test]

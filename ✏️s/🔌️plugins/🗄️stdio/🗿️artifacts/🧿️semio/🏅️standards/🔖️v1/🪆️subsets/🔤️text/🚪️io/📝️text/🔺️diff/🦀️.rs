@@ -8,6 +8,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod diff_codec {
 use super::*;
 use crate::standards::v1::subsets::text::schema::diff::*;
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
+use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -18,7 +20,7 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_text_diff(d: &SemioTextDiff) -> String {
     match &d.runs {
-        Some(list) => format!("runs={}", enc_runs(list)),
+        Some(runs) => format!("runs={}", enc_runs(runs)),
         None => String::new(),
     }
 }
@@ -33,14 +35,30 @@ pub(crate) fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_runs(list: &SemioTextRunList) -> String {
-    format!("[{}]", list.values.iter().map(enc_run).collect::<Vec<_>>().join(","))
+pub(crate) fn enc_runs(runs: &IndexedTripleDiff<SemioTextRunDiff, SemioTextRun>) -> String {
+    format!("[{}]", enc_indexed_triple(runs, enc_run_diff, enc_run))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_runs(s: &str) -> Result<SemioTextRunList, String> {
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_run).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioTextRunList { values })
+pub(crate) fn dec_runs(s: &str) -> Result<IndexedTripleDiff<SemioTextRunDiff, SemioTextRun>, String> {
+    dec_indexed_triple(strip_brackets(s)?, dec_run_diff, dec_run)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_run_diff(d: &SemioTextRunDiff) -> String {
+    let marks = enc_opt(d.marks.as_ref(), |marks| enc_indexed_triple(marks, |m| enc_mark(&m.value), enc_mark));
+    format!("[{},{},{}]", enc_opt(d.language.as_ref(), |v| enc_str(v)), enc_opt(d.content.as_ref(), |v| enc_str(v)), marks)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_run_diff(s: &str) -> Result<SemioTextRunDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [language, content, marks] = parts.as_slice() else { return Err(format!("run diff: expected 3 fields, got {}", parts.len())) };
+    Ok(SemioTextRunDiff {
+        language: dec_opt(language, dec_str)?,
+        content: dec_opt(content, dec_str)?,
+        marks: dec_opt(marks, |triple| dec_indexed_triple(triple, |m| dec_mark(m).map(|value| Replace { value }), dec_mark))?,
+    })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

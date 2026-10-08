@@ -1614,7 +1614,7 @@ pub use crate::standards::v1::subsets::any::io::{Process3dBuilderConstruction, P
 pub use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedSnapshotOwner};
 
 pub use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedPackSession};
-pub use crate::standards::v1::subsets::any::io::text::snapshot::{process3d_mounted_pack_session};
+pub use crate::standards::v1::subsets::any::io::binary::snapshot::{process3d_mounted_pack_session};
 
 #[path = "."]
 pub mod host {

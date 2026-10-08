@@ -1,7 +1,7 @@
 //! 🎨️ Checked, cancellable native PNG sample painting.
 
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
-use crate::schema::operations::{validate_native_paint_target, PngNativePaintWorkOperation, PngNativePaintWorkStep, MAXIMUM_NATIVE_PAINT_OWNED_BYTES};
+use crate::schema::operations::{validate_native_paint_target, owned_validation::PngOwnedValidationWork};
 use crate::schema::snapshot::{PngNativePaint,PngNativeProfile,PngRegion};
 use crate::schema::mutations::{PaintNativeSamplesMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
@@ -119,13 +119,15 @@ pub fn action_id(profile: PngNativeProfile) -> &'static str {
 
 pub struct PaintNativeRegionWork {
     tool_id: &'static str,
-    operation: Option<PngNativePaintWorkOperation<'static>>,
+    reader: Option<std::sync::Arc<PngSnapshot>>,
+    validation: PngOwnedValidationWork,
+    retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     complete: bool,
     closing: bool,
 }
 
 impl PaintNativeRegionWork {
-    pub fn new(tool_id: &'static str) -> Self { Self { tool_id, operation: None, complete: false, closing: false } }
+    pub fn new(tool_id: &'static str) -> Self { Self { tool_id, reader: None, validation: PngOwnedValidationWork::default(), retirement: None, complete: false, closing: false } }
 }
 
 impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
@@ -141,50 +143,45 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         if self.closing || self.complete { return Err(fault("stdio.png.native-region.work-closed", "Native PNG paint work is already closed")); }
         let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = input.command else { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint work received another command")); };
         if action_id(command.paint.profile) != self.tool_id { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint action and profile differ")); }
-        if self.operation.is_none() {
-            let reader=input.snapshot_owner.ok_or_else(||fault("stdio.png.native-region.reader", "Native paint requires an immutable snapshot reader"))?;
-            self.operation = Some(PngNativePaintWorkOperation::try_new_retained(std::sync::Arc::clone(reader), command.region, command.paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES).map_err(|message| fault("stdio.png.native-region.prepare", message))?);
+        if cx.is_cancelled() {return Err(fault("stdio.png.native-region.cancelled", "Native PNG paint was cancelled"));}
+        let reader=input.snapshot_owner.ok_or_else(||fault("stdio.png.native-region.reader", "Native paint requires an immutable snapshot reader"))?;
+        if let Some(previous)=self.reader.as_ref() {
+            if !std::sync::Arc::ptr_eq(previous,reader) {return Err(fault("stdio.png.native-region.reader-drift", "Native paint source reader changed"));}
+        } else {
+            command.validate(reader)?;
+            self.reader=Some(std::sync::Arc::clone(reader));
         }
-        let operation = self.operation.as_mut().expect("native operation was prepared");
-        let reader=input.snapshot_owner.ok_or_else(||fault("stdio.png.native-region.reader", "Native paint lost its immutable snapshot reader"))?;
-        if !operation.retained_reader_matches(reader) {return Err(fault("stdio.png.native-region.reader-drift", "Native paint source reader changed"));}
-        match operation.advance(cx).map_err(|message| fault("stdio.png.native-region.work", message))? {
-            PngNativePaintWorkStep::Yield(progress) => {
-                let (stage, preview) = match progress.phase {
-                    crate::schema::operations::PngNativePaintPhase::Copy => ("png-native-region-copy", &br#"{"en":"Copying owned PNG samples","de":"Eigene PNG-Abtastwerte werden kopiert"}"#[..]),
-                    crate::schema::operations::PngNativePaintPhase::Paint => ("png-native-region-paint", &br#"{"en":"Painting native PNG samples","de":"Native PNG-Abtastwerte werden gemalt"}"#[..]),
-                };
-                Ok(ArtifactCommandWorkStep::Progress { stage, preview })
-            }
-            PngNativePaintWorkStep::Cancelled => Err(fault("stdio.png.native-region.cancelled", "Native PNG paint was cancelled")),
-            PngNativePaintWorkStep::Complete => {
-                let result = operation.take_result().map_err(|message| fault("stdio.png.native-region.result", message))?;
-                self.complete = true;
-                Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![PngMutation::PaintNativeSamples(PaintNativeSamplesMutation {
-                    revision: operation.source_revision().to_owned(),
-                    region: command.region,
-                    paint: command.paint,
-                    result,
-                })])))
+        while !cx.should_yield() {
+            if cx.is_cancelled() {return Err(fault("stdio.png.native-region.cancelled", "Native PNG paint was cancelled"));}
+            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };
+            let (done,progress)=self.validation.advance(reader,None,grant).map_err(|message|fault("stdio.png.native-region.work",message))?;
+            cx.consume_fuel(progress.copied_items as u64);
+            if done {
+                let revision=self.validation.revision().ok_or_else(||fault("stdio.png.native-region.revision", "Native paint source revision is incomplete"))?;
+                self.complete=true;
+                return Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![PngMutation::PaintNativeSamples(PaintNativeSamplesMutation{revision,region:command.region,paint:command.paint})])));
             }
         }
+        Ok(ArtifactCommandWorkStep::Progress{stage:"png-native-region-intent",preview:br#"{"en":"Preparing PNG paint intent","de":"PNG-Malabsicht wird vorbereitet"}"#})
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
-        if let Some(operation) = self.operation.as_mut() { operation.begin_close(); }
+        self.closing=true;
+        if let Some(reader)=self.reader.take() {self.retirement=Some(semio_framework_value::retirement::shared_lease_retirement(reader));}
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.closing { return InteractiveJobCloseStep::Blocked; }
-        let Some(operation) = self.operation.as_mut() else { return InteractiveJobCloseStep::Complete };
-        let step = operation.close_step(maximum_items, maximum_bytes);
-        if step == InteractiveJobCloseStep::Complete && operation.terminal_is_empty() {
-            self.operation = None;
-            return InteractiveJobCloseStep::Complete;
+        if !self.closing {return InteractiveJobCloseStep::Blocked;}
+        let Some(retirement)=self.retirement.as_mut() else {return InteractiveJobCloseStep::Complete;};
+        match retirement.close_step(maximum_items,maximum_bytes) {
+            Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{
+                if !retirement.terminal_is_empty() {return InteractiveJobCloseStep::Blocked;}
+                self.retirement=None;InteractiveJobCloseStep::Complete
+            },
+            Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},
+            _=>InteractiveJobCloseStep::Blocked,
         }
-        step
     }
 
-    fn terminal_is_empty(&self) -> bool { self.closing && self.operation.is_none() }
+    fn terminal_is_empty(&self) -> bool {self.closing&&self.reader.is_none()&&self.retirement.is_none()}
 }

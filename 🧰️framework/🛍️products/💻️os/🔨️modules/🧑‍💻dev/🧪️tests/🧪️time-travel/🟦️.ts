@@ -6485,14 +6485,14 @@ const runLocale = async (locale: Locale) => {
     currentStep = 1;
     if (!wgpuSeedTerminology) {
       const refused = !booted && /terminology authority/u.test(lastBootFault);
-      verdict("wgpu-boots-in-a-fresh-browser-profile", booted, { fault: lastBootFault || null, reading: "a first visit holds no stored UI preference: the React shell boots with its seed terminology (`resolveUiPreferences`), the wgpu shell's `shell_language_axes` has no such term for terminology (only `SEMIO_LOCKED_TERMINOLOGY` or the persisted preference) and refuses to boot" });
+      verdict("wgpu-boots-in-a-fresh-browser-profile", booted, { fault: lastBootFault || null, reading: "a fresh browser profile must boot with its explicitly admitted host locale and the native terminology seed; no stored UI preference is required" });
       if (refused) {
         await context.close().catch(() => {});
         wgpuSeedTerminology = true;
         booted = await openPage(DESKTOP, "boot-with-a-stored-terminology", 100);
       }
     }
-    if (wgpuSeedTerminology) note("wgpu-terminology-preference-seeded", { stored: 'localStorage["semio.os.config"].preferences["os.config.ui-preferences"] = {version: 1, events: [{mutation: "setTerminology", terminology: "native"}]}', reading: "every wgpu page of this run starts as a returning visitor who once chose the native terminology — the state the shell needs to boot at all on this build" });
+    if (wgpuSeedTerminology) note("wgpu-terminology-preference-seeded", { stored: 'localStorage["semio.os.config"].preferences["os.config.ui-preferences"] = {version: 1, events: [{mutation: "setTerminology", terminology: "native"}]}', reading: "diagnostic continuation uses an explicitly stored native terminology after the recorded fresh-profile boot failure; it does not grant fresh-profile success" });
     currentStep = 0;
   }
   page.on("framenavigated", (frame) => {

@@ -2,11 +2,10 @@
 // authoritative `📖️.grammar.semio` (same production names).
 grammar Semio_model_mutations;
 
-op: (setSnapshot | insertSpatialNode | removeSpatialNode | setSpatialNode
+op: ( insertSpatialNode | removeSpatialNode | setSpatialNode
     | insertElement | removeElement | setElement | insertRelation | removeRelation | setRelation
     | dragElements | rotateElements | scaleElements) EOF;
 
-setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 insertSpatialNode: 'insert-spatial-node' 'node' '=' spatialNode;
 removeSpatialNode: 'remove-spatial-node' 'id' '=' HEX;
 setSpatialNode: 'set-spatial-node' 'id' '=' HEX 'kind' '=' optionSpatialKind 'name' '=' optionHex 'parent_id' '=' optionOptionHex 'placement' '=' optionTransform;

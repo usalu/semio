@@ -203,15 +203,24 @@ describe("fleet command paths", () => {
     expect(offenders((source) => /spawn(?:Sync)?\(\s*["'](?:ps|lsof|pgrep|pkill)["']/.test(source) && !source.includes("win32"))).toEqual([]);
   });
 
-  test("every launch row runs unchanged in PowerShell, cmd.exe and POSIX shells (only VS Code `${…}` variables)", () => {
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(join(repoRoot, path), "utf8")) as { configurations: { name: string; command?: string; runtimeExecutable?: string }[] };
-      const posixOnly = launch.configurations.filter(({ command = "", runtimeExecutable = "" }) =>
-        /(?:^|\s)[A-Z_][A-Z0-9_]*=\S*\s|&&|\|\||;\s|\s\|\s|2>&1|>\s*\/dev\/null|\$[A-Za-z_(]|\$\{(?!workspaceFolder\}|input:|env:|config:|userHome\}|pathSeparator\})|(?:^|\s)(?:nohup|sh|bash|zsh|env|export|source|sleep|kill|lsof)\s/.test(command) || /^(?:sh|bash|zsh)$/.test(runtimeExecutable),
-      );
-      expect(posixOnly.map((row) => row.name), path).toEqual([]);
+  test("every Nx target command and root workspace script runs unchanged in PowerShell, cmd.exe and POSIX shells", () => {
+    const listed = spawnSync("git", ["ls-files", "-co", "--exclude-standard", "-z", "--", "📋️project.json", "*/📋️project.json"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    expect(listed.status, listed.stderr).toBe(0);
+    const manifests = listed.stdout.split("\0").filter((path) => path && !path.startsWith(".🧬semio/") && existsSync(join(repoRoot, path)));
+    expect(manifests.length).toBeGreaterThan(500);
+    const commands: { owner: string; command: string }[] = [];
+    for (const path of manifests) {
+      const targets = (JSON.parse(readFileSync(join(repoRoot, path), "utf8")) as { targets?: Record<string, { options?: { command?: unknown; commands?: readonly unknown[] } }> }).targets ?? {};
+      for (const [name, target] of Object.entries(targets))
+        for (const command of [target.options?.command, ...(target.options?.commands ?? []).map((entry) => (typeof entry === "string" ? entry : (entry as { command?: unknown }).command))])
+          if (typeof command === "string") commands.push({ owner: `${path}#${name}`, command });
     }
-  });
+    const scripts = (JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { scripts: Record<string, string> }).scripts;
+    for (const [name, command] of Object.entries(scripts)) commands.push({ owner: `package.json#${name}`, command });
+    expect(commands.length).toBeGreaterThan(3000);
+    const posixOnly = commands.filter(({ command }) => /(?:^|\s)[A-Z_][A-Z0-9_]*=\S*\s|&&|\|\||;\s|\s\|\s|2>&1|>\s*\/dev\/null|\$[A-Za-z_({]|(?:^|\s)(?:nohup|sh|bash|zsh|env|export|source|sleep|kill|lsof)\s/.test(command));
+    expect(posixOnly.map(({ owner }) => owner)).toEqual([]);
+  }, 60_000);
 
   test("credential and local-hub data roots are protected through the owner-only owner, never a bare chmod", () => {
     const owners = [

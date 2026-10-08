@@ -7,7 +7,6 @@ use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
 
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
 use crate::standards::v1::subsets::kit::schema::mutations::{
-    set_snapshot::SetSnapshot,
     add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel, create_object::CreateObject, create_properties::CreateProperties,
     delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign, remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
 };
@@ -62,8 +61,6 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_kit_mutation(m: &SemioKitMutation) -> String {
     match m {
-        SemioKitMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioKitMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioKitMutation::CreateObject(p) => format!("createObject:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
         SemioKitMutation::DeleteObject(p) => format!("deleteObject:{}", enc_str(&p.child_id)),
         SemioKitMutation::CreateModel(p) => format!("createModel:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
@@ -84,16 +81,11 @@ fn print_kit_mutation(m: &SemioKitMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioKitMutation::PatchSnapshot(crate::standards::v1::subsets::kit::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioKitMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     if line == "deleteProperties" {
         return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
@@ -166,7 +158,6 @@ impl protocol::OpText for SemioKitMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
     let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
-        SemioKitMutation::PatchSnapshot(crate::standards::v1::subsets::kit::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1") }),
         SemioKitMutation::DeleteObject(DeleteObject { child_id: "o1".into() }),
         SemioKitMutation::CreateModel(CreateModel { child_id: "m1".into(), target: ref_of("model", "t2") }),
@@ -213,7 +204,6 @@ use crate::standards::v1::subsets::kit::schema::mutations::remove_design;
 use crate::standards::v1::subsets::kit::schema::mutations::remove_type;
 use crate::standards::v1::subsets::kit::schema::mutations::rename_type;
 use crate::standards::v1::subsets::kit::schema::mutations::unbind_representation;
-use crate::standards::v1::subsets::kit::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
 /// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification-vector fixtures carry

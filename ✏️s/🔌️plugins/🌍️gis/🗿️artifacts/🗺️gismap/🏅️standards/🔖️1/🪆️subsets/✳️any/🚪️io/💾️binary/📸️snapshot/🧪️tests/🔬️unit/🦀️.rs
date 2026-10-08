@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::{document_dsl, MapFeature};
+use crate::standards::v1::subsets::any::io::text::snapshot as document_dsl;
+use crate::MapFeature;
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]

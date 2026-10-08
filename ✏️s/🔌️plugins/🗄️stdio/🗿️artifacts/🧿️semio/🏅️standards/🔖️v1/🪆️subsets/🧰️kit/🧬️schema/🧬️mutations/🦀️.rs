@@ -32,13 +32,10 @@ use super::unbind_representation;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit")]
 pub enum SemioKitMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateObject(create_object::CreateObject),
     DeleteObject(delete_object::DeleteObject),
     CreateModel(create_model::CreateModel),
@@ -61,8 +58,7 @@ pub enum SemioKitMutation {
 /// `🧰️mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
-    "create-object",
+pub const KINDS: &[&str] = &["create-object",
     "delete-object",
     "create-model",
     "delete-model",
@@ -80,15 +76,13 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot",
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioKitBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_kit_mutation(snapshot: &mut SemioKitSnapshot, mutation: &SemioKitMutation) -> protocol::MutationOutcome<SemioKitDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
+    <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — thin wrapper around `protocol::Mutation::
 /// inverse` so external Rust callers that cannot name this crate's private `protocol` extern-crate

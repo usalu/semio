@@ -11,7 +11,8 @@
 
 use crate::editor::grid3d::modes::edit::tools::fill::{self, Grid3dFillPayload};
 use crate::editor::grid3d::window::Grid3dWindowConfig;
-use crate::schema::inferences::{solve, Grid3dAssignment};
+use crate::schema::inferences::Grid3dAssignment;
+use crate::host::inferences::solve;
 
 
 

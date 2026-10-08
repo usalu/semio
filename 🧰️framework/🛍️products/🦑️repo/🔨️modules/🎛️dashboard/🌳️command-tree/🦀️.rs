@@ -1,13 +1,16 @@
-//! 🌳️ The workspace command tree: background discovery of executable Nx targets and repo actions.
-//! path, the playground development leaves injected from the generated catalog, and the repo-domain
-//! leaves (tickets, goals, analyze, tree, statutes) that the Rust domain crates answer in process.
+//! 🌳️ The workspace command tree: the command registry projected as the wizard's steps — the verb,
+//! the owner taxonomy and the command — plus the repo-domain actions (tickets, goals, analyze, tree,
+//! statutes) that the Rust domain crates answer in process.
+//!
+//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
+//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json
 
+use crate::registry::{Entry, Kind, Registry, RunPolicy};
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 // #region 🔖️Types
-/// ▶️ One runnable shell invocation built by the wizard.
+/// ▶️ One runnable process of a command.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CommandSpec {
     pub cmd: String,
@@ -16,15 +19,16 @@ pub struct CommandSpec {
     pub env: Vec<(String, String)>,
 }
 
-/// 🍃️ What activating a wizard leaf does: run a process in a pseudo-terminal window, or call the
-/// repo domain in process and show what it answered in an output window.
+/// 🍃️ What activating a wizard leaf does: run a process in a pseudo-terminal window, run several
+/// processes side by side, or call the repo domain in process and show what it answered.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum CommandLeaf {
     Process(CommandSpec),
+    Compound(Vec<CommandSpec>),
     Repo(RepoAction),
 }
 
-/// 🌳️ One node in the runtime-discovered command tree.
+/// 🌿️ One node of the command tree.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CommandNode {
     pub key: String,
@@ -35,242 +39,76 @@ pub struct CommandNode {
 // #endregion 🔖️Types
 
 // #region 🔖️Discover
-const PROJECT_MANIFESTS: &[&str] = &["📋️project.json", "project.json"];
-const WALK_SKIP_DIRS: &[&str] = &["node_modules", "target", ".git", "dist", "build", "generated", "cache"];
-const TAXONOMY_SKIP_KEYS: &[&str] = &["packages", "modules", "products", "plugins", "artifacts", "standards", "subsets", "extensions", "targets"];
-
-const VERB_ORDER: &[&str] = &["dev", "build", "test", "verify", "gate", "lint", "format", "generate", "publish", "tickets", "goals", "analyze", "tree", "statutes"];
-
-/// 🧭️ Walks the repo at `root` and builds the wizard command tree.
+/// 🧭️ Discovers the commands of the workspace at `root` and projects them as the wizard tree.
 pub fn discover(root: &Path) -> CommandNode { discover_cancellable(root, &std::sync::atomic::AtomicBool::new(false)) }
 
 /// ⏳️ Discovers current commands with cooperative cancellation.
-pub fn discover_cancellable(root: &Path, cancelled: &std::sync::atomic::AtomicBool) -> CommandNode {
-    let mut trie = TrieNode::default();
-    collect_project_targets(root, root, &mut trie, cancelled);
-    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_inferred_targets(root, &mut trie, cancelled); }
-    if !cancelled.load(std::sync::atomic::Ordering::Relaxed) { collect_workspace_scripts(root, &mut trie); inject_playground_dev(root, &mut trie); inject_repo_domain(root, &mut trie, repo_implementation()); }
-    let mut root_node = trie.into_command_node("root", "semio");
-    sort_tree(&mut root_node, 0);
-    root_node
-}
-/// 🌱️ Immediate known launch commands without a recursive source walk or Nx graph.
-pub fn seed(root: &Path) -> CommandNode {
-    let mut trie = TrieNode::default();
-    collect_workspace_scripts(root, &mut trie);
-    inject_playground_dev(root, &mut trie);
-    let mut tree = trie.into_command_node("root", "semio"); sort_tree(&mut tree, 0); tree
-}
+pub fn discover_cancellable(root: &Path, cancelled: &std::sync::atomic::AtomicBool) -> CommandNode { tree(&crate::inventory::discover(root, cancelled), true) }
+
+/// 🌱️ The commands known without reading the workspace: scripts, playgrounds and the root manifest.
+pub fn seed(root: &Path) -> CommandNode { tree(&crate::inventory::seed(root), true) }
 // #endregion 🔖️Discover
 
-// #region 🔖️Trie
-#[derive(Default)]
-struct TrieNode {
-    label: String,
-    children: BTreeMap<String, TrieNode>,
-    leaf: Option<CommandLeaf>,
+// #region 🔖️Projection
+/// 🎚️ The presentation a playground leaf starts with until the developer's preferences are bound to it.
+fn presentation() -> Vec<(String, String)> {
+    vec![("language".into(), ui_locale::Locale::ALL[0].as_str().into()), ("terminology".into(), "native".into()), ("appearance".into(), "dark".into())]
 }
+
+/// 🍂️ The wizard leaves of one registry command with the steps each adds below the command's own:
+/// a playground offers one leaf per renderer, every other command one leaf resolved with its defaults.
+/// A command that needs a typed parameter has no leaf here.
+fn leaves(registry: &Registry, entry: &Entry) -> Vec<(Option<&'static str>, CommandLeaf)> {
+    let spec = |process: crate::registry::LaunchProcess| CommandSpec { cmd: process.cmd, args: process.args, cwd: process.cwd, env: process.env };
+    if let (Some(action), RepoImplementation::Rust) = (entry.repo_action(), repo_implementation()) { return vec![(None, CommandLeaf::Repo(action.clone()))]; }
+    if entry.kind == Kind::Playground {
+        return ["react", "wgpu-wasm", "wgpu-native"].into_iter().filter_map(|renderer| {
+            let chosen: Vec<(String, String)> = std::iter::once(("renderer".to_string(), renderer.to_string())).chain(presentation()).collect();
+            registry.resolve_with(&entry.id, &chosen, &[], RunPolicy::default()).ok().map(|mut launch| (Some(renderer), CommandLeaf::Process(spec(launch.processes.remove(0)))))
+        }).collect();
+    }
+    match registry.resolve_with(&entry.id, &[], &[], RunPolicy::default()) {
+        Ok(launch) if entry.is_compound() => vec![(None, CommandLeaf::Compound(launch.processes.into_iter().map(spec).collect()))],
+        Ok(mut launch) => vec![(None, CommandLeaf::Process(spec(launch.processes.remove(0))))],
+        Err(_) => Vec::new(),
+    }
+}
+
+/// 🔎️ The flat launcher of the default searchable commands: `verb / owner / … / command` and the leaf it runs.
+pub fn launcher(registry: &Registry) -> Vec<(String, CommandLeaf)> {
+    registry.entries().iter().filter(|entry| entry.listed).flat_map(|entry| leaves(registry, entry).into_iter().map(move |(step, leaf)| (step.map_or_else(|| entry.label.clone(), |step| format!("{} / {step}", entry.label)), leaf))).collect()
+}
+
+#[derive(Default)]
+struct TrieNode { label: String, children: BTreeMap<String, TrieNode>, leaf: Option<CommandLeaf> }
 
 impl TrieNode {
-    fn insert_path(&mut self, path: &[Segment], leaf: CommandLeaf) {
-        if path.is_empty() {
-            self.leaf = Some(leaf);
-            return;
-        }
-        let head = &path[0];
-        let child = self.children.entry(head.key.clone()).or_insert_with(|| TrieNode { label: head.label.clone(), ..Default::default() });
-        child.insert_path(&path[1..], leaf);
-    }
-
-    fn into_command_node(self, key: &str, label: &str) -> CommandNode {
-        CommandNode {
-            key: key.to_string(),
-            label: label.to_string(),
-            children: self
-                .children
-                .into_iter()
-                .map(|(k, n)| {
-                    let child_label = if n.label.is_empty() { k.clone() } else { n.label.clone() };
-                    n.into_command_node(&k, &child_label)
-                })
-                .collect(),
-            leaf: self.leaf,
+    fn insert(&mut self, path: &mut dyn Iterator<Item = (&str, &str)>, leaf: CommandLeaf) {
+        match path.next() {
+            None => self.leaf = Some(leaf),
+            Some((key, label)) => self.children.entry(key.to_string()).or_insert_with(|| TrieNode { label: label.to_string(), ..Default::default() }).insert(path, leaf),
         }
     }
+
+    fn into_command_node(self, key: &str, depth: usize) -> CommandNode {
+        let mut children: Vec<CommandNode> = self.children.into_iter().map(|(key, node)| node.into_command_node(&key, depth + 1)).collect();
+        if depth == 0 { children.sort_by(|left, right| crate::registry::verb_rank(&left.key).cmp(&crate::registry::verb_rank(&right.key)).then_with(|| left.label.cmp(&right.label))); } else { children.sort_by(|left, right| left.label.cmp(&right.label)); }
+        CommandNode { key: key.to_string(), label: if self.label.is_empty() { key.to_string() } else { self.label }, children, leaf: self.leaf }
+    }
 }
 
-#[derive(Clone)]
-struct Segment {
-    key: String,
-    label: String,
-}
-
-fn segment(key: impl Into<String>, label: impl Into<String>) -> Segment {
-    Segment { key: key.into(), label: label.into() }
-}
-// #endregion 🔖️Trie
-
-// #region 🔖️Walk
-fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode, cancelled: &std::sync::atomic::AtomicBool) {
-    if cancelled.load(std::sync::atomic::Ordering::Relaxed) { return; }
-    let Ok(entries) = fs::read_dir(dir) else { return };
-    for entry in entries.flatten() {
-        let Ok(kind) = entry.file_type() else { continue };
-        if kind.is_symlink() { continue; }
-        let path = entry.path();
-        if kind.is_dir() {
-            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if should_skip_walk_dir(name) {
-                continue;
-            }
-            collect_project_targets(root, &path, trie, cancelled);
-            continue;
-        }
-        if !PROJECT_MANIFESTS.iter().any(|m| path.file_name().and_then(|s| s.to_str()) == Some(*m)) {
-            continue;
-        }
-        let Ok(text) = fs::read_to_string(&path) else { continue };
-        let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) else { continue };
-        let project_name = json.get("name").and_then(|v| v.as_str()).unwrap_or("workspace");
-        let targets = json.get("targets").and_then(|v| v.as_object());
-        if targets.is_none() {
-            continue;
-        }
-        let manifest_dir = path.parent().unwrap_or(dir);
-        let mut segments = taxonomy_segments(root, manifest_dir);
-        if segments.is_empty() { segments.push(segment("workspace", "workspace")); }
-        for (target, _) in targets.unwrap() {
-            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{project_name}:{target}")], cwd: root.to_path_buf(), env: nx_env() };
-            let mut path_segments = vec![segment(target.clone(), target.clone())];
-            path_segments.extend(segments.clone());
-            trie.insert_path(&path_segments, CommandLeaf::Process(spec));
+/// 🌳️ The registry as the wizard tree: the verb in launcher order at the root, then each command's
+/// place in the owner taxonomy, sorted alphabetically. `unlisted` adds the commands of closed tickets.
+pub fn tree(registry: &Registry, unlisted: bool) -> CommandNode {
+    let mut trie = TrieNode { label: "semio".into(), ..Default::default() };
+    for entry in registry.entries().iter().filter(|entry| unlisted || entry.listed) {
+        for (step, leaf) in leaves(registry, entry) {
+            trie.insert(&mut std::iter::once((entry.verb.as_str(), entry.verb.as_str())).chain(entry.path.iter().map(|part| (part.key.as_str(), part.label.as_str()))).chain(step.map(|step| (step, step))), leaf);
         }
     }
+    trie.into_command_node("root", 0)
 }
-
-
-struct CancellationReader<'a> { file: fs::File, cancelled: &'a std::sync::atomic::AtomicBool }
-impl std::io::Read for CancellationReader<'_> {
-    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Relaxed) { return Err(std::io::Error::new(std::io::ErrorKind::Interrupted, "command discovery cancelled")); }
-        std::io::Read::read(&mut self.file, buffer)
-    }
-}
-
-#[derive(serde::Deserialize)]
-struct NxCommandGraph { nodes: BTreeMap<String, NxCommandProject> }
-#[derive(serde::Deserialize)]
-struct NxCommandProject { data: NxCommandData }
-#[derive(serde::Deserialize)]
-struct NxCommandData { root: PathBuf, #[serde(default)] targets: BTreeMap<String, serde::de::IgnoredAny> }
-
-fn collect_inferred_targets(root: &Path, trie: &mut TrieNode, cancelled: &std::sync::atomic::AtomicBool) {
-    let store = root.join(".nx/workspace-data");
-    let path = store.join("project-graph.json"); let started = std::time::Instant::now();
-    let graph = loop {
-        if cancelled.load(std::sync::atomic::Ordering::Relaxed) { return; }
-        let file = match fs::File::open(&path) { Ok(file) => file, Err(error) if error.kind() == std::io::ErrorKind::NotFound => return, Err(_) => { if started.elapsed().as_secs() >= 2 { return; } std::thread::sleep(std::time::Duration::from_millis(20)); continue; } };
-        let before = file.metadata().ok().map(|value| (value.len(), value.modified().ok()));
-        let reader = std::io::BufReader::with_capacity(65536, CancellationReader { file, cancelled });
-        let result = serde_json::from_reader::<_, NxCommandGraph>(reader);
-        let after = fs::metadata(&path).ok().map(|value| (value.len(), value.modified().ok()));
-        if before == after { if let Ok(graph) = result { break graph; } }
-        if started.elapsed().as_secs() >= 2 { return; }
-        std::thread::sleep(std::time::Duration::from_millis(20));
-    };
-    for (name, project) in graph.nodes {
-        if project.data.root.is_absolute() || project.data.root.components().any(|part| match part { std::path::Component::Normal(value) => value.to_str().is_none_or(should_skip_walk_dir), std::path::Component::CurDir => false, _ => true }) { continue; }
-        let owner = root.join(project.data.root);
-        if !owner.is_dir() { continue; }
-        let mut segments = taxonomy_segments(root, &owner);
-        if segments.is_empty() { segments.push(segment("workspace", "workspace")); }
-        for target in project.data.targets.keys() {
-            let mut path = vec![segment(target, target)]; path.extend(segments.clone());
-            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{name}:{target}")], cwd: root.to_path_buf(), env: nx_env() };
-            trie.insert_path(&path, CommandLeaf::Process(spec));
-        }
-    }
-}
-
-fn collect_workspace_scripts(root: &Path, trie: &mut TrieNode) {
-    let Ok(text) = fs::read_to_string(root.join("package.json")) else { return };
-    let Ok(manifest) = serde_json::from_str::<serde_json::Value>(&text) else { return };
-    let Some(scripts) = manifest.get("scripts").and_then(serde_json::Value::as_object) else { return };
-    for (name, command) in scripts {
-        if name == "nx" || name == "dashboard" || name.starts_with("dashboard:") || !command.as_str().is_some_and(|command| command.starts_with("bun nx ") || command.starts_with("nx ")) { continue; }
-        let mut parts = name.split(':');
-        let verb = parts.next().unwrap_or(name);
-        let mut path = vec![segment(verb, verb), segment("scripts", "workspace scripts")];
-        let rest: Vec<_> = parts.map(|part| segment(part, part)).collect();
-        if rest.is_empty() { path.push(segment("workspace", "workspace")); } else { path.extend(rest); }
-        path.push(segment("run", "▶ run"));
-        let spec = CommandSpec { cmd: "bun".into(), args: vec!["run".into(), name.clone()], cwd: root.to_path_buf(), env: nx_env() };
-        trie.insert_path(&path, CommandLeaf::Process(spec));
-    }
-}
-
-fn should_skip_walk_dir(name: &str) -> bool {
-    let key = segment_key(name);
-    WALK_SKIP_DIRS.iter().any(|s| key == *s) || name.starts_with('.') && name != ".semio"
-}
-
-fn nx_env() -> Vec<(String, String)> {
-    [("NX_NATIVE_COMMAND_RUNNER", "false"), ("NX_TUI", "false")].into_iter().map(|(key, value)| (key.into(), value.into())).collect()
-}
-
-fn should_skip_taxonomy_segment(name: &str) -> bool {
-    let key = segment_key(name);
-    TAXONOMY_SKIP_KEYS.iter().any(|s| key == *s)
-}
-
-fn taxonomy_segments(root: &Path, manifest_dir: &Path) -> Vec<Segment> {
-    let rel = manifest_dir.strip_prefix(root).unwrap_or(manifest_dir);
-    rel.components().filter_map(|c| c.as_os_str().to_str()).filter(|c| !c.is_empty()).filter(|c| !should_skip_taxonomy_segment(c)).map(|c| segment(segment_key(c), c.to_string())).filter(|s| !s.key.is_empty()).collect()
-}
-
-fn segment_key(component: &str) -> String {
-    let s = component.trim();
-    let start = s.find(|c: char| c.is_ascii_alphanumeric()).unwrap_or(s.len());
-    s[start..].to_ascii_lowercase()
-}
-
-fn inject_playground_dev(root: &Path, trie: &mut TrieNode) {
-    for row in crate::catalog::load_playground_catalog(root) {
-        for renderer in ["react", "wgpu-wasm", "wgpu-native"] {
-            for example in std::iter::once(None).chain(row.examples.iter().map(Some)) {
-                let opts = crate::env_contract::DevOptions { renderer: renderer.into(), example: example.map_or(crate::options::Lock::All, |id| crate::options::Lock::Individual(id.clone())), language: crate::options::Lock::Individual("en".into()), terminology: crate::options::Lock::Individual("native".into()), appearance: crate::options::Lock::Individual("dark".into()), ..Default::default() };
-                let mut env = crate::env_contract::build_dev_env(&row.variant, Some(&row), &opts);
-                env.extend(nx_env());
-                let target = match renderer { "wgpu-native" => format!("run-{}-native-dev", row.variant), "wgpu-wasm" => format!("dev-{}-wgpu-dev", row.variant), _ => format!("dev-{}-react-dev", row.variant) };
-                let mut args = vec!["nx".into(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")];
-                if renderer == "wgpu-native" { if let Some(id) = example { args.extend(["--".into(), "--example".into(), id.clone()]); } }
-                let spec = CommandSpec { cmd: "bun".into(), args, cwd: root.to_path_buf(), env };
-                let mut path = vec![segment("dev", "dev"), segment(segment_key(&row.plugin_id), row.plugin_id.clone()), segment(segment_key(&row.variant), row.variant.clone()), segment(renderer, renderer)];
-                if let Some(id) = example { path.extend([segment("examples", "examples"), segment(id, id)]); }
-                else { path.push(segment("all", "all examples")); }
-                trie.insert_path(&path, CommandLeaf::Process(spec));
-            }
-        }
-    }
-}
-
-fn verb_rank(key: &str) -> usize {
-    VERB_ORDER.iter().position(|v| *v == key).unwrap_or(VERB_ORDER.len() + 1)
-}
-
-fn sort_tree(node: &mut CommandNode, depth: usize) {
-    if depth == 0 {
-        node.children.sort_by(|a, b| verb_rank(&a.key).cmp(&verb_rank(&b.key)).then_with(|| a.label.cmp(&b.label)));
-    } else if node.key == "language" {
-        node.children.sort_by_key(|child| ui_locale::Locale::ALL.iter().position(|locale| locale.as_str() == child.key).unwrap_or(usize::MAX));
-    } else {
-        node.children.sort_by(|a, b| a.label.cmp(&b.label));
-    }
-    for child in &mut node.children {
-        sort_tree(child, depth + 1);
-    }
-}
-// #endregion 🔖️Walk
+// #endregion 🔖️Projection
 
 // #region 🔖️RepoImplementation
 /// 🧬️ Which repo implementation the dashboard's repo-domain leaves run.
@@ -323,6 +161,9 @@ pub enum RepoAction {
 }
 
 impl RepoAction {
+    /// ⚠️ Whether the operation changes repository state, so a view asks before running it.
+    pub fn mutates(&self) -> bool { matches!(self, RepoAction::TicketClose { .. } | RepoAction::TicketReopen { .. }) }
+
     /// 🐹️ The `semio-repo` argv that performs the same operation in the Go implementation.
     pub fn go_argv(&self) -> Vec<String> {
         let owned = |parts: &[&str]| parts.iter().map(|part| (*part).to_string()).collect::<Vec<String>>();
@@ -380,53 +221,6 @@ pub const ANALYZE_SCOPES: &[(&str, &[&str])] = &[
     ("markdown", &["md"]),
 ];
 
-fn inject_repo_domain(root: &Path, trie: &mut TrieNode, implementation: RepoImplementation) {
-    let mut push = |path: Vec<Segment>, action: RepoAction| {
-        let leaf = match implementation {
-            RepoImplementation::Rust => CommandLeaf::Repo(action),
-            RepoImplementation::Go => CommandLeaf::Process(CommandSpec {
-                cmd: go_binary_path(root).display().to_string(),
-                args: action.go_argv(),
-                cwd: root.to_path_buf(),
-                env: Vec::new(),
-            }),
-        };
-        trie.insert_path(&path, leaf);
-    };
-
-    for ticket in repo_domain::ticket_index(root) {
-        let label = format!("{} [{}] {}", ticket.id, ticket.status, ticket.title);
-        let head = vec![segment("tickets", "tickets"), segment(ticket.id.clone(), label)];
-        for (key, action) in [
-            ("show", RepoAction::TicketShow { id: ticket.id.clone() }),
-            ("files", RepoAction::TicketFiles { id: ticket.id.clone() }),
-            ("close", RepoAction::TicketClose { id: ticket.id.clone() }),
-            ("reopen", RepoAction::TicketReopen { id: ticket.id.clone() }),
-        ] {
-            let mut path = head.clone();
-            path.push(segment(key, key));
-            push(path, action);
-        }
-    }
-
-    push(vec![segment("goals", "goals"), segment("list", "list")], RepoAction::GoalsList);
-    push(vec![segment("goals", "goals"), segment("tree", "tree")], RepoAction::GoalsTree);
-
-    for (scope, _) in ANALYZE_SCOPES {
-        push(vec![segment("analyze", "analyze"), segment(*scope, *scope)], RepoAction::Analyze { scope: (*scope).to_string() });
-    }
-
-    for (key, action) in [
-        ("monorepo", RepoAction::TreeMonorepo),
-        ("goal", RepoAction::TreeGoal),
-        ("statute", RepoAction::TreeStatute),
-        ("territory", RepoAction::TreeTerritory),
-    ] {
-        push(vec![segment("tree", "tree"), segment(key, key)], action);
-    }
-
-    push(vec![segment("statutes", "statutes"), segment("catalog", "catalog")], RepoAction::StatutesCatalog);
-}
 // #endregion 🔖️RepoAction
 
 // #region 🔖️RepoDomain
@@ -743,7 +537,7 @@ pub mod repo_domain {
 }
 // #endregion 🔖️RepoDomain
 
-// #region 🔖️Projection
+// #region 🔖️Document
 /// 🔣️ The discovered tree as the JSON document `🧬️schema/🔣️.json` describes.
 pub fn tree_json(root: &Path, node: &CommandNode) -> serde_json::Value {
     let mut object = serde_json::Map::new();
@@ -766,19 +560,24 @@ pub fn tree_json_text(root: &Path) -> String {
 
 fn leaf_json(root: &Path, leaf: &CommandLeaf) -> serde_json::Value {
     match leaf {
-        CommandLeaf::Process(spec) => serde_json::json!({
-            "kind": "process",
-            "cmd": spec.cmd,
-            "args": spec.args,
-            "cwd": relative_display(root, &spec.cwd),
-            "env": spec.env.iter().map(|(key, value)| serde_json::json!({ "name": key, "value": value })).collect::<Vec<_>>(),
-        }),
+        CommandLeaf::Process(spec) => process_json(root, spec),
+        CommandLeaf::Compound(specs) => serde_json::json!({ "kind": "compound", "processes": specs.iter().map(|spec| process_json(root, spec)).collect::<Vec<_>>() }),
         CommandLeaf::Repo(action) => serde_json::json!({
             "kind": "repo",
             "action": action_key(action),
             "goArgv": action.go_argv(),
         }),
     }
+}
+
+fn process_json(root: &Path, spec: &CommandSpec) -> serde_json::Value {
+    serde_json::json!({
+        "kind": "process",
+        "cmd": spec.cmd,
+        "args": spec.args,
+        "cwd": relative_display(root, &spec.cwd),
+        "env": spec.env.iter().map(|(key, value)| serde_json::json!({ "name": key, "value": value })).collect::<Vec<_>>(),
+    })
 }
 
 fn relative_display(root: &Path, path: &Path) -> String {
@@ -802,7 +601,7 @@ pub fn action_key(action: &RepoAction) -> String {
         RepoAction::StatutesCatalog => "statutes.catalog".to_string(),
     }
 }
-// #endregion 🔖️Projection
+// #endregion 🔖️Document
 
 // #region 🔖️Command
 /// 🦀️ Executes an owned repo action in a managed process so expensive queries remain cancellable.

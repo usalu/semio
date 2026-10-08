@@ -33,7 +33,7 @@ const fixture = JSON.parse(fixtureSource) as {
   }[];
   owners: readonly { path: string; declarations: readonly string[]; imports: readonly string[]; contextChain: readonly string[] }[];
   contexts: readonly { directoryName: string; parentKindId: string; kindId: string }[];
-  routes: Record<string, { target: string; command: string; launchName: string; launchCommand: string }>;
+  routes: Record<string, { target: string; command: string }>;
   inputs: { membership: readonly string[]; source: readonly string[] };
   arguments: readonly { segments: readonly string[]; accepted: boolean; mode?: "check" | "write" }[];
   workspaceCase: {
@@ -46,7 +46,6 @@ const fixture = JSON.parse(fixtureSource) as {
     generatorId: string;
     commands: readonly string[];
     targets: readonly string[];
-    launch: { name: string; command: string; order: number };
     historicalEvidence: readonly { path: string; bytes: number; sha256: string }[];
     absentPaths: readonly string[];
   };
@@ -92,7 +91,7 @@ function internalOwnerImports(path: string, owners: ReadonlySet<string>): string
 
 test("workspace publication fixture is schema-first and independently parsed", async () => {
   
-  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["retirement"]["generatorId"]).toEqual("ticket-important-fem-handoff");expect(fixture["retirement"]["launch"]["order"]).toEqual(206.115);
+  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["retirement"]["generatorId"]).toEqual("ticket-important-fem-handoff");
   
   const jsonc = await import("jsonc-parser");
   const errors: import("jsonc-parser").ParseError[] = [];
@@ -289,9 +288,6 @@ test("historical FEM regeneration authority is retired while evidence bytes rema
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
-    ".vscode/🧩️launch.seed.jsonc",
-    ".vscode/launch.json",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
   ];
   for (const path of authorities) expect(readFileSync(join(repoRoot, path), "utf8").includes(fixture.retirement.generatorId), path).toBe(false);
   const router = readFileSync(join(repoRoot, authorities[0]!), "utf8");
@@ -309,7 +305,7 @@ test("historical FEM regeneration authority is retired while evidence bytes rema
   expect(ownedGeneratorIds).not.toContain(fixture.retirement.generatorId);
 });
 
-test("workspace source, check, and publication routes are exact across package, project, and launch catalogs", async () => {
+test("workspace source, check, and publication routes are exact across package and project", () => {
   const packageRoot = join(libraryRoot, "📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
@@ -320,16 +316,11 @@ test("workspace source, check, and publication routes are exact across package, 
   expect(project.targets[fixture.routes.write.target].inputs).toEqual(["workspaceMembershipSources"]);
   expect(project.targets[fixture.routes.check.target].cache).toBe(false);
   expect(project.targets[fixture.routes.write.target].cache).toBe(false);
-  const jsonc = await import("jsonc-parser");
   for (const route of Object.values(fixture.routes)) {
     expect(project.targets[route.target]?.options?.command).toBe(route.command);
     expect(
-      Object.values(manifest.scripts).filter((command) => command === route.launchCommand.replace(/^bun /u, "")),
+      Object.values(manifest.scripts).filter((command) => command === `nx run @semio-tech/repo-lib:${route.target}`),
       route.target,
     ).toHaveLength(1);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = jsonc.parse(readFileSync(join(repoRoot, path), "utf8"));
-      expect(launch.configurations.filter((row: { name?: string; command?: string }) => row.name === route.launchName && row.command === route.launchCommand)).toHaveLength(1);
-    }
   }
 });

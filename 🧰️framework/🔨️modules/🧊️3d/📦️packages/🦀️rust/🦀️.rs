@@ -45,3 +45,10 @@ pub mod collision;
 
 #[path = "../../📐️brep/🦀️.rs"]
 pub mod brep;
+
+//#region 🔖️Inertia
+/// 🛞️ Symmetric 3x3 eigen solver, principal inertia and parallel-axis algebra shared by the
+/// B-Rep and mesh analysis queries.
+#[path = "../../🛞️inertia/🦀️.rs"]
+pub mod inertia;
+//#endregion 🔖️Inertia

@@ -1,0 +1,991 @@
+{
+  "category": {
+    "id": "brep.feature",
+    "emoji": "🛠️",
+    "order": 60,
+    "label": {
+      "en": "Features",
+      "de": "Features"
+    },
+    "description": {
+      "en": "Local edits of a solid: fillets, chamfers, shelling, draft, offset, thickening and defeaturing.",
+      "de": "Lokale Änderungen an einem Körper: Verrunden, Fasen, Aushöhlen, Entformungsschräge, Versatz, Verdicken und Merkmale entfernen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.feature.fillet",
+      "category": "brep.feature",
+      "emoji": "🔘️",
+      "label": {
+        "en": "Fillet all edges",
+        "de": "Alle Kanten verrunden"
+      },
+      "description": {
+        "en": "Rounds every edge of a solid with a constant radius; faces with holes are not supported yet.",
+        "de": "Rundet jede Kante eines Körpers mit konstantem Radius ab; Flächen mit Löchern werden noch nicht unterstützt."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Radius of the rounding.",
+            "de": "Radius der Verrundung."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with rounded edges.",
+            "de": "Der Körper mit verrundeten Kanten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.filletEdges",
+      "category": "brep.feature",
+      "emoji": "⭕️",
+      "label": {
+        "en": "Fillet edges",
+        "de": "Kanten verrunden"
+      },
+      "description": {
+        "en": "Rounds only the selected edges with a constant radius.",
+        "de": "Rundet nur die ausgewählten Kanten mit konstantem Radius ab."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The edges to round.",
+            "de": "Die zu rundenden Kanten."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "shape",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": []
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Radius of the rounding.",
+            "de": "Radius der Verrundung."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with the selected edges rounded.",
+            "de": "Der Körper mit verrundeten Auswahlkanten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.filletVariable",
+      "category": "brep.feature",
+      "emoji": "🌗️",
+      "label": {
+        "en": "Variable fillet",
+        "de": "Verrundung mit variablem Radius"
+      },
+      "description": {
+        "en": "Rounds the edges with a radius that changes from a start to an end value.",
+        "de": "Rundet die Kanten mit einem Radius ab, der sich von einem Start- zu einem Endwert ändert."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "radiusStart",
+          "label": {
+            "en": "Start radius",
+            "de": "Startradius"
+          },
+          "description": {
+            "en": "Radius at the start of each edge.",
+            "de": "Radius am Anfang jeder Kante."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "radiusEnd",
+          "label": {
+            "en": "End radius",
+            "de": "Endradius"
+          },
+          "description": {
+            "en": "Radius at the end of each edge.",
+            "de": "Radius am Ende jeder Kante."
+          },
+          "type": "length",
+          "default": 0.2,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with variably rounded edges.",
+            "de": "Der Körper mit variabel verrundeten Kanten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.chamfer",
+      "category": "brep.feature",
+      "emoji": "🔻️",
+      "label": {
+        "en": "Chamfer all edges",
+        "de": "Alle Kanten fasen"
+      },
+      "description": {
+        "en": "Bevels every edge of a solid by the same distance on both faces.",
+        "de": "Versieht jede Kante eines Körpers mit einer Fase, die auf beiden Flächen gleich breit ist."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Distance of the bevel from the edge on both faces.",
+            "de": "Abstand der Fase von der Kante auf beiden Flächen."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with bevelled edges.",
+            "de": "Der Körper mit Fasen an allen Kanten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.chamferEdges",
+      "category": "brep.feature",
+      "emoji": "🔶️",
+      "label": {
+        "en": "Chamfer edges",
+        "de": "Kanten fasen"
+      },
+      "description": {
+        "en": "Bevels only the selected edges by the same distance on both faces.",
+        "de": "Versieht nur die ausgewählten Kanten mit einer Fase, die auf beiden Flächen gleich breit ist."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The edges to bevel.",
+            "de": "Die Kanten, die eine Fase erhalten."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "shape",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": []
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Distance of the bevel from the edge on both faces.",
+            "de": "Abstand der Fase von der Kante auf beiden Flächen."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with the selected edges bevelled.",
+            "de": "Der Körper mit Fasen an den gewählten Kanten."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.chamferAsymmetric",
+      "category": "brep.feature",
+      "emoji": "📐️",
+      "label": {
+        "en": "Asymmetric chamfer",
+        "de": "Asymmetrische Fase"
+      },
+      "description": {
+        "en": "Bevels every edge with two different distances.",
+        "de": "Versieht jede Kante mit einer Fase, deren beide Schenkel unterschiedlich lang sind."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "d1",
+          "label": {
+            "en": "Distance 1",
+            "de": "Abstand 1"
+          },
+          "description": {
+            "en": "Distance of the bevel on the first face.",
+            "de": "Abstand der Fase auf der ersten Fläche."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "d2",
+          "label": {
+            "en": "Distance 2",
+            "de": "Abstand 2"
+          },
+          "description": {
+            "en": "Distance of the bevel on the second face.",
+            "de": "Abstand der Fase auf der zweiten Fläche."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with asymmetrically bevelled edges.",
+            "de": "Der Körper mit asymmetrischen Fasen."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.shell",
+      "category": "brep.feature",
+      "emoji": "🥚️",
+      "label": {
+        "en": "Shell",
+        "de": "Aushöhlen"
+      },
+      "description": {
+        "en": "Hollows out a solid to a uniform wall thickness, optionally opening some faces.",
+        "de": "Höhlt einen Körper auf eine gleichmäßige Wandstärke aus und öffnet auf Wunsch einzelne Flächen."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "thickness",
+          "label": {
+            "en": "Thickness",
+            "de": "Wandstärke"
+          },
+          "description": {
+            "en": "Wall thickness; positive values grow inward.",
+            "de": "Wandstärke; positive Werte wachsen nach innen."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "openFaces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces that stay open; leave empty for a closed hollow.",
+            "de": "Die Flächen, die offen bleiben; leer lassen für einen geschlossenen Hohlraum."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "shape",
+            "multiple": true
+          },
+          "default": [],
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The hollowed solid.",
+            "de": "Der ausgehöhlte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "face",
+            "port": "openFaces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.draft",
+      "category": "brep.feature",
+      "emoji": "📏️",
+      "label": {
+        "en": "Draft",
+        "de": "Entformungsschräge"
+      },
+      "description": {
+        "en": "Tilts the selected faces against a pull direction; only planar and cylindrical faces taper exactly.",
+        "de": "Neigt die ausgewählten Flächen gegen eine Entformungsrichtung; nur ebene und zylindrische Flächen werden exakt konisch."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to tilt.",
+            "de": "Die zu neigenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "shape",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": []
+        },
+        {
+          "name": "pullDirection",
+          "label": {
+            "en": "Pull direction",
+            "de": "Entformungsrichtung"
+          },
+          "description": {
+            "en": "Direction in which the part is pulled out of the mold.",
+            "de": "Richtung, in der das Teil aus der Form gezogen wird."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "neutralPoint",
+          "label": {
+            "en": "Neutral point",
+            "de": "Neutralpunkt"
+          },
+          "description": {
+            "en": "A point on the neutral plane that stays fixed.",
+            "de": "Ein Punkt der neutralen Ebene, der fest bleibt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Draft angle against the pull direction.",
+            "de": "Entformungswinkel gegen die Entformungsrichtung."
+          },
+          "type": "angle",
+          "default": 0.1,
+          "min": -1.5,
+          "max": 1.5,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid with drafted faces.",
+            "de": "Der Körper mit geneigten Flächen."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.offsetSolid",
+      "category": "brep.feature",
+      "emoji": "↔️",
+      "label": {
+        "en": "Offset solid",
+        "de": "Körper versetzen"
+      },
+      "description": {
+        "en": "Grows or shrinks a solid by moving all faces along their normals.",
+        "de": "Vergrößert oder verkleinert einen Körper, indem alle Flächen entlang ihrer Normalen verschoben werden."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Offset distance; negative values shrink the solid.",
+            "de": "Versatzabstand; negative Werte verkleinern den Körper."
+          },
+          "type": "length",
+          "default": 0.1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The offset solid.",
+            "de": "Der versetzte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.thicken",
+      "category": "brep.feature",
+      "emoji": "🧈️",
+      "label": {
+        "en": "Thicken face",
+        "de": "Fläche verdicken"
+      },
+      "description": {
+        "en": "Gives a face a thickness and turns it into a solid.",
+        "de": "Gibt einer Fläche eine Dicke und macht sie zu einem Körper."
+      },
+      "inputs": [
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The planar or curved face to operate on.",
+            "de": "Die ebene oder gekrümmte Fläche, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        },
+        {
+          "name": "thickness",
+          "label": {
+            "en": "Thickness",
+            "de": "Dicke"
+          },
+          "description": {
+            "en": "Thickness along the face normal.",
+            "de": "Dicke entlang der Flächennormale."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The thickened solid.",
+            "de": "Der verdickte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "thickness",
+            "along": "normal"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.feature.defeature",
+      "category": "brep.feature",
+      "emoji": "🧽️",
+      "label": {
+        "en": "Remove faces",
+        "de": "Merkmale entfernen"
+      },
+      "description": {
+        "en": "Removes selected faces such as holes and bosses and heals the gap; the result is rebuilt from a mesh.",
+        "de": "Entfernt ausgewählte Flächen wie Bohrungen und Erhebungen und schließt die Lücke; das Ergebnis wird aus einem Netz neu aufgebaut."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid to modify.",
+            "de": "Der zu verändernde Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        },
+        {
+          "name": "faces",
+          "label": {
+            "en": "Faces",
+            "de": "Flächen"
+          },
+          "description": {
+            "en": "The faces to remove.",
+            "de": "Die zu entfernenden Flächen."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "face",
+            "source": "shape",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid without the selected features.",
+            "de": "Der Körper ohne die gewählten Merkmale."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          },
+          {
+            "component": "face",
+            "port": "faces"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

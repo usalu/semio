@@ -1,0 +1,15 @@
+{
+  "actor": "actor:private-child",
+  "groupIds": [null, "", "group:gemeinsam-δ"],
+  "transactions": [
+    null,
+    {
+      "id": "txn:child-25",
+      "tool": "cad#transform"
+    },
+    {
+      "id": "txn:δ",
+      "tool": "cad#verschieben-ä"
+    }
+  ]
+}

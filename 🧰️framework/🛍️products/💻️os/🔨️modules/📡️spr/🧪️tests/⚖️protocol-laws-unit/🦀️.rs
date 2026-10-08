@@ -219,10 +219,10 @@ async fn operation_diff_apply_matches_backwards_inverse() {
     use crate::os_spr::{Mutation, MutationDiff};
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
-    let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
+    let forward = crate::os_spr::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(forward, 15);
     let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
-    assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
+    assert_eq!(crate::os_spr::apply_diff(undo.diff(&forward).diff(), &forward), Ok(base));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -343,6 +343,80 @@ async fn mutation_inverse_law_cold_retires_every_operation_it_mints() {
     crate::os_spr::Mutation::<i64>::retire_cold(operation);
 }
 //#endregion 🧊️ColdOperationOwnership
+
+//#region ➕️InverseSum
+/// 🧪️ A tiny test-local counter mutation whose inverse is chosen by `inverse`: `0` the lawful absolute undo, `1` a wrong undo
+/// that does not restore, `2` a restoring detour whose inverse diffs do not sum to the negative diff, `3` an empty inverse.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+struct SumLawProbe {
+    delta: i64,
+    inverse: u8,
+}
+
+const SUM_LAW_PROBE_DESCRIPTOR: crate::os_spr::MutationLeafDescriptor = crate::os_spr::MutationLeafDescriptor {
+    schema_version: 1,
+    owner: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit",
+    semantic_kind: "sum-law-probe",
+    display_name: "Sum Law Probe",
+    emoji: "➕️",
+    aggregate_variant: "SumLawProbe",
+    payload_schema: "🦀️.rs#SumLawProbe",
+    text_opcode: None,
+    binary_tag: None,
+    invertibility: crate::os_spr::MutationInvertibility::ExplicitMutation,
+    diff_participation: crate::os_spr::MutationDiffParticipation::ApplyOnly,
+    outcome_classes: &[crate::os_spr::MutationOutcomeClass::Applied],
+    composition: crate::os_spr::MutationComposition::Atomic,
+    required_language_surfaces: &[crate::os_spr::MutationLanguageSurface::Rust],
+};
+
+impl crate::os_spr::Mutation<i64> for SumLawProbe {
+    type Diff = CounterDiff;
+    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = &[SUM_LAW_PROBE_DESCRIPTOR];
+
+    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+        &SUM_LAW_PROBE_DESCRIPTOR
+    }
+
+    fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<CounterDiff> {
+        crate::os_spr::MutationOutcome::new(CounterDiff::delta(self.delta))
+    }
+
+    fn inverse(&self, _base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok(match self.inverse {
+            0 => vec![Self { delta: -self.delta, inverse: 0 }],
+            1 => vec![Self { delta: self.delta, inverse: 0 }],
+            2 => vec![Self { delta: -self.delta - 1, inverse: 0 }, Self { delta: 1, inverse: 0 }],
+            _ => Vec::new(),
+        })
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_the_lawful_inverse() {
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 0 }, &10i64).await;
+    assert_mutation_inverse_sum_law(&CounterMutation::AddCounter(AddCounter { delta: -7 }), &10i64).await;
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 0, inverse: 3 }, &10i64).await;
+}
+
+#[semio_framework_async_macros::async_test]
+#[should_panic(expected = "must restore base")]
+async fn mutation_inverse_sum_law_catches_a_wrong_inverse() {
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 1 }, &10i64).await;
+}
+
+#[semio_framework_async_macros::async_test]
+#[should_panic(expected = "must equal the negative of the forward diff")]
+async fn mutation_inverse_sum_law_catches_inverse_diffs_that_do_not_sum_to_the_negative_diff() {
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 2 }, &10i64).await;
+}
+
+#[semio_framework_async_macros::async_test]
+#[should_panic(expected = "must not be empty for a mutation that changes state")]
+async fn mutation_inverse_sum_law_catches_an_empty_inverse() {
+    assert_mutation_inverse_sum_law(&SumLawProbe { delta: 5, inverse: 3 }, &10i64).await;
+}
+//#endregion ➕️InverseSum
 
 #[semio_framework_async_macros::async_test]
 async fn diff_algebra_between_law_holds_for_add() {

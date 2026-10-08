@@ -29,7 +29,7 @@ fn inspector_stroke_controls_are_localized() {
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
-        let tree = render(&document, &[id.clone()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let tree = render(&document, &[id.to_string_owner()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         for label in [labels.stroke_cap, labels.stroke_join, labels.stroke_dash, labels.cap_square, labels.join_bevel, labels.fill_rule, labels.fill_evenodd, labels.fill_nonzero] {
             assert!(json.contains(label.as_str()), "missing {}", label.as_str());
@@ -143,14 +143,14 @@ fn gradient_inspector_projects_type_coordinates_and_stops() {
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
-        let tree = render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let tree = render(&document,&[id.to_string_owner()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         for control in ["fill.type","fill.x1","fill.x2","fill.stop.0.color","fill.stop.1.alpha","fill.stop.1.offset","fill.add"] { assert!(json.contains(control),"missing {control}"); }
         assert!(json.contains(labels.gradient_stops.as_str()));
         assert!(json.contains("editFill"));
     }
     layer_base_mut(&mut document.layers[0]).locked = true;
-    let tree = render(&document,&[id],&DrawingPlayLabels::NATIVE_EN,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+    let tree = render(&document,&[id.to_string_owner()],&DrawingPlayLabels::NATIVE_EN,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
     let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
     assert!(!json.contains("fill.add"));
 }
@@ -173,7 +173,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset: 0, rows: 2 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
-        let tree = render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let tree = render(&document,&[id.to_string_owner()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let projection = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         let json = serde_json::from_str(&projection).unwrap();
         let mut count = 0;
@@ -189,7 +189,7 @@ fn text_inspector_is_multiline_localized_and_commits_on_blur() {
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
-        let tree = render(&document, &[id.clone()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let tree = render(&document, &[id.to_string_owner()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         for value in [labels.text_content.as_str(), labels.text_size.as_str(), "textContent", "textSize", "longText", "blur", "patchLayers"] { assert!(json.contains(value), "missing {value}: {json}"); }
     }

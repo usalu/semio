@@ -1,0 +1,87 @@
+{
+  "maximumReleaseItems": 1,
+  "maximumReleaseBytes": 4096,
+  "cases": [
+    {
+      "fuel": 0,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": false,
+      "releasedBytes": 0
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 128
+    },
+    {
+      "fuel": 4,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 128
+    },
+    {
+      "fuel": 64,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 128
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 4096,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 4096
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 4097,
+      "readers": 0,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 0
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 128,
+      "readers": 1,
+      "cancelled": false,
+      "expired": false,
+      "called": true,
+      "releasedBytes": 0
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": true,
+      "expired": false,
+      "called": false,
+      "releasedBytes": 0
+    },
+    {
+      "fuel": 1,
+      "allocationBytes": 128,
+      "readers": 0,
+      "cancelled": false,
+      "expired": true,
+      "called": false,
+      "releasedBytes": 0
+    }
+  ]
+}

@@ -25,13 +25,10 @@ use super::scale_object;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
 pub enum SemioObjectMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     MoveObject(move_object::MoveObject),
     RotateObject(rotate_object::RotateObject),
     ScaleObject(scale_object::ScaleObject),
@@ -48,24 +45,22 @@ pub enum SemioObjectMutation {
 /// and `📦️mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
 /// and_the_catalog` below is what keeps this list honest against the enum, since the framework
 /// never parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
+pub const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioObjectBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_object_mutation(snapshot: &mut SemioObjectSnapshot, mutation: &SemioObjectMutation) -> protocol::MutationOutcome<SemioObjectDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
+    <SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `📦️mutate-semio-object` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_object_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> Result<Vec<SemioObjectMutation>, semio_framework_value::ValueError> {
     Ok({

@@ -1,6 +1,6 @@
 //! 🧹 `ClearDefaultApp` is the authoritative direct leaf for unpinning one viewer/editor default.
 
-use super::super::OpeningPreferences;
+use super::super::{DefaultAppPin, OpeningDiff, OpeningPreferences};
 use super::set_default_app::SetDefaultApp;
 use super::OpeningConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
@@ -27,13 +27,12 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
-    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if !base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role) {
             let role = role_name(self.role);
-            return MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("\"{}\" has no pinned default {} to clear.", format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset), role));
+            return MutationOutcome::new(OpeningDiff::default()).warning("mutation.no-op", format!("\"{}\" has no pinned default {} to clear.", format!("{} ({}, {})",self.dialect.artifact_kind,self.dialect.standard,self.dialect.subset), role));
         }
-        let defaults = base.defaults.iter().filter(|entry| !(entry.dialect == self.dialect && entry.role == self.role)).cloned().collect();
-        MutationOutcome::new(OpeningPreferences { defaults })
+        MutationOutcome::new(OpeningDiff { pins: vec![DefaultAppPin { dialect: self.dialect.clone(), role: self.role, app: None }] })
     }
 
     fn inverse(&self, base: &OpeningPreferences) -> Result<Vec<OpeningConfigMutation>, semio_framework_value::ValueError> {

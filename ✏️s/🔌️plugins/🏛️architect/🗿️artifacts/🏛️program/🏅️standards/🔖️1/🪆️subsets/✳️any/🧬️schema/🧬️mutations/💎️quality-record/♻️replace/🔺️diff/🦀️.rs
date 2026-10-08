@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💎quality` per Wave C.
 
 use super::ReplaceQualityRecord;
-use crate::diff::{ProgramQualityDelta, ProgramQualityPatchEntry};
+use crate::diff::ProgramQualityDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceQualityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.quality.iter().find(|row| row.header.id == payload.quality_record.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No quality record exists with this id.", [payload.quality_record.header.id.0.clone()]);
+    let id = &payload.quality_record.header.id;
+    let Some(position) = base.quality.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No quality record exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.quality_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This quality record already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.quality[position] == payload.quality_record {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This quality record already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.quality_record).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { quality: Some(ProgramQualityDelta { patched: vec![ProgramQualityPatchEntry { id: payload.quality_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.quality.len()).then(|| base.quality.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { quality: Some(ProgramQualityDelta { removed: vec![id.0.clone()], added: vec![payload.quality_record.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

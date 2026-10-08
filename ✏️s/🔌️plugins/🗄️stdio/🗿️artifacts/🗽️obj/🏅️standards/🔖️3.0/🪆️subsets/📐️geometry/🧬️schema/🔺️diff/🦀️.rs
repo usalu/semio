@@ -29,6 +29,8 @@
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
 #[cfg(test)]
+use crate::standards::v3_0::subsets::any::io::text::diff::{dec_unknown, enc_unknown};
+#[cfg(test)]
 use crate::standards::v3_0::subsets::any::io::binary::diff::dec_unknown_bin;
 #[cfg(test)]
 use crate::standards::v3_0::subsets::any::io::binary::diff::enc_unknown_bin;
@@ -984,7 +986,7 @@ fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
 }
 
 impl MutationDiff<ObjSnapshot> for ObjDiff {
-    fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
+    fn apply(&self, base: &ObjSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<ObjSnapshot> {
         validate_obj_diff(self, base)?;
         Ok(apply_obj_diff_unchecked(self, base))
     }

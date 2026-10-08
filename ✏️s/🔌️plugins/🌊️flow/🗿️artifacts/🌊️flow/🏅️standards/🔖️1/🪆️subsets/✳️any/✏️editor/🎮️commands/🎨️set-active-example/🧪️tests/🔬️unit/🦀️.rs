@@ -9,7 +9,8 @@ use crate::examples::demo;
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_demo_loads_the_published_demo_graph() {
     let mut app = flow_app().await;
-    let expected = <FlowSnapshot as store::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).expect("demo parses").to_host_snapshot();
+    let mut expected = demo::snapshot_from_text(demo::PRIMARY_TEXT).expect("demo parses").to_host_snapshot();
+    expected.schema = crate::FLOW_DOCUMENT_SCHEMA.into();
     let before = composed_scene(&app).await;
     assert_ne!(before, expected, "the live default document must differ from the demo so a demo load is observable");
     before.retire_cold();

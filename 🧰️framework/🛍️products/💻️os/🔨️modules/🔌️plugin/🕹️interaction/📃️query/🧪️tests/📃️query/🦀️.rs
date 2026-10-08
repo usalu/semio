@@ -225,6 +225,7 @@ struct HostileRoot {
     first: String,
     second: HostileValue,
 }
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct HostileRetirementFactory;
 struct HostileRetirement {
     root: Option<std::sync::Arc<HostileRoot>>,
@@ -245,6 +246,8 @@ impl store::ArtifactCanonicalJson for HostileRoot {
 }
 
 impl store::SnapshotRetirementFactory<HostileRoot> for HostileRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<HostileRoot>) -> usize { std::mem::size_of::<HostileRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<HostileRoot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(HostileRetirement { root: Some(root), bytes: Vec::new() })
     }

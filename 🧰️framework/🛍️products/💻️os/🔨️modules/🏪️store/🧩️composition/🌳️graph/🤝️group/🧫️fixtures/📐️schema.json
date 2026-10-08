@@ -1,0 +1,194 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "siblings",
+    "cycle",
+    "pendingCycle",
+    "undergrant",
+    "commit"
+  ],
+  "properties": {
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 65536
+        }
+      }
+    },
+    "siblings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "additions",
+        "expected"
+      ],
+      "properties": {
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additions": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "cycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "addition",
+        "expectedRefusal"
+      ],
+      "properties": {
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "addition": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expectedRefusal": {
+          "const": true
+        }
+      }
+    },
+    "pendingCycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "additions",
+        "expectedRefusal"
+      ],
+      "properties": {
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additions": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "expectedRefusal": {
+          "const": true
+        }
+      }
+    },
+    "undergrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "byteDifference",
+        "allocatedBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "items": {
+          "const": 0
+        },
+        "byteDifference": {
+          "const": 1
+        },
+        "allocatedBytes": {
+          "const": 0
+        },
+        "releasedBytes": {
+          "const": 0
+        }
+      }
+    },
+    "commit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocatedBytes",
+        "releasedBytes",
+        "generationChanges"
+      ],
+      "properties": {
+        "allocatedBytes": {
+          "const": 0
+        },
+        "releasedBytes": {
+          "const": 0
+        },
+        "generationChanges": {
+          "const": 1
+        }
+      }
+    }
+  }
+}

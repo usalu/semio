@@ -1,0 +1,8 @@
+{
+  "arguments": [
+    "/Users/Example User/Work Projects/semio",
+    "C:\\Users\\Example User\\Work Projects\\semio",
+    "emoji 🧪️ argument with spaces"
+  ],
+  "expectedProject": "workspace"
+}

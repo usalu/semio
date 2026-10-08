@@ -1,0 +1,17 @@
+# Store Member Input Census
+
+Broad Store5009 actually ran537 selected tests:520 passed,17 failed,681 outside the selector. Six member history/dictionary/factory laws compare retained release totals against neutral fixture numbers that omit a new explicit opened actor. The same actor is declared in each fixture and retained by MemberOpenRequest: actor:member-opening-fixture is28 UTF8 bytes. Runtime reports315 instead of287,357 instead of329,407 instead of379 and1431 instead of1403. Encoded wire bytes remain unchanged.
+
+The history baseline is255 wire bytes +2 input framing bytes +30 expected identity bytes +28 opened actor bytes =315. Factory input257 plus72 request identity bytes plus28 actor bytes =357. An independent Node Buffer/TextEncoder source census validates these exact identities and shared neutral expected outputs. Its red run has just started; fixtures have not yet been changed. Dictionary owner/scratch totals require the same retained actor exactly once, while preserving their existing per-case wire and scratch census.
+
+The durable three-store fixture explicitly opens actor:owned-group-fixture, while its original journal visibility assertion still expects LOCAL_ACTOR_ID. The real constructor and opened actor must be retained and asserted through the shared neutral fixture; no production actor fallback or wire data change is planned.
+
+Separate initializer runtime physical proof65056 is pending:the new public demand forwards exact active backing and terminal erased Box extent. A six-case actual Vec witness exercises both displaced-current settlement and rejected runtime close; current terminal Box drop still omits release cost, so its correction awaits actual semantic red. This does not change the metadata census task.
+
+Actual source red63625 completed with0 passes,1 failure and8 assertions: expected315, fixture287. After this proof, three handwritten neutral fixture retirement totals now include their declared28-byte opened actor exactly once:18 history totals,61 dictionary totals,43 factory totals. Wire bytes, grants and production request behavior are unchanged. The closed history assertion reads the neutral total, and dictionary residual arithmetic derives identity and actor UTF8 byte lengths. Source green80022 and combined eight native cases4729 are running; no green result is yet claimed.
+
+The durable fixture declares its already explicit actor:owned-group-fixture. The actual constructor and shared journal visibility assertion both read that fixture value, preserving the original root-flip/adoption assertions. The combined native gate includes this case and all six previously failing member laws.
+
+Source green80022 actually completed EXIT0:1 pass,0 fail,28 assertions, all declared identities independently checked through Node Buffer and TextEncoder. Nx elapsed2m2. Runtime combined8-case4729 remains pending.
+
+Combined4729 actually ran8 tests:7 passed,1 failed,1213 outside. Runtime physical law and durable actor passed; the remaining factory full-declaration sweep still constructed its own expected retirement using a hardcoded68-byte subtotal without openedActor. That actual362vs334 regression was corrected by deriving all selected kind/standard/subset fields and retained actor from the fixture, including generated declarations. Current31092 actually completed uncached EXIT0:7 tests run,7 passed,1215 outside,0.630s native/Nx5m24. All six originally failing member laws and the unchanged durable common-root/adoption law now pass.

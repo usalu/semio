@@ -52,9 +52,9 @@ fn own14_aggregate_literal_set_applies_and_inverts_every_owner_word() {
     let same=|a:&PdfSnapshot,b:&PdfSnapshot|{assert_eq!(a.schema,b.schema);assert_eq!(a.pages.len(),b.pages.len());for(a,b)in a.pages.iter().zip(&b.pages){assert_eq!(a.width.to_bits(),b.width.to_bits());assert_eq!(a.height.to_bits(),b.height.to_bits());assert_eq!(a.text,b.text);}};
     let hex=neutral["binaryFrameHex"].as_str().unwrap();let literal=(0..hex.len()).step_by(2).map(|i|u8::from_str_radix(&hex[i..i+2],16).unwrap()).collect::<Vec<_>>();assert_eq!(frame(&expected),literal);
     let decoded=PdfMutation::decode_op(&literal);assert!(decoded.is_ok(),"literal own14 tag5 must decode through existing aggregate: {decoded:?}");let op=decoded.unwrap();
-    let outcome=op.diff(&base);assert!(outcome.messages().is_empty());let next=outcome.diff().apply(&base).unwrap();same(&next,&expected);
-    let mut restored=next;for inverse in op.inverse(&base).unwrap(){let outcome=inverse.diff(&restored);assert!(outcome.messages().is_empty());restored=outcome.diff().apply(&restored).unwrap();}same(&restored,&base);
-    let mut foreign=expected;foreign.schema="foreign".into();let rejected=PdfMutation::decode_op(&frame(&foreign)).unwrap().diff(&base);assert!(!rejected.messages().is_empty());same(&rejected.diff().apply(&base).unwrap(),&base);
+    let outcome=op.diff(&base);assert!(outcome.messages().is_empty());let next=protocol::apply_diff(outcome.diff(), &base).unwrap();same(&next,&expected);
+    let mut restored=next;for inverse in op.inverse(&base).unwrap(){let outcome=inverse.diff(&restored);assert!(outcome.messages().is_empty());restored=protocol::apply_diff(outcome.diff(), &restored).unwrap();}same(&restored,&base);
+    let mut foreign=expected;foreign.schema="foreign".into();let rejected=PdfMutation::decode_op(&frame(&foreign)).unwrap().diff(&base);assert!(!rejected.messages().is_empty());same(&protocol::apply_diff(rejected.diff(), &base).unwrap(),&base);
     eprintln!("[DEBUG] own14 aggregate literal tag5 exact application inverse identity");
 }
 #[test]
@@ -63,8 +63,8 @@ fn own14_diff_signed_zero_and_sparse_nan_text_are_exact() {
     use crate::standards::v1_4::subsets::base::schema::snapshot::PageDoc;
     let base=PdfSnapshot{schema:"stdio.pdf".into(),pages:vec![PageDoc{width:0.0,height:1.0,text:"same".into()}]};let mut next=base.clone();next.pages[0].width=-0.0;
     assert_ne!(base,next,"own14 publication equality must distinguish owner words");
-    let diff=PdfDiff::between(&base,&next);assert!(!diff.is_empty());let applied=diff.apply(&base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=diff.inverse(&base).apply(&applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
-    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=PdfDiff::between(&base,&next);let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(parsed.apply(&base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
+    let diff=PdfDiff::between(&base,&next);assert!(!diff.is_empty());let applied=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(applied.pages[0].width.to_bits(),(-0.0f64).to_bits());let restored=protocol::apply_diff(&diff.inverse(&base), &applied).unwrap();assert_eq!(restored.pages[0].width.to_bits(),0);
+    next.pages[0].width=f64::from_bits(0x7ff8000000000042);let diff=PdfDiff::between(&base,&next);let text=diff.print_diff();assert!(text.contains("nan64_7ff8000000000042"),"{text}");let parsed=PdfDiff::parse_diff(&text).unwrap();assert_eq!(protocol::apply_diff(&parsed, &base).unwrap().pages[0].width.to_bits(),0x7ff8000000000042);
     assert!(PdfDiff::between(&next,&next).is_empty(),"unchanged NaN owner word is no mutation");
     eprintln!("[DEBUG] own14 signed-zero publication equality sparse diff and payload NaN text");
 }
@@ -76,10 +76,10 @@ fn own14_aggregate_patch_applies_inverse_and_freezes_identity() {
     let same=|a:&PdfSnapshot,b:&PdfSnapshot|{assert_eq!(a.schema,b.schema);assert_eq!(a.pages.len(),b.pages.len());for(a,b)in a.pages.iter().zip(&b.pages){assert_eq!(a.width.to_bits(),b.width.to_bits());assert_eq!(a.height.to_bits(),b.height.to_bits());assert_eq!(a.text,b.text);}};
     for identity in ["stdio.pdf","pdf14.custom-schema"] {
         let base=PdfSnapshot{schema:identity.into(),pages:neutral["pages"].as_array().unwrap().iter().map(|page|PageDoc{width:f64::from_bits(page["widthBits"].as_str().unwrap().parse().unwrap()),height:f64::from_bits(page["heightBits"].as_str().unwrap().parse().unwrap()),text:page["text"].as_str().unwrap().into()}).collect()};
-        let original=base.clone();let op=PdfMutation::parse_op(r#"patch-snapshot payload={"operation":"set","path":"/pages/0/text","value":"edited Ω"}"#);assert!(op.is_ok(),"existing aggregate must admit literal path patch: {op:?}");let op=op.unwrap();let outcome=op.diff(&base);assert!(outcome.messages().is_empty());let mut next=outcome.diff().apply(&base).unwrap();let mut expected=base.clone();expected.pages[0].text="edited Ω".into();same(&next,&expected);same(&base,&original);
-        for inverse in op.inverse(&base).unwrap(){let outcome=inverse.diff(&next);assert!(outcome.messages().is_empty());next=outcome.diff().apply(&next).unwrap();}same(&next,&base);
+        let original=base.clone();let op=PdfMutation::parse_op(r#"patch-snapshot payload={"operation":"set","path":"/pages/0/text","value":"edited Ω"}"#);assert!(op.is_ok(),"existing aggregate must admit literal path patch: {op:?}");let op=op.unwrap();let outcome=op.diff(&base);assert!(outcome.messages().is_empty());let mut next=protocol::apply_diff(outcome.diff(), &base).unwrap();let mut expected=base.clone();expected.pages[0].text="edited Ω".into();same(&next,&expected);same(&base,&original);
+        for inverse in op.inverse(&base).unwrap(){let outcome=inverse.diff(&next);assert!(outcome.messages().is_empty());next=protocol::apply_diff(outcome.diff(), &next).unwrap();}same(&next,&base);
         for literal in [r#"patch-snapshot payload={"operation":"set","path":"/pages/0/width","value":"wrong typed field"}"#,r#"patch-snapshot payload={"operation":"set","path":"/schema","value":"foreign"}"#] {
-            let invalid=PdfMutation::parse_op(literal).unwrap();let refused=invalid.diff(&base);assert!(!refused.messages().is_empty());same(&refused.diff().apply(&base).unwrap(),&base);assert!(invalid.inverse(&base).is_err());
+            let invalid=PdfMutation::parse_op(literal).unwrap();let refused=invalid.diff(&base);assert!(!refused.messages().is_empty());same(&protocol::apply_diff(refused.diff(), &base).unwrap(),&base);assert!(invalid.inverse(&base).is_err());
         }
     }
     eprintln!("[DEBUG] own14 neutral path patch preserves eight words canonical/custom identity typed refusal and inverse");

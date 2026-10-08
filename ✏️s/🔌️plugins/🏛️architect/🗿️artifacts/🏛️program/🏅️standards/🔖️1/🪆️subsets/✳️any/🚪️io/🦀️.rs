@@ -59,8 +59,8 @@ impl ProgramExportTable {
 
 /// 🧭️ Explicitly projects every persisted program field into a stable named table.
 pub(crate) fn program_export_tables(snapshot: &crate::ProgramSnapshot) -> Result<Vec<ProgramExportTable>, String> {
-    let knowledge = crate::program_knowledge(snapshot);
-    let benchmarks = crate::program_benchmarks(snapshot);
+    let knowledge = &snapshot.knowledge_payload;
+    let benchmarks = &snapshot.benchmarks_payload;
     let mut tables = vec![
         ProgramExportTable::singleton("program", &ProgramIdentity { schema: &snapshot.schema, knowledge: &snapshot.knowledge, benchmarks: &snapshot.benchmarks })?,
         ProgramExportTable::singleton("meta", &snapshot.meta)?,
@@ -358,14 +358,14 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <ProgramDiff as protocol::MutationDiff<ProgramSnapshot>>::apply(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }

@@ -1,15 +1,14 @@
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::Mutation;
+//! 🔺️ Diff for `RemoveFrame`.
 
-/// 🔺️ Diff helper for remove-frame — an absent BASE frame `index` is `mutation.target-missing`
-/// (Error, empty diff).
+use super::super::*;
+
+//#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff(base: &SemioImageSnapshot, index: usize) -> protocol::MutationOutcome<SemioImageDiff> {
-    if index >= base.frames.len() {
+pub fn diff(payload: &super::RemoveFrame, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
+    let super::RemoveFrame { index } = payload;
+    if *index >= base.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {index} does not exist."), [index.to_string()]);
     }
-    Mutation::diff(&SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }), base)
+    protocol::MutationOutcome::new(SemioImageDiff { frames: Some(SemioImageFramesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
 }
+//#endregion 🔖️Diff

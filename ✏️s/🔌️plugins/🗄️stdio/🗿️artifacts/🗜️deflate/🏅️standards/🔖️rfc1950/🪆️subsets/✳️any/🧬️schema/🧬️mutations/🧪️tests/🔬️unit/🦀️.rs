@@ -7,13 +7,12 @@ fn base_snapshot() -> DeflateSnapshot {
 }
 
 /// 🧪️ `op_text_binary_roundtrip_law`: every variant (incl. both `SetPresetDictionary` arms,
-/// `Some`/`None`, and the `SetSnapshot` leaf payload) round-trips through `print_op`/`parse_op`
+/// `Some`/`None`) round-trips through `print_op`/`parse_op`
 /// (one line, no `\n`) AND `encode_op`/`decode_op`.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     for mutation in [
-        DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DeflateSnapshot { dict_id: Some(0xDEAD_BEEF), ..base.clone() } }),
         DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method: 8, window_bits: 5, level_hint: DeflateLevelHint::Maximum }),
         DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: Some(7) }),
         DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: None }),
@@ -43,7 +42,6 @@ async fn kinds_match_enum_variants_and_catalog() {
     // 🚫️async: E1 pure inherent helper, no I/O — see R9
     fn kebab_of(mutation: &DeflateMutation) -> &'static str {
         match mutation {
-            DeflateMutation::SetSnapshot(_) => "set-snapshot",
             DeflateMutation::SetCompressionParams(_) => "set-compression-params",
             DeflateMutation::SetPresetDictionary(_) => "set-preset-dictionary",
             DeflateMutation::SetPayload(_) => "set-payload",
@@ -56,5 +54,14 @@ async fn kinds_match_enum_variants_and_catalog() {
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+    }
+}
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in demo_mutation_cases() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

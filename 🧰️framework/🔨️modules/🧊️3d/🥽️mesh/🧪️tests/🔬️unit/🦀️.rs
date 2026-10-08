@@ -814,3 +814,29 @@ fn mirror_remaps_owned_channels_and_reflects_corner_capable_normals() {
     assert_eq!(mirrored.attributes()["normal"].value_at(0).unwrap().as_array().unwrap()[0].as_f64(),Some(1.0));assert_eq!(mirrored.attributes()["normal"].value_at(3).unwrap().as_array().unwrap()[0].as_f64(),Some(-1.0));
     assert_eq!(mirrored.attributes()["uv"].indices,Some(vec![0,1,2,2,1,0]));
 }
+
+/// 🔭️ A pure consumer reads positions, wound polygons, canonical edges and vertex normals and rebuilds an equal mesh from them.
+#[test]
+fn bulk_read_accessors_expose_a_pure_consumers_view_and_rebuild_the_mesh() {
+    let mesh = HalfedgeMesh::box_prim(2.0, 3.0, 4.0).unwrap();
+    let (positions, polygons, edges) = (mesh.positions(), mesh.polygons(), mesh.edge_ids());
+    assert_eq!((positions.len(), polygons.len(), edges.len()), (mesh.vertex_count(), mesh.face_count(), mesh.edge_count()));
+    assert_eq!((positions.len(), polygons.len(), edges.len()), (8, 6, 12));
+    assert_eq!(positions.len() as i64 - edges.len() as i64 + polygons.len() as i64, 2);
+    assert!(polygons.iter().all(|polygon| polygon.len() == 4 && polygon.iter().all(|index| (*index as usize) < positions.len())));
+    for (index, polygon) in polygons.iter().enumerate() {
+        let wound: Vec<u32> = mesh.face_vertex_ids(FaceId(index as u32)).unwrap().into_iter().map(|vertex| vertex.0).collect();
+        assert_eq!(*polygon, wound);
+    }
+    for edge in &edges {
+        let (start, end) = mesh.edge_endpoints(*edge).unwrap();
+        assert_ne!(start, end);
+    }
+    for index in 0..positions.len() {
+        let normal = mesh.vertex_normal(VertexId(index as u32)).unwrap();
+        assert!((normal.length() - 1.0).abs() < 1e-6);
+    }
+    assert!(mesh.vertex_normal(VertexId(positions.len() as u32)).is_err());
+    let rebuilt = HalfedgeMesh::from_faces(&positions, &polygons).unwrap();
+    assert_eq!((rebuilt.positions(), rebuilt.polygons(), rebuilt.edge_ids().len()), (positions, polygons, edges.len()));
+}

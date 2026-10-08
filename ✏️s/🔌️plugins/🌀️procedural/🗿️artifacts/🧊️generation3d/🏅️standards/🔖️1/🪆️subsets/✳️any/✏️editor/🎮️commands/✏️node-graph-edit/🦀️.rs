@@ -4,7 +4,7 @@ use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfig
 use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value;
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
+use crate::standards::v1::subsets::any::schema::{with_host, GraphEditor};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
@@ -34,32 +34,36 @@ pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
 /// - `move {gestureId, nodeIds, dx, dy}` — the node-graph gesture record of a released node drag (design §13.3): the
 ///   relative `move-nodes` leaf, committed through the ONE node-drag machine as ONE tool transaction.
 /// - `connect`, `disconnect`, `insertPort`, `delete {nodeIds, synapseIds}` — structural edits by the ids they name, authored
-///   as the id-keyed leaves (wires, widgets, ports) of the graph they leave behind; a refused host edit refuses the batch.
+///   as the declared leaves each edit IS, cascades included (`GraphEditor`): a connect is the `disconnect-synapse` of the wire
+///   its input drops and the `connect-synapse` of the new one, a port insertion the `update-widget` of the operator and the
+///   `update-synapse` of every wire it renumbers, a delete the `disconnect-synapse` / `delete-widget-position` / `delete-widget`
+///   of everything the node holds; a refused host edit refuses the batch.
 fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEditRow]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
     let structural = rows.iter().any(|row| matches!(row, NodeGraphEditRow::Connect { .. } | NodeGraphEditRow::Disconnect { .. } | NodeGraphEditRow::InsertPort { .. } | NodeGraphEditRow::Delete { .. }));
     let mut leaves = if structural {
         with_host(host_snapshot, |host| {
+            let mut editor = GraphEditor::new(host);
             for row in rows {
-                let refused = |error| Fault::from(format!("nodeGraphEdit refusal: {error}"));
+                let refused = |error: String| Fault::from(format!("nodeGraphEdit refusal: {error}"));
                 match row {
-                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(refused)?,
-                    NodeGraphEditRow::Disconnect { synapse_id } => host.disconnect(synapse_id).map_err(refused)?,
-                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => host.add_input_port(node_id, *index as usize).map_err(refused)?,
-                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => host.add_output_port(node_id, *index as usize).map_err(refused)?,
+                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => editor.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(refused)?,
+                    NodeGraphEditRow::Disconnect { synapse_id } => editor.disconnect(synapse_id).map_err(refused)?,
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => editor.add_input_port(node_id, *index as usize).map_err(refused)?,
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => editor.add_output_port(node_id, *index as usize).map_err(refused)?,
                     NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
-                        let held: Vec<&String> = synapse_ids.iter().filter(|id| host.host_snapshot.synapses.iter().any(|synapse| synapse.id == **id)).collect();
+                        let held: Vec<&String> = synapse_ids.iter().filter(|id| editor.snapshot().synapses.iter().any(|synapse| synapse.id == **id)).collect();
                         for synapse_id in held {
-                            host.disconnect(synapse_id).map_err(refused)?;
+                            editor.disconnect(synapse_id).map_err(refused)?;
                         }
                         for node_id in node_ids {
-                            host.remove_widget(node_id).map_err(refused)?;
+                            editor.remove_widget(node_id).map_err(refused)?;
                         }
                     }
                     NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } => {}
                 }
             }
-            Ok::<_, Fault>(commit_host_snapshot(host_snapshot, &host.host_snapshot))
+            Ok::<_, Fault>(editor.finish())
         })?
     } else {
         Vec::new()

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeIdealLoadsSystemOutdoorAirPerArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemOutdoorAirPerArea, base: &Ene
     if existing.outdoor_air_per_area_m3_s_m2 == payload.new_outdoor_air_per_area_m3_s_m2 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ideal loads system {} already has that outdoor air rate per floor area.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {
-        item.outdoor_air_per_area_m3_s_m2 = payload.new_outdoor_air_per_area_m3_s_m2;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::modifying(IdealLoadsSystemPatch { outdoor_air_per_area_m3_s_m2: Some(payload.new_outdoor_air_per_area_m3_s_m2), ..IdealLoadsSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

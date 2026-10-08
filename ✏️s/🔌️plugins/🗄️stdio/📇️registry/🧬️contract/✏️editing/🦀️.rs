@@ -800,6 +800,9 @@ const SNAPSHOT_EDIT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
 ];
 
 pub trait SnapshotEditingEditor: ArtifactEditor {
+    /// 📦️ Declares exact borrowed operation-wire authority for retained prestage host receipts.
+    fn snapshot_operation_wire_source(_mutation: &Self::Mutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> { None }
+
     fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent>;
     fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
         snapshot_edit_value_is_admitted(event, snapshot)
@@ -1029,9 +1032,11 @@ impl RetainedBytesCopy {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NativeEditPreparationRoute<S, M> {
     recognizes: fn(&M) -> bool,
-    factory: ArtifactPreparationFactory<S, M>,
+    #[factory_child]
+    factory: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>,
 }
 
 impl<S, M> NativeEditPreparationRoute<S, M> {
@@ -1040,9 +1045,12 @@ impl<S, M> NativeEditPreparationRoute<S, M> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RoutedNativeEditPreparationFactory<S, M> {
+    #[factory_owned]
     route: NativeEditPreparationRoute<S, M>,
-    fallback: ArtifactPreparationFactory<S, M>,
+    #[factory_child]
+    fallback: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>,
 }
 
 impl<S, M> semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M> for RoutedNativeEditPreparationFactory<S, M>
@@ -1068,6 +1076,11 @@ where
             self.fallback.begin(request)
         }
     }
+}
+
+/// 🌱️ Prices the concrete routed wrapper around its two actual original child factory trees.
+pub fn routed_native_edit_preparation_factory_birth_bytes<S: 'static, M: 'static>(route_birth: Option<usize>, fallback_birth: usize) -> usize {
+    route_birth.map_or(fallback_birth, |bytes| semio_framework_value::factory_constructor_birth_bytes::<RoutedNativeEditPreparationFactory<S, M>>(bytes.checked_add(fallback_birth).expect("routed child constructor layout")))
 }
 
 pub fn routed_native_edit_preparation_factory<S, M>(route: Option<NativeEditPreparationRoute<S, M>>, fallback: ArtifactPreparationFactory<S, M>) -> ArtifactPreparationFactory<S, M>

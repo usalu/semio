@@ -24,7 +24,6 @@ fn output(value: &DslValue) -> serde_json::Value {
 fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
     use std::{io::Write, process::{Command, Stdio}};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
     let mut results = Vec::new();
     for case in fixture["cases"].as_array().unwrap() {
         let value = input(&case["input"]);
@@ -40,9 +39,9 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
         drain(semio_framework_value::retirement::owned_retirement(value));
         results.push(serde_json::json!({"id":case["id"],"accepted":accepted,"actual":actual}));
     }
-    let script = format!("{}\nconst input=JSON.parse(await Bun.stdin.text());await Bun.write(Bun.stdout,JSON.stringify(oracleCases(input.fixture,input.schema)));", include_str!("🟦️.ts"));
+    let script = format!("{}\nconst input=JSON.parse(await Bun.stdin.text());await Bun.write(Bun.stdout,JSON.stringify(oracleCases(input.fixture)));", include_str!("🟦️.ts"));
     let mut child = Command::new("bun").args(["-e", &script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"schema":schema}).to_string().as_bytes()).unwrap();
+    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     assert_eq!(results, serde_json::from_slice::<Vec<serde_json::Value>>(&result.stdout).unwrap());

@@ -8,8 +8,8 @@
     },
     {
       "key": "remote.progress",
-      "en": "Replaying a remote history change: {done} of {total} mutations",
-      "de": "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen"
+      "en": "Replaying a remote history change: {done} of {total} steps",
+      "de": "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Schritten"
     },
     {
       "key": "remote.paused",
@@ -28,8 +28,8 @@
     },
     {
       "key": "step.progress",
-      "en": "Replaying history: {done} of {total} mutations",
-      "de": "Verlauf wird neu angewendet: {done} von {total} Mutationen"
+      "en": "Replaying history: {done} of {total} steps",
+      "de": "Verlauf wird neu angewendet: {done} von {total} Schritten"
     },
     {
       "key": "step.refused",
@@ -75,8 +75,8 @@
         "de": "Entfernte Verlaufsänderung"
       },
       "text": {
-        "en": "Replaying a remote history change: 3 of 12 mutations",
-        "de": "Entfernte Verlaufsänderung wird angewendet: 3 von 12 Mutationen"
+        "en": "Replaying a remote history change: 3 of 12 steps",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 3 von 12 Schritten"
       },
       "paused": false,
       "fault": null
@@ -92,8 +92,8 @@
         "de": "Entfernte Verlaufsänderung"
       },
       "text": {
-        "en": "Replaying a remote history change: 0 of 4 mutations",
-        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 4 Mutationen"
+        "en": "Replaying a remote history change: 0 of 4 steps",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 4 Schritten"
       },
       "paused": false,
       "fault": null
@@ -149,8 +149,8 @@
         "de": "Entfernte Verlaufsänderung"
       },
       "text": {
-        "en": "Replaying a remote history change: 2 of 9 mutations",
-        "de": "Entfernte Verlaufsänderung wird angewendet: 2 von 9 Mutationen"
+        "en": "Replaying a remote history change: 2 of 9 steps",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 2 von 9 Schritten"
       },
       "paused": false,
       "fault": "vcs.rejected"
@@ -167,8 +167,8 @@
         "de": "Verlaufsschritt"
       },
       "text": {
-        "en": "Replaying history: 120 of 240 mutations",
-        "de": "Verlauf wird neu angewendet: 120 von 240 Mutationen"
+        "en": "Replaying history: 120 of 240 steps",
+        "de": "Verlauf wird neu angewendet: 120 von 240 Schritten"
       },
       "paused": false,
       "fault": null
@@ -186,8 +186,8 @@
         "de": "Verlaufsschritt"
       },
       "text": {
-        "en": "Replaying history: 1 of 3 mutations",
-        "de": "Verlauf wird neu angewendet: 1 von 3 Mutationen"
+        "en": "Replaying history: 1 of 3 steps",
+        "de": "Verlauf wird neu angewendet: 1 von 3 Schritten"
       },
       "paused": false,
       "fault": null
@@ -299,8 +299,8 @@
         "de": "Entfernte Verlaufsänderung"
       },
       "text": {
-        "en": "Replaying a remote history change: 0 of 1 mutations · Work completed: 128",
-        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Mutationen · Arbeitsfortschritt: 128"
+        "en": "Replaying a remote history change: 0 of 1 steps · Work completed: 128",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Schritten · Arbeitsfortschritt: 128"
       },
       "paused": false,
       "fault": null
@@ -318,8 +318,27 @@
         "de": "Entfernte Verlaufsänderung"
       },
       "text": {
-        "en": "Replaying a remote history change: 0 of 1 mutations · Work completed: 256",
-        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Mutationen · Arbeitsfortschritt: 256"
+        "en": "Replaying a remote history change: 0 of 1 steps · Work completed: 256",
+        "de": "Entfernte Verlaufsänderung wird angewendet: 0 von 1 Schritten · Arbeitsfortschritt: 256"
+      },
+      "paused": false,
+      "fault": null
+    },
+    {
+      "name": "operation complete while edit settlement remains",
+      "reprojection": {
+        "done": 1,
+        "total": 2,
+        "kind": "step",
+        "processed": 256
+      },
+      "title": {
+        "en": "History step",
+        "de": "Verlaufsschritt"
+      },
+      "text": {
+        "en": "Replaying history: 1 of 2 steps · Work completed: 256",
+        "de": "Verlauf wird neu angewendet: 1 von 2 Schritten · Arbeitsfortschritt: 256"
       },
       "paused": false,
       "fault": null

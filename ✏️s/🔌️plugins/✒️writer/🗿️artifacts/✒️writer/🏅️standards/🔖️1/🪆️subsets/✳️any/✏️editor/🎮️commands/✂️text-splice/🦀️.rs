@@ -31,7 +31,7 @@ impl TextSplice {
 /// (`WriterPlayApp::typing_fold`), which commits as ONE net splice (design §13.2); the retained command job also records `seq`
 /// in the window's selection (see `WriterCommandJob::emit`).
 pub fn handle(payload: &TextSplice, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WriterMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![crate::op::splice_text(payload.splice())]))
+    Ok(Emit::mutations(vec![crate::schema::mutations::splice_text(payload.splice())]))
 }
 
 //#region 🧪️Tests

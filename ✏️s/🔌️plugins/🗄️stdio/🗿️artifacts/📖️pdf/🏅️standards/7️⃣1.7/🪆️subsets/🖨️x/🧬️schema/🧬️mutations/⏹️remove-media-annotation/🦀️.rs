@@ -2,7 +2,7 @@
 
 use super::insert_media_annotation::InsertMediaAnnotation;
 use super::PdfXMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -18,11 +18,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveMediaAnnotation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "media-annotation", kind: "remove-media-annotation", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        if let Some(id) = support::media_annotation(&next, &self.subtype, &self.title) {
-            support::remove_object(&mut next, id);
-        }
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let rows = support::media_annotation(base, &self.subtype, &self.title).map_or_else(PdfDiff::default, |id| support::remove_object_rows(base, id));
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {

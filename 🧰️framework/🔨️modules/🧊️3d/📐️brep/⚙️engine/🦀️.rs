@@ -14,23 +14,24 @@ pub use mesh_io::{MeshImportCursor, MeshImportStep};
 pub mod contract;
 pub use contract::*;
 
-use crate::brep::operations::blend::{chamfer_edges, fillet_edges, fillet_variable};
-use crate::brep::operations::boolean::{boolean_job, boolean_solid, compound_cut, section_solid_by_plane, split_solid_by_plane, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
+#[path = "🪅️shape-value/🦀️.rs"]
+mod shape_value;
+pub use shape_value::{ImportedShape, ShapeComponent, ShapeRoot, ShapeTessellationJob, ShapeValue, ShapeWire};
+
+use crate::brep::operations::boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
 use crate::brep::operations::euler::make_vertex;
 use crate::brep::operations::intersect::intersect_curve_curve;
 use crate::brep::operations::intersect::intersect_curve_surface;
 use crate::brep::operations::intersect::intersect_surface_surface;
-use crate::brep::operations::offset::{draft_angle, offset_face, offset_solid, shell_solid_with_open_faces, thicken_face};
 use crate::brep::operations::primitives::{
-    make_box, make_cone, make_convex_hull, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus, Wire,
+    make_box, make_cone, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus, Wire,
 };
-use crate::brep::operations::sew::{convert_to_nurbs, defeature, heal_solid, sew_faces};
-use crate::brep::operations::sweep::{extrude_face, helical_sweep, loft_profiles, pipe, revolve_face, sweep_along_path};
+use crate::brep::operations::sew::{convert_to_nurbs, heal_solid, sew_faces};
 use crate::brep::operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
 use crate::brep::queries::classification::point_in_solid;
 use crate::brep::queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
 use crate::brep::queries::tessellation::{tessellate_face, tessellate_solid, tessellate_wire, TessellationJob};
-use crate::brep::queries::validation::validate_body;
+use crate::brep::queries::validation::{issue_reaches, validate_body};
 use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::representation::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
 use crate::brep::representation::curve::Curve3;
@@ -391,7 +392,7 @@ pub mod retirement;
 
 use crate::brep::representation::arena::ShellId;
 use crate::brep::representation::topology::history::PersistentLabel;
-use crate::brep::representation::topology::{EntityRef, ReachSet};
+use crate::brep::representation::topology::EntityRef;
 
 /// 🧠 One live registry entry. Vertex/Edge/Face/🐚️Shell/Solid wrap the arena id whose own
 /// [`crate::brep::representation::topology::history::PersistentLabel`]
@@ -764,39 +765,6 @@ fn entity_roots(entity: &Entity) -> Vec<EntityRef> {
     }
 }
 
-/// 🎯️ Whether one [`ValidationIssue`]'s entity label names anything inside `reach`.
-///
-/// A label is a run of `<store>-<raw index>` pairs — `"edge-3"`, `"solid-11-void-shell-12"`,
-/// `"face-4-face-9"` — and the issue belongs to this shape when ANY pair it names is reachable from
-/// it. A label none of whose pairs can be read is treated as belonging to every shape: the gate's
-/// job is to refuse a shape it cannot vouch for, and an unreadable diagnostic is not a clean bill of
-/// health (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn validation_issue_reaches(reach: &ReachSet, label: &str) -> bool {
-    let parts: Vec<&str> = label.split('-').collect();
-    let mut readable = false;
-    for pair in parts.windows(2) {
-        let Ok(index) = pair[1].parse::<u32>() else { continue };
-        let matched = match pair[0] {
-            "vertex" => reach.vertices.iter().any(|id| id.raw_index() == index),
-            "edge" => reach.edges.iter().any(|id| id.raw_index() == index),
-            "coedge" => reach.coedges.iter().any(|id| id.raw_index() == index),
-            "loop" => reach.loops.iter().any(|id| id.raw_index() == index),
-            "face" => reach.faces.iter().any(|id| id.raw_index() == index),
-            "shell" => reach.shells.iter().any(|id| id.raw_index() == index),
-            "solid" => reach.solids.iter().any(|id| id.raw_index() == index),
-            "curve" => reach.curves3.iter().any(|id| id.raw_index() == index),
-            "surface" => reach.surfaces.iter().any(|id| id.raw_index() == index),
-            _ => continue,
-        };
-        readable = true;
-        if matched {
-            return true;
-        }
-    }
-    !readable
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_tag(e: &Entity) -> String {
     match e {
@@ -845,13 +813,6 @@ impl Brep {
     pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
         let solid = make_torus(&mut self.body, major, minor, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn convex_hull_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
-        let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
-        let mut rec = OpRecorder::new();
-        let solid = make_convex_hull(&mut self.body, &pts, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -986,84 +947,6 @@ impl Brep {
         Ok(self.register_surface(surface))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn offset_face_sync(&mut self, face: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
-        let id = self.face_id(face)?;
-        let mut rec = OpRecorder::new();
-        let out = offset_face(&mut self.body, id, distance, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_face(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn thicken_face_sync(&mut self, face: &GeometryHandle, thickness: f64) -> Result<GeometryHandle, BrepError> {
-        let id = self.face_id(face)?;
-        let mut rec = OpRecorder::new();
-        let solid = thicken_face(&mut self.body, id, thickness, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
-        let wire = self.wire_ref(wire)?.clone();
-        let mut rec = OpRecorder::new();
-        let wire = transform_wire(&mut self.body, &wire, &Affine3::IDENTITY, &mut rec);
-        let origin = self.body.vertices.get(wire.vertices[0]).map_or(Pnt3::new(0.0, 0.0, 0.0), |v| v.position);
-        let face = make_planar_face_from_wire(&mut self.body, &wire, origin, NativeVec3::Z, &mut rec).map_err(|error| map_err(&error))?;
-        let dist = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
-        let dir = if dist > 1e-15 { [vector[0] / dist, vector[1] / dist, vector[2] / dist] } else { [0.0, 0.0, 1.0] };
-        let solid = extrude_face(&mut self.body, face, vec3(dir), dist, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
-        let id = self.face_id(face)?;
-        let mut rec = OpRecorder::new();
-        let id = transform_face(&mut self.body, id, &Affine3::IDENTITY, &mut rec).map_err(|error| map_err(&error))?;
-        let solid = extrude_face(&mut self.body, id, vec3(direction), distance, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn revolve_sync(&mut self, face: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
-        let id = self.face_id(face)?;
-        let mut rec = OpRecorder::new();
-        let solid = revolve_face(&mut self.body, id, pnt(axis_origin), vec3(axis_direction), angle, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn loft_sync(&mut self, profiles: &[GeometryHandle], smooth: bool) -> Result<GeometryHandle, BrepError> {
-        let mut faces = Vec::new();
-        for p in profiles {
-            faces.push(self.face_id(p)?);
-        }
-        let mut rec = OpRecorder::new();
-        let solid = loft_profiles(&mut self.body, &faces, smooth, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn sweep_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        let face = self.face_id(profile)?;
-        let wire = self.wire_ref(path)?.clone();
-        let mut rec = OpRecorder::new();
-        let solid = sweep_along_path(&mut self.body, face, &wire, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn pipe_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle, guide: Option<&GeometryHandle>) -> Result<GeometryHandle, BrepError> {
-        let face = self.face_id(profile)?;
-        let wire = self.wire_ref(path)?.clone();
-        let g = match guide {
-            Some(h) => Some(self.wire_ref(h)?.clone()),
-            None => None,
-        };
-        let mut rec = OpRecorder::new();
-        let solid = pipe(&mut self.body, face, &wire, g.as_ref(), &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn helical_sweep_sync(&mut self, profile: &GeometryHandle, axis_origin: EVec3, axis_dir: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
-        let face = self.face_id(profile)?;
-        let mut rec = OpRecorder::new();
-        let solid = helical_sweep(&mut self.body, face, (pnt(axis_origin), vec3(axis_dir)), radius, pitch, turns, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fuse_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
@@ -1130,17 +1013,6 @@ impl Brep {
         let sb = self.solid_id(b)?;
         let mut rec = OpRecorder::new();
         let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compound_cut_sync(&mut self, target: &GeometryHandle, tools: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
-        let t = self.solid_id(target)?;
-        let mut ids = Vec::new();
-        for tool in tools {
-            ids.push(self.solid_id(tool)?);
-        }
-        let mut rec = OpRecorder::new();
-        let solid = compound_cut(&mut self.body, t, &ids, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     /// 🔁 Dispatches an exact affine transform to whichever geometry kind `shape` resolves to: a
@@ -1224,109 +1096,6 @@ impl Brep {
         }
         self.transform_shape_sync(shape, &Affine3::IDENTITY)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn linear_pattern_sync(&mut self, shape: &GeometryHandle, direction: EVec3, spacing: f64, count: usize) -> Result<GeometryHandle, BrepError> {
-        let mut current = shape.clone();
-        for i in 1..count.max(1) {
-            let off = [direction[0] * spacing * i as f64, direction[1] * spacing * i as f64, direction[2] * spacing * i as f64];
-            let next = self.translate_sync(shape, off)?;
-            current = self.fuse_sync(&current, &next)?;
-        }
-        Ok(current)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn circular_pattern_sync(&mut self, shape: &GeometryHandle, axis: EVec3, count: usize) -> Result<GeometryHandle, BrepError> {
-        let mut current = shape.clone();
-        let n = count.max(1);
-        for i in 1..n {
-            let ang = std::f64::consts::TAU * i as f64 / n as f64;
-            let next = self.rotate_sync(shape, axis, ang)?;
-            current = self.fuse_sync(&current, &next)?;
-        }
-        Ok(current)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, (spacing_x, spacing_y): (f64, f64), count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
-        let mut current = shape.clone();
-        for i in 0..count_x.max(1) {
-            for j in 0..count_y.max(1) {
-                if i == 0 && j == 0 {
-                    continue;
-                }
-                let off = [dir_x[0] * spacing_x * i as f64 + dir_y[0] * spacing_y * j as f64, dir_x[1] * spacing_x * i as f64 + dir_y[1] * spacing_y * j as f64, dir_x[2] * spacing_x * i as f64 + dir_y[2] * spacing_y * j as f64];
-                let next = self.translate_sync(shape, off)?;
-                current = self.fuse_sync(&current, &next)?;
-            }
-        }
-        Ok(current)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let edges = all_edges(&self.body, solid);
-        let mut rec = OpRecorder::new();
-        let out = fillet_edges(&mut self.body, solid, &edges, radius, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn fillet_variable_sync(&mut self, shape: &GeometryHandle, radius_start: f64, radius_end: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let edges = all_edges(&self.body, solid);
-        let e = *edges.first().ok_or_else(|| BrepError::InvalidInput("no edges".into()))?;
-        let mut rec = OpRecorder::new();
-        let out = fillet_variable(&mut self.body, solid, e, radius_start, radius_end, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
-        require_positive_size("fillet radius", radius)?;
-        let solid = self.solid_id(shape)?;
-        let eids = self.scoped_solid_edges(solid, edges)?;
-        let mut rec = OpRecorder::new();
-        let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn chamfer_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let edges = all_edges(&self.body, solid);
-        let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &edges, distance, distance, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn chamfer_asymmetric_sync(&mut self, shape: &GeometryHandle, d1: f64, d2: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let edges = all_edges(&self.body, solid);
-        let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &edges, d1, d2, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn chamfer_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
-        require_positive_size("chamfer distance", distance)?;
-        let solid = self.solid_id(shape)?;
-        let eids = self.scoped_solid_edges(solid, edges)?;
-        let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &eids, distance, distance, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn shell_sync(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
-        require_positive_size("shell thickness", thickness)?;
-        let solid = self.solid_id(shape)?;
-        let scope: std::collections::BTreeSet<_> = self.body.solid_faces(solid).into_iter().collect();
-        let mut open_ids = std::collections::BTreeSet::new();
-        for handle in open_faces {
-            let face = self.face_id(handle)?;
-            if !scope.contains(&face) { return Err(BrepError::InvalidInput("Open face is not part of the selected solid".into())); }
-            open_ids.insert(face);
-        }
-        if !open_ids.is_empty() && open_ids.len() == scope.len() { return Err(BrepError::InvalidInput("Keep at least one face when shelling a solid".into())); }
-        let mut rec = OpRecorder::new();
-        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness, &open_ids.into_iter().collect::<Vec<_>>(), &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
     /// 🔒️ Resolves unique selected edges only within the chosen solid's topology.
     fn scoped_solid_edges(&self, solid: SolidId, edges: &[GeometryHandle]) -> Result<Vec<EdgeId>, BrepError> {
         if edges.is_empty() { return Err(BrepError::InvalidInput("Select at least one edge".into())); }
@@ -1338,52 +1107,6 @@ impl Brep {
             selected.insert(edge);
         }
         Ok(selected.into_iter().collect())
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, neutral_point: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let mut fids = Vec::new();
-        for f in faces {
-            fids.push(self.face_id(f)?);
-        }
-        if fids.is_empty() {
-            fids = self.body.solid_faces(solid);
-        }
-        let mut rec = OpRecorder::new();
-        let out = draft_angle(&mut self.body, solid, &fids, vec3(pull_direction), (pnt(neutral_point), vec3(pull_direction)), angle, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn offset_solid_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let mut rec = OpRecorder::new();
-        let out = offset_solid(&mut self.body, solid, distance, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn defeature_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
-        let solid = self.solid_id(shape)?;
-        let mut fids = Vec::new();
-        for f in faces {
-            fids.push(self.face_id(f)?);
-        }
-        let mut rec = OpRecorder::new();
-        let out = defeature(&mut self.body, solid, &fids, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(out))
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn section_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<Vec<GeometryHandle>, BrepError> {
-        let id = self.solid_id(solid)?;
-        let mut rec = OpRecorder::new();
-        let faces = section_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(faces.into_iter().map(|f| self.register_face(f)).collect())
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn split_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
-        let id = self.solid_id(solid)?;
-        let mut rec = OpRecorder::new();
-        let (a, b) = split_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok((self.register_solid(a), self.register_solid(b)))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn curve_curve_intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, tolerance: f64) -> Result<Vec<EVec3>, BrepError> {
@@ -1584,14 +1307,13 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate_sync(&self, shape: &GeometryHandle) -> Result<String, BrepError> {
-        let _ = self.solid_id(shape)?;
-        let issues = validate_body(&self.body);
+        let validity = self.validity_sync(shape)?;
         let report = semio_framework_pack_json::object([
-            ("ok".into(), semio_framework_pack_json::Value::Bool(issues.is_empty())),
-            ("issueCount".into(), semio_framework_pack_json::Value::from(issues.len() as u64)),
-            ("issues".into(), semio_framework_pack_json::Value::Array(issues.iter().map(|issue| semio_framework_pack_json::object([
+            ("ok".into(), semio_framework_pack_json::Value::Bool(validity.ok)),
+            ("issueCount".into(), semio_framework_pack_json::Value::from(validity.issues.len() as u64)),
+            ("issues".into(), semio_framework_pack_json::Value::Array(validity.issues.iter().map(|issue| semio_framework_pack_json::object([
                 ("entity".into(), semio_framework_pack_json::Value::String(issue.entity.clone())),
-                ("code".into(), semio_framework_pack_json::Value::String(issue.code.into())),
+                ("code".into(), semio_framework_pack_json::Value::String(issue.code.clone())),
                 ("message".into(), semio_framework_pack_json::Value::String(issue.message.clone())),
             ])).collect())),
         ]);
@@ -1777,6 +1499,7 @@ impl Brep {
             Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Shell(_)=>{let mut job=self.tessellate_job_sync(shape,deflection)?;loop {match job.step(&self.body,4096).map_err(|error|map_err(&error))? {crate::brep::queries::tessellation::TessellationStep::Done(_)=>return job.into_mesh().map(|(mesh,_)|mesh).ok_or_else(||BrepError::InvalidInput("missing shell tessellation".into())),crate::brep::queries::tessellation::TessellationStep::Cancelled(_)=>return Err(BrepError::InvalidInput("shell tessellation cancelled".into())),_=>{}}}},
             Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(|error| map_err(&error)),
+            Entity::Compound(solids, _) => TessellationJob::for_solids(&self.body, solids, deflection).and_then(|job| job.run_to_completion(&self.body)).map(|(mesh, _)| mesh).map_err(|error| map_err(&error)),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }
@@ -1792,6 +1515,7 @@ impl Brep {
             Entity::Face(id) => TessellationJob::for_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
             Entity::Shell(id)=>TessellationJob::for_shell(&self.body,*id,deflection).map_err(|error|map_err(&error)),
             Entity::Wire(wire, _) => Ok(TessellationJob::for_wire(wire, deflection)),
+            Entity::Compound(solids, _) => TessellationJob::for_solids(&self.body, solids, deflection).map_err(|error| map_err(&error)),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }
@@ -1826,7 +1550,7 @@ impl Brep {
             return Ok(());
         }
         let reach = self.body.reachable_from(&entity_roots(entity));
-        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-") && !(matches!(entity,Entity::Shell(_)) && issue.code=="shell-not-closed")).filter(|issue| validation_issue_reaches(&reach, &issue.entity)).collect();
+        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-") && !(matches!(entity,Entity::Shell(_)) && issue.code=="shell-not-closed")).filter(|issue| issue_reaches(&reach, &issue.entity)).collect();
         if blocking.is_empty() {
             Ok(())
         } else {
@@ -1913,6 +1637,17 @@ fn all_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
 }
 
 // #endregion 🔖️SyncApi
+
+// #region 🔖️OperationJobs
+#[path = "⏱️operation-jobs/🦀️.rs"]
+mod operation_jobs;
+pub use operation_jobs::{BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationProgress, BrepOperationStep};
+// #endregion 🔖️OperationJobs
+
+// #region 🔖️AnalysisSession
+#[path = "🔎️analysis-session/🦀️.rs"]
+mod analysis_session;
+// #endregion 🔖️AnalysisSession
 
 // #region 🔖️BrepKernelImpl
 

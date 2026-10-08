@@ -6,7 +6,6 @@ import Ajv from "ajv";
 import glob from "fast-glob";
 import MarkdownIt from "markdown-it";
 import ts from "typescript";
-import { parse as parseJsonc } from "jsonc-parser";
 import { ownedFilesystemEntries } from "../🔍️filesystem/🟦️.ts";
 import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy, typescriptLeadingDocumentationReferenceAuthority } from "../../🧹️normalization/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
@@ -16,7 +15,7 @@ type Mapping = Readonly<{ id: string; source: string; destination: string; kindI
 type Negative = Readonly<{ id: string; omitDescriptor?: boolean; descriptorPatch?: Record<string, unknown>; extraDescriptor?: boolean; payload?: string; payloadPath?: string }>;
 type FixtureKind = "support" | "oracle" | "unowned";
 type FixtureRetention = Readonly<{ ownerPath: string; prefixes: Readonly<Record<FixtureKind, string>>; rejectedChildren: readonly string[] }>;
-type Vector = Readonly<{ schemaVersion: number; owner: string; subset: string; ownerReadiness: { nodes: number; physicalNodes: number; files: number; sourceBytes: number; sourceTreeDigest: string; alreadyCanonicalSources: readonly string[]; contextSources: readonly { path: string; size: number; sha256: string }[] }; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number; generatorEnvironment: { name: string; value: string }; oracleRetention: { rootPrefix: string; retainedInputs: readonly string[]; disposableOutputs: readonly string[]; retainOnFailure: boolean }; fixtureRetention: FixtureRetention }; sourceInputs: Readonly<Record<string, string>>; cases: readonly Mapping[]; payloadAuthority: unknown; payloadDescriptor: string; documentationCases: readonly { id: string; content: string; values: readonly string[] }[]; negativeCases: readonly Negative[] }>;
+type Vector = Readonly<{ schemaVersion: number; owner: string; subset: string; ownerReadiness: { nodes: number; physicalNodes: number; files: number; sourceBytes: number; sourceTreeDigest: string; alreadyCanonicalSources: readonly string[]; contextSources: readonly { path: string; size: number; sha256: string }[] }; execution: { target: string; command: string; generatorEnvironment: { name: string; value: string }; oracleRetention: { rootPrefix: string; retainedInputs: readonly string[]; disposableOutputs: readonly string[]; retainOnFailure: boolean }; fixtureRetention: FixtureRetention }; sourceInputs: Readonly<Record<string, string>>; cases: readonly Mapping[]; payloadAuthority: unknown; payloadDescriptor: string; documentationCases: readonly { id: string; content: string; values: readonly string[] }[]; negativeCases: readonly Negative[] }>;
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
@@ -224,17 +223,10 @@ describe("artifact support leaf authority", () => {
     expect(readFileSync(join(failed, "Cargo.lock"), "utf8")).toBe("failed run Cargo.lock\n");
   });
 
-  test("registers the canonical test through Nx and the launch catalog", () => {
+  test("registers the canonical test through Nx", () => {
     const expected = vector.execution;
     const project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
     expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const raw = readFileSync(join(repoRoot, path), "utf8");
-      const launches = parseJsonc(raw).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-      expect(launches).toHaveLength(1);
-      expect(launches[0].command).toBe(expected.launchCommand);
-      expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-    }
   });
 
   test("matches the language-neutral owner contracts and exact production inputs", () => {

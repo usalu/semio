@@ -1,12 +1,12 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn fem2d_window_config_model_matches_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     let base: Fem2dModelWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM window config");
-    let mutation = Fem2dModelWindowConfigMutation::Snapshot { config: Box::new(base.clone()) };
-    let after = mutation.diff(&base).diff().apply(&base).expect("FEM window diff");
+    let mutation = Fem2dModelWindowConfigMutation::Update { patch: Box::new(Fem2dModelWindowConfigPatch::replacing(&base)) };
+    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("FEM window diff");
     assert_eq!(after, base);
     assert_eq!(Fem2dModelWindowConfigMutation::parse_op(&mutation.print_op()).expect("FEM text mutation"), mutation);
     assert_eq!(Fem2dModelWindowConfigMutation::decode_op(&mutation.encode_op().expect("FEM binary mutation")).expect("FEM decoded mutation"), mutation);

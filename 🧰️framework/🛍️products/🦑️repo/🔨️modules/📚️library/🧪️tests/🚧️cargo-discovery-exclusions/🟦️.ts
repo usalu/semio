@@ -5,13 +5,12 @@ import { discoverCargoWorkspaces, cargoWorkspaceMembers } from "../../🗂️wor
 import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import glob from "fast-glob";
-import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import { isDiscoverySkipDirectory, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number } };
+const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string } };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
 /** 🧫️ Models filesystem entries in memory and rejects any attempt to touch an opaque path. */
 function virtualFilesystem(root: string, namesOnly = false): { api: any; reads: string[]; fileReads: string[]; content: Map<string, string> } {
@@ -87,14 +86,8 @@ test("registry catalog filesystem excludes opaque names before metadata enumerat
   }
 });
 
-test("registers the Cargo exclusion gate through Nx and both launch catalogs", () => {
+test("registers the Cargo exclusion gate through Nx", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(repoRoot, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
 });

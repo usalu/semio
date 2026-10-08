@@ -1,0 +1,421 @@
+{
+  "category": {
+    "id": "math.values",
+    "emoji": "🔢️",
+    "order": 400,
+    "label": {
+      "en": "Values",
+      "de": "Werte"
+    },
+    "description": {
+      "en": "Constants that feed numbers, angles, vectors, points and planes into other widgets.",
+      "de": "Konstanten, die Zahlen, Winkel, Vektoren, Punkte und Ebenen in andere Widgets einspeisen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "math.number",
+      "category": "math.values",
+      "emoji": "🔢️",
+      "label": {
+        "en": "Number",
+        "de": "Zahl"
+      },
+      "description": {
+        "en": "Provides a decimal number.",
+        "de": "Liefert eine Dezimalzahl."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number.",
+            "de": "Die Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The number.",
+            "de": "Die Zahl."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.integer",
+      "category": "math.values",
+      "emoji": "🔟️",
+      "label": {
+        "en": "Integer",
+        "de": "Ganzzahl"
+      },
+      "description": {
+        "en": "Provides a whole number.",
+        "de": "Liefert eine ganze Zahl."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The whole number.",
+            "de": "Die ganze Zahl."
+          },
+          "type": "integer",
+          "default": 0,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The whole number.",
+            "de": "Die ganze Zahl."
+          },
+          "type": "integer"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.angle",
+      "category": "math.values",
+      "emoji": "📐️",
+      "label": {
+        "en": "Angle",
+        "de": "Winkel"
+      },
+      "description": {
+        "en": "Provides an angle, edited in degrees and stored in radians.",
+        "de": "Liefert einen Winkel, in Grad bearbeitet und in Bogenmaß gespeichert."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The angle.",
+            "de": "Der Winkel."
+          },
+          "type": "angle",
+          "default": 0,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The angle in radians.",
+            "de": "Der Winkel im Bogenmaß."
+          },
+          "type": "angle"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.length",
+      "category": "math.values",
+      "emoji": "📏️",
+      "label": {
+        "en": "Length",
+        "de": "Länge"
+      },
+      "description": {
+        "en": "Provides a length in model units.",
+        "de": "Liefert eine Länge in Modelleinheiten."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The length.",
+            "de": "Die Länge."
+          },
+          "type": "length",
+          "default": 1,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The length.",
+            "de": "Die Länge."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.boolean",
+      "category": "math.values",
+      "emoji": "☑️",
+      "label": {
+        "en": "Boolean",
+        "de": "Wahrheitswert"
+      },
+      "description": {
+        "en": "Provides a yes or no value.",
+        "de": "Liefert einen Ja-Nein-Wert."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "True or false.",
+            "de": "Wahr oder falsch."
+          },
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "True or false.",
+            "de": "Wahr oder falsch."
+          },
+          "type": "boolean"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.vector",
+      "category": "math.values",
+      "emoji": "➡️",
+      "label": {
+        "en": "Vector",
+        "de": "Vektor"
+      },
+      "description": {
+        "en": "Provides a direction or displacement with three components.",
+        "de": "Liefert eine Richtung oder Verschiebung mit drei Komponenten."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The vector.",
+            "de": "Der Vektor."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The vector.",
+            "de": "Der Vektor."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "value"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "math.point",
+      "category": "math.values",
+      "emoji": "📍️",
+      "label": {
+        "en": "Point",
+        "de": "Punkt"
+      },
+      "description": {
+        "en": "Provides a position in space.",
+        "de": "Liefert eine Position im Raum."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The position.",
+            "de": "Die Position."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The position.",
+            "de": "Die Position."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "value"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "math.plane",
+      "category": "math.values",
+      "emoji": "🔳️",
+      "label": {
+        "en": "Plane",
+        "de": "Ebene"
+      },
+      "description": {
+        "en": "Provides a plane from an origin and a normal.",
+        "de": "Liefert eine Ebene aus Ursprung und Normale."
+      },
+      "inputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The plane.",
+            "de": "Die Ebene."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": {
+            "en": "Value",
+            "de": "Wert"
+          },
+          "description": {
+            "en": "The plane.",
+            "de": "Die Ebene."
+          },
+          "type": "plane"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "value"
+          },
+          {
+            "motion": "rotate",
+            "port": "value"
+          }
+        ]
+      },
+      "preview": false
+    }
+  ]
+}

@@ -5,7 +5,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full imperative artifact state across the artifact, presence, config and transient lanes.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureArtifact {

@@ -3,10 +3,8 @@
   "contractId": "artifact-empty-facet-authoring-registration-v1",
   "command": "artifact-empty-facet-authoring",
   "target": "test-artifact-empty-facet-authoring",
+  "cache": false,
   "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts",
   "runner": "runTestBudgeted",
-  "budget": "default",
-  "launchName": "🧹clean🧩️taxonomy🪶️artifact-empty-facet-authoring",
-  "launchGroup": "4_gate",
-  "launchOrder": 410.205
+  "budget": "default"
 }

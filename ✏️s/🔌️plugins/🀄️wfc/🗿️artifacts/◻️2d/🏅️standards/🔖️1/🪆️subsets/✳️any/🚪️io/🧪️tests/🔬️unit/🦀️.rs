@@ -2,7 +2,7 @@
 
 use super::{export_stdio_kinds, import_stdio_kinds, io};
 use crate::examples;
-use crate::standards::v1::subsets::any::io::{mutations, snapshot};
+use crate::standards::v1::subsets::any::io::text::{mutations, snapshot};
 use crate::{Wfc2dMutation, Wfc2dSnapshot};
 use protocol::{OpBinary, OpText};
 use store::ArtifactDsl;

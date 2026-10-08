@@ -19,16 +19,26 @@ pub(crate) trait StructuralMutationCopy<S, M>: Send {
     fn terminal_is_empty(&self) -> bool;
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(crate) struct StructuralPreparationFactory<S, M> {
     prefix: &'static str,
     recognizes: fn(&M) -> bool,
     preflight: fn(&M) -> Result<usize, String>,
     copy: fn() -> Box<dyn StructuralMutationCopy<S, M>>,
+    #[factory_child]
     mutation_retirement: Arc<dyn app_store::ArtifactOwnedValueRetirementFactory<M>>,
+    #[factory_child]
     snapshot_retirement: Arc<dyn app_store::SnapshotRetirementFactory<S>>,
 }
 
 impl<S, M> StructuralPreparationFactory<S, M> {
+    /// 🌱️ Prices the concrete structural factory and both original child constructors.
+    pub(crate) fn constructor_birth_bytes(mutation_birth: usize, snapshot_birth: usize) -> usize
+    where Self: semio_framework_value::FactoryPayloadRetirement,
+    {
+        semio_framework_value::factory_constructor_birth_bytes::<Self>(mutation_birth.checked_add(snapshot_birth).expect("structural child constructor layout"))
+    }
+
     pub(crate) fn new(
         prefix: &'static str,
         recognizes: fn(&M) -> bool,

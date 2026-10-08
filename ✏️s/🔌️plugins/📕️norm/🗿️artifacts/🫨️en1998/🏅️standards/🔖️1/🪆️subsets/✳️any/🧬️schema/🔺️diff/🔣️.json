@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -39,92 +28,680 @@
       "x-semio-state": "artifact"
     },
     "buildings": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/buildings"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998BuildingEdit"
+      },
       "x-semio-state": "artifact"
     },
     "bridges": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/bridges"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998BridgeEdit"
+      },
       "x-semio-state": "artifact"
     },
     "assessments": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/assessments"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998AssessmentEdit"
+      },
       "x-semio-state": "artifact"
     },
     "silos": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/silos"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998SiloEdit"
+      },
       "x-semio-state": "artifact"
     },
     "tanks": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/tanks"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998TankEdit"
+      },
       "x-semio-state": "artifact"
     },
     "foundations": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/foundations"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998FoundationEdit"
+      },
       "x-semio-state": "artifact"
     },
     "retainingWalls": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/retainingWalls"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998RetainingWallEdit"
+      },
       "x-semio-state": "artifact"
     },
     "towers": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/properties/towers"
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998TowerEdit"
+      },
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1998RowOp": {
+      "enum": [
+        "Insert",
+        "Remove",
+        "Replace",
+        "Patch"
+      ]
+    },
+    "En1998BuildingEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Building"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998BuildingPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998BridgeEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Bridge"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998BridgePatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998AssessmentEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Assessment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998AssessmentPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998SiloEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Silo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998TankEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Tank"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998FoundationEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Foundation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998RetainingWallEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998RetainingWall"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998TowerEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Tower"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998TowerPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998SystemEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998System"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998SystemPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998StoreyEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Storey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998StoreyPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998MemberEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "index",
+        "id",
+        "value",
+        "patch"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/En1998RowOp"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998Member"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1998MemberPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998BuildingPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "planRegular": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elevationRegular": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "masonryWallAreaRatio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "systems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998SystemEdit"
+          }
+        },
+        "storeys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998StoreyEdit"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998MemberEdit"
+          }
+        }
+      }
+    },
+    "En1998BridgePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vRdN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998AssessmentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rKN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998TowerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mRdNm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998SystemPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseShearResistanceN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998StoreyPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "permanentGkN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stiffnessX": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "driftXM": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1998MemberPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "detailingCompatibleWithQ": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

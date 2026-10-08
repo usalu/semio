@@ -1,0 +1,29 @@
+{
+  "schema": "semio.member.private-projection/v1",
+  "cases": [
+    {
+      "id": "owned-private",
+      "member": "member-one",
+      "readMember": "member-one",
+      "typed": true,
+      "accepted": true
+    },
+    {
+      "id": "foreign-same-type",
+      "member": "member-one",
+      "readMember": "member-two",
+      "typed": true,
+      "accepted": false
+    },
+    {
+      "id": "wrong-type",
+      "member": "member-one",
+      "readMember": "member-one",
+      "typed": false,
+      "accepted": false
+    }
+  ],
+  "borrowed": true,
+  "allocatedBytes": 0,
+  "liveAuthorityChanged": false
+}

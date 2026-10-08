@@ -256,6 +256,15 @@
       },
       "outputs": []
     },
+    "world3d-modelling-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts world3d-modelling-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
     "agent-bridge-check": {
       "executor": "nx:run-commands",
       "cache": true,

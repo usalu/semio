@@ -6,7 +6,7 @@
 //! load id. The middle guard is what makes the two doors into `loads` agree: the same nodal load on
 //! a missing node is now refused whether it arrives inside a new case or is attached to an old one.
 use super::AddLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry, Fem2dLoadsDelta};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{load_id, Fem2dSnapshot};
 
@@ -22,8 +22,10 @@ pub fn diff(payload: &AddLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcom
     if existing.loads.iter().any(|load| load_id(load) == new_load_id) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" already exists in case \"{}\".", new_load_id, payload.case_id));
     }
-    let mut item = existing.clone();
-    item.loads.push((*payload.load).clone());
-    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), item }], ..Default::default() }), ..Default::default() })
+    let loads = Fem2dLoadsDelta { added: vec![(*payload.load).clone()], ..Default::default() };
+    protocol::MutationOutcome::new(Fem2dDiff {
+        load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), patch: Fem2dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

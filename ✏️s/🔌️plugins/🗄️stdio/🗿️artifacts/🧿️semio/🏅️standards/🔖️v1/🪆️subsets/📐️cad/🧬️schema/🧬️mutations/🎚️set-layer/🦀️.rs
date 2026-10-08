@@ -1,6 +1,4 @@
-//! 🎚️ `set-layer` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎚️ `set-layer` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -22,11 +20,11 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer", record: "SetLayer" };
 
     fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
-        agg_diff(&SemioCadMutation::SetLayer(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioCadMutation::SetLayer(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -38,3 +36,10 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetLayer {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

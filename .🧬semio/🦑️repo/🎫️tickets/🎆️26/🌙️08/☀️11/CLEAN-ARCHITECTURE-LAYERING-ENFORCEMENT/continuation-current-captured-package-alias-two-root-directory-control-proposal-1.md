@@ -1,0 +1,3 @@
+# Captured Package Alias Two Root Directory Control
+
+Alias1 sealed actualgreen16+4/13binding results remain immutable; both Bun and Node actualpath/body results and missingpackage failures are retained. Review identified the Root directory itself as an unsupported workspace package alias scope. Alias2 explicitly refuses materializing it or disguising it as an external entry; current owning namespace has no such alias. The closed neutral17th case proves this refusal. All context/proof schema and pure exported API contracts remain identical. Finite input/executable/library hashes are now captured before controls and rechecked afterward. The exact method outputs and scope remain held until actual controls and Low review.

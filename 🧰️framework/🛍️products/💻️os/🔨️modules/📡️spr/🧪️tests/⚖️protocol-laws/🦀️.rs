@@ -519,11 +519,11 @@ where
     P: PartialEq + std::fmt::Debug,
     D: crate::os_spr::MutationDiff<P> + Clone,
 {
-    let mid = d1.apply(base).expect("first valid diff must apply");
-    let sequential = d2.apply(&mid);
+    let mid = crate::os_spr::apply_diff(&d1, base).expect("first valid diff must apply");
+    let sequential = crate::os_spr::apply_diff(&d2, &mid);
     let mut absorbed = d1;
     absorbed.absorb(d2);
-    let composed = absorbed.apply(base);
+    let composed = crate::os_spr::apply_diff(&absorbed, base);
     assert_eq!(composed, sequential, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base))");
 }
 
@@ -537,12 +537,12 @@ where
     P: PartialEq + std::fmt::Debug,
     D: crate::os_spr::MutationDiff<P> + Clone,
 {
-    let mid = d1.apply(base).expect("first valid diff must apply");
-    let sequential = d2.apply(&mid);
+    let mid = crate::os_spr::apply_diff(&d1, base).expect("first valid diff must apply");
+    let sequential = crate::os_spr::apply_diff(&d2, &mid);
     retire(mid);
     let mut absorbed = d1;
     absorbed.absorb(d2);
-    let composed = absorbed.apply(base);
+    let composed = crate::os_spr::apply_diff(&absorbed, base);
     retire_diff(absorbed);
     let matches = composed == sequential;
     let report = matches.then(String::new).unwrap_or_else(|| format!("composed={composed:?} sequential={sequential:?}"));
@@ -577,7 +577,7 @@ where
     use crate::os_spr::MutationDiff;
     let (forward, messages) = mutation.diff(base).into_parts();
     let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
-    let applied = (!rejected).then(|| forward.apply(base));
+    let applied = (!rejected).then(|| crate::os_spr::apply_diff(&forward, base));
     forward.retire_cold();
     assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
     let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
@@ -585,7 +585,7 @@ where
     backward.reverse();
     for undo in &backward {
         let (delta, _) = undo.diff(&state).into_parts();
-        let next = delta.apply(&state).expect("valid inverse diff must apply");
+        let next = crate::os_spr::apply_diff(&delta, &state).expect("valid inverse diff must apply");
         delta.retire_cold();
         state = next;
     }
@@ -610,7 +610,7 @@ where
     use crate::os_spr::MutationDiff;
     let (forward, messages) = mutation.diff(base).into_parts();
     let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
-    let applied = (!rejected).then(|| forward.apply(base));
+    let applied = (!rejected).then(|| crate::os_spr::apply_diff(&forward, base));
     retire_diff(forward);
     assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
     let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
@@ -618,7 +618,7 @@ where
     backward.reverse();
     for undo in &backward {
         let (delta, _) = undo.diff(&state).into_parts();
-        let next = delta.apply(&state).expect("valid inverse diff must apply");
+        let next = crate::os_spr::apply_diff(&delta, &state).expect("valid inverse diff must apply");
         retire_diff(delta);
         retire(std::mem::replace(&mut state, next));
     }
@@ -632,6 +632,60 @@ where
     assert!(matches, "applying mutation.inverse(base) (reversed) after mutation must restore base; restored:\n{report}");
 }
 
+/// ✅️ LAW (L3): the concrete inverse of `mutation` sums to the negative of its diff. With `d = mutation.diff(base)`, `after =
+/// apply_diff(d, base)`, the inverse operations replayed in storage-reversed order build `d_k = inv_k.diff(s_{k-1})` and
+/// `s_k = apply_diff(d_k, s_{k-1})`, then `Σ = d_1 ⊕ … ⊕ d_n` by [`crate::os_spr::MutationDiff::absorb`]. Asserts (1) the inverse is
+/// non-empty whenever `after != base` (no `V2-EMPTY-INVERSE`), (2) the sequential replay restores `base`, (3)
+/// `apply_diff(Σ, after) == base`, and (4) `canon(Σ) == canon(d.inverse(base))` with `canon(x) = absorb(default, x)` — the inverse
+/// operations are concrete, not derived from the forward diff, yet their diffs sum to exactly the negative diff.
+pub async fn assert_mutation_inverse_sum_law<P, Op>(mutation: &Op, base: &P)
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    Op: crate::os_spr::Mutation<P>,
+{
+    use crate::os_spr::{DiffAlgebra, MutationDiff};
+    use semio_framework_value::ToValue;
+    fn canon<P, D: MutationDiff<P>>(diff: D) -> D {
+        let mut canonical = D::default();
+        canonical.absorb(diff);
+        canonical
+    }
+    let (forward, messages) = mutation.diff(base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    let after = crate::os_spr::apply_diff(&forward, base).expect("valid forward diff must apply");
+    let changed = after != *base;
+    let negative = forward.inverse(base);
+    forward.retire_cold();
+    let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
+    let non_empty = !backward.is_empty();
+    backward.reverse();
+    let mut state = after.clone();
+    let mut sum = <Op::Diff as Default>::default();
+    for undo in &backward {
+        let (step, _) = undo.diff(&state).into_parts();
+        let next = crate::os_spr::apply_diff(&step, &state).expect("valid inverse diff must apply");
+        sum.absorb(step);
+        state = next;
+    }
+    for undo in backward {
+        Op::retire_cold(undo);
+    }
+    let replayed = state == *base;
+    let summed = crate::os_spr::apply_diff(&sum, &after);
+    let summed_restores = summed.as_ref() == Ok(base);
+    let canonical_sum = canon::<P, Op::Diff>(sum);
+    let canonical_negative = canon::<P, Op::Diff>(negative);
+    let matches_negative = !changed || canonical_sum == canonical_negative;
+    let report = format!("sum={:?} negative={:?} restored={state:?} base={base:?}", canonical_sum.to_value(), canonical_negative.to_value());
+    canonical_sum.retire_cold();
+    canonical_negative.retire_cold();
+    assert!(!changed || non_empty, "mutation.inverse(base) must not be empty for a mutation that changes state; base={base:?}");
+    assert!(replayed, "applying mutation.inverse(base) (reversed) after mutation must restore base; {report}");
+    assert!(summed_restores, "the summed inverse diffs must restore base from the applied state; {report}");
+    assert!(matches_negative, "the summed inverse diffs must equal the negative of the forward diff, d.inverse(base); {report}");
+}
+
 /// ✅️ LAW: `D::between(a, b).apply(a) == b`, and `D::between(a, a).is_empty()` —
 /// [`crate::os_spr::DiffAlgebra`]'s state-delta contract.
 pub async fn assert_diff_algebra_between_law<P, D>(a: &P, b: &P)
@@ -640,7 +694,7 @@ where
     D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
     let delta = D::between(a, b);
-    assert_eq!(delta.apply(a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
+    assert_eq!(crate::os_spr::apply_diff(&delta, a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
     assert!(D::between(a, a).is_empty(), "DiffAlgebra::between(a, a) must be empty");
 }
 
@@ -651,8 +705,8 @@ where
     P: Clone + PartialEq + std::fmt::Debug,
     D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
-    let after = d.apply(base).expect("valid diff must apply");
-    let restored = d.inverse(base).apply(&after);
+    let after = crate::os_spr::apply_diff(d, base).expect("valid diff must apply");
+    let restored = crate::os_spr::apply_diff(&d.inverse(base), &after);
     assert_eq!(restored.as_ref(), Ok(base), "d.inverse(base).apply(&d.apply(base)) must equal base");
 }
 

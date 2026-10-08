@@ -10,12 +10,15 @@ const _: () = assert!(size_of::<NoTransient>() == 0 && !std::mem::needs_drop::<N
 const _: () = assert!(size_of::<NoTransientMutation>() == 0 && !std::mem::needs_drop::<NoTransientMutation>());
 
 /// 🫧️ Exact shared and owned retirement for the statically empty transient state.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NoTransientRetirementFactory;
 
 struct NoTransientRetirement(Option<Arc<NoTransient>>);
 struct NoTransientOwnedRetirement(Option<NoTransient>);
 
 impl store::SnapshotRetirementFactory<NoTransient> for NoTransientRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<NoTransient>) -> usize { std::mem::size_of::<NoTransientRetirement>() }
+
     fn retire(&self, root: Arc<NoTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(NoTransientRetirement(Some(root)))
     }

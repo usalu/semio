@@ -6,7 +6,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 /// 📏️ Change width of one reference overlay's `width_world` field.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-reference-width")]

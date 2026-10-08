@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -30,50 +29,47 @@
   "services": null,
   "infrastructure": null,
   "information": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "information-requirement-a",
-        "patch": {
-          "name": "Information Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "informationType": "Replaced Information Requirement A",
-          "format": null,
-          "sourceSystem": null,
-          "destinationSystems": [],
-          "updateFrequency": null,
-          "retentionPeriod": null,
-          "accessControls": [],
-          "classification": null,
-          "qualityCriteria": [],
-          "metadataRequirements": [],
-          "integrationPoints": [],
-          "backupRequirements": [],
-          "disasterRecovery": [],
-          "privacyControls": [],
-          "auditTrail": false,
-          "elementIds": [],
-          "stakeholderIds": [],
-          "standards": [],
-          "ownerId": null
-        }
+        "name": "Information Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "informationType": "Replaced Information Requirement A",
+        "format": null,
+        "sourceSystem": null,
+        "destinationSystems": [],
+        "updateFrequency": null,
+        "retentionPeriod": null,
+        "accessControls": [],
+        "classification": null,
+        "qualityCriteria": [],
+        "metadataRequirements": [],
+        "integrationPoints": [],
+        "backupRequirements": [],
+        "disasterRecovery": [],
+        "privacyControls": [],
+        "auditTrail": false,
+        "elementIds": [],
+        "stakeholderIds": [],
+        "standards": [],
+        "ownerId": null
       }
     ],
+    "removed": [
+      "information-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "communication": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

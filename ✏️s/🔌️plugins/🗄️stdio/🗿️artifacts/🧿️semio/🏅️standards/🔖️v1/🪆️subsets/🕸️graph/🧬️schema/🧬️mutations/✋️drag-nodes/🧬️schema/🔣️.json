@@ -3,7 +3,11 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/drag-nodes/schema.json",
   "title": "DragNodes",
   "description": "The `drag-nodes` mutation record: a set of graph nodes moved by one relative canvas offset.",
-  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
+  "x-semio-inverse-rows": {
+    "perTarget": {
+      "targets": 1
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,8 +24,6 @@
       "minItems": 1,
       "uniqueItems": true,
       "x-semio-ui": {
-        "widget": "reference",
-        "role": "target",
         "label": {
           "en": "Nodes",
           "de": "Knoten"
@@ -29,11 +31,6 @@
         "description": {
           "en": "Nodes to drag; ones the graph lacks are skipped.",
           "de": "Zu ziehende Knoten; im Graphen fehlende werden übersprungen."
-        },
-        "ref": {
-          "kind": "node",
-          "domain": "graph",
-          "granularity": "node"
         },
         "group": "target",
         "order": 10
@@ -93,7 +90,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node ID",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     }

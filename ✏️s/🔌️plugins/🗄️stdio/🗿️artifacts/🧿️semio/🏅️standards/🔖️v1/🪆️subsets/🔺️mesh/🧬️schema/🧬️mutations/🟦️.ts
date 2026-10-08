@@ -8,9 +8,7 @@
  * `{ mutation: "...", ...fields }` shape this previously declared. None of the 17 leaf structs
  * carry `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc comment), so
  * every leaf's own field names are the literal Rust snake_case names verbatim. */
-import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopology, SemioPoint3, SemioUv, SemioRgba } from "../📸️snapshot/🟦️";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateMesh {
   mesh: SemioMesh;
@@ -118,5 +116,3 @@ export type SemioMeshMutation =
   | { ChangeTextureMime: ChangeTextureMime }
   | { ReplaceTextureBytes: ReplaceTextureBytes }
   | { MoveVertex: MoveVertex }
-  | { SetSnapshot: SetSnapshot }
-  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } };

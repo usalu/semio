@@ -1,0 +1,531 @@
+{
+  "contract": "diff-only-law-gate-v1",
+  "design": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/📋️design.md",
+  "codes": {
+    "R8": "V3-LEAF-APPLY",
+    "R9": "V3-LEAF-APPLY",
+    "R10": "V1-SNAPSHOT-DIFF",
+    "R11": "V2-DIFF-DERIVED-INVERSE",
+    "R12": "V1-SNAPSHOT-DIFF",
+    "R13": "V1-SNAPSHOT-DIFF",
+    "R14": "V2-RESTORE-INVERSE",
+    "R15": "V4-LAW-UNTESTED",
+    "R16": "V3-LEAF-APPLY"
+  },
+  "cases": [
+    {
+      "id": "r8-mutable-base",
+      "description": "A diff taking `&mut` base and an inverse passing a `&mut` buffer to a helper.",
+      "segments": [
+        "r8-mutable-base",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &mut S) -> protocol::MutationOutcome<D> {",
+        "    protocol::MutationOutcome::new(D::default())",
+        "}",
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    let mut rows = Vec::new();",
+        "    fill(&mut rows, base);",
+        "    Ok(rows)",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R8"
+        },
+        {
+          "line": 6,
+          "rule": "R8"
+        }
+      ],
+      "oracle": [
+        "R8"
+      ]
+    },
+    {
+      "id": "r9-leaf-applies",
+      "description": "A diff leaf applying a diff through `.apply(`, `apply_diff(` and naming `ApplyCapability`; the `use` statement is not a use.",
+      "segments": [
+        "r9-leaf-applies",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "use protocol::ApplyCapability;",
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    let step = D::default();",
+        "    let next = step.apply(base, cap);",
+        "    let later = protocol::apply_diff(&step, base);",
+        "    protocol::MutationOutcome::new(step)",
+        "}",
+        "fn forward(capability: ApplyCapability) {}"
+      ],
+      "breaches": [
+        {
+          "line": 4,
+          "rule": "R9"
+        },
+        {
+          "line": 5,
+          "rule": "R9"
+        },
+        {
+          "line": 8,
+          "rule": "R9"
+        }
+      ],
+      "oracle": [
+        "R9"
+      ]
+    },
+    {
+      "id": "r9-kind-impl",
+      "description": "A `MutationKind` impl applying a diff outside any `🔺️diff` directory.",
+      "segments": [
+        "r9-kind-impl",
+        "🧬️mutations",
+        "a",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl MutationKind<S, M> for Rename {",
+        "    fn label(&self) -> LocalizedLabel {",
+        "        let next = D::default().apply(base, capability);",
+        "        label(next)",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 3,
+          "rule": "R9"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r10-between",
+      "description": "A diff leaf differencing two snapshots.",
+      "segments": [
+        "r10-between",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    protocol::MutationOutcome::new(D::between(base, base))",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R10"
+        }
+      ],
+      "oracle": [
+        "R10"
+      ]
+    },
+    {
+      "id": "r11-diff-derived-inverse",
+      "description": "Inverses calling the forward diff, walking its output and passing it to a `*_inverse` helper.",
+      "segments": [
+        "r11-diff-derived-inverse",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    let forward = diff(payload, base);",
+        "    let rows = rows_inverse(base, outcome);",
+        "    let again = payload.diff(base);",
+        "    let from = inverse_from_diff(base);",
+        "    Ok(rows)",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R11"
+        },
+        {
+          "line": 3,
+          "rule": "R11"
+        },
+        {
+          "line": 4,
+          "rule": "R11"
+        },
+        {
+          "line": 5,
+          "rule": "R11"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r12-base-clone-diff",
+      "description": "Diff bodies cloning `base` (named `state` here) into mutable bindings.",
+      "segments": [
+        "r12-base-clone-diff",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(payload: &P, state: &S) -> protocol::MutationOutcome<D> {",
+        "    let mut next = state.clone();",
+        "    let mut names: Vec<String> = state.names.clone();",
+        "    let mut owned = (*state).to_owned();",
+        "    protocol::MutationOutcome::new(D::default())",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R12"
+        },
+        {
+          "line": 3,
+          "rule": "R12"
+        },
+        {
+          "line": 4,
+          "rule": "R12"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r13-whole-state-diff",
+      "description": "A whole-state diff impl and `type Diff` aliases of the snapshot or Self, beside a sparse control.",
+      "segments": [
+        "r13-whole-state-diff",
+        "🧬️mutations",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Presence> for Presence {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}",
+        "impl Mutation<Config> for ConfigMutation {",
+        "    type Diff = Config;",
+        "}",
+        "impl Mutation<Config> for OtherMutation {",
+        "    type Diff = Self;",
+        "}",
+        "impl Mutation<Config> for SparseMutation {",
+        "    type Diff = ConfigDiff;",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 8,
+          "rule": "R13"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r14-restore-inverse",
+      "description": "An inverse returning a whole-snapshot restore variant; a helper that is not named inverse may name restore variants.",
+      "segments": [
+        "r14-restore-inverse",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    Ok(vec![M::SetSnapshot { snapshot: base.clone() }])",
+        "}",
+        "pub fn inverse_again(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    Ok(vec![Self::Snapshot { config: base.clone() }])",
+        "}",
+        "pub fn undo(payload: &P, base: &S) -> Vec<M> {",
+        "    vec![M::Restore]",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r14-restore-variants",
+      "description": "Every restore variant name an inverse may return.",
+      "segments": [
+        "r14-restore-variants",
+        "🧬️mutations",
+        "a",
+        "↩️inverse",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    let a = M::PatchSnapshot(p);",
+        "    let b = M::ReplaceDocument(d);",
+        "    let c = M::RestoreAll;",
+        "    let e = Self::Snapshot { config: base.clone() };",
+        "    Ok(vec![a, b, c, e])",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R14"
+        },
+        {
+          "line": 3,
+          "rule": "R14"
+        },
+        {
+          "line": 4,
+          "rule": "R14"
+        },
+        {
+          "line": 5,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r16-apply-to-everywhere",
+      "description": "`apply_to` calls in a test file and the outcome's own definition.",
+      "segments": [
+        "r16-apply-to-everywhere",
+        "🧬️mutations",
+        "a",
+        "🧪️tests",
+        "x",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn check() {",
+        "    let after = outcome.apply_to(&mut base);",
+        "    let again = protocol::MutationOutcome::apply_to(&outcome, &mut base);",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R16"
+        },
+        {
+          "line": 3,
+          "rule": "R16"
+        }
+      ],
+      "oracle": [
+        "R16"
+      ]
+    },
+    {
+      "id": "r16-outcome-definition",
+      "description": "The outcome's own `apply_to` definition.",
+      "segments": [
+        "r16-outcome-definition",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl<D> MutationOutcome<D> {",
+        "    pub fn apply_to(&self, base: &mut P) {}",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R16"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "r13-diff-type-outside-mutations",
+      "description": "A whole-state diff impl is a violation outside any mutations directory too.",
+      "segments": [
+        "r13-diff-type-outside-mutations",
+        "🫧️transient",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl protocol::MutationDiff<Transient> for Transient {",
+        "    fn absorb(&mut self, other: Self) {}",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "hand-written-mutation-impl",
+      "description": "A hand-written `impl Mutation<P>` outside a mutations directory is a leaf: its diff clones base, its inverse restores a snapshot.",
+      "segments": [
+        "hand-written-mutation-impl",
+        "👥️presence",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "impl Mutation<Presence> for PresenceMutation {",
+        "    type Diff = PresenceDiff;",
+        "    fn diff(&self, base: &Presence) -> MutationOutcome<PresenceDiff> {",
+        "        let mut next = base.clone();",
+        "        MutationOutcome::new(PresenceDiff::default())",
+        "    }",
+        "    fn inverse(&self, base: &Presence) -> Result<Vec<Self>, E> {",
+        "        Ok(vec![Self::Restore { presence: base.clone() }])",
+        "    }",
+        "}"
+      ],
+      "breaches": [
+        {
+          "line": 4,
+          "rule": "R12"
+        },
+        {
+          "line": 8,
+          "rule": "R14"
+        }
+      ],
+      "oracle": []
+    },
+    {
+      "id": "compliant-leaf",
+      "description": "Sparse diff, concrete inverse, a diff type forwarding its capability and implementing between, test code and prose that names every forbidden token.",
+      "segments": [
+        "compliant-leaf",
+        "🧬️mutations",
+        "a",
+        "🔺️diff",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "//! A leaf never writes `&mut` into a snapshot, never calls `.apply(` nor `between(`, never clones base.",
+        "use protocol::{ApplyCapability, MutationDiff};",
+        "pub fn diff(payload: &P, base: &S) -> protocol::MutationOutcome<D> {",
+        "    let mut rows = Vec::new();",
+        "    let owned = payload.clone();",
+        "    let label = \"base.clone() and .apply( and &mut inside a string\";",
+        "    rows.push(owned);",
+        "    protocol::MutationOutcome::new(D::from_rows(rows))",
+        "}",
+        "pub fn inverse(payload: &P, base: &S) -> Result<Vec<M>, E> {",
+        "    Ok(vec![M::set_name(base.name.clone())])",
+        "}",
+        "impl MutationDiff<S> for D {",
+        "    fn apply(&self, base: &S, capability: ApplyCapability) -> R { self.inner.apply(base, capability) }",
+        "    fn inverse(&self, base: &S) -> Self { Self::between(base, base) }",
+        "    fn between(base: &S, other: &S) -> Self { D::default() }",
+        "}",
+        "#[cfg(test)]",
+        "mod tests {",
+        "    fn law() { let mut next = base.clone(); D::between(&a, &b).apply(&a, c); }",
+        "}"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-non-leaf",
+      "description": "Files outside every mutations directory without a mutation impl are not leaves.",
+      "segments": [
+        "compliant-non-leaf",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "pub fn diff(base: &mut S) { let mut next = base.clone(); D::between(base, &next).apply(base, c); }"
+      ],
+      "breaches": [],
+      "oracle": []
+    },
+    {
+      "id": "compliant-test-file",
+      "description": "Test files under a leaf may use every helper.",
+      "segments": [
+        "compliant-test-file",
+        "🧬️mutations",
+        "a",
+        "🧪️tests",
+        "x",
+        "🦀️.rs"
+      ],
+      "lines": [
+        "fn law() { let mut next = base.clone(); D::between(&a, &b).apply(&a, c); inverse(&mut next); }"
+      ],
+      "breaches": [],
+      "oracle": []
+    }
+  ],
+  "leafTrees": [
+    {
+      "id": "inverse-sum-law-leaves",
+      "description": "Leaves need the sum-law call under their OWN tests; composites, tests of the law-less kind and shared mutations-level tests do not count.",
+      "files": {
+        "p/🧬️mutations/untested/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ],
+        "p/🧬️mutations/tested/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ],
+        "p/🧬️mutations/tested/🧪️tests/applies/🦀️.rs": [
+          "fn t() { assert_mutation_inverse_sum_law(&m, &before); }"
+        ],
+        "p/🧬️mutations/weak/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ],
+        "p/🧬️mutations/weak/🧪️tests/applies/🦀️.rs": [
+          "fn t() { assert_mutation_inverse_law(&m, &before); }"
+        ],
+        "p/🧬️mutations/composite/🧩️plan/🦀️.rs": [
+          "pub fn plan() {}"
+        ],
+        "p/🧬️mutations/composite/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ],
+        "p/🧬️mutations/shared/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ],
+        "p/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs": [
+          "fn t() { assert_mutation_inverse_sum_law(&m, &before); }"
+        ],
+        "p/🧬️schema/🔺️diff/🦀️.rs": [
+          "pub fn diff() {}"
+        ]
+      },
+      "breaches": [
+        "p/🧬️mutations/shared/🔺️diff/🦀️.rs",
+        "p/🧬️mutations/untested/🔺️diff/🦀️.rs",
+        "p/🧬️mutations/weak/🔺️diff/🦀️.rs"
+      ]
+    }
+  ]
+}

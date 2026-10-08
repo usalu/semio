@@ -1,5 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules;
-use crate::standards::v1::subsets::any::io::text::snapshot::sourcing_json_envelope_is_bounded;
+use crate::standards::v1::subsets::any::io::text::snapshot::{sourcing_modules, sourcing_json_envelope_is_bounded};
 
 use super::*;
 

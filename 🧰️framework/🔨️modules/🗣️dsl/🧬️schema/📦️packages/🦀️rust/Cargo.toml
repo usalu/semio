@@ -23,6 +23,7 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { version = "1.0", features = ["float_roundtrip"] }
@@ -30,3 +31,7 @@ serde_json = { version = "1.0", features = ["float_roundtrip"] }
 [[test]]
 name = "field_refusal_public"
 path = "../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs"
+
+[[test]]
+name = "native_decoding"
+path = "../../🧪️tests/🛬️decoding/🦀️.rs"

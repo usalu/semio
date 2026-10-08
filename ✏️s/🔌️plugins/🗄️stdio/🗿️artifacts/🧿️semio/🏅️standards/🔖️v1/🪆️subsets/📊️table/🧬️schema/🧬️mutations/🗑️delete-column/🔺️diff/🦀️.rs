@@ -1,25 +1,29 @@
 //! 🔺️ Diff for `DeleteColumn`.
 
-use crate::standards::v1::subsets::table::schema::diff::{SemioTableColumnList, SemioTableDiff, SemioTableRowList};
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::table::schema::diff::{SemioTableColumnDiff, SemioTableDiff, SemioTableRowDiff};
+use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
+use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
+/// 🧮️ Removes one column and its cell from every row that has one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::DeleteColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let Some(at) = base.columns.iter().position(|c| c.name == payload.name) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
     };
-    let mut columns = base.columns.clone();
-    columns.remove(at);
-    let mut rows = base.rows.clone();
-    let mut cascaded_rows = 0usize;
-    for row in &mut rows {
-        if at < row.cells.len() {
-            row.cells.remove(at);
-            cascaded_rows += 1;
-        }
-    }
-    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) });
+    let rows = IndexedTripleDiff {
+        modified: base
+            .rows
+            .iter()
+            .enumerate()
+            .filter(|(_, row)| at < row.cells.len())
+            .map(|(index, _)| IndexModified { index, diff: SemioTableRowDiff { cells: Some(IndexedTripleDiff { removed: vec![at], ..Default::default() }) } })
+            .collect(),
+        ..Default::default()
+    };
+    let cascaded_rows = rows.modified.len();
+    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: Some(IndexedTripleDiff { removed: vec![at], ..Default::default() }), rows: (cascaded_rows > 0).then_some(rows) });
     if cascaded_rows == 0 {
         outcome
     } else {

@@ -18,7 +18,7 @@ pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
     if crate::schema::drawing_layer_is_locked(doc.snapshot, &payload.layer_id) { return Err(Fault::from("Unlock the path before editing")); }
     let Some(DrawingLayerNode::Path(path)) = crate::schema::find_drawing_layer(doc.snapshot, &payload.layer_id) else { return Err(Fault::from("Select a path to edit")); };
     let segments = edit_path(&path.segments, &payload.edit).map_err(Fault::from)?;
-    if segments==path.segments {return Ok(Emit::default());}
+    if segments.iter().eq(path.segments.iter()) {return Ok(Emit::default());}
     let rebind=matches!(payload.edit.as_ref(),PathEdit::Position {..}|PathEdit::Coordinate {..}|PathEdit::Translate {..});
     let mut selected=Vec::new();
     if rebind && !session.interaction.points.is_empty() {
@@ -32,7 +32,7 @@ pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
             }
         }
     }
-    let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(payload.layer_id.clone().into(), segments)]);
+    let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(path.base.id.clone(), segments.into())]);
     if rebind && !session.interaction.points.is_empty() {emit.effects.push(point_selection_effect(&selected));}
     Ok(emit)
 }

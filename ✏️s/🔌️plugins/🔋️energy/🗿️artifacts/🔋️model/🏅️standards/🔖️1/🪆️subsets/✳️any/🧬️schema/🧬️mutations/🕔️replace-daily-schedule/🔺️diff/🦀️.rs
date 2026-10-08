@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceDailyScheduleHourlyValues` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, Rows, ScheduleSetPatch, Slots};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,14 +18,8 @@ pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyMode
     if existing.hourly_values.as_slice() == payload.new_hourly_values.as_slice() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Daily schedule {} already carries this hourly_values: {:?}.", payload.id.0, payload.new_hourly_values));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.daily.iter_mut().find(|item| item.id == payload.id) {
-        item.hourly_values = {
-            let mut values = [0.0f64; 24];
-            values.copy_from_slice(&payload.new_hourly_values);
-            values
-        };
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    let mut values = [0.0f64; 24];
+    values.copy_from_slice(&payload.new_hourly_values);
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { daily: Rows::modifying(DailySchedulePatch { hourly_values: Slots::replacing(&existing.hourly_values, &values), ..DailySchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

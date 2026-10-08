@@ -1,0 +1,19 @@
+{
+  "inputs": [
+    {
+      "receipt": "🗑️generated/current-dag-contract-4/admission.json"
+    },
+    {
+      "receipt": "🗑️generated/current-native-world/source-model-8/admission.json"
+    },
+    {
+      "receipt": "🗑️generated/current-engine-layout-6/green-1/admission.json"
+    },
+    {
+      "receipt": "🗑️generated/current-native-smoke-channel-1/green/admission.json"
+    },
+    {
+      "receipt": "🗑️generated/current-native-ui-layout-5/green/admission.json"
+    }
+  ]
+}

@@ -38,14 +38,14 @@ fn own14_page_text_admission_keeps_geometry_and_inverse() {
     assert_eq!(PdfMutation::decode_op(&op.encode_op().unwrap()).unwrap(), op);
     let outcome = op.diff(&original);
     assert!(outcome.messages().is_empty());
-    let next = outcome.diff().apply(&original).unwrap();
+    let next = protocol::apply_diff(outcome.diff(), &original).unwrap();
     assert_eq!(next.pages[0].text, "Edited own14 text");
     assert_eq!(next.pages[0].width.to_bits(), original.pages[0].width.to_bits());
     assert_eq!(next.pages[0].height.to_bits(), original.pages[0].height.to_bits());
     assert_eq!(next.pages[1], original.pages[1]);
     assert_eq!(next.schema, original.schema);
     let mut restored = next;
-    for inverse in op.inverse(&original).unwrap() { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
+    for inverse in op.inverse(&original).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
     assert_eq!(restored, original);
     assert!(text_edit_mutation(&original, 0, 0, &revision, &original.pages[0].text).unwrap().is_none());
     for (page, item, token) in [(2, 0, revision.as_str()), (0, 1, revision.as_str()), (0, 0, "stale")] {
@@ -64,13 +64,13 @@ fn own14_page_structure_actions_only_emit_their_actual_mutation_kind() {
     assert_eq!(emit.artifact_mutations.len(), 1);
     let op = &emit.artifact_mutations[0];
     assert!(matches!(op, PdfMutation::ResizePage(ResizePage { index: 1, width: 8.0, height: 9.0 })));
-    let next = op.diff(&base).diff().apply(&base).unwrap();
+    let next = protocol::apply_diff(op.diff(&base).diff(), &base).unwrap();
     assert_eq!(next.pages[0], base.pages[0]);
     assert_eq!(next.pages[1].text, base.pages[1].text);
     assert_eq!(next.pages[1].width.to_bits(), 8.0f64.to_bits());
     assert_eq!(next.pages[1].height.to_bits(), 9.0f64.to_bits());
     let mut restored = next;
-    for inverse in op.inverse(&base).unwrap() { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
+    for inverse in op.inverse(&base).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
     assert_eq!(restored, base);
     assert!(emit_page_edit(&base, "remove-page", &payload).is_err());
     assert!(edit_from_action("insert-image", Some(&args)).is_err());

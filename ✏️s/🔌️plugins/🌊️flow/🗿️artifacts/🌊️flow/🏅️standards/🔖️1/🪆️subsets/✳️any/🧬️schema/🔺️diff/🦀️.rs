@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 /// `mesh: Option<Option<ArtifactChild<…>>>` precedent; flow's `content` slot is never absent, only
 /// ever replaced, so a single `Option<FlowContentChild>` — not the double-`Option` an optional slot
 /// needs — is the sparse-vs-unchanged signal here, matching writer's `document` field exactly).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowDiff {

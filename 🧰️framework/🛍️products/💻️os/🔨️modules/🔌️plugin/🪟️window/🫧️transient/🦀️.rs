@@ -424,6 +424,48 @@ impl WindowTransientOwnerRegistry {
 #[path = "🧪️tests/🪟️retained-window-input/🦀️.rs"]
 mod retained_window_input_tests;
 
+//#region 🔖️TransientDiff
+/// 🫧️ The diff of a whole-root transient replacement: the new root, or nothing when the root already holds the requested value.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct TransientDiff<S> {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub replacement: Option<S>,
+}
+
+impl<S> Default for TransientDiff<S> {
+    fn default() -> Self {
+        Self { replacement: None }
+    }
+}
+
+impl<S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue> protocol::MutationDiff<S> for TransientDiff<S> {
+    fn apply(&self, base: &S, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<S> {
+        Ok(self.replacement.clone().unwrap_or_else(|| base.clone()))
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.replacement.is_some() {
+            self.replacement = other.replacement;
+        }
+    }
+}
+
+impl<S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue> protocol::DiffAlgebra<S> for TransientDiff<S> {
+    fn inverse(&self, base: &S) -> Self {
+        Self { replacement: self.replacement.as_ref().map(|_| base.clone()) }
+    }
+
+    fn between(base: &S, other: &S) -> Self {
+        Self { replacement: (base != other).then(|| other.clone()) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.replacement.is_none()
+    }
+}
+//#endregion 🔖️TransientDiff
+
 //#region 🔖️TransientRoot
 /// 🫧️ Declares a whole-root transient state's one mutation and codecs (audit K3: the ~150 lines flow, fem, remodel, cad,
 /// lowpoly, layout, forms, draw, raster, wfc each re-wrote): `$mutation::Snapshot { transient }` (wire
@@ -450,18 +492,8 @@ macro_rules! transient_root {
             Snapshot { transient: $state },
         }
 
-        impl $crate::__kernel::MutationDiff<$state> for $state {
-            fn apply(&self, _base: &$state) -> $crate::__kernel::MutationApplyResult<$state> {
-                Ok(self.clone())
-            }
-
-            fn absorb(&mut self, other: Self) {
-                *self = other;
-            }
-        }
-
         impl $crate::__kernel::Mutation<$state> for $mutation {
-            type Diff = $state;
+            type Diff = $crate::TransientDiff<$state>;
 
             const DESCRIPTORS: &'static [$crate::__kernel::MutationLeafDescriptor] = &[$crate::__kernel::MutationLeafDescriptor {
                 schema_version: 1,
@@ -484,9 +516,12 @@ macro_rules! transient_root {
                 &Self::DESCRIPTORS[0]
             }
 
-            fn diff(&self, _base: &$state) -> $crate::__kernel::MutationOutcome<$state> {
+            fn diff(&self, base: &$state) -> $crate::__kernel::MutationOutcome<$crate::TransientDiff<$state>> {
                 let Self::Snapshot { transient } = self;
-                $crate::__kernel::MutationOutcome::new(transient.clone())
+                if transient == base {
+                    return $crate::__kernel::MutationOutcome::empty();
+                }
+                $crate::__kernel::MutationOutcome::new($crate::TransientDiff { replacement: Some(transient.clone()) })
             }
 
             fn inverse(&self, base: &$state) -> Result<Vec<Self>, $crate::__value::ValueError> {

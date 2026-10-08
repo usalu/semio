@@ -144,7 +144,7 @@ mod semio_protocol_conformance;
 
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] =
-    &[("rename-writer", crate::standards::v1::subsets::any::schema::mutations::rename_writer::BINARY_TAG), ("change-uri", crate::standards::v1::subsets::any::schema::mutations::change_uri::BINARY_TAG), ("change-language", crate::standards::v1::subsets::any::schema::mutations::change_language::BINARY_TAG), ("edit-text", crate::standards::v1::subsets::any::schema::mutations::edit_text::BINARY_TAG), ("splice-text", crate::standards::v1::subsets::any::schema::mutations::splice_text::BINARY_TAG)];
+    &[("rename-writer", crate::standards::v1::subsets::any::io::binary::mutations::rename_writer::BINARY_TAG), ("change-uri", crate::standards::v1::subsets::any::io::binary::mutations::change_uri::BINARY_TAG), ("change-language", crate::standards::v1::subsets::any::io::binary::mutations::change_language::BINARY_TAG), ("edit-text", crate::standards::v1::subsets::any::io::binary::mutations::edit_text::BINARY_TAG), ("splice-text", crate::standards::v1::subsets::any::io::binary::mutations::splice_text::BINARY_TAG)];
 
 #[path = "🌐change-language/🦀️.rs"]
 pub mod change_language;

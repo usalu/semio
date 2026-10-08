@@ -695,7 +695,7 @@ fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
-    fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
+    fn apply(&self, base: &SemioDrawingSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
         let mut next = base.clone();
         if let Some(cd) = &self.canvas {
             next.canvas = apply_canvas_diff(&next.canvas, cd);

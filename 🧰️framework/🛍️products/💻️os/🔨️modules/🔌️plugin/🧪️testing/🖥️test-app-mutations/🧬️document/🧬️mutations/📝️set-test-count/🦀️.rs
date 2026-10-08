@@ -3,7 +3,7 @@ use super::super::{TestDiff, TestMutation, TestSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

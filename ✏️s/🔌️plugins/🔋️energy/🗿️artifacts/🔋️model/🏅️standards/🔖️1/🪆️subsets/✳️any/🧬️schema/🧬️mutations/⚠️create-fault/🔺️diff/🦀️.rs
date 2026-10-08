@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateFault` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FaultDefinitionPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -23,10 +23,6 @@ pub fn diff(payload: &super::CreateFault, base: &EnergyModelSnapshot) -> protoco
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.start_schedule_id.0), [payload.start_schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model
-        .faults
-        .insert(payload.index as usize, crate::model::FaultDefinition { id: payload.id, target_equipment_id: payload.target_equipment_id, fault_type: payload.fault_type, severity: payload.severity, start_schedule_id: payload.start_schedule_id });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { faults: Rows::inserting(payload.index as usize, crate::model::FaultDefinition { id: payload.id, target_equipment_id: payload.target_equipment_id, fault_type: payload.fault_type, severity: payload.severity, start_schedule_id: payload.start_schedule_id }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -92,6 +92,37 @@
       }
     },
     "live-agent-loop-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "serve",
+                "kind": "text",
+                "valueEnv": "S_OS_MCP_LIVE_SHELL_URL"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "en"
+                    }
+                  },
+                  {
+                    "id": "de",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "de"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [
@@ -143,6 +174,48 @@
       "outputs": []
     },
     "user-path-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev",
+              "playground:s"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              },
+              {
+                "id": "serve",
+                "kind": "text",
+                "default": "http://127.0.0.1:6070/",
+                "valueEnv": "S_OS_MCP_LIVE_SHELL_URL"
+              },
+              {
+                "id": "locale",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "en",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "en"
+                    }
+                  },
+                  {
+                    "id": "de",
+                    "env": {
+                      "S_OS_MCP_LIVE_LOCALE": "de"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [
@@ -160,6 +233,23 @@
       "outputs": []
     },
     "inference-quartet-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [
@@ -177,6 +267,29 @@
       "outputs": []
     },
     "security-check": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "requires": [
+              "os-hub:dev"
+            ],
+            "parameters": [
+              {
+                "id": "hub",
+                "kind": "text",
+                "default": "http://127.0.0.1:8787",
+                "valueEnv": "OS_MCP_HUB_ORIGIN"
+              },
+              {
+                "id": "admin-capability",
+                "kind": "text",
+                "required": true,
+                "valueEnv": "OS_HUB_ADMIN_CAPABILITY_FILE"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [

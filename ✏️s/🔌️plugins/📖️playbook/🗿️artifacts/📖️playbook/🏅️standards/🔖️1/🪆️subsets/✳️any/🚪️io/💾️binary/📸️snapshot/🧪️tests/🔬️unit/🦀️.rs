@@ -26,7 +26,7 @@ async fn facade_generator_example_pack_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::op::{change_title_operation, PlaybookMutation};
+    use crate::schema::mutations::{change_title_operation, PlaybookMutation};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 

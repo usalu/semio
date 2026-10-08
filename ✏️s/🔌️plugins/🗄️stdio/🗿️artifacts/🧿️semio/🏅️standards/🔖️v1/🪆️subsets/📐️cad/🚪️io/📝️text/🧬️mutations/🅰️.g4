@@ -3,8 +3,7 @@
 // a descriptive mirror, same production names.
 grammar Semio_cad_mutations;
 
-op: setSnapshot
-  | addLayer
+op: addLayer
   | removeLayer
   | setLayer
   | addBlock
@@ -20,7 +19,6 @@ op: setSnapshot
   | setBlockEntityGeometry
   ;
 
-setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 addLayer: 'add-layer' 'layer' '=' layer;
 removeLayer: 'remove-layer' 'name' '=' HEX;
 setLayer: 'set-layer' 'name' '=' HEX 'color-index' '=' optionI32 'line-type' '=' optionHex 'visible' '=' optionBool;

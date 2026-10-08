@@ -516,7 +516,7 @@ pub struct Construction {
 
 // #region 🔖️Schedule
 /// 📅️ Schedule reference by id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ScheduleId(pub u32);
 
 // 🌱️ Hand-written, not derived — same tuple-struct reason as `EntityId` above.

@@ -1,0 +1,175 @@
+{
+  "control": {
+    "existingSlotsOnly": true,
+    "maximumArraySlots": 16,
+    "primitiveBuckets": [
+      "number",
+      "boolean",
+      "option",
+      "vector",
+      "text"
+    ]
+  },
+  "cases": [
+    {
+      "id": "text",
+      "shape": "text",
+      "before": {
+        "values": [
+          "one"
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 4,
+          "pointer": "/values/0",
+          "value": "one edited"
+        }
+      ]
+    },
+    {
+      "id": "boolean",
+      "shape": "boolean",
+      "before": {
+        "values": [
+          false,
+          true
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 1,
+          "pointer": "/values/0",
+          "value": true
+        },
+        {
+          "bucket": 1,
+          "pointer": "/values/1",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "number",
+      "shape": "number",
+      "before": {
+        "values": [
+          2
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 0,
+          "pointer": "/values/0",
+          "value": 3
+        },
+        {
+          "bucket": 0,
+          "pointer": "/values/0",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "option",
+      "shape": "option",
+      "before": {
+        "values": [
+          "a"
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 2,
+          "pointer": "/values/0",
+          "value": "b"
+        }
+      ]
+    },
+    {
+      "id": "vector",
+      "shape": "vector",
+      "before": {
+        "values": [
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 3,
+          "pointer": "/values/0",
+          "value": [
+            3,
+            4
+          ]
+        },
+        {
+          "bucket": 3,
+          "pointer": "/values/0",
+          "value": [
+            1,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "object",
+      "shape": "object",
+      "before": {
+        "values": [
+          {
+            "text": "one",
+            "count": 2
+          }
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 0,
+          "pointer": "/values/0/count",
+          "value": 3
+        },
+        {
+          "bucket": 0,
+          "pointer": "/values/0/count",
+          "value": 1
+        },
+        {
+          "bucket": 4,
+          "pointer": "/values/0/text",
+          "value": "one edited"
+        }
+      ]
+    },
+    {
+      "id": "nested",
+      "shape": "nestedText",
+      "before": {
+        "values": [
+          [
+            "one"
+          ]
+        ]
+      },
+      "expected": [
+        {
+          "bucket": 4,
+          "pointer": "/values/0/0",
+          "value": "one edited"
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "shape": "text",
+      "before": {
+        "values": []
+      },
+      "expected": []
+    }
+  ]
+}

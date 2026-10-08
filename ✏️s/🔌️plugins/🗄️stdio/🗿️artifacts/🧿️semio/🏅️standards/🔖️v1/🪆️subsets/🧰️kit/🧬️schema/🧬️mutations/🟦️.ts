@@ -1,10 +1,8 @@
-import type { SetSnapshot } from "./📸️set-snapshot/🟦️.ts";
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseArtifactRef, type ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import { parseLinkPin, type LinkPin } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 import { parseSemioChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
-import { parseSemioKitConnection, parseSemioKitPiece, parseSemioKitSnapshot, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
+import { parseSemioKitConnection, parseSemioKitPiece, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
 
 export interface CreateObject { child_id: string; target: ArtifactRef }
 export interface DeleteObject { child_id: string }
@@ -38,9 +36,6 @@ export type SemioKitMutation =
   | { AddDesign: AddDesign }
   | { RemoveDesign: RemoveDesign }
   | { EditDesign: EditDesign }
-  | { SetSnapshot: SetSnapshot }
-  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }
-
 function stringField(row: Record<string, unknown>, field: string, at: string): string {
   if (typeof row[field] !== "string") throw new Error(`${at}.${field}: string required`);
   return row[field];
@@ -86,7 +81,7 @@ function parseEditDesign(value: unknown, at: string): EditDesign {
 
 /** 🧬️ Parses exactly one externally tagged native Kit mutation variant. */
 export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutation {
-  const row = parseSchemaRecord(value, ["CreateObject", "DeleteObject", "CreateModel", "DeleteModel", "CreateProperties", "DeleteProperties", "BindRepresentation", "UnbindRepresentation", "ChangeRepresentationPin", "AddType", "RemoveType", "RenameType", "AddDesign", "RemoveDesign", "EditDesign", "SetSnapshot"], at);
+  const row = parseSchemaRecord(value, ["CreateObject", "DeleteObject", "CreateModel", "DeleteModel", "CreateProperties", "DeleteProperties", "BindRepresentation", "UnbindRepresentation", "ChangeRepresentationPin", "AddType", "RemoveType", "RenameType", "AddDesign", "RemoveDesign", "EditDesign"], at);
   const variants = Object.keys(row);
   if (variants.length !== 1) throw new Error(at + ": exactly one Kit mutation variant required");
   const variant = variants[0]!;
@@ -124,9 +119,5 @@ export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutatio
     return { AddDesign: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt) } };
   }
   if (variant === "RemoveDesign") return { RemoveDesign: id(payload, payloadAt) };
-  if (variant === "SetSnapshot") {
-    const entry = parseSchemaRecord(payload, ["snapshot"], payloadAt);
-    return { SetSnapshot: { snapshot: parseSemioKitSnapshot(entry.snapshot, `${payloadAt}.snapshot`) } };
-  }
   return { EditDesign: parseEditDesign(payload, payloadAt) };
 }

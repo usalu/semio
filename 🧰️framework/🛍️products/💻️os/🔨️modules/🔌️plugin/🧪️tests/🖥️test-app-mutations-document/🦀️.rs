@@ -200,8 +200,25 @@ pub(crate) struct TestDiff {
     pub(crate) slot: Option<Vec<String>>,
 }
 
+fn test_slot_uris(snapshot: &TestSnapshot) -> Vec<String> {
+    use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
+    snapshot.slot.iter().map(|child| child.target.to_uri()).collect()
+}
+
+impl protocol::DiffAlgebra<TestSnapshot> for TestDiff {
+    fn inverse(&self, base: &TestSnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count), label: self.label.as_ref().map(|_| base.label.clone()), slot: self.slot.as_ref().map(|_| test_slot_uris(base)) }
+    }
+    fn between(base: &TestSnapshot, other: &TestSnapshot) -> Self {
+        Self { count: (base.count != other.count).then_some(other.count), label: (base.label != other.label).then(|| other.label.clone()), slot: (test_slot_uris(base) != test_slot_uris(other)).then(|| test_slot_uris(other)) }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
 impl protocol::MutationDiff<TestSnapshot> for TestDiff {
-    fn apply(&self, snapshot: &TestSnapshot) -> protocol::MutationApplyResult<TestSnapshot> {
+    fn apply(&self, snapshot: &TestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<TestSnapshot> {
         let slot = match &self.slot {
             None => snapshot.slot.clone(),
             Some(rows) => rows.iter().map(|uri| test_child_handle(uri)).collect::<Result<Vec<_>, String>>().map_err(|error| protocol::MutationApplyError::new("mutation.apply.declared-child-uri", error))?,

@@ -1,0 +1,11 @@
+{
+  "title": "Fix Table Page Breaks in Mit Bestand Zwischenbericht",
+  "emoji": "📄",
+  "status": "closed",
+  "description": "mit bestand zwischenbericht: The page breaks of some tables e.g. Akteursnetz are not working correctly. Rows of long tables (e.g. Tabelle AN.2.a:3 Frankreich) run past the bottom of the page frame into the footer instead of breaking onto the next page.",
+  "summary": "GraphSpread ended with a group-local \\restoregeometry, leaving the spread's taller global \\@colht behind; longtable's output routine never resets it, so the Frankreich table opening right after the Akteursnetz figure spread overflowed the frame on pages 103-106. \\semio_graph_spread_end: now re-seats \\@colht, \\@colroom and \\vsize globally. Verified by rebuilding the Zwischenbericht and measuring every page. Manual bookkeeping (ticket_open returned a malformed result). Report: 📓️report.md.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "⚪b1bff4d0a2ad4d11a8818dba8e6be3d1"
+  ]
+}

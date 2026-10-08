@@ -1,16 +1,20 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use protocol::MutationDiff;
+use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject};
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn detaches_and_can_restore_the_font_program() {
-    let mut base = PdfSnapshot::default();
-    let program = support::insert_object(&mut base, PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() });
-    support::insert_object(&mut base, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile2", PdfObject::Ref(program))]));
+    let base = support::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile2", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))])]);
     let mutation = RemoveFontFile { descriptor_ordinal: 0 };
-    let outcome = <RemoveFontFile as MutationKind<PdfSnapshot, PdfHMutation>>::diff(&mutation, &base);
-    let next = outcome.diff().apply(&base).unwrap();
+    let next = applied(&base, &PdfHMutation::RemoveFontFile(mutation.clone()));
     let descriptor = support::font_descriptors(&next)[0];
     assert!(support::font_program(&next, descriptor).is_none());
     assert_eq!(<RemoveFontFile as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = support::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile2", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))])]);
+    assert_mutation_inverse_sum_law(&PdfHMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: 0 }), &base).await;
 }

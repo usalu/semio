@@ -1,0 +1,443 @@
+{
+  "category": {
+    "id": "mesh.transform",
+    "emoji": "🔁️",
+    "order": 220,
+    "label": {
+      "en": "Mesh transforms",
+      "de": "Netz-Transformationen"
+    },
+    "description": {
+      "en": "Move, rotate, scale, mirror or apply a matrix to a whole mesh.",
+      "de": "Ein ganzes Netz verschieben, drehen, skalieren, spiegeln oder mit einer Matrix transformieren."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.transform.translate",
+      "category": "mesh.transform",
+      "emoji": "➡️",
+      "label": {
+        "en": "Move mesh",
+        "de": "Netz verschieben"
+      },
+      "description": {
+        "en": "Moves every vertex by an offset vector.",
+        "de": "Verschiebt jeden Eckpunkt um einen Versatzvektor."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along X, Y and Z.",
+            "de": "Verschiebung entlang X, Y und Z."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The moved mesh.",
+            "de": "Das verschobene Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "offset"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.transform.rotate",
+      "category": "mesh.transform",
+      "emoji": "🔃️",
+      "label": {
+        "en": "Rotate mesh",
+        "de": "Netz drehen"
+      },
+      "description": {
+        "en": "Rotates the mesh around an axis through the origin.",
+        "de": "Dreht das Netz um eine Achse durch den Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the rotation axis.",
+            "de": "Richtung der Drehachse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Rotation angle; positive values turn counter-clockwise around the axis.",
+            "de": "Drehwinkel; positive Werte drehen gegen den Uhrzeigersinn um die Achse."
+          },
+          "type": "angle",
+          "default": 0.7853981633974483,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The rotated mesh.",
+            "de": "Das gedrehte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "rotate",
+            "port": "angle",
+            "axisPort": "axis"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.transform.scale",
+      "category": "mesh.transform",
+      "emoji": "↔️",
+      "label": {
+        "en": "Scale mesh",
+        "de": "Netz skalieren"
+      },
+      "description": {
+        "en": "Scales each axis about the origin; negative factors mirror the mesh and keep the faces facing outward.",
+        "de": "Skaliert jede Achse um den Ursprung; negative Faktoren spiegeln das Netz und halten die Flächen nach außen gerichtet."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "factor",
+          "label": {
+            "en": "Scale factor",
+            "de": "Skalierfaktor"
+          },
+          "description": {
+            "en": "Scale factor per axis; negative values mirror.",
+            "de": "Skalierfaktor je Achse; negative Werte spiegeln."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The scaled mesh.",
+            "de": "Das skalierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "scale",
+            "port": "factor"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.transform.matrix",
+      "category": "mesh.transform",
+      "emoji": "🧮️",
+      "label": {
+        "en": "Transform by matrix",
+        "de": "Mit Matrix transformieren"
+      },
+      "description": {
+        "en": "Applies a 4x4 affine matrix given column by column; normals and face winding follow.",
+        "de": "Wendet eine affine 4x4-Matrix an, spaltenweise angegeben; Normalen und Flächenorientierung folgen."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "matrix",
+          "label": {
+            "en": "Matrix",
+            "de": "Matrix"
+          },
+          "description": {
+            "en": "The 16 matrix entries in column-major order.",
+            "de": "Die 16 Matrixeinträge in spaltenweiser Reihenfolge."
+          },
+          "type": "number",
+          "list": true,
+          "minItems": 16,
+          "maxItems": 16,
+          "default": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The transformed mesh.",
+            "de": "Das transformierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.transform.mirror",
+      "category": "mesh.transform",
+      "emoji": "🪞️",
+      "label": {
+        "en": "Mirror mesh half",
+        "de": "Netzhälfte spiegeln"
+      },
+      "description": {
+        "en": "Reflects a one-sided mesh across an axis plane through the origin and welds the seam.",
+        "de": "Spiegelt ein einseitiges Netz an einer Achsenebene durch den Ursprung und verschweißt die Naht."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Mirror plane",
+            "de": "Spiegelebene"
+          },
+          "description": {
+            "en": "The axis whose perpendicular plane through the origin is the mirror.",
+            "de": "Die Achse, deren senkrechte Ebene durch den Ursprung die Spiegelebene ist."
+          },
+          "type": "enum",
+          "default": "x",
+          "options": [
+            {
+              "value": "x",
+              "label": {
+                "en": "X axis",
+                "de": "X-Achse"
+              }
+            },
+            {
+              "value": "y",
+              "label": {
+                "en": "Y axis",
+                "de": "Y-Achse"
+              }
+            },
+            {
+              "value": "z",
+              "label": {
+                "en": "Z axis",
+                "de": "Z-Achse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest distance at which seam vertices are welded.",
+            "de": "Größter Abstand, bei dem Nahtpunkte verschweißt werden."
+          },
+          "type": "length",
+          "default": 0.0001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mirrored mesh.",
+            "de": "Das gespiegelte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

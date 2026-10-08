@@ -1119,7 +1119,7 @@ class TestScript extends BundleScript {
     const owner = join(this.root, "../..");
     const actorFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️actor-context/🔣️.json"), "utf8"));
     for (const row of actorFixture.cases) assert.deepEqual(JSON.parse(JSON.stringify([row.actor, row.reopenActor])), row.expectedActors);
-    console.log(`host actor context oracle: ${actorFixture.cases.length} named reopen cases; native assertions follow`);
+    console.log(`[DEBUG] host actor context oracle: ${actorFixture.cases.length} named reopen cases; native assertions follow`);
     const { rest } = resolveTestLevel(segments, "quick");
     if (rest[0] === "rust") {
       runCargo(["test", "--manifest-path", "Cargo.toml", ...rest.slice(1)], this.root);

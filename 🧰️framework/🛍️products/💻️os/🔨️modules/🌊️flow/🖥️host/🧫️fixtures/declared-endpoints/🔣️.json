@@ -1,0 +1,37 @@
+{
+  "contractId": "flow-declared-endpoint-admission",
+  "cases": [
+    {
+      "id": "typed",
+      "source": "slider",
+      "sourcePort": "number",
+      "target": "add",
+      "targetPort": "b",
+      "expected": "accepted"
+    },
+    {
+      "id": "foreign-output",
+      "source": "slider",
+      "sourcePort": "absent-port",
+      "target": "add",
+      "targetPort": "b",
+      "expected": "unknownOutput"
+    },
+    {
+      "id": "foreign-input",
+      "source": "slider",
+      "sourcePort": "number",
+      "target": "add",
+      "targetPort": "absent-port",
+      "expected": "unknownInput"
+    },
+    {
+      "id": "declared-untyped",
+      "source": "slider",
+      "sourcePort": "number",
+      "target": "preview",
+      "targetPort": "",
+      "expected": "accepted"
+    }
+  ]
+}

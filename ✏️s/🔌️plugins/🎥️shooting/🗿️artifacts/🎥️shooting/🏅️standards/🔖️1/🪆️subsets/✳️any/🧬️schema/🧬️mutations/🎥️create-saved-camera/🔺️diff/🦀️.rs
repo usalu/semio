@@ -1,12 +1,13 @@
 //! 🔺 Diff constructor for `CreateSavedCamera`. Fatal `duplicate-id` on an existing id.
 
 use super::CreateSavedCamera;
-use crate::diff::{ShootingDiff, ShootingSavedCamerasDelta};
+use crate::diff::{ShootingDiff, ShootingEdit};
 use crate::ShootingSnapshot;
 
 pub fn diff(payload: &CreateSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
-    if base.saved_cameras.iter().any(|camera| camera.id == payload.saved_camera.id) {
+    if base.saved_cameras.iter().any(|entry| entry.id == payload.saved_camera.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A saved camera with id \"{}\" already exists.", payload.saved_camera.id), [payload.saved_camera.id.clone()]);
     }
-    protocol::MutationOutcome::new(ShootingDiff { saved_cameras: Some(ShootingSavedCamerasDelta { added: vec![payload.saved_camera.clone()], ..Default::default() }), ..Default::default() })
+    let index = payload.index.map_or(base.saved_cameras.len(), |index| index.min(base.saved_cameras.len()));
+    protocol::MutationOutcome::new(ShootingDiff::camera_edit(ShootingEdit::Add { index, item: payload.saved_camera.clone() }))
 }

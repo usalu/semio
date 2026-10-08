@@ -3,7 +3,6 @@
    `OpText::print_op`/`parse_op` one-line text shape. *)
 op                     = set snapshot | set sample rate | set format | insert channel
                        | remove channel | set channel samples | insert tag | remove tag | set tag value ;
-set snapshot            = "set-snapshot", snapshot ;
 set sample rate         = "set-sample-rate", digit sequence ;
 set format               = "set-format", format ;
 insert channel           = "insert-channel", digit sequence, channel ;

@@ -1,47 +1,79 @@
-/** 🔺️ `En1993Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+/** 🔺️ `En1993Diff` wire twin: the sparse delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireLiteral, normWireNullable, normWireObject, type NormWireReader, normWireRequired } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
-import { type BridgeFatigue, type ColdFormedMember, type CraneRunway, type FatigueDetail, type FireExposure, type LoadCase, type MemberAction, parseBridgeFatigue, parseColdFormedMember, parseCraneRunway, parseFatigueDetail, parseFireExposure, parseLoadCase, parseMemberAction, parsePlatedPanel, parseSiloShell, parseSteelJoint, parseSteelMaterial, parseSteelMember, parseSteelPile, parseSteelSection, parseTensionComponent, parseTowerLeg, type PlatedPanel, type SiloShell, type SteelJoint, type SteelMaterial, type SteelMember, type SteelPile, type SteelSection, type TensionComponent, type TowerLeg } from "../📸️snapshot/🟦️.ts";
-import { type En1993Artifact, parseEn1993Artifact } from "../🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireObject, type NormWireReader, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type BridgeFatigue, type ColdFormedMember, type CraneRunway, type FatigueDetail, type FireExposure, type LoadCase, type MemberAction, type PlatedPanel, type SiloShell, type SteelJoint, type SteelMaterial, type SteelMember, type SteelPile, type SteelSection, type TensionComponent, type TowerLeg, parseBridgeFatigue, parseColdFormedMember, parseCraneRunway, parseFatigueDetail, parseFireExposure, parseLoadCase, parseMemberAction, parsePlatedPanel, parseSiloShell, parseSteelJoint, parseSteelMaterial, parseSteelMember, parseSteelPile, parseSteelSection, parseTensionComponent, parseTowerLeg } from "../📸️snapshot/🟦️.ts";
+
+export type En1993RowOp = "Insert" | "Remove" | "Replace";
+export interface En1993MaterialEdit { op: En1993RowOp; index: number; id: string; value: SteelMaterial | null; }
+export interface En1993SectionEdit { op: En1993RowOp; index: number; id: string; value: SteelSection | null; }
+export interface En1993MemberEdit { op: En1993RowOp; index: number; id: string; value: SteelMember | null; }
+export interface En1993LoadCaseEdit { op: En1993RowOp; index: number; id: string; value: LoadCase | null; }
+export interface En1993MemberActionEdit { op: En1993RowOp; index: number; id: string; value: MemberAction | null; }
+export interface En1993JointEdit { op: En1993RowOp; index: number; id: string; value: SteelJoint | null; }
+export interface En1993FatigueDetailEdit { op: En1993RowOp; index: number; id: string; value: FatigueDetail | null; }
+export interface En1993FireExposureEdit { op: En1993RowOp; index: number; id: string; value: FireExposure | null; }
+export interface En1993ColdFormedMemberEdit { op: En1993RowOp; index: number; id: string; value: ColdFormedMember | null; }
+export interface En1993PlatedPanelEdit { op: En1993RowOp; index: number; id: string; value: PlatedPanel | null; }
+export interface En1993SiloShellEdit { op: En1993RowOp; index: number; id: string; value: SiloShell | null; }
+export interface En1993TensionComponentEdit { op: En1993RowOp; index: number; id: string; value: TensionComponent | null; }
+export interface En1993BridgeFatigueEdit { op: En1993RowOp; index: number; id: string; value: BridgeFatigue | null; }
+export interface En1993TowerLegEdit { op: En1993RowOp; index: number; id: string; value: TowerLeg | null; }
+export interface En1993PileEdit { op: En1993RowOp; index: number; id: string; value: SteelPile | null; }
+export interface En1993CraneRunwayEdit { op: En1993RowOp; index: number; id: string; value: CraneRunway | null; }
 
 export interface En1993Diff {
   /** @state artifact */
-  artifact: En1993Artifact | null;
-  /** @state artifact */
   annex: ("En" | "De") | null;
   /** @state artifact */
-  materials: { values: SteelMaterial[]; } | null;
+  materials: En1993MaterialEdit[];
   /** @state artifact */
-  sections: { values: SteelSection[]; } | null;
+  sections: En1993SectionEdit[];
   /** @state artifact */
-  members: { values: SteelMember[]; } | null;
+  members: En1993MemberEdit[];
   /** @state artifact */
-  loadCases: { values: LoadCase[]; } | null;
+  loadCases: En1993LoadCaseEdit[];
   /** @state artifact */
-  memberActions: { values: MemberAction[]; } | null;
+  memberActions: En1993MemberActionEdit[];
   /** @state artifact */
-  joints: { values: SteelJoint[]; } | null;
+  joints: En1993JointEdit[];
   /** @state artifact */
-  fatigueDetails: { values: FatigueDetail[]; } | null;
+  fatigueDetails: En1993FatigueDetailEdit[];
   /** @state artifact */
-  fireExposures: { values: FireExposure[]; } | null;
+  fireExposures: En1993FireExposureEdit[];
   /** @state artifact */
-  coldFormedMembers: { values: ColdFormedMember[]; } | null;
+  coldFormedMembers: En1993ColdFormedMemberEdit[];
   /** @state artifact */
-  platedPanels: { values: PlatedPanel[]; } | null;
+  platedPanels: En1993PlatedPanelEdit[];
   /** @state artifact */
-  siloShells: { values: SiloShell[]; } | null;
+  siloShells: En1993SiloShellEdit[];
   /** @state artifact */
-  tensionComponents: { values: TensionComponent[]; } | null;
+  tensionComponents: En1993TensionComponentEdit[];
   /** @state artifact */
-  bridgeFatigue: { values: BridgeFatigue[]; } | null;
+  bridgeFatigue: En1993BridgeFatigueEdit[];
   /** @state artifact */
-  towerLegs: { values: TowerLeg[]; } | null;
+  towerLegs: En1993TowerLegEdit[];
   /** @state artifact */
-  piles: { values: SteelPile[]; } | null;
+  piles: En1993PileEdit[];
   /** @state artifact */
-  craneRunways: { values: CraneRunway[]; } | null;
+  craneRunways: En1993CraneRunwayEdit[];
 }
 
-export const parseEn1993Diff: NormWireReader<En1993Diff> = normWireObject<En1993Diff>({ artifact: normWireDefault(normWireNullable(parseEn1993Artifact), () => null), annex: normWireDefault(normWireNullable(normWireLiteral("En", "De")), () => null), materials: normWireDefault(normWireNullable(normWireObject<{ values: SteelMaterial[]; }>({ values: normWireRequired(normWireArray(parseSteelMaterial)) })), () => null), sections: normWireDefault(normWireNullable(normWireObject<{ values: SteelSection[]; }>({ values: normWireRequired(normWireArray(parseSteelSection)) })), () => null), members: normWireDefault(normWireNullable(normWireObject<{ values: SteelMember[]; }>({ values: normWireRequired(normWireArray(parseSteelMember)) })), () => null), loadCases: normWireDefault(normWireNullable(normWireObject<{ values: LoadCase[]; }>({ values: normWireRequired(normWireArray(parseLoadCase)) })), () => null), memberActions: normWireDefault(normWireNullable(normWireObject<{ values: MemberAction[]; }>({ values: normWireRequired(normWireArray(parseMemberAction)) })), () => null), joints: normWireDefault(normWireNullable(normWireObject<{ values: SteelJoint[]; }>({ values: normWireRequired(normWireArray(parseSteelJoint)) })), () => null), fatigueDetails: normWireDefault(normWireNullable(normWireObject<{ values: FatigueDetail[]; }>({ values: normWireRequired(normWireArray(parseFatigueDetail)) })), () => null), fireExposures: normWireDefault(normWireNullable(normWireObject<{ values: FireExposure[]; }>({ values: normWireRequired(normWireArray(parseFireExposure)) })), () => null), coldFormedMembers: normWireDefault(normWireNullable(normWireObject<{ values: ColdFormedMember[]; }>({ values: normWireRequired(normWireArray(parseColdFormedMember)) })), () => null), platedPanels: normWireDefault(normWireNullable(normWireObject<{ values: PlatedPanel[]; }>({ values: normWireRequired(normWireArray(parsePlatedPanel)) })), () => null), siloShells: normWireDefault(normWireNullable(normWireObject<{ values: SiloShell[]; }>({ values: normWireRequired(normWireArray(parseSiloShell)) })), () => null), tensionComponents: normWireDefault(normWireNullable(normWireObject<{ values: TensionComponent[]; }>({ values: normWireRequired(normWireArray(parseTensionComponent)) })), () => null), bridgeFatigue: normWireDefault(normWireNullable(normWireObject<{ values: BridgeFatigue[]; }>({ values: normWireRequired(normWireArray(parseBridgeFatigue)) })), () => null), towerLegs: normWireDefault(normWireNullable(normWireObject<{ values: TowerLeg[]; }>({ values: normWireRequired(normWireArray(parseTowerLeg)) })), () => null), piles: normWireDefault(normWireNullable(normWireObject<{ values: SteelPile[]; }>({ values: normWireRequired(normWireArray(parseSteelPile)) })), () => null), craneRunways: normWireDefault(normWireNullable(normWireObject<{ values: CraneRunway[]; }>({ values: normWireRequired(normWireArray(parseCraneRunway)) })), () => null) });
+export const parseEn1993RowOp: NormWireReader<En1993RowOp> = normWireLiteral("Insert", "Remove", "Replace");
+export const parseEn1993MaterialEdit: NormWireReader<En1993MaterialEdit> = normWireObject<En1993MaterialEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSteelMaterial)) });
+export const parseEn1993SectionEdit: NormWireReader<En1993SectionEdit> = normWireObject<En1993SectionEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSteelSection)) });
+export const parseEn1993MemberEdit: NormWireReader<En1993MemberEdit> = normWireObject<En1993MemberEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSteelMember)) });
+export const parseEn1993LoadCaseEdit: NormWireReader<En1993LoadCaseEdit> = normWireObject<En1993LoadCaseEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseLoadCase)) });
+export const parseEn1993MemberActionEdit: NormWireReader<En1993MemberActionEdit> = normWireObject<En1993MemberActionEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseMemberAction)) });
+export const parseEn1993JointEdit: NormWireReader<En1993JointEdit> = normWireObject<En1993JointEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSteelJoint)) });
+export const parseEn1993FatigueDetailEdit: NormWireReader<En1993FatigueDetailEdit> = normWireObject<En1993FatigueDetailEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseFatigueDetail)) });
+export const parseEn1993FireExposureEdit: NormWireReader<En1993FireExposureEdit> = normWireObject<En1993FireExposureEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseFireExposure)) });
+export const parseEn1993ColdFormedMemberEdit: NormWireReader<En1993ColdFormedMemberEdit> = normWireObject<En1993ColdFormedMemberEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseColdFormedMember)) });
+export const parseEn1993PlatedPanelEdit: NormWireReader<En1993PlatedPanelEdit> = normWireObject<En1993PlatedPanelEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parsePlatedPanel)) });
+export const parseEn1993SiloShellEdit: NormWireReader<En1993SiloShellEdit> = normWireObject<En1993SiloShellEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSiloShell)) });
+export const parseEn1993TensionComponentEdit: NormWireReader<En1993TensionComponentEdit> = normWireObject<En1993TensionComponentEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseTensionComponent)) });
+export const parseEn1993BridgeFatigueEdit: NormWireReader<En1993BridgeFatigueEdit> = normWireObject<En1993BridgeFatigueEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseBridgeFatigue)) });
+export const parseEn1993TowerLegEdit: NormWireReader<En1993TowerLegEdit> = normWireObject<En1993TowerLegEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseTowerLeg)) });
+export const parseEn1993PileEdit: NormWireReader<En1993PileEdit> = normWireObject<En1993PileEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseSteelPile)) });
+export const parseEn1993CraneRunwayEdit: NormWireReader<En1993CraneRunwayEdit> = normWireObject<En1993CraneRunwayEdit>({ op: normWireRequired(parseEn1993RowOp), index: normWireRequired(normWireInteger), id: normWireRequired(normWireString), value: normWireRequired(normWireNullable(parseCraneRunway)) });
+export const parseEn1993Diff: NormWireReader<En1993Diff> = normWireObject<En1993Diff>({ annex: normWireDefault(normWireNullable(normWireLiteral("En", "De")), () => null), materials: normWireDefault(normWireArray(parseEn1993MaterialEdit), () => []), sections: normWireDefault(normWireArray(parseEn1993SectionEdit), () => []), members: normWireDefault(normWireArray(parseEn1993MemberEdit), () => []), loadCases: normWireDefault(normWireArray(parseEn1993LoadCaseEdit), () => []), memberActions: normWireDefault(normWireArray(parseEn1993MemberActionEdit), () => []), joints: normWireDefault(normWireArray(parseEn1993JointEdit), () => []), fatigueDetails: normWireDefault(normWireArray(parseEn1993FatigueDetailEdit), () => []), fireExposures: normWireDefault(normWireArray(parseEn1993FireExposureEdit), () => []), coldFormedMembers: normWireDefault(normWireArray(parseEn1993ColdFormedMemberEdit), () => []), platedPanels: normWireDefault(normWireArray(parseEn1993PlatedPanelEdit), () => []), siloShells: normWireDefault(normWireArray(parseEn1993SiloShellEdit), () => []), tensionComponents: normWireDefault(normWireArray(parseEn1993TensionComponentEdit), () => []), bridgeFatigue: normWireDefault(normWireArray(parseEn1993BridgeFatigueEdit), () => []), towerLegs: normWireDefault(normWireArray(parseEn1993TowerLegEdit), () => []), piles: normWireDefault(normWireArray(parseEn1993PileEdit), () => []), craneRunways: normWireDefault(normWireArray(parseEn1993CraneRunwayEdit), () => []) });

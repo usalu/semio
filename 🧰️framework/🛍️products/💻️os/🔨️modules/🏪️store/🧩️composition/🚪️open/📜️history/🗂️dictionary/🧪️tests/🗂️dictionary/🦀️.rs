@@ -154,23 +154,26 @@ fn new_owner(fixture: &Value, row: &Value, history: &[u8]) -> MemberHistoryDicti
     MemberHistoryDictionaryOwner::begin(input, "stdio.semio.flow", limits, &cx).unwrap_or_else(|_| panic!("dictionary input admission"))
 }
 
-fn retire(owner: &mut dyn ErasedSnapshotRetirement, grant: usize) -> usize {
-    let mut retired = 0;
-    assert!(matches!(owner.close_step(0, grant).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    for _ in 0..20000 {
-        match owner.close_step(1, grant).unwrap() {
-            SnapshotRetirementStep::Complete => {
-                assert!(owner.terminal_is_empty());
-                return retired;
-            }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= grant);
-                retired += released_bytes;
-            }
-            SnapshotRetirementStep::Blocked => panic!("private owner cannot block its close"),
-        }
+use super::super::tests::RequestRetirementCensus;
+impl RequestRetirementCensus for MemberHistoryDictionaryOwner {
+    fn request(&self) -> Option<&MemberOpenRequest> {
+        if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return None; }
+        let owners = self.owners.as_ref()?;
+        if owners.index.is_some() { return None; }
+        owners.input.as_ref()?.request.as_ref()
     }
-    panic!("bounded dictionary retirement did not converge");
+}
+impl RequestRetirementCensus for VerifiedMemberHistoryDictionary {
+    fn request(&self) -> Option<&MemberOpenRequest> {
+        let owners = self.owners.as_ref()?;
+        if owners.index.is_some() { return None; }
+        owners.input.as_ref()?.request.as_ref()
+    }
+}
+
+fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usize) -> usize {
+    assert!(matches!(owner.close_step(0, payload_grant).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+    super::super::tests::retire(owner, payload_grant)
 }
 
 fn expected_error(row: &Value) -> Option<MemberOpenDiagnostic> {
@@ -411,7 +414,8 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
             assert_eq!(lookup as u64, row["lookupBytes"].as_u64().unwrap());
             assert_eq!(facts, (row["entries"].as_u64().unwrap() as usize, row["pages"].as_u64().unwrap() as usize, row["inputBytes"].as_u64().unwrap() as usize));
             assert_eq!(retired, row["retiredBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
-            assert_eq!(retired - facts.2 - 72 - facts.1 * 1024 - pending - lookup, row["idBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
+            let identity_bytes = fixture["requestIdentity"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().len()).sum::<usize>() + fixture["openedActor"].as_str().unwrap().len();
+            assert_eq!(retired - facts.2 - identity_bytes - facts.1 * 1024 - pending - lookup, row["idBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
         }
     }
     println!("retained dictionary rejection owner:11 authority transitions +7 payload scratch +9 pending-copy/ID scratch traces x3 grants; original witness retained and exactly closed; no public member");

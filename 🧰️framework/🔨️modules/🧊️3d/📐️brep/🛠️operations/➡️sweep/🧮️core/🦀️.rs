@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_loop, make_vertex};
 use crate::brep::operations::primitives::line_edge;
 use crate::brep::operations::transform::transform_face;
-use crate::brep::representation::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use crate::brep::representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use crate::brep::representation::curve::{Curve2, Curve3};
 use crate::brep::representation::error::KernelError;
 use crate::brep::representation::surface::Surface;
@@ -183,10 +183,11 @@ pub(super) struct Prism {
     pub laterals: Vec<FaceId>,
 }
 
-/// 🧮 Builds one prism segment: `bottom` is flipped in place to face away from the travel
-/// (recorded modified), a fresh `top = transform_face(bottom, map)` whose `flipped` is toggled so
-/// the two caps face opposite ways, and one lateral face per profile edge of every loop (so holes
-/// get their own tube faces).
+/// 🧮 A prism segment built one lateral face at a time: [`PrismBuilder::begin`] flips `bottom` in
+/// place to face away from the travel (recorded modified) and transform-copies it to the top (its
+/// `flipped` toggled so the two caps face opposite ways), then [`PrismBuilder::lateral`] builds the
+/// side face of one profile coedge (so holes get their own tube faces) and
+/// [`PrismBuilder::finish`] hands back the [`Prism`].
 ///
 /// # Lateral orientation
 ///
@@ -213,89 +214,114 @@ pub(super) struct Prism {
 /// Compensating a mass-property sign with `flipped` (the previous `flipped = matches!(Plane)`)
 /// inverted every extruded side wall's shading normal and tessellated winding instead, which is
 /// what made a watertight prism measure `−V/3` as a triangle soup.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn build_prism(body: &mut Body, bottom: FaceId, placement: &Placement, rec: &mut OpRecorder) -> Result<Prism, KernelError> {
-    let map = placement.affine();
-    let n0 = planar_outward_normal(body, bottom)?;
-    let travel = match placement {
-        Placement::Translate { offset } => *offset,
-        Placement::General { .. } => {
-            let bfd = body
-                .faces
-                .get(bottom)
-                .and_then(|f| match body.surfaces.get(f.surface) {
-                    Some(Surface::Plane { frame }) => Some(*frame),
-                    _ => None,
-                })
-                .ok_or_else(|| KernelError::InvalidInput("sweep profile face must be planar".into()))?;
-            map.apply_point(bfd.origin) - bfd.origin
+pub(super) struct PrismBuilder {
+    placement: Placement,
+    bottom_flipped: bool,
+    top: FaceId,
+    pairs: Vec<(CoedgeId, CoedgeId)>,
+    rail_cache: HashMap<VertexId, EdgeId>,
+    laterals: Vec<FaceId>,
+}
+
+impl PrismBuilder {
+    /// 🧮 How many lateral faces a prism over `face` has: one per coedge of every loop.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub(super) fn lateral_count(body: &Body, face: FaceId) -> usize {
+        body.face_loops(face).into_iter().map(|lp| body.loop_coedges(lp).len()).sum()
+    }
+
+    /// 🧮 Flips `bottom` as needed, copies it to the top and pairs every bottom coedge with its twin.
+    pub(super) fn begin(body: &mut Body, bottom: FaceId, placement: Placement, rec: &mut OpRecorder) -> Result<Self, KernelError> {
+        let map = placement.affine();
+        let n0 = planar_outward_normal(body, bottom)?;
+        let travel = match &placement {
+            Placement::Translate { offset } => *offset,
+            Placement::General { .. } => {
+                let bfd = body
+                    .faces
+                    .get(bottom)
+                    .and_then(|f| match body.surfaces.get(f.surface) {
+                        Some(Surface::Plane { frame }) => Some(*frame),
+                        _ => None,
+                    })
+                    .ok_or_else(|| KernelError::InvalidInput("sweep profile face must be planar".into()))?;
+                map.apply_point(bfd.origin) - bfd.origin
+            }
+        };
+        let want_flip_bottom = n0.dot(travel) > 0.0;
+        let bottom_label = body.faces.get(bottom).unwrap().label;
+        if want_flip_bottom {
+            let f = body.faces.get_mut(bottom).unwrap();
+            f.flipped = !f.flipped;
+            rec.record_modified(bottom_label);
         }
-    };
-    let want_flip_bottom = n0.dot(travel) > 0.0;
-    let bottom_label = body.faces.get(bottom).unwrap().label;
-    if want_flip_bottom {
-        let f = body.faces.get_mut(bottom).unwrap();
-        f.flipped = !f.flipped;
-        rec.record_modified(bottom_label);
-    }
-    let bottom_flipped = body.faces.get(bottom).unwrap().flipped;
-    let top = transform_face(body, bottom, &map, rec)?;
-    {
-        let t = body.faces.get_mut(top).unwrap();
-        t.flipped = !t.flipped;
-    }
-    let bottom_loops = body.face_loops(bottom);
-    let top_loops = body.face_loops(top);
-    if bottom_loops.len() != top_loops.len() {
-        return Err(KernelError::Operation("sweep: internal loop-count mismatch after transform_face".into()));
-    }
-    let mut rail_cache: HashMap<VertexId, EdgeId> = HashMap::new();
-    let mut laterals = Vec::new();
-    for (&bl, &tl) in bottom_loops.iter().zip(&top_loops) {
-        let bce = body.loop_coedges(bl);
-        let tce = body.loop_coedges(tl);
-        let n = bce.len();
-        for k in 0..n {
-            let (b_edge, f_i) = {
-                let c = body.coedges.get(bce[k]).unwrap();
-                (c.edge, c.forward)
-            };
-            let t_edge = body.coedges.get(tce[k]).unwrap().edge;
-            let (s_bot, e_bot) = body.coedge_endpoints(bce[k]).unwrap();
-            let (s_top, e_top) = body.coedge_endpoints(tce[k]).unwrap();
-            let (start_bot, start_top, end_bot, end_top) = if f_i { (s_bot, s_top, e_bot, e_top) } else { (e_bot, e_top, s_bot, s_top) };
-            let start_rail = *rail_cache.entry(start_bot).or_insert_with(|| {
-                let (a, b) = (body.vertices.get(start_bot).unwrap().position, body.vertices.get(start_top).unwrap().position);
-                line_edge(body, a, b, start_bot, start_top, Tol::DEFAULT, rec)
-            });
-            let end_rail = *rail_cache.entry(end_bot).or_insert_with(|| {
-                let (a, b) = (body.vertices.get(end_bot).unwrap().position, body.vertices.get(end_top).unwrap().position);
-                line_edge(body, a, b, end_bot, end_top, Tol::DEFAULT, rec)
-            });
-            let curve = body.curves3.get(body.edges.get(b_edge).unwrap().curve).unwrap().clone();
-            let range = body.edges.get(b_edge).unwrap().range;
-            let lat = match placement {
-                Placement::Translate { offset } => translate_lateral(&curve, range, *offset)?,
-                Placement::General { map } => general_lateral(&curve, range, map)?,
-            };
-            let lateral_flipped = f_i != bottom_flipped;
-            let surf_id = body.surfaces.insert(lat.surface);
-            let u0 = lat.u_domain.0;
-            let u1 = lat.u_domain.1;
-            let u_slope = (u1 - u0) / (range.1 - range.0);
-            let u_origin = u0 - u_slope * range.0;
-            let v_slope = lat.v_top - lat.v_bottom;
-            let bottom_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_bottom), dir: Vec2::new(u_slope, 0.0) });
-            let top_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_top), dir: Vec2::new(u_slope, 0.0) });
-            let start_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
-            let end_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u1, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
-            let members = vec![(b_edge, true), (end_rail, true), (t_edge, false), (start_rail, false)];
-            let pcurves = vec![(bottom_pc, range), (end_pc, (0.0, 1.0)), (top_pc, range), (start_pc, (0.0, 1.0))];
-            let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], lateral_flipped, Tol::DEFAULT, rec);
-            laterals.push(face);
+        let bottom_flipped = body.faces.get(bottom).unwrap().flipped;
+        let top = transform_face(body, bottom, &map, rec)?;
+        {
+            let t = body.faces.get_mut(top).unwrap();
+            t.flipped = !t.flipped;
         }
+        let bottom_loops = body.face_loops(bottom);
+        let top_loops = body.face_loops(top);
+        if bottom_loops.len() != top_loops.len() {
+            return Err(KernelError::Operation("sweep: internal loop-count mismatch after transform_face".into()));
+        }
+        let mut pairs = Vec::new();
+        for (&bl, &tl) in bottom_loops.iter().zip(&top_loops) {
+            let bce = body.loop_coedges(bl);
+            let tce = body.loop_coedges(tl);
+            pairs.extend((0..bce.len()).map(|k| (bce[k], tce[k])));
+        }
+        Ok(Self { placement, bottom_flipped, top, pairs, rail_cache: HashMap::new(), laterals: Vec::new() })
     }
-    Ok(Prism { top, laterals })
+
+    /// 🧮 Builds the lateral face of the `index`-th profile coedge.
+    pub(super) fn lateral(&mut self, body: &mut Body, rec: &mut OpRecorder, index: usize) -> Result<(), KernelError> {
+        let (bottom_coedge, top_coedge) = self.pairs[index];
+        let (b_edge, f_i) = {
+            let c = body.coedges.get(bottom_coedge).unwrap();
+            (c.edge, c.forward)
+        };
+        let t_edge = body.coedges.get(top_coedge).unwrap().edge;
+        let (s_bot, e_bot) = body.coedge_endpoints(bottom_coedge).unwrap();
+        let (s_top, e_top) = body.coedge_endpoints(top_coedge).unwrap();
+        let (start_bot, start_top, end_bot, end_top) = if f_i { (s_bot, s_top, e_bot, e_top) } else { (e_bot, e_top, s_bot, s_top) };
+        let start_rail = *self.rail_cache.entry(start_bot).or_insert_with(|| {
+            let (a, b) = (body.vertices.get(start_bot).unwrap().position, body.vertices.get(start_top).unwrap().position);
+            line_edge(body, a, b, start_bot, start_top, Tol::DEFAULT, rec)
+        });
+        let end_rail = *self.rail_cache.entry(end_bot).or_insert_with(|| {
+            let (a, b) = (body.vertices.get(end_bot).unwrap().position, body.vertices.get(end_top).unwrap().position);
+            line_edge(body, a, b, end_bot, end_top, Tol::DEFAULT, rec)
+        });
+        let curve = body.curves3.get(body.edges.get(b_edge).unwrap().curve).unwrap().clone();
+        let range = body.edges.get(b_edge).unwrap().range;
+        let lat = match &self.placement {
+            Placement::Translate { offset } => translate_lateral(&curve, range, *offset)?,
+            Placement::General { map } => general_lateral(&curve, range, map)?,
+        };
+        let lateral_flipped = f_i != self.bottom_flipped;
+        let surf_id = body.surfaces.insert(lat.surface);
+        let u0 = lat.u_domain.0;
+        let u1 = lat.u_domain.1;
+        let u_slope = (u1 - u0) / (range.1 - range.0);
+        let u_origin = u0 - u_slope * range.0;
+        let v_slope = lat.v_top - lat.v_bottom;
+        let bottom_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_bottom), dir: Vec2::new(u_slope, 0.0) });
+        let top_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u_origin, lat.v_top), dir: Vec2::new(u_slope, 0.0) });
+        let start_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
+        let end_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u1, lat.v_bottom), dir: Vec2::new(0.0, v_slope) });
+        let members = vec![(b_edge, true), (end_rail, true), (t_edge, false), (start_rail, false)];
+        let pcurves = vec![(bottom_pc, range), (end_pc, (0.0, 1.0)), (top_pc, range), (start_pc, (0.0, 1.0))];
+        let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], lateral_flipped, Tol::DEFAULT, rec);
+        self.laterals.push(face);
+        Ok(())
+    }
+
+    /// 🧮 The finished segment.
+    pub(super) fn finish(self) -> Prism {
+        Prism { top: self.top, laterals: self.laterals }
+    }
 }
 
 /// 🧮 Line/`Curve3::Nurbs` lateral surface under an arbitrary rigid placement — the only two

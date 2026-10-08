@@ -1,0 +1,21 @@
+{
+  "maximumItems": 1,
+  "maximumAdmissionBytes": 262144,
+  "retainedSlots": 1024,
+  "deniedReleaseBytes": 0,
+  "exactReceipt": true,
+  "emptyVectorExtents": [
+    8194,
+    16384,
+    65536
+  ],
+  "undergrantOffset": 1,
+  "registryFinalDropBytes": 0,
+  "registryLockStates": [
+    "available",
+    "busy",
+    "poisoned"
+  ],
+  "registryExternalAliases": 1,
+  "catalogTerminalDropBytes": 0
+}

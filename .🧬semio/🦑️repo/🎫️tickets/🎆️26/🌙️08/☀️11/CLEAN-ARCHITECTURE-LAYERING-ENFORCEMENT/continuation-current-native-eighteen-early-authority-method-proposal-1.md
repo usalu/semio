@@ -1,0 +1,5 @@
+# Current Native Eighteen Early Authority Method Proposal
+
+Unexecuted Source18 now seeds every declared Root model authority and all model null-before paths first, preserving complete full initial bodies with explicit UTF8 order, byte counts, observed regular-file physical path/device/inode/size/mtime and admission timestamps. Same modelAuthoritiesV1 immediately checks current Root bytes against those retained endpoints. The remainder full source discovery/copy preserves each admitted initial destination and uses those bodies for literal include discovery. After the long copy, sealed seed/authority guards check retained bodies and original receipt mappings; they do not require later Root identity. Final full initial membership/checks/body coverage and all model/prep joins remain mandatory. Full cohort is explicitly non-atomic. Source17 actual refusal/rawpartials preserved.
+
+New seed mutation controls are not yet authored or executed; no Source18 capture/release. Source GUI246/Pub247/Builder13GUI248; runtime22/dispatcher20/cardinal33/Guard8. Current Renderer9 receipt replaces refused8, other5 receipts unchanged.

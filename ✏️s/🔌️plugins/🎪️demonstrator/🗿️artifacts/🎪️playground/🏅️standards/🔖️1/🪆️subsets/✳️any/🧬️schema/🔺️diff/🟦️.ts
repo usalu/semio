@@ -1,15 +1,8 @@
 /** 🧬️ Playground diff schema — sparse field delta over the artifact. */
-import { parsePlaygroundSnapshot } from "../📸️snapshot/🟦️.ts";
 
 export interface PlaygroundDiff {
   /** @state artifact */
-  artifact?: PlaygroundArtifact;
-  /** @state artifact */
   schema?: string;
-}
-
-export interface PlaygroundArtifact {
-  schema: string;
 }
 
 //#region 🚪️Parsers
@@ -61,9 +54,8 @@ export const demonstratorPlaygroundDiffGuardConstant = <T extends string | numbe
 
 export function parsePlaygroundDiff(value: unknown, at = "$"): PlaygroundDiff {
   const row = demonstratorPlaygroundDiffGuardObject(value, at);
-  for (const key of Reflect.ownKeys(row)) if (key !== "artifact" && key !== "schema") demonstratorPlaygroundDiffGuardReject(at, "unexpected field");
+  for (const key of Reflect.ownKeys(row)) if (key !== "schema") demonstratorPlaygroundDiffGuardReject(at, "unexpected field");
   return {
-    artifact: row["artifact"] === undefined ? undefined : parsePlaygroundSnapshot(row["artifact"], `${at}.artifact`),
     schema: row["schema"] === undefined ? undefined : demonstratorPlaygroundDiffGuardString(row["schema"], `${at}.schema`),
   };
 }

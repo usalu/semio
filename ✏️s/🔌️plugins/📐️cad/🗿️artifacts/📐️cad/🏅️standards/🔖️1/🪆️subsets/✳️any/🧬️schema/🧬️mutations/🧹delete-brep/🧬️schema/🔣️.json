@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-brep/schema.json",
+  "title": "DeleteBrep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "childId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteBrep"
+    },
+    "childId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child ID",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Local identity of the owned topology child.",
+          "de": "Lokale Identität des eigenen Topologie-Kindes."
+        },
+        "group": "identity",
+        "order": 10
+      },
+      "minLength": 1
+    }
+  }
+}

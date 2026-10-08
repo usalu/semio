@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `MoveTargetRegion` — patches the one addressed target region in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionPatchEntry, Puzzle2dTargetRegionsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle2dDiff, Puzzle2dTargetRegionPatch, Puzzle2dTargetRegionsDelta};
 use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::puzzle2d_finite;
 
@@ -11,14 +11,16 @@ pub fn diff(payload: &super::MoveTargetRegion, base: &Puzzle2dSnapshot) -> proto
     let Some(region) = base.target_regions.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "target region", payload.id), vec![payload.id.to_string_owner()]);
     };
-    let mut next = region.clone();
-    next.x = payload.new_x;
-    next.y = payload.new_y;
-    if next == *region {
+    let patch = Puzzle2dTargetRegionPatch {
+        x: (payload.new_x != region.x).then_some(payload.new_x),
+        y: (payload.new_y != region.y).then_some(payload.new_y),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.to_string_owner()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
-        target_regions: Some(Puzzle2dTargetRegionsDelta { patched: vec![Puzzle2dTargetRegionPatchEntry { id: payload.id.clone(), patch: Puzzle2dTargetRegionPatch { replacement: Some(next) } }], ..Default::default() }),
+        target_regions: Some(Puzzle2dTargetRegionsDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

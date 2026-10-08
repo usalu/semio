@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
 struct LateDialProbe(std::sync::Arc<std::sync::atomic::AtomicUsize>);
 

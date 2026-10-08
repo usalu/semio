@@ -1,0 +1,306 @@
+{
+  "category": {
+    "id": "mesh.repair",
+    "emoji": "🩹️",
+    "order": 250,
+    "label": {
+      "en": "Mesh repair and cleanup",
+      "de": "Netzreparatur und Bereinigung"
+    },
+    "description": {
+      "en": "Weld, orient, fill holes, merge coplanar faces and simplify.",
+      "de": "Verschweißen, ausrichten, Löcher füllen, koplanare Flächen verschmelzen und vereinfachen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.repair.weld",
+      "category": "mesh.repair",
+      "emoji": "🔥️",
+      "label": {
+        "en": "Weld vertices",
+        "de": "Eckpunkte verschweißen"
+      },
+      "description": {
+        "en": "Merges vertices that lie within the tolerance and removes collapsed faces.",
+        "de": "Verschmilzt Eckpunkte innerhalb der Toleranz und entfernt zusammengefallene Flächen."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Largest distance at which vertices are merged.",
+            "de": "Größter Abstand, bei dem Eckpunkte verschmolzen werden."
+          },
+          "type": "length",
+          "default": 0.0001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The welded mesh.",
+            "de": "Das verschweißte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.repair.orient",
+      "category": "mesh.repair",
+      "emoji": "🧭️",
+      "label": {
+        "en": "Orient faces consistently",
+        "de": "Flächen einheitlich ausrichten"
+      },
+      "description": {
+        "en": "Makes the winding of neighbouring faces agree within each connected piece.",
+        "de": "Gleicht den Umlaufsinn benachbarter Flächen innerhalb jedes zusammenhängenden Teils an."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The consistently oriented mesh.",
+            "de": "Das einheitlich ausgerichtete Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.repair.fillHoles",
+      "category": "mesh.repair",
+      "emoji": "🕳️",
+      "label": {
+        "en": "Fill holes",
+        "de": "Löcher füllen"
+      },
+      "description": {
+        "en": "Caps every open boundary loop with a polygon face.",
+        "de": "Verschließt jede offene Randschleife mit einer Polygonfläche."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh without open holes.",
+            "de": "Das Netz ohne offene Löcher."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.repair.mergeCoplanar",
+      "category": "mesh.repair",
+      "emoji": "🧱️",
+      "label": {
+        "en": "Merge coplanar faces",
+        "de": "Koplanare Flächen verschmelzen"
+      },
+      "description": {
+        "en": "Joins adjacent faces that lie in one plane without changing the surface.",
+        "de": "Verbindet benachbarte Flächen in einer Ebene, ohne die Oberfläche zu ändern."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with merged faces.",
+            "de": "Das Netz mit verschmolzenen Flächen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.repair.decimate",
+      "category": "mesh.repair",
+      "emoji": "📉️",
+      "label": {
+        "en": "Simplify",
+        "de": "Vereinfachen"
+      },
+      "description": {
+        "en": "Reduces the face count by collapsing the shortest edges; it may stop before reaching the target.",
+        "de": "Verringert die Flächenzahl durch Zusammenziehen der kürzesten Kanten; es kann vor Erreichen des Ziels anhalten."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "ratio",
+          "label": {
+            "en": "Keep ratio",
+            "de": "Behaltensanteil"
+          },
+          "description": {
+            "en": "Share of faces to keep; 0.5 halves the mesh.",
+            "de": "Anteil der zu behaltenden Flächen; 0,5 halbiert das Netz."
+          },
+          "type": "number",
+          "default": 0.5,
+          "min": 0,
+          "exclusiveMin": true,
+          "max": 1,
+          "step": 0.05,
+          "unit": "ratio"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The simplified mesh.",
+            "de": "Das vereinfachte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

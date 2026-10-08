@@ -13,7 +13,6 @@ pub struct PaintNativeSamplesMutation {
     pub revision: String,
     pub region: PngRegion,
     pub paint: PngNativePaint,
-    pub result: PngSnapshot,
 }
 
 
@@ -21,11 +20,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMuta
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "native-sample-region", kind: "paint-native-samples", record: "PaintNativeSamples" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        if crate::schema::operations::png_revision(base) != self.revision {
-            return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, "png: source revision changed", ["native-sample-region"]);
-        }
-        match crate::schema::operations::validate_completed_native_paint(base, &self.result, self.region, self.paint) {
-            Ok(()) => protocol::MutationOutcome::new(PngDiff::between(base, &self.result)),
+        match crate::schema::operations::paint_native_region_controlled(base, &self.revision, self.region, self.paint, &mut |_, _| true) {
+            Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["native-sample-region"]),
         }
     }
@@ -49,18 +45,9 @@ pub(crate) fn test_case() -> PngMutation {
     let revision = crate::schema::operations::png_revision(&base);
     let region = PngRegion { x: 0, y: 0, width: 1, height: 1 };
     let paint = PngNativePaint::rgba(0, 0, 0, 255);
-    let result = crate::schema::operations::paint_native_region_owned_controlled(
-        &base,
-        &revision,
-        region,
-        paint,
-        crate::schema::operations::MAXIMUM_NATIVE_PAINT_OWNED_BYTES,
-        &mut |_| true,
-    ).expect("default PNG native paint");
     PngMutation::PaintNativeSamples(PaintNativeSamplesMutation {
         revision,
         region,
         paint,
-        result,
     })
 }

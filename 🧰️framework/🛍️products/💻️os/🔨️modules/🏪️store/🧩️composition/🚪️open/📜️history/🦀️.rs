@@ -221,6 +221,7 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
     fn terminal_is_empty(&self) -> bool {
         self.request.is_none() && self.scanner.is_none() && self.span.is_none() && self.pending.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::next_close_byte_demand) }
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
@@ -238,6 +239,7 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
     fn terminal_is_empty(&self) -> bool {
         self.request.is_none() && self.span.is_none()
     }
+    fn next_close_byte_demand(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::next_close_byte_demand) }
 }
 
 impl Drop for MemberHistoryVerification {

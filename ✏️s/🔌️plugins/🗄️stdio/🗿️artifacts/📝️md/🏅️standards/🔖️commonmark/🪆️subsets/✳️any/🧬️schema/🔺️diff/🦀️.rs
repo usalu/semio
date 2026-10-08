@@ -235,7 +235,7 @@ pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Opt
 
 //#region 🔖️Apply
 impl MutationDiff<MdSnapshot> for MdDiff {
-    fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
+    fn apply(&self, base: &MdSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<MdSnapshot> {
         if let Some(blocks) = &self.blocks {
             validate_md_blocks(&base.blocks, blocks)?;
         }

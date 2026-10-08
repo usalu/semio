@@ -1,6 +1,4 @@
-//! 🧱️ `insert-element` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧱️ `insert-element` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -15,11 +13,11 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertEl
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertElement" };
 
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
-        agg_diff(&SemioModelMutation::InsertElement(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioModelMutation::InsertElement(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -31,3 +29,10 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertEl
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

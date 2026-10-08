@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::op::change_title_operation;
+use crate::schema::mutations::change_title_operation;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {

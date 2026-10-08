@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateDailySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -31,10 +31,7 @@ pub fn diff(payload: &super::CreateDailySchedule, base: &EnergyModelSnapshot) ->
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Schedule limits {} .. {} are not an interval.", min, max), [payload.id.0.to_string()]);
         }
     }
-    let mut model = base.model.clone();
-    model.schedules.daily.insert(
-        payload.index as usize,
-        crate::schedule::DailySchedule {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { daily: Rows::inserting(payload.index as usize, crate::schedule::DailySchedule {
             id: payload.id,
             hourly_values: {
                 let mut values = [0.0f64; 24];
@@ -46,8 +43,6 @@ pub fn diff(payload: &super::CreateDailySchedule, base: &EnergyModelSnapshot) ->
                 (Some(min), Some(max)) => Some(crate::schedule::ScheduleLimits { min, max }),
                 _ => None,
             },
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

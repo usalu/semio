@@ -4,7 +4,6 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { dirname, join, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import ts from "typescript";
-import { parse as parseJsonc } from "jsonc-parser";
 import { inventoryTaxonomy, planTaxonomy, type TaxonomyPlanOptions } from "../../🧹️normalization/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -108,14 +107,9 @@ test("the real CLI options cancel incoming-reference planning without changing s
   }
 }, { timeout: 30_000 });
 
-test("registers the cancellation gate through Nx and both launch catalogs", () => {
+test("registers the cancellation gate through Nx as an owner route that is never replayed from cache", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launches = parseJsonc(readFileSync(join(root, path), "utf8")).configurations.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(launches).toHaveLength(1);
-    expect(launches[0].command).toBe(expected.launchCommand);
-    expect(launches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-  }
+  expect(project.targets[expected.target]?.cache).toBe(expected.cache);
 });

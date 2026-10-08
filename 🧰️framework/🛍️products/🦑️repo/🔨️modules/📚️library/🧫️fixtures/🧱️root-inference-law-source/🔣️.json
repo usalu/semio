@@ -179,8 +179,6 @@
   ],
   "route": {
     "target": "test-root-inference-law-source",
-    "command": "bun ./📜️script.ts test root-inference-law-source",
-    "launchName": "🧬schema💡️inference🧪source-ownership",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-inference-law-source"
+    "command": "bun ./📜️script.ts test root-inference-law-source"
   }
 }

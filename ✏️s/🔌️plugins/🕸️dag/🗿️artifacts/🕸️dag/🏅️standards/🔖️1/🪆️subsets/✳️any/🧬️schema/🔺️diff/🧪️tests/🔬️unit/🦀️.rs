@@ -12,7 +12,7 @@ async fn dag_diff_default_has_no_pending_writes() {
 async fn a_content_handle_diff_swaps_only_the_handle() {
     let base = default_snapshot();
     let handle = crate::dag_content_child_handle(&crate::DagScene::default());
-    let next = DagDiff { content: Some(handle.clone()), ..Default::default() }.apply(&base).expect("valid handle diff");
+    let next = protocol::apply_diff(&DagDiff { content: Some(handle.clone()), ..Default::default() }, &base).expect("valid handle diff");
     assert_eq!(next.content, handle);
     assert_eq!(next.schema, base.schema);
 }

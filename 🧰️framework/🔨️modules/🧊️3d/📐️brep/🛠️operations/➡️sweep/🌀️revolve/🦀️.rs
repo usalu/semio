@@ -18,8 +18,9 @@ use std::collections::HashMap;
 use std::f64::consts::TAU;
 
 use crate::brep::operations::euler::make_edge;
+use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::brep::operations::transform::transform_face;
-use crate::brep::representation::arena::{EdgeId, FaceId, SolidId, VertexId};
+use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::representation::curve::{Curve2, Curve3};
 use crate::brep::representation::error::KernelError;
 use crate::brep::representation::surface::Surface;
@@ -237,119 +238,167 @@ fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f
     }
 }
 
-/// 🌀 Partial-angle revolve (`|angle| < 2π - ε`): two planar caps (profile at the start and end
-/// angle, built exactly like `🧮️core::build_prism`'s bottom/top) plus one lateral face per profile
-/// edge, bounded by two new rotation-arc "rails" (one per profile vertex, shared between adjacent
-/// lateral faces) instead of straight lines.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn revolve_partial(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let map = Affine3::rotation_about(axis_origin, axis, angle);
-    let n0 = super::core::planar_outward_normal(body, profile)?;
-    let start_frame = {
-        let f = body.faces.get(profile).unwrap();
-        match body.surfaces.get(f.surface).unwrap() {
-            Surface::Plane { frame } => *frame,
-            _ => return Err(KernelError::InvalidInput("revolve profile face must be planar".into())),
-        }
-    };
-    let travel = map.apply_point(start_frame.origin) - start_frame.origin;
-    let flip_start = n0.dot(travel) > 0.0;
-    let start_label = body.faces.get(profile).unwrap().label;
-    if flip_start {
-        let f = body.faces.get_mut(profile).unwrap();
-        f.flipped = !f.flipped;
-        rec.record_modified(start_label);
-    }
-    let end_face = transform_face(body, profile, &map, rec)?;
-    let start_loops = body.face_loops(profile);
-    let end_loops = body.face_loops(end_face);
-    if start_loops.len() != end_loops.len() {
-        return Err(KernelError::Operation("revolve: internal loop-count mismatch after transform_face".into()));
-    }
-    let mut rail_cache: HashMap<VertexId, EdgeId> = HashMap::new();
-    let mut laterals = Vec::new();
-    for (&sl, &el) in start_loops.iter().zip(&end_loops) {
-        let sce = body.loop_coedges(sl);
-        let ece = body.loop_coedges(el);
-        let n = sce.len();
-        for k in 0..n {
-            let (edge_id, f_i) = {
-                let c = body.coedges.get(sce[k]).unwrap();
-                (c.edge, c.forward)
-            };
-            let (s_v0, s_v1) = body.coedge_endpoints(sce[k]).unwrap();
-            let (e_v0, e_v1) = body.coedge_endpoints(ece[k]).unwrap();
-            let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();
-            let range = body.edges.get(edge_id).unwrap().range;
-            let rev = classify(&curve, axis_origin, axis)?;
-            let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, angle);
-            let left_rail = *rail_cache.entry(s_v0).or_insert_with(|| {
-                let p = body.vertices.get(s_v0).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v0, e_v0), rec)
-            });
-            let right_rail = *rail_cache.entry(s_v1).or_insert_with(|| {
-                let p = body.vertices.get(s_v1).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v1, e_v1), rec)
-            });
-            let members = vec![(edge_id, !f_i), (left_rail, true), (edge_id, f_i), (right_rail, false)];
-            let pcurves = vec![pc0, pc_left, pc1, pc_right];
-            let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], flip, Tol::DEFAULT, rec);
-            laterals.push(face);
-        }
-    }
-    let mut faces = vec![profile, end_face];
-    faces.extend(laterals);
-    Ok(finish_solid(body, faces, rec))
+/// 🌀 Resumable revolve. A partial angle (`|angle| < 2π - ε`) builds two planar caps — the profile
+/// at the start and end angle, built exactly like `🧮️core::PrismBuilder`'s bottom/top — plus one
+/// lateral face per profile edge, bounded by two new rotation-arc "rails" (one per profile vertex,
+/// shared between adjacent lateral faces) instead of straight lines: one setup unit, one unit per
+/// lateral, one closing unit. A full 2π revolve has no caps — one rotation-orbit circle (or
+/// degenerate on-axis edge) per profile vertex, shared by its two adjacent lateral faces, and each
+/// profile edge reused TWICE as its own lateral face's seam (`u=0` forward, `u=2π` reverse), the
+/// direct N-edge generalization of `🧱️primitives::make_cylinder`'s own single-seam pattern — so it
+/// is one unit per lateral and one closing unit.
+pub struct RevolveJob {
+    profile: FaceId,
+    axis_origin: Pnt3,
+    axis: Vec3,
+    angle: f64,
+    full: bool,
+    end_face: Option<FaceId>,
+    items: Vec<(CoedgeId, Option<CoedgeId>)>,
+    rail_cache: HashMap<VertexId, EdgeId>,
+    laterals: Vec<FaceId>,
+    plan: Plan,
 }
 
-/// 🌀 Full 2π revolve: no caps — one rotation-orbit circle (or degenerate on-axis edge) per
-/// profile vertex, shared by its two adjacent lateral faces, and each profile edge reused TWICE
-/// as its own lateral face's seam (`u=0` forward, `u=2π` reverse) — the direct N-edge
-/// generalization of `🧱️primitives::make_cylinder`'s own single-seam pattern.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn revolve_full(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let profile_label = body.faces.get(profile).unwrap().label;
-    rec.record_deleted(profile_label);
-    let loops = body.face_loops(profile);
-    let mut orbit_cache: HashMap<VertexId, EdgeId> = HashMap::new();
-    let mut laterals = Vec::new();
-    for &lp in &loops {
-        let coedges = body.loop_coedges(lp);
-        for coedge in coedges {
-            let edge_id = body.coedges.get(coedge).unwrap().edge;
-            let (v0, v1) = (body.edges.get(edge_id).unwrap().v0, body.edges.get(edge_id).unwrap().v1);
-            let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();
-            let range = body.edges.get(edge_id).unwrap().range;
-            let rev = classify(&curve, axis_origin, axis)?;
-            let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, TAU);
-            let c_start = *orbit_cache.entry(v0).or_insert_with(|| {
-                let p = body.vertices.get(v0).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, TAU, (v0, v0), rec)
-            });
-            let c_end = *orbit_cache.entry(v1).or_insert_with(|| {
-                let p = body.vertices.get(v1).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, TAU, (v1, v1), rec)
-            });
-            let members = vec![(c_start, true), (edge_id, true), (c_end, false), (edge_id, false)];
-            let pcurves = vec![pc_left, (pc0.0, range), pc_right, (pc1.0, range)];
-            let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], flip, Tol::DEFAULT, rec);
-            laterals.push(face);
+impl RevolveJob {
+    /// 🌀 Plans a revolve of `face` about `(axis_origin, axis_direction)` by `angle` radians
+    /// (`|angle| ≥ 2π` clamps to a full closed revolve).
+    pub fn new(body: &Body, face: FaceId, axis_origin: Pnt3, axis_direction: Vec3, angle: f64) -> Result<Self, KernelError> {
+        let axis = axis_direction.normalized().ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
+        if !angle.is_finite() || angle.abs() <= 1e-12 {
+            return Err(KernelError::InvalidInput("revolve angle must be non-zero".into()));
         }
+        let full = angle.abs() >= TAU - 1e-9;
+        let profile_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
+        if !full && !matches!(body.surfaces.get(profile_data.surface), Some(Surface::Plane { .. })) {
+            return Err(KernelError::InvalidInput("revolve profile face must be planar".into()));
+        }
+        let items: Vec<(CoedgeId, Option<CoedgeId>)> = body.face_loops(face).into_iter().flat_map(|lp| body.loop_coedges(lp)).map(|coedge| (coedge, None)).collect();
+        let plan = Plan::new(&[("setup", usize::from(!full)), ("laterals", items.len()), ("close", 1)]);
+        Ok(Self { profile: face, axis_origin, axis, angle, full, end_face: None, items, rail_cache: HashMap::new(), laterals: Vec::new(), plan })
     }
-    Ok(finish_solid(body, laterals, rec))
+
+    /// 🌀 Flips the start cap, copies it to the end angle and pairs every start coedge with its twin.
+    fn setup_partial(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<(), KernelError> {
+        let map = Affine3::rotation_about(self.axis_origin, self.axis, self.angle);
+        let n0 = super::core::planar_outward_normal(body, self.profile)?;
+        let start_frame = {
+            let f = body.faces.get(self.profile).unwrap();
+            match body.surfaces.get(f.surface).unwrap() {
+                Surface::Plane { frame } => *frame,
+                _ => return Err(KernelError::InvalidInput("revolve profile face must be planar".into())),
+            }
+        };
+        let travel = map.apply_point(start_frame.origin) - start_frame.origin;
+        let flip_start = n0.dot(travel) > 0.0;
+        let start_label = body.faces.get(self.profile).unwrap().label;
+        if flip_start {
+            let f = body.faces.get_mut(self.profile).unwrap();
+            f.flipped = !f.flipped;
+            rec.record_modified(start_label);
+        }
+        let end_face = transform_face(body, self.profile, &map, rec)?;
+        let start_loops = body.face_loops(self.profile);
+        let end_loops = body.face_loops(end_face);
+        if start_loops.len() != end_loops.len() {
+            return Err(KernelError::Operation("revolve: internal loop-count mismatch after transform_face".into()));
+        }
+        self.items.clear();
+        for (&sl, &el) in start_loops.iter().zip(&end_loops) {
+            let sce = body.loop_coedges(sl);
+            let ece = body.loop_coedges(el);
+            self.items.extend((0..sce.len()).map(|k| (sce[k], Some(ece[k]))));
+        }
+        self.end_face = Some(end_face);
+        Ok(())
+    }
+
+    /// 🌀 The lateral face of one partial-angle profile coedge.
+    fn lateral_partial(&mut self, body: &mut Body, rec: &mut OpRecorder, (start, end): (CoedgeId, CoedgeId)) -> Result<(), KernelError> {
+        let (edge_id, f_i) = {
+            let c = body.coedges.get(start).unwrap();
+            (c.edge, c.forward)
+        };
+        let (s_v0, s_v1) = body.coedge_endpoints(start).unwrap();
+        let (e_v0, e_v1) = body.coedge_endpoints(end).unwrap();
+        let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();
+        let range = body.edges.get(edge_id).unwrap().range;
+        let rev = classify(&curve, self.axis_origin, self.axis)?;
+        let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, self.angle);
+        let (axis_origin, axis, angle) = (self.axis_origin, self.axis, self.angle);
+        let left_rail = *self.rail_cache.entry(s_v0).or_insert_with(|| {
+            let p = body.vertices.get(s_v0).unwrap().position;
+            axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v0, e_v0), rec)
+        });
+        let right_rail = *self.rail_cache.entry(s_v1).or_insert_with(|| {
+            let p = body.vertices.get(s_v1).unwrap().position;
+            axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v1, e_v1), rec)
+        });
+        let members = vec![(edge_id, !f_i), (left_rail, true), (edge_id, f_i), (right_rail, false)];
+        let pcurves = vec![pc0, pc_left, pc1, pc_right];
+        self.laterals.push(build_face(body, surf_id, &[LoopSpec { members, pcurves }], flip, Tol::DEFAULT, rec));
+        Ok(())
+    }
+
+    /// 🌀 The lateral face of one full-turn profile coedge.
+    fn lateral_full(&mut self, body: &mut Body, rec: &mut OpRecorder, coedge: CoedgeId) -> Result<(), KernelError> {
+        let edge_id = body.coedges.get(coedge).unwrap().edge;
+        let (v0, v1) = (body.edges.get(edge_id).unwrap().v0, body.edges.get(edge_id).unwrap().v1);
+        let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();
+        let range = body.edges.get(edge_id).unwrap().range;
+        let rev = classify(&curve, self.axis_origin, self.axis)?;
+        let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, TAU);
+        let (axis_origin, axis) = (self.axis_origin, self.axis);
+        let c_start = *self.rail_cache.entry(v0).or_insert_with(|| {
+            let p = body.vertices.get(v0).unwrap().position;
+            axis_orbit_edge(body, axis_origin, axis, p, TAU, (v0, v0), rec)
+        });
+        let c_end = *self.rail_cache.entry(v1).or_insert_with(|| {
+            let p = body.vertices.get(v1).unwrap().position;
+            axis_orbit_edge(body, axis_origin, axis, p, TAU, (v1, v1), rec)
+        });
+        let members = vec![(c_start, true), (edge_id, true), (c_end, false), (edge_id, false)];
+        let pcurves = vec![pc_left, (pc0.0, range), pc_right, (pc1.0, range)];
+        self.laterals.push(build_face(body, surf_id, &[LoopSpec { members, pcurves }], flip, Tol::DEFAULT, rec));
+        Ok(())
+    }
+}
+
+impl StagedOperation for RevolveJob {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn progress(&self) -> StageProgress {
+        self.plan.progress()
+    }
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        let unit = self.plan.take().ok_or_else(|| KernelError::Operation("revolve job already finished".into()))?;
+        match unit.phase {
+            0 => self.setup_partial(body, rec)?,
+            1 => {
+                let (start, end) = self.items[unit.index];
+                match end {
+                    Some(end) => self.lateral_partial(body, rec, (start, end))?,
+                    None => self.lateral_full(body, rec, start)?,
+                }
+            }
+            _ => {
+                if self.full {
+                    let profile_label = body.faces.get(self.profile).unwrap().label;
+                    rec.record_deleted(profile_label);
+                    return Ok(StageStep::Done(StageOutput::Solid(finish_solid(body, std::mem::take(&mut self.laterals), rec))));
+                }
+                let mut faces = vec![self.profile, self.end_face.expect("end cap built in setup")];
+                faces.extend(std::mem::take(&mut self.laterals));
+                return Ok(StageStep::Done(StageOutput::Solid(finish_solid(body, faces, rec))));
+            }
+        }
+        Ok(StageStep::Working)
+    }
 }
 
 /// 🌀 Revolves `face` about `(axis_origin, axis_direction)` by `angle` (radians; `|angle| ≥ 2π`
-/// clamps to a full closed revolve). Dispatches to [`revolve_full`]/[`revolve_partial`].
+/// clamps to a full closed revolve) — [`RevolveJob`] driven to completion.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn revolve_face(body: &mut Body, face: FaceId, axis_origin: Pnt3, axis_direction: Vec3, angle: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let axis = axis_direction.normalized().ok_or_else(|| KernelError::InvalidInput("revolve axis is zero-length".into()))?;
-    if !angle.is_finite() || angle.abs() <= 1e-12 {
-        return Err(KernelError::InvalidInput("revolve angle must be non-zero".into()));
-    }
-    if angle.abs() >= TAU - 1e-9 {
-        revolve_full(body, face, axis_origin, axis, rec)
-    } else {
-        revolve_partial(body, face, axis_origin, axis, angle, rec)
-    }
+    drive_solid(&mut RevolveJob::new(body, face, axis_origin, axis_direction, angle)?, body, rec)
 }

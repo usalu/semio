@@ -33,7 +33,5 @@ export async function testCiBaselineCommand(workspace: string, output: string): 
     assert.deepEqual(Object.keys(outputs), fixture.outputKeys); assert.deepEqual(outputs, { mode: "all", base: "", head });
     const invalid = spawnSync(process.execPath, [script, "baseline", "--base=HEAD~1"], { cwd: workspace, encoding: "utf8", timeout: 30000 });
     assert.notEqual(invalid.status, 0); assert.match(invalid.stderr, /accepts only --full/);
-    const parse = require("jsonc-parser").parse;
-    for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) assert.equal(parse(readFileSync(join(workspace, file), "utf8")).configurations.filter((row: any) => row.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

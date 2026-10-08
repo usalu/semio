@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplaceFastenerGeometry` — patches the one addressed fastener in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
+use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenersDelta};
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
@@ -7,20 +7,22 @@ pub fn diff(payload: &super::ReplaceFastenerGeometry, base: &Puzzle5dSnapshot) -
     let Some(item) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "fastener", payload.id), vec![payload.id.clone()]);
     };
-    let mut next = item.clone();
-    next.gap = payload.new_gap;
-    next.shift = payload.new_shift;
-    next.rise = payload.new_rise;
-    next.rotation = payload.new_rotation;
-    next.turn = payload.new_turn;
-    next.tilt = payload.new_tilt;
-    next.x = payload.new_x;
-    next.y = payload.new_y;
-    if next == *item {
+    let patch = Puzzle5dFastenerPatch {
+        gap: (payload.new_gap != item.gap).then_some(payload.new_gap),
+        shift: (payload.new_shift != item.shift).then_some(payload.new_shift),
+        rise: (payload.new_rise != item.rise).then_some(payload.new_rise),
+        rotation: (payload.new_rotation != item.rotation).then_some(payload.new_rotation),
+        turn: (payload.new_turn != item.turn).then_some(payload.new_turn),
+        tilt: (payload.new_tilt != item.tilt).then_some(payload.new_tilt),
+        x: (payload.new_x != item.x).then_some(payload.new_x),
+        y: (payload.new_y != item.y).then_some(payload.new_y),
+        ..Default::default()
+    };
+    if patch.is_empty() {
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
-        fasteners: Some(Puzzle5dFastenersDelta { patched: vec![Puzzle5dFastenerPatchEntry { id: payload.id.clone(), patch: Puzzle5dFastenerPatch { replacement: Some(next) } }], ..Default::default() }),
+        fasteners: Some(Puzzle5dFastenersDelta::patching(payload.id.clone(), patch)),
         ..Default::default()
     })
 }

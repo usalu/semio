@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️reorder-assets/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️reorder-assets/🔀️moves/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("reorder-assets diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("reorder-assets diff applies")
 }
 
 /// ▶️ `reorder-assets` emits a whole-list `reordered` id sequence — remove-then-insert-at-`to_index`
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_an_unchanged_order_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "reorder-assets/moves-asset-hero-behind-asset-prop: an order-preserving move is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "reorder-assets/moves-asset-hero-behind-asset-prop: the order guard's frozen code");
-    let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "reorder-assets/moves-asset-hero-behind-asset-prop: a no-op reorder applies an empty diff");
 }
 
@@ -91,11 +91,11 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-assets/moves-asset-hero-behind-asset-prop: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["assets"]["reordered"][0], "asset-prop", "reorder-assets/moves-asset-hero-behind-asset-prop: the new order is a complete id sequence");
-    assert_eq!(committed["assets"]["reordered"][1], "asset-hero", "reorder-assets/moves-asset-hero-behind-asset-prop: the moved asset is named last");
+    assert_eq!(committed["assets"]["edits"][0]["id"], "asset-hero", "reorder-assets/moves-asset-hero-behind-asset-prop: the moved asset is named by id");
+    assert_eq!(committed["assets"]["edits"][0]["index"], 1, "reorder-assets/moves-asset-hero-behind-asset-prop: the destination is the last position");
     assert!(
-        committed["assets"]["patched"].as_array().expect("patched is an array").is_empty() && committed["assets"]["added"].as_array().expect("added is an array").is_empty(),
-        "reorder-assets/moves-asset-hero-behind-asset-prop: reordering is pure permutation — no record is patched or re-added"
+        committed["assets"]["patched"].as_array().expect("patched is an array").is_empty() && committed["assets"]["edits"].as_array().expect("edits is an array").len() == 1,
+        "reorder-assets/moves-asset-hero-behind-asset-prop: reordering is one move row — no record is patched or re-added"
     );
 }
 
@@ -112,6 +112,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-assets/moves-asset-hero-behind-asset-prop: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -5,12 +5,9 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::RenameLayer, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_drawing_layer(base, &payload.layer_id) {
+    Ok(match find_drawing_layer(base, &payload.layer_id) {
         Some(layer) => vec![super::mutation::rename_layer(payload.layer_id.clone(), layer_base(layer).name.clone())],
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

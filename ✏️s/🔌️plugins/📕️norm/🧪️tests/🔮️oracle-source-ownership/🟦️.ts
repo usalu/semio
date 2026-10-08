@@ -104,10 +104,6 @@ describe("Norm oracle source ownership", () => {
     expect(local.namedInputs.normOracleSources?.slice().sort()).toEqual(normSources);
     expect(local.targets["test-oracle-source"].inputs).toContain("normOracleSources");
     expect(local.targets["test-oracle-source"].options.command).toBe("bun ./📜️script.ts oracle-source");
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launches = Bun.JSONC.parse(read(path)).configurations;
-      expect(launches.filter((entry: { command: string }) => entry.command === "bun nx run @semio-tech/norm-js:test-oracle-source")).toHaveLength(1);
-    }
   });
 
   test("the committed native host executes the selected EN 1991 case from the real plan builder", async () => {

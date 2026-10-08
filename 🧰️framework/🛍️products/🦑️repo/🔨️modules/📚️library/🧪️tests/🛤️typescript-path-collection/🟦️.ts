@@ -3,7 +3,6 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, posix, resolve } from "node:path";
-import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -201,18 +200,11 @@ test("neutral map-only boundaries match independent AST for-of detection without
   }
 });
 
-test("registers the kind-only canonical test through the package router and both launch catalogs", () => {
+test("registers the kind-only canonical test through the package router as an owner route that is never replayed from cache", () => {
   const expected = vector.execution, project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
+  expect(project.targets[expected.target]?.cache).toBe(expected.cache);
   const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(router.match(/segments\[0\] === "typescript-path-collection"/gu)).toHaveLength(1);
   expect(router).toContain(expected.source);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const configurations = parseJsonc(readFileSync(join(root, path), "utf8")).configurations;
-    const rows = configurations.filter((row: any) => row.name === expected.launchName);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].command).toBe(expected.launchCommand);
-    expect(rows[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-    expect(configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder)).toHaveLength(1);
-  }
 });

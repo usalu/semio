@@ -9,7 +9,7 @@ pub(crate) use set_count::SetCount;
 pub(crate) use set_label::SetLabel;
 pub(crate) use set_slot_children::SetSlotChildren;
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=super::TestSnapshot,diff=super::TestDiff,schema="plugin.testkit.document")]
@@ -19,12 +19,6 @@ pub(crate) enum TestMutation {
     SetSlotChildren(SetSlotChildren),
 }
 
-impl semio_framework_value::retirement::RetireOwned for TestMutation{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
-        use semio_framework_value::retirement::RetireOwned;
-        match self{Self::SetCount(operation)=>operation.value.retirement(),Self::SetLabel(operation)=>operation.value.retirement(),Self::SetSlotChildren(operation)=>operation.children.retirement()}
-    }
-}
 
 impl protocol::OpText for TestMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

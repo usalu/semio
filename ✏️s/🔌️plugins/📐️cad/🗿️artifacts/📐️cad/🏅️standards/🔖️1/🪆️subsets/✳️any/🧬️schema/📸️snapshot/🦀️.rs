@@ -1,6 +1,6 @@
 //! 🧬️ Cad snapshot schema — artifact-lane fields only.
 
-use crate::{empty_cad_snapshot, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
+use crate::{empty_cad_snapshot, CadBrepChild, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::CadReferenceIndex;
@@ -49,6 +49,10 @@ pub struct CadSnapshot {
     #[child(kind = "s.stdio.semio")]
     #[value(default)]
     pub drawings: Vec<CadDrawingChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default)]
+    pub breps: Vec<CadBrepChild>,
     #[value(default)]
     #[state(artifact)]
     pub references_by_model_definition_id: CadReferenceIndex,

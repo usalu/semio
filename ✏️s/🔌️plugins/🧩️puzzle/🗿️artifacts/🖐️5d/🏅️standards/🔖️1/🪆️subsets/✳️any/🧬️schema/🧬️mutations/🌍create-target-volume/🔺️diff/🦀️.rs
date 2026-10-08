@@ -8,13 +8,12 @@ pub fn diff(payload: &super::CreateTargetVolume, base: &Puzzle5dSnapshot) -> pro
     if base.target_volumes.iter().any(|entry| entry.id == payload.target_volume.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target volume"), vec![payload.target_volume.id.clone()]);
     }
-    let mut delta = Puzzle5dTargetVolumesDelta { added: vec![payload.target_volume.clone()], ..Default::default() };
-    if let Some(index) = payload.index {
+    let reordered = payload.index.filter(|index| *index < base.target_volumes.len()).map(|index| {
         let mut order: Vec<String> = base.target_volumes.iter().map(|entry| entry.id.clone()).collect();
-        let at = index.min(order.len());
-        order.insert(at, payload.target_volume.id.clone());
-        delta.reordered = Some(order);
-    }
+        order.insert(index, payload.target_volume.id.clone());
+        order
+    });
+    let delta = Puzzle5dTargetVolumesDelta::adding(payload.target_volume.clone(), reordered);
     protocol::MutationOutcome::new(Puzzle5dDiff { target_volumes: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

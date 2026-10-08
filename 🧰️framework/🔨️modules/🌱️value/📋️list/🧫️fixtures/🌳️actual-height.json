@@ -4,7 +4,7 @@
   "maximumBytes":4096,
   "firstScalarMaximumAllocations":2,
   "firstScalarMaximumAllocationBytes":8192,
-  "ownerWords":6,
+  "ownerWords":7,
   "scalar":7,
   "growthPayloadBytes":[8194,65537],
   "cases":["empty-root-no-allocation","first-leaf-and-payload-only","growth-retains-first-pointer","growth-grant-refusal-preserves-root","exact-parent-handoff-zero-child-disposal"]

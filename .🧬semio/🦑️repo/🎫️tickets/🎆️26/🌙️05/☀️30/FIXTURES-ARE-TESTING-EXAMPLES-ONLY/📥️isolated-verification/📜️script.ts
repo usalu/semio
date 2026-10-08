@@ -17,6 +17,18 @@ if (command === "test-owner-command" && [uiOwner, "🧰️framework/🛍️produ
   repositoryEnv.SEMIO_VITEST_POLICY = JSON.stringify({ version: 1, cwd: dirname(join(root, rest[0]!)), toolPath: join(root, "node_modules/vitest/vitest.mjs"), runtime: "node", coverageRuntime: "node", cacheRoot: join(artifactRoot, "ui-vitest-cache"), coverageDirectory: join(artifactRoot, "ui-vitest-coverage"), budgetMs: 300_000 });
 }
 
+if (command === "root-service-oracles" || command === "root-service-current") {
+  const artifactRoot = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw Error("Explicit ticket artifact storage required for service verification");
+  const owner = join(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript");
+  const policy = { version: 1 as const, cwd: owner, toolPath: join(root, "node_modules/vitest/vitest.mjs"), runtime: "node", coverageRuntime: "node", cacheRoot: join(artifactRoot, "service-vitest-cache"), coverageDirectory: join(artifactRoot, "service-vitest-coverage"), budgetMs: 300_000 };
+  repositoryEnv.SEMIO_VITEST_POLICY = JSON.stringify(policy);
+  const { runVitestV1 } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts"));
+  const args = command === "root-service-current" ? [] : ["--testNamePattern", "retains the preceding inference job when a successor opening is refused|refreshes Shell session authority serially and cancels stale callbacks|retains the exact bootstrap owner across hash completion and progress callbacks"];
+  await runVitestV1(policy, args, "../../💡️inference/🧪️tests/🎚️config/🟦️.ts", repositoryEnv);
+  process.exit(0);
+}
+
 if (command === "root-current-corpus-tests") {
   const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
   const paths = [
@@ -98,7 +110,7 @@ if (command === "kernel-corpus") {
   console.log("[DEBUG] kernel behavior oracle failures=" + JSON.stringify(failed));
   process.exit(failed.length ? 1 : 0);
 }
-const args = command === "test-owner-command" ? [join(root, rest[0]!), ...rest.slice(1)] : command === "owner-command" ? [join(root, library, "⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", join(dirname(rest[0]!), "Cargo.toml"), "--cwd", dirname(rest[0]!), "--", process.execPath, join(root, rest[0]!), ...rest.slice(1)] : command === "structural-catalog-test" ? ["test", join(root, library, "🧪️tests/🔬️workspace-contract/🟦️.ts"), "-t", "schema scope catalog"] : command === "kernel-test" ? [join(root, kernel, "📜️script.ts"), "test", "os_store::tests::", "--", "--nocapture"] : command === "kernel-command" ? [join(root, kernel, "📜️script.ts"), ...rest] : command === "schema" ? [join(root, "📜️script.ts"), "schema", ...rest] : command === "verify" ? [join(root, "📜️script.ts"), "verify", ...rest] : command === "tests" ? ["test", ...rest.map(path => join(root, path))] : command === "parity" ? [join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"), "parity", "quick", "--owner", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", "--case", "🖥️host-protocol-parity"] : null;
+const args = command === "test-owner-command" ? [join(root, rest[0]!), ...rest.slice(1)] : command === "owner-command" ? [join(root, library, "⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", join(dirname(rest[0]!), "Cargo.toml"), "--cwd", dirname(rest[0]!), "--", process.execPath, join(root, rest[0]!), ...rest.slice(1)] : command === "structural-catalog-test" ? ["test", join(root, library, "🧪️tests/🔬️workspace-contract/🟦️.ts"), "-t", "schema scope catalog"] : command === "kernel-test" ? [join(root, kernel, "📜️script.ts"), "test", "os_store::tests::", "--", "--nocapture"] : command === "kernel-command" ? [join(root, library, "⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", join(kernel, "Cargo.toml"), "--cwd", kernel, "--", process.execPath, join(root, kernel, "📜️script.ts"), ...rest] : command === "schema" ? [join(root, "📜️script.ts"), "schema", ...rest] : command === "verify" ? [join(root, "📜️script.ts"), "verify", ...rest] : command === "tests" ? ["test", ...rest.map(path => join(root, path))] : command === "parity" ? [join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"), "parity", "quick", "--owner", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", "--case", "🖥️host-protocol-parity"] : null;
 if (!args) throw Error("Unknown verification command");
 console.log("[DEBUG] isolated Nx verification " + command);
 const child = Bun.spawn([process.execPath, ...args], { cwd: root, env: repositoryEnv, stdin: "inherit", stdout: "inherit", stderr: "inherit" });

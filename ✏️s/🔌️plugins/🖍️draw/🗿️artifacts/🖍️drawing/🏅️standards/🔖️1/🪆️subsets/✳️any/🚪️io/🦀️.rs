@@ -128,7 +128,7 @@ pub fn drawing_document_to_semio_drawing(doc: &DrawingSnapshot) -> SemioDrawingS
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: SemioDrawCanvas { width: width as f64, height: height as f64, background: None },
         styles,
-        layers: vec![SemioDrawLayer { id: "root".into(), name: doc.title.clone().unwrap_or_else(|| "root".into()), visible: true, root: SemioDrawNode::Group { transform: SemioTransform::identity(), children } }],
+        layers: vec![SemioDrawLayer { id: "root".into(), name: doc.title.as_ref().map(|title| title.to_string_owner()).unwrap_or_else(|| "root".into()), visible: true, root: SemioDrawNode::Group { transform: SemioTransform::identity(), children } }],
     }
 }
 

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeConstantScheduleValue` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ConstantSchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeConstantScheduleValue, base: &EnergyModelSnap
     if existing.value == payload.new_value {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Constant schedule {} already carries this value: {}.", payload.id.0, payload.new_value));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.constants.iter_mut().find(|item| item.id == payload.id) {
-        item.value = payload.new_value;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { constants: Rows::modifying(ConstantSchedulePatch { value: Some(payload.new_value), ..ConstantSchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

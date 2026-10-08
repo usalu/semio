@@ -4,9 +4,11 @@
 //!
 //! Every command of the dashboard is one domain sub-folder of `🔨️modules/🎛️dashboard`, pulled in
 //! with `#[path]` so the taxonomy tree — not the crate layout — states what the dashboard is made
-//! of. The `⌨️cli` crate owns the `semio` binary and dispatches into this crate.
+//! of. This crate owns the `semio` binary: `🚪️entrypoint` hands its argv to [`run`], which
+//! dispatches each verb to its command module.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json
+//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🚪️entrypoint/🦀️.rs
 
 #[path = "../../🌊️workflow/🦀️.rs"]
 pub mod workflow;
@@ -38,11 +40,43 @@ pub mod preferences;
 #[path = "../../📚️inventory/🦀️.rs"]
 pub mod inventory;
 
+#[path = "../../🎮️registry/🦀️.rs"]
+pub mod registry;
+
 #[path = "../../🖥️terminal/🦀️.rs"]
 pub mod terminal;
 
 /// ✉️ The framed dashboard transport, owned by the daemon sub-folder.
 pub use daemon::ipc;
+
+// #region 🔖️Dispatch
+/// 🚦️ Runs one `semio` invocation and returns its process exit code.
+pub fn run(argv: &[String]) -> i32 {
+    let root = semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
+    let parsed = invocation(argv);
+    match parsed.verb.as_str() {
+        "dashboard" => terminal::run_with(&root, &parsed),
+        "preferences" => preferences::run(&root, &parsed),
+        "repo-view" => command_tree::run_action(&root, &parsed),
+        "daemon" => daemon::run(&root, &parsed),
+        "workflow" => workflow::run(&root, &parsed),
+        "dev" => playground_session::run(&root, &parsed),
+        "catalog" => playground_catalog::run(&root, &parsed),
+        "command-tree" => command_tree::run(&root, &parsed),
+        "commands" => registry::run(&root, &parsed),
+        "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry::run(&root, parsed.segments.get(1).map_or("generate", String::as_str)),
+        _ => root_delegation::run(&root, &parsed),
+    }
+}
+
+/// 🧭️ Reads argv as one verb invocation; a bare or flag-first invocation is the dashboard itself.
+fn invocation(argv: &[String]) -> args::ParsedArgs {
+    if argv.first().is_none_or(|argument| argument.starts_with("--")) {
+        return args::parse(&std::iter::once("dashboard".into()).chain(argv.iter().cloned()).collect::<Vec<_>>());
+    }
+    args::parse(argv)
+}
+// #endregion 🔖️Dispatch
 
 // #region 🔖️Args
 pub mod args {
@@ -309,9 +343,8 @@ pub mod env_contract {
         if opts.skip_wgpu_build {
             env.push(("SKIP_WGPU_BUILD".to_string(), "1".to_string()));
         }
-        env.push(("NX_NATIVE_COMMAND_RUNNER".to_string(), "false".to_string()));
         env.push(("NX_TASKS_RUNNER_DYNAMIC_OUTPUT".to_string(), "false".to_string()));
-        env.push(("NX_TUI".to_string(), "false".to_string()));
+        env.extend(crate::registry::RUNNER_ENV.iter().map(|(key, value)| ((*key).to_string(), (*value).to_string())));
         env
     }
 }

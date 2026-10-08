@@ -1,5 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
+use crate::standards::v1::subsets::any::io::binary::mutations::PresentationProjectionAdoptionTarget;
 use crate::standards::v1::subsets::any::schema::empty_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
@@ -592,6 +593,7 @@ pub fn create_presentation_envelope(id: &str) -> PresentationEnvelope {
 
 const PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct PresentationFreshSnapshotRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<PresentationSnapshot> for PresentationFreshSnapshotRetirementFactory {
@@ -1114,6 +1116,7 @@ impl Drop for PresentationFreshSnapshotRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct PresentationUnexpectedMutationRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<PresentationMutation> for PresentationUnexpectedMutationRetirementFactory {
@@ -1271,6 +1274,7 @@ struct PresentationRejectedNestedAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for PresentationRejectedNestedAuthority {
+    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -1636,3 +1640,7 @@ pub struct PresentationEnvelopeMaterializeRegistry {
     occupied: u64,
     maintenance_cursor: usize,
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

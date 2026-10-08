@@ -7,15 +7,12 @@ use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::DuplicateLayer, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_drawing_layer(base, &payload.layer_id) {
+    Ok(match find_drawing_layer(base, &payload.layer_id) {
         Some(layer) => {
             let duplicate = clone_drawing_layer_node(layer, " copy");
             vec![crate::mutations::delete_layer(layer_id(&duplicate).to_string().into())]
         }
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

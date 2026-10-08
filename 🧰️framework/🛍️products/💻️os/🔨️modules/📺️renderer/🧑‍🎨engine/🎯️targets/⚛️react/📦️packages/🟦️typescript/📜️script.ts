@@ -770,6 +770,15 @@ class World3dInteractionCheckScript extends BundleScript {
   }
 }
 
+/** 📏️ Executes the mounted World3d modelling layer (annotations, heatmap legend, pick filter, section plane, highlight tokens). */
+class World3dModellingCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("world3d-modelling-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    await runVitest(this.root, ["../../../../🧱️elements/🌐️World3dHost/🧪️tests/📏️modelling/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 //#region 🪪️SurfaceHostRetentionOracle
 type RetentionBody = { readonly key: string; readonly component: string; readonly children?: readonly RetentionBody[] };
 
@@ -959,6 +968,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("hub-sign-in-spaces-check", HubSignInSpacesCheckScript)
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
+  .register("world3d-modelling-check", World3dModellingCheckScript)
   .register("scene-shading-pixel-check", SceneShadingPixelCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)
   .register("input-ledger-check", InputLedgerCheckScript)

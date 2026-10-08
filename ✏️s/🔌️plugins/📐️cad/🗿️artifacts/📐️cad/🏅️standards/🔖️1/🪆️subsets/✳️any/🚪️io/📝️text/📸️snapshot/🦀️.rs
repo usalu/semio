@@ -59,6 +59,9 @@ pub(crate) fn require_exact_children(s: &CadSnapshot) -> Result<(), String> {
     for child in &s.drawings {
         exact_child(&child.target, "drawing")?;
     }
+    for child in &s.breps {
+        exact_child(&child.target, "brep")?;
+    }
     Ok(())
 }
 

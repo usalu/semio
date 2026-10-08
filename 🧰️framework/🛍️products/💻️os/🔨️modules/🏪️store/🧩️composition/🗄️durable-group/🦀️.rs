@@ -474,7 +474,114 @@ pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
     tail_undo_cache: Option<(String, Arc<P>)>,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     displaced_reservation: Option<super::ArtifactStoreDisplacedOwnerReservation>,
+    retirement: Option<Box<StagedRootRetirement<P>>>,
     pub(super) adopted: bool,
+}
+
+pub(super) struct StagedRootRetirement<P> {
+    cursor: Option<super::ArtifactStoreCursorRetirement>,
+    applied: Option<super::ArtifactStoreStringVectorRetirement>,
+    redo: Option<super::ArtifactStoreStringVectorRetirement>,
+    revision: Option<super::ArtifactStoreRevisionAccumulatorRetirement>,
+    report: Option<super::ArtifactStorePendingReportRetirement>,
+    tail_id: Option<super::ArtifactStoreStringRetirement>,
+    authority: Option<super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement>,
+    snapshots: [Option<Arc<P>>; 2],
+    active: Option<Box<dyn super::ErasedSnapshotRetirement>>,
+    factory: Option<Arc<dyn super::SnapshotRetirementFactory<P>>>,
+    phase: u8,
+}
+
+impl<P> StagedRootRetirement<P> {
+    fn new(factory: Arc<dyn super::SnapshotRetirementFactory<P>>) -> Self {
+        Self { cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), phase: 0 }
+    }
+
+    fn inline_owner(&self) -> Option<&dyn super::ErasedSnapshotRetirement> {
+        match self.phase {
+            0 => self.cursor.as_ref().map(|owner| owner as _),
+            1 => self.applied.as_ref().map(|owner| owner as _),
+            2 => self.redo.as_ref().map(|owner| owner as _),
+            3 => self.revision.as_ref().map(|owner| owner as _),
+            4 => self.report.as_ref().map(|owner| owner as _),
+            5 => self.tail_id.as_ref().map(|owner| owner as _),
+            6 => self.authority.as_ref().map(|owner| owner as _),
+            _ => None,
+        }
+    }
+
+    fn inline_owner_mut(&mut self) -> Option<&mut dyn super::ErasedSnapshotRetirement> {
+        match self.phase {
+            0 => self.cursor.as_mut().map(|owner| owner as _),
+            1 => self.applied.as_mut().map(|owner| owner as _),
+            2 => self.redo.as_mut().map(|owner| owner as _),
+            3 => self.revision.as_mut().map(|owner| owner as _),
+            4 => self.report.as_mut().map(|owner| owner as _),
+            5 => self.tail_id.as_mut().map(|owner| owner as _),
+            6 => self.authority.as_mut().map(|owner| owner as _),
+            _ => None,
+        }
+    }
+
+    fn clear_inline(&mut self) {
+        match self.phase {
+            0 => { self.cursor = None; }
+            1 => { self.applied = None; }
+            2 => { self.redo = None; }
+            3 => { self.revision = None; }
+            4 => { self.report = None; }
+            5 => { self.tail_id = None; }
+            6 => { self.authority = None; }
+            _ => {}
+        }
+    }
+}
+
+impl<P: Send + Sync> super::ErasedSnapshotRetirement for StagedRootRetirement<P> {
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
+        if let Some(owner) = self.inline_owner() { return owner.next_close_byte_demand(); }
+        if (7..9).contains(&self.phase) {
+            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].as_ref() {
+                return self.factory.as_ref().expect("staged root retains its snapshot factory").retirement_birth_bytes(snapshot);
+            }
+        }
+        0
+    }
+
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<super::SnapshotRetirementStep, semio_framework_value::ValueError> {
+        use super::{ErasedSnapshotRetirement as _, SnapshotRetirementStep};
+        if items == 0 || bytes < self.next_close_byte_demand() { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, items, bytes); }
+        if let Some(owner) = self.inline_owner_mut() {
+            let step = owner.close_step(items, bytes)?;
+            if step != SnapshotRetirementStep::Complete { return Ok(step); }
+            if !owner.terminal_is_empty() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "staged root inline retirement lost its terminal witness")); }
+            self.clear_inline();
+        }
+        if (7..9).contains(&self.phase) {
+            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].take() {
+                self.active = Some(self.factory.as_ref().expect("staged root retains its snapshot factory").retire(snapshot));
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+        }
+        if self.phase < 9 {
+            self.phase += 1;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        self.factory = None;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none()
+    }
+}
+
+impl<P> Drop for StagedRootRetirement<P> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || (self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
+    }
 }
 
 fn retained_string_stack(source: impl IntoIterator<Item = String>, appended: Option<&str>) -> Result<crate::os_vcs::HistoryPageStack<String>, DurableOwnedGroupDecisionError> {
@@ -565,9 +672,9 @@ where
             Err(error) => return reject(error, outcome),
         },
         applied_tail_chains: None,
-        mutation_positions: BTreeMap::new(),
-        indexed_edits: BTreeMap::new(),
-        unit_flags: BTreeMap::new(),
+        mutation_positions: store.revision_accumulator.mutation_positions.clone(),
+        indexed_edits: store.revision_accumulator.indexed_edits.clone(),
+        unit_flags: store.revision_accumulator.unit_flags.clone(),
     };
     revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit);
     let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]);
@@ -620,7 +727,45 @@ where
         tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
         authority: Some(seal.authority),
         displaced_reservation: Some(displaced_reservation),
+        retirement: Some(Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("staged group retains its snapshot factory"))))),
         adopted: false,
+    });
+    Ok(())
+}
+
+/// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
+pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut ArtifactStore<P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>) -> Result<(), String>
+where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+      Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
+{
+    if store.durable_group_root.is_some() || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
+    store.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
+    let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| "batch group final transfer lost its authority".to_string())?);
+    let group = publication.group_preparation.as_mut().ok_or_else(|| "batch group final transfer lost its retained preparation".to_string())?;
+    let visibility = group.visibility();
+    let history = group.history.as_ref().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
+    store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
+    let history = group.history.take().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
+    let mut displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
+    let cursor = super::ArtifactCursorOwners { applied_edit_ids: std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty()), redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(), checkpoint_id: group.checkpoint.take() };
+    let applied = std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty());
+    let mut revision = group.revision.take().expect("copied group retains its complete revision and indexes");
+    let stage = publication.take_stage().expect("copied group retains its complete typed candidate");
+    let super::ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, .. } = *stage;
+    store.envelope.cursor.as_mut().expect("exclusive group transfer retains its cursor").stage_group_owned(cursor, &visibility).unwrap_or_else(|_| panic!("exclusive copied group cursor transfer must retain its exact owners"));
+    let ledger = store.envelope.vcs.edits.stage_group_reserved(history.history, *edit, &visibility).unwrap_or_else(|_| panic!("exclusive copied group edit transfer must retain its reserved slot"));
+    store.displaced_retirements.release_owner_slots(history.rejected_owner).expect("exclusive copied group retains its exact rejected-owner reservation");
+    if let Some(actor) = local_actor { retain_displaced_owner(&mut store.displaced_retirements, &mut displaced, Box::new(super::ArtifactStoreStringRetirement::new(actor))); }
+    retain_displaced_owner(&mut store.displaced_retirements, &mut displaced, Box::new(super::ArtifactStoreStringRetirement::new(applied_edit_id)));
+    let mut tail = revision.applied.pop().expect("copied group retains its new revision tail");
+    tail.ledger_key = Some(ledger); revision.applied.push(tail);
+    let content_revision = revision.revision(store.current_checkpoint_id.as_deref());
+    *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
+        visibility, current: post, generation: store.generation + 1, content_revision,
+        applied_edit_ids: applied, redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(),
+        last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number,
+        clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
+        authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("staged group retains its snapshot factory"))))), adopted: false,
     });
     Ok(())
 }
@@ -631,7 +776,7 @@ fn retain_displaced_owner(store: &mut super::ArtifactStoreDisplacedRetirements, 
     }
 }
 
-fn abort_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+pub(super) fn abort_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
@@ -649,16 +794,17 @@ where
     let cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.abort_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let mut root = store.durable_group_root.take().expect("validated aborted durable group root remains owned");
     let mut reservation = root.displaced_reservation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if let Some(retirement) = root.retirement.take() { retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement); }
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreDecodedEditRetirement::new(edit, mutation_factory)));
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(cursor))));
     if let Some(current) = root.current.take() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(current));
     }
     if !root.applied_edit_ids.is_empty() || root.applied_edit_ids.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::take(&mut root.applied_edit_ids))));
+        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
     }
     if !root.redo_edit_ids.is_empty() || root.redo_edit_ids.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::take(&mut root.redo_edit_ids))));
+        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
     }
     if let Some(revision) = root.revision_accumulator.take() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(revision)));
@@ -682,7 +828,7 @@ where
 /// close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
 /// `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
 /// exactly as the symmetric guards below and in `commit_document_roots_retained` do.
-fn adopt_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+pub(super) fn adopt_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
@@ -691,55 +837,39 @@ where
     if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || !visibility.committed() {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let factory = store.snapshot_retirement_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if root.retirement.as_ref().and_then(|retirement| retirement.factory.as_ref()).is_none_or(|prepared| !Arc::ptr_eq(prepared, factory)) {
+        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
+    }
     store.envelope.vcs.edits.adopt_group(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let displaced_cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.adopt_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let mut root = store.durable_group_root.take().expect("validated committed durable group root remains owned");
     let mut reservation = root.displaced_reservation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(displaced_cursor))));
-    let previous_applied = std::mem::replace(&mut *store.applied_edit_ids, std::mem::take(&mut root.applied_edit_ids));
-    if !previous_applied.is_empty() || previous_applied.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(previous_applied)));
-    }
-    let previous_redo = std::mem::replace(&mut *store.redo_edit_ids, std::mem::take(&mut root.redo_edit_ids));
-    if !previous_redo.is_empty() || previous_redo.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringVectorRetirement::new(previous_redo)));
-    }
-    let mut next_revision = root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let mut positions = std::mem::take(&mut store.revision_accumulator.mutation_positions);
-    positions.extend(std::mem::take(&mut next_revision.mutation_positions));
-    next_revision.mutation_positions = positions;
-    let mut indexed = std::mem::take(&mut store.revision_accumulator.indexed_edits);
-    indexed.extend(std::mem::take(&mut next_revision.indexed_edits));
-    next_revision.indexed_edits = indexed;
-    let mut units = std::mem::take(&mut store.revision_accumulator.unit_flags);
-    units.extend(std::mem::take(&mut next_revision.unit_flags));
-    next_revision.unit_flags = units;
-    let previous_revision = std::mem::replace(&mut *store.revision_accumulator, next_revision);
-    if !previous_revision.applied.is_empty() || previous_revision.applied.capacity() != 0 || !previous_revision.redo.is_empty() || previous_revision.redo.capacity() != 0 {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(previous_revision)));
-    }
+    let mut retirement = root.retirement.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    retirement.cursor = Some(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(displaced_cursor)));
+    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.applied_edit_ids, std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
+    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.redo_edit_ids, std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
+    let next_revision = root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    retirement.revision = Some(super::ArtifactStoreRevisionAccumulatorRetirement::new(std::mem::replace(&mut *store.revision_accumulator, next_revision)));
     let previous_current = std::mem::replace(&mut *store.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
     let next_tail = root.tail_undo_cache.take();
     if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) {
         drop(previous_current);
     } else {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(previous_current));
+        retirement.snapshots[0] = Some(previous_current);
     }
     if let Some((edit_id, snapshot)) = store.tail_undo_cache.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(edit_id)));
+        retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id));
         if !Arc::ptr_eq(&snapshot, &store.current) {
-            retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(snapshot));
+            retirement.snapshots[1] = Some(snapshot);
         }
     }
     *store.tail_undo_cache = next_tail;
-    let previous_report = std::mem::take(&mut *store.pending_report);
-    if previous_report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !previous_report.messages.is_empty() || previous_report.messages.capacity() != 0 || previous_report.worst.is_some() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStorePendingReportRetirement::new(previous_report)));
-    }
+    retirement.report = Some(super::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.pending_report)));
     if let Some(authority) = root.authority.take() {
-        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, authority.retire());
+        retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
     }
+    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
     store.generation = root.generation;
     store.content_revision = root.content_revision;
     store.fold_frontier = None;
@@ -764,6 +894,7 @@ where
         || root.revision_accumulator.is_some()
         || root.tail_undo_cache.is_some()
         || root.authority.is_some()
+        || root.retirement.is_some()
         || root.displaced_reservation.is_some()
         || !root.applied_edit_ids.is_empty()
         || !root.redo_edit_ids.is_empty()

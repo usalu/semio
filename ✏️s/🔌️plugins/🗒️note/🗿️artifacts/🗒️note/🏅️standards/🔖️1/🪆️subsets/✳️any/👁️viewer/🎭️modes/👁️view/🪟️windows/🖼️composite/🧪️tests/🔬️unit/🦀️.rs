@@ -9,7 +9,7 @@ async fn definition_declares_an_ink_canvas_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
-    let document = crate::schema::empty_note_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     let node = render(&document).expect("viewer canvas");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic canvas") };
     let scene: InkCanvasScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");

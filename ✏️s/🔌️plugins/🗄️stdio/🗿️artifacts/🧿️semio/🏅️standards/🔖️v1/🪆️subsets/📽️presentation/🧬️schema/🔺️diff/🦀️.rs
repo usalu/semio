@@ -894,7 +894,7 @@ fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnap
 
 //#region 🔖️Apply
 impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
-    fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
+    fn apply(&self, base: &SemioPresentationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;

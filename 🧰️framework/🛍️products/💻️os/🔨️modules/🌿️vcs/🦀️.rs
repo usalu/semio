@@ -274,6 +274,17 @@ fn history_chunk_ref<T>(chunk: &HistoryPageChunk<T>, remaining: usize) -> &Histo
 }
 
 impl<T> HistoryPageStack<T> {
+    /// 🪶️ Creates an empty retained catalog without allocating resident pages.
+    pub fn empty() -> Self { Self { head: None, pages: 0, len: 0 } }
+
+    /// 🎟️ Reports all backing allocations required by exactly the next pushed entry.
+    pub fn next_push_allocation_bytes(&self) -> usize {
+        if self.len < self.capacity() { return 0; }
+        std::mem::size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(std::mem::size_of::<HistoryValuePage<T>>())
+            .saturating_add(if self.pages as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<HistoryPageChunk<T>>() } else { 0 })
+    }
+
     pub fn new() -> Self {
         Self::try_new().expect("history catalog first page")
     }
@@ -360,6 +371,14 @@ impl<T> HistoryPageStack<T> {
 
     pub fn last(&self) -> Option<&T> {
         self.len.checked_sub(1).and_then(|index| self.get(index))
+    }
+
+    /// 📏️ Borrows one empty page's exact native backing and final directory allocation extent.
+    pub fn next_empty_page_release_byte_demand(&self) -> Option<usize> {
+        if self.len != 0 { return None; }
+        if self.pages == 0 { return Some(0); }
+        let page = std::mem::size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(std::mem::size_of::<HistoryValuePage<T>>())?;
+        page.checked_add(if (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<HistoryPageChunk<T>>() } else { 0 })
     }
 
     /// ♻️ Releases one fixed empty page; callers retire entries before releasing resident storage.
@@ -618,7 +637,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryPageSta
 
 //#region 🧩️GroupHistoryVisibility
 /// 🪟 A shared decision bit used by prepared read roots; only its unique publisher can switch it.
-pub(crate) struct ArtifactGroupVisibility {
+pub struct ArtifactGroupVisibility {
     state: std::sync::atomic::AtomicU8,
 }
 
@@ -638,24 +657,24 @@ impl ArtifactGroupReadDecision<'_> {
 }
 
 /// 🗝️ Unique low-level publication owner; preparation and freshness remain the Store coordinator's responsibility.
-pub(crate) struct ArtifactGroupVisibilityOwner {
+pub struct ArtifactGroupVisibilityOwner {
     view: std::sync::Arc<ArtifactGroupVisibility>,
 }
 
 impl ArtifactGroupVisibilityOwner {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { view: std::sync::Arc::new(ArtifactGroupVisibility { state: std::sync::atomic::AtomicU8::new(0) }) }
     }
 
-    pub(crate) fn view(&self) -> std::sync::Arc<ArtifactGroupVisibility> {
+    pub fn view(&self) -> std::sync::Arc<ArtifactGroupVisibility> {
         std::sync::Arc::clone(&self.view)
     }
 
-    pub(crate) fn commit(&mut self) -> bool {
+    pub fn commit(&mut self) -> bool {
         self.view.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
     }
 
-    pub(crate) fn abort(&mut self) -> bool {
+    pub fn abort(&mut self) -> bool {
         self.view.state.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
     }
 }
@@ -671,11 +690,13 @@ impl ArtifactGroupVisibility {
         ArtifactGroupReadDecision { visibility: self, committed: self.committed() }
     }
 
-    pub(crate) fn committed(&self) -> bool {
+    /// 🟢️ Reads whether the shared owner published its complete staged group.
+    pub fn committed(&self) -> bool {
         self.state.load(std::sync::atomic::Ordering::Acquire) == 1
     }
 
-    pub(crate) fn pending(&self) -> bool {
+    /// 🟡️ Reads whether the shared owner still permits private candidate construction.
+    pub fn pending(&self) -> bool {
         self.state.load(std::sync::atomic::Ordering::Acquire) == 0
     }
 }
@@ -842,6 +863,14 @@ impl<T> ArtifactHistoryLedger<T> {
         self.page_count as usize * ARTIFACT_HISTORY_PAGE_SLOTS
     }
 
+    /// 🎟️ Reports backing required by the next unoccupied history reservation.
+    pub fn next_reservation_allocation_bytes(&self) -> usize {
+        if self.reservation.is_some() || self.free_head.is_some() || (self.initialized as usize) < self.allocated_slots() { return 0; }
+        std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>())
+            .saturating_add(if self.page_count as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })
+    }
+
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if self.group.is_some() {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
@@ -917,6 +946,13 @@ impl<T> ArtifactHistoryLedger<T> {
             self.slot_mut(tail).next = Some(index);
         }
         Ok(ArtifactHistoryKey { index, generation })
+    }
+
+    /// 🪢️ Binds an already reserved slot to its exact still-private visibility owner.
+    pub(crate) fn bind_group_reservation(&mut self, reservation: &ArtifactHistoryReservation, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+        if self.reservation.as_ref() != Some(reservation) || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) { return Err(()); }
+        if self.group.is_none() { self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 }); }
+        Ok(())
     }
 
     pub(crate) fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
@@ -1740,7 +1776,7 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
 }
 //#endregion 🔖️CollectionDiff
 
-//#region 🔖️CollectionMutation
+//#region 🔖️Identified
 /// 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
 pub trait Identified<TId> {
     // 🚫️async: E1 pure accessor — every real caller is a std `Iterator`/`Vec` closure
@@ -1750,116 +1786,12 @@ pub trait Identified<TId> {
     fn id(&self) -> &TId;
 }
 
-/// 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
+/// 🩹️ Applies a patch in place and diffs two states back into a patch.
 pub trait Patchable<TPatch>: Sized {
     fn apply_patch(&mut self, patch: &TPatch);
     fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
-
-/// 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
-///
-/// 🎞️ `crate::os_spr::command` re-exports this very type, so `index`/`to_index` is the one wire shape
-/// every caller sees — there is no second spr-side schema to keep in step.
-///
-/// 🗣️ Semantic-mutations overhaul ruling (`.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`):
-/// this type and its three helper fns below are an INTERNAL diff/inverse ENGINE for a
-/// `🧬️mutations/<kind>/{🔺️diff,↩️inverse}` triad leaf to call — e.g. a `remove-stakeholder` leaf's
-/// `inverse` fn may call [`inverse_collection_mutation`] to compute the captured-item re-add. They
-/// are NOT public mutation vocabulary: no `pub enum *Mutation` dispatch variant may wrap
-/// `CollectionMutation<..>` directly (that erases the verb — `Add`/`Remove`/`Move`/`Patch` say
-/// nothing about *why*). `policySemanticVocabularyBreaches` in `📜️script.ts` enforces this on
-/// `✏️s/**/🧬️mutations/**` dispatch enums once the fan-out wave lands.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
-pub enum CollectionMutation<TId, TItem, TPatch> {
-    Add { index: usize, item: TItem },
-    Remove { id: TId },
-    Move { id: TId, to_index: usize },
-    Patch { id: TId, patch: TPatch },
-}
-
-/// ▶️ Applies a `CollectionMutation` to a `Vec` in place.
-pub fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-{
-    match operation {
-        CollectionMutation::Add { index, item } => {
-            let at = (*index).min(items.len());
-            items.insert(at, item.clone());
-        }
-        CollectionMutation::Remove { id } => {
-            items.retain(|item| item.id() != id);
-        }
-        CollectionMutation::Move { id, to_index } => {
-            if let Some(from) = items.iter().position(|item| item.id() == id) {
-                let item = items.remove(from);
-                let at = (*to_index).min(items.len());
-                items.insert(at, item);
-            }
-        }
-        CollectionMutation::Patch { id, patch } => {
-            if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
-                item.apply_patch(patch);
-            }
-        }
-    }
-}
-
-/// ↩️ Computes the inverse `CollectionMutation` from the pre-state `items`. Panics if `operation` targets
-/// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
-pub fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-{
-    match operation {
-        CollectionMutation::Add { item, .. } => CollectionMutation::Remove { id: item.id().clone() },
-        CollectionMutation::Remove { id } => {
-            let index = items.iter().position(|item| item.id() == id).expect("remove target must exist in pre-state");
-            CollectionMutation::Add { index, item: items[index].clone() }
-        }
-        CollectionMutation::Move { id, .. } => {
-            let index = items.iter().position(|item| item.id() == id).expect("move target must exist in pre-state");
-            CollectionMutation::Move { id: id.clone(), to_index: index }
-        }
-        CollectionMutation::Patch { id, patch } => {
-            let prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
-            let mut after = prior.clone();
-            after.apply_patch(patch);
-            let inverse_patch = after.diff_patch(&prior).expect("a patch that changed state must yield a computable inverse");
-            CollectionMutation::Patch { id: id.clone(), patch: inverse_patch }
-        }
-    }
-}
-
-/// 🧮️ Projects a `CollectionMutation` onto a sparse {@link CollectionDiff}, so a plugin's
-/// `Mutation::diff` can produce a diff in one call instead of hand-writing `removed`/`modified`/
-/// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
-/// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
-/// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
-pub fn collection_diff_from_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
-where
-    TId: PartialEq + Clone,
-    TItem: Identified<TId> + Clone,
-    TPatch: Clone,
-{
-    let mut diff = CollectionDiff::default();
-    match operation {
-        CollectionMutation::Add { item, .. } => diff.added.push(item.clone()),
-        CollectionMutation::Remove { id } => diff.removed.push(id.clone()),
-        CollectionMutation::Patch { id, patch } => diff.modified.push(ItemPatch { id: id.clone(), patch: patch.clone() }),
-        CollectionMutation::Move { id, .. } => {
-            if let Some(item) = items.iter().find(|item| item.id() == id) {
-                diff.removed.push(id.clone());
-                diff.added.push(item.clone());
-            }
-        }
-    }
-    diff
-}
-//#endregion 🔖️CollectionMutation
+//#endregion 🔖️Identified
 //#region 🔖️Mutation
 // 🎞️ `Mutation`/`MutationDiff`/`MutationMessage` live in `protocol_command`; this region just
 // replays a snapshot through an operation's forward diff — the pure per-step transform every
@@ -1877,7 +1809,7 @@ where
     Mutation: self::Mutation<P>,
 {
     let (diff, messages) = operation.diff(snapshot).into_parts();
-    let applied = diff.apply(snapshot);
+    let applied = crate::os_spr::apply_diff(&diff, snapshot);
     MutationDiff::retire_cold(diff);
     Ok((applied?, messages))
 }

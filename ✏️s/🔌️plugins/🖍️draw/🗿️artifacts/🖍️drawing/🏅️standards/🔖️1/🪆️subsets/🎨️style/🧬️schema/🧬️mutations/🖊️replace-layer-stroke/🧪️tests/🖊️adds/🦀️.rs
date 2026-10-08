@@ -47,7 +47,7 @@ async fn an_absent_stroke_becomes_the_committed_dashed_one() {
     assert_eq!(stroke.width, 2.0, "the stroke width comes from the payload");
     assert_eq!(stroke.cap, crate::StrokeCap::Round, "the stroke cap comes from the payload");
     assert_eq!(stroke.join, crate::StrokeJoin::Bevel, "the stroke join comes from the payload");
-    assert_eq!(stroke.dash, Some(vec![4.0, 2.0]), "the optional dash pattern must survive verbatim");
+    assert_eq!(stroke.dash, Some([4.0, 2.0].into_iter().collect()), "the optional dash pattern must survive verbatim");
     assert_eq!(after_attributes.fill, before_attributes.fill, "installing a stroke must not disturb the fill");
 }
 
@@ -106,7 +106,7 @@ async fn produces_committed_diff() {
     let patch = &delta.patched[0].patch;
     let stroke = patch.stroke.as_ref().expect("typed stroke patch").value.clone();
     let stroke = stroke.expect("this case installs a stroke rather than clearing one");
-    assert_eq!(stroke.dash, Some(vec![4.0, 2.0]), "the optional dash pattern survives inside the blob");
+    assert_eq!(stroke.dash, Some([4.0, 2.0].into_iter().collect()), "the optional dash pattern survives inside the blob");
     assert!(patch.fill.is_none(), "a stroke swap must leave the fill lane empty");
 }
 
@@ -127,4 +127,11 @@ async fn committed_diff_applies_to_after() {
     let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-layer-stroke/adds-a-dashed-stroke: committed diff did not carry before to after");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
 }

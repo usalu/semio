@@ -65,6 +65,16 @@
       }
     },
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6029,
+              "portEnv": "MIT_BESTAND_DEMONSTRATOR_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "activate-dev"
@@ -149,6 +159,16 @@
       ]
     },
     "serve": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6029,
+              "portEnv": "MIT_BESTAND_DEMONSTRATOR_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",

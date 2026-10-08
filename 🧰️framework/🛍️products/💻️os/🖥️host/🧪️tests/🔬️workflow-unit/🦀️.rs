@@ -1,5 +1,6 @@
 mod tests {
     use super::*;
+    use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
     /// 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 1: the real
     /// end-to-end proof for the bug this whole ticket exists to remove -- "export as .xyz" must

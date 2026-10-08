@@ -70,6 +70,10 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 app.bind_instance_id(FLOW_WINDOW_OWNERSHIP_INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
+                    let archive_before = app.document_archive().await.map_err(|error| format!("{error:?}"))?;
+                    if archive_before.parent_pack != document_before.pack || archive_before.parent_spr != document_before.spr { return Err("Flow archive root differs from its exact document pair".into()); }
+                    let member_witness: Vec<_> = archive_before.members.iter().map(|member| serde_json::json!({"slot":member.owner.slot,"artifactKind":member.reference.artifact_kind,"standard":member.reference.standard,"subset":member.reference.subset})).collect();
+                    if serde_json::to_value(&member_witness).unwrap() != fixture["ownedMembers"] || archive_before.members.iter().any(|member| member.owner.child_id != member.reference.artifact_id || member.envelope_pack.is_empty()) { return Err("Flow recursive owned-member closure differs from the neutral witness".into()); }
                     let mut lanes = (0usize, 0usize);
                     for (context, command) in [
                         (&left, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 } })),
@@ -77,10 +81,10 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                         (&right, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -21.0, y: 5.0, zoom: 0.75 } })),
                         (&right, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(context.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(context.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }).await.map_err(|error| format!("{error:?}"))?;
                         lanes.0 += drain(&mut app).await?.0;
                     }
-                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(generation.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(generation.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }).await.map_err(|error| format!("{error:?}"))?;
                     lanes.1 += drain(&mut app).await?.1;
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Flow window publications changed document bytes".into()); }
@@ -126,7 +130,20 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     // recorded in 📓️flow.md §5; it is NOT this law's subject, which is exact-window partitioning.
                     if lanes != (4, 1) { return Err(format!("Flow exact-window publication lane count changed: {lanes:?} instead of (4, 1) window-config/window-transient pages")); }
                     let config_packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
+                    let operation = artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
+                    app.begin_document_archive_load(operation, archive_before).map_err(|error| format!("{error:?}"))?;
+                    let mut polls = 0usize;
+                    let status = loop {
+                        let status = app.poll_document_archive_load(operation).await.map_err(|error| format!("{error:?}"))?;
+                        if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) { break status; }
+                        polls += 1;
+                        if polls >= 1_000_000 { return Err("Flow complete archive reload never reached a terminal state".into()); }
+                    };
+                    app.acknowledge_document_archive_load(operation).map_err(|error| format!("{error:?}"))?;
+                    if status.state != protocol::DocumentArchiveLoadState::Ready { return Err(format!("Flow complete archive reload refused: {:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault))); }
+                    let restored = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
+                    if restored.pack != document_before.pack || restored.spr != document_before.spr { return Err("Flow complete reload changed exact document bytes".into()); }
+                    println!("[DEBUG] Flow exact-window complete archive restored neutral owned-member closure through begin/poll/ack; document bytes unchanged");
                     // 🫧️ A same-byte reload is still a NEW document instance for every window: the whole
                     // window-transient registry is replaced at `document_generation + 1`, so each partition
                     // is reborn at generation 0 holding its own `Default` state. `capture` answers `Some`
@@ -153,7 +170,6 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     if addressed(&wrong, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
                     Ok(())
                 }.await;
-                if let Err(error) = &outcome { eprintln!("[TRACE] Flow exact-window runtime failure before close: {error}"); }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Flow exact-window ownership runtime law");
             })
@@ -207,7 +223,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 let mut app: Box<FlowRuntime> = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
                 app.bind_instance_id(FLOW_ONE_TURN_INSTANCE).await;
                 let outcome: Result<(), String> = async {
-                    let meta = ActionMeta { instance_id: FLOW_ONE_TURN_INSTANCE, view_state: Some(window.clone()), ..artifact_app_laws::meta("flow-one-turn") };
+                    let meta = ActionMeta { instance_id: FLOW_ONE_TURN_INSTANCE, view_state: Some(window.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
                     app.dispatch_typed(FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(false) }), &meta).await.map_err(|error| format!("{error:?}"))?;
                     app.dispatch_typed(FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 }), &meta).await.map_err(|error| format!("{error:?}"))?;
                     let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, FLOW_ONE_TURN_INSTANCE).await.map_err(|error| format!("{error:?}"))?;
@@ -245,7 +261,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 }
                 .await;
                 if let Err(error) = &outcome {
-                    eprintln!("Flow one-turn window-config failure before close: {error}");
+                    eprintln!("[DEBUG] Flow one-turn window-config failure before close: {error}");
                 }
                 artifact_app_laws::close_registered_fixture_app(&mut *app);
                 outcome.expect("Flow two window-config commands in one turn");

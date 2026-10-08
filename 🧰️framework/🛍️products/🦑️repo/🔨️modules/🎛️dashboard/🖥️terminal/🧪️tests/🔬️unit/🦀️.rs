@@ -1,4 +1,5 @@
 use super::*;
+use ui_tui::tui::event::KeyEvent;
 
 #[test]
 fn native_leader_bytes_match_the_shared_control_vectors() {
@@ -36,7 +37,7 @@ fn launcher_search_matches_language_neutral_selection_vectors() {
 #[test]
 fn mouse_launcher_selection_matches_the_shared_viewport_vectors() {
     use ui_tui::tui::geometry::Pos;
-    use ui_tui::tui::event::{MouseEvent, MouseKind};
+    use ui_tui::tui::event::{MouseButton, MouseEvent, MouseKind};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔎️launcher/🔣️.json")).unwrap();
     for case in fixture["pointer"].as_array().unwrap() {
         let mut tui = Tui::new(Size { width: 80, height: case["height"].as_u64().unwrap() as u16 }, Theme::new(AppearanceName::Dark));
@@ -45,7 +46,7 @@ fn mouse_launcher_selection_matches_the_shared_viewport_vectors() {
         let widget = tui.scene.add(tui.scene.root(), Node::new(NodeContent::Widget(WidgetState::Wizard(state))));
         tui.scene.node_mut(widget).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
         tui.render_full();
-        let result = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: 2, y: case["row"].as_u64().unwrap() as u16 }, mods: 0 }));
+        let result = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: 2, y: case["row"].as_u64().unwrap() as u16 }, mods: 0, clicks: 1 }));
         assert_eq!(result, case["index"].as_u64().map(|index| vec![(widget, WidgetSignal::Activated(index as usize))]).unwrap_or_default(), "{case}");
     }
 }
@@ -91,8 +92,8 @@ fn opinionated_defaults_and_controls_are_visible_in_both_languages() {
 #[test]
 fn restored_process_output_and_exit_status_render_without_stealing_focus() {
     let (mut dashboard, mut tui) = dashboard(Locale::English);
-    let command = SessionCommand { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), "workspace:test".into()], cwd: ".".into(), env: Vec::new(), cols: 80, rows: 24 };
-    let info = SessionInfo { session_id: "test".into(), command, status: SessionStatus::Exited, pid: Some(42), code: Some(0) };
+    let command = SessionCommand { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), "workspace:test".into()], cwd: ".".into(), env: Vec::new(), cols: 80, rows: 24, ..Default::default() };
+    let info = SessionInfo { session_id: "test".into(), command, status: SessionStatus::Exited, pid: Some(42), code: Some(0), ..Default::default() };
     dashboard.update_session(&mut tui, info.clone());
     assert_eq!(dashboard.focused, "w1");
     assert!(!dashboard.terminal_input);

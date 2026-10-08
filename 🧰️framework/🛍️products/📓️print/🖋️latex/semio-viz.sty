@@ -171,6 +171,7 @@
 \bool_new:N \l_semio_viz_section_rule_bool
 \tl_new:N \g_semio_viz_section_prev_tl
 \tl_new:N \l_semio_viz_section_name_tl
+\tl_new:N \l_semio_viz_section_heading_tl
 \int_new:N \g_semio_viz_section_int
 \fp_new:N \g_semio_viz_column_cursor_fp
 \fp_new:N \l_semio_viz_saved_width_fp
@@ -192,22 +193,30 @@
   \bool_set_true:N \l_semio_viz_section_rule_bool
 }
 
-% 🏷️ Draws a band's own furniture: the separating rule, the title and the right-hand aside.
+% 🏷️ Draws a band's own furniture: the separating rule, the title and the right-hand aside. The
+% heading nodes are named, so the content is placed under what they measure and not under a
+% guessed line height.
 \cs_new_protected:Npn \semio_viz_section_chrome: {
+  \tl_clear:N \l_semio_viz_section_heading_tl
   \bool_if:NT \l_semio_viz_section_rule_bool {
     \use:x { \exp_not:N \draw [ semio~viz~rule ] ( 0 , 0 ) -- ( \fp_eval:n { \l_semio_viz_width_fp } , 0 ) ; }
   }
-  \tl_if_empty:NF \l_semio_viz_section_title_tl {
-    \node [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
-      at ( 0 , -1.4 ) { \exp_not:V \l_semio_viz_section_title_tl } ;
-  }
   \tl_if_empty:NF \l_semio_viz_section_aside_tl {
-    \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal, anchor=north~east ]
-      at ( \fp_eval:n { \l_semio_viz_width_fp } , -1.4 ) { \exp_not:V \l_semio_viz_section_aside_tl } ;
+    \tl_set:Nx \l_semio_viz_section_heading_tl { \l_semio_viz_section_name_tl aside }
+    \node ( \l_semio_viz_section_heading_tl )
+      [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal, anchor=north~east ]
+      at ( \fp_eval:n { \l_semio_viz_width_fp } , -\c_semio_viz_section_title_gap_tl ) { \exp_not:V \l_semio_viz_section_aside_tl } ;
+  }
+  \tl_if_empty:NF \l_semio_viz_section_title_tl {
+    \tl_set:Nx \l_semio_viz_section_heading_tl { \l_semio_viz_section_name_tl title }
+    \node ( \l_semio_viz_section_heading_tl )
+      [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
+      at ( 0 , -\c_semio_viz_section_title_gap_tl ) { \exp_not:V \l_semio_viz_section_title_tl } ;
   }
 }
 
-% 📐 Opens a band: names its bounding box, anchors it under the previous band and draws the chrome.
+% 📐 Opens a band: names its bounding box, anchors it under the previous band, draws the chrome
+% and starts the content under the measured heading.
 \cs_new_protected:Npn \semio_viz_section_open:n #1 {
   \semio_viz_frame_require:n { VizSection }
   \semio_viz_section_keys_reset:
@@ -224,7 +233,14 @@
     }
   \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ]
   \semio_viz_section_chrome:
-  \begin{scope}[ yshift=-\c_semio_viz_section_content_gap_tl ]
+  \tl_if_empty:NTF \l_semio_viz_section_heading_tl
+    { \begin{scope}[ yshift=-\c_semio_viz_section_content_gap_tl ] }
+    {
+      \begin{scope}[
+        shift={ ( $ (0,0) ! ( \l_semio_viz_section_heading_tl .south ) ! (0,-1) $ ) } ,
+        yshift=-\c_semio_viz_section_content_gap_tl
+      ]
+    }
 }
 
 % 📏 Closes a band and records its measured south-west corner as the anchor of the next one.
@@ -248,63 +264,75 @@
   { \semio_viz_section_close: }
 
 \fp_new:N \l_semio_viz_column_width_fp
+\fp_new:N \l_semio_viz_column_height_fp
 \tl_new:N \l_semio_viz_column_title_tl
 \tl_new:N \l_semio_viz_column_note_tl
+\tl_new:N \l_semio_viz_column_below_tl
+\int_new:N \g_semio_viz_column_int
 
 % ⚙️ Vocabulary of one VizColumn slot.
-%   width number  default the section width   slot width in millimetres
-%   title text    default empty              heading above the slot
-%   note  text    default empty              caption-weight paragraph under the heading
+%   width  number  default the section width   slot width in millimetres
+%   height number  default 0                   canvas height in millimetres of the chart the slot
+%                                              holds; 0 leaves the slot to content that grows downward
+%   title  text    default empty               heading above the slot
+%   note   text    default empty               caption-weight paragraph under the heading
 \keys_define:nn { semio / viz / column } {
-  width .fp_set:N = \l_semio_viz_column_width_fp,
-  title .tl_set:N = \l_semio_viz_column_title_tl,
-  note  .tl_set:N = \l_semio_viz_column_note_tl,
+  width  .fp_set:N = \l_semio_viz_column_width_fp,
+  height .fp_set:N = \l_semio_viz_column_height_fp,
+  title  .tl_set:N = \l_semio_viz_column_title_tl,
+  note   .tl_set:N = \l_semio_viz_column_note_tl,
 }
 
-% 📝 A note draws below any title, in the caption weight already used
-% throughout (\c_semio_viz_theme_font_label_tl), and reserves its own gap before content starts --
-% the mechanism-level replacement for skalierung.tex's H1/H2 caption lines,
-% which used to be a bare \node followed by a hand-tuned \begin{scope}[yshift=
-% -4mm] compensating for the caption's own height. text width is the column's
-% own real width, not a number copied from the call site.
-\cs_new_protected:Npn \semio_viz_column_note_draw: {
-  \node [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
-          anchor=north~west, align=left, text~width=\fp_eval:n{\l_semio_viz_width_fp}mm ]
-    at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_note_tl } ;
-}
-
-% 🏛️ Opens a slot at the section's running cursor and narrows the figure width to the slot.
+% 🏛️ Opens a slot at the section's running cursor and narrows the figure width to the slot. The
+% title, the note and the content stack on each other's measured south edge. A chart draws upward
+% from its canvas origin, so a slot that declares a `height` drops its origin by that height and
+% the chart fills the rectangle under the heading instead of climbing over the bands above.
 \cs_new_protected:Npn \semio_viz_column_open:n #1 {
   \semio_viz_frame_require:n { VizColumn }
   \fp_set_eq:NN \l_semio_viz_column_width_fp \l_semio_viz_width_fp
+  \fp_zero:N \l_semio_viz_column_height_fp
   \tl_clear:N \l_semio_viz_column_title_tl
   \tl_clear:N \l_semio_viz_column_note_tl
   \keys_set:nn { semio / viz / column } {#1}
   \fp_set_eq:NN \l_semio_viz_saved_width_fp \l_semio_viz_width_fp
+  \int_gincr:N \g_semio_viz_column_int
   \begin{scope}[ shift={(\fp_eval:n{\g_semio_viz_column_cursor_fp},0)} ]
   \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_column_width_fp
-  \tl_if_empty:NTF \l_semio_viz_column_title_tl
-    { \begin{scope} }
+  \tl_set:Nn \l_semio_viz_column_below_tl { 0 , 0 }
+  \tl_if_empty:NF \l_semio_viz_column_title_tl
     {
-      \node [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
+      \node ( vizcolumntitle \int_use:N \g_semio_viz_column_int )
+        [ font=\c_semio_viz_theme_font_title_tl, text=semio-chrome-foreground, anchor=north~west ]
         at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
-      \begin{scope}[ yshift=-\c_semio_viz_section_content_gap_tl ]
+      \tl_set:Nx \l_semio_viz_column_below_tl
+        { vizcolumntitle \int_use:N \g_semio_viz_column_int .south~west }
     }
-  \tl_if_empty:NTF \l_semio_viz_column_note_tl
-    { \begin{scope} }
+  \tl_if_empty:NF \l_semio_viz_column_note_tl
     {
-      \semio_viz_column_note_draw:
-      \begin{scope}[ yshift=-\c_semio_viz_section_note_gap_tl ]
+      \node ( vizcolumnnote \int_use:N \g_semio_viz_column_int )
+        [ font=\c_semio_viz_theme_font_label_tl, text=semio-chrome-text-normal,
+          anchor=north~west, align=left, text~width=\fp_eval:n{\l_semio_viz_width_fp}mm - 0.6666em ]
+        at ( \l_semio_viz_column_below_tl ) { \exp_not:V \l_semio_viz_column_note_tl } ;
+      \tl_set:Nx \l_semio_viz_column_below_tl
+        { vizcolumnnote \int_use:N \g_semio_viz_column_int .south~west }
     }
+  \fp_compare:nNnTF { \l_semio_viz_column_height_fp } > { 0 }
+    {
+      \begin{scope}[
+        shift={ ( \l_semio_viz_column_below_tl ) } ,
+        yshift=-\fp_to_decimal:N \l_semio_viz_column_height_fp mm
+      ]
+      \fp_set_eq:NN \l_semio_viz_height_fp \l_semio_viz_column_height_fp
+    }
+    { \begin{scope}[ shift={ ( \l_semio_viz_column_below_tl ) } ] }
 }
 
 % 🧾 Closes a slot, advances the cursor by its width plus the gutter and restores the figure width.
 \cs_new_protected:Npn \semio_viz_column_close: {
   \end{scope}
   \end{scope}
-  \end{scope}
   \fp_gset:Nn \g_semio_viz_column_cursor_fp
-    { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \c_semio_viz_column_gutter_tl } }
+    { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + ( \c_semio_viz_column_gutter_tl ) / 1mm }
   \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_saved_width_fp
 }
 

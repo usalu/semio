@@ -16,6 +16,11 @@ pub struct Generation3dDiff {
     pub host_snapshot: Option<FlowHostSnapshot>,
     #[state(artifact)]
     pub generation: Option<GenerationPlayRoot>,
+    /// 🗺️ The regions a leaf's delta writes, recorded by the leaf that decided it (see [`Generation3dDiff::regions`]). Not a
+    /// schema member: the wire carries the replacement values, and a decoded delta is widened to whole members.
+    #[derived]
+    #[value(skip)]
+    pub(crate) touched: Option<Vec<String>>,
 }
 //#endregion 🔖️Generation3dDiff
 
@@ -25,7 +30,7 @@ impl Generation3dDiff {
     /// whose root must be retired (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`) and
     /// `generation` owns its own ladder — so an owned diff is CLOSED, never dropped.
     pub fn retire_cold(self) {
-        let Self { artifact, host_snapshot, generation } = self;
+        let Self { artifact, host_snapshot, generation, touched: _ } = self;
         if let Some(artifact) = artifact {
             let Generation3dArtifact { host_snapshot, generation } = *artifact;
             host_snapshot.retire_cold();
@@ -226,7 +231,9 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
             std::mem::replace(self, other).retire_cold();
             return;
         }
-        let Self { artifact: _, host_snapshot, generation } = other;
+        let regions: Vec<String> = self.regions().into_iter().chain(other.regions()).collect();
+        let Self { artifact: _, host_snapshot, generation, touched: _ } = other;
+        self.touched = Some(regions.into_iter().collect::<std::collections::BTreeSet<_>>().into_iter().collect());
         if let Some(replacement) = host_snapshot {
             if let Some(displaced) = self.host_snapshot.replace(replacement) {
                 displaced.retire_cold();
@@ -252,17 +259,128 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
     }
 }
 
-/// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
+/// 🏗️ Whole-fixture field delta after applying sparse collection helpers, with the exact regions it writes.
 pub fn diff_snapshot_from_helpers(base: &Generation3dSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> Generation3dDiff {
     let host_snapshot = apply_host_snapshot_helpers(&base.host_snapshot, widgets, synapses, layout, camera, schema);
-    Generation3dDiff { host_snapshot: Some(host_snapshot), ..Generation3dDiff::default() }
+    let touched = Some(host_regions(&base.host_snapshot, &host_snapshot));
+    Generation3dDiff { host_snapshot: Some(host_snapshot), touched, ..Generation3dDiff::default() }
 }
 
 /// 🏗️ Generation field delta after applying ordered generation mutations.
 pub fn diff_generation_from_ops(base: &Generation3dSnapshot, ops: &[GenerationMutation]) -> Generation3dDiff {
     let generation = apply_generation_helpers(&base.generation, ops);
-    Generation3dDiff { generation: Some(generation.into()), ..Generation3dDiff::default() }
+    diff_generation_state(base, generation)
 }
+
+/// 🏗️ Generation field delta of `edit` applied to a copy of the base play state — the seam for scalar edits (selection,
+/// preview) that no [`GenerationMutation`] expresses.
+pub fn diff_generation_with(base: &Generation3dSnapshot, edit: impl FnOnce(&mut GenerationPlayState)) -> Generation3dDiff {
+    let mut generation = (*base.generation).clone();
+    edit(&mut generation);
+    diff_generation_state(base, generation)
+}
+
+fn diff_generation_state(base: &Generation3dSnapshot, generation: GenerationPlayState) -> Generation3dDiff {
+    let touched = Some(generation_regions(&base.generation, &generation));
+    Generation3dDiff { generation: Some(generation.into()), touched, ..Generation3dDiff::default() }
+}
+
+//#region 🗺️TouchedRegions
+/// 🧷️ One path segment as the region vocabulary spells it: JSON-pointer escaped, so an id holding `/` stays one segment.
+fn region_segment(id: &str) -> String {
+    id.replace('~', "~0").replace('/', "~1")
+}
+
+/// 🗺️ The ids whose entry differs between two keyed sequences — present on one side only, or present on both with another
+/// value — and whether the survivors changed their relative order.
+fn keyed_regions<'a, T: PartialEq + 'a>(before: impl Iterator<Item = (&'a str, &'a T)>, after: impl Iterator<Item = (&'a str, &'a T)>) -> (Vec<&'a str>, bool) {
+    let before: Vec<(&str, &T)> = before.collect();
+    let after: Vec<(&str, &T)> = after.collect();
+    let before_index: std::collections::HashMap<&str, &T> = before.iter().copied().collect();
+    let after_index: std::collections::HashMap<&str, &T> = after.iter().copied().collect();
+    let mut changed: Vec<&str> = before.iter().filter(|(id, value)| after_index.get(id).is_none_or(|next| next != value)).map(|(id, _)| *id).collect();
+    changed.extend(after.iter().map(|(id, _)| *id).filter(|id| !before_index.contains_key(id)));
+    let survivors_before: Vec<&str> = before.iter().map(|(id, _)| *id).filter(|id| after_index.contains_key(id)).collect();
+    let survivors_after: Vec<&str> = after.iter().map(|(id, _)| *id).filter(|id| before_index.contains_key(id)).collect();
+    (changed, survivors_before != survivors_after)
+}
+
+/// 🗺️ Every region of the host snapshot whose value differs between `before` and `after`, as sorted unique paths:
+/// `hostSnapshot/widgets/<id>`, `hostSnapshot/synapses/<id>`, `hostSnapshot/layout/<id>` (the collection path itself when
+/// the survivors' relative order moved), `hostSnapshot/camera` and `hostSnapshot/schema`.
+pub fn host_regions(before: &FlowHostSnapshot, after: &FlowHostSnapshot) -> Vec<String> {
+    let mut paths = std::collections::BTreeSet::new();
+    let (changed, reordered) = keyed_regions(before.widgets.iter().map(|widget| (widget_id(widget), widget)), after.widgets.iter().map(|widget| (widget_id(widget), widget)));
+    paths.extend(changed.into_iter().map(|id| format!("hostSnapshot/widgets/{}", region_segment(id))));
+    if reordered {
+        paths.insert("hostSnapshot/widgets".to_string());
+    }
+    let (changed, reordered) = keyed_regions(before.synapses.iter().map(|synapse| (synapse.id.as_str(), synapse)), after.synapses.iter().map(|synapse| (synapse.id.as_str(), synapse)));
+    paths.extend(changed.into_iter().map(|id| format!("hostSnapshot/synapses/{}", region_segment(id))));
+    if reordered {
+        paths.insert("hostSnapshot/synapses".to_string());
+    }
+    let (changed, reordered) = keyed_regions(before.layout.iter().map(|(id, layout)| (id.as_str(), layout)), after.layout.iter().map(|(id, layout)| (id.as_str(), layout)));
+    paths.extend(changed.into_iter().map(|id| format!("hostSnapshot/layout/{}", region_segment(id))));
+    if reordered {
+        paths.insert("hostSnapshot/layout".to_string());
+    }
+    if before.camera != after.camera {
+        paths.insert("hostSnapshot/camera".to_string());
+    }
+    if before.schema != after.schema {
+        paths.insert("hostSnapshot/schema".to_string());
+    }
+    paths.into_iter().collect()
+}
+
+/// 🗺️ Every region of the generation play state whose value differs between `before` and `after`: `generation/<id>`
+/// per added, removed or changed generation (the roster path when the survivors' order moved), `generation/selected` and
+/// `generation/previewText`.
+pub fn generation_regions(before: &GenerationPlayState, after: &GenerationPlayState) -> Vec<String> {
+    let mut paths = std::collections::BTreeSet::new();
+    let (changed, reordered) = keyed_regions(before.generations.iter().map(|entry| (entry.id.as_str(), entry)), after.generations.iter().map(|entry| (entry.id.as_str(), entry)));
+    paths.extend(changed.into_iter().map(|id| format!("generation/{}", region_segment(id))));
+    if reordered {
+        paths.insert("generation".to_string());
+    }
+    if before.selected_generation_id != after.selected_generation_id {
+        paths.insert("generation/selected".to_string());
+    }
+    if before.preview_text != after.preview_text {
+        paths.insert("generation/previewText".to_string());
+    }
+    paths.into_iter().collect()
+}
+
+impl Generation3dDiff {
+    /// 🗺️ The regions this delta writes: the recorded ones, widened to the whole `hostSnapshot` / `generation` member a
+    /// delta replaces without recording what changed inside it, so a hand-built delta can only over-approximate.
+    pub fn regions(&self) -> std::collections::BTreeSet<String> {
+        let mut paths: std::collections::BTreeSet<String> = self.touched.iter().flatten().cloned().collect();
+        if self.touched.is_none() {
+            if self.host_snapshot.is_some() {
+                paths.insert("hostSnapshot".to_string());
+            }
+            if self.generation.is_some() {
+                paths.insert("generation".to_string());
+            }
+        }
+        if self.artifact.is_some() {
+            paths.extend(["hostSnapshot".to_string(), "generation".to_string()]);
+        }
+        paths
+    }
+}
+
+/// 🗺️ The diff→invalidation bridge of the inference tier-1 gate (`protocol::DiffRegions`): a delta touches exactly the
+/// regions it records, never a coarser or finer claim.
+impl protocol::DiffRegions for Generation3dDiff {
+    fn touches(&self) -> protocol::TouchedPaths {
+        protocol::TouchedPaths::new(self.regions())
+    }
+}
+//#endregion 🗺️TouchedRegions
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

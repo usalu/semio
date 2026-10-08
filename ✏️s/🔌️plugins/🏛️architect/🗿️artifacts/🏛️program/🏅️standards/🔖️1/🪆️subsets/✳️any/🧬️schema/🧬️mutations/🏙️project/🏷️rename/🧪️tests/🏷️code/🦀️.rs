@@ -2,15 +2,15 @@
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
-//! leaf's own `🔺️diff/🦀️.rs`, which clones `base.project`, writes the single `code` field, and emits it as the whole `project` facet — the diff carries the complete replacement value, not a patch.
+//! leaf's own `🔺️diff/🦀️.rs`, which patches only `code` through the `project` section edit (`patch.code`), never the whole section.
 //!
-//! That leaf's own contract line reads: ✏️ New `ProjectDefinition` with only `code` changed. Root-scoped singleton — always present, so Warning `mutation.no-op` (empty diff) covers the only degenerate case: the code is unchanged.
+//! That leaf's own contract line reads: ✏️ Patches only `code` of the section. Root-scoped singleton — always present, so Warning `mutation.no-op` (empty diff) covers the only degenerate case: the code is unchanged.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏙️project/🏷️rename/🏷️code/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn rename_project_applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("rename-project/renames-the-project-code: rename-project applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("rename-project/renames-the-project-code: rename-project applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "rename-project/renames-the-project-code: applied state differs from the committed after-snapshot");
 }
 
@@ -46,9 +46,9 @@ async fn rename_project_inverse_restores_before() {
     let forward = mutation();
     let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
-    let mut state = forward.diff(&base).diff().apply(&base).expect("rename-project/renames-the-project-code: forward diff applies");
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("rename-project/renames-the-project-code: forward diff applies");
     for step in &undo {
-        state = step.diff(&state).diff().apply(&state).expect("rename-project/renames-the-project-code: inverse step applies");
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("rename-project/renames-the-project-code: inverse step applies");
     }
     assert_eq!(state, base, "rename-project/renames-the-project-code: rename-project back to the captured prior value did not restore the before-snapshot");
 }
@@ -76,7 +76,7 @@ async fn rename_project_declared_outcome_holds() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert!(outcome.messages().is_empty(), "rename-project/renames-the-project-code: rename-project raised a diagnostic on a fixture that declares a clean apply");
-    assert!(outcome.diff().apply(&base).is_ok(), "rename-project/renames-the-project-code: rename-project was rejected by apply on its own before-snapshot");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "rename-project/renames-the-project-code: rename-project was rejected by apply on its own before-snapshot");
 }
 
 /// 🔺️ The sparse delta rename-project produces is exactly the committed diff — this pins WHICH collection
@@ -102,6 +102,12 @@ async fn rename_project_committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn rename_project_committed_diff_applies_to_after() {
     let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-project/renames-the-project-code: committed diff decodes");
-    let produced = decoded.apply(&before()).expect("rename-project/renames-the-project-code: committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("rename-project/renames-the-project-code: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-project/renames-the-project-code: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of rename-project's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn rename_project_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -29,7 +29,7 @@ pub fn example_arg_options() -> Vec<ActionArgOption> {
 /// of silently loading whichever example happens to be bundled.
 pub fn example_document(example_id: &str) -> Result<GisTerrainSnapshot, Fault> {
     if example_id.is_empty() {
-        return Ok(crate::schema::empty_gis_terrain_snapshot());
+        return Ok(crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot());
     }
     let source = example_catalogue().into_iter().find(|source| source.id() == example_id).ok_or_else(|| Fault::from(format!("gis terrain example '{example_id}' is not in the catalogue")))?;
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(&source.document_json()).map_err(|error| Fault::from(format!("gis terrain example '{example_id}' does not parse: {error:?}")))

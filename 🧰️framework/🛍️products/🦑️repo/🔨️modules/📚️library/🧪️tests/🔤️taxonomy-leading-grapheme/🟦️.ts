@@ -152,7 +152,7 @@ test("registers leading grapheme through its closed canonical route", async () =
   const directory = join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🧪️registration"), bytes = readFileSync(join(directory, "🔣️.json"), "utf8"), registration = JSON.parse(bytes);
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔤️taxonomy-leading-grapheme/🧪️registration/🔣️.json"), "utf8")));
   expect(validate(registration), JSON.stringify(validate.errors)).toBe(true);
-  for (const changed of [{ ...registration, source: "./🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }, { ...registration, launchOrder: 410.208 }]) expect(validate(changed)).toBe(false);
+  for (const changed of [{ ...registration, source: "./🟦️.ts" }, { ...registration, budget: 120000 }, { ...registration, budgetMs: 120000 }, { ...registration, filter: "selected" }, { ...registration, runner: "other" }]) expect(validate(changed)).toBe(false);
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);
@@ -172,12 +172,6 @@ test("registers leading grapheme through its closed canonical route", async () =
     const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", compiler.compile(`${declarations[0]!.getText(syntax)}\nreturn new TestScript();`))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Leading grapheme fell through to generic routing"); });
     await router.run([registration.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, registration.source)], options: { cwd: repoRoot } }]);
-  }
-  for (const filename of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const parseErrors: ParseError[] = [], document = parse(readFileSync(join(repoRoot, filename), "utf8"), parseErrors);
-    expect(parseErrors).toEqual([]);
-    expect(document.configurations.filter((row: { name: string }) => row.name === registration.launchName)).toEqual([{ name: registration.launchName, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${registration.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: registration.launchGroup, order: registration.launchOrder } }]);
-    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === registration.launchGroup && row.presentation?.order === registration.launchOrder)).toHaveLength(1);
   }
 });
 

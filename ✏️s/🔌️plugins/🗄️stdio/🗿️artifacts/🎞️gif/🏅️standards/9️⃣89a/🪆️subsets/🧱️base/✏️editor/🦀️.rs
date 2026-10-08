@@ -5,7 +5,7 @@
 
 use crate::editor::gif_89a::modes::edit;
 use crate::editor::gif_89a::modes::edit::windows::main;
-use crate::standards::v89a::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,set_frame_pixels,GifMutation};
+use crate::standards::v89a::subsets::any::schema::mutations::{net_mutations, set_frame_pixels, GifMutation};
 
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::{GIF_89A_DIALECT, STDIO_GIF89A_DOCUMENT_SCHEMA};
@@ -218,7 +218,7 @@ impl editing::SnapshotEditingEditor for Gif89aEditor {
         match command { Gif89aEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| GifMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| GifMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        editing::snapshot_edit_net(event, snapshot, net_mutations)
     }
 }
 

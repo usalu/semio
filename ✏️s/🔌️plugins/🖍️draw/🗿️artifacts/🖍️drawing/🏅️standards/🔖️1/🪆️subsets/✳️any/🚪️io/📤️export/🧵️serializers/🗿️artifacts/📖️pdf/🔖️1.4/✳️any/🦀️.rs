@@ -214,7 +214,7 @@ fn stroke_ops(content: &mut String, stroke: &StrokeStyle) {
         crate::StrokeJoin::Bevel => 2,
     };
     let _ = writeln!(content, "{} {} {} RG {} w {cap} J {join} j", num(stroke.color[0]), num(stroke.color[1]), num(stroke.color[2]), num(stroke.width));
-    match stroke.dash.as_deref() {
+    match stroke.dash.as_ref() {
         Some(dash) if !dash.is_empty() && dash.iter().all(|value| value.is_finite() && *value >= 0.0) && dash.iter().any(|value| *value > 0.0) => {
             let pattern = dash.iter().map(|value| num(*value)).collect::<Vec<_>>().join(" ");
             let _ = writeln!(content, "[{pattern}] 0 d");
@@ -466,7 +466,7 @@ impl PdfWriter {
         Ok(name)
     }
 
-    fn stop_function(&mut self, stops: &[GradientStop]) -> Result<u32, String> {
+    fn stop_function(&mut self, stops: &semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>) -> Result<u32, String> {
         let mut sorted: Vec<&GradientStop> = stops.iter().filter(|stop| stop.offset.is_finite()).collect();
         if sorted.is_empty() {
             return Err("a gradient needs at least one stop".into());
@@ -628,7 +628,7 @@ fn decode_image_source(doc: &DrawingSnapshot, src: &str) -> Option<semio_framewo
     };
     let bytes = base64_codec::base64_standard_decode(body).ok()?;
     let decoded = semio_framework_pixels::decode_png(&bytes).ok()?;
-    let declared = doc.assets.values().find(|asset| asset.data == src || src.ends_with(asset.data.as_str())).and_then(|asset| asset.width.zip(asset.height));
+    let declared = doc.assets.values().find(|asset| asset.data.eq_str(src) || src.len().checked_sub(asset.data.len()).and_then(|offset| src.get(offset..)).is_some_and(|suffix| asset.data.eq_str(suffix))).and_then(|asset| asset.width.zip(asset.height));
     Some(match declared {
         Some((width, height)) if width > 0 && height > 0 && (width, height) != (decoded.width, decoded.height) => semio_framework_pixels::resize_bilinear(&decoded, width, height),
         _ => decoded,

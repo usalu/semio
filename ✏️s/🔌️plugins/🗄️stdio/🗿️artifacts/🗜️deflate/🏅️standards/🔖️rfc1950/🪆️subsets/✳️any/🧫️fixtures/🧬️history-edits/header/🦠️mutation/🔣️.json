@@ -1,0 +1,28 @@
+{
+  "mutation": {
+    "mutation": "setCompressionParams",
+    "method": 8,
+    "window_bits": 6,
+    "level_hint": "maximum"
+  },
+  "before": {
+    "schema": "stdio.deflate",
+    "compressionMethod": 8,
+    "windowBits": 7,
+    "compressionLevelHint": "default",
+    "payload": [
+      104,
+      105
+    ]
+  },
+  "after": {
+    "schema": "stdio.deflate",
+    "compressionMethod": 8,
+    "windowBits": 6,
+    "compressionLevelHint": "maximum",
+    "payload": [
+      104,
+      105
+    ]
+  }
+}

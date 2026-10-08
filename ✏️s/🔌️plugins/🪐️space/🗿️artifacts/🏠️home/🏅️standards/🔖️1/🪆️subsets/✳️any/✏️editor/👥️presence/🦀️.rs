@@ -135,9 +135,12 @@ impl protocol::OpBinary for HomePresenceMutation {
 /// `createStudio` path — so without this the local studio path is refused even though nothing is
 /// wrong with the command. `HomePresence` owns no heap collections (the launcher keeps its chrome in
 /// `HomeConfig`), so one root retires in a single step and reports one released item.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct HomePresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<HomePresence> for HomePresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<HomePresence>) -> usize { std::mem::size_of::<HomePresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<HomePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(HomePresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
     }

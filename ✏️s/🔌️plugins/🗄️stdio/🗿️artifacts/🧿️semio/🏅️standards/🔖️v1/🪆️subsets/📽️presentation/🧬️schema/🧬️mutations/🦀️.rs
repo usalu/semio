@@ -60,10 +60,6 @@ pub mod set_slide_notes;
 /// needed (unlike docx's nested-table `DocxBlockPath`) since a shape tree here is exactly two
 /// levels deep. Masters/layouts are addressed by their own `id`.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "✍️set-text-box-blocks/🦀️.rs"]
 pub mod set_textbox_blocks;
 //#endregion 🔖️Leaves
@@ -81,8 +77,6 @@ pub mod set_textbox_blocks;
 #[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `🎞️slide` at `index` (FINAL-state index).
     InsertSlide(insert_slide::InsertSlide),
     /// ➖️ Removes the slide at `index` (BASE-state index).
@@ -116,17 +110,16 @@ pub enum SemioPresentationMutation {
 /// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). 
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
 /// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master", "patch-snapshot"];
+pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d` -- the diff is the
-/// single semantics source, never a separate imperative apply path (apply-and-capture is banned).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_presentation_mutation(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
+    <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ `SemioPresentationMutation`'s own computed inverse, reachable from OUTSIDE this crate.
 /// `protocol` is a private `extern crate semio_framework_os_kernel as protocol` alias in
@@ -158,86 +151,9 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 }
 //#endregion 🔖️Helpers
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
-    protocol::MutationOutcome::new(match this {
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        SemioPresentationMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation>>::diff(patch, base),
-        SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => diff_insert_slide(*index, slide.clone()),
-        SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => diff_remove_slide(*index),
-        SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => diff_set_slide_layout(base, *index, layout_id.clone()),
-        SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index, notes }) => diff_set_slide_notes(base, *index, notes),
-        SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
-        SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => diff_remove_shape(*slide_index, *shape_index),
-        SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => diff_set_shape_frame(base, *slide_index, *shape_index, *frame),
-        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => diff_set_textbox_blocks(base, *slide_index, *shape_index, blocks),
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => diff_insert_master(master.clone()),
-        SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => diff_remove_master(id),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => diff_insert_layout(layout.clone()),
-        SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id }) => diff_remove_layout(id),
-        SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id, master_id }) => diff_set_layout_master(id, master_id),
-    })
-}
 
-/// ↩️ Lifted verbatim from the former `impl Mutation`, except every `None`/no-match fallback that
-/// used to construct `NoMutation` now returns `Vec::new()` (an inverse with nothing to restore) —
-/// the convention this migration's fleet coordinator ruled on, since `NoMutation` is no longer a
-/// constructible variant.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        SemioPresentationMutation::SetSnapshot(_) => vec![SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        SemioPresentationMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation>>::inverse(patch, base)?),
-        SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, .. }) => vec![SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: *index })],
-        SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => match base.slides.get(*index) {
-            Some(slide) => vec![SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: *index, slide: slide.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, .. }) => match base.slides.get(*index) {
-            Some(slide) => vec![SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: *index, layout_id: slide.layout_id.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index, .. }) => match base.slides.get(*index) {
-            Some(slide) => vec![SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index: *index, notes: slide.notes.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, .. }) => {
-            vec![SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: *slide_index, shape_index: *shape_index })]
-        }
-        SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => match shape_at(base, *slide_index, *shape_index) {
-            Some(shape) => vec![SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, .. }) => match shape_at(base, *slide_index, *shape_index) {
-            Some(shape) => vec![SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: *slide_index, shape_index: *shape_index, frame: *frame_of(shape) })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, .. }) => match shape_at(base, *slide_index, *shape_index) {
-            Some(SlideShape::TextBox { blocks, .. }) => {
-                vec![SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: *slide_index, shape_index: *shape_index, blocks: blocks.clone() })]
-            }
-            _ => Vec::new(),
-        },
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => vec![SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: master.id.clone() })],
-        SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => match master_at(base, id) {
-            Some(m) => vec![SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: m.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => vec![SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: layout.id.clone() })],
-        SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id }) => match layout_at(base, id) {
-            Some(l) => vec![SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: l.clone() })],
-            None => Vec::new(),
-        },
-        SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id, .. }) => match layout_at(base, id) {
-            Some(l) => vec![SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: id.clone(), master_id: l.master_id.clone() })],
-            None => Vec::new(),
-        },
-    }
 
-    })
-}
+
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -266,8 +182,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
     vec![
-        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::snapshot_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide {
             index: 1,
             slide: Slide { id: "new".into(), layout_id: Some("layout1".into()), shapes: vec![SlideShape::Table { frame, rows: vec![SlideTableRow { cells: vec![SlideTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] }], notes: Vec::new() },
@@ -295,18 +209,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️rewrites/🦀️.rs"]
-mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔃️reverses-the-slide-order/🦀️.rs"]
-mod set_snapshot_reverses_the_slide_order;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

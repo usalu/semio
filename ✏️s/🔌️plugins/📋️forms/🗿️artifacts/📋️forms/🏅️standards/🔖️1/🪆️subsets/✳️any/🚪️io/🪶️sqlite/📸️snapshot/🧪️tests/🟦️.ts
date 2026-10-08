@@ -2,7 +2,7 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import fixture from"../🧫️fixtures/🔣️.json";
-import * as snapshot from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import * as snapshot from"../🟦️.ts";
 import{answerError}from"../../../../🧬️schema/✅️validation/🟦️.ts";
 import{prepareResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -15,7 +15,7 @@ function specimen():any{
  const q=fixture.question,values=fixture.values.map(portableValue),child=(value:typeof fixture.structure)=>({childId:value.childId,target:{artifactId:value.artifactId,dialect:{artifactKind:value.artifactKind,standard:value.standard,subset:value.subset}}});
  return{schema:fixture.schema,id:fixture.id,version:fixture.version,title:fixture.title,definition:{steps:[{...fixture.step,blocks:[{id:q.id,label:q.label,kind:q.kind,description:q.description,required:q.required,placeholder:q.placeholder,default:{kind:"array",items:values},min:binary64Value({bits:BigInt("0x"+q.minimumBits)}),max:binary64Value({bits:BigInt("0x"+q.maximumBits)}),step:binary64Value({bits:BigInt("0x"+q.incrementBits)}),unit:q.unit,text:q.text,options:q.options,fields:q.fields.map(f=>({key:f.key,...("label"in f?{label:f.label}:{}),value:binary64Value({bits:BigInt("0x"+f.valueBits)})})),schema:q.questionSchema,src:q.src,accept:q.accept,exampleId:q.exampleId,params:portableValue(fixture.values[8]),condition:{kind:"eq",left:{kind:"const",value:portableValue(fixture.values[2])},right:{kind:"or",items:[{kind:"var",name:"answer"},{kind:"truthy",expr:{kind:"and",items:[]}}]}}}]}]},responses:[{id:fixture.response.id,submittedAt:Number(fixture.response.submittedAt),definitionVersion:fixture.response.definitionVersion,answers:values.map((value,i)=>({questionId:"answer"+i,label:"Label"+i,kind:"free",value}))}],structure:child(fixture.structure),results:child(fixture.results)};
 }
-function codec(){const owner=snapshot as Record<string,any>;if(typeof owner.formsSnapshotToSqliteDatabase!=="function")throw Error("missing actual Forms source provider");return{to:owner.formsSnapshotToSqliteDatabase,from:owner.formsSnapshotFromSqliteDatabase,guard:owner.validateFormsSnapshotSqliteDialect};}
+function codec(){return{to:snapshot.formsSnapshotToSqliteDatabase,from:snapshot.formsSnapshotFromSqliteDatabase,guard:snapshot.validateFormsSnapshotSqliteDialect};}
 test("Forms complete neutral state survives third-party serialization and editable typed joins",async()=>{
  const {to,from,guard}=codec(),original=specimen(),database:SqliteDatabase=await to(original),bytes=await exportSqliteDatabase(database);const oracle=Database.deserialize(bytes);
  try{expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(oracle.query("SELECT high,low FROM forms_unsigned ORDER BY id LIMIT 1").get()).toEqual({high:4294967295,low:4294967295});expect(oracle.query("SELECT printf('%016llx',value_ieee754_bits) AS bits,value_numeric_class,value FROM forms_float ORDER BY id LIMIT 1").get()).toEqual({bits:"fff0000000000123",value_numeric_class:"nan",value:null});expect(await from(await importSqliteDatabase(oracle.serialize()))).toEqual(original);

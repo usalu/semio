@@ -12,10 +12,10 @@ fn nested(shape:Option<&Shape>,control:&mut NativeEncodeControl<'_>)->Result<Opt
 #[derive(Clone, Copy)]
 struct Symbol<'a>{text:&'a str,forced:bool}
 struct Symbols<'a>{entries:Vec<Symbol<'a>>}
-enum DynamicItems<'a>{Array(std::slice::Iter<'a,DslValue>),Object(std::slice::Iter<'a,(String,DslValue)>),Sorted(std::vec::IntoIter<(usize,&'a (String,DslValue))>)}
+enum DynamicItems<'a>{Array(std::slice::Iter<'a,DslValue>),Object(std::slice::Iter<'a,(String,DslValue)>)}
 struct DynamicFrame<'a>{items:DynamicItems<'a>,depth:u16}
 impl<'a> DynamicFrame<'a>{
-    fn next(&mut self)->Option<(Option<&'a str>,&'a DslValue)>{match &mut self.items{DynamicItems::Array(items)=>items.next().map(|value|(None,value)),DynamicItems::Object(items)=>items.next().map(|(key,value)|(Some(key.as_str()),value)),DynamicItems::Sorted(items)=>items.next().map(|(_,(key,value))|(Some(key.as_str()),value))}}
+    fn next(&mut self)->Option<(Option<&'a str>,&'a DslValue)>{match &mut self.items{DynamicItems::Array(items)=>items.next().map(|value|(None,value)),DynamicItems::Object(items)=>items.next().map(|(key,value)|(Some(key.as_str()),value))}}
 }
 fn dynamic_child_depth(depth:u16,maximum:u16)->Result<u16,PackRefusal>{depth.checked_add(1).filter(|next|*next<=maximum).ok_or_else(||ValueError::new(ValueRefusalKind::DepthLimit,"Pack dynamic child exceeds declared depth").into())}
 impl<'a> Symbols<'a>{
@@ -112,7 +112,7 @@ impl Encoder<'_,'_,'_,'_>{
                 DslValue::Number(Number::Float(value))=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)?;},
                 DslValue::String(text)=>self.text(text,false,output)?,DslValue::Bytes(bytes)=>self.bytes(bytes,output)?,
                 DslValue::Array(items)=>{output.byte(TAG_LIST,self.control)?;output.varint(items.len()as u64,self.control)?;if !items.is_empty(){let depth=dynamic_child_depth(depth,self.options.limits.max_depth)?;push(&mut frames,DynamicFrame{items:DynamicItems::Array(items.iter()),depth},self.control)?;}},
-                DslValue::Object(items)=>{output.byte(TAG_MAP,self.control)?;output.varint(items.len()as u64,self.control)?;if !items.is_empty(){let depth=dynamic_child_depth(depth,self.options.limits.max_depth)?;let mut sorted=self.control.allocate_vec(items.len())?;for item in items.iter().enumerate(){self.control.checkpoint()?;sorted.push(item);}controlled_schema::sort(&mut sorted,|a,b,control|{let order=controlled_schema::compare_text(&a.1.0,&b.1.0,control)?;Ok(if order==Ordering::Equal{a.0.cmp(&b.0)}else{order})},self.control)?;push(&mut frames,DynamicFrame{items:DynamicItems::Sorted(sorted.into_iter()),depth},self.control)?;}},
+                DslValue::Object(items)=>{output.byte(TAG_MAP,self.control)?;output.varint(items.len()as u64,self.control)?;if !items.is_empty(){let depth=dynamic_child_depth(depth,self.options.limits.max_depth)?;push(&mut frames,DynamicFrame{items:DynamicItems::Object(items.iter()),depth},self.control)?;}},
             }
             loop{let Some(frame)=frames.last_mut()else{return Ok(())};if let Some((key,child))=frame.next(){value=child;depth=frame.depth;if let Some(key)=key{self.text(key,true,output)?;}continue 'visit;}frames.pop();}
         }

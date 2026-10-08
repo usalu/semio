@@ -1,5 +1,5 @@
 //! 📐️ Change Layout direct payload and owned behavior.
-use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowLayoutEntry, FlowMutation, WidgetLayout};
+use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowLayoutEntry, FlowMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,21 +19,19 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Layout(self.entries.clone())))
     }
     fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let mut layout: std::collections::BTreeMap<String, WidgetLayout> = base.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
-        let mut inverse = Vec::with_capacity(self.entries.len());
-        for entry in &self.entries {
-            let previous = layout.get(&entry.id).cloned();
-            inverse.push(FlowMutation::ChangeLayout(Self { entries: vec![FlowLayoutEntry { id: entry.id.clone(), layout: previous }] }));
-            match &entry.layout {
-                Some(value) => { layout.insert(entry.id.clone(), value.clone()); }
-                None => { layout.remove(&entry.id); }
-            }
-        }
-        inverse
-    
-    })())
-}
+        Ok(self
+            .entries
+            .iter()
+            .enumerate()
+            .map(|(at, entry)| {
+                let previous = match self.entries[..at].iter().rev().find(|earlier| earlier.id == entry.id) {
+                    Some(earlier) => earlier.layout.clone(),
+                    None => base.layout.get(&entry.id).cloned(),
+                };
+                FlowMutation::ChangeLayout(Self { entries: vec![FlowLayoutEntry { id: entry.id.clone(), layout: previous }] })
+            })
+            .collect())
+    }
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Change layout", "Layout ändern")
     }

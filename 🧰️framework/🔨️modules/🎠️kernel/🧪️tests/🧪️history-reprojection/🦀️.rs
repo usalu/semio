@@ -34,6 +34,9 @@ fn every_case_reads_to_its_status_in_both_locales() {
             assert_eq!(status.fault.as_deref(), case["fault"].as_str(), "{name} ({column}) fault");
             assert!(status.fault.as_deref().is_none_or(|code| !status.text.contains(code)), "{name} ({column}) never shows its raw code");
             assert_eq!(history_reprojection_status(&reprojection, Terminology::Reuse, locale), status, "{name} ({column}) is terminology-invariant");
+            if let Some(processed) = reprojection.processed {
+                eprintln!("[DEBUG] history processed native reprojection locale={column} completed={processed} text={}", status.text);
+            }
         }
     }
 }

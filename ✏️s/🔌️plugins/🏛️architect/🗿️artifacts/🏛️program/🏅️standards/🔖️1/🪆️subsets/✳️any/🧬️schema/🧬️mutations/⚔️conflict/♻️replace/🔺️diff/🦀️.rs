@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚔️conflicts` per Wave C.
 
 use super::ReplaceConflict;
-use crate::diff::{ProgramConflictsDelta, ProgramConflictsPatchEntry};
+use crate::diff::ProgramConflictsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceConflict, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.conflicts.iter().find(|row| row.header.id == payload.conflict.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No conflict exists with this id.", [payload.conflict.header.id.0.clone()]);
+    let id = &payload.conflict.header.id;
+    let Some(position) = base.conflicts.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No conflict exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.conflict {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This conflict already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.conflicts[position] == payload.conflict {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This conflict already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.conflict).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { conflicts: Some(ProgramConflictsDelta { patched: vec![ProgramConflictsPatchEntry { id: payload.conflict.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.conflicts.len()).then(|| base.conflicts.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { conflicts: Some(ProgramConflictsDelta { removed: vec![id.0.clone()], added: vec![payload.conflict.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

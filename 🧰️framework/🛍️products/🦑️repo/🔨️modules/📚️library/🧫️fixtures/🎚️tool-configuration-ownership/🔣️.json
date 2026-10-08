@@ -123,8 +123,6 @@
     "vscode-test-cli-config"
   ],
   "registration": {
-    "name": "🧹clean🧩️taxonomy🎚️tool-configuration-ownership",
-    "command": "bun nx run @semio-tech/repo-lib:test-tool-configuration-ownership",
     "target": "test-tool-configuration-ownership"
   },
   "consumers": [

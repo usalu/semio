@@ -1,0 +1,17 @@
+{
+  "artifact": null,
+  "hostSnapshot": null,
+  "generation": {
+    "generations": [
+      {
+        "id": "gen-1",
+        "name": "Baseline",
+        "values": {
+          "storeys": 3
+        }
+      }
+    ],
+    "selectedGenerationId": "gen-1",
+    "previewText": "Imported preview 😀\n\\ \""
+  }
+}

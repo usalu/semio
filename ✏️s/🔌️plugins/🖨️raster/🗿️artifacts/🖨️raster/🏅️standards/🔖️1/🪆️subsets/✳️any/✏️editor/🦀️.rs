@@ -601,6 +601,7 @@ impl RasterDownloadProofs {
 /// 📬️ The document lane's one-item retained preparation. Without it every route declaring
 /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
 /// stays dispatch-dead, no matter how it is classified.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RasterStorePreparationFactory;
 
 struct RasterStorePreparation {
@@ -764,6 +765,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
 /// (`setBrushSize`/`setBrushOpacity`/`setCompositeViewport`/`setCamera`/`setCameraZoom`/
 /// publication contract outright when this factory is absent. `RasterConfig` is a whole-record config
 /// (`store::impl_whole_record_config!`), so its `Diff` is the config value itself.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RasterConfigStorePreparationFactory;
 
 struct RasterConfigStorePreparation {

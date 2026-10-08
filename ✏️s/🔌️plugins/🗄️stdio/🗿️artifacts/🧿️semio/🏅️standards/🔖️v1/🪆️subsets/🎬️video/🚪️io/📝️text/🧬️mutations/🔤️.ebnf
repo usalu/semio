@@ -1,7 +1,6 @@
 (* stdio.semio.video mutation text grammar: "<keyword> arg=value ...". See
    📖️.grammar.semio for the fully-spelled-out ABNF-flavored version of this same shape. *)
-op = "set-snapshot snapshot=", value
-   | "insert-stream index=", index, " stream=", stream value
+op = "insert-stream index=", index, " stream=", stream value
    | "remove-stream index=", index
    | "set-stream-meta index=", index, " kind=", kind, " codec=", hex string, " width=", index, " height=", index, " rate=", rational
    | "insert-sample stream-index=", index, " index=", index, " sample=", sample value

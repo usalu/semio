@@ -8,9 +8,12 @@ use store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirem
 const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
 
 /// 🌊️ Exact local and peer snapshot ownership, including variable-length UTF-8 identifiers.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct FlowPresenceRetirementFactory;
 
 impl SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowPresence>) -> usize { std::mem::size_of::<FlowPresenceRetirement>() }
+
     fn retire(&self, root: Arc<FlowPresence>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(FlowPresenceRetirement { root: ManuallyDrop::new(Some(root)), domain: FlowRetirement::default(), debt: 0 })
     }

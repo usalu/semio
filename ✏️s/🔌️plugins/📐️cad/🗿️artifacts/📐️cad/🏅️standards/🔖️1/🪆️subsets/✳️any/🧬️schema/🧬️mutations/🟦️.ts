@@ -63,6 +63,11 @@ export interface DeleteDrawing {
   childId: string;
 }
 
+/** 🧊️ Inserts an owned topology child at its exact ordered position. */
+export interface CreateBrep { childId: string; target: ArtifactRef; index: number }
+/** 🧹️ Removes one topology child by its local identity. */
+export interface DeleteBrep { childId: string }
+
 /** ➕️ `create-node` payload — brings a new node into existence in the scene graph tree. */
 export interface CreateNode {
   node: CadNode;
@@ -146,7 +151,26 @@ export type CadMutation =
   | ({ mutation: "changeReferenceWidth" } & ChangeReferenceWidth)
   | ({ mutation: "moveReference" } & MoveReference)
   | ({ mutation: "replaceReferenceMedia" } & ReplaceReferenceMedia)
-  | ({ mutation: "replaceReferences" } & ReplaceReferences);
+  | ({ mutation: "replaceReferences" } & ReplaceReferences)
+  | ({ mutation: "createBrep" } & CreateBrep)
+  | ({ mutation: "deleteBrep" } & DeleteBrep);
 
 /** 🪪️ Admits the exact owned child identity without native URI interpretation. */
-export function parseCadChildPayload(value:unknown,subset:"model"|"drawing"):{childId:string;target:ArtifactRef}{if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("CAD child payload must be an object");const row=value as Record<string,unknown>;if(Object.keys(row).some(k=>k!=="childId"&&k!=="target")||typeof row.childId!=="string"||row.childId==="")throw new TypeError("CAD child identity is invalid");const target=parseArtifactRef(row.target);if(target.artifactId===""||target.dialect.artifactKind!=="s.stdio.semio"||target.dialect.standard!=="v1"||target.dialect.subset!==subset)throw new TypeError("CAD child target dialect differs");return{childId:row.childId,target};}
+export function parseCadChildPayload(value:unknown,subset:"model"|"drawing"|"brep"):{childId:string;target:ArtifactRef}{if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("CAD child payload must be an object");const row=value as Record<string,unknown>;if(Object.keys(row).some(k=>k!=="childId"&&k!=="target")||typeof row.childId!=="string"||row.childId==="")throw new TypeError("CAD child identity is invalid");const target=parseArtifactRef(row.target);if(target.artifactId===""||target.dialect.artifactKind!=="s.stdio.semio"||target.dialect.standard!=="v1"||target.dialect.subset!==subset)throw new TypeError("CAD child target dialect differs");return{childId:row.childId,target};}
+
+
+/** 📍️ Admits an exact topology child and representable ordered insertion index. */
+export function parseCreateBrep(value: unknown): CreateBrep {
+  if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("CAD brep payload must be an object");
+  const row=value as Record<string,unknown>;
+  if(Object.keys(row).some(key=>!["childId","target","index"].includes(key))||typeof row.index!=="number"||!Number.isSafeInteger(row.index)||row.index<0||row.index>4294967295)throw new TypeError("CAD brep insertion index is invalid");
+  const child=parseCadChildPayload({childId:row.childId,target:row.target},"brep");
+  return {...child,index:row.index};
+}
+/** 🪪️ Admits the exact local topology child selected for removal. */
+export function parseDeleteBrep(value: unknown): DeleteBrep {
+  if(value===null||typeof value!=="object"||Array.isArray(value))throw new TypeError("CAD brep payload must be an object");
+  const row=value as Record<string,unknown>;
+  if(Object.keys(row).length!==1||typeof row.childId!=="string"||row.childId==="")throw new TypeError("CAD brep removal identity is invalid");
+  return {childId:row.childId};
+}

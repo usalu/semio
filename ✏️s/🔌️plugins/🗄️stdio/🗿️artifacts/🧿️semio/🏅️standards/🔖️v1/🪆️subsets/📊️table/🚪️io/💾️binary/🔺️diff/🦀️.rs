@@ -22,38 +22,23 @@ use crate::standards::v1::subsets::table::io::text::snapshot::{dec_column};
 use crate::standards::v1::subsets::table::io::text::snapshot::{enc_column};
 
 impl protocol::DiffBinary for SemioTableDiff {
-/// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are
-/// two REAL fixed fields; each present section follows as a real varint count + per-item
-/// binary encoding (reusing the snapshot facet's own `write_column`/`read_column` and the
-/// value subset's own `enc_semio_value_bin`/`dec_semio_value_bin` for row cells).
+/// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are two REAL fixed fields; each present
+/// section follows as a varint byte length plus the same `enc_indexed_triple` text this facet's `print_diff` emits.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::table::io::binary::snapshot::write_column;
-    use crate::standards::v1::subsets::value::io::binary::diff::enc_semio_value_bin;
+    use crate::standards::v1::subsets::table::io::text::diff::{enc_columns, enc_rows};
     let presence: u8 = (if self.columns.is_some() { 0b0000_0001 } else { 0 }) | (if self.rows.is_some() { 0b0000_0010 } else { 0 });
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
-    if let Some(list) = &self.columns {
-        store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-        for c in &list.values {
-            write_column(&mut out, c);
-        }
-    }
-    if let Some(list) = &self.rows {
-        store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-        for r in &list.values {
-            store::pack_rt::write_varint_u64(&mut out, r.cells.len() as u64);
-            for cell in &r.cells {
-                enc_semio_value_bin(cell, &mut out);
-            }
-        }
+    for section in [self.columns.as_ref().map(enc_columns), self.rows.as_ref().map(enc_rows)].into_iter().flatten() {
+        store::pack_rt::write_varint_u64(&mut out, section.len() as u64);
+        out.extend_from_slice(section.as_bytes());
     }
     Ok(out)
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::table::io::binary::snapshot::read_column;
-    use crate::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
-    use crate::standards::v1::subsets::value::io::binary::diff::dec_semio_value_bin;
+    use crate::standards::v1::subsets::table::io::text::diff::{dec_columns, dec_rows};
+    let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 2, detail };
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
     }
@@ -62,33 +47,14 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     }
     let presence = bytes[1];
     let mut reader = store::ByteReader::new(&bytes[2..]);
-    let columns = if presence & 0b0000_0001 != 0 {
-        let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff columns count", offset: 2, detail: e.to_string() })?;
-        let mut values = Vec::with_capacity(count as usize);
-        for _ in 0..count {
-            values.push(read_column(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff column", offset: 2, detail: e })?);
-        }
-        Some(SemioTableColumnList { values })
-    } else {
-        None
+    let mut section = |what: &'static str| -> Result<String, protocol::ProtocolError> {
+        let length = reader.read_varint_u64().map_err(|e| malformed(what, e.to_string()))? as usize;
+        let raw = reader.read_bytes(length).map_err(|e| malformed(what, e.to_string()))?;
+        String::from_utf8(raw.to_vec()).map_err(|e| malformed(what, e.to_string()))
     };
-    let rows = if presence & 0b0000_0010 != 0 {
-        let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff rows count", offset: 2, detail: e.to_string() })?;
-        let mut values = Vec::with_capacity(count as usize);
-        for _ in 0..count {
-            let cell_count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff row cell count", offset: 2, detail: e.to_string() })?;
-            let mut cells = Vec::with_capacity(cell_count as usize);
-            for _ in 0..cell_count {
-                cells.push(dec_semio_value_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff cell", offset: 2, detail: e })?);
-            }
-            values.push(SemioTableRow { cells });
-        }
-        Some(SemioTableRowList { values })
-    } else {
-        None
-    };
+    let columns = if presence & 0b0000_0001 != 0 { Some(dec_columns(&section("diff columns")?).map_err(|e| malformed("diff columns", e))?) } else { None };
+    let rows = if presence & 0b0000_0010 != 0 { Some(dec_rows(&section("diff rows")?).map_err(|e| malformed("diff rows", e))?) } else { None };
     Ok(SemioTableDiff { columns, rows })
-}
 }
 }
 pub use diff_codec::*;

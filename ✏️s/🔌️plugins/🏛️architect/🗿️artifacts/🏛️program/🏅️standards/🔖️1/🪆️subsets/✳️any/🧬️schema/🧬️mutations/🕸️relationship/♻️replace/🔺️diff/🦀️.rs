@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔗relationships` per Wave C.
 
 use super::ReplaceRelationship;
-use crate::diff::{ProgramRelationshipsDelta, ProgramRelationshipsPatchEntry};
+use crate::diff::ProgramRelationshipsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceRelationship, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.relationships.iter().find(|row| row.header.id == payload.relationship.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No relationship exists with this id.", [payload.relationship.header.id.0.clone()]);
+    let id = &payload.relationship.header.id;
+    let Some(position) = base.relationships.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No relationship exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.relationship {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This relationship already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.relationships[position] == payload.relationship {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This relationship already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.relationship).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { relationships: Some(ProgramRelationshipsDelta { patched: vec![ProgramRelationshipsPatchEntry { id: payload.relationship.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.relationships.len()).then(|| base.relationships.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { relationships: Some(ProgramRelationshipsDelta { removed: vec![id.0.clone()], added: vec![payload.relationship.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

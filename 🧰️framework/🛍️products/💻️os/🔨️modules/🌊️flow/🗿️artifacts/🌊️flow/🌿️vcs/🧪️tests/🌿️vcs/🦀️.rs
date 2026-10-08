@@ -47,7 +47,7 @@ fn retire_diff(diff: FlowDiff) {
 }
 fn apply(base: &FlowHostSnapshot, mutation: &FlowMutation) -> FlowHostSnapshot {
     let (diff, _) = mutation.diff(base).into_parts();
-    let next = diff.apply(base).expect("valid Flow delta");
+    let next = crate::os_spr::apply_diff(&diff, base).expect("valid Flow delta");
     retire_diff(diff);
     next
 }
@@ -207,12 +207,12 @@ fn structural_composition_is_ordered() {
         let mutation = operation(index);
         let (diff, _) = mutation.diff(&current).into_parts();
         retire_mutation(mutation);
-        let next = diff.apply(&current).expect("sequential diff");
+        let next = crate::os_spr::apply_diff(&diff, &current).expect("sequential diff");
         combined.absorb(diff);
         current.retire_cold();
         current = next;
     }
-    let result = combined.apply(&before).expect("composed diff");
+    let result = crate::os_spr::apply_diff(&combined, &before).expect("composed diff");
     assert_eq!(result, current);
     assert_eq!(combined.deltas.len(), 6);
     assert!(third_party_json(&combined).get("operations").is_none());
@@ -261,7 +261,7 @@ fn typed_rejection_is_atomic() {
     ];
     for mutation in invalid {
         let (diff, _) = mutation.diff(&before).into_parts();
-        assert!(diff.apply(&before).is_err());
+        assert!(crate::os_spr::apply_diff(&diff, &before).is_err());
         retire_diff(diff);
         retire_mutation(mutation);
         assert_eq!(third_party_json(&before), original);

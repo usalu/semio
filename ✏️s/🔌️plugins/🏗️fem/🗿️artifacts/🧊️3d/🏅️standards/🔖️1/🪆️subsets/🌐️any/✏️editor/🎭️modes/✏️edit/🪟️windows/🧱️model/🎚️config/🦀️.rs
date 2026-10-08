@@ -75,14 +75,14 @@ impl store::ArtifactPack for Fem3dModelWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(Fem3dModelWindowConfig);
+impl store::ConfigRecord for Fem3dModelWindowConfig {}
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Fem3dModelWindowConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "update")]
+    Update {
         #[dsl(block)]
-        config: Box<Fem3dModelWindowConfig>,
+        patch: Box<Fem3dModelWindowConfigPatch>,
     },
 }
 
@@ -105,14 +105,14 @@ impl protocol::OpBinary for Fem3dModelWindowConfigMutation {
 }
 
 impl protocol::Mutation<Fem3dModelWindowConfig> for Fem3dModelWindowConfigMutation {
-    type Diff = Fem3dModelWindowConfig;
+    type Diff = Fem3dModelWindowConfigPatch;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config",
         semantic_kind: "set-window-config",
         display_name: "Set FEM 3D Model Window Configuration",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "Update",
         payload_schema: "fem.3d.modelwindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -126,17 +126,19 @@ impl protocol::Mutation<Fem3dModelWindowConfig> for Fem3dModelWindowConfigMutati
         &Self::DESCRIPTORS[0]
     }
     fn diff(&self, base: &Fem3dModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { config } if config.as_ref() == base => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "FEM window configuration is already current."),
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()),
+        let Self::Update { patch } = self;
+        let changed = patch.against(base);
+        if changed == Fem3dModelWindowConfigPatch::default() {
+            protocol::MutationOutcome::new(changed).warning("mutation.no-op", "Window configuration is already current.")
+        } else {
+            protocol::MutationOutcome::new(changed)
         }
     }
     fn inverse(&self, base: &Fem3dModelWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: Box::new(base.clone()) }]
-    
-    })())
-}
+        let Self::Update { patch } = self;
+        let changed = patch.against(base);
+        Ok(if changed == Fem3dModelWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: Box::new(protocol::DiffAlgebra::inverse(&changed, base)) }] })
+    }
 }
 
 pub struct Fem3dModelWindowConfigOwner;
@@ -169,7 +171,7 @@ pub fn captured<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Option<F
 
 /// 🎚️ The whole-record publication into one exact model-window partition.
 pub fn addressed_to(window_id: &str, config: Fem3dModelWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
-    semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(window_id, Fem3dModelWindowConfigMutation::Snapshot { config: Box::new(config) })
+    semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(window_id, Fem3dModelWindowConfigMutation::Update { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) })
 }
 
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem3dModelWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
@@ -178,7 +180,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem3dModelWin
     if kind != <Fem3dModelWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
         return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(id, Fem3dModelWindowConfigMutation::Snapshot { config: Box::new(config) }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(id, Fem3dModelWindowConfigMutation::Update { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&config)) }))
 }
 
 #[cfg(test)]

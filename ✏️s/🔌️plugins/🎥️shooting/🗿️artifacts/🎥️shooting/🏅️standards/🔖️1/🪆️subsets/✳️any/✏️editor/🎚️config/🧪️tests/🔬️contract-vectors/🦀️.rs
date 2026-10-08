@@ -15,9 +15,9 @@ fn shooting_configuration_contract_vectors_match_the_json_oracle() {
         assert_eq!(ShootingConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
         let outcome = mutation.diff(&base);
         assert!(outcome.messages().is_empty());
-        let next = outcome.diff().apply(&base).expect("apply diff");
+        let next = protocol::apply_diff(outcome.diff(), &base).expect("apply diff");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
-        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("apply inverse"));
         assert_eq!(restored, base);
     }
 }

@@ -19,8 +19,19 @@ impl crate::value::FromValue for CausalAddDiff {
         Ok(Self { delta })
     }
 }
+impl crate::mutation::DiffAlgebra<i64> for CausalAddDiff {
+    fn inverse(&self, _base: &i64) -> Self {
+        Self { delta: -self.delta }
+    }
+    fn between(base: &i64, other: &i64) -> Self {
+        Self { delta: other - base }
+    }
+    fn is_empty(&self) -> bool {
+        self.delta == 0
+    }
+}
 impl crate::mutation::MutationDiff<i64> for CausalAddDiff {
-    fn apply(&self, base: &i64) -> crate::mutation::MutationApplyResult<i64> {
+    fn apply(&self, base: &i64, _capability: crate::mutation::ApplyCapability) -> crate::mutation::MutationApplyResult<i64> {
         Ok(base + self.delta)
     }
     fn absorb(&mut self, other: Self) {
@@ -676,3 +687,37 @@ fn ops_vec_binary_round_trips_including_empty() {
     assert_eq!(decode_ops_vec(&encode_ops_vec(&ops)).unwrap(), ops);
 }
 //#endregion 🔖️EnvelopeCodec
+
+#[test]
+fn causal_empty_fixed_slots_keep_each_allocation_under_declared_admission(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧫️fixtures/🔣️.json")).unwrap();
+    let (dag,requested)=crate::test_allocation::observe(MutationDag::new);
+    assert!(dag.terminal_is_empty());assert!(requested>0);
+    let original=std::mem::size_of_val(&*dag.envelopes.slots);
+    assert!(original<=law["admissionBytes"].as_u64().unwrap() as usize,"empty causal payload allocation {original} exceeds original admission");
+    let (_,birth,freed)=crate::test_allocation::observe_backing(||drop(dag));
+    assert_eq!(birth,0);assert_eq!(freed,requested);
+    println!("[DEBUG] original causal slot shell requested={requested} largest-payload-allocation={original} exact System release={freed}");
+}
+
+#[test]
+fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_allocation(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧫️fixtures/🔣️.json")).unwrap();
+    for case in law["cases"].as_array().unwrap(){
+        let count=case["occupied"].as_u64().unwrap() as usize;
+        let(mut dag,birth)=crate::test_allocation::observe(MutationDag::new);
+        assert!(birth>0);assert!(!dag.backing_is_empty());
+        for i in 0..count { dag.seed_applied(crate::ids::MutationId(format!("source-{i}"))).unwrap(); }
+        let pointers=dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>();
+        let(result,requested,released)=crate::test_allocation::observe_backing(||dag.close_backing_step(1,262144));
+        if count>0 { assert_eq!(result,(0,0,false));assert_eq!((requested,released),(0,0));assert_eq!(dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>(),pointers); }
+        let mut identities=0;while let Some(owner)=dag.take_one_close_owner(){match owner{MutationDagCloseOwner::Identity(id)=>{assert!(pointers.contains(&id.as_ptr()));identities+=1;drop(id);},MutationDagCloseOwner::Envelope(_)=>panic!("seed-only law")}}
+        assert_eq!(identities,count);assert!(dag.terminal_is_empty());assert!(!dag.backing_is_empty());
+        let mut freed=if count==0 { result.1 } else { 0 };let mut turns=0;
+        while !dag.backing_is_empty(){assert!(turns<law["maximumCloseTurns"].as_u64().unwrap()as usize);let query=dag.next_backing_release_byte_demand();assert!(query<=law["admissionBytes"].as_u64().unwrap() as usize);
+            for(items,bytes)in [(0,query),(1,query.saturating_sub(1))]{let(step,requested,released)=crate::test_allocation::observe_backing(||dag.close_backing_step(items,bytes));assert_eq!(step,(0,0,false));assert_eq!((requested,released),(0,0));assert_eq!(dag.next_backing_release_byte_demand(),query);}
+            let(step,requested,released)=crate::test_allocation::observe_backing(||dag.close_backing_step(1,query));assert_eq!(requested,0);assert_eq!(released,query);assert_eq!(step.0,1);assert_eq!(step.1,released);freed+=released;turns+=1;
+        }
+        assert_eq!(freed,birth);assert_eq!(dag.next_backing_release_byte_demand(),0);let(_,requested,released)=crate::test_allocation::observe_backing(||drop(dag));assert_eq!((requested,released),(0,0));println!("[DEBUG] causal case={} exact-original-slots={count} pages/metadata={turns} Systemrelease={freed}; zero/one-below retain; terminalDrop0heap",case["name"]);
+    }
+}

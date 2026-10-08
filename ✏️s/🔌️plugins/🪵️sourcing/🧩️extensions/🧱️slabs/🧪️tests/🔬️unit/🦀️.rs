@@ -1,6 +1,9 @@
 
 use super::*;
 
+#[path = "../../../🧪️tests/🔬️unit/🔮️oracle/🦀️.rs"]
+mod json_oracle;
+
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_module_for_sourcing_curation() {
     let manifest = bundle().into_manifest_cold().unwrap();
@@ -14,6 +17,9 @@ async fn bundle_contributes_module_for_sourcing_curation() {
     assert_eq!(topic.payload["moduleId"].as_str(), Some("slabs"));
     let typology_json = topic.payload["typologyJson"].as_str().unwrap();
     let kinds_json = topic.payload["kindsJson"].as_str().unwrap();
-    assert!(semio_framework_os_kernel::json::from_json_str::<semio_s_artifact_sourcing_curation::schema::TypologyNode>(typology_json).is_ok());
-    assert!(semio_framework_os_kernel::json::from_json_str::<Vec<semio_s_artifact_sourcing_curation::ObjectKind>>(kinds_json).is_ok());
+    let typology = semio_framework_pack_json::from_json_str::<semio_s_artifact_sourcing_curation::schema::TypologyNode>(typology_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let kinds = semio_framework_pack_json::from_json_str::<Vec<semio_s_artifact_sourcing_curation::ObjectKind>>(kinds_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(typology, SlabsModule.typology());
+    assert_eq!(kinds, SlabsModule.demo_kinds());
+    json_oracle::verify(SlabsModule.module_id(), typology_json, kinds_json);
 }

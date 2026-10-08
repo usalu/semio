@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -51,52 +50,49 @@
   "quality": null,
   "artifacts": null,
   "assumptions": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "assumption-a",
-        "patch": {
-          "name": "Assumption A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "statement": {
-            "text": ""
-          },
-          "basis": null,
-          "confidenceLevel": null,
-          "impactIfFalse": null,
-          "relatedEntityIds": [],
-          "validationStatus": "passed",
-          "validatedBy": null,
-          "validationDate": null,
+        "name": "Assumption A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "reviewCycle": null,
-          "source": null,
-          "category": null,
-          "dependencies": [],
-          "mitigation": [],
-          "linkedRequirementIds": [],
-          "linkedRiskIds": [],
-          "expirationDate": null,
-          "statusNotes": [],
-          "artifactRefs": []
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "statement": {
+          "text": ""
+        },
+        "basis": null,
+        "confidenceLevel": null,
+        "impactIfFalse": null,
+        "relatedEntityIds": [],
+        "validationStatus": "passed",
+        "validatedBy": null,
+        "validationDate": null,
+        "ownerId": null,
+        "reviewCycle": null,
+        "source": null,
+        "category": null,
+        "dependencies": [],
+        "mitigation": [],
+        "linkedRequirementIds": [],
+        "linkedRiskIds": [],
+        "expirationDate": null,
+        "statusNotes": [],
+        "artifactRefs": []
       }
     ],
+    "removed": [
+      "assumption-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "constraints": null,
@@ -114,9 +110,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

@@ -1,0 +1,4 @@
+> bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts" canonical-bootstrap-folder-mirror-check process
+
+[DEBUG] isolated Nx verification test-owner-command
+canonical-bootstrap-folder-mirror: phase=process payloads=canonical-pair sqlite=1 sha256=2 frontiers=10 stale=7 hostile=8 mixed=1 monotonic-epoch=1

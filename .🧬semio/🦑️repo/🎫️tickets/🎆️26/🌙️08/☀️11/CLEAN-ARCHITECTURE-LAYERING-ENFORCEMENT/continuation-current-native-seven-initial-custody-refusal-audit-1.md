@@ -1,0 +1,3 @@
+# Fresh Seven Negative Endpoint Correction
+
+The first audit attempted to read tsconfig.base.json without first examining its expected null state. Direct inspection confirms all three endpoint checks for all three owners intentionally bind absent tsconfig.base.json, expected null and byteCount zero. All declared destinations are absent. This is consistent negative custody, not missing captured nonnull bytes. The earlier refusal interpretation is withdrawn; no bytes were restored and no acceptance beyond this negative endpoint correction is inferred. Complete source audit must explicitly distinguish absence from retained body checks.

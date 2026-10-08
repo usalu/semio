@@ -2,7 +2,7 @@
 
 use super::remove_output_intent::RemoveOutputIntent;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 pub const OUTPUT_INTENT_SUBTYPE: &str = "GTS_PDFA1";
@@ -20,9 +20,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetOutputIntent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intent", kind: "set-output-intent", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::set_output_intent(&mut next, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE);
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::output_intent_rows(base, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {

@@ -154,6 +154,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJo
 //#region 📬️StorePreparation
 const PLAYGROUND_STORE_MAXIMUM_BYTES: usize = 8_192;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct PlaygroundStorePreparationFactory;
 
 struct PlaygroundStorePreparation {
@@ -212,7 +213,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, Playgroun
 
 impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -225,7 +226,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
                 let mutation = self.mutation.take().ok_or_else(|| "Playground preparation lost its mutation owner".to_string())?;
                 let completed_bytes = playground_mutation_bytes(&mutation)?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Playground mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(&mutation.diff(base.get()).into_parts().0, base.get()).map_err(|_| "Playground mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };

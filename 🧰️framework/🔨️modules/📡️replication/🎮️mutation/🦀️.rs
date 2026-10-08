@@ -91,6 +91,20 @@ impl MutationApplyError {
 /// 🛡️ Crate-owned result of applying a diff to a snapshot.
 pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 
+/// 🔑️ Proof that the caller is the central applier. The private field makes this module the only place that can construct it,
+/// and [`apply_diff`] is the only function here that does.
+#[derive(Clone, Copy, Debug)]
+pub struct ApplyCapability {
+    _sealed: (),
+}
+
+/// 🎯️ THE central applier: the only mint point of [`ApplyCapability`] and the one callable entry that turns a diff into a
+/// snapshot. Store lanes, replay, merge, backbone, plugin transaction folds, tool folds, the db and composite planners all
+/// route through it; mutation leaves never call [`MutationDiff::apply`].
+pub fn apply_diff<P, D: MutationDiff<P>>(diff: &D, base: &P) -> MutationApplyResult<P> {
+    diff.apply(base, ApplyCapability { _sealed: () })
+}
+
 /// 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
 /// malformed or base-incompatible persisted diff must return [`MutationApplyError`]; it must never
 /// clamp an index, ignore a missing target, or return the unchanged base as implicit success.
@@ -100,8 +114,10 @@ pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
 /// forced onto `serde` by this supertrait alone; see
 /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 /// 🔍️research/📓️serde-replacement-surface.md`.
-pub trait MutationDiff<P>: Clone + Default + crate::value::ToValue + crate::value::FromValue {
-    fn apply(&self, base: &P) -> MutationApplyResult<P>;
+pub trait MutationDiff<P>: Clone + Default + PartialEq + crate::value::ToValue + crate::value::FromValue + DiffAlgebra<P> {
+    /// 🔑️ Turns the diff into the next snapshot. Callable only with an [`ApplyCapability`], which only [`apply_diff`] mints,
+    /// so leaves cannot apply diffs; a composite diff forwards the capability it received to its sub-diffs.
+    fn apply(&self, base: &P, capability: ApplyCapability) -> MutationApplyResult<P>;
     /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
     /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
@@ -113,7 +129,7 @@ pub trait MutationDiff<P>: Clone + Default + crate::value::ToValue + crate::valu
     /// method's — the CRDT-era concurrent-diff merge helper this docstring used to point at is
     /// deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
     /// LAW: whenever sequential application succeeds,
-    /// `absorb(d1, d2).await.apply(base).await == d1.apply(base).await.and_then(|mid| d2.apply(&mid).await)`, associative
+    /// `apply_diff(&absorb(d1, d2), base) == apply_diff(&d1, base).and_then(|mid| apply_diff(&d2, &mid))`, associative
     /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
     /// rejection; absorb must not manufacture an implicit success path.
     fn absorb(&mut self, other: Self);
@@ -1310,24 +1326,6 @@ impl<D> MutationOutcome<D> {
     /// ➡️ Consumes `self` into its raw `(diff, messages)` parts.
     pub fn into_parts(self) -> (D, Vec<MutationMessage>) {
         (self.diff, self.messages)
-    }
-
-    /// 🛡️ Applies this outcome atomically and converts an apply rejection into a fatal outcome.
-    pub fn apply_to<P>(self, snapshot: &mut P) -> Self
-    where
-        D: Default + MutationDiff<P>,
-    {
-        let (diff, mut messages) = self.into_parts();
-        match diff.apply(snapshot) {
-            Ok(next) => {
-                *snapshot = next;
-                Self { diff, messages }
-            }
-            Err(error) => {
-                messages.push(MutationMessage::fatal(error.code, error.message).at(error.target));
-                Self { diff: D::default(), messages }
-            }
-        }
     }
 
     /// ➕️ Appends one `Info`-level message (e.g. a cascade note).

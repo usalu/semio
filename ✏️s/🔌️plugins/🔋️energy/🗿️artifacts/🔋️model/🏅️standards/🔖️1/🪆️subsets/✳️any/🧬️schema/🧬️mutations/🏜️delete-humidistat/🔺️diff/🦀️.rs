@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteHumidistat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, HumidistatPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeleteHumidistat, base: &EnergyModelSnapshot) -> pr
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.humidistats.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { humidistats: Rows::removing(&base.model.humidistats, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

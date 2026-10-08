@@ -1,0 +1,5 @@
+# Current Renderer Nine Actual Source Controls
+
+Exact GUI900.244001 in both canonical launch files invoked the read-only Bun/Nx command and closed actual Nx0. The receipt is 🗑️generated/current-engine-layout-9/green-1/admission.json, SHA256 `9dcb0c7867466dca0069783fe2949defb4350a37296ac99df6f7a2c80dadeaf2`. It seals one conserved complete Renderer fixture pair, all 60 current bindings, 45 normative/adversarial own JSON and independent JSON5 outcomes and 5 closed own/AJV schema outcomes. Immediate independent binding drift count is 0. Original complete laws, capacities, owner bytes, stacks and threshold are conserved.
+
+The fresh captured11-to-current Store full-body transition, hash and replacement recipe are explicit in the proposal; current Store SHA256 is 3f1d99cf503fbd12fcf43981f747cd7687c74f4064654c25c9c7106c204f73be. Renderer8 and Source17 refusal remain retained. This source receipt admits held joint33 verification only. physicalLayoutAccepted, nativeExecuted, sourceWritesOutsideTicket and publicationReady remain false. All three fresh original native wholes and current applicability guards are still required.

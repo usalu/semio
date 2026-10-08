@@ -38,12 +38,12 @@ pub struct CadReferencePatch {
     pub source_url: Option<String>,
     pub media_kind: Option<String>,
     pub origin: Option<[f64; 3]>,
-    pub orientation: Option<[f64; 4]>,
-    pub scale: Option<f64>,
+    pub orientation: Option<Option<[f64; 4]>>,
+    pub scale: Option<Option<f64>>,
     pub width_world: Option<f64>,
     pub hidden: Option<bool>,
     pub locked: Option<bool>,
-    pub opacity: Option<f64>,
+    pub opacity: Option<Option<f64>>,
 }
 //#endregion 🔖️InternalPatches
 
@@ -55,7 +55,7 @@ pub struct CadReferencePatch {
 /// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
 /// gone — whole-document replace is not an in-history mutation at all (routed through
 /// `ArtifactStore::reset`, see `CadPlayApp::whole_document_operation` returning `None` now).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value_derive::RetireOwned)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CadSnapshot, diff = CadDiff, schema = "cad.cad")]
 pub enum CadMutation {
@@ -78,6 +78,8 @@ pub enum CadMutation {
     MoveReference(move_reference::MoveReference),
     ReplaceReferenceMedia(replace_reference_media::ReplaceReferenceMedia),
     ReplaceReferences(replace_references::ReplaceReferences),
+    CreateBrep(create_brep::CreateBrep),
+    DeleteBrep(delete_brep::DeleteBrep),
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
@@ -104,6 +106,8 @@ pub const KINDS: &[&str] = &[
     "move-reference",
     "replace-reference-media",
     "replace-references",
+    "create-brep",
+    "delete-brep",
 ];
 //#endregion 🔖️Mutations
 
@@ -113,6 +117,7 @@ use super::change_reference_locked;
 use super::change_reference_width;
 use super::create_building_model;
 use super::create_drawing;
+use super::{create_brep, delete_brep};
 use super::create_energy_model;
 use super::create_node;
 use super::create_shape_model;

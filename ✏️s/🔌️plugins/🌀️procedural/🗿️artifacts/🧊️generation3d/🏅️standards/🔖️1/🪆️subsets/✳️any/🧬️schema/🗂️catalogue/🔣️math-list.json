@@ -1,0 +1,274 @@
+{
+  "category": {
+    "id": "math.list",
+    "emoji": "📚️",
+    "order": 430,
+    "label": {
+      "en": "Ranges and lists",
+      "de": "Bereiche und Listen"
+    },
+    "description": {
+      "en": "Create number sequences and read items from lists.",
+      "de": "Zahlenfolgen erzeugen und Elemente aus Listen lesen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "math.range",
+      "category": "math.list",
+      "emoji": "📏️",
+      "label": {
+        "en": "Range",
+        "de": "Bereich"
+      },
+      "description": {
+        "en": "Creates evenly spaced numbers from a start to an end value, both included.",
+        "de": "Erzeugt gleichmäßig verteilte Zahlen von einem Start- bis zu einem Endwert, beide eingeschlossen."
+      },
+      "inputs": [
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Start"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "end",
+          "label": {
+            "en": "End",
+            "de": "Ende"
+          },
+          "description": {
+            "en": "The last number.",
+            "de": "Die letzte Zahl."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "count",
+          "label": {
+            "en": "Count",
+            "de": "Anzahl"
+          },
+          "description": {
+            "en": "How many numbers to create; at least two.",
+            "de": "Wie viele Zahlen erzeugt werden; mindestens zwei."
+          },
+          "type": "integer",
+          "default": 11,
+          "min": 2,
+          "max": 100000,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "numbers",
+          "label": {
+            "en": "Numbers",
+            "de": "Zahlen"
+          },
+          "description": {
+            "en": "The evenly spaced numbers.",
+            "de": "Die gleichmäßig verteilten Zahlen."
+          },
+          "type": "number",
+          "list": true
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.series",
+      "category": "math.list",
+      "emoji": "🪜️",
+      "label": {
+        "en": "Series",
+        "de": "Folge"
+      },
+      "description": {
+        "en": "Creates numbers that grow by a fixed step.",
+        "de": "Erzeugt Zahlen, die um eine feste Schrittweite wachsen."
+      },
+      "inputs": [
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Start"
+          },
+          "description": {
+            "en": "The first number.",
+            "de": "Die erste Zahl."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "step",
+          "label": {
+            "en": "Step",
+            "de": "Schritt"
+          },
+          "description": {
+            "en": "The difference between neighbouring numbers.",
+            "de": "Die Differenz zwischen benachbarten Zahlen."
+          },
+          "type": "number",
+          "default": 1,
+          "step": 0.1
+        },
+        {
+          "name": "count",
+          "label": {
+            "en": "Count",
+            "de": "Anzahl"
+          },
+          "description": {
+            "en": "How many numbers to create.",
+            "de": "Wie viele Zahlen erzeugt werden."
+          },
+          "type": "integer",
+          "default": 10,
+          "min": 1,
+          "max": 100000,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "numbers",
+          "label": {
+            "en": "Numbers",
+            "de": "Zahlen"
+          },
+          "description": {
+            "en": "The numbers of the series.",
+            "de": "Die Zahlen der Folge."
+          },
+          "type": "number",
+          "list": true
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.listItem",
+      "category": "math.list",
+      "emoji": "🎣️",
+      "label": {
+        "en": "List item",
+        "de": "Listenelement"
+      },
+      "description": {
+        "en": "Reads one item from a list by its zero-based position.",
+        "de": "Liest ein Element einer Liste anhand seiner nullbasierten Position."
+      },
+      "inputs": [
+        {
+          "name": "list",
+          "label": {
+            "en": "List",
+            "de": "Liste"
+          },
+          "description": {
+            "en": "The list to read from.",
+            "de": "Die Liste, aus der gelesen wird."
+          },
+          "type": "any",
+          "list": true,
+          "default": []
+        },
+        {
+          "name": "index",
+          "label": {
+            "en": "Index",
+            "de": "Position"
+          },
+          "description": {
+            "en": "Zero-based position of the item.",
+            "de": "Nullbasierte Position des Elements."
+          },
+          "type": "integer",
+          "default": 0,
+          "min": 0,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "label": {
+            "en": "Item",
+            "de": "Element"
+          },
+          "description": {
+            "en": "The item at the position.",
+            "de": "Das Element an der Position."
+          },
+          "type": "any"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    },
+    {
+      "id": "math.listLength",
+      "category": "math.list",
+      "emoji": "🔢️",
+      "label": {
+        "en": "List length",
+        "de": "Listenlänge"
+      },
+      "description": {
+        "en": "Counts the items in a list.",
+        "de": "Zählt die Elemente einer Liste."
+      },
+      "inputs": [
+        {
+          "name": "list",
+          "label": {
+            "en": "List",
+            "de": "Liste"
+          },
+          "description": {
+            "en": "The list to count.",
+            "de": "Die zu zählende Liste."
+          },
+          "type": "any",
+          "list": true,
+          "default": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "count",
+          "label": {
+            "en": "Count",
+            "de": "Anzahl"
+          },
+          "description": {
+            "en": "The number of items.",
+            "de": "Die Anzahl der Elemente."
+          },
+          "type": "integer"
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": false
+    }
+  ]
+}

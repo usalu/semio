@@ -200,30 +200,6 @@ pub mod behavior {
     /// only needs updating here if `🦀️.rs`'s directory wiring ever changes.
     use crate::schema::mutations as leaves;
 
-    //#region ↔️AdjacencyMutations
-    /// ➕️ Upserts an adjacency row with normalized endpoints; replaces same pair if present.
-    pub fn set_adjacency(program: &mut ProgramSnapshot, mut adjacency: Adjacency) {
-        let (a, b) = normalize_pair(&adjacency.element_a_id, &adjacency.element_b_id);
-        adjacency.element_a_id = a;
-        adjacency.element_b_id = b;
-        adjacency.normalized = true;
-        if let Some(existing) = program.adjacencies.iter().position(|row| row.element_a_id == adjacency.element_a_id && row.element_b_id == adjacency.element_b_id) {
-            program.adjacencies[existing] = adjacency;
-        } else {
-            program.adjacencies.push(adjacency);
-        }
-    }
-
-    /// ➖️ Removes an adjacency by id or by normalized element pair.
-    pub fn clear_adjacency(program: &mut ProgramSnapshot, id: &EntityId) {
-        if let Some(index) = program.adjacencies.iter().position(|row| &row.header.id == id) {
-            program.adjacencies.remove(index);
-            return;
-        }
-        program.adjacencies.retain(|row| &row.element_a_id != id && &row.element_b_id != id);
-    }
-    //#endregion ↔️AdjacencyMutations
-
     //#region 📐️Template
     /// 📋️ Result of applying a template to a program.
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -236,8 +212,8 @@ pub mod behavior {
         pub messages: Vec<String>,
     }
 
-    /// 🧩️ Applies a template record and returns replayable `ProgramMutation`s.
-    pub fn apply_template(program: &mut ProgramSnapshot, template: &TemplateRecord) -> Vec<ProgramMutation> {
+    /// 🧩️ Expands a template record into the replayable `ProgramMutation`s that create its rows; it reads no snapshot and writes none.
+    pub fn apply_template(template: &TemplateRecord) -> Vec<ProgramMutation> {
         let mut operations = Vec::new();
         let mut element_ids = Vec::new();
         for field in &template.default_fields {
@@ -271,8 +247,7 @@ pub mod behavior {
                         communication_channels: Vec::new(),
                         success_metrics: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item.clone() }));
-                    program.stakeholders.push(item);
+                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item }));
                 }
                 "user" => {
                     let item = UserProfile {
@@ -302,8 +277,7 @@ pub mod behavior {
                         validated: false,
                         stakeholder_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item.clone() }));
-                    program.users.push(item);
+                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item }));
                 }
                 "activity" => {
                     let item = Activity {
@@ -333,8 +307,7 @@ pub mod behavior {
                         temporal_pattern: None,
                         supervision_level: None,
                     };
-                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item.clone() }));
-                    program.activities.push(item);
+                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item }));
                 }
                 "function" => {
                     let item = Function {
@@ -362,8 +335,7 @@ pub mod behavior {
                         hierarchy_parent_id: None,
                         conflict_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item.clone() }));
-                    program.functions.push(item);
+                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item }));
                 }
                 "element" | "room" => {
                     let item = ProgramElement {
@@ -394,8 +366,7 @@ pub mod behavior {
                         adjacency_preferences: Vec::new(),
                         environmental_zone: None,
                     };
-                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item.clone() }));
-                    program.elements.push(item);
+                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item }));
                     element_ids.push(id.clone());
                 }
                 "requirement" => {
@@ -422,8 +393,7 @@ pub mod behavior {
                         trace_links: Vec::new(),
                         superseded_by: None,
                     };
-                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item.clone() }));
-                    program.requirements.push(item);
+                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item }));
                 }
                 "risk" => {
                     let item = Risk {
@@ -448,8 +418,7 @@ pub mod behavior {
                         escalation_path: Vec::new(),
                         monitoring_plan: None,
                     };
-                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item.clone() }));
-                    program.risks.push(item);
+                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item }));
                 }
                 "process" => {
                     let item = Process {
@@ -478,8 +447,7 @@ pub mod behavior {
                         handoff_points: Vec::new(),
                         quality_gates: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item.clone() }));
-                    program.processes.push(item);
+                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item }));
                 }
                 "equipment" => {
                     let item = Equipment {
@@ -509,8 +477,7 @@ pub mod behavior {
                         commissioning_notes: Vec::new(),
                         spare_parts: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item.clone() }));
-                    program.equipment.push(item);
+                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item }));
                 }
                 "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
                     let (a, b) = normalize_pair(&element_ids[0], &element_ids[1]);
@@ -537,25 +504,20 @@ pub mod behavior {
                         source_relationship_id: None,
                         internal_external_access: None,
                     };
-                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: adjacency.clone() }));
-                    set_adjacency(program, adjacency);
+                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
                 }
                 _ => {}
             }
-        }
-        if let Some(existing) = program.templates.iter_mut().find(|t| t.header.id == template.header.id) {
-            existing.usage_count += 1;
-            existing.last_applied = Some(program.meta.timestamps.updated.clone());
         }
         operations
     }
     //#endregion 📐️Template
 
     //#region 📄️ReportRecord
-    /// 📝️ Builds a report and appends a `ReportRecord` to the program.
-    pub fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> crate::standards::v1::subsets::any::schema::inferences::ProgramReport {
+    /// 📝️ Builds a report and the `CreateReportRecord` mutation that persists it as a `ReportRecord`.
+    pub fn build_report_and_record(program: &ProgramSnapshot, kind: ReportKind) -> (crate::standards::v1::subsets::any::schema::inferences::ProgramReport, ProgramMutation) {
         let report = build_report(program, kind);
-        let record = ReportRecord {
+        let report_record = ReportRecord {
             header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
             kind,
             title: report.title.clone(),
@@ -576,16 +538,15 @@ pub mod behavior {
             expiry_date: None,
             related_decision_ids: Vec::new(),
         };
-        program.reports.push(record);
-        report
+        (report, ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record }))
     }
     //#endregion 📄️ReportRecord
 
     //#region 🔬️AnalysisRecord
-    /// 📝️ Runs analysis and appends an `AnalysisRecord` to the program.
-    pub fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> crate::standards::v1::subsets::any::schema::inferences::AnalysisResult {
+    /// 📝️ Runs analysis and the `CreateAnalysisRecord` mutation that persists it as an `AnalysisRecord`.
+    pub fn run_analysis_and_record(program: &ProgramSnapshot, kind: AnalysisKind) -> (crate::standards::v1::subsets::any::schema::inferences::AnalysisResult, ProgramMutation) {
         let result = run_analysis(program, kind);
-        let record = AnalysisRecord {
+        let analysis_record = AnalysisRecord {
             header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
             kind,
             title: result.title.clone(),
@@ -606,8 +567,7 @@ pub mod behavior {
             recommendations: result.findings.clone(),
             raw_result_ref: None,
         };
-        program.analyses.push(record);
-        result
+        (result, ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record }))
     }
     //#endregion 🔬️AnalysisRecord
 
@@ -641,10 +601,19 @@ pub mod behavior {
         Ok(rows)
     }
 
+    /// 📥️ The outcome of a register import: the mutations that perform it, the program they produce when folded through the central
+    /// applier, and the ids the import touched.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct RegisterImport {
+        pub snapshot: ProgramSnapshot,
+        pub mutations: Vec<ProgramMutation>,
+        pub touched: Vec<EntityId>,
+    }
+
     /// 📥️ Decodes CSV via stdio's real RFC 4180 codec, then merges rows into matching
     /// register collections via `MergeStrategy`.
-    pub fn import_registers_csv(program: &mut ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
+    pub fn import_registers_csv(program: &ProgramSnapshot, csv: &str, strategy: MergeStrategy) -> Result<RegisterImport, PluginError> {
+        let snapshot = stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with(csv, true);
         import_rows(program, csv_snapshot_to_rows(&snapshot)?, strategy)
     }
 
@@ -667,14 +636,32 @@ pub mod behavior {
 
     /// 📥️ Decodes TSV via stdio's real IANA TSV codec, then merges rows into matching
     /// register collections via `MergeStrategy`.
-    pub fn import_registers_tsv(program: &mut ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
-        let snapshot = stdio_tsv_engine::decode_tsv(tsv);
+    pub fn import_registers_tsv(program: &ProgramSnapshot, tsv: &str, strategy: MergeStrategy) -> Result<RegisterImport, PluginError> {
+        let snapshot = stdio_tsv::standards::iana::subsets::any::io::text::snapshot::decode_tsv(tsv);
         import_rows(program, tsv_snapshot_to_rows(&snapshot)?, strategy)
+    }
+
+    /// 🧬️ One import run: the working program every row decision reads, and the mutations emitted so far. A mutation enters the run only
+    /// through [`ImportRun::emit`], which folds its diff into the working program via the central applier.
+    struct ImportRun {
+        work: ProgramSnapshot,
+        mutations: Vec<ProgramMutation>,
+    }
+
+    impl ImportRun {
+        fn emit(&mut self, mutation: ProgramMutation) {
+            use protocol::Mutation;
+            if let Ok(next) = protocol::apply_diff(mutation.diff(&self.work).diff(), &self.work) {
+                self.work = next;
+                self.mutations.push(mutation);
+            }
+        }
     }
 
     /// 🔀️ Applies `MergeStrategy` upsert semantics to already-decoded rows — shared by the
     /// CSV and TSV import paths, the decode step itself lives entirely in stdio's real codecs.
-    fn import_rows(program: &mut ProgramSnapshot, rows: Vec<RegisterCsvRow>, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
+    fn import_rows(program: &ProgramSnapshot, rows: Vec<RegisterCsvRow>, strategy: MergeStrategy) -> Result<RegisterImport, PluginError> {
+        let mut run = ImportRun { work: program.clone(), mutations: Vec::new() };
         let mut touched = Vec::new();
         let mut seen: HashSet<(String, EntityId)> = HashSet::new();
         for row in rows {
@@ -682,16 +669,16 @@ pub mod behavior {
             if !seen.insert(key.clone()) {
                 return Err(PluginError::Csv(format!("duplicate import id {} in register {}", row.id, row.register)));
             }
-            if strategy == MergeStrategy::SkipDuplicates && register_contains(program, &row.register, &row.id) {
+            if strategy == MergeStrategy::SkipDuplicates && register_contains(&run.work, &row.register, &row.id) {
                 continue;
             }
             if strategy == MergeStrategy::Replace {
-                remove_register_item(program, &row.register, &row.id);
+                remove_register_item(&mut run, &row.register, &row.id);
             }
-            upsert_register_row(program, row.clone())?;
+            upsert_register_row(&mut run, row.clone())?;
             touched.push(row.id);
         }
-        Ok(touched)
+        Ok(RegisterImport { snapshot: run.work, mutations: run.mutations, touched })
     }
 
     fn register_contains(program: &ProgramSnapshot, register: &str, id: &EntityId) -> bool {
@@ -705,26 +692,30 @@ pub mod behavior {
         }
     }
 
-    fn remove_register_item(program: &mut ProgramSnapshot, register: &str, id: &EntityId) {
+    fn remove_register_item(run: &mut ImportRun, register: &str, id: &EntityId) {
+        if !register_contains(&run.work, register, id) {
+            return;
+        }
+        let id = id.clone();
         match register {
-            "elements" => program.elements.retain(|e| &e.header.id != id),
-            "stakeholders" => program.stakeholders.retain(|s| &s.header.id != id),
-            "requirements" => program.requirements.retain(|r| &r.header.id != id),
-            "relationships" => program.relationships.retain(|r| &r.header.id != id),
-            "adjacencies" => program.adjacencies.retain(|a| &a.header.id != id),
+            "elements" => run.emit(ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id })),
+            "stakeholders" => run.emit(ProgramMutation::DeleteStakeholder(leaves::delete_stakeholder::DeleteStakeholder { id })),
+            "requirements" => run.emit(ProgramMutation::DeleteRequirement(leaves::delete_requirement::DeleteRequirement { id })),
+            "relationships" => run.emit(ProgramMutation::DeleteRelationship(leaves::delete_relationship::DeleteRelationship { id })),
+            "adjacencies" => run.emit(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id })),
             _ => {}
         }
     }
 
-    fn upsert_register_row(program: &mut ProgramSnapshot, row: RegisterCsvRow) -> Result<(), PluginError> {
+    fn upsert_register_row(run: &mut ImportRun, row: RegisterCsvRow) -> Result<(), PluginError> {
         match row.register.as_str() {
-            "elements" => upsert_element(program, row),
-            "stakeholders" => upsert_stakeholder(program, row),
-            "requirements" => upsert_requirement(program, row),
-            "relationships" => upsert_relationship(program, row),
-            "adjacencies" => upsert_adjacency(program, row),
-            "knowledge" => upsert_knowledge(program, row),
-            "benchmarks" => upsert_benchmark(program, row),
+            "elements" => upsert_element(run, row),
+            "stakeholders" => upsert_stakeholder(run, row),
+            "requirements" => upsert_requirement(run, row),
+            "relationships" => upsert_relationship(run, row),
+            "adjacencies" => upsert_adjacency(run, row),
+            "knowledge" => upsert_knowledge(run, row),
+            "benchmarks" => upsert_benchmark(run, row),
             other => {
                 return Err(PluginError::Csv(format!("unsupported register import: {other}")));
             }
@@ -732,12 +723,14 @@ pub mod behavior {
         Ok(())
     }
 
-    fn upsert_element(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(element) = program.elements.iter_mut().find(|e| e.header.id == row.id) {
-            element.header.name = row.name;
+    fn upsert_element(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(element) = run.work.elements.iter().find(|e| e.header.id == row.id) {
+            if element.header.name != row.name {
+                run.emit(ProgramMutation::RenameProgramElement(leaves::rename_program_element::RenameProgramElement { id: row.id, new_name: row.name }));
+            }
             return;
         }
-        program.elements.push(ProgramElement {
+        let program_element = ProgramElement {
             header: EntityHeader::new(row.id, row.name),
             code: String::new(),
             kind: ProgramElementKind::Room,
@@ -764,15 +757,18 @@ pub mod behavior {
             visibility_level: None,
             adjacency_preferences: Vec::new(),
             environmental_zone: None,
-        });
+        };
+        run.emit(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element }));
     }
 
-    fn upsert_stakeholder(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(stakeholder) = program.stakeholders.iter_mut().find(|s| s.header.id == row.id) {
-            stakeholder.header.name = row.name;
+    fn upsert_stakeholder(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(stakeholder) = run.work.stakeholders.iter().find(|s| s.header.id == row.id) {
+            if stakeholder.header.name != row.name {
+                run.emit(ProgramMutation::RenameStakeholder(leaves::rename_stakeholder::RenameStakeholder { id: row.id, new_name: row.name }));
+            }
             return;
         }
-        program.stakeholders.push(Stakeholder {
+        let stakeholder = Stakeholder {
             header: EntityHeader::new(row.id, row.name),
             role: String::new(),
             organization: String::new(),
@@ -798,18 +794,24 @@ pub mod behavior {
             influence_strategy: None,
             communication_channels: Vec::new(),
             success_metrics: Vec::new(),
-        });
+        };
+        run.emit(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder }));
     }
 
-    fn upsert_requirement(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(requirement) = program.requirements.iter_mut().find(|r| r.header.id == row.id) {
-            requirement.header.name = row.name;
-            if !row.source.is_empty() {
-                requirement.source = Some(row.source);
+    fn upsert_requirement(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(existing) = run.work.requirements.iter().find(|r| r.header.id == row.id) {
+            let source = (!row.source.is_empty()).then(|| row.source.clone());
+            if existing.header.name != row.name || source.as_ref().is_some_and(|source| existing.source.as_ref() != Some(source)) {
+                let mut requirement = existing.clone();
+                requirement.header.name = row.name;
+                if source.is_some() {
+                    requirement.source = source;
+                }
+                run.emit(ProgramMutation::ReplaceRequirement(leaves::replace_requirement::ReplaceRequirement { requirement }));
             }
             return;
         }
-        program.requirements.push(Requirement {
+        let requirement = Requirement {
             header: EntityHeader::new(row.id, row.name),
             code: String::new(),
             kind: RequirementKind::Functional,
@@ -831,15 +833,8 @@ pub mod behavior {
             regulatory_refs: Vec::new(),
             trace_links: Vec::new(),
             superseded_by: None,
-        });
-    }
-
-    /// 🧬️ Applies one register mutation through the event-sourced diff/apply path.
-    fn absorb_register_mutation(program: &mut ProgramSnapshot, mutation: ProgramMutation) {
-        use protocol::{Mutation, MutationDiff};
-        if let Ok(next) = mutation.diff(program).diff().apply(program) {
-            *program = next;
-        }
+        };
+        run.emit(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement }));
     }
 
     /// 🔗 Parses `source_id>target_id` from the CSV `source` column (export fidelity encoding).
@@ -855,14 +850,14 @@ pub mod behavior {
         (fallback.clone(), program.elements.get(1).map_or_else(|| fallback.clone(), |e| e.header.id.clone()))
     }
 
-    fn upsert_relationship(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(existing) = program.relationships.iter().find(|r| r.header.id == row.id) {
+    fn upsert_relationship(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(existing) = run.work.relationships.iter().find(|r| r.header.id == row.id) {
             if existing.header.name != row.name {
-                absorb_register_mutation(program, ProgramMutation::RenameRelationship(leaves::rename_relationship::RenameRelationship { id: row.id, new_name: row.name }));
+                run.emit(ProgramMutation::RenameRelationship(leaves::rename_relationship::RenameRelationship { id: row.id, new_name: row.name }));
             }
             return;
         }
-        let (source_id, target_id) = parse_endpoint_pair(&row.source, program);
+        let (source_id, target_id) = parse_endpoint_pair(&row.source, &run.work);
         let relationship = Relationship {
             header: EntityHeader::new(row.id, row.name),
             source_id,
@@ -890,19 +885,19 @@ pub mod behavior {
             incompatibility_requirement: None,
             separation_requirements: Vec::new(),
         };
-        absorb_register_mutation(program, ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship }));
+        run.emit(ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship }));
     }
 
-    fn upsert_adjacency(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(existing) = program.adjacencies.iter().find(|a| a.header.id == row.id) {
+    fn upsert_adjacency(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(existing) = run.work.adjacencies.iter().find(|a| a.header.id == row.id) {
             if existing.header.name != row.name {
                 let mut adjacency = existing.clone();
                 adjacency.header.name = row.name;
-                absorb_register_mutation(program, ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+                run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
             }
             return;
         }
-        let (a, b) = parse_endpoint_pair(&row.source, program);
+        let (a, b) = parse_endpoint_pair(&row.source, &run.work);
         let (left, right) = normalize_pair(&a, &b);
         let adjacency = Adjacency {
             header: EntityHeader::new(row.id, row.name),
@@ -927,14 +922,14 @@ pub mod behavior {
             source_relationship_id: None,
             internal_external_access: None,
         };
-        absorb_register_mutation(program, ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+        run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
     }
 
     /// 📚️ Upserts a COMPOSED `knowledge` register row through create/rename mutations.
-    fn upsert_knowledge(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(existing) = program.knowledge_payload.iter().find(|record| record.header.id == row.id) {
+    fn upsert_knowledge(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(existing) = run.work.knowledge_payload.iter().find(|record| record.header.id == row.id) {
             if existing.header.name != row.name {
-                absorb_register_mutation(program, ProgramMutation::RenameKnowledgeRecord(leaves::rename_knowledge_record::RenameKnowledgeRecord { id: row.id, new_name: row.name }));
+                run.emit(ProgramMutation::RenameKnowledgeRecord(leaves::rename_knowledge_record::RenameKnowledgeRecord { id: row.id, new_name: row.name }));
             }
             return;
         }
@@ -959,14 +954,14 @@ pub mod behavior {
             citations: Vec::new(),
             usage_count: 0,
         };
-        absorb_register_mutation(program, ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record }));
+        run.emit(ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record }));
     }
 
     /// 🏁️ Upserts a COMPOSED `benchmarks` register row through create/rename mutations.
-    fn upsert_benchmark(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
-        if let Some(existing) = program.benchmarks_payload.iter().find(|record| record.header.id == row.id) {
+    fn upsert_benchmark(run: &mut ImportRun, row: RegisterCsvRow) {
+        if let Some(existing) = run.work.benchmarks_payload.iter().find(|record| record.header.id == row.id) {
             if existing.header.name != row.name {
-                absorb_register_mutation(program, ProgramMutation::RenameBenchmarkRecord(leaves::rename_benchmark_record::RenameBenchmarkRecord { id: row.id, new_name: row.name }));
+                run.emit(ProgramMutation::RenameBenchmarkRecord(leaves::rename_benchmark_record::RenameBenchmarkRecord { id: row.id, new_name: row.name }));
             }
             return;
         }
@@ -992,7 +987,7 @@ pub mod behavior {
             knowledge_id: None,
             last_verified: None,
         };
-        absorb_register_mutation(program, ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record }));
+        run.emit(ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record }));
     }
     //#endregion 📤️ExchangeImport
 
@@ -1019,9 +1014,9 @@ pub mod behavior {
     }
 
     /// 🔗️ Builds a forward trace chain from `root_id` following kind-appropriate links.
-    pub fn trace_chain(program: &mut ProgramSnapshot, root_id: &EntityId) -> TraceChain {
-        embed_requirement_traces(program);
-        let adjacency = trace_adjacency(&program.traces);
+    pub fn trace_chain(program: &ProgramSnapshot, root_id: &EntityId) -> TraceChain {
+        let traces = effective_traces(program);
+        let adjacency = trace_adjacency(&traces);
         let mut visited = HashSet::new();
         let mut links = Vec::new();
         let mut queue = VecDeque::new();
@@ -1044,20 +1039,19 @@ pub mod behavior {
     }
 
     /// 🔍️ Finds trace links touching `entity_id` (from or to).
-    pub fn trace_links_for(program: &mut ProgramSnapshot, entity_id: &EntityId) -> Vec<TraceLink> {
-        embed_requirement_traces(program);
-        program.traces.iter().filter(|link| &link.from_id == entity_id || &link.to_id == entity_id).cloned().collect()
+    pub fn trace_links_for(program: &ProgramSnapshot, entity_id: &EntityId) -> Vec<TraceLink> {
+        effective_traces(program).into_iter().filter(|link| &link.from_id == entity_id || &link.to_id == entity_id).collect()
     }
 
     /// ↩️ Reverse impact trace — entities that depend on or satisfy `target_id`.
-    pub fn trace_impact(program: &mut ProgramSnapshot, target_id: &EntityId) -> ImpactTrace {
-        embed_requirement_traces(program);
+    pub fn trace_impact(program: &ProgramSnapshot, target_id: &EntityId) -> ImpactTrace {
+        let traces = effective_traces(program);
         let mut upstream = HashSet::new();
         let mut links = Vec::new();
         let mut queue = VecDeque::new();
         queue.push_back(target_id.clone());
         while let Some(current) = queue.pop_front() {
-            for link in &program.traces {
+            for link in &traces {
                 if link.to_id != current {
                     continue;
                 }
@@ -1072,21 +1066,23 @@ pub mod behavior {
         ImpactTrace { target_id: target_id.clone(), upstream_ids: upstream.into_iter().collect(), links }
     }
 
-    /// ➕️ Appends a trace link to the plugin trace register.
-    pub fn add_trace_link(program: &mut ProgramSnapshot, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
-        program.traces.push(TraceLink::new(from_id, to_id, kind));
+    /// ➕️ The mutation that appends a trace link to the plugin trace register.
+    pub fn add_trace_link(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> ProgramMutation {
+        ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: TraceLink::new(from_id, to_id, kind) })
     }
 
-    /// 🧷️ Copies requirement-embedded trace links into the plugin trace register.
-    fn embed_requirement_traces(program: &mut ProgramSnapshot) {
+    /// 🧷️ The plugin trace register plus the requirement-embedded trace links it does not hold yet.
+    fn effective_traces(program: &ProgramSnapshot) -> Vec<TraceLink> {
+        let mut traces = program.traces.clone();
         for requirement in &program.requirements {
             for link in &requirement.trace_links {
-                if program.traces.iter().any(|t| t.id == link.id) {
+                if traces.iter().any(|t| t.id == link.id) {
                     continue;
                 }
-                program.traces.push(link.clone());
+                traces.push(link.clone());
             }
         }
+        traces
     }
 
     fn follows_kind_chain(kind: &TraceKind) -> bool {

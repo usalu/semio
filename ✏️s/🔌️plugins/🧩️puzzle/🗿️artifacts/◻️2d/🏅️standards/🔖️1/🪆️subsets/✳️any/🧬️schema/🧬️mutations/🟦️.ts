@@ -105,6 +105,7 @@ export interface ReplaceNodeHandle {
 
 /** 🔗 `connect-handles` payload. */
 export interface ConnectHandles {
+  index?: number | null;
   id: string;
   source: string;
   target: string;

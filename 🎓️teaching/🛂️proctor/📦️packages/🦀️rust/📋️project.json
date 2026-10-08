@@ -63,6 +63,16 @@
       }
     },
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8791,
+              "portEnv": "PROCTOR_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
@@ -106,6 +116,20 @@
       "cache": false
     },
     "restore": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "file",
+                "kind": "text",
+                "required": true,
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
@@ -115,6 +139,36 @@
       "cache": false
     },
     "erase": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "handle",
+                "kind": "text",
+                "valueFlag": "--handle"
+              },
+              {
+                "id": "tag",
+                "kind": "text",
+                "valueFlag": "--tag"
+              },
+              {
+                "id": "learner",
+                "kind": "text",
+                "valueFlag": "--learner"
+              },
+              {
+                "id": "dry-run",
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
@@ -124,6 +178,28 @@
       "cache": false
     },
     "prune": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "older-than",
+                "kind": "text",
+                "default": "7d",
+                "required": true,
+                "valueFlag": "--older-than"
+              },
+              {
+                "id": "dry-run",
+                "kind": "flag",
+                "args": [
+                  "--dry-run"
+                ]
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",

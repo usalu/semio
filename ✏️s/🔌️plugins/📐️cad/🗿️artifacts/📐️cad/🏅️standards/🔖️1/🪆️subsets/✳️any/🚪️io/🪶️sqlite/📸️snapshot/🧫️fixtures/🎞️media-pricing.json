@@ -1,0 +1,19 @@
+{
+  "maximumSourceBytes": 49152,
+  "maximumUnitBytes": 64,
+  "grantWorkUnits": 1,
+  "maximumPricingSteps": 126,
+  "closeMaximumItems": 1,
+  "closeMaximumBytes": 4096,
+  "maximumCloseSteps": 64,
+  "prefix": "# µ😀\u0000\n",
+  "repeat": 800,
+  "suffix": "v 0 0 0\nv 2 0 0\nv 0 3 0\nf 1 2 3\n",
+  "sourceBytes": 8032,
+  "sourceChecksum": "3237680797887899861",
+  "orderedNodes": ["pricing", "conversion", "publication", "close"],
+  "forms": ["intrinsicText", "intrinsicBytes", "structuredText"],
+  "cancelAtBytes": [0, 64, 128, 4096],
+  "refusedBytes": 49153,
+  "checksumMultiplier": 31
+}

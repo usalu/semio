@@ -339,10 +339,8 @@
   "execution": {
     "target": "test-rust-physical-reference-context",
     "command": "bun ./📜️script.ts test rust-physical-reference-context long",
-    "launchName": "🧹clean🧩️taxonomy🧲️rust-physical-reference-context",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-physical-reference-context --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.08
+    "cache": false,
+    "artifactRoute": "rust-physical-reference-context"
   },
   "oracle": {
     "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔮️oracles/🧲️rust-physical-reference-context/⚙️.toml",

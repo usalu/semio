@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSizingObjectDesignDayType` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SizingObjectPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,10 +13,6 @@ pub fn diff(payload: &super::ChangeSizingObjectDesignDayType, base: &EnergyModel
     if existing.design_day_type == payload.new_design_day_type {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sizing object {} already has that design day type.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.sizing_objects.iter_mut().find(|item| item.id == payload.id) {
-        item.design_day_type = payload.new_design_day_type;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { sizing_objects: Rows::modifying(SizingObjectPatch { design_day_type: Some(payload.new_design_day_type), ..SizingObjectPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

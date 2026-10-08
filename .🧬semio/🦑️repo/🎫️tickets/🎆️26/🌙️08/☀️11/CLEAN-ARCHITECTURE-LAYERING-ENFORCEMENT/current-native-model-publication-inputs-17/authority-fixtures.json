@@ -1,0 +1,37 @@
+[
+  {
+    "id": "ticket",
+    "path": "$ticket/immutable-law.json",
+    "accepted": true
+  },
+  {
+    "id": "node-modules",
+    "path": "$root/node_modules/immutable-law.json",
+    "accepted": true
+  },
+  {
+    "id": "external",
+    "path": "$external/immutable-law.json",
+    "accepted": true
+  },
+  {
+    "id": "root-model",
+    "path": "$root/🧰️framework/model.rs",
+    "accepted": false
+  },
+  {
+    "id": "root-manifest",
+    "path": "$root/Cargo.toml",
+    "accepted": false
+  },
+  {
+    "id": "root-owner-script",
+    "path": "$root/📜️script.ts",
+    "accepted": false
+  },
+  {
+    "id": "relative",
+    "path": "relative.json",
+    "accepted": false
+  }
+]

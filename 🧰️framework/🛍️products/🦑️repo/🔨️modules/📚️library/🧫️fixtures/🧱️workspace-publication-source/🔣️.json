@@ -104,21 +104,15 @@
   "routes": {
     "source": {
       "target": "test-workspace-publication-source",
-      "command": "bun ./📜️script.ts test workspace-publication-source",
-      "launchName": "🧪️test🗂️workspace-publication-source",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-workspace-publication-source"
+      "command": "bun ./📜️script.ts test workspace-publication-source"
     },
     "check": {
       "target": "workspaces-check",
-      "command": "bun ./📜️script.ts workspaces --check",
-      "launchName": "🔎️check🗂️workspace-membership",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:workspaces-check"
+      "command": "bun ./📜️script.ts workspaces --check"
     },
     "write": {
       "target": "workspaces-write",
-      "command": "bun ./📜️script.ts workspaces --write",
-      "launchName": "📣️publish🗂️workspace-membership",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:workspaces-write"
+      "command": "bun ./📜️script.ts workspaces --write"
     }
   },
   "inputs": {
@@ -131,12 +125,9 @@
     ],
     "source": [
       "workspaceMembershipSources",
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
@@ -247,11 +238,6 @@
       "generate-ticket-important-fem-handoff",
       "preview-generated"
     ],
-    "launch": {
-      "name": "📦️preview🤖️ticket-important-fem-handoff",
-      "command": "bun nx run @semio-tech/repo-lib:preview-generated",
-      "order": 206.115
-    },
     "historicalEvidence": [
       {
         "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/🔧️write-handoff.mjs",

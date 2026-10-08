@@ -158,30 +158,22 @@ pub use super::scale_selection::mutation::{scale_selection, ScaleSelection};
 pub use super::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
 
 //#region 🔖️SelectionTransform
-/// 🧭️ Shared diff of the three parametric selection leaves (`drag-`, `rotate-`, `scale-selection`).
-/// `targets` is classified by document membership against `base`: an object id goes through `object`,
-/// a target-volume id through `volume`, each record transformed IN PLACE about its own origin. An empty
-/// or repeated target set is the Fatal `mutation.invariant` the payload schema's `minItems`/`uniqueItems`
-/// forbid. Absent ids and locked records are skipped with one `mutation.partial` warning per reason (in
-/// that order, ids in payload order); nothing left is `mutation.target-missing`; an `identity`
-/// transform, or survivors that do not move, is `mutation.no-op`. Every moved record is patched whole
-/// from the base, in document order, so the leaf replays on any base.
-///
-/// 🧲️ `follow` re-solves the attraction graph of a pose-changing leaf ([`puzzle3d_selection_follow`]): every
-/// unlocked object an attraction hangs off a moved object is re-placed from it, and every other attraction
-/// touching a moved object is re-derived from the moved poses — one Info-level `mutation.cascade` names both.
-/// A scaling moves no pose and passes `false`.
-pub fn puzzle3d_selection_diff(
-    base: &Puzzle3dSnapshot,
-    targets: &[String],
-    identity: bool,
-    object: impl Fn(&crate::Puzzle3dObject) -> crate::Puzzle3dObject,
-    volume: impl Fn(&crate::Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume,
-    follow: bool,
-) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry, Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
+/// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
+/// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`:
+/// an object id goes through `objects`, a target-volume id through `volumes`, each record transformed IN PLACE about
+/// its own origin. An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
+/// `minItems`/`uniqueItems` forbid. Absent ids and locked records are skipped with one warning per reason (in that
+/// order, ids in payload order); nothing left is `mutation.target-missing`.
+pub struct Puzzle3dSelection<'a> {
+    pub objects: Vec<&'a crate::Puzzle3dObject>,
+    pub volumes: Vec<&'a crate::Puzzle3dTargetVolume>,
+    pub warnings: Vec<protocol::MutationMessage>,
+}
+
+/// 🗃️ Classifies a selection leaf's `targets` against `base`; `Err` is the leaf's final refusal outcome.
+pub fn puzzle3d_selection<'a>(base: &'a Puzzle3dSnapshot, targets: &[String]) -> Result<Puzzle3dSelection<'a>, protocol::MutationOutcome<Puzzle3dDiff>> {
     if let Err(reason) = puzzle3d_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+        return Err(protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec()));
     }
     let (mut missing, mut locked, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
     for id in targets {
@@ -194,21 +186,48 @@ pub fn puzzle3d_selection_diff(
         }
     }
     if survivors.is_empty() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked object or target volume", targets.len()), targets.to_vec());
+        return Err(protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked object or target volume", targets.len()), targets.to_vec()));
     }
-    let mut messages: Vec<protocol::MutationMessage> = [(missing, "not in this scene"), (locked, "locked")]
+    let warnings = [(missing, "not in this scene"), (locked, "locked")]
         .into_iter()
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let solved = if identity { Puzzle3dSelectionFollow::default() } else { puzzle3d_selection_follow(base, targets, &survivors, &object, follow) };
-    let objects: Vec<Puzzle3dObjectPatchEntry> = base.objects.iter().zip(&solved.objects).filter_map(|(entry, moved)| moved.as_ref().filter(|next| *next != entry).map(|next| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next.clone()) } })).collect();
-    let volumes: Vec<Puzzle3dTargetVolumePatchEntry> = if identity {
-        Vec::new()
-    } else {
-        base.target_volumes.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(volume(entry)).filter(|next| next != entry).map(|next| Puzzle3dTargetVolumePatchEntry { id: entry.id.clone(), patch: Puzzle3dTargetVolumePatch { replacement: Some(next) } })).collect()
-    };
-    let attractions: Vec<Puzzle3dAttractionPatchEntry> = solved.attractions.into_iter().map(|next| Puzzle3dAttractionPatchEntry { id: next.id.clone(), patch: Puzzle3dAttractionPatch { replacement: Some(next) } }).collect();
+    Ok(Puzzle3dSelection {
+        objects: base.objects.iter().filter(|entry| survivors.contains(entry.id.as_str())).collect(),
+        volumes: base.target_volumes.iter().filter(|entry| survivors.contains(entry.id.as_str())).collect(),
+        warnings,
+    })
+}
+
+/// 📦️ The outcome of a selection leaf's per-member patches: the sparse diff plus the classification warnings and, when
+/// objects followed or attractions were re-derived, one Info-level `mutation.cascade` naming both — or the
+/// `mutation.no-op` warning (after the classification ones) when nothing changes.
+pub fn puzzle3d_selection_outcome(
+    selection: Puzzle3dSelection<'_>,
+    targets: &[String],
+    solved: Puzzle3dSelectionFollow,
+    base: &Puzzle3dSnapshot,
+    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dTargetVolumePatchEntry>,
+) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{ItemPatch, Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
+    let mut messages = selection.warnings;
+    let objects: Vec<Puzzle3dObjectPatchEntry> = base
+        .objects
+        .iter()
+        .zip(&solved.poses)
+        .filter_map(|(entry, pose)| {
+            let pose = pose.as_ref()?;
+            let patch = Puzzle3dObjectPatch {
+                origin: (pose.origin != entry.origin).then_some(pose.origin),
+                orientation: (pose.orientation != entry.orientation).then_some(pose.orientation),
+                scale: (pose.scale != entry.scale).then(|| pose.scale.clone()),
+                ..Default::default()
+            };
+            (!patch.is_empty()).then(|| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch })
+        })
+        .collect();
+    let attractions = solved.attractions;
     if objects.is_empty() && volumes.is_empty() && attractions.is_empty() {
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
     }
@@ -223,47 +242,6 @@ pub fn puzzle3d_selection_diff(
         ..Default::default()
     })
     .absorb_messages(messages)
-}
-
-/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose
-/// field its forward `outcome` changes — origin, orientation, scale — and the whole geometry of every
-/// attraction it re-derives, so an undo never accumulates the float error a negated offset, angle or
-/// factor would.
-pub fn puzzle3d_selection_inverse(base: &Puzzle3dSnapshot, outcome: protocol::MutationOutcome<Puzzle3dDiff>) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let (diff, _) = outcome.into_parts();
-    let mut steps = Vec::new();
-    for entry in diff.objects.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.objects.iter().find(|object| object.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if before.origin != after.origin {
-            steps.push(move_object(before.id.clone(), before.origin));
-        }
-        if before.orientation != after.orientation {
-            steps.push(rotate_object(before.id.clone(), before.orientation));
-        }
-        if before.scale != after.scale {
-            steps.push(scale_object(before.id.clone(), before.scale));
-        }
-    }
-    for entry in diff.target_volumes.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.target_volumes.iter().find(|volume| volume.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if before.origin != after.origin {
-            steps.push(move_target_volume(before.id.clone(), before.origin));
-        }
-        if before.orientation != after.orientation {
-            steps.push(rotate_target_volume(before.id.clone(), before.orientation));
-        }
-        if before.scale != after.scale {
-            steps.push(scale_target_volume(before.id.clone(), before.scale));
-        }
-    }
-    for entry in diff.attractions.iter().flat_map(|delta| &delta.patched) {
-        let Some(before) = base.attractions.iter().find(|attraction| attraction.id == entry.id) else { continue };
-        steps.push(replace_attraction_geometry(ReplaceAttractionGeometry { id: before.id.clone(), new_gap: before.gap, new_shift: before.shift, new_rise: before.rise, new_rotation: before.rotation, new_turn: before.turn, new_tilt: before.tilt, new_x: before.x, new_y: before.y }));
-    }
-    steps
-
-    })())
 }
 
 /// 🗃️ A selection target set names at least one id and no id twice.
@@ -338,31 +316,42 @@ pub const PUZZLE3D_IDENTITY_QUATERNION: [f64; 4] = [0.0, 0.0, 0.0, 1.0];
 /// kernel's own alignment tolerance.
 const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
 
-/// 🧾️ What one selection leaf's attraction re-solve moves, in document order: per object its new record (`None`
-/// for an unmoved object), the ids of the objects that only FOLLOWED, and every re-derived attraction whole.
+/// 🧭️ The pose fields a selection transform may change on one object — its world origin, orientation and scale.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dPose {
+    pub origin: [f64; 3],
+    pub orientation: Option<[f64; 4]>,
+    pub scale: Option<crate::Puzzle3dScale>,
+}
+
+/// 🧾️ What one selection leaf's attraction re-solve moves, in document order: per object its new pose (`None`
+/// for an unmoved object), the ids of the objects that only FOLLOWED, and the re-derived connection parameters of
+/// every attraction whose parameters change.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Puzzle3dSelectionFollow {
-    pub objects: Vec<Option<crate::Puzzle3dObject>>,
+    pub poses: Vec<Option<Puzzle3dPose>>,
     pub followers: Vec<String>,
-    pub attractions: Vec<crate::Puzzle3dAttraction>,
+    pub attractions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dAttractionPatchEntry>,
 }
 
 /// 🌲️ Re-solves the attraction graph of one selection move on `base`, with the document's own placement kernel
 /// ([`puzzle3d_attraction_child_pose`], the one the editor's resolve runs). Each surviving object target (payload
-/// order) takes its `object` transform; with `follow`, a breadth-first walk then re-places every UNLOCKED object an
+/// order) takes its `pose` transform; with `follow`, a breadth-first walk then re-places every UNLOCKED object an
 /// attraction hangs off a moved object (`attracting → attracted`, attractions in document order, first visit wins)
 /// from its moved parent and the attraction's unchanged parameters, so a moved attracting object carries its whole
 /// subtree exactly as resolving would. A locked object never follows, and neither does what hangs off it. Every
 /// other attraction touching a moved object gets its six connection parameters re-derived from the moved poses
 /// ([`derive_attraction_params`]), so resolving the document afterwards never snaps a moved object back. Without
 /// `follow` (a scaling) nothing follows and no attraction changes.
-pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], survivors: &std::collections::BTreeSet<&str>, object: &dyn Fn(&crate::Puzzle3dObject) -> crate::Puzzle3dObject, follow: bool) -> Puzzle3dSelectionFollow {
-    let mut solved = Puzzle3dSelectionFollow { objects: vec![None; base.objects.len()], ..Default::default() };
+pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], selection: &Puzzle3dSelection<'_>, pose: &dyn Fn(&crate::Puzzle3dObject) -> Puzzle3dPose, follow: bool) -> Puzzle3dSelectionFollow {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry};
+    let survivors: std::collections::BTreeSet<&str> = selection.objects.iter().map(|entry| entry.id.as_str()).collect();
+    let mut solved = Puzzle3dSelectionFollow { poses: vec![None; base.objects.len()], ..Default::default() };
     let mut queue = std::collections::VecDeque::new();
     for id in targets.iter().filter(|id| survivors.contains(id.as_str())) {
         let Some(at) = base.objects.iter().position(|entry| &entry.id == id) else { continue };
-        if solved.objects[at].is_none() {
-            solved.objects[at] = Some(object(&base.objects[at]));
+        if solved.poses[at].is_none() {
+            solved.poses[at] = Some(pose(&base.objects[at]));
             queue.push_back(at);
         }
     }
@@ -375,11 +364,11 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], su
     while let Some(parent) = queue.pop_front() {
         for (index, ends) in ends.iter().enumerate() {
             let Some((from, to)) = *ends else { continue };
-            if from.0 != parent || solved.objects[to.0].is_some() || base.objects[to.0].locked {
+            if from.0 != parent || solved.poses[to.0].is_some() || base.objects[to.0].locked {
                 continue;
             }
-            let (Some(attracting), attraction, attracted) = (solved.objects[parent].as_ref(), &base.attractions[index], &base.objects[to.0]) else { continue };
-            let (source, target) = (&attracting.vortices[from.1], &attracted.vortices[to.1]);
+            let (Some(attracting), attraction, attracted) = (solved.poses[parent].as_ref(), &base.attractions[index], &base.objects[to.0]) else { continue };
+            let (source, target) = (&base.objects[parent].vortices[from.1], &attracted.vortices[to.1]);
             let (origin, orientation) = puzzle3d_attraction_child_pose(
                 attracting.origin,
                 attracting.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
@@ -394,25 +383,25 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], su
                 attraction.turn,
                 attraction.tilt,
             );
-            solved.objects[to.0] = Some(crate::Puzzle3dObject { origin, orientation: Some(orientation), ..attracted.clone() });
+            solved.poses[to.0] = Some(Puzzle3dPose { origin, orientation: Some(orientation), scale: attracted.scale.clone() });
             solved.followers.push(attracted.id.clone());
             placing[index] = true;
             queue.push_back(to.0);
         }
     }
-    let pose = |at: usize| solved.objects[at].as_ref().unwrap_or(&base.objects[at]);
-    let attractions = base
+    let current = |at: usize| solved.poses[at].clone().unwrap_or_else(|| Puzzle3dPose { origin: base.objects[at].origin, orientation: base.objects[at].orientation, scale: base.objects[at].scale.clone() });
+    solved.attractions = base
         .attractions
         .iter()
         .zip(&ends)
         .zip(&placing)
         .filter_map(|((attraction, ends), placing)| {
             let (from, to) = (*ends)?;
-            if *placing || solved.objects[from.0].is_none() && solved.objects[to.0].is_none() {
+            if *placing || solved.poses[from.0].is_none() && solved.poses[to.0].is_none() {
                 return None;
             }
-            let (attracting, attracted) = (pose(from.0), pose(to.0));
-            let (source, target) = (&attracting.vortices[from.1], &attracted.vortices[to.1]);
+            let (attracting, attracted) = (current(from.0), current(to.0));
+            let (source, target) = (&base.objects[from.0].vortices[from.1], &base.objects[to.0].vortices[to.1]);
             let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
                 attracting.origin,
                 attracting.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
@@ -423,10 +412,18 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], su
                 attracted.origin,
                 attracted.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
             );
-            Some(crate::Puzzle3dAttraction { gap, shift, rise, rotation, turn, tilt, ..attraction.clone() }).filter(|next| next != attraction)
+            let patch = Puzzle3dAttractionPatch {
+                gap: (gap != attraction.gap).then_some(gap),
+                shift: (shift != attraction.shift).then_some(shift),
+                rise: (rise != attraction.rise).then_some(rise),
+                rotation: (rotation != attraction.rotation).then_some(rotation),
+                turn: (turn != attraction.turn).then_some(turn),
+                tilt: (tilt != attraction.tilt).then_some(tilt),
+                ..Default::default()
+            };
+            (patch != Puzzle3dAttractionPatch::default()).then(|| Puzzle3dAttractionPatchEntry { id: attraction.id.clone(), patch })
         })
         .collect();
-    solved.attractions = attractions;
     solved
 }
 

@@ -1660,7 +1660,7 @@ fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnapshot {
 }
 
 impl MutationDiff<DxfSnapshot> for DxfDiff {
-    fn apply(&self, base: &DxfSnapshot) -> MutationApplyResult<DxfSnapshot> {
+    fn apply(&self, base: &DxfSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<DxfSnapshot> {
         validate_dxf_diff(self, base)?;
         Ok(apply_dxf_diff_unchecked(self, base))
     }

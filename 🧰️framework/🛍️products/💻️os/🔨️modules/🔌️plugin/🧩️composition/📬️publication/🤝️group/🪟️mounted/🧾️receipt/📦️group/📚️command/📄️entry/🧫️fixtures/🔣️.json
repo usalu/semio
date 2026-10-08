@@ -1,0 +1,84 @@
+{
+  "maximumCopyBytes": 64,
+  "maximumCapacityBytes": 1048576,
+  "locales": [
+    "en",
+    "de"
+  ],
+  "terminologies": [
+    "native",
+    "reuse"
+  ],
+  "timestamps": [
+    {
+      "millis": -62167219200000,
+      "iso": "0000-01-01T00:00:00.000Z"
+    },
+    {
+      "millis": -1,
+      "iso": "1969-12-31T23:59:59.999Z"
+    },
+    {
+      "millis": 0,
+      "iso": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "millis": 951782400123,
+      "iso": "2000-02-29T00:00:00.123Z"
+    },
+    {
+      "millis": 4107542400999,
+      "iso": "2100-03-01T00:00:00.999Z"
+    },
+    {
+      "millis": 253402300799999,
+      "iso": "9999-12-31T23:59:59.999Z"
+    }
+  ],
+  "invalidMillis": [
+    -62167219200001,
+    253402300800000
+  ],
+  "cases": [
+    {
+      "id": "localized",
+      "actionId": "action:雪\u0000publish",
+      "label": {
+        "native": {
+          "en": "Publish original",
+          "de": "Original veröffentlichen"
+        },
+        "reuse": {
+          "en": "Reuse original",
+          "de": "Original wiederverwenden"
+        }
+      },
+      "parentTouched": true,
+      "childEditIds": [
+        "child:a",
+        "child:雪"
+      ],
+      "parentEditId": "parent:original"
+    },
+    {
+      "id": "fallback-child-only",
+      "actionId": "runtime:雪\u0000original",
+      "label": null,
+      "parentTouched": false,
+      "childEditIds": [
+        "child:only"
+      ],
+      "parentEditId": null
+    }
+  ],
+  "cancelTurns": [
+    0,
+    1,
+    3,
+    7,
+    12,
+    20,
+    60
+  ],
+  "largeLabelBytes": 8194
+}

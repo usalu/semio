@@ -613,6 +613,7 @@ where
 /// 🏭️ The exact one-item Store preparation authority every migrated `🪐️space` tool needs: a
 /// publication lane a tool declares is refused at app construction
 /// (`interactive-job.publication-contract`) unless its lane factory exists.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SpaceOneItemPreparationFactory<P, M> {
     prefix: &'static str,
     maximum_bytes: usize,

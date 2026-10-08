@@ -19,7 +19,6 @@ use semio_framework_value::ToValue;
         let program = doc.snapshot;
         let template_id = EntityId(payload.template_id.clone());
         let template = program.templates.iter().find(|row| row.header.id == template_id).cloned().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.template-missing"), format!("applyTemplate found no template \"{}\"", payload.template_id)))?;
-        let mut scratch = program.clone();
-        Ok(Emit::mutations(apply_template(&mut scratch, &template)))
+        Ok(Emit::mutations(apply_template(&template)))
     }
 }

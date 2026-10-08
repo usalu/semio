@@ -353,8 +353,6 @@
     }
   ],
   "registration": {
-    "name": "🧹clean🧩️taxonomy🎚️vitest-configuration-ownership",
-    "command": "bun nx run @semio-tech/repo-lib:test-vitest-configuration-ownership",
     "target": "test-vitest-configuration-ownership"
   }
 }

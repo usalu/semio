@@ -455,6 +455,17 @@ pub struct World3dScene {
     /// crate by layering: only renderers decode it, and an idle run publishes no lane at all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_run_trace: Option<String>,
+    /// 📏️ The annotation layer — linear dimensions, angles, point markers and leader labels with
+    /// caller-supplied EN/DE text. A typed lane: [`crate::World3dAnnotationLayer`] is carried as JSON text
+    /// only on the wire, never as an opaque string field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub annotations: Option<crate::World3dAnnotationLayer>,
+    /// 🌡️ The scalar analysis field painted as a heatmap with an on-screen legend — a typed lane.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scalar_field: Option<crate::World3dScalarField>,
+    /// ⚙️ Pick granularity filter, section plane and sub-element highlight tokens — a typed lane.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub modelling_options: Option<crate::World3dModellingOptions>,
     /// 🪟️ The framework [`InteractionRef`]/`InteractionDefinition` id this world window is bound to,
     /// serialized as `domainId`. `None` leaves the window on the OS's own shared `world` board
     /// domain and plain plugin-private actions (`setHover`/`worldPick`/`worldSelect`). When set, a
@@ -528,6 +539,14 @@ scene_pack_wire!(World3dScenePack, World3dScene {
     points_json: Option<String>,
     status_json: Option<String>,
     tool_run_trace: Option<String>,
+    // 📏️ The typed modelling lanes never ride the pack: `SceneDoc::encode_pack` refuses a scene that still
+    // carries one, and `split_lanes` moves them into their own carriers first.
+    #[serde(skip)]
+    annotations: Option<crate::World3dAnnotationLayer>,
+    #[serde(skip)]
+    scalar_field: Option<crate::World3dScalarField>,
+    #[serde(skip)]
+    modelling_options: Option<crate::World3dModellingOptions>,
     domain_id: Option<String>,
     domain_granularity_id: Option<String>,
     // 🚚️ An assembled scene carries no manifest, and neither does a scene built by a producer that
@@ -541,6 +560,9 @@ impl SceneDoc for World3dScene {
     const SCHEMA: &'static str = "world-3d@1";
 
     fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        if self.annotations.is_some() || self.scalar_field.is_some() || self.modelling_options.is_some() {
+            return Err(crate::pack::PackError::Unsupported("typed modelling lanes ride scene lanes; split_lanes first"));
+        }
         crate::pack::to_bytes(&World3dScenePack::from(self))
     }
 
@@ -563,8 +585,7 @@ impl SceneDoc for World3dScene {
 
     fn merge_lane(&mut self, key: &str, payload: String) -> bool {
         let Some(lane) = World3dSceneLane::from_body_key(key) else { return false };
-        lane.put(self, payload);
-        true
+        lane.put(self, payload)
     }
 }
 
@@ -606,6 +627,9 @@ impl World3dScene {
             points_json: None,
             status_json: None,
             tool_run_trace: None,
+            annotations: None,
+            scalar_field: None,
+            modelling_options: None,
             domain_id: None,
             domain_granularity_id: None,
             lanes: Vec::new(),
@@ -640,6 +664,9 @@ impl ToValue for World3dScene {
         value_push_option(&mut entries, "pointsJson", &self.points_json);
         value_push_option(&mut entries, "statusJson", &self.status_json);
         value_push_option(&mut entries, "toolRunTrace", &self.tool_run_trace);
+        value_push_option(&mut entries, "annotations", &self.annotations);
+        value_push_option(&mut entries, "scalarField", &self.scalar_field);
+        value_push_option(&mut entries, "modellingOptions", &self.modelling_options);
         value_push_option(&mut entries, "domainId", &self.domain_id);
         value_push_option(&mut entries, "domainGranularityId", &self.domain_granularity_id);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -675,6 +702,9 @@ impl FromValue for World3dScene {
             points_json: value_decode_option(&entries, "pointsJson")?,
             status_json: value_decode_option(&entries, "statusJson")?,
             tool_run_trace: value_decode_option(&entries, "toolRunTrace")?,
+            annotations: value_decode_option(&entries, "annotations")?,
+            scalar_field: value_decode_option(&entries, "scalarField")?,
+            modelling_options: value_decode_option(&entries, "modellingOptions")?,
             domain_id: value_decode_option(&entries, "domainId")?,
             domain_granularity_id: value_decode_option(&entries, "domainGranularityId")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,
@@ -684,7 +714,7 @@ impl FromValue for World3dScene {
 //#endregion 🔖️World3dScene
 
 //#region 🔖️World3dSceneLanes
-/// 🚚️ The twenty-two world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// 🚚️ The twenty-five world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
 /// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
 ///
 /// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
@@ -722,6 +752,9 @@ pub enum World3dSceneLane {
     Points,
     Status,
     ToolRunTrace,
+    Annotations,
+    ScalarField,
+    ModellingOptions,
 }
 
 /// 🚚️ Reserved carrier-key namespace. Dotted and `framework.`-prefixed so a lane root can never
@@ -729,7 +762,7 @@ pub enum World3dSceneLane {
 pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
 
 /// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
-pub const WORLD3D_SCENE_LANE_NAMES: [&str; 22] = [
+pub const WORLD3D_SCENE_LANE_NAMES: [&str; 25] = [
     "meshes",
     "instances",
     "instancesDelta",
@@ -752,10 +785,13 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 22] = [
     "points",
     "status",
     "toolRunTrace",
+    "annotations",
+    "scalarField",
+    "modellingOptions",
 ];
 
 /// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 22] = [
+pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 25] = [
     "meshesJson",
     "instancesJson",
     "instancesDeltaJson",
@@ -778,11 +814,14 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 22] = [
     "pointsJson",
     "statusJson",
     "toolRunTrace",
+    "annotations",
+    "scalarField",
+    "modellingOptions",
 ];
 
 /// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
 /// so the constant is greppable and pinnable rather than assembled at runtime.
-pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 22] = [
+pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 25] = [
     "framework.scene.world3d.meshes",
     "framework.scene.world3d.instances",
     "framework.scene.world3d.instancesDelta",
@@ -805,15 +844,18 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 22] = [
     "framework.scene.world3d.points",
     "framework.scene.world3d.status",
     "framework.scene.world3d.toolRunTrace",
+    "framework.scene.world3d.annotations",
+    "framework.scene.world3d.scalarField",
+    "framework.scene.world3d.modellingOptions",
 ];
 
 /// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
 /// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
 /// — while an absent optional lane publishes no carrier at all.
-pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 22] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 25] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 
 impl World3dSceneLane {
-    pub const ALL: [Self; 22] = [
+    pub const ALL: [Self; 25] = [
         Self::Meshes,
         Self::Instances,
         Self::InstancesDelta,
@@ -836,6 +878,9 @@ impl World3dSceneLane {
         Self::Points,
         Self::Status,
         Self::ToolRunTrace,
+        Self::Annotations,
+        Self::ScalarField,
+        Self::ModellingOptions,
     ];
 
     /// 🏷️ See [`WORLD3D_SCENE_LANE_NAMES`].
@@ -901,12 +946,17 @@ impl World3dSceneLane {
             Self::Points => scene.points_json.take(),
             Self::Status => scene.status_json.take(),
             Self::ToolRunTrace => scene.tool_run_trace.take(),
+            Self::Annotations => scene.annotations.take().map(|layer| crate::world3d_modelling_lane_text(&layer)),
+            Self::ScalarField => scene.scalar_field.take().map(|field| crate::world3d_modelling_lane_text(&field)),
+            Self::ModellingOptions => scene.modelling_options.take().map(|options| crate::world3d_modelling_lane_text(&options)),
         }
     }
 
     /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`World3dSceneLane::take`].
+    /// A typed lane whose payload the schema or its semantic rules refuse leaves the scene unchanged
+    /// and returns `false`; every `*_json` lane always returns `true`.
     // 🚫️async: E6 sync payload construction — see this module's own header.
-    pub fn put(self, scene: &mut World3dScene, payload: String) {
+    pub fn put(self, scene: &mut World3dScene, payload: String) -> bool {
         match self {
             Self::Meshes => scene.meshes_json = payload,
             Self::Instances => scene.instances_json = payload,
@@ -930,7 +980,20 @@ impl World3dSceneLane {
             Self::Points => scene.points_json = Some(payload),
             Self::Status => scene.status_json = Some(payload),
             Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
+            Self::Annotations => match crate::world3d_modelling_from_lane_text(&payload) {
+                Ok(layer) => scene.annotations = Some(layer),
+                Err(_) => return false,
+            },
+            Self::ScalarField => match crate::world3d_modelling_from_lane_text(&payload) {
+                Ok(field) => scene.scalar_field = Some(field),
+                Err(_) => return false,
+            },
+            Self::ModellingOptions => match crate::world3d_modelling_from_lane_text(&payload) {
+                Ok(options) => scene.modelling_options = Some(options),
+                Err(_) => return false,
+            },
         }
+        true
     }
 }
 

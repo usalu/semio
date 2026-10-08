@@ -2,15 +2,13 @@
 # A Rust `Option<Option<T>>` field collapses to a plain nullable `T` here, same as every other
 # optional field — GraphQL already conflates "absent" with "explicit null". Nested types imported
 # from the artifact's own root schema so every facet of the drawing artifact agrees on the same
-# `DrawingLayerNode`/`DrawingImageAsset`/`DrawingArtboard`/`DrawingArtifact`.
+# `DrawingLayerNode`/`DrawingImageAsset`/`DrawingArtboard`.
 # import PathSegment from "../🔗️.graphql"
-# import DrawingArtifact from "../🔗️.graphql"
 # import DrawingLayerNode from "../🔗️.graphql"
 # import DrawingImageAsset from "../🔗️.graphql"
 # import DrawingArtboard from "../🔗️.graphql"
 
 type DrawingDiff {
-  artifact: DrawingArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   id: String @state(class: ARTIFACT)
   title: String @state(class: ARTIFACT)

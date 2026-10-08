@@ -2,11 +2,10 @@
 // authoritative `📖️.grammar.semio` (same production names).
 grammar Semio_flow_mutations;
 
-op: (setSnapshot | insertNode | removeNode | setNodeKind | setNodeLabel
+op: ( insertNode | removeNode | setNodeKind | setNodeLabel
     | setNodePosition | setNodeParam | removeNodeParam | insertEdge | removeEdge
     | setEdgeEndpoints | setEdgeKind | dragNodes) EOF;
 
-setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 insertNode: 'insert-node' 'node' '=' node;
 removeNode: 'remove-node' 'id' '=' HEX;
 setNodeKind: 'set-node-kind' 'id' '=' HEX 'kind' '=' HEX;

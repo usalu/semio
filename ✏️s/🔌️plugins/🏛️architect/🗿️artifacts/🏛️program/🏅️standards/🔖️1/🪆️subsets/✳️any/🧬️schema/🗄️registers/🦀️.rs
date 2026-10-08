@@ -7,41 +7,74 @@ use crate::kernel::*;
 use protocol::{Identified, Patchable};
 
 // #region 🔖️PatchHelpers
-/// 🩹️ Per-field patch application (`apply_row`) and full-snapshot forward-diff
-/// (`diff_row`) — the frozen `protocol::Patchable` contract splits `vcs::Patchable`'s single
-/// mutate-and-return-inverse `apply_patch` into a mutate-only `apply_patch` plus a separate
-/// `diff_patch(&self, other)` that computes the patch turning `self` into `other`; `diff_row`
-/// always snapshots `other`'s value (never gated on inequality) so the recovered patch is exact
-/// even for fields the underlying `Option<T>` representation otherwise can't express clearing to
-/// `None` (a pre-existing representation limit of this macro, unchanged from `vcs::Patchable`'s
-/// same `Option<T>`-typed patch fields).
+/// 🩹️ Per-field patch algebra of one register row: `apply_row` writes a patched value, `diff_row` records the value
+/// that turns `self` into `other` (`false` when `other` clears an `Option` field — a patch field `Option<T>` cannot
+/// express a clear), and `restore_row` records the current value so the patch that undoes a patch can be built (`false`
+/// under the same clear limit).
 trait PatchRow<T: Clone> {
     fn apply_row(&mut self, patch: &Option<T>);
-    fn diff_row(&self, other: &Self, out: &mut Option<T>);
+    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool;
+    fn restore_row(&self, out: &mut Option<T>) -> bool;
 }
 
-impl<T: Clone> PatchRow<T> for T {
+impl<T: Clone + PartialEq> PatchRow<T> for T {
     fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = value.clone();
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
-        *out = Some(other.clone());
+    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool {
+        if self != other {
+            *out = Some(other.clone());
+        }
+        true
+    }
+
+    fn restore_row(&self, out: &mut Option<T>) -> bool {
+        *out = Some(self.clone());
+        true
     }
 }
 
-impl<T: Clone> PatchRow<T> for Option<T> {
+impl<T: Clone + PartialEq> PatchRow<T> for Option<T> {
     fn apply_row(&mut self, patch: &Option<T>) {
         if let Some(value) = patch {
             *self = Some(value.clone());
         }
     }
 
-    fn diff_row(&self, other: &Self, out: &mut Option<T>) {
-        *out = other.clone();
+    fn diff_row(&self, other: &Self, out: &mut Option<T>) -> bool {
+        if self == other {
+            return true;
+        }
+        match other {
+            Some(value) => {
+                *out = Some(value.clone());
+                true
+            }
+            None => false,
+        }
     }
+
+    fn restore_row(&self, out: &mut Option<T>) -> bool {
+        match self {
+            Some(value) => {
+                *out = Some(value.clone());
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+/// 🧮️ Patch-level algebra of a row patch `Self` over the row type `E`: `merge` folds a later patch over an earlier one
+/// (later fields win), `restore` builds the patch that puts the patched fields of `row` back (`None` when a patched field
+/// held `None` in `row`, which a patch cannot express), `is_empty` tells a patch that sets nothing.
+pub trait RowPatch<E>: Sized {
+    fn merge(&mut self, later: Self);
+    fn restore(&self, row: &E) -> Option<Self>;
+    fn is_empty(&self) -> bool;
 }
 
 macro_rules! impl_identified_header {
@@ -63,13 +96,40 @@ macro_rules! impl_patchable {
 
             fn diff_patch(&self, other: &Self) -> Option<$patch> {
                 let mut patch = <$patch>::default();
-                $( PatchRow::diff_row(&self$(.$path)+, &other$(.$path)+, &mut patch.$f); )+
+                $( if !PatchRow::diff_row(&self$(.$path)+, &other$(.$path)+, &mut patch.$f) { return None; } )+
                 Some(patch)
+            }
+        }
+
+        impl RowPatch<$entity> for $patch {
+            fn merge(&mut self, later: Self) {
+                $( if later.$f.is_some() { self.$f = later.$f; } )+
+            }
+
+            fn restore(&self, row: &$entity) -> Option<Self> {
+                let mut restored = <$patch>::default();
+                $( if self.$f.is_some() && !PatchRow::restore_row(&row$(.$path)+, &mut restored.$f) { return None; } )+
+                Some(restored)
+            }
+
+            fn is_empty(&self) -> bool {
+                true $( && self.$f.is_none() )+
             }
         }
     };
 }
 // #endregion
+
+impl_patchable!(
+    TraceLink,
+    TraceLinkPatch,
+    {
+        [from_id] => from_id,
+        [to_id] => to_id,
+        [kind] => kind,
+        [label] => label,
+    }
+);
 
 // #region 🔖️SharedEnums
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar)]
@@ -564,7 +624,7 @@ pub struct ProgramMeta {
     pub timestamps: TimestampMeta,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -586,45 +646,27 @@ pub struct ProgramMetaPatch {
     pub timestamps: Option<TimestampMeta>,
 }
 
-impl Patchable<ProgramMetaPatch> for ProgramMeta {
-    fn apply_patch(&mut self, patch: &ProgramMetaPatch) {
-        PatchRow::apply_row(&mut self.schema, &patch.schema);
-        PatchRow::apply_row(&mut self.document_id, &patch.document_id);
-        PatchRow::apply_row(&mut self.title, &patch.title);
-        PatchRow::apply_row(&mut self.subtitle, &patch.subtitle);
-        PatchRow::apply_row(&mut self.purpose, &patch.purpose);
-        PatchRow::apply_row(&mut self.terminology, &patch.terminology);
-        PatchRow::apply_row(&mut self.classification, &patch.classification);
-        PatchRow::apply_row(&mut self.industry_sector, &patch.industry_sector);
-        PatchRow::apply_row(&mut self.project_type, &patch.project_type);
-        PatchRow::apply_row(&mut self.locale, &patch.locale);
-        PatchRow::apply_row(&mut self.revision, &patch.revision);
-        PatchRow::apply_row(&mut self.author_ids, &patch.author_ids);
-        PatchRow::apply_row(&mut self.source_system, &patch.source_system);
-        PatchRow::apply_row(&mut self.export_profile, &patch.export_profile);
-        PatchRow::apply_row(&mut self.timestamps, &patch.timestamps);
+impl_patchable!(
+    ProgramMeta,
+    ProgramMetaPatch,
+    {
+        [schema] => schema,
+        [document_id] => document_id,
+        [title] => title,
+        [subtitle] => subtitle,
+        [purpose] => purpose,
+        [terminology] => terminology,
+        [classification] => classification,
+        [industry_sector] => industry_sector,
+        [project_type] => project_type,
+        [locale] => locale,
+        [revision] => revision,
+        [author_ids] => author_ids,
+        [source_system] => source_system,
+        [export_profile] => export_profile,
+        [timestamps] => timestamps,
     }
-
-    fn diff_patch(&self, other: &Self) -> Option<ProgramMetaPatch> {
-        let mut patch = ProgramMetaPatch::default();
-        PatchRow::diff_row(&self.schema, &other.schema, &mut patch.schema);
-        PatchRow::diff_row(&self.document_id, &other.document_id, &mut patch.document_id);
-        PatchRow::diff_row(&self.title, &other.title, &mut patch.title);
-        PatchRow::diff_row(&self.subtitle, &other.subtitle, &mut patch.subtitle);
-        PatchRow::diff_row(&self.purpose, &other.purpose, &mut patch.purpose);
-        PatchRow::diff_row(&self.terminology, &other.terminology, &mut patch.terminology);
-        PatchRow::diff_row(&self.classification, &other.classification, &mut patch.classification);
-        PatchRow::diff_row(&self.industry_sector, &other.industry_sector, &mut patch.industry_sector);
-        PatchRow::diff_row(&self.project_type, &other.project_type, &mut patch.project_type);
-        PatchRow::diff_row(&self.locale, &other.locale, &mut patch.locale);
-        PatchRow::diff_row(&self.revision, &other.revision, &mut patch.revision);
-        PatchRow::diff_row(&self.author_ids, &other.author_ids, &mut patch.author_ids);
-        PatchRow::diff_row(&self.source_system, &other.source_system, &mut patch.source_system);
-        PatchRow::diff_row(&self.export_profile, &other.export_profile, &mut patch.export_profile);
-        PatchRow::diff_row(&self.timestamps, &other.timestamps, &mut patch.timestamps);
-        Some(patch)
-    }
-}
+);
 // #endregion
 
 // #region 🔖️ProjectDefinition
@@ -662,7 +704,7 @@ pub struct ProjectDefinition {
     pub timestamps: TimestampMeta,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -772,7 +814,7 @@ pub struct Stakeholder {
     pub success_metrics: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -888,7 +930,7 @@ pub struct UserProfile {
     pub stakeholder_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1004,7 +1046,7 @@ pub struct Activity {
     pub supervision_level: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1118,7 +1160,7 @@ pub struct Function {
     pub conflict_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1231,7 +1273,7 @@ pub struct ProgramElement {
     pub environmental_zone: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1346,7 +1388,7 @@ pub struct QuantityRequirement {
     pub variance_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1455,7 +1497,7 @@ pub struct Relationship {
     pub separation_requirements: Vec<SeparationKind>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1569,7 +1611,7 @@ pub struct Adjacency {
     pub internal_external_access: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1676,7 +1718,7 @@ pub struct Process {
     pub quality_gates: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1789,7 +1831,7 @@ pub struct FlowRequirement {
     pub verification_method: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1895,7 +1937,7 @@ pub struct AccessRule {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2003,7 +2045,7 @@ pub struct OperationalRequirement {
     pub escalation_contact_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2121,7 +2163,7 @@ pub struct Equipment {
     pub spare_parts: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2236,7 +2278,7 @@ pub struct Resource {
     pub sharing_ratio: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2348,7 +2390,7 @@ pub struct StorageRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2453,7 +2495,7 @@ pub struct EnvironmentalRequirement {
     pub verification_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2560,7 +2602,7 @@ pub struct HumanFactorRequirement {
     pub verification_method: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2671,7 +2713,7 @@ pub struct AccessibilityRequirement {
     pub universal_design_principles: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2779,7 +2821,7 @@ pub struct PrivacyRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2883,7 +2925,7 @@ pub struct SafetyRequirement {
     pub residual_risk: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -2987,7 +3029,7 @@ pub struct SecurityRequirement {
     pub audit_requirements: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3090,7 +3132,7 @@ pub struct RegulatoryRequirement {
     pub update_source: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3194,7 +3236,7 @@ pub struct SiteContext {
     pub max_coverage: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3297,7 +3339,7 @@ pub struct OrganizationalRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3398,7 +3440,7 @@ pub struct ServiceRequirement {
     pub feedback_channels: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3499,7 +3541,7 @@ pub struct InfrastructureRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3600,7 +3642,7 @@ pub struct InformationRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3701,7 +3743,7 @@ pub struct CommunicationRequirement {
     pub templates: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3803,7 +3845,7 @@ pub struct WayfindingRequirement {
     pub brand_integration: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -3905,7 +3947,7 @@ pub struct ScheduleRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4007,7 +4049,7 @@ pub struct FlexibilityRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4106,7 +4148,7 @@ pub struct GrowthPlan {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4208,7 +4250,7 @@ pub struct SustainabilityRequirement {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4311,7 +4353,7 @@ pub struct ResilienceRequirement {
     pub verification_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4413,7 +4455,7 @@ pub struct CostRequirement {
     pub sensitivity_factors: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4515,7 +4557,7 @@ pub struct DeliveryConstraint {
     pub constraint_status: LifecycleStatus,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4618,7 +4660,7 @@ pub struct Risk {
     pub monitoring_plan: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4719,7 +4761,7 @@ pub struct Conflict {
     pub related_risk_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4821,7 +4863,7 @@ pub struct Requirement {
     pub superseded_by: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -4924,7 +4966,7 @@ pub struct PriorityRecord {
     pub ranking_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5025,7 +5067,7 @@ pub struct Scenario {
     pub owner_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5126,7 +5168,7 @@ pub struct OptionEvaluation {
     pub evaluation_date: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5227,7 +5269,7 @@ pub struct Decision {
     pub artifact_refs: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5328,7 +5370,7 @@ pub struct ValidationRecord {
     pub validation_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5429,7 +5471,7 @@ pub struct PerformanceCriterion {
     pub incentive_threshold: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5530,7 +5572,7 @@ pub struct QualityRecord {
     pub continuous_improvement: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5631,7 +5673,7 @@ pub struct ArtifactRecord {
     pub source_system: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5732,7 +5774,7 @@ pub struct ChangeRecord {
     pub audit_event_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5832,7 +5874,7 @@ pub struct CollaborationRecord {
     pub survey_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -5930,7 +5972,7 @@ pub struct AnalysisRecord {
     pub raw_result_ref: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6028,7 +6070,7 @@ pub struct ReportRecord {
     pub related_decision_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6127,7 +6169,7 @@ pub struct SearchFilter {
     pub pinned: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6228,7 +6270,7 @@ pub struct StatusRecord {
     pub status_notes: Vec<TaggedNote>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6327,7 +6369,7 @@ pub struct Workshop {
     pub survey_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6428,7 +6470,7 @@ pub struct Survey {
     pub survey_status: LifecycleStatus,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6529,7 +6571,7 @@ pub struct Issue {
     pub escalation_level: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6629,7 +6671,7 @@ pub struct AuditEvent {
     pub retention_until: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6728,7 +6770,7 @@ pub struct TemplateRecord {
     pub source_organization: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6828,7 +6870,7 @@ pub struct KnowledgeRecord {
     pub usage_count: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -6927,7 +6969,7 @@ pub struct BenchmarkRecord {
     pub last_verified: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7028,7 +7070,7 @@ pub struct Assumption {
     pub artifact_refs: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7131,7 +7173,7 @@ pub struct ConstraintRecord {
     pub escalation_contact_id: Option<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7238,7 +7280,7 @@ pub struct ComplianceRecord {
     pub artifact_refs: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7343,7 +7385,7 @@ pub struct ApprovalRecord {
     pub audit_trail_ref: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7445,7 +7487,7 @@ pub struct MeetingRecord {
     pub approval_ids: Vec<EntityId>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -7553,7 +7595,7 @@ pub struct Governance {
     pub governance_performance: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

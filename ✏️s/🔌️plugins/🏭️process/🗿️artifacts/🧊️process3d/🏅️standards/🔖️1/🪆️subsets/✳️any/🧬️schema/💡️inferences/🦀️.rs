@@ -19,6 +19,7 @@
 //! recipe's §3 prescribes.
 
 use crate::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+use crate::standards::v1::subsets::any::io::text::inferences::{hash_value, prefix_signature};
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use semio_framework_value::FromValue;
@@ -225,10 +226,13 @@ pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingS
     let mut handle = current?;
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
         let tool = tool_solid_for_measure(session.kernel_mut(), &step.measure)?;
-        let next = match step.measure {
-            ProcessMeasure::Attach { .. } => session.kernel_mut().fuse(&handle, &tool).ok()?,
-            _ => session.kernel_mut().cut(&handle, &tool).ok()?,
+        let result = match step.measure {
+            ProcessMeasure::Attach { .. } => session.kernel_mut().fuse(&handle, &tool),
+            _ => session.kernel_mut().cut(&handle, &tool),
         };
+        #[cfg(test)]
+        if let Err(error) = &result { eprintln!("[DEBUG] Process replay step {} refused: {error}", step.id); }
+        let next = result.ok()?;
         handle = next;
         session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
     }

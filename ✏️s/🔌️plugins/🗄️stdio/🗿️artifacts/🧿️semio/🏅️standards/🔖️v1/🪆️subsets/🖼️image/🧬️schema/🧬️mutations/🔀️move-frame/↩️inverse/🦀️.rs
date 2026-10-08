@@ -1,13 +1,11 @@
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::move_frame;
+//! ↩️ Inverse for `MoveFrame`.
 
-/// ↩️ Inverse of move-frame — swaps `from`/`to` (structural, base-content-independent).
+use super::super::*;
+
+//#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, from: usize, to: usize) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
-    Ok({
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }), base)?
-
-    })
+pub fn inverse(payload: &super::MoveFrame, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    let super::MoveFrame { from, to } = payload;
+    Ok(vec![SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: *to, to: *from })])
 }
+//#endregion 🔖️Inverse

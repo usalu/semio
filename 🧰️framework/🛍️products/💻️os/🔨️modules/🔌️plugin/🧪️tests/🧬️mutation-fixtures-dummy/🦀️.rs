@@ -90,8 +90,20 @@ pub(crate) struct DummyDiff {
     count: Option<i32>,
 }
 
+impl protocol::DiffAlgebra<DummySnapshot> for DummyDiff {
+    fn inverse(&self, base: &DummySnapshot) -> Self {
+        Self { count: self.count.map(|_| base.count) }
+    }
+    fn between(base: &DummySnapshot, other: &DummySnapshot) -> Self {
+        Self { count: (base.count != other.count).then_some(other.count) }
+    }
+    fn is_empty(&self) -> bool {
+        self.count.is_none()
+    }
+}
+
 impl MutationDiff<DummySnapshot> for DummyDiff {
-    fn apply(&self, snapshot: &DummySnapshot) -> protocol::MutationApplyResult<DummySnapshot> {
+    fn apply(&self, snapshot: &DummySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DummySnapshot> {
         Ok(DummySnapshot { count: self.count.unwrap_or(snapshot.count) })
     }
 
@@ -455,6 +467,8 @@ impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
     /// no child, so the un-openable operation is the honest declaration. `PackMemberSnapshotOpen`
     /// additionally demands `RetireOwned`, which the dummy snapshot does not implement.
     type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+
+    fn member_store_owners_birth_bytes() -> usize { crate::app::bounded_document_store_owners_birth_bytes::<Self, DummyMutation>() }
 
     fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {
         crate::app::bounded_document_store_owners::<Self, DummyMutation>()

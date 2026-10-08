@@ -211,10 +211,6 @@
     "source": {
       "command": "socket-grant-command-source-check",
       "target": "socket-grant-command-source-check",
-      "launchName": "⚖️gate🔌️socket-grant📐️source",
-      "launchCommand": "bun nx run os-hub:socket-grant-command-source-check",
-      "launchGroup": "4_gate",
-      "launchOrder": 411.09999,
       "inputs": [
         "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts",
@@ -241,18 +237,12 @@
         "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🌎️hub/🏗️bootstrap/🦀️.rs",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-        "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-        "{workspaceRoot}/.vscode/launch.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ]
     },
     "native": {
       "command": "socket-grant-check",
       "target": "socket-grant-check",
-      "launchName": "⚖️gate🔌️socket-grant🛡️server",
-      "launchCommand": "bun nx run os-hub:socket-grant-check",
-      "launchGroup": "4_gate",
-      "launchOrder": 411.1,
       "inputs": [
         "hubSocketGrantCommandSources"
       ]

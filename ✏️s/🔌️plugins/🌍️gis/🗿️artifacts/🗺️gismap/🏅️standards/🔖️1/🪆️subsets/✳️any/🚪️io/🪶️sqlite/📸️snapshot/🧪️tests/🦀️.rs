@@ -39,7 +39,7 @@ async fn sqlite_snapshot_gismap_real_declaration_public_typed_io() {
 
 #[test]
 fn sqlite_snapshot_gis_map_whole_native_control_preserves_exact_fields_and_interior_cancellation(){
- let mut value=fixture();let old=std::mem::replace(&mut value.positions[0].data,semio_framework_value::DslValue::Array((0..600).map(|i|semio_framework_value::DslValue::String(if i==0{"long 世界".repeat(20000)}else{"child".into()})).collect()));crate::standards::v1::subsets::any::io::sqlite::snapshot::owned_pack::retire_value(old);
+ let mut value=fixture();let old=std::mem::replace(&mut value.positions[0].data,semio_framework_value::DslValue::Array((0..600).map(|i|semio_framework_value::DslValue::String(if i==0{"long 世界".repeat(20000)}else{"child".into()})).collect()));crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::retire_value(old);
  let limits=SqliteDatabaseLimits::default();let expected=value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
  for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value)),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value))]{
   let restored=GisMapSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);GisMapSnapshot::retire_sqlite_snapshot(restored);
@@ -81,7 +81,7 @@ fn sqlite_snapshot_map_explicit_native_schema_and_row_admission_precedes_work() 
 }
 #[test]
 fn sqlite_snapshot_map_explicit_native_output_exact_file_frontier_and_unicode_cancel() {
- let mut snapshot=fixture();let old=std::mem::replace(&mut snapshot.positions[0].data,semio_framework_value::DslValue::String("interior 世界".repeat(20000)));crate::standards::v1::subsets::any::io::sqlite::snapshot::owned_pack::retire_value(old);
+ let mut snapshot=fixture();let old=std::mem::replace(&mut snapshot.positions[0].data,semio_framework_value::DslValue::String("interior 世界".repeat(20000)));crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::retire_value(old);
  let limits=SqliteDatabaseLimits::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
   let payload=<GisMapSnapshot as ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();

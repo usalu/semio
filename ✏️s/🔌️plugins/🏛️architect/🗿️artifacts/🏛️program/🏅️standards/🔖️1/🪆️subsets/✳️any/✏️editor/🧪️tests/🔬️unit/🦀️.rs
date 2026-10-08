@@ -524,11 +524,11 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     for (slot, child_id) in [("knowledge", snapshot.knowledge.child_id.clone()), ("benchmarks", snapshot.benchmarks.child_id.clone())] {
         assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");
     }
-    assert!(!crate::program_knowledge(&snapshot).is_empty(), "the demo example must survive the archive door with its knowledge rows, not an empty table");
-    assert!(!crate::program_benchmarks(&snapshot).is_empty(), "the demo example must survive the archive door with its benchmark rows, not an empty table");
+    assert!(!snapshot.knowledge_payload.is_empty(), "the demo example must survive the archive door with its knowledge rows, not an empty table");
+    assert!(!snapshot.benchmarks_payload.is_empty(), "the demo example must survive the archive door with its benchmark rows, not an empty table");
     for (slot, child_id, rows) in [
-        ("knowledge", snapshot.knowledge.child_id.clone(), crate::program_knowledge(&snapshot).len()),
-        ("benchmarks", snapshot.benchmarks.child_id.clone(), crate::program_benchmarks(&snapshot).len()),
+        ("knowledge", snapshot.knowledge.child_id.clone(), snapshot.knowledge_payload.len()),
+        ("benchmarks", snapshot.benchmarks.child_id.clone(), snapshot.benchmarks_payload.len()),
     ] {
         let derived = crate::genesis_program_child_pack(&snapshot, slot, &child_id).unwrap_or_else(|| panic!("the loaded snapshot still derives its own {slot} member"));
         let table = <semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));

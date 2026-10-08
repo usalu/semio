@@ -54,6 +54,14 @@ const KINDS: &[&str] = &[
     "delete-generation",
     "rename-generation",
     "change-generation-value",
+    "change-slider-value",
+    "drag-transforms",
+    "rotate-transforms",
+    "scale-transforms",
+    "move-nodes",
+    "change-widget-input",
+    "select-generation",
+    "change-generation-preview",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Generation3dDiff` mirrors `Generation3dSnapshot`'s two fields name for name, so the table is empty; the sibling `🀄️wfc` subset, whose diff splits every collection into a `<name>Removed`/`<name>Upserted` pair, carries real rows here.
@@ -86,17 +94,17 @@ fn vector(ctx: &Context) -> Result<Vector, String> {
     Ok(Vector { kind, before: ctx.input_json(&spec.str("before"))?, mutation: ctx.input_json(&spec.str("mutation"))?, diff: ctx.input_json(&spec.str("diff"))?, after: ctx.input_json(&spec.str("after"))?, outcome: ctx.input_json(&spec.str("outcome"))? })
 }
 
-/// 🐫️ `create-widget` → `CreateWidget`, the Rust variant name this subset's EXTERNALLY tagged enum writes as the
-/// payload's sole object key.
+/// 🐫️ `create-widget` → `createWidget`, the lowerCamel variant name this subset's INTERNALLY tagged enum writes as the
+/// payload's `mutation` member.
 fn discriminant(kind: &str) -> String {
-    kind.split('-').map(|word| format!("{}{}", word[..1].to_uppercase(), &word[1..])).collect()
+    kind.split('-').enumerate().map(|(at, word)| if at == 0 { word.to_string() } else { format!("{}{}", word[..1].to_uppercase(), &word[1..]) }).collect()
 }
 
-/// 🏷️ The kind a committed payload actually declares: this subset tags EXTERNALLY, so the
-/// discriminant is the payload's single member name and a payload of any other arity is malformed.
+/// 🏷️ The kind a committed payload actually declares: this subset tags INTERNALLY, so the discriminant is the payload's
+/// `mutation` member and a payload without one is malformed.
 fn declared_kind(mutation: &Json) -> String {
-    match mutation {
-        Json::Object(entries) if entries.len() == 1 => entries[0].0.clone(),
+    match mutation.get("mutation") {
+        Some(Json::String(tag)) => tag.clone(),
         _ => String::new(),
     }
 }
@@ -244,15 +252,15 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "shared://🧬️mutations/🗑️delete/removes-the-selected-generation-2-and-falls-back/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.input_bytes(SNAPSHOT)?;
     let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();
     law::reparsed_not_copied(reserialized.as_bytes(), &committed)?;
     let reparsed = semio_repo_test_host::parse_json(&reserialized)?;
     law::round_trip_preserves(&reparsed, &parsed)?;
-    let fixture_widgets = reparsed.get("fixture").map(|fixture| fixture.array("widgets").len()).unwrap_or(0);
-    let fixture_synapses = reparsed.get("fixture").map(|fixture| fixture.array("synapses").len()).unwrap_or(0);
+    let fixture_widgets = reparsed.get("hostSnapshot").map(|fixture| fixture.array("widgets").len()).unwrap_or(0);
+    let fixture_synapses = reparsed.get("hostSnapshot").map(|fixture| fixture.array("synapses").len()).unwrap_or(0);
     let generations = reparsed.get("generation").map(|generation| generation.array("generations").len()).unwrap_or(0);
     if fixture_widgets < 2 || fixture_synapses == 0 || generations < 2 {
         return Err(format!("the committed round-trip snapshot is the two-widget, one-synapse graph with a two-generation history this scenario describes, but it carries {fixture_widgets}/{fixture_synapses}/{generations}"));

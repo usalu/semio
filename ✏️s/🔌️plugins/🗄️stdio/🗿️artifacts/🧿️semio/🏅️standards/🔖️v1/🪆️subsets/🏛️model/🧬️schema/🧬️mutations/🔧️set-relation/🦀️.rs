@@ -1,6 +1,4 @@
-//! 🔗️ `set-relation` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔗️ `set-relation` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -21,11 +19,11 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetRelat
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relation", kind: "set-relation", record: "SetRelation" };
 
     fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<<SemioModelMutation as Mutation<SemioModelSnapshot>>::Diff> {
-        agg_diff(&SemioModelMutation::SetRelation(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioModelSnapshot) -> Result<Vec<SemioModelMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioModelMutation::SetRelation(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -37,3 +35,10 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for SetRelat
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

@@ -1205,6 +1205,38 @@
         "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" shared-owner-native",
         "forwardAllArgs": true
       }
+    },
+    "root-dev-mirror-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\" canonical-bootstrap-folder-mirror-check source",
+        "forwardAllArgs": true
+      }
+    },
+    "root-dev-mirror-process": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts\" canonical-bootstrap-folder-mirror-check process",
+        "forwardAllArgs": true
+      }
+    },
+    "root-service-oracles": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-service-oracles",
+        "forwardAllArgs": true
+      }
+    },
+    "root-service-current": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-service-current",
+        "forwardAllArgs": true
+      }
     }
   }
 }

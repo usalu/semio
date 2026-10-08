@@ -1,34 +1,25 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": null,
   "savedCameras": null,
   "scene": {
-    "background": "#101014",
-    "sun": {
-      "enabled": true,
-      "azimuth": 315.0,
-      "elevation": 35.0,
-      "intensity": 2.4,
-      "color": "#ffffff"
-    },
-    "ambient": {
-      "intensity": 1.15,
-      "color": "#ffffff"
-    },
-    "shadow": {
-      "enabled": true,
-      "opacity": 0.35,
-      "softness": 1.0
-    },
-    "material": {
-      "color": "#9aa0ab",
-      "metalness": 0.0,
-      "roughness": 1.0,
-      "emissive": "#000000",
-      "emissiveIntensity": 0.0,
-      "stroke": ""
-    }
+    "background": null,
+    "sunEnabled": null,
+    "sunAzimuth": 315.0,
+    "sunElevation": null,
+    "sunIntensity": null,
+    "sunColor": null,
+    "ambientIntensity": null,
+    "ambientColor": null,
+    "shadowEnabled": null,
+    "shadowOpacity": null,
+    "shadowSoftness": null,
+    "materialColor": null,
+    "materialMetalness": null,
+    "materialRoughness": null,
+    "materialEmissive": null,
+    "materialEmissiveIntensity": null,
+    "materialStroke": null
   },
   "shots": null,
   "activeShotId": null,

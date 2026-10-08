@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "beforeBytes",
+    "afterBytes",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "engine_canvas::EngineSurfaceRegistry"
+    },
+    "beforeBytes": {
+      "const": 86544
+    },
+    "afterBytes": {
+      "const": 90264
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "stack",
+              "worker",
+              "threshold",
+              "capacity",
+              "owner-bytes",
+              "owner-name",
+              "other-row",
+              "element",
+              "extra-field",
+              "missing-row",
+              "before-hash",
+              "after-hash",
+              "inverse",
+              "path",
+              "binding",
+              "missing-binding",
+              "assertion"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

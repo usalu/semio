@@ -1,0 +1,5 @@
+# Current UI Nine Actual Source Controls
+
+Exactre-registeredbothGUI273002 retry actualNx0. Readytrue receiptSHA256 `6d177fd2bf88403e3e3f7306e13f6bcb6e144329f0e764c91bc2c79cbfd43278` seals1191currentbindings/21own-JSON5+5own-AJVschema normative/adversarialoutcomes. Immediateindependentbindingdrift 0. Completefivecaptured14baseline/currentbody/hash transitions retained withsole166040descriptorfullpair/alloriginalwholeassertions/owners/caps/stacks/threshold conserved. EarlierUI8latecurrentdrift/UI9prechildregistrationrefusal retained; wrapperretryoutputdurable.
+
+Source22explicitchoice maybindfreshUI9 afterLowcurrentheldadmission withoutmethodcode/schema changes. NoRootfreeze/physicaltype-sizeattribution/native/livelayout/publicationacceptance, noRootwrite/compiler. Allthreefreshoriginalwhole pluscompletecurrentapplicability stillrequired.

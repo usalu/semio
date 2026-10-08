@@ -15,6 +15,7 @@ fn refusal(value:&FieldValue)->ValueError {
     };
     ValueError::new(kind,row["message"].as_str().unwrap())
 }
+impl semio_framework_dsl_record::BorrowedDslField for RefusingField { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text; }
 impl DslField for RefusingField {
     fn shape()->Shape {Shape::Text}
     fn to_value(&self)->FieldValue {panic!("ordinary projection must not run")}

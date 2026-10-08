@@ -15,23 +15,8 @@ pub fn inverse(payload: &super::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> Re
     };
     let index = node.handles.iter().position(|h| h.id == payload.handle_id);
     let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::add_node_handle::add_node_handle(payload.node_id.clone(), handle.clone(), index)];
-    for edge in base.edges.iter().filter(|edge| edge.source == payload.handle_id || edge.target == payload.handle_id) {
-        mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_handles::connect_handles(
-            edge.id.clone(),
-            edge.source.clone(),
-            edge.target.clone(),
-            edge.edge_kind.clone(),
-            edge.gap,
-            edge.shift,
-            edge.rise,
-            edge.rotation,
-            edge.turn,
-            edge.tilt,
-            edge.x,
-            edge.y,
-            edge.source_tip.clone(),
-            edge.target_tip.clone(),
-        ));
+    for (index, edge) in base.edges.iter().enumerate().filter(|(_, edge)| edge.source == payload.handle_id || edge.target == payload.handle_id) {
+        crate::standards::v1::subsets::any::schema::mutations::connect_handles::restore_edge(edge, index, &mut mutations);
     }
     mutations
 

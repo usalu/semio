@@ -34,7 +34,6 @@ message SemioFlowSnapshot {
 }
 message SemioFlowMutation {
   string mutation = 1;
-  SemioFlowSnapshot snapshot = 2;
   FlowNode node = 3;
   FlowEdge edge = 4;
   string id = 5;
@@ -49,7 +48,6 @@ message SemioFlowMutation {
 
 message SemioFlowMutationText {
   string mutation = 1;
-  optional SemioFlowSnapshot snapshot = 2;
   optional FlowNode node = 3;
   optional FlowEdge edge = 4;
   optional string id = 5;

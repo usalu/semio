@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "smoke-1",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "smoke-2",
+      "mutation": "previous-channel",
+      "accepted": false
+    },
+    {
+      "id": "smoke-3",
+      "mutation": "future-channel",
+      "accepted": false
+    },
+    {
+      "id": "smoke-4",
+      "mutation": "stack-budget",
+      "accepted": false
+    },
+    {
+      "id": "smoke-5",
+      "mutation": "request-change",
+      "accepted": false
+    },
+    {
+      "id": "smoke-6",
+      "mutation": "drop-apps",
+      "accepted": false
+    },
+    {
+      "id": "smoke-7",
+      "mutation": "selected-app",
+      "accepted": false
+    },
+    {
+      "id": "smoke-8",
+      "mutation": "exit-success",
+      "accepted": false
+    },
+    {
+      "id": "smoke-9",
+      "mutation": "runtime-change",
+      "accepted": false
+    },
+    {
+      "id": "smoke-10",
+      "mutation": "body-truncate",
+      "accepted": false
+    },
+    {
+      "id": "smoke-11",
+      "mutation": "before-hash",
+      "accepted": false
+    },
+    {
+      "id": "smoke-12",
+      "mutation": "after-hash",
+      "accepted": false
+    },
+    {
+      "id": "smoke-13",
+      "mutation": "forward",
+      "accepted": false
+    },
+    {
+      "id": "smoke-14",
+      "mutation": "inverse",
+      "accepted": false
+    },
+    {
+      "id": "smoke-15",
+      "mutation": "unknown-field",
+      "accepted": false
+    },
+    {
+      "id": "smoke-16",
+      "mutation": "unknown-path",
+      "accepted": false
+    },
+    {
+      "id": "smoke-17",
+      "mutation": "channel-authority",
+      "accepted": false
+    },
+    {
+      "id": "smoke-18",
+      "mutation": "extra-pair",
+      "accepted": false
+    },
+    {
+      "id": "smoke-19",
+      "mutation": "drop-pair",
+      "accepted": false
+    },
+    {
+      "id": "smoke-20",
+      "mutation": "source-write",
+      "accepted": false
+    },
+    {
+      "id": "smoke-21",
+      "mutation": "native-acceptance",
+      "accepted": false
+    },
+    {
+      "id": "smoke-22",
+      "mutation": "publication-acceptance",
+      "accepted": false
+    }
+  ]
+}

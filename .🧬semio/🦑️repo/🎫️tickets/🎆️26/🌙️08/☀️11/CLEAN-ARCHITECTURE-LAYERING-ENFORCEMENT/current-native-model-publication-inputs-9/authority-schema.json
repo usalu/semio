@@ -1,0 +1,19 @@
+{
+  "anyOf": [
+    {
+      "const": {
+        "path": "$ticket/immutable-law.json"
+      }
+    },
+    {
+      "const": {
+        "path": "$root/node_modules/immutable-law.json"
+      }
+    },
+    {
+      "const": {
+        "path": "$external/immutable-law.json"
+      }
+    }
+  ]
+}

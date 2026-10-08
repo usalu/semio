@@ -14,7 +14,7 @@ use crate::widget_id_for;
 use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 
 
@@ -262,11 +262,14 @@ struct FlowSnapshotRetirement {
 }
 
 impl SnapshotRetirementFactory<FlowHostSnapshot> for FlowSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowHostSnapshot>) -> usize { std::mem::size_of::<FlowSnapshotRetirement>() }
+
     fn retire(&self, snapshot: Arc<FlowHostSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(FlowSnapshotRetirement { snapshot: Some(snapshot), host_snapshot: None })
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct FlowSnapshotRetirementFactory;
 
 impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
@@ -309,6 +312,7 @@ impl Drop for FlowSnapshotRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FlowOwnedHostSnapshotRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<FlowHostSnapshot> for FlowOwnedHostSnapshotRetirementFactory {
@@ -340,6 +344,7 @@ impl Drop for FlowMutationRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FlowMutationRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetirementFactory {
@@ -393,6 +398,14 @@ impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
     /// replacement or document archive carrying a real flow member was refused at member-open step 0,
     /// always.
     type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
+
+    fn member_store_owners_birth_bytes() -> usize {
+        crate::os_store::document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, FlowMutation>>([
+            semio_framework_value::factory_constructor_birth_bytes::<FlowSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<FlowOwnedHostSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<FlowMutationRetirementFactory>(0),
+        ])
+    }
 
     fn member_store_owners() -> DocumentStoreOwners<Self, FlowMutation> {
         DocumentStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedHostSnapshotRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new()))

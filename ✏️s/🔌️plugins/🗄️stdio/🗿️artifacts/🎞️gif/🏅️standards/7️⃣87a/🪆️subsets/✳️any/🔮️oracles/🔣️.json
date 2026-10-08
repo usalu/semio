@@ -104,9 +104,9 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
+          "mutationId": "set-image-pixels",
+          "sourceMutationDirectoryName": "🎞️set-image-pixels",
+          "mutationDirectoryName": "🎞️set-image-pixels",
           "scenarios": [
             {
               "id": "repaints-the-right-pixel-of-the-single-image",
@@ -116,8 +116,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-screen-size",
         "set-global-color-table",
         "set-background-color-index",
@@ -140,69 +138,6 @@
       "standardDirectoryName": "7️⃣87a",
       "subsetDirectoryName": "✳️any",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "gif-87a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-87a-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-87a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "gif-87a-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gif-87a-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "gif-87a-any-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "gif"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "gif-reencode-round-trip-agrees-with-reference-decoder"
-            ]
-          }
-        },
         {
           "id": "set-screen-size",
           "capability": "gif-87a-mutate",
@@ -573,54 +508,6 @@
       "reproducible": true,
       "family": "mechanical",
       "notes": "A conformant GIF87a written by Pillow 11.3.0 — correct signature, no Graphic Control Extension — with the no-mutation mutation expressed as the difference between the pair. Multi-image cases are assembled from Pillow's own image blocks, with the source headers asserted byte-identical first so no frame's colours are re-attributed. The judge is gif 0.13, a different third-party implementation, which reports the declared VERSION as part of its projection.",
-      "comparisonPipeline": "gif-87a-reader-compare-v1"
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.gif",
-        "standard": "87a",
-        "subset": "any"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-gif",
-          "path": "../🧫️fixtures/📸️set-snapshot/⬅️before.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:361229558a192837ae06c5f553029f2546ce4134ec9271e53fc258284bea4a58",
-          "bytes": 76
-        },
-        {
-          "role": "expected-after-gif",
-          "path": "../🧫️fixtures/📸️set-snapshot/➡️after.gif",
-          "mediaType": "image/gif",
-          "sha256": "sha256:772e54b448def4b4322aaa0c8b80cf5cf19573c12ee6625577c9c324fa79275d",
-          "bytes": 46
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "public-domain (synthetic, no third-party content embedded)"
-      },
-      "generator": {
-        "oracle": "gif-87a-any-mutate-reader",
-        "packageVersion": "11.3.0",
-        "engineFamily": "pillow",
-        "engineVersion": "11.3.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🏭️generator/📜️script.ts generate",
-        "platform": "darwin-arm64"
-      },
-      "comparisonProfile": "semantic-gif-87a-reader-v1",
-      "reproducible": true,
-      "family": "mechanical",
-      "notes": "A conformant GIF87a written by Pillow 11.3.0 — correct signature, no Graphic Control Extension — with the set-snapshot mutation expressed as the difference between the pair. Multi-image cases are assembled from Pillow's own image blocks, with the source headers asserted byte-identical first so no frame's colours are re-attributed. The judge is gif 0.13, a different third-party implementation, which reports the declared VERSION as part of its projection.",
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {

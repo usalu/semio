@@ -1,6 +1,5 @@
-//! 🎨️ `set-global-color-table` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎨️ `set-global-color-table` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +15,16 @@ pub struct SetGlobalColorTable {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "global-color-table", kind: "set-global-color-table", record: "SetGlobalColorTable" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetGlobalColorTable(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { gct } = self;
+        if let Some((message, target)) = base.frames.iter().enumerate().filter(|(_, frame)| frame.lct.is_none()).find_map(|(index, frame)| frame_colored(index, frame, gct.as_ref())) {
+            return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, target);
+        }
+        protocol::MutationOutcome::new(GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetGlobalColorTable(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: base.gct.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
     }

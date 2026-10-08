@@ -1,6 +1,5 @@
 # 🧬️ SemioValueMutation facet mirror — mirrors the `🦀️.rs` sibling's real fields.
 enum SemioValueMutationKind {
-  SET_SNAPSHOT
   SET_VALUE
   SET_MAP_ENTRY
   REMOVE_MAP_ENTRY
@@ -19,7 +18,6 @@ type SemioValuePathSegment {
 
 type SemioValueMutation {
   mutation: SemioValueMutationKind!
-  snapshot: SemioValueSnapshot
   path: [SemioValuePathSegment!]
   value: SemioValue
   key: String

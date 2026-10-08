@@ -1,0 +1,3 @@
+# Renderer Eight Current Held Admission
+
+Exact1fb1fbfaef9425bb0487a0e6084687d5138fbc97a924234bf17bcfd9e1db2b96 receipt/all60immediatebindings zero drift.45+5actual controls agree;fullpair identicalRenderer7andcurrentfixturebefore exact. CompleteStore currentbodyrefresh is heldauthority only,not physicalsizeinvariance. Original capacities/owners/stacks/assertions andWorldcoupling conserved. Admitted jointheldverification only with immediatecaptureauthorityrenewal; no isolatedfixture/native/pub acceptance.

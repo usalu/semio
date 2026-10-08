@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "statement"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "statement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "width"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "width": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

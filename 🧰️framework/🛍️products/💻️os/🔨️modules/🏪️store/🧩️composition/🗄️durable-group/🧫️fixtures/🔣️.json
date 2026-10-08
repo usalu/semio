@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "openedActor": "actor:owned-group-fixture",
   "limits": {
     "participants": 3,
     "eventBytes": 491520,

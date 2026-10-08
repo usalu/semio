@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeGlazingMaterialInfraredEmissivity` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GlazingMaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -17,11 +17,6 @@ pub fn diff(payload: &super::ChangeGlazingMaterialInfraredEmissivity, base: &Ene
     if existing.infrared_emissivity_front == payload.new_infrared_emissivity_front && existing.infrared_emissivity_back == payload.new_infrared_emissivity_back {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries these infrared emissivities.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {
-        item.infrared_emissivity_front = payload.new_infrared_emissivity_front;
-        item.infrared_emissivity_back = payload.new_infrared_emissivity_back;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { glazing_materials: Rows::modifying(GlazingMaterialPatch { infrared_emissivity_front: Some(payload.new_infrared_emissivity_front), infrared_emissivity_back: Some(payload.new_infrared_emissivity_back), ..GlazingMaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

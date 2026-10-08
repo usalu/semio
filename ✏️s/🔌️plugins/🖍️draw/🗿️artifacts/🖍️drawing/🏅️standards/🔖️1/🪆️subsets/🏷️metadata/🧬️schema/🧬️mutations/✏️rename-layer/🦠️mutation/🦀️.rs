@@ -28,11 +28,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RenameLayer {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename layer \"{}\" to \"{}\"", self.layer_id, self.new_name), &format!("Ebene \"{}\" in \"{}\" umbenennen", self.layer_id, self.new_name))
     }

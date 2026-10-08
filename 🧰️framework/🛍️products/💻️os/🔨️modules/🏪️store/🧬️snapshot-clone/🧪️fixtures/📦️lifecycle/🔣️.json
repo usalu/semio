@@ -2,7 +2,9 @@
   "grant": {
     "maximumItems": 1,
     "maximumBytes": 4096,
-    "maximumDepth": 64
+    "maximumDepth": 64,
+    "combinedCapacityCopyAndReleaseMaximum": 4096,
+    "alternateCapacityPayloadAndRelease": true
   },
   "largeCapacity": {
     "stringByteLength": 8192,
@@ -29,7 +31,12 @@
       "initial": 1,
       "value": 7,
       "interruptAfterTurns": 0,
-      "expected": { "published": true, "value": 7, "history": 1, "terminalEmpty": true }
+      "expected": {
+        "published": true,
+        "value": 7,
+        "history": 1,
+        "terminalEmpty": true
+      }
     },
     {
       "id": "admission-rejection",
@@ -37,7 +44,12 @@
       "initial": 2,
       "value": 8,
       "interruptAfterTurns": 0,
-      "expected": { "published": false, "value": 2, "history": 0, "terminalEmpty": true }
+      "expected": {
+        "published": false,
+        "value": 2,
+        "history": 0,
+        "terminalEmpty": true
+      }
     },
     {
       "id": "mid-copy-cancel",
@@ -45,7 +57,12 @@
       "initial": 3,
       "value": 9,
       "interruptAfterTurns": 2,
-      "expected": { "published": false, "value": 3, "history": 0, "terminalEmpty": true }
+      "expected": {
+        "published": false,
+        "value": 3,
+        "history": 0,
+        "terminalEmpty": true
+      }
     },
     {
       "id": "stale-supersession",
@@ -53,7 +70,12 @@
       "initial": 4,
       "value": 10,
       "interruptAfterTurns": 2,
-      "expected": { "published": false, "value": 5, "history": 1, "terminalEmpty": true }
+      "expected": {
+        "published": false,
+        "value": 5,
+        "history": 1,
+        "terminalEmpty": true
+      }
     },
     {
       "id": "edit-fault",
@@ -61,7 +83,12 @@
       "initial": 6,
       "value": 11,
       "interruptAfterTurns": 4,
-      "expected": { "published": false, "value": 6, "history": 0, "terminalEmpty": true }
+      "expected": {
+        "published": false,
+        "value": 6,
+        "history": 0,
+        "terminalEmpty": true
+      }
     },
     {
       "id": "over-budget-edit",
@@ -69,7 +96,12 @@
       "initial": 7,
       "value": 12,
       "interruptAfterTurns": 0,
-      "expected": { "published": false, "value": 7, "history": 0, "terminalEmpty": true }
+      "expected": {
+        "published": false,
+        "value": 7,
+        "history": 0,
+        "terminalEmpty": true
+      }
     }
   ]
 }

@@ -203,3 +203,7 @@ fn document_source(source:DocumentSource<'_>,options:&EncodeOptions,control:&mut
 #[cfg(test)]
 #[path="../🧪️tests/🚦️refusals/🦀️.rs"]
 mod refusal_tests;
+
+#[path="🫳️borrowed/⏳️cursor/🦀️.rs"]
+mod borrowed_cursor;
+pub use borrowed_cursor::{BorrowedProjectedPackCursor,BorrowedProjectedPackProgress};

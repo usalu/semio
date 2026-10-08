@@ -13,8 +13,6 @@
     "id": {
       "$ref": "#/$defs/GraphNodeId",
       "x-semio-ui": {
-        "widget": "reference",
-        "role": "target",
         "label": {
           "en": "Node",
           "de": "Knoten"
@@ -23,11 +21,6 @@
           "en": "Node whose id changes.",
           "de": "Knoten, dessen ID sich ändert."
         },
-        "ref": {
-          "kind": "node",
-          "domain": "graph",
-          "granularity": "node"
-        },
         "group": "target",
         "order": 10
       }
@@ -35,8 +28,6 @@
     "new_id": {
       "$ref": "#/$defs/NewGraphNodeId",
       "x-semio-ui": {
-        "widget": "text",
-        "role": "value",
         "label": {
           "en": "New id",
           "de": "Neue ID"
@@ -59,7 +50,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node ID",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     },
@@ -72,7 +76,15 @@
       "properties": {
         "value": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "New ID",
+              "de": "Neue ID"
+            }
+          }
         }
       }
     }

@@ -5,7 +5,6 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
 import { join, resolve } from "node:path";
-import { getNodeValue, parseTree } from "jsonc-parser";
 import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath);
@@ -86,15 +85,13 @@ test("WAL and selected-resume snapshots use owned proof while forward execution 
   expect(calls(apply).filter((name) => name === "validateResumeTuples")).toHaveLength(3);
 });
 
-test("recovery authority is mounted through its exact Nx and launch registrations", () => {
-  const row = vector.registration, root = resolve(library, "../../../../.."), packagePath = join(library, "📦️packages/🟦️typescript");
+test("recovery authority is mounted through its exact Nx registration", () => {
+  const row = vector.registration, packagePath = join(library, "📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packagePath, "📋️project.json"), "utf8"));
   expect(project.targets["test-" + row.id]).toEqual({ executor: "nx:run-commands", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
   const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
   expect(router).toContain('segments[0] === "' + row.id + '"');
   expect(router).toContain('🧪️tests/🛟️' + row.id + '/🟦️.ts');
-  const document = getNodeValue(parseTree(readFileSync(join(root, ".vscode/launch.json"), "utf8"))!);
-  expect(document.configurations.filter((entry: any) => entry.name === row.name)).toEqual([{ name: row.name, type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/repo-lib:test-" + row.id, cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: row.order } }]);
 });
 
 

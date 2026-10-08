@@ -31,7 +31,7 @@ impl protocol::OpBinary for crate::schema::mutations::LowpolyMutation {
         Ok(crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: error.valid_up_to(), detail: error.to_string() })?;
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: error.valid_up_to() as u64, detail: error.to_string() })?;
         crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).map_err(|error| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: error.to_string() })
     }
 }

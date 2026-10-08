@@ -1,5 +1,7 @@
 //! 🎨️ Typed fill editing for the inspector and canvas gradient handles.
 use crate::{FillStyle, GradientStop};
+use semio_framework_value::list::PagedList;
+static EMPTY_STOPS: std::sync::LazyLock<PagedList<GradientStop, {usize::MAX}>> = std::sync::LazyLock::new(Default::default);
 #[path="🎨️sampling/🦀️.rs"]
 pub mod sampling;
 
@@ -29,12 +31,19 @@ pub enum FillType { None, Solid, LinearGradient, RadialGradient }
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum FillAxis { X1, Y1, X2, Y2, Cx, Cy, R }
 
-pub fn stops(fill: &FillStyle) -> &[GradientStop] {
-    match fill { FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } => stops, _ => &[] }
+pub fn stops(fill: &FillStyle) -> &PagedList<GradientStop, {usize::MAX}> {
+    match fill { FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } => stops, _ => &EMPTY_STOPS }
 }
 
-fn stops_mut(fill: &mut FillStyle) -> Result<&mut Vec<GradientStop>, &'static str> {
+fn stops_mut(fill: &mut FillStyle) -> Result<&mut PagedList<GradientStop, {usize::MAX}>, &'static str> {
     match fill { FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } => Ok(stops), _ => Err("Select a gradient fill") }
+}
+
+fn sort_stops(stops: &mut PagedList<GradientStop, {usize::MAX}>) {
+    for index in 1..stops.len() {
+        let mut current = index;
+        while current > 0 && stops[current].offset.total_cmp(&stops[current - 1].offset).is_lt() { stops.swap(current, current - 1); current -= 1; }
+    }
 }
 
 fn color_mut(fill: &mut FillStyle, index: Option<usize>) -> Result<&mut [f64;4], &'static str> {
@@ -52,7 +61,7 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
     }
     if let FillEdit::Type { value } = edit {
         let color = match source { Some(FillStyle::Solid { color }) => *color, Some(fill) => stops(fill).first().map_or([0.0,0.0,0.0,1.0], |stop| stop.color), None => [0.0,0.0,0.0,1.0] };
-        let stops = source.map(stops).filter(|stops| !stops.is_empty()).map_or_else(|| vec![GradientStop { offset:0.0,color }, GradientStop { offset:1.0,color:[1.0,1.0,1.0,color[3]] }], <[GradientStop]>::to_vec);
+        let stops = source.map(stops).filter(|stops| !stops.is_empty()).map_or_else(|| [GradientStop { offset:0.0,color }, GradientStop { offset:1.0,color:[1.0,1.0,1.0,color[3]] }].into_iter().collect(), Clone::clone);
         return Ok(match value {
             FillType::None => None,
             FillType::Solid => Some(FillStyle::Solid { color }),
@@ -91,14 +100,14 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
             if !value.is_finite() || !(0.0..=1.0).contains(value) { return Err("Stop position must be between zero and one"); }
             let stops = stops_mut(&mut fill)?;
             stops.get_mut(*index).ok_or("Missing gradient stop")?.offset = *value;
-            stops.sort_by(|a,b| a.offset.total_cmp(&b.offset));
+            sort_stops(stops);
         }
         FillEdit::AddStop { offset } => {
             if !offset.is_finite() || !(0.0..=1.0).contains(offset) { return Err("Stop position must be between zero and one"); }
             let stops = stops_mut(&mut fill)?;
             if stops.len() >= 64 || stops.is_empty() { return Err("Cannot add another gradient stop"); }
-            stops.sort_by(|a,b| a.offset.total_cmp(&b.offset));
-            let right = stops.partition_point(|stop| stop.offset <= *offset);
+            sort_stops(stops);
+            let right = stops.iter().take_while(|stop| stop.offset <= *offset).count();
             let color = sampling::GradientRamp::new(stops)?.sample(*offset)?;
             stops.insert(right,GradientStop { offset:*offset,color });
         }

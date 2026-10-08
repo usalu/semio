@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteDailySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -28,8 +28,6 @@ pub fn diff(payload: &super::DeleteDailySchedule, base: &EnergyModelSnapshot) ->
     {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Schedule {} is still referenced by the document.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.schedules.daily.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { daily: Rows::removing(&base.model.schedules.daily, &payload.id), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

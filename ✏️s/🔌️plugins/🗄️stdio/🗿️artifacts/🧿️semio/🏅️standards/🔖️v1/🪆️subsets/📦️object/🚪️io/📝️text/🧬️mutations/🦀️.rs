@@ -6,7 +6,6 @@ use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutatio
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::object::schema::mutations::{
-    set_snapshot::SetSnapshot,
     create_brep::CreateBrep, create_mesh::CreateMesh, create_properties::CreateProperties, delete_brep::DeleteBrep, delete_mesh::DeleteMesh, delete_properties::DeleteProperties, move_object::MoveObject, rotate_object::RotateObject,
     scale_object::ScaleObject,
 };
@@ -55,8 +54,6 @@ fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, S
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_object_mutation(m: &SemioObjectMutation) -> String {
     match m {
-        SemioObjectMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioObjectMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioObjectMutation::MoveObject(p) => format!("moveObject:{},{},{}", p.translation.x, p.translation.y, p.translation.z),
         SemioObjectMutation::RotateObject(p) => format!("rotateObject:{},{},{},{}", p.rotation.x, p.rotation.y, p.rotation.z, p.rotation.w),
         SemioObjectMutation::ScaleObject(p) => format!("scaleObject:{},{},{}", p.scale.x, p.scale.y, p.scale.z),
@@ -71,16 +68,11 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioObjectMutation::PatchSnapshot(crate::standards::v1::subsets::object::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioObjectMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     if line == "deleteBrep" {
         return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {}));
@@ -142,7 +134,6 @@ impl protocol::OpText for SemioObjectMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
     let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
-        SemioObjectMutation::PatchSnapshot(crate::standards::v1::subsets::object::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioObjectMutation::MoveObject(MoveObject { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),
         SemioObjectMutation::RotateObject(RotateObject { rotation: SemioQuaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 } }),
         SemioObjectMutation::ScaleObject(ScaleObject { scale: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }),
@@ -177,7 +168,6 @@ use crate::standards::v1::subsets::object::schema::mutations::delete_properties;
 use crate::standards::v1::subsets::object::schema::mutations::move_object;
 use crate::standards::v1::subsets::object::schema::mutations::rotate_object;
 use crate::standards::v1::subsets::object::schema::mutations::scale_object;
-use crate::standards::v1::subsets::object::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

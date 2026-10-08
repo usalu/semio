@@ -94,6 +94,7 @@ fn selection_json(selection: &DomainSelection) -> JsonValue<'_> {
 //#endregion 🔒️CapturedRoot
 
 //#region ♻️ExactReadReturn
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct CapturedRootRetirementFactory;
 struct CapturedRootRetirement {
     owned: ManuallyDrop<CapturedRootRetirementState>,
@@ -103,6 +104,8 @@ struct CapturedRootRetirementState {
 }
 
 impl SnapshotRetirementFactory<CapturedRoot> for CapturedRootRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<CapturedRoot>) -> usize { std::mem::size_of::<CapturedRootRetirement>() }
+
     fn retire(&self, root: Arc<CapturedRoot>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) })
     }

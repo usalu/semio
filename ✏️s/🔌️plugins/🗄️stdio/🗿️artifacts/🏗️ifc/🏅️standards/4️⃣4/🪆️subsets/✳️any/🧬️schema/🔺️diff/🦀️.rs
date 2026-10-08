@@ -621,7 +621,7 @@ fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
 }
 
 impl MutationDiff<IfcSnapshot> for IfcDiff {
-    fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
+    fn apply(&self, base: &IfcSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<IfcSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }

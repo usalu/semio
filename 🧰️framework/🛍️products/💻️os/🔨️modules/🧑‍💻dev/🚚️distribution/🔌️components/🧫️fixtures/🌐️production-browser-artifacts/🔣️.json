@@ -3,7 +3,7 @@
     "project": "@semio-tech/framework-os-dev",
     "prerequisite": "build-s-react-release",
     "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
-    "launches": [
+    "targets": [
       "build",
       "build-cad-react-release",
       "build-puzzle3d-react-release",

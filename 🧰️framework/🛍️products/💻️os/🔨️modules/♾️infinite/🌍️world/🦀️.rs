@@ -12855,6 +12855,7 @@ struct World3dSceneBridgeCursor {
     mesh_cursor: usize,
     retiring_mesh: bool,
     mesh_digest:Option<WorldMeshDigestCursor>,
+    scalar_field: Option<ui_wgpu::wgpu::World3dScalarField>,
 }
 
 /// 🎯️ The plain-JSON instance lane may retain at most the objects and identifier bytes the
@@ -12883,7 +12884,8 @@ pub enum World3dSceneBridgeStep {
 /// idempotent: an unchanged payload re-stages nothing.
 fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::World3dScene) {
     let camera_digest = world3d_scene_digest(&[&world.camera_json]);
-    let digest = world3d_scene_digest(&[&world.meshes_json, &world.instances_json, &world.camera_json]);
+    let field_key = world.scalar_field.as_ref().map(|field| world.lanes.iter().find(|lane| lane.lane == "scalarField").map_or_else(|| ui_wgpu::wgpu::scene_lane_hash(&ui_wgpu::wgpu::world3d_modelling_lane_text(field)), |lane| lane.hash.clone())).unwrap_or_default();
+    let digest = world3d_scene_digest(&[&world.meshes_json, &world.instances_json, &world.camera_json, &field_key]);
     if state.scene_bridge_digest == Some(digest) || state.scene_bridge.as_ref().is_some_and(|cursor| cursor.digest == digest) {
         return;
     }
@@ -12904,6 +12906,7 @@ fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::W
         mesh_cursor: 0,
         retiring_mesh: false,
         mesh_digest:None,
+        scalar_field: world.scalar_field.clone(),
     });
 }
 
@@ -12986,6 +12989,11 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
             for mesh in &mut cursor.meshes {
                 if mesh.data.normals.len() != mesh.data.positions.len() && !mesh.data.attributes.values().any(|attribute| attribute.semantic == semio_framework::MeshAttributeSemantic::Normal) {
                     mesh.data.compute_normals();
+                }
+            }
+            if let Some(field) = cursor.scalar_field.as_ref() {
+                if let Some(mesh) = cursor.meshes.iter_mut().find(|mesh| mesh.id == field.mesh_id) {
+                    world3d_apply_scalar_field(&mut mesh.data, field);
                 }
             }
             if !world3d_scene_instance_interactions_are_bounded(&cursor.instances) {
@@ -13352,6 +13360,80 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     if changed {advance_world3d_view_revision(state);}
 }
 
+/// 🎯️ Constrains the live selection channels to the scene's pick granularity filter, the native twin of
+/// `world3dSelectionWithPickFilter` (`🌐️World3dHost/📏️modelling`): hover and selection reach only the chosen
+/// granularity, components of another granularity are dropped, and no filter leaves the guest-authored channels alone.
+/// Idempotent: it advances the view revision only when it changed something.
+fn apply_world3d_pick_filter(state: &mut World3dState, filter: Option<ui_wgpu::wgpu::World3dPickGranularity>) {
+    use ui_wgpu::wgpu::World3dPickGranularity as Granularity;
+    let Some(filter) = filter else { return };
+    let (granularity, targets) = match filter {
+        Granularity::Shape => ("mesh", WorldSelectionTargets { vertex: false, edge: false, face: false }),
+        Granularity::Face => ("face", WorldSelectionTargets { vertex: false, edge: false, face: true }),
+        Granularity::Edge => ("edge", WorldSelectionTargets { vertex: false, edge: true, face: false }),
+        Granularity::Vertex => ("vertex", WorldSelectionTargets { vertex: true, edge: false, face: false }),
+    };
+    let component_filter = filter != Granularity::Shape;
+    let keep_components = component_filter && state.granularity == granularity;
+    let keep_hovered = component_filter && state.hovered_component_mode.as_deref() == Some(granularity);
+    let mut changed = false;
+    if state.granularity != granularity {
+        state.granularity = granularity.to_string();
+        changed = true;
+    }
+    if state.selection_targets != targets {
+        state.selection_targets = targets;
+        changed = true;
+    }
+    if !keep_components && !state.component_ids.is_empty() {
+        state.component_ids.clear();
+        changed = true;
+    }
+    if !keep_hovered && (state.hovered_component_mode.is_some() || state.hovered_component_id.is_some() || state.hovered_component_object_id.is_some()) {
+        state.hovered_component_mode = None;
+        state.hovered_component_id = None;
+        state.hovered_component_object_id = None;
+        changed = true;
+    }
+    if changed {
+        advance_world3d_view_revision(state);
+    }
+}
+
+fn srgb_byte_to_linear(byte: u8) -> f32 {
+    let value = f32::from(byte) / 255.0;
+    if value <= 0.04045 { value / 12.92 } else { ((value + 0.055) / 1.055).powf(2.4) }
+}
+
+/// 🌡️ Paints a scalar field into an inline mesh's colours, the native twin of `world3dMeshDataWithScalarField`
+/// (`🌐️World3dHost/📏️modelling`): a vertex field becomes the canonical linear per-vertex RGBA, a face field a constant
+/// per-triangle colour attribute. Returns `false`, leaving the mesh untouched, when the value count does not fit.
+fn world3d_apply_scalar_field(data: &mut WorldMeshBuffers, field: &ui_wgpu::wgpu::World3dScalarField) -> bool {
+    use ui_wgpu::wgpu::World3dScalarDomain;
+    let expected = match field.domain {
+        World3dScalarDomain::Vertex => data.vertex_count(),
+        World3dScalarDomain::Face => data.indices.len() / 3,
+    };
+    if field.values.len() != expected {
+        return false;
+    }
+    let bytes = field.color_bytes();
+    let linear: Vec<[f32; 4]> = bytes.chunks_exact(3).map(|rgb| [srgb_byte_to_linear(rgb[0]), srgb_byte_to_linear(rgb[1]), srgb_byte_to_linear(rgb[2]), 1.0]).collect();
+    data.attributes.retain(|_, attribute| attribute.semantic != semio_framework::MeshAttributeSemantic::Color);
+    match field.domain {
+        World3dScalarDomain::Vertex => data.colors = linear.into_iter().flatten().collect(),
+        World3dScalarDomain::Face => {
+            data.colors.clear();
+            let values = linear.into_iter().map(|color| semio_framework_value::DslValue::Array(color.into_iter().map(|channel| semio_framework_value::DslValue::float(f64::from(channel))).collect())).collect();
+            data.attributes.insert(
+                "scalarField".into(),
+                semio_framework::MeshAttribute { domain: semio_framework::MeshAttributeDomain::Face, semantic: semio_framework::MeshAttributeSemantic::Color, interpolation: semio_framework::MeshAttributeInterpolation::Constant, values, indices: None },
+            );
+        }
+    }
+    true
+}
+
 /// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads
 /// React's `World3dHost` parses every frame, but which the wgpu host had never copied into
 /// `World3dState` (so document-tree references never reached `render_world_3d`'s textured planes).
@@ -13418,6 +13500,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     sync_world3d_scene_fit(state, world.fit_json.as_deref());
     sync_world3d_projection_content_frame(state);
     sync_world3d_scene_selection(state, &world.selection_json);
+    apply_world3d_pick_filter(state, world.modelling_options.as_ref().and_then(|options| options.pick_filter));
     sync_world3d_scene_document_lanes(state, world);
     sync_world3d_brush_mesh_feedback(state, world.interaction_json.as_deref());
     let lease = match world.snapshot {

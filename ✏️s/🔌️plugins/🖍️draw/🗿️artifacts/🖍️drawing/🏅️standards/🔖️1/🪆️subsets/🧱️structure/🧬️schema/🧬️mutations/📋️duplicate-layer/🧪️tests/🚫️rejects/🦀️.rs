@@ -90,3 +90,11 @@ async fn declared_outcome_holds() {
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }
+
+/// ⚖️ A duplicate of a present layer sums its inverse diffs to exactly the negative of the forward insert.
+#[semio_framework_async_macros::async_test]
+async fn a_present_source_inverse_sums_to_the_negative_diff() {
+    let base = DrawingSnapshot { layers: vec![crate::schema::create_drawing_shape_layer_rect("Rect")].into(), ..Default::default() };
+    let source = crate::schema::layer_id(&base.layers[0]).clone();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::mutations::duplicate_layer(source.into()), &base).await;
+}

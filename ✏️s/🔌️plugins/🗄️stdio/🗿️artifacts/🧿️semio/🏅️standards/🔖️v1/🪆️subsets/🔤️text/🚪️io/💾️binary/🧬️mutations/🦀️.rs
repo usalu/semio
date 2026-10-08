@@ -27,8 +27,6 @@ const TEXT_KEYWORDS: [(&str, &str); 8] = [
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioTextMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-run");
 const TAG_REMOVE_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-run");
 const TAG_EDIT_RUN: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "edit-run");
@@ -41,8 +39,6 @@ const TAG_REMOVE_MARK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wire_tag(m: &SemioTextMutation) -> u8 {
     match m {
-        SemioTextMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioTextMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioTextMutation::InsertRun(_) => TAG_INSERT_RUN,
         SemioTextMutation::RemoveRun(_) => TAG_REMOVE_RUN,
         SemioTextMutation::EditRun(_) => TAG_EDIT_RUN,
@@ -66,11 +62,6 @@ fn print_op_args(m: &SemioTextMutation) -> String {
 
 impl protocol::OpBinary for SemioTextMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
@@ -84,9 +75,6 @@ impl protocol::OpBinary for SemioTextMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::text::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;

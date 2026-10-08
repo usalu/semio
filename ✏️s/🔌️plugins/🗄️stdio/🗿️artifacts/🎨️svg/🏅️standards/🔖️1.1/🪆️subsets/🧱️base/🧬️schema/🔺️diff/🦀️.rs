@@ -158,7 +158,7 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SvgSnapshot> for SvgDiff {
-    fn apply(&self, base: &SvgSnapshot) -> MutationApplyResult<SvgSnapshot> {
+    fn apply(&self, base: &SvgSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<SvgSnapshot> {
         if let Some(root) = &self.root {
             validate_svg_node(base.doc.root.as_ref(), root)?;
         }

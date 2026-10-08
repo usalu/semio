@@ -3,8 +3,7 @@
 //! The demonstrator playground's whole persistent snapshot is ONE metadata string, so
 //! `change-schema` is its entire mutation vocabulary. Its diff oracle is root-scoped — there is no
 //! target that could be missing, only the equality guard (`base.schema == new_schema` ⇒ Warning
-//! `mutation.no-op`) — and it emits `PlaygroundDiff { schema: Some(..) }`, deliberately leaving the
-//! whole-artifact `artifact` replacement slot alone.
+//! `mutation.no-op`) — and it emits `PlaygroundDiff { schema: Some(..) }`.
 //!
 //! 🔤️ Serde shape note: `PlaygroundMutation` carries NO `#[serde(tag = ..)]`, so unlike every other
 //! artifact in this ticket it encodes EXTERNALLY tagged — `{"ChangeSchema": {..}}` — and its
@@ -43,7 +42,7 @@ fn built_outcome() -> protocol::MutationOutcome<PlaygroundDiff> {
 /// `playground.experiment`.
 #[test]
 fn retags_the_only_persistent_field() {
-    let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-schema applies to its committed before-document");
+    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("change-schema applies to its committed before-document");
     assert_eq!(applied, expected_after(), "change-schema/retags-the-playground-document-schema: the retagged document differs from the committed after-snapshot");
     assert_eq!(applied.schema, "playground.experiment", "change-schema/retags-the-playground-document-schema: the schema tag must land on the payload's value");
 }
@@ -53,12 +52,12 @@ fn retags_the_only_persistent_field() {
 #[test]
 fn retagging_back_restores_before() {
     let base = before();
-    let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward change-schema applies");
+    let mut snapshot = protocol::apply_diff(built_outcome().diff(), &base).expect("forward change-schema applies");
     let inverse = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-schema/retags-the-playground-document-schema: the inverse of one retag is exactly one retag back");
     for step in &inverse {
         let undo = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the change-schema inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the change-schema inverse step applies");
     }
     assert_eq!(snapshot, base, "change-schema/retags-the-playground-document-schema: retagging back to playground.playground did not restore the before-document");
 }
@@ -89,8 +88,7 @@ fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "change-schema/retags-the-playground-document-schema: an accepted retag emits no diagnostics");
 }
 
-/// 🔺️ `PlaygroundDiff` has two slots — the whole-artifact `artifact` replacement and the sparse
-/// `schema` field. This mutation may set the second one only.
+/// 🔺️ `PlaygroundDiff` has one sparse slot, `schema`; this mutation sets exactly that one.
 #[test]
 fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(built_outcome().diff())).expect("produced change-schema diff encodes");
@@ -98,13 +96,11 @@ fn produces_committed_diff() {
     assert_eq!(produced, committed, "change-schema/retags-the-playground-document-schema: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `PlaygroundDiff` and re-encodes unchanged — `artifact` stays
-/// an explicit `null` because `PlaygroundDiff` carries no `skip_serializing_if`.
+/// 🔣️ The committed diff decodes to `PlaygroundDiff` and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
     let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
     assert_eq!(decoded.schema.as_deref(), Some("playground.experiment"), "change-schema/retags-the-playground-document-schema: the committed diff must set the new tag");
-    assert!(decoded.artifact.is_none(), "change-schema/retags-the-playground-document-schema: a one-field retag must never escalate into a whole-artifact replacement");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed diff JSON is not canonical");
@@ -114,6 +110,12 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: PlaygroundDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-schema diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-schema/retags-the-playground-document-schema: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff (`Σ = d₁ ⊕ … ⊕ dₙ`, `Σ.apply(after) == before`).
+#[test]
+fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before());
 }

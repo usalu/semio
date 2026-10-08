@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-brep/schema.json",
+  "title": "CreateBrep",
+  "x-semio-invariant": [
+    {
+      "id": "child-identity",
+      "description": {
+        "en": "A composed child's local id and target artifact id are independent, and the target uses the s.stdio.semio@v1 dialect of the expected subset.",
+        "de": "Die lokale Kind-Id und die Artefakt-Id seines Ziels sind unabhängig, und das Ziel verwendet den Dialekt s.stdio.semio@v1 des erwarteten Subsets."
+      }
+    }
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "childId",
+    "target",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createBrep"
+    },
+    "childId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child ID",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Local identity of the owned topology child.",
+          "de": "Lokale Identität des eigenen Topologie-Kindes."
+        },
+        "group": "identity",
+        "order": 10
+      },
+      "minLength": 1
+    },
+    "target": {
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "Owned target artifact identity and dialect.",
+          "de": "Eigene Zielartefakt-Identität und Dialekt."
+        },
+        "group": "source",
+        "order": 20
+      },
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifactId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dialect": {
+              "type": "object",
+              "properties": {
+                "artifactKind": {
+                  "const": "s.stdio.semio"
+                },
+                "standard": {
+                  "const": "v1"
+                },
+                "subset": {
+                  "const": "brep"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Ordered insertion position in the owned topology collection.",
+          "de": "Geordnete Einfügeposition in der eigenen Topologie-Sammlung."
+        },
+        "group": "identity",
+        "order": 30
+      }
+    }
+  }
+}

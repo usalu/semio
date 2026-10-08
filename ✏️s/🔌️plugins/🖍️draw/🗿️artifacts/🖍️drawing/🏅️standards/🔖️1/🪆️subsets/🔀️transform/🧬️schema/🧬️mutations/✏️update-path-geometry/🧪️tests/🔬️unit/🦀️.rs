@@ -3,7 +3,7 @@ use crate::{DrawingSnapshot, DrawingLayerNode, PathSegment};
 
 #[test]
 fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json")).unwrap();
     let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
@@ -11,7 +11,7 @@ fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     let result = mutation.diff(&before);
     assert!(result.messages().is_empty());
     assert_eq!(*result.diff(), serde_json::from_value::<crate::DrawingDiff>(expected).unwrap());
-    assert_eq!(result.diff().apply(&before).unwrap(), after);
+    assert_eq!(protocol::apply_diff(result.diff(), &before).unwrap(), after);
     let mut restored = after;
     for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
@@ -26,7 +26,7 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", before.into());
     let id = crate::schema::layer_id(&layer).to_string();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
-    let mutation = super::mutation::update_path_geometry(id.into(), after.clone());
+    let mutation = super::mutation::update_path_geometry(id.into(), after.clone().into());
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
     store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     let decoded: Vec<PathSegment> = semio_framework_pack_json::from_json_str(&fixture["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -38,4 +38,12 @@ fn path_geometry_mutation_roundtrip_fixture() {
     assert_eq!(path.segments, after.into());
     for mutation in inverse { crate::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
     assert_eq!(edited, document);
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff on the committed reshape scenario.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

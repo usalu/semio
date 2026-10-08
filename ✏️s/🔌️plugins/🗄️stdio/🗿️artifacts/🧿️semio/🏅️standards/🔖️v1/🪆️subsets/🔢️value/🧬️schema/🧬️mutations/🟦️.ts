@@ -1,14 +1,11 @@
 /** 🧬️ SemioValueMutation facet mirror — the `🦀️.rs` sibling is the real source of
  * truth; this discriminated union tracks its fields 1:1 (see `POLICY_FACET_MIRROR_DRIFT`). */
 import type { ValueId, SemioValueSnapshot, SemioValue } from "../📸️snapshot/🟦️";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioValuePathSegment = { kind: "key"; key: string } | { kind: "index"; index: number };
 export type SemioValuePath = SemioValuePathSegment[];
 
 export type SemioValueMutation =
-  | { mutation: "setSnapshot"; snapshot: SemioValueSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "setValue"; path: SemioValuePath; value: SemioValue }
   | { mutation: "setMapEntry"; path: SemioValuePath; key: string; value: SemioValue }
   | { mutation: "removeMapEntry"; path: SemioValuePath; key: string }

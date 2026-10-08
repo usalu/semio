@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "pairCount": 33,
+  "inputs": [
+    {
+      "role": "dag",
+      "pairCount": 15,
+      "receipt": "🗑️generated/current-dag-contract-4/admission.json"
+    },
+    {
+      "role": "world",
+      "pairCount": 10,
+      "receipt": "🗑️generated/current-native-world/source-model-8/admission.json"
+    },
+    {
+      "role": "renderer",
+      "pairCount": 1,
+      "receipt": "🗑️generated/current-engine-layout-13/green-1/admission.json"
+    },
+    {
+      "role": "smoke",
+      "pairCount": 1,
+      "receipt": "🗑️generated/current-native-smoke-channel-1/green/admission.json"
+    },
+    {
+      "role": "ui",
+      "pairCount": 1,
+      "receipt": "🗑️generated/current-native-ui-layout-9/green/admission.json"
+    },
+    {
+      "role": "notice",
+      "pairCount": 5,
+      "receipt": "🗑️generated/current-native-channel-notice-1/green/admission.json"
+    }
+  ]
+}

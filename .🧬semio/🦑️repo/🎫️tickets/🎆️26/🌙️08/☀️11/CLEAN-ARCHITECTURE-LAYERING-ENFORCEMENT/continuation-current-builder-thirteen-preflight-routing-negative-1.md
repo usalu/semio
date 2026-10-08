@@ -1,0 +1,3 @@
+# Current Builder Thirteen Routing Preflight Negative
+
+Initial exact GUI900.248002 invocation closed Nx1 before finite controls. Copied registered-row dynamic suffix remained -12 while successor rows used -13, so strict row lookup refused. Raw output and complete attempted helper body are retained under 🗑️generated/current-native-live-applicability-builder-13/preflight-negative-1. No method outcome, native execution or applicability capture occurred. The unsealed successor now corrects only its dynamic own-row suffix and reruns the same exact registered route. This assembly negative is not a semantic TDD red claim.

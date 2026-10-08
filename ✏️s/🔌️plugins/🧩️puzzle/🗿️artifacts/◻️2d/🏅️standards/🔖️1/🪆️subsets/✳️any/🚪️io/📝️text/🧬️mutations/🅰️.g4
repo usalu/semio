@@ -23,7 +23,7 @@ changeNodeAnchor: 'change-node-anchor' SP id SP anchor ;
 addNodeHandle: 'add-node-handle' SP id SP handleBlock SP indexOpt ;
 removeNodeHandle: 'remove-node-handle' SP id SP id ;
 replaceNodeHandle: 'replace-node-handle' SP id SP id SP handleBlock ;
-connectHandles: 'connect-handles' SP id SP id SP id SP edgeFields SP numberOpt ;
+connectHandles: 'connect-handles' SP id SP id SP id SP edgeFields SP numberOpt SP indexOpt ;
 disconnectHandles: 'disconnect-handles' SP id ;
 replaceEdgeGeometry: 'replace-edge-geometry' SP id SP number SP number SP number SP number SP number SP number SP number SP number ;
 changeEdgeKind: 'change-edge-kind' SP id SP textOpt ;

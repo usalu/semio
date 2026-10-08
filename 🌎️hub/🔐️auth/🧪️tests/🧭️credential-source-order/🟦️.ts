@@ -1,8 +1,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-type NativeCredentialSourcePopulation = Readonly<{ entrypoint: string; credential: string; runner: string; launch: string }>;
-type McpCredentialSourcePopulation = Readonly<{ entrypoint: string; workspace: string; remote: string; directory: string; runner: string; launch: string }>;
+type NativeCredentialSourcePopulation = Readonly<{ entrypoint: string; credential: string; runner: string; project: string }>;
+type McpCredentialSourcePopulation = Readonly<{ entrypoint: string; workspace: string; remote: string; directory: string; runner: string; project: string }>;
+
+/** 🎯️ Reads the command one owner Nx target declares in its project manifest source. */
+function ownerTargetCommand(project: string, target: string): string | undefined {
+  try {
+    return (JSON.parse(project) as { targets?: Record<string, { options?: { command?: string } }> }).targets?.[target]?.options?.command;
+  } catch {
+    return undefined;
+  }
+}
 
 function balancedBody(source: string, opening: number): string | undefined {
   let depth = 0;
@@ -111,7 +120,7 @@ export function nativeCredentialSourceOrderConforms(source: NativeCredentialSour
     session[0]!.includes("await runNativeBinary(") &&
     binary.length === 1 &&
     binary[0]!.includes("await runTool(") &&
-    source.launch.includes("os-hub:dev-secure-native")
+    ownerTargetCommand(source.project, "dev-secure-native") === "bun ./📜️script.ts dev secure-native"
   );
 }
 
@@ -177,7 +186,7 @@ export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopu
     source.directory.includes("directory_socket_hello_v1()") &&
     !source.runner.includes('runCmd("cargo", ["run"') &&
     source.runner.includes("runCmd(requireMcpBinary") &&
-    source.launch.includes("os-hub:dev-secure-mcp")
+    ownerTargetCommand(source.project, "dev-secure-mcp") === "bun ./📜️script.ts dev secure-mcp"
   );
 }
 
@@ -187,7 +196,7 @@ export function proveNativeCredentialSourceOrder(repoRoot: string): void {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8"),
     credential: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts"), "utf8"),
-    launch: readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8"),
+    project: readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };
   if (!nativeCredentialSourceOrderConforms(population)) throw new Error("WGPU credential claim or current native process-owner chain drift");
 }
@@ -200,7 +209,7 @@ export function proveMcpCredentialSourceOrder(repoRoot: string): void {
     remote: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8"),
     directory: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),
-    launch: readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8"),
+    project: readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };
   if (!mcpCredentialSourceOrderConforms(population)) throw new Error("MCP credential claim or current direct-binary process owner drift");
 }

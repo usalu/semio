@@ -11,9 +11,6 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
-        "env": {
-          "CAD_JS_RENDERER_PLAY_PORT": "6041"
-        },
         "forwardAllArgs": true
       }
     },
@@ -23,9 +20,6 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
-        "env": {
-          "CAD_JS_RENDERER_PLAY_PORT": "6041"
-        },
         "forwardAllArgs": true
       }
     },
@@ -35,9 +29,6 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
-        "env": {
-          "CAD_JS_RENDERER_PLAY_PORT": "6041"
-        },
         "forwardAllArgs": true
       }
     },
@@ -47,9 +38,6 @@
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
-        "env": {
-          "CAD_JS_RENDERER_PLAY_PORT": "6041"
-        },
         "forwardAllArgs": true
       }
     },

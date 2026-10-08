@@ -635,7 +635,7 @@ fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
 }
 
 impl MutationDiff<PlySnapshot> for PlyDiff {
-    fn apply(&self, base: &PlySnapshot) -> MutationApplyResult<PlySnapshot> {
+    fn apply(&self, base: &PlySnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PlySnapshot> {
         if let Some(diff) = &self.elements {
             validate_elements_diff(&base.elements, diff)?;
         }

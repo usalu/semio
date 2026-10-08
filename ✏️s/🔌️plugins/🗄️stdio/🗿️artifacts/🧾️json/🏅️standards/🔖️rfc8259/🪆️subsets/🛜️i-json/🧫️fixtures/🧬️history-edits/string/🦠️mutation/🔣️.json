@@ -1,0 +1,56 @@
+{
+  "mutation": {
+    "mutation": "setString",
+    "path": [
+      {
+        "kind": "key",
+        "value": "title"
+      }
+    ],
+    "value": "Hallo 😀"
+  },
+  "before": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "string",
+            "value": "Old"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "string",
+            "value": "Hallo 😀"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    }
+  }
+}

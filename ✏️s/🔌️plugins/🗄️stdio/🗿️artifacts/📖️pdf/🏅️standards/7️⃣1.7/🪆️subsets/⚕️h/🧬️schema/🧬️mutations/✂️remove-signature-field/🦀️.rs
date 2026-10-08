@@ -2,7 +2,7 @@
 
 use super::insert_signature_field::InsertSignatureField;
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +17,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "signature-field", kind: "remove-signature-field", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::remove_signature_field(&mut next, &self.name);
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::remove_signature_field_rows(base, &self.name)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {

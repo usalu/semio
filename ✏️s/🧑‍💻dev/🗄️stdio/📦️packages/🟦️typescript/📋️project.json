@@ -29,8 +29,6 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "stdioArtifactContract": [
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/package.json",
@@ -62,8 +60,6 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "stdioArtifactGraph": [
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/package.json",

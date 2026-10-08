@@ -2,14 +2,15 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏷️update-meta` per Wave C.
 
 use super::ReplaceMeta;
+use crate::diff::ProgramMetaEdit;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ New `ProgramMeta` wholesale. Root-scoped singleton — always present, so Warning
+/// 🔁️ Replaces the whole section. Root-scoped singleton — always present, so Warning
 /// `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.
 pub fn diff(payload: &ReplaceMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.meta == payload.new_meta {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Document metadata already matches the requested value.").at([base.meta.document_id.clone()])]);
     }
-    protocol::MutationOutcome::new(ProgramDiff { meta: Some(payload.new_meta.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { meta: Some(ProgramMetaEdit::replacing(payload.new_meta.clone())), ..Default::default() })
 }

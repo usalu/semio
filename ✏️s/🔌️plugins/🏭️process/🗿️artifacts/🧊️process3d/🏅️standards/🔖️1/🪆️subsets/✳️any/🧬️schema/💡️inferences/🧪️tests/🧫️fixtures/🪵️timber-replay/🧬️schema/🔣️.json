@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "scene",
+    "volumes",
+    "volumeTolerance",
+    "circularSegments",
+    "poseScalarBits"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "scene": {
+      "type": "object",
+      "required": [
+        "stock",
+        "steps"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stock": {
+          "$ref": "#/definitions/stock"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/definitions/step"
+          }
+        }
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "volumeTolerance": {
+      "const": 1e-9
+    },
+    "circularSegments": {
+      "const": 512
+    },
+    "poseScalarBits": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "step",
+          "coordinate",
+          "bits"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "coordinate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "bits": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "pose": {
+      "type": "object",
+      "required": [
+        "position",
+        "axis",
+        "angle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/definitions/vector"
+        },
+        "axis": {
+          "const": [
+            0,
+            0,
+            1
+          ]
+        },
+        "angle": {
+          "const": 0
+        }
+      }
+    },
+    "solid": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "width",
+            "depth",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "box"
+            },
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "depth": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "radius",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "cylinder"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "stock": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "solid",
+        "pose"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "solid": {
+          "$ref": "#/definitions/solid"
+        },
+        "pose": {
+          "$ref": "#/definitions/pose"
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "enabled",
+        "origin",
+        "measure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "enabled": {
+          "const": true
+        },
+        "origin": {
+          "type": "object",
+          "required": [
+            "machineId",
+            "capabilityId"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "machineId": {
+              "type": "string"
+            },
+            "capabilityId": {
+              "type": "string"
+            }
+          }
+        },
+        "measure": {
+          "$ref": "#/definitions/measure"
+        }
+      }
+    },
+    "measure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "measure",
+            "tool",
+            "pose"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "measure": {
+              "const": "cut"
+            },
+            "tool": {
+              "$ref": "#/definitions/solid"
+            },
+            "pose": {
+              "$ref": "#/definitions/pose"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "measure",
+            "radius",
+            "depth",
+            "pose"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "measure": {
+              "const": "drill"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "depth": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "pose": {
+              "$ref": "#/definitions/pose"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "measure",
+            "component",
+            "pose"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "measure": {
+              "const": "attach"
+            },
+            "component": {
+              "$ref": "#/definitions/solid"
+            },
+            "pose": {
+              "$ref": "#/definitions/pose"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

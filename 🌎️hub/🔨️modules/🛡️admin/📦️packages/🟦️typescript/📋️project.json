@@ -12,6 +12,19 @@
   },
   "targets": {
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8790,
+              "portEnv": "OS_HUB_ADMIN_DEV_PORT"
+            },
+            "requires": [
+              "os-hub:dev"
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {

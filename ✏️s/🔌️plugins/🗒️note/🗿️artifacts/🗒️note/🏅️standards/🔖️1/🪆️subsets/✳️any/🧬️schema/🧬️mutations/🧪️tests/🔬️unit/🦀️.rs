@@ -4,7 +4,7 @@ use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing
 use protocol::SemanticMutation;
 
 fn sample_snapshot() -> NoteSnapshot {
-    let mut snapshot = crate::schema::empty_note_snapshot();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     snapshot.blocks.push(NoteBlockNode::Text {
         id: "b1".into(),
         name: "Text".into(),

@@ -6,7 +6,6 @@ op = no op | set snapshot | set dimensions | set colorspace | set bit depth | se
    | set metadata entry | remove metadata entry ;
 
 no op                  = "no" ;
-set snapshot           = "setSnapshot", ":", snapshot ;
 set dimensions         = "setDimensions", ":", digit sequence, ",", digit sequence ;
 set colorspace         = "setColorspace", ":", colorspace ;
 set bit depth          = "setBitDepth", ":", digit sequence ;

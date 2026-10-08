@@ -36,6 +36,7 @@ impl<T> Drop for ZeroPayloadRetirement<T> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ZeroPayloadRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
 impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
@@ -45,6 +46,8 @@ impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPa
 }
 
 impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { std::mem::size_of::<ZeroPayloadRetirement<std::sync::Arc<T>>>() }
+
     fn retire(&self, snapshot: Arc<T>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(ZeroPayloadRetirement { value: ManuallyDrop::new(Some(snapshot)) })
     }

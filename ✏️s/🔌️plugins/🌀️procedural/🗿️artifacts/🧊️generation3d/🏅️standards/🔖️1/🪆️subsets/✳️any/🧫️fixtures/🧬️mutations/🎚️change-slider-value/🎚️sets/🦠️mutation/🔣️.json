@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSliderValue",
+  "id": "knob",
+  "value": 6.5
+}

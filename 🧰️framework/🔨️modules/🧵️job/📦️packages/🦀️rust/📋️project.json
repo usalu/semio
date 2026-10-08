@@ -37,6 +37,14 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
+    "test-close-demand-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-close-demand-source"
+      }
+    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,

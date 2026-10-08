@@ -1,0 +1,1 @@
+{"version":1,"pageSlots":64,"lanes":["applied","redo","cursorApplied","cursorRedo","appliedRevision","redoRevision"],"grants":["zeroItems","oneBelow","exact"],"expected":{"pagesReleasedPerExactTurn":1,"totalReleasedPages":6,"retainedAfterZeroOrBelow":true,"terminalHeapRelease":0}}

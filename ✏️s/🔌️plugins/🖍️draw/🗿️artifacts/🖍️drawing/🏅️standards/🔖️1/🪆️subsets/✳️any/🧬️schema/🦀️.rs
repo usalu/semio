@@ -419,11 +419,11 @@ pub fn selected_drawing_layers<'a>(document: &'a DrawingSnapshot, ids: &[String]
 }
 
 /// 🔒️ A lock on any ancestor protects its complete subtree from interactive edits.
-pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &str) -> bool {
-    fn visit(layers: &[DrawingLayerNode], id: &str, inherited: bool) -> Option<bool> {
+pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
+    fn visit(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), inherited: bool) -> Option<bool> {
         for layer in layers {
             let locked = inherited || layer_base(layer).locked;
-            if layer_id(layer) == id { return Some(locked); }
+            if layer_id(layer).eq_text(id) { return Some(locked); }
             if let DrawingLayerNode::Group(group) = layer {
                 if let Some(found) = visit(&group.children, id, locked) { return Some(found); }
             }
@@ -433,9 +433,9 @@ pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &str) -> bool {
     visit(&document.layers, id, false).unwrap_or(false)
 }
 
-pub fn flatten_drawing_layers(layers: &[DrawingLayerNode]) -> Vec<&DrawingLayerNode> {
+pub fn flatten_drawing_layers(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>) -> Vec<&DrawingLayerNode> {
     let mut out = Vec::new();
-    fn walk<'a>(nodes: &'a [DrawingLayerNode], out: &mut Vec<&'a DrawingLayerNode>) {
+    fn walk<'a>(nodes: &'a semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, out: &mut Vec<&'a DrawingLayerNode>) {
         for node in nodes {
             out.push(node);
             if let DrawingLayerNode::Group(group) = node {
@@ -462,8 +462,8 @@ pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
     format!("drawing-play-layers.{segment}.{}", layer_id(layer))
 }
 
-pub fn drawing_play_boolean_child_row_id(boolean_id: &str, child_id: &str) -> String {
-    format!("drawing-play-layers.boolean-child.{}.{boolean_id}{child_id}", boolean_id.len())
+pub fn drawing_play_boolean_child_row_id(boolean_id: &(impl semio_framework_value::paged::Utf8Text + std::fmt::Display + ?Sized), child_id: &(impl std::fmt::Display + ?Sized)) -> String {
+    format!("drawing-play-layers.boolean-child.{}.{boolean_id}{child_id}", boolean_id.text_bytes())
 }
 
 pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
@@ -479,7 +479,7 @@ pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
 
 pub fn layer_to_path_segments(layer: &DrawingLayerNode) -> Vec<PathSegment> {
     match layer {
-        DrawingLayerNode::Path(path) => path.segments.clone(),
+        DrawingLayerNode::Path(path) => path.segments.iter().cloned().collect(),
         DrawingLayerNode::Shape(shape) => shape_to_path_segments(shape),
         _ => Vec::new(),
     }
@@ -492,15 +492,15 @@ fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> [PathSegment;6] 
 
 /// 🔷️ Reads one primitive contour segment without cloning a polygon.
 pub fn shape_path_segment(shape:&DrawingShapeBody,index:usize)->Option<PathSegment> {
-    match shape.shape_kind.as_str() {
-        "rect"=>shape.rect.as_ref().and_then(|r|[
+    match () {
+        () if shape.shape_kind.eq_str("rect")=>shape.rect.as_ref().and_then(|r|[
             PathSegment::Move {to:[r.x,r.y]},PathSegment::Line {to:[r.x+r.width,r.y]},
             PathSegment::Line {to:[r.x+r.width,r.y+r.height]},PathSegment::Line {to:[r.x,r.y+r.height]},PathSegment::Close,
         ].get(index).cloned()),
-        "line"=>shape.line.as_ref().and_then(|l|[PathSegment::Move {to:[l.x1,l.y1]},PathSegment::Line {to:[l.x2,l.y2]}].get(index).cloned()),
-        "polygon"=>shape.polygon.as_ref().and_then(|p|p.points.get(index).map(|to|if index==0 {PathSegment::Move {to:*to}}else{PathSegment::Line {to:*to}}).or_else(||(!p.points.is_empty()&&index==p.points.len()).then_some(PathSegment::Close))),
-        "ellipse"=>shape.ellipse.as_ref().and_then(|e|ellipse_path_segments(e.cx,e.cy,e.rx,e.ry).get(index).cloned()),
-        "circle"=>shape.circle.as_ref().and_then(|c|ellipse_path_segments(c.cx,c.cy,c.r,c.r).get(index).cloned()),
+        () if shape.shape_kind.eq_str("line")=>shape.line.as_ref().and_then(|l|[PathSegment::Move {to:[l.x1,l.y1]},PathSegment::Line {to:[l.x2,l.y2]}].get(index).cloned()),
+        () if shape.shape_kind.eq_str("polygon")=>shape.polygon.as_ref().and_then(|p|p.points.get(index).map(|to|if index==0 {PathSegment::Move {to:*to}}else{PathSegment::Line {to:*to}}).or_else(||(!p.points.is_empty()&&index==p.points.len()).then_some(PathSegment::Close))),
+        () if shape.shape_kind.eq_str("ellipse")=>shape.ellipse.as_ref().and_then(|e|ellipse_path_segments(e.cx,e.cy,e.rx,e.ry).get(index).cloned()),
+        () if shape.shape_kind.eq_str("circle")=>shape.circle.as_ref().and_then(|c|ellipse_path_segments(c.cx,c.cy,c.r,c.r).get(index).cloned()),
         _=>None,
     }
 }
@@ -547,14 +547,14 @@ fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
 
 fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> DrawingSceneNode {
     DrawingSceneNode {
-        id: base.id.clone(),
+        id: base.id.to_string_owner(),
         groups:Vec::new(),
         transform: drawing_transform_to_matrix(&base.transform),
         segments,
         fill: base.attributes.fill.clone(),
         stroke: base.attributes.stroke.clone(),
         opacity: base.opacity,
-        blend_mode: base.blend_mode.clone(),
+        blend_mode: base.blend_mode.to_string_owner(),
         visible: base.visible,
         fill_rule: Some(base.attributes.fill_rule.as_str().into()),
         text: None,
@@ -569,7 +569,7 @@ pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<Dra
 /// ↔️ Preview world-space transforms through the same group traversal as the committed scene.
 pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, transformation: Option<&(Vec<String>,[f64;6])>) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
@@ -577,13 +577,13 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
             }
             let mut parent=parent;
             if let Some((ids,matrix))=transformation {
-                if ids.contains(&base.id) { parent=geometry::multiply(*matrix,parent); }
+                if ids.iter().any(|id| base.id.eq_str(id)) { parent=geometry::multiply(*matrix,parent); }
             }
             let first = out.len();
             match layer {
                 DrawingLayerNode::Group(group) => {
                     let isolated=group.isolation || base.opacity!=1.0 || base.blend_mode!="normal";
-                    if isolated {groups.push(DrawingSceneGroup {id:base.id.clone(),opacity:base.opacity,blend_mode:base.blend_mode.clone()});}
+                    if isolated {groups.push(DrawingSceneGroup {id:base.id.to_string_owner(),opacity:base.opacity,blend_mode:base.blend_mode.to_string_owner()});}
                     walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), transformation, groups, out);
                     if isolated {groups.pop();}
                     continue;
@@ -609,30 +609,30 @@ pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, trans
                     out.push(node);
                 }
                 DrawingLayerNode::Text(text) => out.push(DrawingSceneNode {
-                    id: text.base.id.clone(),
+                    id: text.base.id.to_string_owner(),
                     groups:Vec::new(),
                     transform: geometry::multiply(drawing_transform_to_matrix(&text.base.transform), [1.0, 0.0, 0.0, 1.0, text.x, text.y]),
                     segments: Default::default(),
                     fill: text.base.attributes.fill.clone(),
                     stroke: text.base.attributes.stroke.clone(),
                     opacity: text.base.opacity,
-                    blend_mode: text.base.blend_mode.clone(),
+                    blend_mode: text.base.blend_mode.to_string_owner(),
                     visible: text.base.visible,
                     fill_rule: None,
-                    text: Some(DrawingSceneText { content: text.content.clone(), size: text.size }),
+                    text: Some(DrawingSceneText { content: text.content.to_string_owner(), size: text.size }),
                     image: None,
                 }),
                 DrawingLayerNode::Image(image) => {
-                    let src = doc.assets.get(&image.image_key).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
+                    let src = doc.assets.get(&image.image_key).map(|asset| if asset.data.bytes().take(5).eq(b"data:".iter().copied()) { asset.data.to_string_owner() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
                     out.push(DrawingSceneNode {
-                        id: image.base.id.clone(),
+                        id: image.base.id.to_string_owner(),
                         groups:Vec::new(),
                         transform: drawing_transform_to_matrix(&image.base.transform),
                         segments: Default::default(),
                         fill: image.base.attributes.fill.clone(),
                         stroke: image.base.attributes.stroke.clone(),
                         opacity: image.base.opacity,
-                        blend_mode: image.base.blend_mode.clone(),
+                        blend_mode: image.base.blend_mode.to_string_owner(),
                         visible: image.base.visible,
                         fill_rule: None,
                         text: None,
@@ -661,22 +661,22 @@ pub fn canvas_layer_records(doc: &DrawingSnapshot) -> Vec<DrawingCanvasLayerReco
         .map(|layer| {
             let base = layer_base(layer);
             let bounds = drawing_layer_world_bounds(layer);
-            DrawingCanvasLayerRecord { id: base.id.clone(), kind: layer_kind_label(layer), name: base.name.clone(), x: bounds.map(|b| b.0), y: bounds.map(|b| b.1), width: bounds.map(|b| b.2), height: bounds.map(|b| b.3) }
+            DrawingCanvasLayerRecord { id: base.id.to_string_owner(), kind: layer_kind_label(layer), name: base.name.to_string_owner(), x: bounds.map(|b| b.0), y: bounds.map(|b| b.1), width: bounds.map(|b| b.2), height: bounds.map(|b| b.3) }
         })
         .collect()
 }
 
 pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str) -> DrawingLayerNode {
-    fn identify(node: &mut DrawingLayerNode, suffix: &str, ids: &mut BTreeMap<String, String>) {
+    fn identify(node: &mut DrawingLayerNode, suffix: &str, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) {
         let base = layer_base_mut(node);
         let old = base.id.clone();
         base.id = create_drawing_id("layer", format!("{old}{suffix}").as_bytes()).into();
         ids.insert(old, base.id.clone());
         if let DrawingLayerNode::Group(group) = node { for child in &mut group.children { identify(child, suffix, ids); } }
     }
-    fn references(node: &mut DrawingLayerNode, ids: &BTreeMap<String, String>) {
+    fn references(node: &mut DrawingLayerNode, ids: &BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) {
         match node {
-            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone().into(); } } }
+            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone(); } } }
             DrawingLayerNode::Group(group) => { for child in &mut group.children { references(child, ids); } }
             _ => {}
         }
@@ -1126,7 +1126,9 @@ fn resolve_boolean_layer_segments(doc: &DrawingSnapshot, boolean: &DrawingBoolea
         return Vec::new();
     }
     let kernel_inputs: Vec<Vec<semio_framework_2d::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
-    match semio_framework_2d::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
+    let operation = crate::DRAWING_BOOLEAN_OPERATIONS.iter().copied().find(|operation| boolean.operation.eq_str(operation));
+    let Some(operation) = operation else { return Vec::new(); };
+    match semio_framework_2d::booleans::boolean_paths_many(&kernel_inputs, operation) {
         Ok(result) => from_kernel_segments(&result),
         Err(_) => Vec::new(),
     }
@@ -1134,9 +1136,10 @@ fn resolve_boolean_layer_segments(doc: &DrawingSnapshot, boolean: &DrawingBoolea
 
 /// 🖼️ Decodes a (possibly resized) PNG asset into an 8-bit luma buffer, matching the premigration canvas-based decode.
 fn decode_drawing_image_asset_luma(asset: &DrawingImageAsset) -> Option<(u32, u32, Vec<u8>)> {
-    let base64_data = match asset.data.strip_prefix("data:") {
+    let data = asset.data.to_string_owner();
+    let base64_data = match data.strip_prefix("data:") {
         Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
-        None => asset.data.as_str(),
+        None => data.as_str(),
     };
     let bytes = base64_codec::base64_standard_decode(base64_data).ok()?;
     let decoded = semio_framework_pixels::decode_png(&bytes).ok()?;

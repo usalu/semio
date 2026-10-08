@@ -11,13 +11,13 @@ mod snapshot;
 pub use snapshot::*;
 #[path = "🧬️schema/🔺️diff/🦀️.rs"]
 mod diff;
-pub use diff::RunDiff;
+pub use diff::{RunDiff, RunHeaderEdit, RunSealEdit, RunStep};
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{AppendRunLog, FinishRunNode, RunMutation, SealRun, StartRun, StartRunNode};
+pub use mutations::{AppendRunLog, FinishRunNode, RetractRunLog, RetractRunNode, RunMutation, SealRun, SetRunHeader, SetRunSeal, StartRun, StartRunNode};
 #[path = "🧬️schema/🧬️mutations/⚡️apply/🦀️.rs"]
 mod apply;
-pub use apply::{apply_run_operation, apply_run_operation_checked};
+pub use apply::apply_run_operation_checked;
 
 #[cfg(test)]
 #[path = "🧪️tests/🏃️run/🦀️.rs"]

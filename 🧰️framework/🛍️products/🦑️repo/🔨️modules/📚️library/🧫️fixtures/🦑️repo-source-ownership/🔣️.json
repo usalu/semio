@@ -11,10 +11,10 @@
     },
     {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️main.rs",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🚪️entrypoint/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🚪️entrypoint/🦀️.rs",
       "kind": "rust",
       "boundary": "cargo-bin",
-      "anchor": "semio_framework_repo_cli::run(",
+      "anchor": "semio_framework_repo_dashboard::run(",
       "glue": "../../🚪️entrypoint/🦀️.rs"
     },
     {

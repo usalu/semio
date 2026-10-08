@@ -13,7 +13,7 @@ type Fixture = Readonly<{
   owners: readonly Owner[];
   selector: Readonly<{ libraryDeclaration: string; relativeOwnerSuffix: string; editorSetting: string; editorPattern: string }>;
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
-  registration: Readonly<{ name: string; command: string; target: string }>;
+  registration: Readonly<{ target: string }>;
 }>;
 
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -270,15 +270,11 @@ describe("Vitest configuration ownership", () => {
     expect(options && ts.isObjectLiteralExpression(options) && options.properties.some((property) => property.name?.getText(syntax) === "projects")).toBe(false);
   });
 
-  test("registers the gate through package, Nx and both launch projections", () => {
+  test("registers the gate through package and Nx", () => {
     const packageRoot = resolve(libraryRoot, "📦️packages/🟦️typescript");
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test vitest-configuration-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
     expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { configurations: { name?: string; command?: string }[] };
-      expect(launch.configurations.filter(({ name, command }) => name === fixture.registration.name && command === fixture.registration.command), path).toHaveLength(1);
-    }
   });
 });

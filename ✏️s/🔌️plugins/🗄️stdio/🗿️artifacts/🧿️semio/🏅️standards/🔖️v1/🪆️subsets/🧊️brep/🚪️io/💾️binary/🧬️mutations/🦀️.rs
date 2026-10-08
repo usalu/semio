@@ -3,6 +3,13 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
+#[path = "🫳️borrowed/🦀️.rs"]
+mod borrowed;
+
+#[cfg(test)]
+#[path = "🫳️borrowed/🧪️tests/🦀️.rs"]
+mod borrowed_tests;
+
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
@@ -51,13 +58,10 @@ use crate::standards::v1::subsets::brep::schema::mutations::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
-use crate::standards::v1::subsets::brep::schema::mutations::set_snapshot::SetSnapshot;
 use crate::standards::v1::subsets::brep::io::text::mutations::{print_brep_mutation};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
-        SemioBrepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioBrepMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioBrepMutation::CreateVertex(_) => TAG_CREATE_VERTEX,
         SemioBrepMutation::DeleteVertex(_) => TAG_DELETE_VERTEX,
         SemioBrepMutation::CreateEdge(_) => TAG_CREATE_EDGE,
@@ -91,11 +95,6 @@ pub(crate) fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
 /// independent encoding.
 impl OpBinary for SemioBrepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
@@ -108,9 +107,6 @@ impl OpBinary for SemioBrepMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::brep::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -125,8 +121,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioBrepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_CREATE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-vertex");
 const TAG_DELETE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-vertex");
 const TAG_CREATE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-edge");
@@ -141,3 +135,11 @@ const TAG_REPLACE_CURVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "repla
 const TAG_REPLACE_SURFACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-surface");
 const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-vertex");
 //#endregion 🏷️WireTags
+
+/// 📦️ Reborrows original snapshot and patch fields for bounded prestage operation-wire receipts.
+pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> {
+    use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
+    match mutation {
+        _ => None,
+    }
+}

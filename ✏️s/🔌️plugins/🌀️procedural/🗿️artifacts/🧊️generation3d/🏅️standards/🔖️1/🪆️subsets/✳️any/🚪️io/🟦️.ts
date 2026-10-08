@@ -85,7 +85,10 @@ export function gltfImportAdmission(document: GltfDocument, inputBytes = 0): { p
 
 /** 🎨️ Resolves absent PBR factors from the target's owning material standard. */
 export function materialFieldsForExport(material: NonNullable<PolygonMesh["materials"]>[string]): { baseColor: number[]; metallic: number; roughness: number } {
-  const target = parseGltfPbrMetallicRoughness({ ...(material.baseColor === undefined ? {} : { baseColorFactor: material.baseColor }), ...(material.metallic === undefined ? {} : { metallicFactor: material.metallic }), ...(material.roughness === undefined ? {} : { roughnessFactor: material.roughness }) });
+  const number = (value: unknown) => { if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("export material factor must be finite"); return binary64(value); };
+  const color = material.baseColor;
+  if (color !== undefined && !Array.isArray(color)) throw new Error("export base color must be an array");
+  const target = parseGltfPbrMetallicRoughness({ ...(color === undefined ? {} : { baseColorFactor: color.map(number) }), ...(material.metallic === undefined ? {} : { metallicFactor: number(material.metallic) }), ...(material.roughness === undefined ? {} : { roughnessFactor: number(material.roughness) }) });
   const output = { baseColor: target.baseColorFactor.map(binary64Value), metallic: binary64Value(target.metallicFactor), roughness: binary64Value(target.roughnessFactor) };
   if ([...output.baseColor, output.metallic, output.roughness].some(value => value < 0 || value > 1)) throw new Error("export material factors must lie in [0,1]");
   return output;

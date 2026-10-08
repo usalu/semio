@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameFenestration` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::RenameFenestration, base: &EnergyModelSnapshot) -> 
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this name.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {
-        item.name = payload.new_name.clone();
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::modifying(FenestrationPatch { name: Some(payload.new_name.clone()), ..FenestrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

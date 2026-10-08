@@ -315,7 +315,7 @@ mod tests;
 pub fn apply_en1993_mutation(base: &En1993Snapshot, mutation: &En1993Mutation) -> Result<(En1993Snapshot, Vec<String>), String> {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1993Diff as protocol::MutationDiff<En1993Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 pub fn inverse_en1993_mutation(mutation: &En1993Mutation, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {

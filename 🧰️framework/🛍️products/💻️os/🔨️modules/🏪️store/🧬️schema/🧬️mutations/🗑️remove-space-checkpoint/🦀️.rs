@@ -1,6 +1,6 @@
 //! 🗑️ Direct space-checkpoint removal mutation.
 use super::super::{CommitSpaceCheckpoint, SpaceHistoryMutation};
-use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
+use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub struct RemoveSpaceCheckpoint {
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceCheckpoint {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "remove", entity: "space-checkpoint", kind: "remove-space-checkpoint", record: "RemovedSpaceCheckpoint" };
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { remove_checkpoint_id: Some(self.checkpoint_id.clone()), ..Default::default() })
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveCheckpoint { checkpoint_id: self.checkpoint_id.clone() }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
     Ok((|| {

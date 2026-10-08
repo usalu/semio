@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔅️change-scene-ambient/🔅️dims/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔅️change-scene-ambient/🔅️dims/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-scene-ambient-intensity diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-scene-ambient-intensity diff applies")
 }
 
 /// ▶️ `change-scene-ambient-intensity` sets the FILL light's strength. It writes
@@ -93,9 +93,9 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["scene"]["ambient"]["intensity"], 0.25, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the AMBIENT intensity is the edited field");
-    assert_eq!(committed["scene"]["sun"]["intensity"], 2.4, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the SUN's intensity rides along at its base value");
-    assert_eq!(committed["scene"]["ambient"]["color"], "#ffffff", "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the ambient tint is cloned, not reset");
+    assert_eq!(committed["scene"]["ambientIntensity"], 0.25, "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the AMBIENT intensity is the edited field");
+    assert!(committed["scene"]["sunIntensity"].is_null(), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the SUN's intensity slot stays null");
+    assert!(committed["scene"]["ambientColor"].is_null(), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: the ambient tint slot stays null");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed whole-scene block round-trips through `ShootingDiff` unchanged.
@@ -111,6 +111,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-scene-ambient-intensity/dims-scene-ambient-to-quarter: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

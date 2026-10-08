@@ -239,7 +239,7 @@ fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> Do
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
-    let mut owners: Vec<&String> = base.opc.relationships.keys().collect();
+    let mut owners: Vec<_> = base.opc.relationships.keys().collect();
     owners.sort();
     let mut modified = Vec::new();
     for owner in owners {
@@ -256,7 +256,7 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
         if entries.is_empty() {
             continue;
         }
-        modified.push(NamedModified { key: owner.clone(), diff: DocxOpcRelListDiff { modified: entries, ..Default::default() } });
+        modified.push(NamedModified { key: owner.to_string_owner(), diff: DocxOpcRelListDiff { modified: entries, ..Default::default() } });
     }
     if modified.is_empty() {
         return DocxDiff::default();

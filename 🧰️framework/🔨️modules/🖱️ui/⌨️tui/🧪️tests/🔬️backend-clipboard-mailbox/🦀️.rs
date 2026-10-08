@@ -1,5 +1,6 @@
 mod clipboard_mailbox_tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn stalled_clipboard_worker_keeps_poll_callback_p99_below_two_ms() {

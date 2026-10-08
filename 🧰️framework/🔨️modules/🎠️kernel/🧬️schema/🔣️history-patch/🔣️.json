@@ -271,10 +271,12 @@
           "$ref": "#/definitions/LocalizedLabel"
         },
         "done": {
-          "$ref": "#/definitions/U32"
+          "$ref": "#/definitions/U32",
+          "description": "Completed history work steps; replay includes operation application and final edit settlement."
         },
         "total": {
-          "$ref": "#/definitions/U32"
+          "$ref": "#/definitions/U32",
+          "description": "Total history work steps; replay includes operation application and final edit settlement."
         },
         "worst": {
           "$ref": "#/definitions/Severity"
@@ -379,10 +381,12 @@
       ],
       "properties": {
         "done": {
-          "$ref": "#/definitions/U32"
+          "$ref": "#/definitions/U32",
+          "description": "Completed history work steps; replay includes operation application and final edit settlement."
         },
         "total": {
-          "$ref": "#/definitions/U32"
+          "$ref": "#/definitions/U32",
+          "description": "Total history work steps; replay includes operation application and final edit settlement."
         },
         "kind": {
           "enum": [

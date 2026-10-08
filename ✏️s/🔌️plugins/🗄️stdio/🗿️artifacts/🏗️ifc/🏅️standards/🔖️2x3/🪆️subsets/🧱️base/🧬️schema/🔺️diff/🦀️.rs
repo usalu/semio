@@ -113,7 +113,7 @@ fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2
 }
 
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
-    fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
+    fn apply(&self, base: &Ifc2x3Snapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Ifc2x3Snapshot> {
         validate_ifc2x3_diff(self, base)?;
         Ok(apply_ifc2x3_diff_unchecked(self, base))
     }

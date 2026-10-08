@@ -1,0 +1,59 @@
+# Brep Contact Topology Diagnosis
+
+Parent actual geometry gate ran all three original Process tests, zero passed; exact dowel-attach union validator warning for nonadjacent faces125/136 (alternate136/124) at distance0. Existing full neutral timber scene, exact float bits and independent Manifold512 volume oracle are green. Applicable root and 3d AGENTS read; the referenced old brep/AGENTS.md does not exist in the canonical emoji kernel directory.
+
+The self-intersection probe compares boundary midpoint/vertex samples, exempting only exact shared EdgeId or VertexId topology. The exact boolean path welds imprint endpoints and then selects/groups shells; genuine duplicate independently indexed contacts may indicate missing topological welding, whereas an edge curve sample outside its active parameter interval could be a false classifier witness. No validation condition has been weakened.
+
+A temporary environment-gated DEBUG contact witness records exact surfaces, boundary vertex identities/positions and sample sets only on actual collisions. SEMIO_BREP_CONTACT_DIAGNOSTIC is supplied only to the named three-case diagnosis; instrumentation and environment switch must be removed before final producer acceptance. Main graph and unrelated processes remain preserved.
+
+
+Further precise boolean source audit found an orientation-blind coincident face rule: both before and after imprint, coincident pairs are indexed without outward normal agreement; ClassifyA retains one face for Unite/Intersect and removes it for Cut regardless of opposite interior sides. For a plug exactly filling a bore, the bore floor/wall and plug boundary have opposite outward normals: their shared interface must be omitted from union, whereas an aligned duplicate is retained once. The witness run must confirm actual problematic face geometry before a production edit. The current temporary diagnostic also records Face.flipped to distinguish natural surface parameterization from outward orientation. No speculative selection repair applied yet.
+
+
+Before any selection production repair, six closed-schema neutral coincident-boundary cases are authored alongside the canonical boolean owner. They specify per-side occupancy, orientation agreement, boundary retention and complete unit-cube result volumes for union/intersection/difference. The native private policy law consumes the same rows; the independent Bun/Ajv/Manifold oracle observes actual result triangles on the shared plane and volumes, with every third-party owner disposed. No geometry dimensions/poses from original Process acceptance changed. Source oracle must validate these semantics before applying a candidate; actual contact witness remains pending.
+
+
+Independent boundary oracle12633 actual Nx exec exit0: one Bun test,19assertions, all six closed-schema cases. Manifold reports aligned union/intersection retain the shared plane at volume1, aligned difference no boundary/volume0; opposed union no shared plane/volume2, opposed intersection no boundary/volume0, opposed difference preserves A plane/volume1. This validates the semantic distinction before any orientation selection repair. Existing production selection was factored into a private policy preserving its exact original behavior; native law is authored first, exact collision witness remains pending.
+
+
+Actual contact run52794 ended Nx exit1 after13m31 before runtime. The only errors are two E0599 in current Process host/owned physical close hunk: disposer.close_step at1479 and terminal_is_empty at1480 lack their canonical trait in scope. Publication owns that hunk and was notified; no geometry sample or validated orientation diagnosis is inferred. Native policy baseline3451 remains independently compiling, existing original geometry0/3 red and six independent boundary/volume cases are retained.
+
+The six-row native boundary policy baseline actually executed and failed the opposed union row (one selected test, zero passed). The independent Manifold source law remains green. The first full-contact probe stopped at two Process lib-test method-resolution errors before runtime; the owning agent repaired the canonical ArtifactOwnedDisposer trait import. The same three original geometry laws are now retrying in the same cold generation, session 55054, log `🗑️generated/process-geometry-contact-topology-retry.log`, with temporary contact diagnostics enabled. No validator rule has changed.
+
+After the actual six-row native policy red, the canonical coincident classification now retains outward alignment in its face map. Alignment compares both analytic surface normals at the same boundary midpoint, including each face's flipped authority; singular samples advance to the next boundary edge. Aligned coincident faces survive union/intersection once and disappear for difference; opposed interfaces disappear for union/intersection and preserve the left boundary for difference. The regression additionally inspects real unit cube topology (six aligned face pairs, one opposed shared face). The validator and all original timber geometry/volume laws are unchanged. Current contact retry may compile this source; its witness must still establish whether the timber fault is resolved or has an additional topology root. New native regression retry is logged in `🗑️generated/brep-coincident-boundary-native-green.log`; no green receipt is claimed yet.
+
+The actual three original timber laws retry 55054 executed and still failed all three (zero passed, 376 outside selection, 1.822 seconds). The exact defect moved from duplicate-face contact to shell-not-closed: ring edge 241/247 is used once after the opposed internal boundary is removed. Coincident face occupancy is therefore only one necessary repair; selected operand seam ownership still requires diagnosis. Temporary gated shell witness now prints the rejected edge curve/range/vertex IDs and actual face owners of geometrically matching midpoint candidates. The closure validator's requirements remain untouched. No source-only orientation proof is presented as completed timber geometry.
+
+Native orientation proof 24622 completed actual EXIT0 (one selected test passed, 607 outside selection, Nx 6m12s): all six neutral occupancy rows and real cube face normal assertions ran. Independent Manifold source proof remains one passed / 19 assertions. This establishes the orientation fix independently; the original three timber laws still need the seam repair. Exact open-boundary witness retry is session 56663, log `🗑️generated/process-geometry-open-boundary-witness.log`, same cold store and unchanged original selector/budget.
+
+A narrow schema-first bore/refill fixture now mirrors the actual seam shape: unit stock, radius 0.1, height 1, z=0.5 insertion, 512 independent oracle segments, expected closed shell and analytic union volume 1.015707963267949. The Manifold source oracle and co-located native closed-shell law share that JSON input. Both were authored before any seam welding source repair. The complete boolean native family is running as `🗑️generated/brep-boolean-family-seam-baseline.log`; the independent source oracle is `🗑️generated/brep-coincident-seam-manifold.log`. No closure/volume assertions were relaxed, and original three Process tests remain the exact admission gate.
+
+Independent Manifold source oracle 7583 actually completed EXIT0: two passed, 23 assertions, six face occupancy rows and the matched bore/refill closed shell. Observed volume 1.0157075690057216 versus analytic expected 1.015707963267949 at 512 segments. Afterwards both implementations' assertions were made explicit consumers of the fixture's closedShell authority without changing its true value or predicate; final source verification will include that small assertion wiring change. No seam production repair exists yet.
+
+The open-edge witness and boolean family attempts ended at compilation, before assertions: the new temporary shell diagnostic referenced PROBE_TOL outside its local self-intersection function. This diagnostic-only reference is corrected to the same 1e-3 diagnostic matching threshold; no admission threshold changed. These attempts are compiler-only failures, not seam or family runtime results. The semantic orientation green receipt remains valid.
+
+Complete native boolean family baseline now actually executed: 21 run, 20 passed, only the new matched bore/refill closed seam law failed (588 outside selection), 1.519 seconds runtime / Nx 2m11s. All original boolean union/cut/pocket/bore/lens/commutativity/input ownership cases passed with the orientation change. The new seam failure is independently reproduced at the smallest canonical kernel primitive, while the same fixture's independent Manifold oracle passes. The Process exact edge witness is still in live preparation.
+
+The next exact Process edge witness attempt ended at one unrelated current plugin compiler root before runtime: ChildEmitGenesis derives Serialize while ArtifactRef has no serde Serialize authority (plugin main line 13490). The owning editor agent has the precise diagnostic; geometry source is not responsible for this E0277. Kernel-only full family witness remains active in `🗑️generated/brep-boolean-family-open-edge-witness.log`, session 33923, avoiding that plugin dependency while capturing the independently reproduced seam.
+
+Actual kernel edge witness established the duplicate-hole root: original copied ring edge 43 and newly minted edge 51 have identical circle, range 4.71238898038469..10.995574287564276, and seam vertex 30 at z=1; planar face 21 owns both, while only edge 51 joins cylinder side face 28. Closed SSI explicitly disabled existing boundary detection for full_period, so it queued a duplicate hole. The canonical imprint now detects closed boundary reuse too, anchors the shared period at the original edge vertex, maps p-curve direction by tangent orientation, and queues no imprint on the boundary's existing owner. Coincident closed boundaries with the same physical seam vertex share that vertex/edge; distinct seam anchors remain an explicit geometry refusal instead of duplicate topology. No post-hoc duplicate filtering or validator exemption was added.
+
+Both temporary validator diagnostic blocks are removed completely and no next command supplies SEMIO_BREP_CONTACT_DIAGNOSTIC. Validator admission source remains unchanged. Current-source green proofs must establish the seam repair; no green result is claimed before execution.
+
+## Clean closed-boundary family receipt
+
+The exact Boolean family command completed Nx exit 0 in 4m 8s: 21 run, 21 passed, 588 outside selection, native runtime 3.047s. The new bore/refill owner-seam law and all 20 pre-existing Boolean cases passed. Both temporary validator diagnostic blocks and their environment switch are removed; admission checks are unchanged. The original three Process geometry cases are still compiling and are not yet accepted. Logs: `🗑️generated/brep-boolean-family-closed-boundary-green.log`.
+
+## Original Process geometry acceptance
+
+The clean original three-case Process command completed actual Nx exit 0. All three original geometry laws passed (no selection or pose changes), and the independent two-case Ajv/Manifold source command completed actual Nx exit 0 with 2 passed / 23 assertions. Final native Boolean family also passed all 21 cases. No diagnostic switch or validator mutation is present. Exact geometry runtime summary and duration are retained in the accompanying log and this receipt below.
+
+@semio-tech/process-process3d-rs: warning: static variable `__DSL_BORROWED_DwgSummaryInfo_FIELDS` should have an upper case name
+
+@semio-tech/process-process3d-rs: 4994 | pub struct DwgSummaryInfo {
+
+@semio-tech/process-process3d-rs: 4994 - pub struct DwgSummaryInfo {
+
+@semio-tech/process-process3d-rs:      Summary [   7.524s] 3 tests run: 3 passed, 376 skipped
+
+  Run duration:      14m 1s

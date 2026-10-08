@@ -76,7 +76,7 @@ pub fn widget_tree_label(widget: &Widget) -> String {
 
 //#region 🔹Artifact
 /// 🧬️ flow document artifact state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowArtifact {

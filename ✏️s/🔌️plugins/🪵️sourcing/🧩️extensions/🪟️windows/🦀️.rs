@@ -24,8 +24,8 @@ fn bundle() -> ExtensionBundle {
             ("moduleId".to_string(), semio_framework_value::DslValue::String(module.module_id().to_string())),
             ("label".to_string(), semio_framework_value::DslValue::String(module.label().to_string())),
             ("iconId".to_string(), semio_framework_value::DslValue::String("window".to_string())),
-            ("typologyJson".to_string(), semio_framework_value::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology()))),
-            ("kindsJson".to_string(), semio_framework_value::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.demo_kinds()))),
+            ("typologyJson".to_string(), semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&module.typology()))),
+            ("kindsJson".to_string(), semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&module.demo_kinds()))),
         ]),
     )
 }

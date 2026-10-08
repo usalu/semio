@@ -12,7 +12,7 @@ These are newly introduced report asset copies and report sources, not the disap
 - The Forschungsbericht project tree contains **67 files** matching all 67 Zwischenbericht files by emoji-stripped coordinate and SHA-256, but only **one** matches the already repaired full coordinate. The new copy therefore carries old repeated folder identities while the prior canonical Zwischenbericht names remain intact.
 - The Forschungsbericht logo tree contains **10 files** matching the prior ten logos by emoji-stripped coordinate and SHA-256; **none** shares the earlier full semantic basename. Kompaktbericht also has a copied generic logo tree.
 - The two report directories `📑️forschungsbericht` and `📝️kompaktbericht`, and the Zwischenbericht actor asset tree, are currently untracked additions. The report router has 805 added and 44 removed lines relative to HEAD, with new document routes and actor-network rendering/validation source. This is substantive concurrent report work and must be preserved.
-- Filesystem birth/modification times for the inspected actor copies are 04:45:03 (Forschungsbericht) and 04:45:09 (Zwischenbericht), after the prior repaired asset directories (23:52). The present report sources were updated subsequently. Timestamp evidence supports newly copied content; it does not identify the agent responsible.
+- Filesystem birth/modification times for the inspected actor copies are 04:45:03 (Forschungsbericht) and 04:45:09, after the prior repaired asset directories (23:52). The present report sources were updated subsequently. Timestamp evidence supports newly copied content; it does not identify the agent responsible.
 
 ## Finding Breakdown
 

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSpace` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SpacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,9 +18,7 @@ pub fn diff(payload: &super::CreateSpace, base: &EnergyModelSnapshot) -> protoco
     if !payload.floor_area_m2.is_finite() || payload.floor_area_m2 < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Space {} needs a non-negative finite floor area, got {}.", payload.id.0, payload.floor_area_m2), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    let position = model.spaces.iter().position(|item| item.id > payload.id).unwrap_or(model.spaces.len());
-    model.spaces.insert(position, crate::model::Space { id: payload.id, name: payload.name.clone(), zone_id: payload.zone_id, floor_area_m2: payload.floor_area_m2 });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    let position = base.model.spaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.spaces.len());
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { spaces: Rows::inserting(position, crate::model::Space { id: payload.id, name: payload.name.clone(), zone_id: payload.zone_id, floor_area_m2: payload.floor_area_m2 }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

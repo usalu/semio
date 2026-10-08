@@ -13,8 +13,6 @@
     "edge_id": {
       "$ref": "#/$defs/GraphEdgeId",
       "x-semio-ui": {
-        "widget": "reference",
-        "role": "target",
         "label": {
           "en": "Edge",
           "de": "Kante"
@@ -22,11 +20,6 @@
         "description": {
           "en": "Edge the property is detached from.",
           "de": "Kante, von der die Eigenschaft gelöst wird."
-        },
-        "ref": {
-          "kind": "edge",
-          "domain": "graph",
-          "granularity": "edge"
         },
         "group": "target",
         "order": 10
@@ -37,7 +30,7 @@
       "minLength": 1,
       "x-semio-ui": {
         "widget": "text",
-        "role": "target",
+        "role": "value",
         "label": {
           "en": "Property",
           "de": "Eigenschaft"
@@ -60,7 +53,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Edge ID",
+              "de": "Kanten-ID"
+            },
+            "ref": {
+              "kind": "edge",
+              "domain": "graph",
+              "granularity": "edge"
+            }
+          }
         }
       }
     }

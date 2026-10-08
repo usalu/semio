@@ -905,13 +905,25 @@ mod bridge {
         value: i64,
     }
 
-    #[derive(Clone, Default, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+    #[derive(Clone, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     struct AddDiff {
         amount: i64,
     }
 
+    impl protocol::DiffAlgebra<Counter> for AddDiff {
+        fn inverse(&self, _base: &Counter) -> Self {
+            Self { amount: -self.amount }
+        }
+        fn between(base: &Counter, other: &Counter) -> Self {
+            Self { amount: other.value - base.value }
+        }
+        fn is_empty(&self) -> bool {
+            self.amount == 0
+        }
+    }
+
     impl protocol::MutationDiff<Counter> for AddDiff {
-        fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
+        fn apply(&self, base: &Counter, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Counter> {
             Ok(Counter { value: base.value + self.amount })
         }
         fn absorb(&mut self, other: Self) {
@@ -1569,13 +1581,25 @@ impl store::ArtifactPack for HashProjection {
     }
 }
 
-#[derive(Clone, Debug, Default, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct HashDiff {
     pub hash: Option<[u8; 32]>,
 }
 
+impl protocol::DiffAlgebra<HashProjection> for HashDiff {
+    fn inverse(&self, base: &HashProjection) -> Self {
+        Self { hash: self.hash.map(|_| base.latest_hash) }
+    }
+    fn between(base: &HashProjection, other: &HashProjection) -> Self {
+        Self { hash: (base.latest_hash != other.latest_hash).then_some(other.latest_hash) }
+    }
+    fn is_empty(&self) -> bool {
+        self.hash.is_none()
+    }
+}
+
 impl protocol::MutationDiff<HashProjection> for HashDiff {
-    fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
+    fn apply(&self, base: &HashProjection, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HashProjection> {
         Ok(match self.hash {
             Some(hash) => HashProjection { latest_hash: hash },
             None => base.clone(),
@@ -1768,6 +1792,7 @@ impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct HashOwnedRetirementFactory;
 
 impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {
@@ -1794,9 +1819,12 @@ impl store::ErasedSnapshotRetirement for HashSnapshotRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct HashSnapshotRetirementFactory;
 
 impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<HashProjection>) -> usize { std::mem::size_of::<HashSnapshotRetirement>() }
+
     fn retire(&self, snapshot: Arc<HashProjection>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(HashSnapshotRetirement(Some(snapshot)))
     }
@@ -1811,6 +1839,14 @@ impl semio_framework_value::retirement::RetireOwned for HashProjection {
 impl store::MemberStoreOwner<HashMutation> for HashProjection {
     /// 📦️ The fixture projection opens as an owned member through its own `ArtifactPack` codec.
     type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
+
+    fn member_store_owners_birth_bytes() -> usize {
+        store::document_store_owners_constructor_birth_bytes::<store::ArtifactStoreCursorDisposer<Self, HashMutation>>([
+            semio_framework_value::factory_constructor_birth_bytes::<HashSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<HashOwnedRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<HashOwnedRetirementFactory>(0),
+        ])
+    }
 
     fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
         store::DocumentStoreOwners::new(

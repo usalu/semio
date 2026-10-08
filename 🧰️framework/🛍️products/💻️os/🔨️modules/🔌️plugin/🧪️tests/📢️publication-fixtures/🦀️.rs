@@ -42,25 +42,25 @@ mod tests {
     fn publication_leaves_apply_inverse_preserve_identity_diff_and_expose_full_rosters() {
         let presence = ChangePublicationPresence { revision: 7 };
         let presence_before = PublicationPresence { revision: 3 };
-        assert_eq!(PublicationPresenceDiff::default().apply(&presence_before).unwrap(), presence_before);
+        assert_eq!(protocol::apply_diff(&PublicationPresenceDiff::default(), &presence_before).unwrap(), presence_before);
         let mut presence_diff = PublicationPresenceDiff::default();
         presence_diff.absorb(PublicationPresenceDiff { revision: Some(7) });
-        assert_eq!(presence_diff.apply(&presence_before).unwrap(), PublicationPresence { revision: 7 });
-        let presence_after = presence.diff(&presence_before).diff().apply(&presence_before).unwrap();
+        assert_eq!(protocol::apply_diff(&presence_diff, &presence_before).unwrap(), PublicationPresence { revision: 7 });
+        let presence_after = protocol::apply_diff(presence.diff(&presence_before).diff(), &presence_before).unwrap();
         assert_eq!(presence_after, PublicationPresence { revision: 7 });
         let [presence_inverse] = <[PublicationPresenceMutation; 1]>::try_from(presence.inverse(&presence_before).expect("valid retained mutation inverse fixture")).unwrap();
-        assert_eq!(presence_inverse.diff(&presence_after).diff().apply(&presence_after).unwrap(), presence_before);
+        assert_eq!(protocol::apply_diff(presence_inverse.diff(&presence_after).diff(), &presence_after).unwrap(), presence_before);
 
         let transient = ChangePublicationTransient { revision: 11 };
         let transient_before = PublicationTransient { revision: 5 };
-        assert_eq!(PublicationTransientDiff::default().apply(&transient_before).unwrap(), transient_before);
+        assert_eq!(protocol::apply_diff(&PublicationTransientDiff::default(), &transient_before).unwrap(), transient_before);
         let mut transient_diff = PublicationTransientDiff::default();
         transient_diff.absorb(PublicationTransientDiff { revision: Some(11) });
-        assert_eq!(transient_diff.apply(&transient_before).unwrap(), PublicationTransient { revision: 11 });
-        let transient_after = transient.diff(&transient_before).diff().apply(&transient_before).unwrap();
+        assert_eq!(protocol::apply_diff(&transient_diff, &transient_before).unwrap(), PublicationTransient { revision: 11 });
+        let transient_after = protocol::apply_diff(transient.diff(&transient_before).diff(), &transient_before).unwrap();
         assert_eq!(transient_after, PublicationTransient { revision: 11 });
         let [transient_inverse] = <[PublicationTransientMutation; 1]>::try_from(transient.inverse(&transient_before).expect("valid retained mutation inverse fixture")).unwrap();
-        assert_eq!(transient_inverse.diff(&transient_after).diff().apply(&transient_after).unwrap(), transient_before);
+        assert_eq!(protocol::apply_diff(transient_inverse.diff(&transient_after).diff(), &transient_after).unwrap(), transient_before);
 
         assert_eq!(<PublicationPresenceMutation as Mutation<PublicationPresence>>::DESCRIPTORS, &[ChangePublicationPresence::DESCRIPTOR]);
         assert_eq!(<PublicationTransientMutation as Mutation<PublicationTransient>>::DESCRIPTORS, &[ChangePublicationTransient::DESCRIPTOR]);

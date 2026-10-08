@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v_rfc1950::subsets::any::schema::mutations::*;
-use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, diff_set_snapshot, DeflateDiff};
+use crate::schema::diff::{diff_set_compression_params, diff_set_payload, diff_set_preset_dictionary, DeflateDiff};
 use crate::schema::snapshot::DeflateLevelHint;
 use crate::DeflateSnapshot;
 use protocol::Mutation;

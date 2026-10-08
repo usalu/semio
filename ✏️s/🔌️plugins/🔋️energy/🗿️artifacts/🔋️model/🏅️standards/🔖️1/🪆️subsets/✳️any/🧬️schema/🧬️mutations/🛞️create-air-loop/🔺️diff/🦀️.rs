@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateAirLoop` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelAirLoopPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -30,15 +30,13 @@ pub fn diff(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> proto
     if payload.terminal_zone_ids.iter().any(|entry| !base.model.zones.iter().any(|zone| zone.id == *entry)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "A terminal zone list names a zone this model does not have.".to_string(), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.air_loops.push(crate::model::ModelAirLoop {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { air_loops: Rows::inserting(base.model.air_loops.len(), crate::model::ModelAirLoop {
         id: payload.id,
         name: payload.name.clone(),
         supply_node_id: payload.supply_node_id,
         return_node_id: payload.return_node_id,
         design_supply_air_flow_m3_s: payload.design_supply_air_flow_m3_s,
         terminal_zone_ids: payload.terminal_zone_ids.clone(),
-    });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

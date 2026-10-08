@@ -1,0 +1,17 @@
+{
+  "stock": [
+    1,
+    1,
+    1
+  ],
+  "radius": 0.1,
+  "height": 1,
+  "translation": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "circularSegments": 512,
+  "expectedVolume": 1.015707963267949,
+  "closedShell": true
+}

@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::wfc2d::transient::mutations::*;
 use crate::editor::wfc2d::transient::Wfc2dTransient;
-use set_solve::SetSolve;
+use crate::editor::wfc2d::transient::mutations::SetSolve;
 
 impl protocol::OpBinary for Wfc2dTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

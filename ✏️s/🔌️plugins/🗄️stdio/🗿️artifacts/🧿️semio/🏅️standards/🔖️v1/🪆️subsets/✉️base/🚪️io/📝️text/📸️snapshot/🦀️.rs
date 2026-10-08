@@ -241,6 +241,21 @@ pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
+/// 🧮️ Optional sparse-diff field: `_` when absent, otherwise `s` followed by the field's own encoding.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn enc_opt<T>(value: Option<&T>, enc: impl Fn(&T) -> String) -> String {
+    value.map_or_else(|| "_".to_string(), |v| format!("s{}", enc(v)))
+}
+
+/// 🧮️ Inverse of [`enc_opt`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dec_opt<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+    match s {
+        "_" => Ok(None),
+        other => other.strip_prefix('s').ok_or_else(|| format!("optional field: bad token {other:?}")).and_then(dec).map(Some),
+    }
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
     let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");

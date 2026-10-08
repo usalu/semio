@@ -36,7 +36,15 @@ async fn the_content_child_is_the_one_scene_every_verb_and_window_reads() {
     let added = composed_scene(&app).await;
     let note = added.widgets.iter().map(|widget| crate::schema::widget_id(widget).to_string()).find(|id| id.starts_with("note")).expect("addWidget lands one note in the content child");
     added.retire_cold();
-    let main_window = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&render(&mut app, FLOW_PLAY_BODY_MAIN).await).expect("main window node-graph scene");
+    let rendered = render(&mut app, FLOW_PLAY_BODY_MAIN).await;
+    let spine = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&rendered).expect("main window scene spine");
+    let main_window = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rendered).expect("assembled main window node-graph scene");
+    let projection: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    let surface = semio_framework_plugin::artifact_app_laws::fixture_scene_node::<semio_framework_plugin::NodeGraphScene>(&projection).unwrap();
+    let carrier = surface["children"].as_array().unwrap().iter().find(|child| child["key"] == "framework.scene.nodeGraph.nodes").expect("production node carrier");
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::fixture_carrier_text(carrier)).unwrap();
+    assert_eq!(main_window.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), oracle.as_array().unwrap().iter().map(|node| node["id"].as_str().unwrap()).collect::<Vec<_>>(), "assembled scene reads the actual serialized node carrier");
+    eprintln!("[DEBUG] Flow current child={} added={} spine_ids={:?} rendered_ids={:?}; serde_json node carrier matched", coordinate, note, spine.nodes.iter().map(|node| &node.id).collect::<Vec<_>>(), main_window.nodes.iter().map(|node| &node.id).collect::<Vec<_>>());
     assert!(main_window.nodes.iter().any(|node| node.id == note), "the main window renders the widget the child edit added");
     dispatch(&mut app, FlowCommand::RemoveWidget(RemoveWidget { widget_id: note.clone() })).await;
     settle(&mut app).await;

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "admissionBytes", "pageBytes", "cases"],
+  "properties": {
+    "schema": { "const": "job-close-demand.v1" },
+    "admissionBytes": { "const": 262144 },
+    "pageBytes": { "const": 16384 },
+    "cases": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "physicalBytes", "callerBytes", "releasedBytes"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "physicalBytes": { "type": "integer", "minimum": 1, "maximum": 262144 },
+          "callerBytes": { "type": "integer", "minimum": 0, "maximum": 262144 },
+          "releasedBytes": { "type": "integer", "minimum": 0, "maximum": 262144 }
+        }
+      }
+    }
+  }
+}

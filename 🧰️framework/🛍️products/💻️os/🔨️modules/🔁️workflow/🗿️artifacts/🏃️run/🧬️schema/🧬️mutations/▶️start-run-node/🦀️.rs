@@ -1,4 +1,4 @@
-use super::super::{RunArtifact, RunDiff, RunMutation};
+use super::super::{RetractRunLog, RunArtifact, RunDiff, RunLogLine, RunMutation, RunStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -15,14 +15,11 @@ pub struct StartRunNode {
 impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "start", entity: "run-node", kind: "start-run-node", record: "StartedRunNode" };
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::NodeStarted { node_id: self.node_id.clone() })
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: self.node_id.clone(), level: "info".into(), message: "node started".into(), at: store::now_iso() })))
     }
     fn inverse(&self, _base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        Vec::new()
-    
-    })())
-}
+        Ok(vec![RunMutation::RetractRunLog(RetractRunLog { count: 1 })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Start run node {}", self.node_id), &format!("Laufknoten {} starten", self.node_id))
     }

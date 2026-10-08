@@ -4,7 +4,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ fem3d document artifact state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dArtifact {

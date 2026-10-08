@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeZoneMultiplier` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZonePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeZoneMultiplier, base: &EnergyModelSnapshot) -
     if existing.multiplier == payload.new_multiplier {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} already has multiplier {}.", payload.id.0, payload.new_multiplier));
     }
-    let mut model = base.model.clone();
-    if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
-        zone.multiplier = payload.new_multiplier;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zones: Rows::modifying(ZonePatch { multiplier: Some(payload.new_multiplier), ..ZonePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -22,5 +22,5 @@ fn absent_coordinate_is_a_warned_no_op() {
     let outcome = MutationKind::<OpeningPreferences, OpeningConfigMutation>::diff(&payload, &base);
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
-    assert_eq!(outcome.diff(), &base);
+    assert!(protocol::DiffAlgebra::<OpeningPreferences>::is_empty(outcome.diff()));
 }

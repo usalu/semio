@@ -1,0 +1,143 @@
+{
+  "category": {
+    "id": "mesh.convert",
+    "emoji": "🔀️",
+    "order": 210,
+    "label": {
+      "en": "Mesh conversion",
+      "de": "Netz-Umwandlung"
+    },
+    "description": {
+      "en": "Convert between exact B-Rep shapes and polygon meshes.",
+      "de": "Zwischen exakten B-Rep-Formen und Polygonnetzen umwandeln."
+    }
+  },
+  "kinds": [
+    {
+      "id": "mesh.convert.fromBrep",
+      "category": "mesh.convert",
+      "emoji": "🔺️",
+      "label": {
+        "en": "B-Rep to mesh",
+        "de": "B-Rep in Netz"
+      },
+      "description": {
+        "en": "Triangulates a B-Rep shape into a mesh; a smaller deflection gives more detail.",
+        "de": "Trianguliert eine B-Rep-Form zu einem Netz; eine kleinere Abweichung ergibt mehr Details."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "deflection",
+          "label": {
+            "en": "Deflection",
+            "de": "Abweichung"
+          },
+          "description": {
+            "en": "Largest distance between the surface and its triangles; smaller values give finer meshes.",
+            "de": "Größter Abstand zwischen Oberfläche und Dreiecken; kleinere Werte ergeben feinere Netze."
+          },
+          "type": "length",
+          "default": 0.1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.01
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The triangulated mesh.",
+            "de": "Das triangulierte Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "tessellated-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.convert.toBrep",
+      "category": "mesh.convert",
+      "emoji": "🧊️",
+      "label": {
+        "en": "Mesh to B-Rep",
+        "de": "Netz in B-Rep"
+      },
+      "description": {
+        "en": "Turns every polygon into a planar B-Rep face; curved surfaces are not reconstructed.",
+        "de": "Macht aus jedem Polygon eine ebene B-Rep-Fläche; gekrümmte Flächen werden nicht rekonstruiert."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "tolerance",
+          "label": {
+            "en": "Tolerance",
+            "de": "Toleranz"
+          },
+          "description": {
+            "en": "Distance within which vertices are merged.",
+            "de": "Abstand, innerhalb dessen Eckpunkte verschmolzen werden."
+          },
+          "type": "length",
+          "default": 0.001,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.0001
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The faceted B-Rep shape.",
+            "de": "Die facettierte B-Rep-Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "preview": true
+    }
+  ]
+}

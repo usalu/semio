@@ -19,7 +19,7 @@ use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
-use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_pane_models, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
+use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_import_object_emit, cad_pane_models, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
 use crate::editor::cad::modes::edit::windows::transient::{self as window_transient, CadWorldWindowTransient};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
@@ -1473,7 +1473,150 @@ impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
+
+/// 🎞️ A media delivery uses the retained command's exact preparation and publication lifecycle.
+struct CadMediaJob(ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>);
+
+impl semio_framework_job::InteractiveJob for CadMediaJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+    fn begin_close(&mut self) { semio_framework_job::InteractiveJob::begin_close(&mut self.0); }
+    fn close_step(&mut self, items: usize, bytes: usize) -> semio_framework_job::InteractiveJobCloseStep { semio_framework_job::InteractiveJob::close_step(&mut self.0, items, bytes) }
+    fn terminal_is_empty(&self) -> bool { semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) }
+}
+
+impl semio_framework_plugin::ArtifactReservedJob for CadMediaJob {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(match semio_framework_job::InteractiveJob::close_step(&mut self.0, items, bytes) {
+            semio_framework_job::InteractiveJobCloseStep::Complete if semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) => semio_framework_plugin::PluginCloseStep::Complete,
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
+            _ => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Cad media still retains exact owners".into() },
+        })
+    }
+    fn terminal_is_empty(&self) -> bool { semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) }
+}
+
+struct CadMediaWork {
+    port: String,
+    media: Option<Media>,
+    children: Option<semio_framework_plugin::ChildContentView>,
+    retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    priced_bytes: usize,
+    price_checksum: u64,
+    pricing_complete: bool,
+    consumed: bool,
+    closing: bool,
+}
+
+impl CadMediaWork {
+    fn new(port: String, media: Media, children: Option<semio_framework_plugin::ChildContentView>) -> Self {
+        Self { port, media: Some(media), children, retirement: None, priced_bytes: 0, price_checksum: 0, pricing_complete: false, consumed: false, closing: false }
+    }
+    fn borrowed_source(&self) -> Result<&[u8], Fault> {
+        match &self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?.payload {
+            MediaPayload::Structured { json, .. } => Ok(json.as_bytes()),
+            MediaPayload::Intrinsic { value, .. } => value.as_bytes().or_else(|| value.as_str().map(str::as_bytes)).ok_or_else(|| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-shape"), "Cad file media requires borrowed intrinsic text or bytes")),
+            MediaPayload::Binary { .. } => Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-shape"), "Cad file media requires a retained source rather than a binary address")),
+        }
+    }
+    fn price_source(&mut self, maximum_bytes: usize) -> Result<usize, Fault> {
+        if maximum_bytes == 0 || self.pricing_complete { return Ok(0); }
+        let source = self.borrowed_source()?;
+        if source.len() > semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES {
+            return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.media-input-capacity"), "Cad media source exceeds its declared retained raw-byte authority"));
+        }
+        let end = self.priced_bytes.saturating_add(maximum_bytes.min(64)).min(source.len());
+        let mut checksum = self.price_checksum;
+        for byte in &source[self.priced_bytes..end] { checksum = checksum.wrapping_mul(31).wrapping_add(u64::from(*byte)); }
+        let complete = end == source.len();
+        let charged = end - self.priced_bytes;
+        self.price_checksum = checksum;
+        self.priced_bytes = end;
+        self.pricing_complete = complete;
+        Ok(charged)
+    }
+    fn price_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, Fault> {
+        if cx.is_cancelled() { return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("interactive-job.cancelled"), "Cad media pricing was cancelled before conversion")); }
+        if cx.should_yield() { return Ok(false); }
+        if !self.pricing_complete {
+            self.price_source(64)?;
+            cx.consume_fuel(1);
+            return Ok(false);
+        }
+        Ok(true)
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
+    fn tool_id(&self) -> &'static str { "importCadFile" }
+    fn workspace_identity(&self) -> u64 { self.borrowed_source().map_or(0, |source| (source.as_ptr() as usize as u64).wrapping_add(source.len() as u64)) }
+    fn extent(&self, _: &CadCommand, _: &CadSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> { Some(1) }
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 { return Err(Fault::from("Cad media pricing checkpoint capacity")); }
+        target[..24].fill(0);
+        target[..8].copy_from_slice(&(self.priced_bytes as u64).to_le_bytes());
+        target[8..16].copy_from_slice(&self.price_checksum.to_le_bytes());
+        target[16] = u8::from(self.pricing_complete);
+        Ok(24)
+    }
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 24 || checkpoint[16] > 1 || checkpoint[17..].iter().any(|byte| *byte != 0) { return Err(Fault::from("Cad media pricing checkpoint shape")); }
+        let offset = usize::try_from(u64::from_le_bytes(checkpoint[..8].try_into().map_err(|_| Fault::from("Cad media pricing offset"))?)).map_err(|_| Fault::from("Cad media pricing offset authority"))?;
+        let source = self.borrowed_source()?;
+        if offset > source.len() || (checkpoint[16] == 1 && offset != source.len()) { return Err(Fault::from("Cad media pricing checkpoint source extent")); }
+        self.priced_bytes = offset;
+        self.price_checksum = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("Cad media pricing checksum"))?);
+        self.pricing_complete = checkpoint[16] == 1;
+        Ok(())
+    }
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
+        if self.consumed { return Err(Fault::from("Cad media operation was already consumed")); }
+        let before = (self.priced_bytes, self.pricing_complete);
+        if !self.price_step(cx)? {
+            let preview = br#"{"en":"Pricing media","de":"Medienaufwand bestimmen"}"#;
+            return Ok(if before == (self.priced_bytes, self.pricing_complete) { ArtifactCommandWorkStep::Replay { stage: "cad-media-pricing", preview } } else { ArtifactCommandWorkStep::Progress { stage: "cad-media-pricing", preview } });
+        }
+        self.consumed = true;
+        cx.set_stage("cad-media-decode");
+        let mut operation = input.operation.clone();
+        operation.operation_id = cx.operation().0;
+        operation.generation = cx.generation().0;
+        let doc = ArtifactView::with_children(input.snapshot, input.history, self.children.as_ref().ok_or_else(|| Fault::from("Cad media child read owner is absent"))?.clone()).bound_to_operation(operation);
+        let media = self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?;
+        let emit = CadPlayApp::import_media(&self.port, media, &doc).map_err(|error| Fault::from(error.to_string()))?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing || maximum_items == 0 { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+        if let Some(retirement) = self.retirement.as_mut() {
+            return match retirement.close_step(1, maximum_bytes) {
+                Ok(store::SnapshotRetirementStep::Complete) if retirement.terminal_is_empty() => { self.retirement = None; InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } },
+                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                _ => InteractiveJobCloseStep::Blocked,
+            };
+        }
+        if self.media.is_some() {
+            if maximum_bytes < 4096 { return InteractiveJobCloseStep::Blocked; }
+            let payload = self.media.take().expect("admitted media owner").payload;
+            let (schema, value) = match payload {
+                MediaPayload::Structured { schema, json } => (schema, semio_framework_value::DslValue::String(json)),
+                MediaPayload::Intrinsic { schema, value } => (schema, value),
+                MediaPayload::Binary { format_kind, blob_hash } => (format_kind, semio_framework_value::DslValue::String(blob_hash)),
+            };
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement((std::mem::take(&mut self.port), schema, value)));
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.children.take().is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.media.is_none() && self.port.is_empty() && self.children.is_none() && self.retirement.is_none() }
+}
+
 //#region 📬️ConfigStorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct CadConfigStorePreparationFactory;
 
 struct CadConfigStorePreparation {
@@ -1638,6 +1781,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
 const CAD_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
 const CAD_ARTIFACT_STORE_MAXIMUM_ITEMS: usize = 512;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct CadArtifactStorePreparationFactory;
 
 struct CadArtifactStorePreparation {
@@ -1712,7 +1856,21 @@ fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(Ca
     Ok((post, inverse, mutation))
 }
 
+/// 🧰️ Pairs canonical Cad retirement and original typed preparation authorities.
+pub(crate) fn cad_document_store_owners() -> store::DocumentStoreOwners<CadSnapshot, CadMutation> {
+    semio_framework_plugin::bounded_document_store_owners::<CadSnapshot, CadMutation>().with_one_item_preparation(std::sync::Arc::new(CadArtifactStorePreparationFactory))
+}
+
 impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
+    fn operation_wire_source<'a>(&self, operation: &'a CadMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
+        crate::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
+    }
+
+    fn operation_schema_parts<'a>(&'a self, operation: &'a CadMutation) -> Option<(&'a str, &'a str)> {
+        let semantics = protocol::SemanticMutation::semantics(operation);
+        Some((semantics.entity, semantics.kind))
+    }
+
     fn preflight(&self, mutation: &CadMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("CAD Artifact preparation rejected its lane".into());
@@ -1865,6 +2023,8 @@ pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVer
 }
 
 impl ArtifactEditor for CadPlayApp {
+    fn owned_mutation_batch_birth_bytes()->Option<usize>{Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<CadMutation>())}
+    fn admit_owned_mutation_batch(values:&mut Option<Vec<CadMutation>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::MemberStoreOwnedBatch::admit(values,grant)}
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
@@ -1896,7 +2056,7 @@ impl ArtifactEditor for CadPlayApp {
 }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+        Some(cad_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -2062,6 +2222,20 @@ impl ArtifactEditor for CadPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    fn build_reserved_tool_job(request: semio_framework_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+        if request.tool_id != "import-media" { return Ok(None); }
+        if !request.raw_wire.is_empty() || request.authoring_seed.is_empty() { return Err(Fault::from("Cad media requires exact decoded admission authority")); }
+        let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = request.input else { return Err(Fault::from("Cad media requires its declared input owner")); };
+        if !matches!(port.as_str(), "geometry:in" | "artifact:in") { return Err(Fault::from("Cad media input port is not declared")); }
+        let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
+        let work = Box::new(CadMediaWork::new(port, media, Some(request.children)));
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
+            CadCommand::command_id, CAD_RETAINED_RAW_BYTES, CAD_RETAINED_WORK_ITEMS, work,
+        )?;
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(CadMediaJob(ArtifactRetainedCommandJob::new(payload)))))
+    }
+
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::cad::config::schema::app_schema_descriptor())
     }
@@ -2105,12 +2279,8 @@ impl ArtifactEditor for CadPlayApp {
             MediaPayload::Intrinsic { value, .. } => value,
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in requires an intrinsic or structured file payload".into())),
         };
-        let element = crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, payload).ok_or_else(|| MediaError::Payload(port.to_string(), "unrecognized geometry payload".into()))?;
-        let models = cad_pane_models(doc.snapshot, &doc.children);
-        if models.model(CadPaneId::Shape).is_none() {
-            return Err(MediaError::Payload(port.to_string(), "the shape pane composes no model child to insert into".into()));
-        }
-        Ok(cad_child_leaves_emit(&models, None, vec![CadToolLeaf { pane: CadPaneId::Shape, leaf: SemioModelMutation::InsertElement(InsertElement { element }) }]))
+        let imported = crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, payload).ok_or_else(|| MediaError::Payload(port.to_string(), "unrecognized geometry payload".into()))?;
+        cad_import_object_emit(doc, CadPaneId::Shape, "import-media", imported).map_err(|fault| MediaError::Payload(port.to_string(), fault.message))
     }
 
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current

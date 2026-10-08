@@ -1,4 +1,3 @@
-# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ SemioMeshMutation facet mirror — see the `🦀️.rs` sibling for the real source of
 # truth. Seventeen-verb mesh vocabulary; `replacePrimitiveGeometry` is SMO's approved rename of
 # the old `setPrimitiveGeometry`, completed by DKM after SMO wound down.
@@ -21,7 +20,6 @@ enum MeshMutationKind {
   CHANGE_TEXTURE_MIME
   REPLACE_TEXTURE_BYTES
   MOVE_VERTEX
-  SET_SNAPSHOT
 }
 
 type SemioMeshMutation {
@@ -47,5 +45,4 @@ type SemioMeshMutation {
   newMime: String
   newBytes: [Int!]
   newPoint: SemioPoint3
-  snapshot: SemioMeshSnapshot
 }

@@ -55,7 +55,6 @@ mod tests;
 mod native_codec {
 use super::*;
 pub use crate::mutations::LayoutMutation;
-pub use mutations_wire_codec::*;
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for LayoutMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

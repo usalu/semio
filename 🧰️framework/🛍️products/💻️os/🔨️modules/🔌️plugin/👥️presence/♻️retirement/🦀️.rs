@@ -7,6 +7,7 @@ use std::sync::{Arc, Weak};
 const _: () = assert!(size_of::<crate::NoPresence>() == 0 && !std::mem::needs_drop::<crate::NoPresence>());
 
 /// 🫧️ Explicit ownership for the framework's zero-payload presence type only.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NoPresenceRetirementFactory;
 
 fn no_presence_is_empty(_: &crate::NoPresence) -> bool {
@@ -78,12 +79,15 @@ where
     Arc::new(BoundedPresenceRootRetirementFactory::<P>(std::marker::PhantomData))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct BoundedPresenceRootRetirementFactory<P>(std::marker::PhantomData<fn() -> P>);
 
 impl<P> store::SnapshotRetirementFactory<P> for BoundedPresenceRootRetirementFactory<P>
 where
     P: store::ArtifactDsl + Send + Sync + 'static,
 {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { std::mem::size_of::<BoundedPresenceRootRetirement<P>>() }
+
     fn retire(&self, snapshot: Arc<P>) -> Box<dyn store::ErasedSnapshotRetirement> {
         let retained_bytes = store::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Box::new(BoundedPresenceRootRetirement { root: Some(snapshot), retained_bytes })
@@ -116,6 +120,8 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresen
 }
 
 impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<crate::NoPresence>) -> usize { std::mem::size_of::<NoPresenceRetirement>() }
+
     fn retire(&self, root: Arc<crate::NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(NoPresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))
     }

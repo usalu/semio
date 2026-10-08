@@ -1,0 +1,8 @@
+{
+  "title": "Diff-Only Mutations With Central Apply And Diff-Summing Inverses",
+  "emoji": "🧮",
+  "status": "open",
+  "description": "All mutations must return a declarative concrete diff that achieves the change and never mutate state directly. All mutations must return a list of mutations that inverts the mutation; the diffs of those inverse mutations must sum to the negative of the forward mutation's diff. It must be impossible by design for a mutation to mutate a snapshot directly; every state change goes through the diff, which is applied centrally. Covers all artifacts in all plugins, end to end. Violations include generic inverse/diff implementations used where concrete ones are required, e.g. ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🦀️.rs. Ticket bookkeeping is manual: repo MCP ticket_open returned a malformed result (structuredContent null).",
+  "goal": "🎯runningframework",
+  "sessions": ["⚪04146190065c41c68927c62acd5070cc1"]
+}

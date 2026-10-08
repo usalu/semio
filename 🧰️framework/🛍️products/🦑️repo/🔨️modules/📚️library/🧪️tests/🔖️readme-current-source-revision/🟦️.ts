@@ -269,7 +269,7 @@ test("current revision exact helper extraction has no strict compiler diagnostic
   expect(diagnostics).toEqual(expected.diagnostics);
 });
 
-test("revision gate registration matches the declared Nx route and both launch catalogs", () => {
+test("revision gate registration matches the declared Nx route", () => {
   const expected = vector.execution, packagePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
   const projectSource = evidence(packagePath + "/📋️project.json").bytes.toString("utf8"), project = JSON.parse(projectSource), errors: ParseError[] = [];
   expect(parseJson(projectSource, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(project);
@@ -284,10 +284,4 @@ test("revision gate registration matches the declared Nx route and both launch c
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
   expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const errors: ParseError[] = [], configurations = parseJson(evidence(path).bytes.toString("utf8"), errors).configurations;
-    expect(errors, path).toEqual([]);
-    expect(configurations.filter((row: any) => row.name === expected.launchName), path).toEqual([{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }]);
-    expect(configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder), path).toHaveLength(1);
-  }
 });

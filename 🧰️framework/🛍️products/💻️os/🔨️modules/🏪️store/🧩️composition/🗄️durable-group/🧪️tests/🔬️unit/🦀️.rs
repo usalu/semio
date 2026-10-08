@@ -120,7 +120,7 @@ async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::Arti
     let mut envelope = crate::os_store::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId("actor:owned-group-fixture".into())).await.expect("owned group fixture Store");
+    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }
@@ -800,7 +800,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("one captured group read");
         if coordinator.phase() == DurableOwnedThreeStoreCommitPhaseV1::Journal {
             assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
-            assert_eq!(parent.local_actor_id().0, crate::os_spr::LOCAL_ACTOR_ID);
+            assert_eq!(parent.local_actor_id().0, fixture()["openedActor"].as_str().expect("declared opened group actor"));
             assert!(drawing.invalidate_after_replay().is_err());
             observed_pending = true;
         }

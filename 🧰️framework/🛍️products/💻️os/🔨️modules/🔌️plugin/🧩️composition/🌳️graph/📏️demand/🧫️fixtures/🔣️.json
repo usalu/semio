@@ -1,0 +1,17 @@
+{
+  "maximumItems": 1,
+  "ordinaryBytes": 4096,
+  "maximumBytes": 65536,
+  "identifierByte": 120,
+  "parentByte": 121,
+  "slotByte": 122,
+  "identifierBytes": 8194,
+  "deniedBytes": [
+    0,
+    4096,
+    8193
+  ],
+  "expectedDemandBytes": 8194,
+  "physicalReceiptBytes": 8194,
+  "finalOwnedStage": 8
+}

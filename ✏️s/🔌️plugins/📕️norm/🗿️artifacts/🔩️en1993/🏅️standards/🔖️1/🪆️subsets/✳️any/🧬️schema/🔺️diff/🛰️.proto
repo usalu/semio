@@ -1,24 +1,158 @@
 // 🧬️ En1993 diff
 syntax = "proto3";
 package semio.s.norm.en1993.diff;
-message En1993ListWrap { repeated bytes values = 1; }
+
+enum En1993RowOp {
+  EN1993_ROW_OP_INSERT = 0;
+  EN1993_ROW_OP_REMOVE = 1;
+  EN1993_ROW_OP_REPLACE = 2;
+}
+
+message En1993MaterialEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993SectionEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993MemberEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993LoadCaseEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993MemberActionEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993JointEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993FatigueDetailEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993FireExposureEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993ColdFormedMemberEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993PlatedPanelEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993SiloShellEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993TensionComponentEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993BridgeFatigueEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993TowerLegEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993PileEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1993CraneRunwayEdit {
+  En1993RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
 message En1993Diff {
-  bytes artifact = 1;
-  optional string annex = 2;
-  optional En1993ListWrap materials = 3;
-  optional En1993ListWrap sections = 4;
-  optional En1993ListWrap members = 5;
-  optional En1993ListWrap load_cases = 6;
-  optional En1993ListWrap member_actions = 7;
-  optional En1993ListWrap joints = 8;
-  optional En1993ListWrap fatigue_details = 9;
-  optional En1993ListWrap fire_exposures = 10;
-  optional En1993ListWrap cold_formed_members = 11;
-  optional En1993ListWrap plated_panels = 12;
-  optional En1993ListWrap silo_shells = 13;
-  optional En1993ListWrap tension_components = 14;
-  optional En1993ListWrap bridge_fatigue = 15;
-  optional En1993ListWrap tower_legs = 16;
-  optional En1993ListWrap piles = 17;
-  optional En1993ListWrap crane_runways = 18;
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  repeated En1993MaterialEdit materials = 2;
+  // @state artifact
+  repeated En1993SectionEdit sections = 3;
+  // @state artifact
+  repeated En1993MemberEdit members = 4;
+  // @state artifact
+  repeated En1993LoadCaseEdit load_cases = 5;
+  // @state artifact
+  repeated En1993MemberActionEdit member_actions = 6;
+  // @state artifact
+  repeated En1993JointEdit joints = 7;
+  // @state artifact
+  repeated En1993FatigueDetailEdit fatigue_details = 8;
+  // @state artifact
+  repeated En1993FireExposureEdit fire_exposures = 9;
+  // @state artifact
+  repeated En1993ColdFormedMemberEdit cold_formed_members = 10;
+  // @state artifact
+  repeated En1993PlatedPanelEdit plated_panels = 11;
+  // @state artifact
+  repeated En1993SiloShellEdit silo_shells = 12;
+  // @state artifact
+  repeated En1993TensionComponentEdit tension_components = 13;
+  // @state artifact
+  repeated En1993BridgeFatigueEdit bridge_fatigue = 14;
+  // @state artifact
+  repeated En1993TowerLegEdit tower_legs = 15;
+  // @state artifact
+  repeated En1993PileEdit piles = 16;
+  // @state artifact
+  repeated En1993CraneRunwayEdit crane_runways = 17;
 }

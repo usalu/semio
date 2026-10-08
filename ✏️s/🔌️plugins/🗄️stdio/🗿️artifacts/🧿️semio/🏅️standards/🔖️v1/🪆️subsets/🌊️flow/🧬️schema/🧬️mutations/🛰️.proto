@@ -33,10 +33,9 @@ message SemioFlowSnapshot {
   repeated FlowEdge edges = 3;
 }
 message SemioFlowMutation {
-  string mutation = 1; // set-snapshot | insert-node | remove-node | set-node-kind |
+  string mutation = 1; // insert-node | remove-node | set-node-kind |
                         // set-node-label | set-node-position | set-node-param | remove-node-param |
                         // insert-edge | remove-edge | set-edge-endpoints | set-edge-kind | drag-nodes
-  SemioFlowSnapshot snapshot = 2;
   FlowNode node = 3;
   FlowEdge edge = 4;
   string id = 5;

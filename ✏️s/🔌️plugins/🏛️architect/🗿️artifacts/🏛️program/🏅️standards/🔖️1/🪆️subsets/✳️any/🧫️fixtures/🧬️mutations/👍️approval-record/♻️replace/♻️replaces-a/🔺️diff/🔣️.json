@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -54,50 +53,47 @@
   "constraints": null,
   "complianceRecords": null,
   "approvals": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "approval-record-a",
-        "patch": {
-          "name": "Approval Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "approvalType": "Replaced Approval Record A",
-          "subjectId": "",
-          "approverIds": [],
-          "approvalDate": null,
-          "conditions": [],
-          "approvalStatus": "draft",
-          "expiryDate": null,
-          "delegationChain": [],
-          "evidenceRefs": [],
-          "relatedDecisionId": null,
-          "relatedChangeId": null,
-          "authorityBasis": [],
-          "signatureMethod": null,
-          "rejectionReason": null,
-          "resubmissionDate": null,
-          "notificationList": [],
-          "workflowStep": null,
-          "version": null,
-          "auditTrailRef": null
-        }
+        "name": "Approval Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "approvalType": "Replaced Approval Record A",
+        "subjectId": "",
+        "approverIds": [],
+        "approvalDate": null,
+        "conditions": [],
+        "approvalStatus": "draft",
+        "expiryDate": null,
+        "delegationChain": [],
+        "evidenceRefs": [],
+        "relatedDecisionId": null,
+        "relatedChangeId": null,
+        "authorityBasis": [],
+        "signatureMethod": null,
+        "rejectionReason": null,
+        "resubmissionDate": null,
+        "notificationList": [],
+        "workflowStep": null,
+        "version": null,
+        "auditTrailRef": null
       }
     ],
+    "removed": [
+      "approval-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "meetings": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

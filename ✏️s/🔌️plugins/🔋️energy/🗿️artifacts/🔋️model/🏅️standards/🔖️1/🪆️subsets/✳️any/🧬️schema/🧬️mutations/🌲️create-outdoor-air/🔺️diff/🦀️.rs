@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateOutdoorAirSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, OutdoorAirSystemPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +15,6 @@ pub fn diff(payload: &super::CreateOutdoorAirSystem, base: &EnergyModelSnapshot)
     if !payload.min_oa_flow_m3_s.is_finite() || payload.min_oa_flow_m3_s < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A minimum outdoor air flow must be a non-negative finite number, got {}.", payload.min_oa_flow_m3_s), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.outdoor_air_systems.push(crate::model::OutdoorAirSystem { id: payload.id, air_loop_id: payload.air_loop_id, min_oa_flow_m3_s: payload.min_oa_flow_m3_s, economizer_enabled: payload.economizer_enabled });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { outdoor_air_systems: Rows::inserting(base.model.outdoor_air_systems.len(), crate::model::OutdoorAirSystem { id: payload.id, air_loop_id: payload.air_loop_id, min_oa_flow_m3_s: payload.min_oa_flow_m3_s, economizer_enabled: payload.economizer_enabled }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

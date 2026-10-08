@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::mutations::change_schema::{apply_playground_mutation_json,undo_playground_mutation_json};
-use crate::standards::v1::subsets::any::schema::mutations::change_schema::*;
+use crate::standards::v1::subsets::any::schema::mutations::{PlaygroundMutation, ChangeSchema};
+use crate::standards::v1::subsets::any::io::binary::mutations::change_schema::{decode_payload, encode_payload};
 
 #[test]
 fn binary_and_text_wire_forms_agree() {

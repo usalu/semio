@@ -1,3 +1,4 @@
+import {block3dSnapshotToJsonText,block3dSnapshotFromJsonText} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import * as ownerSqlite0 from "../🟦️.ts";
 import binary64Schema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
 /** 🧱️ Independent Source owner law for Block3d independent semantic SQLite demand. */
@@ -28,7 +29,7 @@ import transport from "../🧫️fixtures/🔢️transport/🔣️.json";
 
 test('closed genuine JSON transport preserves every declared binary64 word and rejects malformed carriers',()=>{
  expect(transport["roles"]).toEqual([["vortices",0,"position",0],["vortices",0,"position",1],["vortices",0,"position",2],["vortices",0,"direction",0],["vortices",0,"direction",1],["vortices",0,"direction",2],["vortices",0,"radius"],["camera3d","position",0],["camera3d","position",1],["camera3d","position",2],["camera3d","target",0],["camera3d","target",1],["camera3d","target",2],["camera3d","zoom"]]);expect(transport["invalidWords"]).toEqual([{"bits":"7FF0000000000000"},{"bits":"0"},{"bits":"0000000000000000","foreign":true},{"bits":0},{}]);
- const write=Reflect.get(owner,'block3dSnapshotToJsonText'),read=Reflect.get(owner,'block3dSnapshotFromJsonText');
+ const write=block3dSnapshotToJsonText,read=block3dSnapshotFromJsonText;
  expect(typeof write).toBe('function');expect(typeof read).toBe('function');
  const validate=new Ajv({strict:true}).compile(binary64Schema.$defs.Binary64);
  for(const word of transport.words){const value=specimen(word),text=write(value),parsed=JSON.parse(text);for(const path of transport.roles){expect(validate(at(parsed,path))).toBe(true);expect(at(parsed,path)).toEqual({bits:word});const bytes=Buffer.from(at(parsed,path).bits,'hex');expect(new DataView(bytes.buffer,bytes.byteOffset,8).getBigUint64(0)).toBe(BigInt('0x'+word));}expect(read(text)).toEqual(value);for(const invalid of transport.invalidWords){const bad=JSON.parse(text);set(bad,transport.roles[0]!,invalid);expect(()=>read(JSON.stringify(bad))).toThrow();}}

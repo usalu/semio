@@ -38,15 +38,19 @@ pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
 }
 
 /// 🪪 Admits and creates the domain cursor while the Store retains publication authority.
-pub trait RetainedCloneEdit<P: RetainedClone, M>: Send + Sync + 'static {
+pub trait RetainedCloneEdit<P: RetainedClone, M>: semio_framework_value::FactoryRetirement + Send + Sync + 'static {
     type Cursor: RetainedCloneEditCursor<P, M>;
     fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin(&self) -> Self::Cursor;
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RetainedClonePreparationFactory<P, M, E> {
+    #[factory_child]
     edit: Arc<E>,
+    #[factory_child]
     mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
+    #[factory_child]
     snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
     maximum_depth: usize,
     marker: PhantomData<fn() -> (P, M)>,
@@ -93,6 +97,8 @@ where
             footprint,
             retained_capacity_bytes: 0,
             maximum_depth: self.maximum_depth,
+            clone_turn: 0,
+            zero_work_turns: 0,
             checkpoint: ArtifactStoreOneItemCheckpoint::default(),
             seal_base: ArtifactStoreOneItemCheckpoint::default(),
             phase: RetainedClonePreparationPhase::Clone,
@@ -129,6 +135,8 @@ struct RetainedClonePreparation<P: RetainedClone, M: Send + Sync + 'static, E: R
     footprint: ArtifactStoreOneItemFootprint,
     retained_capacity_bytes: usize,
     maximum_depth: usize,
+    clone_turn: u8,
+    zero_work_turns: u8,
     checkpoint: ArtifactStoreOneItemCheckpoint,
     seal_base: ArtifactStoreOneItemCheckpoint,
     phase: RetainedClonePreparationPhase,
@@ -146,12 +154,26 @@ impl<P: RetainedClone, M: Send + Sync + 'static, E: RetainedCloneEdit<P, M>> Ret
         Ok(())
     }
 
-    fn clone_grant(&self, grant: ArtifactStoreOneItemGrant) -> RetainedCloneGrant {
-        RetainedCloneGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_bytes, maximum_capacity_bytes: grant.maximum_bytes, maximum_depth: self.maximum_depth }
+    fn clone_grant(&mut self, grant: ArtifactStoreOneItemGrant) -> RetainedCloneGrant {
+        let turn = self.clone_turn;
+        self.clone_turn = (turn + 1) % 3;
+        match turn {
+            0 => RetainedCloneGrant::one_capacity_turn(grant.maximum_bytes, self.maximum_depth),
+            1 => RetainedCloneGrant::one_payload_turn(grant.maximum_bytes, self.maximum_depth),
+            _ => RetainedCloneGrant::one_release_turn(grant.maximum_bytes, self.maximum_depth),
+        }
+    }
+
+    fn admit_empty_turn(&mut self, empty: bool, maximum_bytes: usize, owner: &str) -> Result<(), String> {
+        self.zero_work_turns = if empty { self.zero_work_turns.saturating_add(1) } else { 0 };
+        if self.zero_work_turns >= 3 {
+            return Err(format!("retained-clone.step-grant-too-small: {owner} requires more than the admitted {maximum_bytes}-byte per-turn allocation, copy, or release grant"));
+        }
+        Ok(())
     }
 
     fn record_progress(&mut self, progress: RetainedCloneProgress) -> Result<(), String> {
-        let bytes = progress.copied_bytes.checked_add(progress.retained_capacity_bytes).ok_or("retained clone preparation byte progress overflow")?;
+        let bytes = progress.copied_bytes.checked_add(progress.retained_capacity_bytes).and_then(|bytes| bytes.checked_add(progress.released_bytes)).ok_or("retained clone preparation byte progress overflow")?;
         self.retained_capacity_bytes = self.retained_capacity_bytes.checked_add(progress.retained_capacity_bytes).ok_or("retained clone preparation retained capacity overflow")?;
         if self.retained_capacity_bytes > self.footprint.retained_bytes {
             return Err("retained clone preparation exceeded its admitted retained capacity".into());
@@ -166,7 +188,7 @@ impl<P: RetainedClone, M: Send + Sync + 'static, E: RetainedCloneEdit<P, M>> Ret
     fn record_retirement(&mut self, step: SnapshotRetirementStep, maximum_items: usize, maximum_bytes: usize, scope: &str) -> Result<(), String> {
         let step = admit_retained_clone_retirement(step, maximum_items, maximum_bytes, scope).map_err(semio_framework_value::ValueError::into_message)?;
         if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            self.record_progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })?;
+            self.record_progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes })?;
         }
         Ok(())
     }
@@ -243,7 +265,7 @@ impl<P: RetainedClone, M: Send + Sync + 'static, E: RetainedCloneEdit<P, M>> Ret
             Arc::clone(self.mutation_retirement.as_ref().ok_or("retained clone preparation lost its mutation retirement authority")?),
             Arc::clone(self.snapshot_retirement.as_ref().ok_or("retained clone preparation lost its snapshot retirement authority")?),
         ));
-        self.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: required })?;
+        self.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: required, released_bytes: 0 })?;
         self.seal_base = self.checkpoint;
         self.phase = RetainedClonePreparationPhase::Seal;
         Ok(true)
@@ -285,15 +307,13 @@ where
                     .map_err(semio_framework_value::ValueError::into_message)?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone").map_err(semio_framework_value::ValueError::into_message)?;
                 self.record_progress(progress)?;
-                if matches!(step, RetainedCloneStep::Progress(value) if value == RetainedCloneProgress::default()) {
-                    return Err(format!("retained-clone.step-grant-too-small: snapshot clone requires more than the admitted {}-byte per-turn allocation or copy grant", grant.maximum_bytes));
-                }
+                self.admit_empty_turn(matches!(step, RetainedCloneStep::Progress(value) if value == RetainedCloneProgress::default()), grant.maximum_bytes, "snapshot clone")?;
                 if matches!(step, RetainedCloneStep::Complete(_)) {
                     self.copied = Some(self.clone_cursor.as_mut().and_then(RetainedCloneCursor::take).ok_or("retained clone cursor completed without its owner")?);
                     self.handoff_clone_cursor().map_err(semio_framework_value::ValueError::into_message)?;
                     self.phase = RetainedClonePreparationPhase::CloseClone;
                 }
-                Ok(if progress == RetainedCloneProgress::default() { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint) })
+                Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             RetainedClonePreparationPhase::CloseClone => {
                 let maximum_items = grant.maximum_items.min(1);
@@ -321,15 +341,13 @@ where
                 )?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation typed edit").map_err(semio_framework_value::ValueError::into_message)?;
                 self.record_progress(progress)?;
-                if matches!(step, RetainedCloneEditStep::Progress(value) if value == RetainedCloneProgress::default()) {
-                    return Err(format!("retained-clone.step-grant-too-small: typed edit requires more than the admitted {}-byte per-turn allocation or copy grant", grant.maximum_bytes));
-                }
+                self.admit_empty_turn(matches!(step, RetainedCloneEditStep::Progress(value) if value == RetainedCloneProgress::default()), grant.maximum_bytes, "typed edit")?;
                 if matches!(step, RetainedCloneEditStep::Complete(_)) {
                     self.inverse = Some(self.edit_cursor.take_inverse().ok_or("retained clone edit completed without inverse mutations")?);
                     let _ = self.edit_cursor.begin_close();
                     self.phase = RetainedClonePreparationPhase::CloseEdit;
                 }
-                Ok(if progress == RetainedCloneProgress::default() { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint) })
+                Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             RetainedClonePreparationPhase::CloseEdit => {
                 let maximum_items = grant.maximum_items.min(1);

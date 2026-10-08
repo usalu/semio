@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeZoneEquipmentPriority` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZoneEquipmentAssignmentPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeZoneEquipmentPriority, base: &EnergyModelSnap
     if existing.priority == payload.new_priority {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone equipment {} already has that priority.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {
-        item.priority = payload.new_priority;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::modifying(ZoneEquipmentAssignmentPatch { priority: Some(payload.new_priority), ..ZoneEquipmentAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

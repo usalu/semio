@@ -673,7 +673,7 @@ impl GifDiff {
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
-    fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
+    fn apply(&self, base: &GifSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<GifSnapshot> {
         if let Some(frames) = &self.frames {
             validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"])?;
         }
@@ -820,12 +820,6 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
-    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot)
-}
-
 /// 🧪️ P2-FG2: representative `GifDiff` (89a) cases for `diff_grammar_conformance_law`/
 /// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
 /// the empty diff, plus a real `between()` result exercising every scalar field, both
@@ -865,7 +859,7 @@ pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
     fb0.transparent_index = None;
     fb0.plain_text = Some(GifPlainText { left: 0, top: 0, width: 4, height: 1, cell_width: 4, cell_height: 8, fg_color_index: 0, bg_color_index: 1, text: "hi".into() });
     let b = GifSnapshot { width: 8, height: 8, gct: None, background_color_index: 3, pixel_aspect_ratio: 5, loop_count: None, frames: vec![fb0, f(6, 3, 3), f(7, 3, 3)], comments: vec![], app_extensions: vec![], ..GifSnapshot::default() };
-    vec![GifDiff::default(), diff_set_snapshot(&a, &b), diff_set_snapshot(&b, &a)]
+    vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️Diff
 

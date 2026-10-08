@@ -1,0 +1,642 @@
+{
+  "category": {
+    "id": "brep.solid",
+    "emoji": "🏗️",
+    "order": 40,
+    "label": {
+      "en": "Solids from profiles",
+      "de": "Körper aus Profilen"
+    },
+    "description": {
+      "en": "Turns faces, wires and paths into solids by extruding, revolving, sweeping, lofting and piping.",
+      "de": "Macht aus Flächen, Kantenzügen und Pfaden Körper durch Extrudieren, Rotieren, Austragen, Ausformen und Rohrbildung."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.solid.extrudeWire",
+      "category": "brep.solid",
+      "emoji": "🧱️",
+      "label": {
+        "en": "Extrude wire",
+        "de": "Kantenzug extrudieren"
+      },
+      "description": {
+        "en": "Extrudes a closed wire in a plane parallel to the XY plane into a solid along a vector.",
+        "de": "Extrudiert einen geschlossenen Kantenzug in einer zur XY-Ebene parallelen Ebene entlang eines Vektors zu einem Körper."
+      },
+      "inputs": [
+        {
+          "name": "wire",
+          "label": {
+            "en": "Wire",
+            "de": "Kantenzug"
+          },
+          "description": {
+            "en": "The closed wire to extrude.",
+            "de": "Der zu extrudierende geschlossene Kantenzug."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire"
+          ]
+        },
+        {
+          "name": "vector",
+          "label": {
+            "en": "Extrusion vector",
+            "de": "Extrusionsvektor"
+          },
+          "description": {
+            "en": "Direction and length of the extrusion.",
+            "de": "Richtung und Länge der Extrusion."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The extruded solid.",
+            "de": "Der extrudierte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "wire"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "vector"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.solid.extrudeFace",
+      "category": "brep.solid",
+      "emoji": "⬆️",
+      "label": {
+        "en": "Extrude face",
+        "de": "Fläche extrudieren"
+      },
+      "description": {
+        "en": "Extrudes a face along a vector into a solid; the length of the vector is the extrusion distance.",
+        "de": "Extrudiert eine Fläche entlang eines Vektors zu einem Körper; die Länge des Vektors ist die Extrusionslänge."
+      },
+      "inputs": [
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The face to extrude.",
+            "de": "Die zu extrudierende Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        },
+        {
+          "name": "vector",
+          "label": {
+            "en": "Extrusion vector",
+            "de": "Extrusionsvektor"
+          },
+          "description": {
+            "en": "Direction and length of the extrusion.",
+            "de": "Richtung und Länge der Extrusion."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The extruded solid.",
+            "de": "Der extrudierte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "vector"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.solid.revolve",
+      "category": "brep.solid",
+      "emoji": "🔄️",
+      "label": {
+        "en": "Revolve",
+        "de": "Rotieren"
+      },
+      "description": {
+        "en": "Revolves a face around an axis into a solid of revolution.",
+        "de": "Rotiert eine Fläche um eine Achse zu einem Rotationskörper."
+      },
+      "inputs": [
+        {
+          "name": "face",
+          "label": {
+            "en": "Face",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The profile face; it must not cross the axis.",
+            "de": "Die Profilfläche; sie darf die Achse nicht schneiden."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "face"
+          ]
+        },
+        {
+          "name": "axisOrigin",
+          "label": {
+            "en": "Axis origin",
+            "de": "Achsenursprung"
+          },
+          "description": {
+            "en": "A point on the axis.",
+            "de": "Ein Punkt auf der Achse."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "axisDirection",
+          "label": {
+            "en": "Axis direction",
+            "de": "Achsenrichtung"
+          },
+          "description": {
+            "en": "Direction of the axis.",
+            "de": "Richtung der Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Revolution angle; a full turn is 360 degrees.",
+            "de": "Rotationswinkel; eine volle Drehung sind 360 Grad."
+          },
+          "type": "angle",
+          "default": 6.283185307179586,
+          "min": 0,
+          "exclusiveMin": true,
+          "max": 6.283185307179586,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The solid of revolution.",
+            "de": "Der Rotationskörper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "face"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "rotate",
+            "port": "angle",
+            "axisPort": "axisDirection",
+            "originPort": "axisOrigin"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.solid.loft",
+      "category": "brep.solid",
+      "emoji": "🌉️",
+      "label": {
+        "en": "Loft",
+        "de": "Ausformen (Loft)"
+      },
+      "description": {
+        "en": "Blends a solid through a sequence of profiles.",
+        "de": "Formt einen Körper durch eine Folge von Profilen aus."
+      },
+      "inputs": [
+        {
+          "name": "profiles",
+          "label": {
+            "en": "Profiles",
+            "de": "Profile"
+          },
+          "description": {
+            "en": "The profiles in order; at least two, with compatible curve structure.",
+            "de": "Die Profile in Reihenfolge; mindestens zwei, mit kompatibler Kurvenstruktur."
+          },
+          "type": "shapes",
+          "shapeKinds": [
+            "wire",
+            "face"
+          ],
+          "minItems": 2
+        },
+        {
+          "name": "smooth",
+          "label": {
+            "en": "Smooth",
+            "de": "Glatt"
+          },
+          "description": {
+            "en": "Blend smoothly through the profiles instead of straight between them.",
+            "de": "Glatt durch die Profile überblenden statt geradlinig dazwischen."
+          },
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The lofted solid.",
+            "de": "Der ausgeformte Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-analytic",
+      "preview": true
+    },
+    {
+      "id": "brep.solid.sweep",
+      "category": "brep.solid",
+      "emoji": "🛤️",
+      "label": {
+        "en": "Sweep",
+        "de": "Austragen (Sweep)"
+      },
+      "description": {
+        "en": "Moves a profile along a path to create a solid.",
+        "de": "Bewegt ein Profil entlang eines Pfads und erzeugt so einen Körper."
+      },
+      "inputs": [
+        {
+          "name": "profile",
+          "label": {
+            "en": "Profile",
+            "de": "Profil"
+          },
+          "description": {
+            "en": "The closed profile that is moved along the operation.",
+            "de": "Das geschlossene Profil, das durch den Vorgang bewegt wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "face"
+          ]
+        },
+        {
+          "name": "path",
+          "label": {
+            "en": "Path",
+            "de": "Pfad"
+          },
+          "description": {
+            "en": "The curve the profile follows.",
+            "de": "Die Kurve, der das Profil folgt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "curve",
+            "edge"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The swept solid.",
+            "de": "Der ausgetragene Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    },
+    {
+      "id": "brep.solid.pipe",
+      "category": "brep.solid",
+      "emoji": "🚰️",
+      "label": {
+        "en": "Pipe",
+        "de": "Rohr"
+      },
+      "description": {
+        "en": "Sweeps a profile along a path, optionally steered by a guide curve.",
+        "de": "Trägt ein Profil entlang eines Pfads aus, optional geführt von einer Leitkurve."
+      },
+      "inputs": [
+        {
+          "name": "profile",
+          "label": {
+            "en": "Profile",
+            "de": "Profil"
+          },
+          "description": {
+            "en": "The closed profile that is moved along the operation.",
+            "de": "Das geschlossene Profil, das durch den Vorgang bewegt wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "face"
+          ]
+        },
+        {
+          "name": "path",
+          "label": {
+            "en": "Path",
+            "de": "Pfad"
+          },
+          "description": {
+            "en": "The curve the profile follows.",
+            "de": "Die Kurve, der das Profil folgt."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "curve",
+            "edge"
+          ]
+        },
+        {
+          "name": "guide",
+          "label": {
+            "en": "Guide",
+            "de": "Leitkurve"
+          },
+          "description": {
+            "en": "Optional curve that controls the twist of the profile.",
+            "de": "Optionale Kurve, die die Verdrehung des Profils steuert."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "curve",
+            "edge"
+          ],
+          "optional": true
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The piped solid.",
+            "de": "Der Rohrkörper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    },
+    {
+      "id": "brep.solid.helicalSweep",
+      "category": "brep.solid",
+      "emoji": "🌀️",
+      "label": {
+        "en": "Helical sweep",
+        "de": "Schraubenförmig austragen"
+      },
+      "description": {
+        "en": "Sweeps a profile along a helix around an axis, for springs and threads.",
+        "de": "Trägt ein Profil entlang einer Schraubenlinie um eine Achse aus, etwa für Federn und Gewinde."
+      },
+      "inputs": [
+        {
+          "name": "profile",
+          "label": {
+            "en": "Profile",
+            "de": "Profil"
+          },
+          "description": {
+            "en": "The closed profile that is moved along the operation.",
+            "de": "Das geschlossene Profil, das durch den Vorgang bewegt wird."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "wire",
+            "face"
+          ]
+        },
+        {
+          "name": "axisOrigin",
+          "label": {
+            "en": "Axis origin",
+            "de": "Achsenursprung"
+          },
+          "description": {
+            "en": "A point on the axis.",
+            "de": "Ein Punkt auf der Achse."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "axisDirection",
+          "label": {
+            "en": "Axis direction",
+            "de": "Achsenrichtung"
+          },
+          "description": {
+            "en": "Direction of the axis.",
+            "de": "Richtung der Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "radius",
+          "label": {
+            "en": "Radius",
+            "de": "Radius"
+          },
+          "description": {
+            "en": "Radius of the helix.",
+            "de": "Radius der Schraubenlinie."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "pitch",
+          "label": {
+            "en": "Pitch",
+            "de": "Steigung"
+          },
+          "description": {
+            "en": "Distance travelled along the axis per full turn.",
+            "de": "Weg entlang der Achse pro voller Windung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "turns",
+          "label": {
+            "en": "Turns",
+            "de": "Windungen"
+          },
+          "description": {
+            "en": "Number of full turns; fractions are allowed.",
+            "de": "Anzahl voller Windungen; Bruchteile sind erlaubt."
+          },
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Solid",
+            "de": "Körper"
+          },
+          "description": {
+            "en": "The helical solid.",
+            "de": "Der schraubenförmige Körper."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
+        }
+      ],
+      "quality": "exact-numerical",
+      "preview": true
+    }
+  ]
+}

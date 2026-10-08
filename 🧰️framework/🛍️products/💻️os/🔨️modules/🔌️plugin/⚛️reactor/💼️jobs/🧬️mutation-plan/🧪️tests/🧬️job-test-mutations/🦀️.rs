@@ -26,8 +26,20 @@ pub(crate) struct JobTestDiff {
     pub(crate) deltas: Vec<i32>,
 }
 
+impl protocol::DiffAlgebra<JobTestSnapshot> for JobTestDiff {
+    fn inverse(&self, _base: &JobTestSnapshot) -> Self {
+        Self { deltas: self.deltas.iter().rev().map(|delta| delta.saturating_neg()).collect() }
+    }
+    fn between(base: &JobTestSnapshot, other: &JobTestSnapshot) -> Self {
+        Self { deltas: if base.value == other.value { Vec::new() } else { vec![other.value.wrapping_sub(base.value)] } }
+    }
+    fn is_empty(&self) -> bool {
+        self.deltas.iter().all(|delta| *delta == 0)
+    }
+}
+
 impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
-    fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
+    fn apply(&self, base: &JobTestSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JobTestSnapshot> {
         let value = self.deltas.iter().try_fold(base.value, |value, delta| value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.value-overflow", "job fixture value addition exceeds i32").at(["value"])))?;
         Ok(JobTestSnapshot { value })
     }

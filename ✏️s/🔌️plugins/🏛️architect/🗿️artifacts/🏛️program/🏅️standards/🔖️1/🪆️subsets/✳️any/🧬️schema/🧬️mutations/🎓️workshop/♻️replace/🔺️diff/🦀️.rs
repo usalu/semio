@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎓workshops` per Wave C.
 
 use super::ReplaceWorkshop;
-use crate::diff::{ProgramWorkshopsDelta, ProgramWorkshopsPatchEntry};
+use crate::diff::ProgramWorkshopsDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceWorkshop, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.workshops.iter().find(|row| row.header.id == payload.workshop.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No workshop exists with this id.", [payload.workshop.header.id.0.clone()]);
+    let id = &payload.workshop.header.id;
+    let Some(position) = base.workshops.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No workshop exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.workshop {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This workshop already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.workshops[position] == payload.workshop {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This workshop already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.workshop).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { workshops: Some(ProgramWorkshopsDelta { patched: vec![ProgramWorkshopsPatchEntry { id: payload.workshop.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.workshops.len()).then(|| base.workshops.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { workshops: Some(ProgramWorkshopsDelta { removed: vec![id.0.clone()], added: vec![payload.workshop.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

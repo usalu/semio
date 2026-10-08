@@ -1,6 +1,4 @@
-//! 🧊 `set-text-box-blocks` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧊 `set-text-box-blocks` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 //!
 //! 🧭️ `SEMANTICS.kind` — and this leaf's folder — is `set-text-box-blocks`:
 //! `dsl::Mutations`' derive asserts `SEMANTICS.kind == to_kebab("SetTextBoxBlocks")`, and
@@ -24,11 +22,11 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text-box-blocks", kind: "set-text-box-blocks", record: "SetTextBoxBlocks" };
 
     fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
-        agg_diff(&SemioPresentationMutation::SetTextBoxBlocks(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioPresentationMutation::SetTextBoxBlocks(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -40,3 +38,10 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

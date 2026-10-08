@@ -113,8 +113,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "note.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
-        import_stdio_kinds: io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+        export_stdio_kinds: standards::v1::subsets::any::io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+        import_stdio_kinds: standards::v1::subsets::any::io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
     }
 }
 //#endregion 🔖️ArtifactKind

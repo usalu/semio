@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃️reorder-shots/⬆️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃️reorder-shots/⬆️moves/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("reorder-shots diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("reorder-shots diff applies")
 }
 
 /// ▶️ `reorder-shots` promotes "shot-close" to the head of the storyboard. The active-shot cursor
@@ -79,7 +79,7 @@ async fn declared_outcome_holds_and_an_unchanged_order_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "reorder-shots/moves-shot-close-to-front: an order-preserving move is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "reorder-shots/moves-shot-close-to-front: the order guard's frozen code");
-    let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "reorder-shots/moves-shot-close-to-front: a no-op reorder applies an empty diff");
 }
 
@@ -91,7 +91,8 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-shots/moves-shot-close-to-front: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["shots"]["reordered"][0], "shot-close", "reorder-shots/moves-shot-close-to-front: the promoted shot heads the sequence");
+    assert_eq!(committed["shots"]["edits"][0]["id"], "shot-close", "reorder-shots/moves-shot-close-to-front: the promoted shot is the moved row");
+    assert_eq!(committed["shots"]["edits"][0]["index"], 0, "reorder-shots/moves-shot-close-to-front: the destination is the front");
     assert!(committed["activeShotId"].is_null(), "reorder-shots/moves-shot-close-to-front: the active-shot cursor slot is untouched by a reorder");
     assert!(committed["shots"]["patched"].as_array().expect("patched is an array").is_empty(), "reorder-shots/moves-shot-close-to-front: reordering is pure permutation");
 }
@@ -109,6 +110,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-shots/moves-shot-close-to-front: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

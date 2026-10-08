@@ -1,11 +1,11 @@
 //! 🗂️ Stable stack moves for selected sibling layers, from back to front.
-pub fn stack_moves(order:&[String],ids:&[String],operation:&str)->Option<Vec<(String,usize)>> {
+pub fn stack_moves<T:Clone+Ord>(order:&[T],ids:&[T],operation:&str)->Option<Vec<(T,usize)>> {
     let selected=ids.iter().collect::<std::collections::BTreeSet<_>>();
     let unique=order.iter().collect::<std::collections::BTreeSet<_>>();
     if unique.len()!=order.len() || ids.iter().any(|id|!unique.contains(id)) || !matches!(operation,"bringForward"|"sendBackward"|"bringToFront"|"sendToBack") {return None;}
     let mut working=order.to_vec();
     let mut moves=Vec::new();
-    let step=|working:&mut Vec<String>,moves:&mut Vec<(String,usize)>,index:usize,to:usize| {
+    let step=|working:&mut Vec<T>,moves:&mut Vec<(T,usize)>,index:usize,to:usize| {
         let id=working[index].clone();working.swap(index,to);moves.push((id,to));
     };
     if operation=="bringForward" {

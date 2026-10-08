@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PlaySurfaceRoundTrip",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "initialRole", "dismissControlId", "settlement", "domPaintCases", "steps"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "initialRole": { "const": "editor" },
+    "dismissControlId": { "const": "ui.introduction.skip" },
+    "domPaintCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "markup", "painted"],
+        "properties": {
+          "id": { "enum": ["empty-chrome", "pending-chrome", "portal-only", "document-content"] },
+          "markup": { "type": "string", "minLength": 1 },
+          "painted": { "type": "boolean" }
+        }
+      }
+    },
+    "settlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controlId", "busy", "beforePaint"],
+      "properties": {
+        "controlId": { "const": "playground.navbar.roles" },
+        "busy": { "const": false },
+        "beforePaint": { "const": true }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "controlId", "painted"],
+        "properties": {
+          "role": { "enum": ["editor", "viewer"] },
+          "controlId": { "type": "string", "pattern": "^playground\\.navbar\\.roles\\.(editor|viewer)$" },
+          "painted": { "const": true }
+        },
+        "oneOf": [
+          { "properties": { "role": { "const": "viewer" }, "controlId": { "const": "playground.navbar.roles.viewer" } } },
+          { "properties": { "role": { "const": "editor" }, "controlId": { "const": "playground.navbar.roles.editor" } } }
+        ]
+      }
+    }
+  }
+}

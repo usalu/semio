@@ -10,6 +10,29 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
+/// 🗝️ Borrows a logical OPC path independently of its native page capacity.
+#[derive(Clone, Copy)]
+struct PartPath<'a>(&'a dyn semio_framework_value::paged::Utf8Text);
+
+impl PartPath<'_> {
+    fn bytes(&self) -> impl Iterator<Item = u8> + '_ {
+        (0..self.0.text_chunk_count()).flat_map(|index| self.0.text_chunk(index).expect("valid OPC path chunk").bytes())
+    }
+}
+
+impl PartialEq for PartPath<'_> {
+    fn eq(&self, other: &Self) -> bool { self.0.text_bytes() == other.0.text_bytes() && self.bytes().eq(other.bytes()) }
+}
+
+impl Eq for PartPath<'_> {}
+
+impl std::hash::Hash for PartPath<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        for byte in self.bytes() { state.write_u8(byte); }
+        state.write_u8(0xff);
+    }
+}
+
 //#region 🔖️DocxModel
 /// ✍️ Semantic run projection with direct formatting flags; style inheritance is not resolved here.
 /// Canonical XML parts retain absent, explicitly disabled, and richer formatting independently.
@@ -283,7 +306,7 @@ impl DocxSnapshot {
             if !docx_part_is_xml(&part.path, &part.content_type) {
                 return Err(DocxError::Malformed(format!("XML authority carries a non-XML content type: {}", part.path)));
             }
-            if !paths.insert(part.path.clone()) {
+            if !paths.insert(PartPath(&part.path)) {
                 return Err(DocxError::Malformed(format!("duplicate XML part authority: {}", part.path)));
             }
             if self.opc.content_types.resolve(&part.path).is_none_or(|content_type| !content_type.eq_str(&part.content_type)) {
@@ -299,7 +322,7 @@ impl DocxSnapshot {
             if docx_part_is_xml(&path, &content_type) {
                 return Err(DocxError::Malformed(format!("binary authority carries an XML content part: {path}")));
             }
-            if !paths.insert(path.clone()) {
+            if !paths.insert(PartPath(&part.path)) {
                 return Err(DocxError::Malformed(format!("duplicate OPC part authority: {path}")));
             }
             if self.opc.content_types.resolve(&path).is_none_or(|resolved| !resolved.eq_str(&content_type)) {
@@ -307,7 +330,7 @@ impl DocxSnapshot {
             }
         }
         for owner in self.opc.relationships.keys().filter(|owner| !owner.is_empty()) {
-            if !paths.contains(owner.as_str()) {
+            if !paths.contains(&PartPath(owner)) {
                 return Err(DocxError::Malformed(format!("relationship owner is not a content part: {owner}")));
             }
         }

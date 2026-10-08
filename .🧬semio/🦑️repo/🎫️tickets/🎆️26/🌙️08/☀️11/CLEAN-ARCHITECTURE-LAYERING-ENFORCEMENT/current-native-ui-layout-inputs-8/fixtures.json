@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "cases": [
+    {
+      "id": "ui-layout-1",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "ui-layout-2",
+      "mutation": "element",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-3",
+      "mutation": "capacity",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-4",
+      "mutation": "owner",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-5",
+      "mutation": "stack",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-6",
+      "mutation": "worker",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-7",
+      "mutation": "threshold",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-8",
+      "mutation": "table-name",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-9",
+      "mutation": "extra-field",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-10",
+      "mutation": "remove-table",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-11",
+      "mutation": "before",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-12",
+      "mutation": "before-hash",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-13",
+      "mutation": "path",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-14",
+      "mutation": "binding",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-15",
+      "mutation": "measurement",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-16",
+      "mutation": "extra-pair",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-17",
+      "mutation": "inverse",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-18",
+      "mutation": "after-hash",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-19",
+      "mutation": "transition",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-20",
+      "mutation": "transition-layout",
+      "accepted": false
+    },
+    {
+      "id": "ui-layout-21",
+      "mutation": "missing-transition",
+      "accepted": false
+    }
+  ]
+}

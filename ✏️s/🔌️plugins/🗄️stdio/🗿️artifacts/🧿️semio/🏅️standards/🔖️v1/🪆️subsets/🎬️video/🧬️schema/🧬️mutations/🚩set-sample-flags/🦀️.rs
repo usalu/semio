@@ -1,7 +1,4 @@
-//! 🚩️ `set-sample-flags` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🚩️ `set-sample-flags` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -20,11 +17,11 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampl
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-flags", kind: "set-sample-flags", record: "SetSampleFlags" };
 
     fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
-        agg_diff(&SemioVideoMutation::SetSampleFlags(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioVideoMutation::SetSampleFlags(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -36,3 +33,10 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampl
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

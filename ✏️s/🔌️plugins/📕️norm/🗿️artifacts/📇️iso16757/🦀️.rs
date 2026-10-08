@@ -32,27 +32,7 @@ use std::collections::BTreeMap;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CatalogueId(pub String);
 
-/// 🔗️ Hand `DslField` bridge for `CatalogueId`: a tuple ("newtype") struct has no named fields for
-/// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
-/// changing its public tuple shape (used pervasively as `.0` across this crate).
-impl semio_framework_dsl_record::DslField for CatalogueId {
-    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::shape_controlled(control)}
-    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control).map(Self)}
 
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::Text
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::Text(self.0.clone())
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Text(s) => Ok(CatalogueId(s.clone())),
-            other => Err(format!("expected Text, found {other:?}")),
-        }
-    }
-}
 
 /// 🆔️ Dictionary identifier with version.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
@@ -134,28 +114,7 @@ pub enum CatalogueValue {
     List { items: Vec<CatalogueValue> },
 }
 
-/// 🧿️ Catalogue syntax uses its owned tagged intrinsic value shape, preserving exact numeric words.
-impl semio_framework_dsl_record::DslField for CatalogueValue {
-    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
-    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::catalogue_value(value,control)}
-    fn retire_decoded(self){crate::snapshot::native_decoding::retire_value(self)}
 
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::Value
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Value(dsl_value) => {
-                semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string())
-            }
-            other => Err(format!("expected Value, found {other:?}")),
-        }
-    }
-}
 
 /// ∅ Value availability states.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
@@ -614,7 +573,7 @@ pub mod part_2 {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
     #[value(tag = "node", rename_all = "camelCase")]
-    #[dsl(retire_with="crate::snapshot::native_decoding::retire_geometry")]
+    #[dsl(retire_with="crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_geometry")]
     pub enum GeometryNode {
         Primitive {
             kind: String,
@@ -881,28 +840,7 @@ pub mod part_5 {
         Script { function_id: String, source: String },
     }
 
-    /// 🔗️ Hand `DslField` bridge for `PartNumberRule`: embedded as a BARE (non-`Vec`/`Option`/`Box`)
-    /// field on `Document`, so `#[dsl(statements)]` has no effect (the derive only recognizes that
-    /// attribute on `Box<T>`/`Vec<T>`/`Option<T>` wrappers) — binding through `Shape::Value` avoids
-    /// changing `Document.part_number_rule`'s plain-enum public shape just for the DSL boundary.
-    impl semio_framework_dsl_record::DslField for PartNumberRule {
-    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
-    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
-        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::part_number(value,control)}
-
-        fn shape() -> semio_framework_dsl_record::Shape {
-            semio_framework_dsl_record::Shape::Value
-        }
-        fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-            semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
-        }
-        fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-            match value {
-                semio_framework_dsl_record::FieldValue::Value(dsl_value) => semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string()),
-                other => Err(format!("expected Value, found {other:?}")),
-            }
-        }
-    }
+    
 
     /// 📄️ External media reference.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -1270,8 +1208,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "iso16757.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("iso16757.diff"),

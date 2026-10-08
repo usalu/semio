@@ -268,8 +268,8 @@ pub trait SemanticMutation<P>: Mutation<P> {
 //#endregion 🔖️Semantics
 
 //#region 🔖️Collection
-/// 🧬️ Collection identity/patch/diff/ops — single source of truth in VCS (`crate::os_vcs`).
-pub use crate::os_vcs::{apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable};
+/// 🧬️ Collection identity/patch/diff — single source of truth in VCS (`crate::os_vcs`).
+pub use crate::os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
 
 //#endregion 🔖️Collection
 
@@ -738,7 +738,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
             return Err(PlanError::StepRejected(reason));
         }
         let pre_state = self.base.clone();
-        self.base = diff.apply(&self.base)?;
+        self.base = apply_diff(&diff, &self.base)?;
         self.steps.push(PlanStep::Local(op));
         self.pre_states.push(Some(pre_state));
         Ok(())
@@ -822,7 +822,7 @@ pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind:
 /// 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
 /// [`MutationDiff::absorb`], applying each step against the snapshot as it stood right before that
 /// step (matching [`Planner::call`]'s own advance-as-you-go semantics) — so a successful
-/// `fold_plan_diff(k, b).diff().apply(&b)` equals sequential application of the plan's local steps.
+/// `apply_diff(fold_plan_diff(k, b).diff(), &b)` equals sequential application of the plan's local steps.
 /// Foreign steps never contribute to the folded diff (LAW 5 of the contract freeze). **All-or-
 /// nothing** (§C4): if planning itself fails (`PlanError`) or any step's messages reach `Error` or
 /// worse, the returned diff is empty (`Default::default()`) — but every message collected along the
@@ -850,7 +850,7 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
     for step in steps {
         if let PlanStep::Local(op) = step {
             let diff = op.diff(&current).into_parts().0;
-            match diff.apply(&current) {
+            match apply_diff(&diff, &current) {
                 Ok(next) => current = next,
                 Err(error) => {
                     messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()).at(error.target));

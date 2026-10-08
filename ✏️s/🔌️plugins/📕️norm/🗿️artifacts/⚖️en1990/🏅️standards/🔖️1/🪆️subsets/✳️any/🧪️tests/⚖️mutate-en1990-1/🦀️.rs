@@ -118,7 +118,7 @@ mod subject {
             if applied && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
             }
-            for step in &steps {
+            for step in steps.iter().rev() {
                 current = apply_en1990_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step was rejected: {error}"))?.0;
             }
             let restored = projection(&current)?;

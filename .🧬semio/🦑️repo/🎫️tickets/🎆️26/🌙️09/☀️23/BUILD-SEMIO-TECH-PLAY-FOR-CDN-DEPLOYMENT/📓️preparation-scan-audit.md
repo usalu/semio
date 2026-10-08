@@ -1,0 +1,15 @@
+# Preparation Scan Audit
+
+The parent requested a bounded read-only audit of the current source-preparation wait, specifically checking whether fresh private Cargo/Nx caches or generated outputs were traversed as generator inputs. No performance behavior was changed.
+
+The canonical Cargo workspace discovery and membership walkers both refuse every directory name beginning with `.` before recursion. Consequently the repository's `.🧬semio/🦑️repo/⚡️cache/play-fleet/release-6Z7Lxu` Cargo/Nx/Vite generation, all sibling private generations, and ticket outputs cannot be traversed by these walkers. Discovery additionally excludes exact `node_modules`, `target`, `dist`, `build`, `🤖️generated`, `🗑️generated`, `coverage`, `temp` and `compose` directories, and symbolic links. Membership excludes the relevant generated/build directories and checks current owner exclude patterns before recursion.
+
+The root authored owner patterns are `[!.]*/Cargo.toml` and `[!.]*/**/📦️packages/🦀️rust/Cargo.toml`. They intentionally permit discovery across public top-level source trees. The framework membership pattern is constrained to `🧰️framework/**/📦️packages/🦀️rust/Cargo.toml`; sibling workspaces have their own authored membership authority. No narrower unverified namespace whitelist was introduced.
+
+A bounded standard-library filesystem walk using the same opaque directory names observed 8,000 public directories in 0.476 seconds and stopped with 156 pending directories. This is an observational lower-bound scan, not a benchmark of the Bun workspace algorithms. Actual generated Hub folders observed (`🤖️generated` and `🗑️generated`) had the exact variation-selector spellings admitted by the opaque set. No generated/private-cache traversal defect was established.
+
+The earlier CPU-active font preparation holder PID 32228 exited before a one-second native sample could attach. A subsequent holder PID 33628 also exited before sampling. These failed sample attempts provide no function-level attribution for the earlier long operation. The source contract still performs fresh live membership inventories and supported local dependency recipe preparation for each admitted invocation; no receipt inheritance is supported. No blind receipt skip, stale semantic cache, lease weakening, unrelated process interruption or source matcher change was made.
+
+A final bounded sample attached successfully to current preparation PID 34726 (`semio-framework-schema`, root workspace), observed at 98.2 percent CPU and 11 minutes 28 seconds elapsed. It captured active filesystem `openat` calls under unsymbolized Bun/JavaScript frames. This proves active filesystem work but does not identify the accessed directory set or a specific source function. Temporary profile: `🗑️generated/bounded-preparation-live-profile.log`. No cache traversal or matcher defect can be inferred from those unsymbolized frames.
+
+There is no confirmed exact exclusion/matcher defect to repair from this bounded audit. Current compilation retains priority, with any future optimization requiring its own neutral corpus, independent walker oracle and actual regression proof before implementation.

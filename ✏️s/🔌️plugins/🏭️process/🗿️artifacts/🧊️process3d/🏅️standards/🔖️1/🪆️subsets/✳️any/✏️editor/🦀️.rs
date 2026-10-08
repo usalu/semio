@@ -20,6 +20,7 @@ use crate::editor::process3d::panels::{catalogue, document as document_panel, in
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -754,6 +755,7 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️ConfigStorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Process3dConfigStorePreparationFactory;
 
 struct Process3dConfigStorePreparation {
@@ -945,6 +947,7 @@ const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
 /// `PROCESS3D_DOCUMENT_MAXIMUM_BYTES`), never the gate.
 const PROCESS3D_DOCUMENT_GRANT_BYTES: usize = 4_096;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Process3dArtifactPreparationFactory;
 
 struct Process3dArtifactPreparation {
@@ -1531,7 +1534,7 @@ impl ArtifactEditor for Process3dPlayApp {
 }
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

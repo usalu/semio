@@ -1,0 +1,113 @@
+[
+  {
+    "moduleId": "beams",
+    "typology": {
+      "id": "beams",
+      "label": "Beams",
+      "children": [
+        {
+          "id": "solid-timber",
+          "label": "Solid Timber",
+          "children": [
+            {
+              "id": "glulam",
+              "label": "Glulam"
+            },
+            {
+              "id": "kvh",
+              "label": "KVH"
+            }
+          ]
+        },
+        {
+          "id": "steel",
+          "label": "Steel",
+          "children": [
+            {
+              "id": "ipe",
+              "label": "IPE"
+            },
+            {
+              "id": "hea",
+              "label": "HEA"
+            }
+          ]
+        }
+      ]
+    },
+    "kindIds": [
+      "beam-glulam-gl24h",
+      "beam-kvh-c24",
+      "beam-steel-ipe200",
+      "beam-steel-hea160"
+    ],
+    "availability": [
+      24,
+      60,
+      12,
+      8
+    ]
+  },
+  {
+    "moduleId": "slabs",
+    "typology": {
+      "id": "slabs",
+      "label": "Slabs",
+      "children": [
+        {
+          "id": "concrete",
+          "label": "Concrete"
+        },
+        {
+          "id": "clt",
+          "label": "CLT"
+        },
+        {
+          "id": "hollow-core",
+          "label": "Hollow Core"
+        }
+      ]
+    },
+    "kindIds": [
+      "slab-concrete-240",
+      "slab-clt-160",
+      "slab-hollow-core-265"
+    ],
+    "availability": [
+      30,
+      20,
+      16
+    ]
+  },
+  {
+    "moduleId": "windows",
+    "typology": {
+      "id": "windows",
+      "label": "Windows",
+      "children": [
+        {
+          "id": "casement",
+          "label": "Casement"
+        },
+        {
+          "id": "fixed",
+          "label": "Fixed"
+        },
+        {
+          "id": "tilt-turn",
+          "label": "Tilt & Turn"
+        }
+      ]
+    },
+    "kindIds": [
+      "window-casement-100x120",
+      "window-fixed-150x150",
+      "window-tilt-turn-120x140"
+    ],
+    "availability": [
+      18,
+      10,
+      14
+    ]
+  }
+]

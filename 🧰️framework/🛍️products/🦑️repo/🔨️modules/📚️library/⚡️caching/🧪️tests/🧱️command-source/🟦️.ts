@@ -28,7 +28,7 @@ function relativeSpecifier(consumer: string, owner: string): string {
 
 test("validates the language-neutral cache command source contract", () => {
   
-  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["route"]["target"]).toEqual("test-cache-command-source");expect(fixture["route"]["command"]).toEqual("bun ./📜️script.ts test cache-command-source");expect(fixture["route"]["namedInput"]).toEqual("cacheCommandSources");expect(fixture["route"]["launchName"]).toEqual("🧪️test⚡️cache-command-source");expect(fixture["route"]["launchCommand"]).toEqual("bun nx run repo:test-cache-command-source");expect(fixture["coordinates"]["policy"]).toEqual("🔣️policy.json");expect(fixture["coordinates"]["bootstrap"]).toEqual("🚀️bootstrap/📜️script.ts");
+  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["route"]["target"]).toEqual("test-cache-command-source");expect(fixture["route"]["command"]).toEqual("bun ./📜️script.ts test cache-command-source");expect(fixture["route"]["namedInput"]).toEqual("cacheCommandSources");expect(fixture["coordinates"]["policy"]).toEqual("🔣️policy.json");expect(fixture["coordinates"]["bootstrap"]).toEqual("🚀️bootstrap/📜️script.ts");
   expect(fixture.owners).toHaveLength(13);
   expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(13);
 });
@@ -215,7 +215,7 @@ test("keeps policy, bootstrap and prune executable coordinates source-relative",
   expect(rootConsumer).toContain("cache-prune");
 });
 
-test("registers the exact Bun, Nx and launch source closure", () => {
+test("registers the exact Bun and Nx source closure", () => {
   const project = JSON.parse(readFileSync(resolve(domainRoot, "📋️project.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
   expect(project.targets[fixture.route.target]?.inputs).toEqual([fixture.route.namedInput]);
@@ -229,13 +229,6 @@ test("registers the exact Bun, Nx and launch source closure", () => {
     "{projectRoot}/🧪️tests/🧱️command-source/🟦️.ts",
     "{projectRoot}/🧬️schema/🧱️command-source/🔣️.json",
     "{projectRoot}/🧫️fixtures/🧱️command-source/🔣️.json",
-    "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-    "{workspaceRoot}/.vscode/launch.json",
   ])
     expect(inputs.has(path), path).toBe(true);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const source = readFileSync(resolve(repoRoot, path), "utf8");
-    expect(source.split(fixture.route.launchName).length - 1).toBe(1);
-    expect(source).toContain(fixture.route.launchCommand);
-  }
 });

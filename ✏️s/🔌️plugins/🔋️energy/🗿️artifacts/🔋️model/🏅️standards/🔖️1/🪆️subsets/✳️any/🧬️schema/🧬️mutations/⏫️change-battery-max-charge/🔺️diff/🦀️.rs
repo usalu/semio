@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeBatteryMaxCharge` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, BatteryAssignmentPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeBatteryMaxCharge, base: &EnergyModelSnapshot)
     if existing.max_charge_w == payload.new_max_charge_w {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Battery {} already carries this maximum charge power (W): {}.", payload.id.0, payload.new_max_charge_w));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {
-        item.max_charge_w = payload.new_max_charge_w;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { battery_storage: Rows::modifying(BatteryAssignmentPatch { max_charge_w: Some(payload.new_max_charge_w), ..BatteryAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

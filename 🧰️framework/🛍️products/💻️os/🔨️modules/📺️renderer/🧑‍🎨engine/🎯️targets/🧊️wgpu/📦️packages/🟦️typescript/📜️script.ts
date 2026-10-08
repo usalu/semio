@@ -68,7 +68,7 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test worker-cell");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts")], {
-        cwd: this.repoRoot, env: process.env, budgetMs: 15000, throwOnFailure: true,
+        cwd: this.repoRoot, env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) }, budgetMs: 15000, throwOnFailure: true,
       });
       return;
     }

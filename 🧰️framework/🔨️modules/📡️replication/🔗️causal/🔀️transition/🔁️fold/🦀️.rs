@@ -2,14 +2,28 @@
 
 use super::*;
 use semio_framework_value::{ErasedSnapshotRetirement, SnapshotRetirementStep};
-use semio_framework_value::retirement::{RetireOwned, owned_retirement};
-use std::{collections::{BTreeMap, BTreeSet, VecDeque}, future::Future, ops::{Deref, DerefMut}, pin::Pin, sync::{Arc, Mutex, atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering}}, task::{Context, Poll, Wake, Waker}};
+use semio_framework_value::retirement::{RetireOwned, owned_retirement, owned_retirement_birth_bytes};
+use std::mem::{ManuallyDrop,size_of,size_of_val};
+use std::{collections::{BTreeMap, BTreeSet, VecDeque}, future::Future, ops::{Deref, DerefMut}, pin::Pin, sync::{Arc, atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering}}, task::{Context, Poll, Wake, Waker}};
+
+struct FoldRetirementQueue { locked:AtomicBool, values:std::cell::UnsafeCell<VecDeque<Box<dyn ErasedSnapshotRetirement>>> }
+unsafe impl Send for FoldRetirementQueue {}
+unsafe impl Sync for FoldRetirementQueue {}
+impl FoldRetirementQueue {
+    fn new()->Self{Self{locked:AtomicBool::new(false),values:std::cell::UnsafeCell::new(VecDeque::with_capacity(128))}}
+    fn lock(&self)->FoldRetirementGuard<'_>{while self.locked.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).is_err(){std::hint::spin_loop();}FoldRetirementGuard(self)}
+}
+struct FoldRetirementGuard<'a>(&'a FoldRetirementQueue);
+impl Deref for FoldRetirementGuard<'_>{type Target=VecDeque<Box<dyn ErasedSnapshotRetirement>>;fn deref(&self)->&Self::Target{unsafe{&*self.0.values.get()}}}
+impl DerefMut for FoldRetirementGuard<'_>{fn deref_mut(&mut self)->&mut Self::Target{unsafe{&mut*self.0.values.get()}}}
+impl Drop for FoldRetirementGuard<'_>{fn drop(&mut self){self.0.locked.store(false,Ordering::Release);}}
 
 struct FoldControlState {
     cancelled: AtomicBool,
     completed: AtomicU64,
     page_bytes: AtomicUsize,
-    retirements: Mutex<VecDeque<Box<dyn ErasedSnapshotRetirement>>>,
+    pending_retirement_birth: AtomicUsize,
+    retirements: FoldRetirementQueue,
 }
 
 /// ⏱️ The shared pulse and retirement authority of one immutable-source fold.
@@ -18,35 +32,34 @@ pub struct HistoryFoldControl(Arc<FoldControlState>);
 
 impl HistoryFoldControl {
     /// 🌱️ Creates fixed retirement queue capacity without inspecting any history.
-    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), page_bytes: AtomicUsize::new(4096), retirements: Mutex::new(VecDeque::with_capacity(128)) })) }
+    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), page_bytes: AtomicUsize::new(4096), pending_retirement_birth:AtomicUsize::new(0), retirements: FoldRetirementQueue::new() })) }
     /// 📊️ Completed cooperative work units, excluding cancellation retirement.
     pub fn completed(&self) -> u64 { self.0.completed.load(Ordering::Relaxed) }
     /// ♻️ Transfers an owned local to exact retirement when its coroutine scope ends.
-    pub fn track<T: RetireOwned>(&self, value: T) -> HistoryFoldOwned<T> { HistoryFoldOwned { value: Some(value), control: self.clone() } }
+    pub fn track<T: RetireOwned>(&self, value: T) -> HistoryFoldOwned<T> { self.0.pending_retirement_birth.fetch_add(owned_retirement_birth_bytes::<T>(),Ordering::Relaxed);HistoryFoldOwned { value: Some(value), control: self.clone() } }
     /// ⏭️ One pulse before each bounded work unit; cancellation is checked before publication.
     pub async fn pulse(&self) -> Result<(), crate::ProtocolError> { FoldPulse { control: self, yielded: false }.await }
     fn page_bytes(&self) -> usize { self.0.page_bytes.load(Ordering::Relaxed).clamp(1, 4096) }
-    fn retire<T: RetireOwned>(&self, value: T) { self.0.retirements.lock().expect("fold retirement authority remains available").push_back(owned_retirement(value)); }
-    fn empty(&self) -> bool { self.0.retirements.lock().expect("fold retirement authority remains available").is_empty() }
-    fn close_one(&self, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let mut queue = self.0.retirements.lock().expect("fold retirement authority remains available");
-        let Some(owner) = queue.front_mut() else { return Ok(SnapshotRetirementStep::Complete) };
-        match owner.close_step(1, maximum_bytes)? {
-            SnapshotRetirementStep::Complete if owner.terminal_is_empty() => { queue.pop_front(); Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }) }
-            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "fold retirement reported a false terminal")),
-            step => Ok(step),
-        }
+    fn retire<T: RetireOwned>(&self, value: T) { self.0.retirements.lock().push_back(owned_retirement(value)); }
+    fn empty(&self) -> bool { self.0.retirements.lock().is_empty() }
+    fn next_close_byte_demand(&self)->usize { let queue=self.0.retirements.lock();queue.front().map_or(0,|owner|if owner.terminal_is_empty(){size_of_val(owner.as_ref())}else{owner.next_close_byte_demand()}) }
+    fn close_one(&self,maximum_bytes:usize)->Result<SnapshotRetirementStep,semio_framework_value::ValueError>{
+        let mut queue=self.0.retirements.lock();let Some(owner)=queue.front_mut()else{return Ok(SnapshotRetirementStep::Complete);};
+        if owner.terminal_is_empty(){let bytes=size_of_val(owner.as_ref());if maximum_bytes<bytes{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}drop(queue.pop_front());return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:bytes});}
+        if maximum_bytes<owner.next_close_byte_demand(){return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}
+        match owner.close_step(1,maximum_bytes)?{SnapshotRetirementStep::Complete if !owner.terminal_is_empty()=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"fold retirement reported a false terminal")),SnapshotRetirementStep::Complete=>Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0}),step=>Ok(step)}
     }
+
 }
 
 impl Default for HistoryFoldControl { fn default() -> Self { Self::new() } }
 
 /// 🧳️ Coroutine-local owned values enqueue their registered retirement instead of deep-dropping on cancellation.
 pub struct HistoryFoldOwned<T: RetireOwned> { value: Option<T>, control: HistoryFoldControl }
-impl<T: RetireOwned> HistoryFoldOwned<T> { pub fn take(mut self) -> T { self.value.take().expect("fold local remains owned") } }
+impl<T: RetireOwned> HistoryFoldOwned<T> { pub fn take(mut self) -> T { self.control.0.pending_retirement_birth.fetch_sub(owned_retirement_birth_bytes::<T>(),Ordering::Relaxed);self.value.take().expect("fold local remains owned") } }
 impl<T: RetireOwned> Deref for HistoryFoldOwned<T> { type Target = T; fn deref(&self) -> &T { self.value.as_ref().expect("fold local remains owned") } }
 impl<T: RetireOwned> DerefMut for HistoryFoldOwned<T> { fn deref_mut(&mut self) -> &mut T { self.value.as_mut().expect("fold local remains owned") } }
-impl<T: RetireOwned> Drop for HistoryFoldOwned<T> { fn drop(&mut self) { if let Some(value) = self.value.take() { self.control.retire(value); } } }
+impl<T: RetireOwned> Drop for HistoryFoldOwned<T> { fn drop(&mut self) { if let Some(value) = self.value.take() { self.control.0.pending_retirement_birth.fetch_sub(owned_retirement_birth_bytes::<T>(),Ordering::Relaxed);self.control.retire(value); } } }
 
 struct FoldPulse<'a> { control: &'a HistoryFoldControl, yielded: bool }
 impl Future for FoldPulse<'_> {
@@ -63,14 +76,17 @@ struct FoldWake;
 impl Wake for FoldWake { fn wake(self: Arc<Self>) {} }
 
 /// 📊️ One granted step of a history fold, including the retirement required before handoff.
-pub enum HistoryFoldJobStep<T = HistoryFold> { Pending { completed: u64 }, Ready(T), Rejected(crate::ProtocolError) }
+pub enum HistoryFoldJobStep<T = HistoryFold> { Pending { completed: u64, released_bytes: usize }, Ready(T), Rejected(crate::ProtocolError) }
 
 /// 🧮️ A pinned fold state machine; its immutable input is captured by the caller-owned runner.
 pub struct HistoryFoldJob<'a, T: RetireOwned = HistoryFold> {
-    control: HistoryFoldControl,
+    control: ManuallyDrop<HistoryFoldControl>,
     future: Option<Pin<Box<dyn Future<Output = Result<T, crate::ProtocolError>> + Send + 'a>>>,
     result: Option<Result<T, crate::ProtocolError>>,
-    waker: Waker,
+    waker: Option<Waker>,
+    future_finished: bool,
+    control_closed: bool,
+    completed_final: u64,
     terminal: bool,
 }
 
@@ -79,29 +95,38 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     pub fn new<F: Future<Output = Result<T, crate::ProtocolError>> + Send + 'a>(runner: impl FnOnce(HistoryFoldControl) -> F) -> Self {
         let control = HistoryFoldControl::new();
         let future = Box::pin(runner(control.clone()));
-        Self { control, future: Some(future), result: None, waker: Waker::from(Arc::new(FoldWake)), terminal: false }
+        Self { control:ManuallyDrop::new(control), future: Some(future), result: None, waker: Some(Waker::from(Arc::new(FoldWake))), future_finished:false,control_closed:false,completed_final:0,terminal: false }
     }
     /// 📊️ Completed semantic and decoding work units.
-    pub fn completed(&self) -> u64 { self.control.completed() }
+    pub fn completed(&self) -> u64 { if self.control_closed{self.completed_final}else{self.control.completed()} }
     /// ⏭️ Polls at most one coroutine work unit or one exact retired child per granted item.
-    pub fn step(&mut self, maximum_items: usize, maximum_bytes: usize, should_yield: &mut impl FnMut() -> bool) -> Result<HistoryFoldJobStep<T>, semio_framework_value::ValueError> {
-        self.control.0.page_bytes.store(maximum_bytes.clamp(1,4096), Ordering::Relaxed);
-        if maximum_bytes == 0 { return Ok(HistoryFoldJobStep::Pending { completed: self.completed() }); }
-        for _ in 0..maximum_items {
-            if should_yield() { break; }
-            if !self.control.empty() { self.control.close_one(maximum_bytes)?; continue; }
-            let Some(future) = self.future.as_mut() else { break };
-            if let Poll::Ready(result) = future.as_mut().poll(&mut Context::from_waker(&self.waker)) { self.result = Some(result); self.future.take(); }
-        }
-        if self.future.is_none() && self.control.empty() {
-            if let Some(result) = self.result.take() { self.terminal = true; return Ok(match result { Ok(fold) => HistoryFoldJobStep::Ready(fold), Err(error) => HistoryFoldJobStep::Rejected(error) }); }
-        }
-        Ok(HistoryFoldJobStep::Pending { completed: self.completed() })
+    pub fn step(&mut self,maximum_items:usize,maximum_bytes:usize,should_yield:&mut impl FnMut()->bool)->Result<HistoryFoldJobStep<T>,semio_framework_value::ValueError>{
+        if maximum_items==0||should_yield(){return Ok(HistoryFoldJobStep::Pending{completed:self.completed(),released_bytes:0});}
+        if !self.control_closed&&self.control.0.cancelled.load(Ordering::Acquire){let step=self.close_step(maximum_items,maximum_bytes)?;let released_bytes=match step{SnapshotRetirementStep::Pending{released_bytes,..}=>released_bytes,_=>0};return Ok(HistoryFoldJobStep::Pending{completed:self.completed(),released_bytes});}
+        if self.future_finished||self.future.is_none()||!self.control.empty(){let step=self.cleanup_one(maximum_bytes,false)?;let released_bytes=match step{SnapshotRetirementStep::Pending{released_bytes,..}=>released_bytes,_=>0};if self.control_closed&&released_bytes==0{if let Some(result)=self.result.take(){self.terminal=true;return Ok(match result{Ok(value)=>HistoryFoldJobStep::Ready(value),Err(error)=>HistoryFoldJobStep::Rejected(error)});}}return Ok(HistoryFoldJobStep::Pending{completed:self.completed(),released_bytes});}
+        if maximum_bytes==0{return Ok(HistoryFoldJobStep::Pending{completed:self.completed(),released_bytes:0});}
+        self.control.0.page_bytes.store(maximum_bytes.clamp(1,4096),Ordering::Relaxed);
+        for _ in 0..maximum_items{if should_yield(){break;}if let Poll::Ready(result)=self.future.as_mut().unwrap().as_mut().poll(&mut Context::from_waker(self.waker.as_ref().unwrap())){self.result=Some(result);self.future_finished=true;break;}if !self.control.empty(){break;}}
+        Ok(HistoryFoldJobStep::Pending{completed:self.completed(),released_bytes:0})
+    }
+    /// 📏️ Separates original logical copy policy from the next physical cleanup allocation.
+    pub fn next_step_byte_demand(&self,logical_copy:usize)->usize{if self.control_closed{0}else if !self.control.empty(){self.control.next_close_byte_demand()}else if self.future_finished||self.future.is_none(){self.next_close_byte_demand()}else{logical_copy}}
+    fn error_demand(error:&crate::ProtocolError)->usize{match error{crate::ProtocolError::Malformed{detail,..}|crate::ProtocolError::Io(detail)=>detail.capacity(),crate::ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(error))=>match error{semio_framework_pack_error::PackRefusal::Malformed{detail,..}=>detail.capacity(),semio_framework_pack_error::PackRefusal::ValueRefusal(error)|semio_framework_pack_error::PackRefusal::Io{error,..}=>error.message.capacity(),semio_framework_pack_error::PackRefusal::TextRefusal(error)=>error.message.capacity()+error.expected.as_ref().map_or(0,String::capacity),_=>0},crate::ProtocolError::Pack(semio_framework_pack_error::PackError::TransportFailure(_))=>usize::MAX,_=>0}}
+    fn control_frame_bytes(&self)->usize{let layout=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<FoldControlState>()).unwrap().0.pad_to_align();if Arc::strong_count(&self.control.0)==1{layout.size()}else{0}}
+    fn cleanup_one(&mut self,maximum_bytes:usize,cancelled:bool)->Result<SnapshotRetirementStep,semio_framework_value::ValueError>{
+        if self.control_closed{return Ok(SnapshotRetirementStep::Complete);}
+        let demand=self.next_close_byte_demand();if maximum_bytes<demand{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}
+        if !self.control.empty(){return self.control.close_one(maximum_bytes);}
+        if let Some(future)=self.future.as_ref(){let frame=size_of_val(future.as_ref().get_ref());drop(self.future.take());return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:frame});}
+        if cancelled&&matches!(self.result.as_ref(),Some(Err(crate::ProtocolError::Pack(semio_framework_pack_error::PackError::TransportFailure(_))))){return Ok(SnapshotRetirementStep::Blocked);}if cancelled&&self.result.is_some(){if let Some(Ok(value))=self.result.as_ref(){let _=value;let Some(Ok(value))=self.result.take()else{unreachable!()};self.control.retire(value);return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0});}drop(self.result.take());return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:demand});}
+        let mut queue=self.control.0.retirements.lock();if queue.capacity()!=0{drop(std::mem::take(&mut*queue));return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:demand});}drop(queue);
+        if self.waker.is_some(){drop(self.waker.take());return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:demand});}
+        self.completed_final=self.control.completed();unsafe{ManuallyDrop::drop(&mut self.control)};self.control_closed=true;Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:demand})
     }
     /// 🧊️ Runs the same cursor to completion for explicit cold callers; interactive owners grant individual turns.
     pub fn finish_cold(mut self) -> Result<T, crate::ProtocolError> {
         loop {
-            match self.step(64, 4096, &mut || false).expect("registered history owners must retire within their grants") {
+            match self.step(64, self.next_step_byte_demand(4096), &mut || false).expect("registered history owners must retire within their grants") {
                 HistoryFoldJobStep::Pending { .. } => {},
                 HistoryFoldJobStep::Ready(value) => return Ok(value),
                 HistoryFoldJobStep::Rejected(error) => return Err(error),
@@ -110,22 +135,14 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     }
 
     /// 🛑️ Cancels without executing further fold work; tracked locals transfer to exact retirement.
-    pub fn request_cancel(&mut self) {
-        self.control.0.cancelled.store(true, Ordering::Release);
-        self.future.take();
-        if let Some(Ok(fold)) = self.result.take() { self.control.retire(fold); }
-    }
+    pub fn request_cancel(&mut self){if !self.control_closed{self.control.0.cancelled.store(true,Ordering::Release);}}
+
 }
 
-impl<T: RetireOwned> ErasedSnapshotRetirement for HistoryFoldJob<'_, T> {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        self.request_cancel();
-        if maximum_items == 0 { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if !self.control.empty() { return self.control.close_one(maximum_bytes); }
-        self.terminal = true;
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool { self.terminal && self.future.is_none() && self.result.is_none() && self.control.empty() }
+impl<T:RetireOwned> ErasedSnapshotRetirement for HistoryFoldJob<'_,T>{
+    fn next_close_byte_demand(&self)->usize{if self.control_closed{return 0;}if !self.control.empty(){return self.control.next_close_byte_demand();}if let Some(future)=self.future.as_ref(){return size_of_val(future.as_ref().get_ref()).max(self.control.0.pending_retirement_birth.load(Ordering::Relaxed));}if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>owned_retirement_birth_bytes::<T>(),Err(error)=>Self::error_demand(error)};}}let queue=self.control.0.retirements.lock();if queue.capacity()!=0{return queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>();}drop(queue);if self.waker.is_some(){return size_of::<[usize;2]>();}self.control_frame_bytes()}
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<SnapshotRetirementStep,semio_framework_value::ValueError>{self.request_cancel();if maximum_items==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});}let step=self.cleanup_one(maximum_bytes,true)?;if self.control_closed&&matches!(step,SnapshotRetirementStep::Complete){self.terminal=true;}Ok(step)}
+    fn terminal_is_empty(&self)->bool{self.terminal&&self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none()}
 }
 impl<T: RetireOwned> Drop for HistoryFoldJob<'_, T> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "history fold job released before exact handoff or retirement"); } }
 
@@ -517,3 +534,6 @@ pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryF
     if position != bytes.len() { return Err(malformed(position, "quarantined envelope has trailing bytes")); }
     Ok(super::super::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: target.take(), diff: super::super::ArtifactDiff { schema: diff_schema.take(), payload: diff_payload.take() }, inverse: super::super::InverseMutation { schema: inverse_schema.take(), payload: inverse_payload.take() }, timestamp, transaction: transaction.take(), verb: verb.take(), line: line.take() })
 }
+
+#[cfg(test)]
+include!("📏️retirement/🧪️tests/🦀️.rs");

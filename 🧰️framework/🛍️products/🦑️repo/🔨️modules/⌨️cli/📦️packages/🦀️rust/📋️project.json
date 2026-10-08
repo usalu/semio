@@ -7,11 +7,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      },
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/build"
-      ]
+      }
     },
     "test": {
       "executor": "nx:run-commands",
@@ -41,18 +37,6 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
-    "run": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts run",
-        "forwardAllArgs": true,
-        "env": {
-          "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
-        }
-      },
-      "cache": false
-    },
     "repo": {
       "executor": "nx:run-commands",
       "options": {
@@ -67,44 +51,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts mcp",
-        "forwardAllArgs": true
-      },
-      "cache": false
-    },
-    "daemon": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts daemon",
-        "forwardAllArgs": true
-      },
-      "cache": false
-    },
-    "workflow": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts workflow",
-        "forwardAllArgs": true
-      },
-      "cache": false
-    },
-    "install": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts install"
-      },
-      "cache": false,
-      "dependsOn": [
-        "build"
-      ]
-    },
-    "preferences": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts preferences",
         "forwardAllArgs": true
       },
       "cache": false

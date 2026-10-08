@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.semio.tech/drawing/native-retirement/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumBytes", "constructorAllocationBytes", "variants", "initializerOwners", "axes", "backingBytes", "terminalEmpty"],
+  "properties": {
+    "schema": {"const": "drawing.native-retirement/v1"},
+    "maximumBytes": {"const": 4096},
+    "constructorAllocationBytes": {"const": 0},
+    "variants": {"const": ["Snapshot", "Mutation", "Layer", "Fill", "Stroke", "String", "Segments", "SegmentCollections", "HistoryId"]},
+    "initializerOwners": {"const": ["HistoryId", "Snapshot"]},
+    "axes": {"const": ["copy", "capacity", "release"]},
+    "backingBytes": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+    "terminalEmpty": {"const": true}
+  }
+}

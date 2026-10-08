@@ -241,7 +241,7 @@ pub struct TxtDiff {
 }
 
 impl MutationDiff<TxtSnapshot> for TxtDiff {
-    fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
+    fn apply(&self, base: &TxtSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<TxtSnapshot> {
         if let Some(lines) = &self.lines {
             validate_txt_lines(base.lines.len(), lines)?;
         }

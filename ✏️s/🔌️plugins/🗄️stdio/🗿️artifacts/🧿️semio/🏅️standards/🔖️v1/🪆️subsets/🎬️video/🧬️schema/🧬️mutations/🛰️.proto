@@ -5,7 +5,6 @@ import "../📸️snapshot/🛰️.proto";
 import "../🔺️diff/🛰️.proto";
 
 enum SemioVideoMutationTag {
-  SET_SNAPSHOT = 0;
   INSERT_STREAM = 2;
   REMOVE_STREAM = 3;
   SET_STREAM_META = 4;
@@ -17,7 +16,6 @@ enum SemioVideoMutationTag {
 
 message SemioVideoMutation {
   SemioVideoMutationTag mutation = 1;
-  semio.s_stdio_semio_video.snapshot.SemioVideoSnapshot snapshot = 2;
   optional uint64 index = 3;
   semio.s_stdio_semio_video.snapshot.SemioVideoStream stream = 4;
   optional semio.s_stdio_semio_video.snapshot.SemioVideoStreamKind kind = 5;

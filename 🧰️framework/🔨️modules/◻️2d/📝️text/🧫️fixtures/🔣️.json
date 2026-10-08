@@ -51,5 +51,9 @@
         18
       ]
     }
+  ],
+  "chunkCases": [
+    { "prefix": "a", "prefixRepeat": 1023, "suffix": "\r\n🧬", "size": 10, "extent": [6138, 24] },
+    { "prefix": "é", "prefixRepeat": 511, "suffix": "\r\n\rX", "size": 5, "extent": [1533, 18] }
   ]
 }

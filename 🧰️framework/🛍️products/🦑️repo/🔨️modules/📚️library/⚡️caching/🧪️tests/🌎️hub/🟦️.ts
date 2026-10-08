@@ -22,9 +22,6 @@ export async function testHubBuild(workspace: string): Promise<void> {
   assert.deepEqual(tasks.dependencies[`${project.name}:build`], [fixture.prerequisite]);
   const script = readFileSync(join(workspace, fixture.projectRoot, "📜️script.ts"), "utf8"), ts = require("typescript");
   const source = ts.createSourceFile("📜️script.ts", script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const launch = ts.parseConfigFileTextToJson("launch.seed.jsonc", readFileSync(join(workspace, ".vscode/🧩️launch.seed.jsonc"), "utf8"));
-  assert.equal(launch.error, undefined);
-  for (const target of [`${fixture.project}:build`, fixture.prerequisite]) assert.ok(launch.config.configurations.some((entry: any) => entry.command === `bun nx run ${target}`), `Missing editor build command: ${target}`);
   assert.ok(!source.statements.some((node: any) => ts.isClassDeclaration(node) && node.name?.text === "BuildScript"), "Hub must not retain a second build implementation");
   const imports = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
   assert.ok(!Object.keys(imports.metafile.inputs).some(path => path.startsWith("🌎️hub/")), "The native producer must not eagerly import the Hub application/test script");

@@ -1,0 +1,49 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "shapeModel": null,
+  "buildingModel": null,
+  "energyModel": null,
+  "structureClassicModel": null,
+  "drawings": null,
+  "breps": {
+    "values": [
+      {
+        "childId": "brep-first",
+        "target": {
+          "artifactId": "topology-first",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      },
+      {
+        "childId": "brep-middle",
+        "target": {
+          "artifactId": "topology-middle",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      },
+      {
+        "childId": "brep-last",
+        "target": {
+          "artifactId": "topology-last",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      }
+    ]
+  },
+  "referencesByModelDefinitionId": null,
+  "nodes": null
+}

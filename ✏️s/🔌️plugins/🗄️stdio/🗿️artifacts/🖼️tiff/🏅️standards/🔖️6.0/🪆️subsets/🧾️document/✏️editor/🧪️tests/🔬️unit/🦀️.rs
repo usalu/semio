@@ -61,25 +61,21 @@ fn retained_page_selection_publishes_only_the_addressed_config_lane() {
 }
 
 fn tiled_editor_snapshot() -> TiffSnapshot {
-    use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffStorage, TiffStorageKind, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
+    use crate::schema::snapshot::{TiffSampleBlock, TiffWord64, TiffValues, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL};
     let short = |tag, values| TiffTag { tag, values: TiffValues::Short(values) };
     let long = |tag, value| TiffTag { tag, values: TiffValues::Long(vec![value]) };
     TiffSnapshot {
         schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-        byte_order: TiffByteOrder::LittleEndian,
         ifds: vec![TiffIfd {
             entries: vec![
                 long(TAG_IMAGE_WIDTH, 16),
                 long(TAG_IMAGE_LENGTH, 16),
                 short(TAG_BITS_PER_SAMPLE, vec![8, 8, 8]),
-                short(TAG_COMPRESSION, vec![1]),
                 short(TAG_PHOTOMETRIC, vec![2]),
                 short(TAG_SAMPLES_PER_PIXEL, vec![3]),
-                long(TAG_TILE_WIDTH, 16),
-                long(TAG_TILE_LENGTH, 16),
                 TiffTag { tag: 65000, values: TiffValues::Undefined(vec![7, 5, 3, 1]) },
             ],
-            storage: TiffStorage { kind: TiffStorageKind::Tiles, offsets_kind: TiffFieldType::Long, byte_counts_kind: TiffFieldType::Long, chunks: vec![vec![0; 16 * 16 * 3]] },
+            blocks: vec![TiffSampleBlock{x:0,y:0,width:16,height:16,channels:3,samples:vec![TiffWord64::default();16*16*3]}],
         }],
     }
 }
@@ -143,7 +139,7 @@ fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
     assert_eq!(TiffMutation::parse_op(&mutations[0].print_op()).expect("text paint round trip"), mutations[0]);
     assert_eq!(TiffMutation::decode_op(&mutations[0].encode_op().expect("binary paint encode")).expect("binary paint decode"), mutations[0]);
     let after = mutations[0].diff(&before).diff().apply(&before).expect("apply TIFF paint");
-    assert_eq!(&after.ifds[0].storage.chunks[0][765..768], &[9, 8, 7]);
+    assert_eq!(&after.ifds[0].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
     assert_eq!(after.ifds[0].entries, before.ifds[0].entries);
     let inverse = mutations[0].inverse(&before).expect("paint inverse");
     let restored = inverse.into_iter().fold(after, |current, mutation| mutation.diff(&current).diff().apply(&current).expect("apply TIFF paint inverse"));
@@ -155,14 +151,14 @@ fn retained_tiled_paint_targets_the_selected_ifd_and_survives_artifact_undo() {
     use protocol::{Mutation, MutationDiff};
     let mut before = tiled_editor_snapshot();
     before.ifds.push(before.ifds[0].clone());
-    let first_before = before.ifds[0].storage.clone();
+    let first_before = before.ifds[0].blocks.clone();
     let config = TiffEditorConfig { selected_ifd: 1 };
     let [mutation] = drive_paint(&paint_command(), &before, &config).try_into().expect("one selected-page paint mutation");
     let TiffMutation::PaintRegion(payload) = &mutation else { panic!("selected-page paint mutation") };
     assert_eq!(payload.ifd_index, 1);
     let after = mutation.diff(&before).diff().apply(&before).expect("selected page paint applies");
-    assert_eq!(after.ifds[0].storage, first_before);
-    assert_eq!(&after.ifds[1].storage.chunks[0][765..768], &[9, 8, 7]);
+    assert_eq!(after.ifds[0].blocks, first_before);
+    assert_eq!(&after.ifds[1].blocks[0].samples[765..768], &[crate::schema::snapshot::TiffWord64::from_word(9),crate::schema::snapshot::TiffWord64::from_word(8),crate::schema::snapshot::TiffWord64::from_word(7)]);
     let restored = mutation.inverse(&before).expect("selected page inverse").into_iter().fold(after, |current, inverse| inverse.diff(&current).diff().apply(&current).expect("selected page inverse applies"));
     assert_eq!(restored, before);
     assert_eq!(config.selected_ifd, 1, "artifact history never rewrites local page selection");
@@ -192,32 +188,11 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
 }
 
 #[test]
-fn large_raster_byte_order_edit_uses_compact_native_event() {
-    register_document_schema();
-    let mut snapshot = crate::schema::blank_tiff_snapshot();
-    snapshot.ifds[0].storage.chunks[0] = vec![7; 2 * 1_024 * 1_024];
-    let event = editing::SnapshotEditEvent::SetValue { path: "/byteOrder".into(), value: semio_framework_value::DslValue::String("bigEndian".into()) };
-    assert!(<TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
-    let emit = <TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("byte-order edit emits");
-    let [TiffMutation::ChangeByteOrder(payload)] = emit.artifact_mutations.as_slice() else { panic!("byte-order edit must use its native leaf") };
-    assert_eq!(payload.byte_order, crate::schema::snapshot::TiffByteOrder::BigEndian);
-    assert!(<TiffMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("byte-order mutation encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let next = protocol::MutationDiff::apply(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("byte-order mutation applies");
-    assert_eq!(next.byte_order, crate::schema::snapshot::TiffByteOrder::BigEndian);
-    assert_eq!(next.ifds[0].storage, snapshot.ifds[0].storage);
-    let inverse = <TiffMutation as protocol::Mutation<TiffSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
-    assert!(inverse.iter().all(|mutation| <TiffMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
-    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::MutationDiff::apply(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &current).diff(), &current).expect("byte-order inverse applies"));
-    assert_eq!(restored, snapshot);
-
-    let native_base = crate::schema::demo_tiff_snapshot();
-    let native_emit = <TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native byte-order edit emits");
-    let native_edited = protocol::MutationDiff::apply(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native byte-order mutation applies");
-    let native = crate::standards::v6_0::subsets::document::io::encode_tiff(&native_edited).expect("edited TIFF encodes");
-    assert_eq!(&native[..2], b"MM");
-    let reopened = crate::standards::v6_0::subsets::document::io::decode_tiff(&native).expect("edited native TIFF reopens");
-    assert_eq!(reopened.byte_order, crate::schema::snapshot::TiffByteOrder::BigEndian);
-    assert_eq!(reopened.ifds[0].storage.chunks, native_edited.ifds[0].storage.chunks);
+fn physical_byte_order_options_preserve_owned_large_sample_identity() {
+ use crate::standards::v6_0::subsets::document::io::{TiffByteOrder,TiffNativeOptions,encode_tiff_with,decode_tiff};
+ let snapshot=tiled_editor_snapshot();let before=snapshot.clone();
+ for byte_order in [TiffByteOrder::LittleEndian,TiffByteOrder::BigEndian]{let native=encode_tiff_with(&snapshot,TiffNativeOptions{byte_order,..Default::default()}).unwrap();assert_eq!(&native[..2],if byte_order==TiffByteOrder::LittleEndian{b"II"}else{b"MM"});assert_eq!(decode_tiff(&native).unwrap(),snapshot);}
+ assert_eq!(snapshot,before);
 }
 
 #[test]
@@ -225,12 +200,13 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = crate::schema::blank_tiff_snapshot();
-    snapshot.ifds[0].storage.chunks[0] = vec![7, 9];
+    snapshot.ifds[0].entries.push(TiffTag{tag:65000,values:crate::schema::snapshot::TiffValues::Undefined(vec![7,9])});
+    let payload_path=format!("/ifds/0/entries/{}/values/value",snapshot.ifds[0].entries.len()-1);
     let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
     for row in fixture["payload"]["cases"].as_array().unwrap() {
         let mut event = row["event"].clone();
-        event["path"] = format!("/ifds/0/storage/chunks/0{}", event["path"].as_str().unwrap()).into();
-        if let Some(from) = event.get_mut("from") { *from = format!("/ifds/0/storage/chunks/0{}", from.as_str().unwrap()).into(); }
+        event["path"] = format!("{payload_path}{}", event["path"].as_str().unwrap()).into();
+        if let Some(from) = event.get_mut("from") { *from = format!("{payload_path}{}", from.as_str().unwrap()).into(); }
         let event: editing::SnapshotEditEvent = semio_framework_pack_json::from_json_str(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let emitted = <TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
@@ -238,7 +214,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
             next = protocol::MutationDiff::apply(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
-        *expected.pointer_mut("/ifds/0/storage/chunks/0").unwrap() = row["expected"].clone();
+        *expected.pointer_mut(&payload_path).unwrap() = row["expected"].clone();
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
         assert_eq!(actual, expected, "{}", row["id"]);
     }

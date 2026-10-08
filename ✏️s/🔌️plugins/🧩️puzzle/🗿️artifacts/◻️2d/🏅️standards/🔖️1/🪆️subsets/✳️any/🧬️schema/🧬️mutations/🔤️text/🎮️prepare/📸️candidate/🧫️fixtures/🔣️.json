@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "role": "nodeIcon",
+      "before": null,
+      "next": null,
+      "target": true,
+      "expected": "noOp"
+    },
+    {
+      "role": "nodeIcon",
+      "before": null,
+      "next": "",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "nodeIcon",
+      "before": "",
+      "next": null,
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "nodeIcon",
+      "before": "😀\u0000甲",
+      "next": "😀\u0000甲",
+      "target": true,
+      "expected": "noOp"
+    },
+    {
+      "role": "nodeIcon",
+      "before": "a😀",
+      "next": "a甲",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "nodeIcon",
+      "before": "abc",
+      "next": "abcZ",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "nodeIcon",
+      "before": "long",
+      "next": null,
+      "target": false,
+      "expected": "targetMissing"
+    },
+    {
+      "role": "regionLabel",
+      "before": null,
+      "next": null,
+      "target": true,
+      "expected": "noOp"
+    },
+    {
+      "role": "regionLabel",
+      "before": null,
+      "next": "",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "regionLabel",
+      "before": "",
+      "next": null,
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "regionLabel",
+      "before": "😀\u0000甲",
+      "next": "😀\u0000甲",
+      "target": true,
+      "expected": "noOp"
+    },
+    {
+      "role": "regionLabel",
+      "before": "a😀",
+      "next": "a甲",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "regionLabel",
+      "before": "abc",
+      "next": "abcZ",
+      "target": true,
+      "expected": "changed"
+    },
+    {
+      "role": "regionLabel",
+      "before": "long",
+      "next": null,
+      "target": false,
+      "expected": "targetMissing"
+    }
+  ],
+  "pausePoints": [
+    0,
+    1,
+    3,
+    7,
+    17
+  ]
+}

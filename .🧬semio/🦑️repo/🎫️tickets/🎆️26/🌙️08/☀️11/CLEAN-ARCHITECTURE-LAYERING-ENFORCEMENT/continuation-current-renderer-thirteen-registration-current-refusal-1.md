@@ -1,0 +1,3 @@
+# Current Renderer Thirteen Registration Refusal
+
+FirstactualGUI271001 Nx1 refused its second canonical launch-file ownerrow count0 while expecting1. All preceding completecurrent source guards succeeded but sourcecontrols were notexecuted/sealed. No actor/cause inferred; GUIregistration initialwrapperverify is insufficient to claim laterrow remains. Rawpartial output/fullhelper body are retained under 🗑️generated/current-engine-layout-13/registration-negative-1. Helper/proposal inputs unchanged; exact bothownedrows willregister again beforeinvoking freshclean green1 output. No Rootwrite/compiler/methodacceptance follows fromthisnegative.

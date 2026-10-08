@@ -11,9 +11,8 @@ start op
 # verb this facet registers (`create`/`delete`/`change`/`move`/`add`/`remove`) —
 # `📓️taxonomy.md`'s `APPROVED_VERBS`, no `no`/`setSnapshot` (banned vocabulary). Edges are
 # id-keyed ENTITIES (`createEdge`/`deleteEdge`), never `connect`/`disconnect`.
-op = patch-snapshot | create-node | delete-node | change-node-kind | change-node-label | move-node | add-node-port | remove-node-port | add-node-property | remove-node-property | create-edge | delete-edge | drag-nodes | set-node-property | resize-node | rename-node | set-edge-property | add-edge-property | remove-edge-property
+op = create-node | delete-node | change-node-kind | change-node-label | move-node | add-node-port | remove-node-port | add-node-property | remove-node-property | create-edge | delete-edge | drag-nodes | set-node-property | resize-node | rename-node | set-edge-property | add-edge-property | remove-edge-property
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
 create-node = "createNode" ":" hex "," hex "," hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "," at
 delete-node = "deleteNode" ":" hex
 change-node-kind = "changeNodeKind" ":" hex "," hex

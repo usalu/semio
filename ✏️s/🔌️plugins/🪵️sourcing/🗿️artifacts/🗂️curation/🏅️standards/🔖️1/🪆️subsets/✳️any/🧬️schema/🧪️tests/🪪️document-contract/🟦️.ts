@@ -17,7 +17,7 @@ import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json
 export function testCurationDocumentContractOracle(): void {
   for (const catalog of vectors.invalidChildren) assert.throws(() => artifact.parseCurationArtifact({ ...vectors.document, catalog }));
   assertDocumentContractOracle({
-    name: "Curation", dependencies: [ioSchema, childSchema, semioChildSchema,artifactReferenceSchema], childIdentityFields: ["catalog"],
+    name: "Curation", dependencies: [ioSchema, childSchema, semioChildSchema,artifactReferenceSchema],
     artifact: { schema: artifactSchema, parse: artifact.parseCurationArtifact },
     snapshot: { schema: snapshotSchema, parse: snapshot.parseCurationSnapshot },
     diff: { schema: diffSchema, parse: diff.parseCurationDiff },

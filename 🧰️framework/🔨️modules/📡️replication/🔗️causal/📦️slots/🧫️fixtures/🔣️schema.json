@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capacity",
+    "pageSlots",
+    "admissionBytes",
+    "maximumItems",
+    "cases",
+    "denied",
+    "expectedRelease",
+    "preserveSlotIdentity",
+    "maximumCloseTurns"
+  ],
+  "properties": {
+    "capacity": {
+      "const": 8192
+    },
+    "pageSlots": {
+      "const": 64
+    },
+    "admissionBytes": {
+      "const": 262144
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "occupied"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "occupied": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8192
+          }
+        }
+      }
+    },
+    "denied": {
+      "const": [
+        "zero",
+        "one-below"
+      ]
+    },
+    "expectedRelease": {
+      "const": "one-whole-allocation"
+    },
+    "preserveSlotIdentity": {
+      "const": true
+    },
+    "maximumCloseTurns": {
+      "const": 1024
+    }
+  }
+}

@@ -13,7 +13,7 @@ fn selected_document() -> (NoteSnapshot, String) {
     let mut ids = NoteIdOwner::new("nudge-test", 0);
     let block = create_block_by_kind(&mut ids, "text", 0.0, 0.0);
     let id = block_id(&block).to_string();
-    (NoteSnapshot { blocks: vec![block], ..crate::schema::empty_note_snapshot() }, id)
+    (NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() }, id)
 }
 
 fn moved_bounds(document: &NoteSnapshot, selected: &str, emit: &semio_framework_plugin::Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> (f64, f64) {

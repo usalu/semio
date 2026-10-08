@@ -4,7 +4,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ fem2d document artifact state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.fem.fem2d")]
 #[derive(Default)]
@@ -12,6 +12,7 @@ pub struct Fem2dArtifact {
     #[state(artifact)]
     pub nodes: Vec<FemNode>,
     #[state(artifact)]
+    #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
     pub regions: Vec<FemRegion>,

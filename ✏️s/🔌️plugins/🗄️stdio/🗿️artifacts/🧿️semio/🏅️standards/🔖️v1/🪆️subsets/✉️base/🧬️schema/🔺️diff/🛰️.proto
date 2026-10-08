@@ -1,9 +1,8 @@
 syntax = "proto3";
 // 🔺️ SemioDiff schema — real mirror of `🦀️.rs`. The envelope union's own diff: NoChange,
-// 13 same-kind opaque-wire wrappers, and Replace (cross-kind change / explicit SetSnapshot).
+// 13 same-kind opaque-wire wrappers.
 // Proto packages never cross-import between subsets, so each same-kind field is that subset's own
-// OPAQUE diff wire form; `replace` reuses this package's own SemioSnapshot message directly (same
-// subset, real message reference, not opaque bytes).
+// OPAQUE diff wire form.
 package semio.s_stdio_semio.diff;
 
 import "../📸️snapshot/🛰️.proto";
@@ -24,6 +23,5 @@ message SemioDiff {
     bytes animation = 12;    // SemioAnimationDiff (animation subset's own wire form)
     bytes presentation = 13; // SemioPresentationDiff (presentation subset's own wire form)
     bytes flow = 14;     // SemioFlowDiff (flow subset's own wire form)
-    semio.s_stdio_semio.snapshot.SemioSnapshot replace = 15;
   }
 }

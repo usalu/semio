@@ -1,8 +1,7 @@
 //! 👤️ Authoritative PDF/H mutation for setting the document author conformance axis.
 
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
+use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,9 +16,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoAuthor {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-author", kind: "set-info-author", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        next.info.author = Some(self.author.clone());
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        let change = (base.info.author.as_deref() != Some(self.author.as_str())).then(|| PdfInfoDiff { author: Some(PdfSet::Set { value: self.author.clone() }), ..Default::default() });
+        MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {

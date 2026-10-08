@@ -35,9 +35,7 @@
       "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
       "{workspaceRoot}/🌎️hub/🏗️bootstrap/🦀️.rs",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-      "{workspaceRoot}/.vscode/launch.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
     ],
     "hubFoundationSources": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
@@ -64,8 +62,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/{🦀️.rs,📜️script.ts}",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}",
-      "{workspaceRoot}/.vscode/{🧩️launch.seed.jsonc,launch.json}"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}"
     ]
   },
   "targets": {
@@ -684,7 +681,11 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-catalog-selection-check"
+        "command": "bun ./📜️script.ts native-catalog-selection-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-catalog-selection/🗑️generated",
+          "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-catalog-selection/🗑️generated/cargo-target"
+        }
       },
       "outputs": []
     },
@@ -693,7 +694,20 @@
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts native-openable-catalog-provider-check"
+        "command": "bun ./📜️script.ts native-openable-catalog-provider-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider/🗑️generated",
+          "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider/🗑️generated/cargo-target"
+        }
+      },
+      "configurations": {
+        "stdio-only": {
+          "args": "--stdio-only",
+          "env": {
+            "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated",
+            "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated/cargo-target"
+          }
+        }
       },
       "outputs": []
     },
@@ -906,6 +920,19 @@
       "outputs": []
     },
     "trusted-catalog-preflight": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "packages",
+                "kind": "text",
+                "valueFlag": "--packages"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -916,6 +943,19 @@
       "outputs": []
     },
     "trusted-catalog-bootstrap": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "packages",
+                "kind": "text",
+                "valueFlag": "--packages"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -1044,6 +1084,17 @@
       "outputs": []
     },
     "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev",
@@ -1062,6 +1113,25 @@
       "continuous": true
     },
     "dev-postgres": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            },
+            "parameters": [
+              {
+                "id": "data",
+                "kind": "text",
+                "default": "{workspace}/.🧬semio/🌐hub/hub-dev-postgres",
+                "valueEnv": "OS_HUB_DATA"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev-postgres",
@@ -1080,6 +1150,25 @@
       "continuous": true
     },
     "dev-neo4j": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT",
+              "path": "/admin"
+            },
+            "parameters": [
+              {
+                "id": "data",
+                "kind": "text",
+                "default": "{workspace}/.🧬semio/🌐hub/hub-dev-neo4j",
+                "valueEnv": "OS_HUB_DATA"
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev-postgres",
@@ -1098,6 +1187,16 @@
       "continuous": true
     },
     "dev-secure-suite": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev",
@@ -1116,6 +1215,16 @@
       "continuous": true
     },
     "dev-secure-native": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev",
@@ -1134,6 +1243,16 @@
       "continuous": true
     },
     "dev-secure-mcp": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev",
@@ -1152,6 +1271,16 @@
       "continuous": true
     },
     "dev-secure-admin": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 8787,
+              "portEnv": "OS_HUB_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [
         "build-dev",

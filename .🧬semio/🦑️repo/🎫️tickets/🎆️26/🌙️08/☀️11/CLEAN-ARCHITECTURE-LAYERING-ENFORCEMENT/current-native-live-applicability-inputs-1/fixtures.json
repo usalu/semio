@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "live-law-01",
+      "mutation": "none-before",
+      "accepted": true
+    },
+    {
+      "id": "live-law-02",
+      "mutation": "none-after",
+      "accepted": true
+    },
+    {
+      "id": "live-law-03",
+      "mutation": "unrelated-root",
+      "accepted": true
+    },
+    {
+      "id": "live-law-04",
+      "mutation": "selected-root",
+      "accepted": false
+    },
+    {
+      "id": "live-law-05",
+      "mutation": "model-after-before",
+      "accepted": false
+    },
+    {
+      "id": "live-law-06",
+      "mutation": "model-before-after",
+      "accepted": false
+    },
+    {
+      "id": "live-law-07",
+      "mutation": "new-model-created-before",
+      "accepted": false
+    },
+    {
+      "id": "live-law-08",
+      "mutation": "new-model-missing-after",
+      "accepted": false
+    },
+    {
+      "id": "live-law-09",
+      "mutation": "immutable-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-10",
+      "mutation": "immutable-missing",
+      "accepted": false
+    },
+    {
+      "id": "live-law-11",
+      "mutation": "watch-add",
+      "accepted": false
+    },
+    {
+      "id": "live-law-12",
+      "mutation": "watch-remove",
+      "accepted": false
+    },
+    {
+      "id": "live-law-13",
+      "mutation": "watch-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-14",
+      "mutation": "watch-kind",
+      "accepted": false
+    },
+    {
+      "id": "live-law-15",
+      "mutation": "generated-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-16",
+      "mutation": "external-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-17",
+      "mutation": "external-add",
+      "accepted": false
+    },
+    {
+      "id": "live-law-18",
+      "mutation": "helper-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-19",
+      "mutation": "witness-change",
+      "accepted": false
+    },
+    {
+      "id": "live-law-20",
+      "mutation": "missing-source",
+      "accepted": false
+    },
+    {
+      "id": "live-law-21",
+      "mutation": "unknown-phase",
+      "accepted": false
+    },
+    {
+      "id": "live-law-22",
+      "mutation": "extra-proof",
+      "accepted": false
+    },
+    {
+      "id": "live-law-23",
+      "mutation": "missing-model",
+      "accepted": false
+    },
+    {
+      "id": "live-law-24",
+      "mutation": "pair-hash",
+      "accepted": false
+    },
+    {
+      "id": "live-law-25",
+      "mutation": "pair-forward",
+      "accepted": false
+    },
+    {
+      "id": "live-law-26",
+      "mutation": "pair-inverse",
+      "accepted": false
+    },
+    {
+      "id": "live-law-27",
+      "mutation": "model-absence-kind",
+      "accepted": false
+    },
+    {
+      "id": "live-law-28",
+      "mutation": "binding-symlink",
+      "accepted": false
+    }
+  ],
+  "parserCases": [
+    {
+      "id": "dep-unicode",
+      "source": "/target/unit.d: 🧰️framework/🦀️.rs fixture.json\nfixture.json:\n",
+      "paths": [
+        "🧰️framework/🦀️.rs",
+        "fixture.json"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-space",
+      "source": "/target/unit.d: src/with\\ space.rs\n",
+      "paths": [
+        "src/with space.rs"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-windows",
+      "source": "C:\\target\\unit.d: C:\\repo\\source.rs D:\\asset\\fixture.json\r\n",
+      "paths": [
+        "C:\\repo\\source.rs",
+        "D:\\asset\\fixture.json"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "dep-empty",
+      "source": "/target/unit.d: \n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-missing",
+      "source": "not a rule\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-continuation",
+      "source": "/target/unit.d: source.rs \\\n other.rs\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-dollar",
+      "source": "/target/unit.d: source$unknown.rs\n",
+      "paths": [],
+      "accepted": false
+    },
+    {
+      "id": "dep-comment-symbol",
+      "source": "/target/unit.d: source#unknown.rs\n",
+      "paths": [],
+      "accepted": false
+    }
+  ],
+  "expectations": {
+    "modelCount": 21,
+    "ownerCount": 3,
+    "scope": "Joint modeled before/after; unrelated Root bytes outside selected scope do not fence publication"
+  }
+}

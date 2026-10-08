@@ -16,7 +16,7 @@ const fixture = JSON.parse(fixtureSource) as {
   readonly schemaVersion: 1;
   readonly owners: readonly { readonly path: string; readonly language: "typescript" | "rust"; readonly declarations: readonly string[]; readonly imports: readonly string[]; readonly rootImports: readonly string[]; readonly contextChain: readonly string[] }[];
   readonly contexts: readonly { readonly directoryName: string; readonly parentKindId: string; readonly kindId: string }[];
-  readonly routes: Readonly<Record<"source" | "native", { readonly command: string; readonly target: string; readonly launchName: string; readonly launchCommand: string; readonly launchGroup: string; readonly launchOrder: number; readonly inputs: readonly string[] }>>;
+  readonly routes: Readonly<Record<"source" | "native", { readonly command: string; readonly target: string; readonly inputs: readonly string[] }>>;
   readonly nativeStages: readonly { readonly id: string; readonly args: readonly string[]; readonly source: string | null; readonly declaration: string | null }[];
 };
 
@@ -175,7 +175,7 @@ test("Rust oracle independently parses exact test declarations and hostile looka
   expect(library).toContain('socket-grant/🧪️tests/🔮️oracles/🦀️.rs"]');
 });
 
-test("package, cache input, targets, and launch records bind only the moved owners", async () => {
+test("package, cache input and targets bind only the moved owners", () => {
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const router = readFileSync(routerPath, "utf8");
   const routerAst = ts.createSourceFile(routerPath, router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -196,14 +196,4 @@ test("package, cache input, targets, and launch records bind only the moved owne
   expect(project.targets[fixture.routes.source.target]?.options?.command).toBe("bun ./📜️script.ts socket-grant-command-source-check");
   expect(project.targets[fixture.routes.native.target]?.inputs).toEqual(["hubSocketGrantCommandSources"]);
   expect(project.targets[fixture.routes.native.target]?.options?.command).toBe("bun ./📜️script.ts socket-grant-check");
-  const jsonc = await import("jsonc-parser");
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launch = jsonc.parse(readFileSync(join(repoRoot, path), "utf8"));
-    for (const route of Object.values(fixture.routes)) {
-      const matches = launch.configurations.filter((entry: { name?: string }) => entry.name === route.launchName);
-      expect(matches, `${path}:${route.launchName}`).toHaveLength(1);
-      expect(matches[0].command).toBe(route.launchCommand);
-      expect(matches[0].presentation).toEqual({ group: route.launchGroup, order: route.launchOrder });
-    }
-  }
 });

@@ -133,7 +133,14 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &mutation).expect("a refused edit folds as a no-op");
         let delta = crate::diff::diff_set_layer_blend_mode("shape-a", mode);
-        assert_eq!(delta.apply(&original).is_ok(), accepted, "{mode}");
+        assert_eq!(protocol::apply_diff(&delta, &original).is_ok(), accepted, "{mode}");
         if !accepted { assert_eq!(document, original); }
     }
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
 }

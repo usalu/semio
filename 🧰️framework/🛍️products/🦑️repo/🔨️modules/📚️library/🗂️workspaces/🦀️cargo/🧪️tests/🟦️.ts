@@ -5,6 +5,7 @@ import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -193,6 +194,82 @@ test("batch owner publication discovers one fresh repository inventory", () => {
 });
 
 
+test("selected preparation development closure matches Cargo tree root ownership",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure;
+ for(const row of law.cases){
+  const root=mkdtempSync(join(artifactRoot!,"cargo-development-closure-")),names=new Set<string>(law.packages.map((value:any)=>value.name));
+  put(root,"Cargo.toml",workspace(["packages/*"]));
+  for(const value of law.packages){
+   const edges=["dependencies","build-dependencies","dev-dependencies"].flatMap(kind=>value[kind]?.length?[`[${kind}]\n${value[kind].map((name:string)=>`${name}={path="../${name}"}`).join("\n")}\n`]:[]).join("");
+   const path=`packages/${value.name}/Cargo.toml`,source=pkg(value.name,'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+value.name+'"]\n'+edges);
+   put(root,path,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
+  }
+  expect(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).length).toBe(names.size);
+  const tree=Bun.spawnSync(["cargo","tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...(row.roots.length?row.roots.flatMap((name:string)=>["-p",name]):["--workspace"])],{cwd:root,stdout:"pipe",stderr:"pipe",timeout:10_000});
+  expect(tree.exitCode,tree.stderr.toString()).toBe(0);
+  const reached=[...new Set(tree.stdout.toString().split("\n").map(line=>line.split(" ")[0]!).filter(name=>names.has(name)))].sort();expect(reached).toEqual(row.expected);
+  put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.NX_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");');
+  prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),row.roots);
+  expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(reached);
+  console.log(`[DEBUG] Cargo preparation development closure roots=${row.roots.join(",")||"workspace"} exactPrepared=${reached.length}`);
+ }
+});
+
+test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),packages=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure.packages;
+ const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8"))),root=mkdtempSync(join(artifactRoot!,"cargo-preparation-diagnostics-"));
+ put(root,"Cargo.toml",workspace(["packages/*"]));
+ for(const value of packages){
+  const edges=["dependencies","build-dependencies","dev-dependencies"].flatMap(kind=>value[kind]?.length?[`[${kind}]\n${value[kind].map((name:string)=>`${name}={path="../${name}"}`).join("\n")}\n`]:[]).join("");
+  const source=pkg(value.name,'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+value.name+'"]\n'+edges);
+  put(root,`packages/${value.name}/Cargo.toml`,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
+ }
+ const tree=Bun.spawnSync(["cargo","tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...law.roots.flatMap((name:string)=>["-p",name])],{cwd:root,stdout:"pipe",stderr:"pipe"});
+ expect(tree.exitCode,tree.stderr.toString()).toBe(0);
+ const reached=[...new Set(tree.stdout.toString().trim().split("\n").map(line=>line.split(" ")[0]))].sort();expect(reached).toEqual(law.expected);
+ put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";appendFileSync(process.env.NX_WORKSPACE_ROOT+"/events.jsonl",process.argv[2]+"\\n");');
+ const old=process.env.SEMIO_CARGO_PREPARATION_TIMING,output:string[]=[];
+ expect(law.stream).toBe("stderr");
+ const logger=spyOn(console,"error").mockImplementation((line:unknown)=>{output.push(String(line));});
+ try{
+  process.env.SEMIO_CARGO_PREPARATION_TIMING=law.disabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
+  expect(output.filter(line=>line.startsWith("[DEBUG] cargo-preparation "))).toHaveLength(0);output.length=0;
+  process.env.SEMIO_CARGO_PREPARATION_TIMING=law.enabled;prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),law.roots);
+  const records=output.filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
+  expect([...new Set(records.map(row=>row.phase))].sort()).toEqual([...law.phases].sort());
+  for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
+  expect(records.filter(row=>row.phase==="recipe").map(row=>TOML.parse(readFileSync(join(root,row.owner),"utf8")).package!.name).sort()).toEqual(reached);
+  expect(records.filter(row=>row.phase==="inventory")).toHaveLength(1);
+  expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
+ }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
+ const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
+ const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
+ expect(child.exitCode,child.stderr.toString()).toBe(0);
+ const records=child.stderr.toString().split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
+ expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
+ for(const record of records)expect(validate(record),JSON.stringify(validate.errors)).toBe(true);
+ expect((TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")).workspace as {members:string[]}).members.sort()).toEqual(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).map(path=>path.slice(0,-"/Cargo.toml".length)).sort());
+ console.log(`[DEBUG] independent Cargo/TOML preparation diagnostic phases=${law.phases.length} exactRecipes=${reached.length} defaultQuiet=true`);
+});
+
+test("queued Cargo preparation exposes opted-in waiting before the protected operation completes",async()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),root=mkdtempSync(join(artifactRoot!,"cargo-live-wait-"));
+ put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
+ const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
+ expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
+ const lease=await acquireResourceLease({directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
+ const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
+ const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
+ const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.find(line=>line.startsWith("[DEBUG] cargo-preparation "));if(line)return line;}};
+  const observed=await Promise.race([observation(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error("No live stderr lease-wait observation")),law.waiting.maximumObservationMs);})]);
+  const record=JSON.parse(observed.slice("[DEBUG] cargo-preparation ".length));
+  expect(validate(record),JSON.stringify(validate.errors)).toBe(true);expect(record.phase).toBe(law.waiting.phase);expect(record.owner).toBe(law.waiting.owner);expect(record.items).toBe(law.waiting.items);expect(child.exitCode).toBe(null);
+  console.log(`[DEBUG] queued Cargo preparation live stderr phase=${record.phase} protectedOperationIncomplete=true`);
+ }finally{if(timeout)clearTimeout(timeout);child.kill("SIGTERM");await child.exited;reader.releaseLock();lease.release();}
+},10000);
+
 test("selected package preparation follows the Cargo resolved local closure without preparing siblings",()=>{
  const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
  for(const row of law.cases){
@@ -221,4 +298,24 @@ test("selected package preparation follows the Cargo resolved local closure with
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);
   for(const path of ["Cargo.toml","specific/Cargo.toml"])expect(Bun.TOML.parse(readFileSync(join(root,path),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,path),"utf8")));
  }
+});
+
+
+test("membership discovery compiles bounded matchers independent of unrelated leaf count", () => {
+ const law=fixture.discoveryWork,root=mkdtempSync(join(artifactRoot!,"cargo-discovery-work-"));
+ put(root,"Cargo.toml",workspace(law.members).replace("exclude-patterns=[]","exclude-patterns="+JSON.stringify(law.exclude)));
+ put(root,"packages/owned/Cargo.toml",pkg("owned-member"));
+ put(root,"packages/ignored/nested/Cargo.toml","excluded authority must not parse");
+ for(let index=0;index<law.noiseFiles;index++)put(root,`packages/noise/${index}.data`,"unrelated leaf");
+ const owner=cargoWorkspaceForManifest(root,"Cargo.toml"),original=Bun.Glob,descriptor=Object.getOwnPropertyDescriptor(Bun,"Glob")!;
+ let matchers=0;
+ Object.defineProperty(Bun,"Glob",{configurable:descriptor.configurable,enumerable:descriptor.enumerable,writable:true,value:class extends original {constructor(pattern:string){super(pattern);matchers++;}}});
+ try {
+  const actual=cargoWorkspaceMembers(root,owner);
+  const independent=glob.sync(owner.memberManifests,{cwd:root,onlyFiles:true,followSymbolicLinks:false,ignore:law.exclude}).sort();
+  expect(actual.map(row=>row.manifest)).toEqual(independent);
+  expect(actual.map(row=>row.name)).toEqual(law.expectedNames);
+  expect(matchers).toBeLessThanOrEqual(law.maximumMatchers);
+  console.log(`[DEBUG] Cargo membership discovery unrelatedLeaves=${law.noiseFiles} compiledMatchers=${matchers} exactManifests=${actual.length}`);
+ } finally {Object.defineProperty(Bun,"Glob",descriptor);}
 });

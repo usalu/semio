@@ -18,11 +18,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
   assert.deepEqual(project.targets.build.outputs, []);
   assert.equal(project.targets.build.cache, true);
   assert.equal(JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")).scripts.build, `bun nx run ${cases.completion.project}:build`);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launch = require("jsonc-parser").parse(await readFile(join(workspace, path), "utf8"));
-    for (const target of cases.completion.launches) assert.ok(launch.configurations.some((row: any) => row.command === `bun nx run ${cases.completion.project}:${target}`), `${path}: ${target}`);
-    assert.ok(!launch.configurations.some((row: any) => row.command?.startsWith(`bun nx run ${cases.completion.project}:build --`)));
-  }
+  for (const target of cases.completion.targets) assert.equal(project.targets[target]?.executor, "nx:run-commands", `${cases.completion.project}:${target} must be declared by its owner`);
   assert.equal(require("jsonschema").validate(cases.plan, schema).valid, true);
   assert.deepEqual(selectProductionBrowserComponents(cases.session, "cad", "cad", cases.plan.components), cases.plan);
   for (const invalid of cases.invalidSessions) assert.throws(() => selectProductionBrowserComponents(invalid, "cad", "cad", cases.plan.components), /production/i);

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateLightingGain` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, LightingGainPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -23,10 +23,7 @@ pub fn diff(payload: &super::CreateLightingGain, base: &EnergyModelSnapshot) -> 
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.lighting.insert(
-        payload.index as usize,
-        crate::model::LightingGain {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { lighting: Rows::inserting(payload.index as usize, crate::model::LightingGain {
             id: payload.id,
             zone_id: payload.zone_id,
             schedule_id: payload.schedule_id,
@@ -34,8 +31,6 @@ pub fn diff(payload: &super::CreateLightingGain, base: &EnergyModelSnapshot) -> 
             radiant_fraction: payload.radiant_fraction,
             visible_fraction: payload.visible_fraction,
             return_air_fraction: payload.return_air_fraction,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

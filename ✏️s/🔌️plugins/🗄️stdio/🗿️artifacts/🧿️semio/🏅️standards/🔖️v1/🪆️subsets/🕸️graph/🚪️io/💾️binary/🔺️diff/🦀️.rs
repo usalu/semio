@@ -22,33 +22,23 @@ use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_edge};
 use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_edge};
 
 impl protocol::DiffBinary for SemioGraphDiff {
-/// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`nodes`, bit1=`edges`) are two
-/// REAL fixed fields; when present, each list follows as a real varint count + per-record
-/// binary encoding (reusing the snapshot facet's own `write_node`/`read_node`/`write_edge`/
-/// `read_edge`) rather than a text-blob-in-binary shortcut.
+/// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`nodes`, bit1=`edges`) are two REAL fixed fields; each present
+/// section follows as a varint byte length plus the same `enc_indexed_triple` text this facet's `print_diff` emits.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::graph::io::binary::snapshot::{write_edge};
-    use crate::standards::v1::subsets::graph::io::binary::snapshot::{write_node};
+    use crate::standards::v1::subsets::graph::io::text::diff::{enc_nodes, enc_edges};
     let presence: u8 = (if self.nodes.is_some() { 0b0000_0001 } else { 0 }) | (if self.edges.is_some() { 0b0000_0010 } else { 0 });
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
-    if let Some(list) = &self.nodes {
-        store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-        for n in &list.values {
-            write_node(&mut out, n);
-        }
-    }
-    if let Some(list) = &self.edges {
-        store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-        for e in &list.values {
-            write_edge(&mut out, e);
-        }
+    for section in [self.nodes.as_ref().map(enc_nodes), self.edges.as_ref().map(enc_edges)].into_iter().flatten() {
+        store::pack_rt::write_varint_u64(&mut out, section.len() as u64);
+        out.extend_from_slice(section.as_bytes());
     }
     Ok(out)
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::graph::io::binary::snapshot::{read_edge, read_node};
+    use crate::standards::v1::subsets::graph::io::text::diff::{dec_nodes, dec_edges};
+    let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 2, detail };
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
     }
@@ -57,28 +47,14 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     }
     let presence = bytes[1];
     let mut reader = store::ByteReader::new(&bytes[2..]);
-    let nodes = if presence & 0b0000_0001 != 0 {
-        let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes count", offset: 2, detail: e.to_string() })?;
-        let mut values = Vec::with_capacity(count as usize);
-        for _ in 0..count {
-            values.push(read_node(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff node", offset: 2, detail: e })?);
-        }
-        Some(SemioGraphNodeList { values })
-    } else {
-        None
+    let mut section = |what: &'static str| -> Result<String, protocol::ProtocolError> {
+        let length = reader.read_varint_u64().map_err(|e| malformed(what, e.to_string()))? as usize;
+        let raw = reader.read_bytes(length).map_err(|e| malformed(what, e.to_string()))?;
+        String::from_utf8(raw.to_vec()).map_err(|e| malformed(what, e.to_string()))
     };
-    let edges = if presence & 0b0000_0010 != 0 {
-        let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges count", offset: 2, detail: e.to_string() })?;
-        let mut values = Vec::with_capacity(count as usize);
-        for _ in 0..count {
-            values.push(read_edge(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edge", offset: 2, detail: e })?);
-        }
-        Some(SemioGraphEdgeList { values })
-    } else {
-        None
-    };
+    let nodes = if presence & 0b0000_0001 != 0 { Some(dec_nodes(&section("diff nodes")?).map_err(|e| malformed("diff nodes", e))?) } else { None };
+    let edges = if presence & 0b0000_0010 != 0 { Some(dec_edges(&section("diff edges")?).map_err(|e| malformed("diff edges", e))?) } else { None };
     Ok(SemioGraphDiff { nodes, edges })
-}
 }
 }
 pub use diff_codec::*;

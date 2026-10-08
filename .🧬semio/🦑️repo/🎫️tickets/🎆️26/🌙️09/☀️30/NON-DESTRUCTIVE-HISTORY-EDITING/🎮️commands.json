@@ -1,0 +1,2237 @@
+{
+  "tools": [
+    {
+      "id": "syntax-puzzle2d-paged",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-architect-roles-runtime",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "architect-role-native"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-architect-roles-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️kernel/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️tests-exchange/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/🔬️unit/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧬️compiled/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🦀️.rs",
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-binary-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-binary",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-cargo-dev-closure-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+        "-t",
+        "development closure"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/ui-cargo-development-closure"
+      }
+    },
+    {
+      "id": "test-cargo-discovery-work",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+        "{workspace}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️nested-owners/🟦️.ts"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/ui-cargo-discovery"
+      }
+    },
+    {
+      "id": "test-cargo-preparation-diagnostics",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+        "--test-name-pattern",
+        "Cargo preparation diagnostics"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/cargo-preparation-diagnostics"
+      }
+    },
+    {
+      "id": "test-csv-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-csv",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-deflate-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-deflate",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-diagnostic-release-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📨️messages",
+        "{workspace}/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-docx-history-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-docx",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-drawing-callers-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌫️delete-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🎛️selection/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-drawing-commands-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "drawing-cold"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-drawing-commands-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌫️delete-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🎯️points"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-drawing-svg-native-commands-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-dsl-inline-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs",
+        "{workspace}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🦀️.rs",
+        "{workspace}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🏷️required-inline/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-dwg-summary-title-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-dwg",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-editors-history-acceptance",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "all"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-forms-io-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔨️modules/🏠️host/🧰️owned/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-genesis-deferred-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "genesis-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-30-explicit-stdio-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-avi,semio-s-artifact-stdio-bcf,semio-s-artifact-stdio-binary,semio-s-artifact-stdio-bmp,semio-s-artifact-stdio-csv,semio-s-artifact-stdio-deflate,semio-s-artifact-stdio-dwg,semio-s-artifact-stdio-dxf,semio-s-artifact-stdio-epw,semio-s-artifact-stdio-gif,semio-s-artifact-stdio-gltf,semio-s-artifact-stdio-html,semio-s-artifact-stdio-ifc,semio-s-artifact-stdio-json,semio-s-artifact-stdio-las,semio-s-artifact-stdio-md,semio-s-artifact-stdio-mp3,semio-s-artifact-stdio-mp4,semio-s-artifact-stdio-obj,semio-s-artifact-stdio-pdf,semio-s-artifact-stdio-ply,semio-s-artifact-stdio-pptx,semio-s-artifact-stdio-semio,semio-s-artifact-stdio-stl,semio-s-artifact-stdio-svg,semio-s-artifact-stdio-tsv,semio-s-artifact-stdio-txt,semio-s-artifact-stdio-wav,semio-s-artifact-stdio-xml,semio-s-artifact-stdio-zip",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_LEVEL": "long"
+      }
+    },
+    {
+      "id": "test-history-35-caller-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🕸️canvas/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗃️entries/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-block/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬆️nudge-selection-up/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖊️ink-apply-events/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️semantic-contract/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️composite/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️media/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔢️number/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🌐️guest/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/🧰️framework/🔨️modules/🏗️mesh-engine/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-35-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-writer-writer,semio-s-artifact-mathematical-equation,semio-s-artifact-flow-flow,semio-s-artifact-vcs-vcs,semio-s-artifact-animate-presentation,semio-s-artifact-demonstrator-playground,semio-s-artifact-sequence-sequence,semio-s-artifact-architect-program,semio-s-artifact-process-process3d,semio-s-artifact-lowpoly-lowpoly,semio-s-artifact-reasoning-wires,semio-s-artifact-forms-forms,semio-s-artifact-layout-layout,semio-s-artifact-cad-cad,semio-s-artifact-norm-en1990,semio-s-artifact-norm-din18599,semio-s-artifact-norm-en1997,semio-s-artifact-norm-din16798,semio-s-artifact-norm-en1991,semio-s-artifact-norm-en1992,semio-s-artifact-norm-vdi3805,semio-s-artifact-norm-iso16757,semio-s-artifact-norm-en1993,semio-s-artifact-norm-en1994,semio-s-artifact-norm-din4108,semio-s-artifact-norm-en1996,semio-s-artifact-norm-en1995,semio-s-artifact-norm-en1999,semio-s-artifact-norm-en1998,semio-s-artifact-playbook-playbook,semio-s-artifact-imperative-procedure,semio-s-artifact-energy-model,semio-s-artifact-dag-dag,semio-s-artifact-note-note,semio-s-artifact-sourcing-curation",
+        "ungated"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-35-explicit-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-writer-writer,semio-s-artifact-mathematical-equation,semio-s-artifact-flow-flow,semio-s-artifact-vcs-vcs,semio-s-artifact-animate-presentation,semio-s-artifact-demonstrator-playground,semio-s-artifact-sequence-sequence,semio-s-artifact-architect-program,semio-s-artifact-process-process3d,semio-s-artifact-lowpoly-lowpoly,semio-s-artifact-reasoning-wires,semio-s-artifact-forms-forms,semio-s-artifact-layout-layout,semio-s-artifact-cad-cad,semio-s-artifact-norm-en1990,semio-s-artifact-norm-din18599,semio-s-artifact-norm-en1997,semio-s-artifact-norm-din16798,semio-s-artifact-norm-en1991,semio-s-artifact-norm-en1992,semio-s-artifact-norm-vdi3805,semio-s-artifact-norm-iso16757,semio-s-artifact-norm-en1993,semio-s-artifact-norm-en1994,semio-s-artifact-norm-din4108,semio-s-artifact-norm-en1996,semio-s-artifact-norm-en1995,semio-s-artifact-norm-en1999,semio-s-artifact-norm-en1998,semio-s-artifact-playbook-playbook,semio-s-artifact-imperative-procedure,semio-s-artifact-energy-model,semio-s-artifact-dag-dag,semio-s-artifact-note-note,semio-s-artifact-sourcing-curation",
+        "ungated"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_LEVEL": "long"
+      }
+    },
+    {
+      "id": "test-history-35-ungated-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-writer-writer,semio-s-artifact-mathematical-equation,semio-s-artifact-flow-flow,semio-s-artifact-vcs-vcs,semio-s-artifact-animate-presentation,semio-s-artifact-demonstrator-playground,semio-s-artifact-sequence-sequence,semio-s-artifact-architect-program,semio-s-artifact-process-process3d,semio-s-artifact-lowpoly-lowpoly,semio-s-artifact-reasoning-wires,semio-s-artifact-forms-forms,semio-s-artifact-layout-layout,semio-s-artifact-cad-cad,semio-s-artifact-norm-en1990,semio-s-artifact-norm-din18599,semio-s-artifact-norm-en1997,semio-s-artifact-norm-din16798,semio-s-artifact-norm-en1991,semio-s-artifact-norm-en1992,semio-s-artifact-norm-vdi3805,semio-s-artifact-norm-iso16757,semio-s-artifact-norm-en1993,semio-s-artifact-norm-en1994,semio-s-artifact-norm-din4108,semio-s-artifact-norm-en1996,semio-s-artifact-norm-en1995,semio-s-artifact-norm-en1999,semio-s-artifact-norm-en1998,semio-s-artifact-playbook-playbook,semio-s-artifact-imperative-procedure,semio-s-artifact-energy-model,semio-s-artifact-dag-dag,semio-s-artifact-note-note,semio-s-artifact-sourcing-curation",
+        "ungated"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-array-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "acceptance-arrays"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-bcf-fixture",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-child-genesis-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-empty-catalog-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-managed-cancel",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts",
+        "managed-cancel",
+        "{history-verification-job}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "history-verification-job",
+          "kind": "text",
+          "default": "message-clamp-native-20261007-a"
+        }
+      ]
+    },
+    {
+      "id": "test-history-managed-inspect",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts",
+        "managed-inspect",
+        "{history-verification-job}"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "history-verification-job",
+          "kind": "text",
+          "default": "message-clamp-native-20261007-a"
+        }
+      ]
+    },
+    {
+      "id": "test-history-member-group-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TICKET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING"
+      }
+    },
+    {
+      "id": "test-history-member-group-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🦀️.rs",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-native-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone",
+        "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone",
+        "🧰️framework/🔨️modules/🌱️value/♻️retirement",
+        "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append",
+        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🦀️.rs",
+        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/../🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🦠️mutation/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🔺️diff/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🦀️.rs",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🔗️owned",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🔗️owned",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/📐️footprint/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/📐️footprint/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/♻️retirement",
+        "{workspace}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏗️initialization/📚️catalog"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-non-stdio-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "non-stdio",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-non-stdio-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "non-stdio",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-non-stdio-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "non-stdio",
+        "ungated"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-non-stdio20-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-wfc-2d,semio-s-artifact-wfc-grid2d,semio-s-artifact-wfc-bitmap,semio-s-artifact-wfc-3d,semio-s-artifact-wfc-grid3d,semio-s-artifact-procedural-generation2d,semio-s-artifact-procedural-generation3d,semio-s-artifact-gis-gisterrain,semio-s-artifact-fem-2d,semio-s-artifact-fem-3d,semio-s-artifact-trinity-rewriting,semio-s-artifact-trinity-jack,semio-s-artifact-puzzle-2d,semio-s-artifact-puzzle-5d,semio-s-artifact-puzzle-3d,semio-s-artifact-block-2d,semio-s-artifact-block-5d,semio-s-artifact-block-3d,semio-s-artifact-space-home,semio-s-artifact-space-space",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-nonstdio-j-callers",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🧪️tests/🔬️store-fixture/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️example/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️example/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏔️exaggeration/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🦀️.rs",
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-ready-candidate-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-stdio19-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-html,semio-s-artifact-stdio-ifc,semio-s-artifact-stdio-json,semio-s-artifact-stdio-las,semio-s-artifact-stdio-md,semio-s-artifact-stdio-mp3,semio-s-artifact-stdio-mp4,semio-s-artifact-stdio-obj,semio-s-artifact-stdio-pdf,semio-s-artifact-stdio-ply,semio-s-artifact-stdio-pptx,semio-s-artifact-stdio-semio,semio-s-artifact-stdio-stl,semio-s-artifact-stdio-svg,semio-s-artifact-stdio-tsv,semio-s-artifact-stdio-txt,semio-s-artifact-stdio-wav,semio-s-artifact-stdio-xml,semio-s-artifact-stdio-zip",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-history-ungated-callers-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️text-splice/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📝️text-edit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔤️set-text/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️format-document/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️native/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌱roots/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/🧱️builder/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📨️responses/🪟️windows/📊️results/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧾️dictionary/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️update-playbook/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔢️number/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-ungated-h-callers",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-ungated-i-callers",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️format-document/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔤️set-text/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📝️text-edit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📜️docx/🔖️ecma-376/✳️any/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️native/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-history-universal-react",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:time-travel",
+        "--",
+        "--universal",
+        "--variant",
+        "{history-universal-variant}",
+        "--serve",
+        "{history-universal-serve-url}",
+        "--renderer",
+        "react",
+        "--locales",
+        "en,de",
+        "--chords",
+        "en,de",
+        "--editor",
+        "{history-universal-variant}",
+        "--out",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/ui-universal/react"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "history-universal-variant",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "id": "history-universal-serve-url",
+          "kind": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "test-history-universal-wgpu",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:time-travel",
+        "--",
+        "--universal",
+        "--variant",
+        "{history-universal-variant}",
+        "--serve",
+        "{history-universal-serve-url}",
+        "--renderer",
+        "wgpu",
+        "--locales",
+        "en,de",
+        "--chords",
+        "en,de",
+        "--editor",
+        "{history-universal-variant}",
+        "--out",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/ui-universal/wgpu"
+      ],
+      "cwd": "",
+      "parameters": [
+        {
+          "id": "history-universal-variant",
+          "kind": "text",
+          "required": true
+        },
+        {
+          "id": "history-universal-serve-url",
+          "kind": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "test-html-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-html",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-html-json-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-html,semio-s-artifact-stdio-json",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-ifc-pdf-md-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-ifc,semio-s-artifact-stdio-pdf,semio-s-artifact-stdio-md",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-iso16757-history-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-norm-iso16757",
+        "ungated"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-jpg-tiff-history-boundary",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-jpg,semio-s-artifact-stdio-tiff",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-json-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-json",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-markdown-intent-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-md",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-messages-clamp-managed",
+      "verb": "test",
+      "command": [
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts",
+        "managed-start",
+        "{history-verification-job}",
+        "--",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-kernel:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "--",
+        "edit_message_clamp",
+        "edit_replay_checks_deadline_during_message_settlement",
+        "edit_replay_clamping_preserves_every_fatal_mutation_status",
+        "cancelling_a_report_replay_at_every_step_leaves_the_store_untouched",
+        "--nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_JOBS": "1",
+        "CARGO_INCREMENTAL": "0",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/managed-verification/{history-verification-job}/artifacts",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "parameters": [
+        {
+          "id": "history-verification-job",
+          "kind": "text",
+          "default": "message-clamp-native-20261007-a"
+        }
+      ]
+    },
+    {
+      "id": "test-pack-retained-symbols-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🏷️symbols/🎮️decode"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-pdf-committed-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-pdf",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-pdf-native-number-assembly",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-pdf",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-png-history-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-png",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-process-owned-timeout",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-process:test-owned-execution",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/tools-execution"
+      }
+    },
+    {
+      "id": "test-puzzle-ifc-norm-tiff-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-candidate-syntax-connect",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-candidate-syntax-delete",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-candidate-syntax-flag",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-candidate-syntax-text",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-cascade-full-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "puzzle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-cascade-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "puzzle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-cascade-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-child-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎮️prepare/🧰️child",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-current-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️history-edit-runtime/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-edge-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-handles-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/↩️inverse",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/↩️inverse",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️wire-format-guard/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-history-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-puzzle-2d",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-puzzle2d-inline-close-copy-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/📸️candidate/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/↩️inverse/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-inverse-syntax-delete",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-inverse-syntax-flag",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-inverse-syntax-literal",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️literal-id-inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/↩️inverse/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-inverse-syntax-text",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/↩️inverse",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-optional-text-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-puzzle2d-paged-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "puzzle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-preparation-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-prepare-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🦀️.rs",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🦀️.rs",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-region-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-puzzle2d-root-txt-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/↩️inverse/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚑️flag/🎮️prepare/📸️candidate/🧪️tests/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-repo-library-normalization-multi-scope-verification",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/repo-lib:test-multi-scope-verification",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/s4-gates"
+      }
+    },
+    {
+      "id": "test-sqlite-paged-allocation",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "sqlite-paged-native"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-sqlite-paged-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "sqlite"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-stdio-30-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-avi,semio-s-artifact-stdio-bcf,semio-s-artifact-stdio-binary,semio-s-artifact-stdio-bmp,semio-s-artifact-stdio-csv,semio-s-artifact-stdio-deflate,semio-s-artifact-stdio-dwg,semio-s-artifact-stdio-dxf,semio-s-artifact-stdio-epw,semio-s-artifact-stdio-gif,semio-s-artifact-stdio-gltf,semio-s-artifact-stdio-html,semio-s-artifact-stdio-ifc,semio-s-artifact-stdio-json,semio-s-artifact-stdio-las,semio-s-artifact-stdio-md,semio-s-artifact-stdio-mp3,semio-s-artifact-stdio-mp4,semio-s-artifact-stdio-obj,semio-s-artifact-stdio-pdf,semio-s-artifact-stdio-ply,semio-s-artifact-stdio-pptx,semio-s-artifact-stdio-semio,semio-s-artifact-stdio-stl,semio-s-artifact-stdio-svg,semio-s-artifact-stdio-tsv,semio-s-artifact-stdio-txt,semio-s-artifact-stdio-wav,semio-s-artifact-stdio-xml,semio-s-artifact-stdio-zip",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-stdio-committed-current",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-ifc,semio-s-artifact-stdio-html,semio-s-artifact-stdio-json,semio-s-artifact-stdio-md,semio-s-artifact-stdio-mp4",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-stdio-step-reference-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "step-references"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-stdio-stl-analysis-syntax",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "{workspace}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+        "{workspace}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-step-history-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-step",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-step-history-independent",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "step-history-oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-step-history-intent",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "step-history"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-tool-corpus-oracle",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "tool-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-tool-ownership-oracles",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "source-oracle",
+        "tool"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    },
+    {
+      "id": "test-xlsx-history-assembly-strict",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "run",
+        "semio-s-artifact-stdio-xlsx",
+        "assembly"
+      ],
+      "cwd": "",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      }
+    }
+  ]
+}

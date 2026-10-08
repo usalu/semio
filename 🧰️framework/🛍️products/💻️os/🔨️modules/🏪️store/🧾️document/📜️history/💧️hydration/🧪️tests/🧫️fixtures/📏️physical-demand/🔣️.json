@@ -1,0 +1,17 @@
+{
+  "ordinaryPageBytes": 4096,
+  "maximumAdmissionBytes": 262144,
+  "maximumItems": 1,
+  "workFuel": 1,
+  "allocationBytes": [
+    8194,
+    65536,
+    262144
+  ],
+  "physicalReceiptEqualsExtent": true,
+  "terminalFrameSeparate": true,
+  "refusedAllocationBytes": 262145,
+  "runtimeAllocationBytes": [43024, 65536, 262144],
+  "foldLogicalBytes": [1, 7, 4096],
+  "foldAllocationBytes": [40, 8194, 65536, 262144]
+}

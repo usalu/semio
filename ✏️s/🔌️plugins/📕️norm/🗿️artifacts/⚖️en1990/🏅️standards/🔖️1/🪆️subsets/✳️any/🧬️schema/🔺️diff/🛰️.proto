@@ -1,17 +1,101 @@
+// 🧬️ En1990 diff
 syntax = "proto3";
 package semio.s.norm.en1990.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+
+enum En1990RowOp {
+  EN1990_ROW_OP_INSERT = 0;
+  EN1990_ROW_OP_REMOVE = 1;
+  EN1990_ROW_OP_REPLACE = 2;
+}
+
+message En1990PermanentEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990VariableEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990AccidentalEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990SeismicEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990MemberEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990BridgeSlsEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
+message En1990EffectEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional bytes value = 4;
+}
+
 message En1990Diff {
   // @state artifact
-  optional double g_k = 1;
+  optional string annex = 1;
   // @state artifact
-  semio.os.store.ArtifactChild q_k = 2;
+  optional string project_id = 2;
   // @state artifact
-  optional double resistance_kn = 3;
+  optional string structure_kind = 3;
   // @state artifact
-  optional uint32 consequence_class = 4;
+  optional double altitude_m = 4;
   // @state artifact
-  optional string annex = 5;
+  optional uint32 consequence_class = 5;
   // @state artifact
-  optional double seismic_a_ed_kn = 6;
+  optional uint32 reliability_class = 6;
+  // @state artifact
+  optional uint32 design_working_life_category = 7;
+  // @state artifact
+  optional double design_working_life_years = 8;
+  // @state artifact
+  optional double reference_period_years = 9;
+  // @state artifact
+  optional string supervision_level = 10;
+  // @state artifact
+  optional string inspection_level = 11;
+  // @state artifact
+  optional double k_fi_declared = 12;
+  // @state artifact
+  optional double beta_computed = 13;
+  // @state artifact
+  repeated En1990PermanentEdit permanents = 14;
+  // @state artifact
+  repeated En1990VariableEdit variables = 15;
+  // @state artifact
+  repeated En1990AccidentalEdit accidentals = 16;
+  // @state artifact
+  repeated En1990SeismicEdit seismics = 17;
+  // @state artifact
+  repeated En1990MemberEdit members = 18;
+  // @state artifact
+  repeated En1990BridgeSlsEdit bridge_sls = 19;
+  // @state artifact
+  repeated En1990EffectEdit effects = 20;
 }

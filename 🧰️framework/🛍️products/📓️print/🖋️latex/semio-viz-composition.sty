@@ -648,6 +648,16 @@
 \fp_new:N \l_semio_viz_block_y_fp
 \fp_new:N \l_semio_viz_block_xb_fp
 \fp_new:N \l_semio_viz_block_step_fp
+\fp_new:N \l_semio_viz_block_rowheight_fp
+\fp_new:N \l_semio_viz_block_pitch_fp
+\int_new:N \l_semio_viz_block_first_int
+\int_new:N \l_semio_viz_block_last_int
+\tl_new:N \l_semio_viz_block_font_tl
+\tl_new:N \l_semio_viz_block_kindfont_tl
+\tl_new:N \l_semio_viz_block_justify_tl
+\dim_new:N \l_semio_viz_block_xsep_dim
+\dim_new:N \l_semio_viz_block_ysep_dim
+\box_new:N \g_semio_viz_block_box
 
 % 🔑 semio / viz / block — the vocabulary the three blocks share.
 %   label      (column, default `label`)   the column whose text a box carries
@@ -657,7 +667,8 @@
 %   chip       (column, default `chip`)    the source chip a stage chain starts with
 %   stages     (clist, default empty)      the columns that carry the chain's stages
 %   columns    (int, default 0)            boxes per row; 0 puts every row of the table in one line
-%   boxHeight  (mm, default 7)             height of one box
+%   boxHeight  (mm, default 7)             least height of one box; a row grows to its tallest text
+%   font       (theme font role, default `cell`) the theme font a cell is set in: cell, label, value
 %   gutter     (mm, default 1.6)           gap between two boxes
 %   labelWidth (mm, default 25)            width of the leading label column of a span row
 \keys_define:nn { semio / viz / block } {
@@ -670,6 +681,7 @@
   stages     .clist_set:N = \l_semio_viz_block_stages_clist,
   columns    .int_set:N = \l_semio_viz_block_columns_int,
   boxHeight  .fp_set:N = \l_semio_viz_block_height_fp,
+  font       .tl_set:N = \l_semio_viz_block_font_tl,
   gutter     .fp_set:N = \l_semio_viz_block_gutter_fp,
   labelWidth .fp_set:N = \l_semio_viz_block_labelwidth_fp,
 }
@@ -687,6 +699,7 @@
   \clist_clear:N \l_semio_viz_block_stages_clist
   \int_zero:N \l_semio_viz_block_columns_int
   \fp_set:Nn \l_semio_viz_block_height_fp { 7 }
+  \tl_set:Nn \l_semio_viz_block_font_tl { cell }
   \fp_set:Nn \l_semio_viz_block_gutter_fp { 1.6 }
   \fp_set:Nn \l_semio_viz_block_labelwidth_fp { 25 }
   \keys_set:nn { semio / viz / block } {#2}
@@ -696,19 +709,100 @@
     { \int_set:Nn \l_semio_viz_block_rows_int { 1 } }
 }
 
-% 🧱 One labelled cell, given its top-left corner and its width.
-\cs_new_protected:Npn \semio_viz_block_box:nnnn #1#2#3#4 {
-  \use:x
+% 🔤 Selects the font, the justification and the insets of box kind #1 — a `cell` or a `chip`.
+% The insets are theme ems, resolved here under the box's own font so a box is exactly as wide as
+% the layout says, whatever the font of the surrounding page.
+\cs_new_protected:Npn \semio_viz_block_kind:n #1 {
+  \str_if_eq:nnTF {#1} { chip }
     {
-      \exp_not:N \semio_viz_text_draw:nnnn { cell }
-        {
-          width = \fp_to_decimal:n { (#3) - 2 } ,
-          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
-          anchor = north~west
-        }
-        { \fp_to_decimal:n {#1} , \fp_to_decimal:n {#2} } { \exp_not:n {#4} }
+      \tl_set_eq:NN \l_semio_viz_block_kindfont_tl \c_semio_viz_theme_font_chip_tl
+      \tl_set:Nn \l_semio_viz_block_justify_tl { \raggedright }
+      \semio_viz_block_insets:VV \c_semio_viz_theme_chip_inset_x_tl \c_semio_viz_theme_chip_inset_y_tl
+    }
+    {
+      \tl_set:Nx \l_semio_viz_block_kindfont_tl
+        { \exp_not:c { c_semio_viz_theme_font_ \l_semio_viz_block_font_tl _tl } }
+      \tl_set:Nn \l_semio_viz_block_justify_tl { \centering }
+      \semio_viz_block_insets:VV \c_semio_viz_theme_cell_inset_x_tl \c_semio_viz_theme_cell_inset_y_tl
     }
 }
+
+% 📦 Resolves the horizontal inset #1 and the vertical inset #2 under the current box font. A
+% picture runs on the null font, whose em is zero, so the font is selected in an interrupted one.
+\cs_new_protected:Npn \semio_viz_block_insets:nn #1#2 {
+  \hbox_set:Nn \l_tmpa_box
+    {
+      \pgfinterruptpicture
+      \l_semio_viz_block_kindfont_tl
+      \dim_gset:Nn \g_tmpa_dim {#1}
+      \dim_gset:Nn \g_tmpb_dim {#2}
+      \endpgfinterruptpicture
+    }
+  \dim_set_eq:NN \l_semio_viz_block_xsep_dim \g_tmpa_dim
+  \dim_set_eq:NN \l_semio_viz_block_ysep_dim \g_tmpb_dim
+}
+\cs_generate_variant:Nn \semio_viz_block_insets:nn { VV }
+
+% 📦 Sets the content #2 as a paragraph for a box #1 millimetres wide, in the current kind's font.
+% The same box is measured and then drawn, so a row's height is the height of what it prints.
+% The paragraph is set inside an interrupted picture, which hands back a box without height, so
+% it is kept in a box of its own and that one is measured.
+\cs_new_protected:Npn \semio_viz_block_typeset:nn #1#2 {
+  \hbox_set:Nn \l_tmpa_box
+    {
+      \pgfinterruptpicture
+      \hbox_gset:Nn \g_semio_viz_block_box
+        {
+          \begin{minipage}[c]
+            { \dim_eval:n { \fp_to_dim:n { (#1) * 1mm } - 2 \l_semio_viz_block_xsep_dim } }
+            \l_semio_viz_block_kindfont_tl \l_semio_viz_block_justify_tl #2
+          \end{minipage}
+        }
+      \endpgfinterruptpicture
+    }
+}
+
+% 📏 Raises the current row height to fit the content #3 in a box of kind #1 that is #2 wide.
+\cs_new_protected:Npn \semio_viz_block_measure:nnn #1#2#3 {
+  \semio_viz_block_kind:n {#1}
+  \semio_viz_block_typeset:nn {#2} {#3}
+  \fp_set:Nn \l_semio_viz_block_rowheight_fp
+    {
+      max ( \l_semio_viz_block_rowheight_fp ,
+        \dim_to_fp:n
+          {
+            \box_ht:N \g_semio_viz_block_box + \box_dp:N \g_semio_viz_block_box
+            + 2 \l_semio_viz_block_ysep_dim
+          }
+        / \dim_to_fp:n { 1mm } )
+    }
+}
+\cs_generate_variant:Nn \semio_viz_block_measure:nnn { nnV , nxV }
+
+% 🧱 One box of kind #1 with its top-left corner at (#2,#3), #4 wide and as tall as the current
+% row, carrying the content #5.
+\cs_new_protected:Npn \semio_viz_block_box:nnnnn #1#2#3#4#5 {
+  \semio_viz_block_kind:n {#1}
+  \semio_viz_block_typeset:nn {#4} {#5}
+  \use:x
+    {
+      \exp_not:N \semio_viz_text_draw:nnnn {#1}
+        {
+          style =
+            {
+              semio~viz~#1 ,
+              inner~xsep = \dim_use:N \l_semio_viz_block_xsep_dim ,
+              inner~ysep = \dim_use:N \l_semio_viz_block_ysep_dim ,
+              minimum~width = \fp_to_decimal:n {#4} mm
+            } ,
+          height = \fp_to_decimal:N \l_semio_viz_block_rowheight_fp ,
+          anchor = north~west
+        }
+        { \fp_to_decimal:n {#2} , \fp_to_decimal:n {#3} }
+        { \exp_not:N \box_use:N \exp_not:N \g_semio_viz_block_box }
+    }
+}
+\cs_generate_variant:Nn \semio_viz_block_box:nnnnn { nxxxV }
 
 % 🔳 \SemioVizCellGrid{table}[keys]: one labelled cell per table row, wrapped into `columns`
 % columns across the current frame — or, with `scale=` and `key=`, one cell per named band of
@@ -722,6 +816,7 @@
 }
 
 % 🔳 The wrapped grid: `columns` cells per row across the frame, or the whole table in one row.
+% Every grid row is as tall as its tallest cell, and the next row starts under it.
 \cs_new_protected:Npn \semio_viz_block_grid_wrapped: {
   \int_compare:nNnT { \l_semio_viz_block_columns_int } = { 0 }
     { \int_set_eq:NN \l_semio_viz_block_columns_int \l_semio_viz_block_rows_int }
@@ -731,70 +826,76 @@
         - ( \l_semio_viz_block_columns_int - 1 ) * \l_semio_viz_block_gutter_fp )
       / \l_semio_viz_block_columns_int
     }
-  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_grid_cell:n {##1} }
+  \fp_zero:N \l_semio_viz_block_y_fp
+  \int_step_inline:nnnn { 1 } { \l_semio_viz_block_columns_int } { \l_semio_viz_block_rows_int }
+    { \semio_viz_block_grid_row:n {##1} }
 }
 
-% 🧱 One cell of the wrapped grid: table row #1 at the column and row its index puts it in.
-\cs_new_protected:Npn \semio_viz_block_grid_cell:n #1 {
-  \int_set:Nn \l_semio_viz_block_col_int
-    { \int_mod:nn { (#1) - 1 } { \l_semio_viz_block_columns_int } }
-  \int_set:Nn \l_semio_viz_block_row_int
-    { \int_div_truncate:nn { (#1) - 1 } { \l_semio_viz_block_columns_int } }
-  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
-    \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
-  \use:x
+% 🧱 One row of the wrapped grid, starting at table row #1: measured, drawn, then stepped past.
+\cs_new_protected:Npn \semio_viz_block_grid_row:n #1 {
+  \int_set:Nn \l_semio_viz_block_first_int {#1}
+  \int_set:Nn \l_semio_viz_block_last_int
+    { \int_min:nn { (#1) + \l_semio_viz_block_columns_int - 1 } { \l_semio_viz_block_rows_int } }
+  \fp_set_eq:NN \l_semio_viz_block_rowheight_fp \l_semio_viz_block_height_fp
+  \int_step_inline:nnn { \l_semio_viz_block_first_int } { \l_semio_viz_block_last_int }
     {
-      \exp_not:N \semio_viz_block_box:nnnn
+      \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {##1}
+        \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
+      \semio_viz_block_measure:nxV { cell }
+        { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
+    }
+  \int_step_inline:nnn { \l_semio_viz_block_first_int } { \l_semio_viz_block_last_int }
+    {
+      \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {##1}
+        \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
+      \semio_viz_block_box:nxxxV { cell }
         {
           \fp_to_decimal:n
             {
-              \l_semio_viz_block_col_int
+              ( (##1) - \l_semio_viz_block_first_int )
               * ( \l_semio_viz_block_width_fp + \l_semio_viz_block_gutter_fp )
             }
         }
-        {
-          \fp_to_decimal:n
-            {
-              - \l_semio_viz_block_row_int
-              * ( \l_semio_viz_block_height_fp + \l_semio_viz_block_gutter_fp )
-            }
-        }
-        { \fp_to_decimal:n { \l_semio_viz_block_width_fp } }
-        { \exp_not:V \l_semio_viz_block_cell_tl }
+        { \fp_to_decimal:N \l_semio_viz_block_y_fp }
+        { \fp_to_decimal:N \l_semio_viz_block_width_fp }
+        \l_semio_viz_block_cell_tl
     }
+  \fp_sub:Nn \l_semio_viz_block_y_fp
+    { \l_semio_viz_block_rowheight_fp + \l_semio_viz_block_gutter_fp }
 }
 
 % 🎚️ The banded grid: one cell per table row, placed on the band its `key` column names, so the
-% scale's own domain order decides the layout.
+% scale's own domain order decides the layout. All cells share the height of the tallest.
 \cs_new_protected:Npn \semio_viz_block_grid_banded: {
-  \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_grid_band:n {##1} }
+  \fp_set_eq:NN \l_semio_viz_block_rowheight_fp \l_semio_viz_block_height_fp
+  \int_step_inline:nn { \l_semio_viz_block_rows_int }
+    {
+      \semio_viz_block_grid_band_load:n {##1}
+      \semio_viz_block_measure:nxV { cell }
+        { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
+    }
+  \int_step_inline:nn { \l_semio_viz_block_rows_int }
+    {
+      \semio_viz_block_grid_band_load:n {##1}
+      \semio_viz_block_box:nxxxV { cell }
+        { \fp_to_decimal:N \l_semio_viz_block_x_fp } { 0 }
+        { \fp_to_decimal:N \l_semio_viz_block_width_fp }
+        \l_semio_viz_block_cell_tl
+    }
 }
 
-% 🧱 One cell of the banded grid: table row #1 across the full width of its own band.
-\cs_new_protected:Npn \semio_viz_block_grid_band:n #1 {
+% 🧱 Loads table row #1 of the banded grid: the left edge and the width of its band, less the
+% gutter, and the label it carries.
+\cs_new_protected:Npn \semio_viz_block_grid_band_load:n #1 {
   \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
     \l_semio_viz_block_key_tl \l_semio_viz_block_cell_tl
   \semio_viz_scale_band_edges:VVNN \l_semio_viz_block_scale_tl \l_semio_viz_block_cell_tl
     \l_semio_viz_block_x_fp \l_semio_viz_block_xb_fp
+  \fp_set:Nn \l_semio_viz_block_width_fp
+    { \l_semio_viz_block_xb_fp - \l_semio_viz_block_x_fp - \l_semio_viz_block_gutter_fp }
+  \fp_add:Nn \l_semio_viz_block_x_fp { \l_semio_viz_block_gutter_fp / 2 }
   \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
     \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
-  \use:x
-    {
-      \exp_not:N \semio_viz_block_box:nnnn
-        {
-          \fp_to_decimal:n
-            { \l_semio_viz_block_x_fp + \l_semio_viz_block_gutter_fp / 2 }
-        }
-        { 0 }
-        {
-          \fp_to_decimal:n
-            {
-              \l_semio_viz_block_xb_fp - \l_semio_viz_block_x_fp
-              - \l_semio_viz_block_gutter_fp
-            }
-        }
-        { \exp_not:V \l_semio_viz_block_cell_tl }
-    }
 }
 
 % ▭ \SemioVizSpanRows{table}[keys]: one row per table entry, its bar reaching from the `from`
@@ -802,14 +903,24 @@
 % ends are band NAMES, so reordering the scale's domain can never silently move a span.
 \cs_new_protected:Npn \semio_viz_block_spans:nn #1#2 {
   \semio_viz_block_reset:nn {#1} {#2}
+  \hbox_set:Nn \l_tmpa_box
+    {
+      \pgfinterruptpicture
+      \c_semio_viz_theme_font_label_tl
+      \dim_gset:Nn \g_tmpa_dim { \tex_baselineskip:D }
+      \endpgfinterruptpicture
+    }
+  \fp_set:Nn \l_semio_viz_block_pitch_fp
+    { max ( \l_semio_viz_block_height_fp , \dim_to_fp:n { \g_tmpa_dim } / \dim_to_fp:n { 1mm } ) }
   \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_span_row:n {##1} }
 }
 
 % ↔️ One span row: table row #1's label in the leading column, and its box stretched from the
-% `from` band to the `to` band of the named scale.
+% `from` band to the `to` band of the named scale. Rows are never pitched tighter than one line
+% of the label font, so neighbouring labels cannot run into each other.
 \cs_new_protected:Npn \semio_viz_block_span_row:n #1 {
   \fp_set:Nn \l_semio_viz_block_y_fp
-    { - ( (#1) - 0.5 ) * \l_semio_viz_block_height_fp }
+    { - ( (#1) - 0.5 ) * \l_semio_viz_block_pitch_fp }
   \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
     \l_semio_viz_block_label_tl \l_semio_viz_block_cell_tl
   \use:x
@@ -871,32 +982,35 @@
     }
   \fp_set:Nn \l_semio_viz_block_step_fp
     { \l_semio_viz_block_width_fp + 3 * \l_semio_viz_block_gutter_fp }
+  \fp_zero:N \l_semio_viz_block_y_fp
   \int_step_inline:nn { \l_semio_viz_block_rows_int } { \semio_viz_block_chain_row:n {##1} }
 }
 
 % 🔗 One chain row: table row #1's source chip, then one box per stage column, left to right.
+% The row is as tall as its tallest box, and the next row starts under it.
 \cs_new_protected:Npn \semio_viz_block_chain_row:n #1 {
-  \fp_set:Nn \l_semio_viz_block_y_fp
+  \fp_set_eq:NN \l_semio_viz_block_rowheight_fp \l_semio_viz_block_height_fp
+  \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
+    \l_semio_viz_block_chip_tl \l_semio_viz_block_cell_tl
+  \semio_viz_block_measure:nxV { chip }
+    { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
+  \clist_map_inline:Nn \l_semio_viz_block_stages_clist
     {
-      - ( (#1) - 1 )
-      * ( \l_semio_viz_block_height_fp + \l_semio_viz_block_gutter_fp )
+      \semio_viz_table_cell:VnnN \l_semio_viz_block_table_tl {#1} {##1}
+        \l_semio_viz_block_cell_tl
+      \semio_viz_block_measure:nxV { cell }
+        { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
     }
   \semio_viz_table_cell:VnVN \l_semio_viz_block_table_tl {#1}
     \l_semio_viz_block_chip_tl \l_semio_viz_block_cell_tl
-  \use:x
-    {
-      \exp_not:N \semio_viz_text_draw:nnnn { chip }
-        {
-          width = \fp_to_decimal:n { \l_semio_viz_block_width_fp - 2 } ,
-          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
-          anchor = north~west
-        }
-        { 0 , \fp_to_decimal:N \l_semio_viz_block_y_fp }
-        { \exp_not:V \l_semio_viz_block_cell_tl }
-    }
+  \semio_viz_block_box:nxxxV { chip }
+    { 0 } { \fp_to_decimal:N \l_semio_viz_block_y_fp }
+    { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
   \int_zero:N \l_semio_viz_block_col_int
   \clist_map_inline:Nn \l_semio_viz_block_stages_clist
     { \semio_viz_block_chain_stage:nn {#1} {##1} }
+  \fp_sub:Nn \l_semio_viz_block_y_fp
+    { \l_semio_viz_block_rowheight_fp + \l_semio_viz_block_gutter_fp }
 }
 
 % 🧱 One stage of a chain: the arrow into it, then the box holding row #1's column #2.
@@ -907,18 +1021,9 @@
   \semio_viz_block_chain_arrow:
   \semio_viz_table_cell:VnnN \l_semio_viz_block_table_tl {#1} {#2}
     \l_semio_viz_block_cell_tl
-  \use:x
-    {
-      \exp_not:N \semio_viz_text_draw:nnnn { cell }
-        {
-          width = \fp_to_decimal:n { \l_semio_viz_block_width_fp - 2 } ,
-          height = \fp_to_decimal:n { \l_semio_viz_block_height_fp } ,
-          anchor = north~west
-        }
-        { \fp_to_decimal:N \l_semio_viz_block_x_fp ,
-          \fp_to_decimal:N \l_semio_viz_block_y_fp }
-        { \exp_not:V \l_semio_viz_block_cell_tl }
-    }
+  \semio_viz_block_box:nxxxV { cell }
+    { \fp_to_decimal:N \l_semio_viz_block_x_fp } { \fp_to_decimal:N \l_semio_viz_block_y_fp }
+    { \fp_to_decimal:N \l_semio_viz_block_width_fp } \l_semio_viz_block_cell_tl
 }
 
 % ➡️ The arrow into the current stage; the last one is dashed, because the closing step of an
@@ -937,10 +1042,10 @@
               \fp_to_decimal:n
                 { \l_semio_viz_block_x_fp - 3 * \l_semio_viz_block_gutter_fp } ,
               \fp_to_decimal:n
-                { \l_semio_viz_block_y_fp - \l_semio_viz_block_height_fp / 2 } ;
+                { \l_semio_viz_block_y_fp - \l_semio_viz_block_rowheight_fp / 2 } ;
               \fp_to_decimal:n { \l_semio_viz_block_x_fp - 0.4 } ,
               \fp_to_decimal:n
-                { \l_semio_viz_block_y_fp - \l_semio_viz_block_height_fp / 2 }
+                { \l_semio_viz_block_y_fp - \l_semio_viz_block_rowheight_fp / 2 }
             }
         }
     }

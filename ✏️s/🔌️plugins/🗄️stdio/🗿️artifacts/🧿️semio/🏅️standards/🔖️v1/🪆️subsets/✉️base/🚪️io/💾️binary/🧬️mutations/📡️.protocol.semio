@@ -13,8 +13,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=0
-field payload bytes
 record apply-brep tag=1
 field payload bytes
 record apply-mesh tag=2
@@ -50,6 +48,4 @@ field payload bytes
 record apply-object tag=17
 field payload bytes
 record apply-kit tag=18
-field payload bytes
-record patch-snapshot tag=19
 field payload bytes

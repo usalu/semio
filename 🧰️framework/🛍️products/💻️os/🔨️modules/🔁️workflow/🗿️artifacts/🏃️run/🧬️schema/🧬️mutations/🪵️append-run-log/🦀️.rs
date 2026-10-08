@@ -1,4 +1,4 @@
-use super::super::{RunArtifact, RunDiff, RunMutation};
+use super::super::{RetractRunLog, RunArtifact, RunDiff, RunLogLine, RunMutation, RunStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -18,14 +18,11 @@ pub struct AppendRunLog {
 impl protocol::MutationKind<RunArtifact, RunMutation> for AppendRunLog {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "run-log", kind: "append-run-log", record: "AppendedRunLog" };
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::Log { node_id: self.node_id.clone(), level: self.level.clone(), message: self.message.clone(), at: self.at.clone() })
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: self.node_id.clone(), level: self.level.clone(), message: self.message.clone(), at: self.at.clone() })))
     }
     fn inverse(&self, _base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        Vec::new()
-    
-    })())
-}
+        Ok(vec![RunMutation::RetractRunLog(RetractRunLog { count: 1 })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Append run log for {}", self.node_id), &format!("Laufprotokoll für {} anhängen", self.node_id))
     }

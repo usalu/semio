@@ -38,17 +38,34 @@ fn request(history: &[u8]) -> MemberOpenRequest {
     MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, None, pages, crate::os_spr::ActorId(fixture()["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
-fn retire(owner: &mut dyn ErasedSnapshotRetirement, grant: usize) -> usize {
+pub(super) trait RequestRetirementCensus: ErasedSnapshotRetirement { fn request(&self) -> Option<&MemberOpenRequest>; }
+impl RequestRetirementCensus for MemberOpenRequest { fn request(&self) -> Option<&MemberOpenRequest> { Some(self) } }
+impl RequestRetirementCensus for MemberHistoryVerification { fn request(&self) -> Option<&MemberOpenRequest> { self.request.as_ref() } }
+impl RequestRetirementCensus for VerifiedMemberHistoryInput { fn request(&self) -> Option<&MemberOpenRequest> { self.request.as_ref() } }
+
+pub(super) fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usize) -> usize {
     let mut released = 0;
+    let mut frames = 0;
+    let mut logical = 0;
     for _ in 0..20_000 {
-        match owner.close_step(1, grant).unwrap() {
+        let frame = owner.request().map_or(0, super::super::tests::next_request_frame_bytes);
+        let grant = owner.next_close_byte_demand().max(payload_grant);
+        assert!(grant <= super::super::tests::retirement_admission());
+        let before = owner.request().map(super::super::tests::request_logical_retained_bytes);
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(1, grant).unwrap());
+        if let Some(before) = before { logical += before - owner.request().map_or(0, super::super::tests::request_logical_retained_bytes); }
+        match step {
             SnapshotRetirementStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1 && released_bytes <= grant);
+                if before.is_some() { assert_eq!((events.requested_bytes, events.released_bytes), (0, released_bytes)); } else { logical += released_bytes; }
+                if frame != 0 { assert_eq!((released_items, released_bytes), (1, frame)); frames += frame; }
                 released += released_bytes;
             }
             SnapshotRetirementStep::Complete => {
                 assert!(owner.terminal_is_empty());
-                return released;
+                if before.is_some() { assert_eq!((events.requested_bytes, events.released_bytes), (0, 0)); }
+                println!("[DEBUG] retained member logical-ownership={logical} physical-page-backing={frames} reported-physical-release={released}");
+                return logical;
             }
             SnapshotRetirementStep::Blocked => panic!("exclusive retained input cannot block"),
         }
@@ -190,7 +207,7 @@ fn member_history_verification_rechecks_every_owner_transition_and_retires_exact
         }
     }
     let mut closed = request(&bytes);
-    assert_eq!(retire(&mut closed, 7), 287);
+    assert_eq!(retire(&mut closed, 7), fixture["inputs"][0]["retiredBytes"].as_u64().unwrap() as usize);
     let failure = MemberHistoryVerification::new(closed, RetainedSprLimits::default()).err().expect("retired admission fails without panic");
     assert_eq!(failure.diagnostic, MemberOpenDiagnostic::Stale);
     assert!(failure.request.terminal_is_empty());

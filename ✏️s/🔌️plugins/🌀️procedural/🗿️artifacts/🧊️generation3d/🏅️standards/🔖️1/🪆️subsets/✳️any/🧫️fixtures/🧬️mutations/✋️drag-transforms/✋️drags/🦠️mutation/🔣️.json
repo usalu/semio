@@ -1,0 +1,9 @@
+{
+  "mutation": "dragTransforms",
+  "targets": [
+    "extrude__gumball_translate"
+  ],
+  "dx": 1.5,
+  "dy": -2.0,
+  "dz": 0.25
+}

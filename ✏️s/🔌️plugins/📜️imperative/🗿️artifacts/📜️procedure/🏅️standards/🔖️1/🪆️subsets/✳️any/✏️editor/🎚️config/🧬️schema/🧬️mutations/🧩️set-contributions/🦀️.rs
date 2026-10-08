@@ -12,14 +12,12 @@ pub struct SetContributions {
 
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetContributions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "contributions_json", kind: "set-contributions", record: "SetContributions" };
-    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
+    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfigDiff> {
         imperative_engine::sync_imperative_module_contributions(&self.json);
         if base.contributions_json == self.json {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The requested configuration value is already current.");
         }
-        let mut next = base.clone();
-        next.contributions_json = self.json.clone();
-        protocol::MutationOutcome::new(next)
+        protocol::MutationOutcome::new(ImperativeConfigDiff { contributions_json: Some(self.json.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &ImperativeConfig) -> Result<Vec<ImperativeConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -32,5 +30,17 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetC
     }
     fn target(&self) -> Vec<String> {
         vec!["contributions_json".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[test]
+    fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = ImperativeConfig::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ImperativeConfigMutation::SetContributions(SetContributions { json: "[1]".into() }), &base);
     }
 }

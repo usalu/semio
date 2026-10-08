@@ -17,6 +17,7 @@ use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
 use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::brep::representation::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::representation::curve::{Curve2, Curve3};
 use crate::brep::representation::error::KernelError;
@@ -476,36 +477,7 @@ pub fn solid_from_triangle_soup(body: &mut Body, triangles: &[[Pnt3; 3]], rec: &
 /// triangles) — see [`merge_coplanar_triangles`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_convex_hull(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let hull = convex_hull_3d(points).ok_or_else(|| KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()))?;
-    let tol = Tol::DEFAULT;
-    let vertex_ids: Vec<VertexId> = hull.vertices.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
-    let groups = merge_coplanar_triangles(&hull);
-    let mut edge_map: HashMap<(usize, usize), EdgeId> = HashMap::new();
-    let mut faces = Vec::with_capacity(groups.len());
-    for group in &groups {
-        let boundary = &group.boundary;
-        let mut members = Vec::with_capacity(boundary.len());
-        for i in 0..boundary.len() {
-            let ia = boundary[i];
-            let ib = boundary[(i + 1) % boundary.len()];
-            let key = (ia.min(ib), ia.max(ib));
-            let (eid, forward) = if let Some(&existing) = edge_map.get(&key) {
-                let edge = body.edges.get(existing).unwrap();
-                (existing, edge.v0 == vertex_ids[ia])
-            } else {
-                let eid = line_edge(body, hull.vertices[ia], hull.vertices[ib], vertex_ids[ia], vertex_ids[ib], tol, rec);
-                edge_map.insert(key, eid);
-                (eid, true)
-            };
-            members.push((eid, forward));
-        }
-        let frame = Frame3::from_normal(hull.vertices[boundary[0]], group.normal).expect("plane frame");
-        let surface = body.surfaces.insert(Surface::Plane { frame });
-        let face = attach_face(body, surface, &members, false, tol, rec);
-        attach_planar_face_pcurves(body, face, frame, &members, tol.value());
-        faces.push(face);
-    }
-    Ok(finish_solid(body, faces, rec))
+    drive_solid(&mut ConvexHullJob::new(points)?, body, rec)
 }
 
 // #endregion 🔖️Solids
@@ -669,45 +641,80 @@ fn find_initial_tetrahedron(pts: &[Pnt3]) -> Option<[usize; 4]> {
     Some([i0, i1, i2, i3])
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
-    if points.len() < 4 {
-        return None;
-    }
-    let tol = 1e-10;
-    let mut pts: Vec<Pnt3> = Vec::with_capacity(points.len());
-    for &p in points {
-        if pts.iter().all(|q| q.distance(p) >= tol) {
-            pts.push(p);
+/// 🧱 Phase indices of a [`ConvexHullJob`] plan.
+const DEDUPE: usize = 0;
+const SEED: usize = 1;
+const INSERT: usize = 2;
+const VERTICES: usize = 3;
+const MERGE: usize = 4;
+const FACES: usize = 5;
+
+/// 🧱 Resumable [`make_convex_hull`]: Quickhull one point per unit. One unit per input point
+/// de-duplicates it, one seeds the initial tetrahedron, one per remaining point inserts it (finding
+/// its visible faces and re-capping the horizon), one per hull point mints its vertex, one merges
+/// coplanar triangles into polygons, one per polygon builds its face, one closes the solid. The
+/// insertion, vertex and face phases are sized once de-duplication has fixed the point count.
+pub struct ConvexHullJob {
+    input: Vec<Pnt3>,
+    pts: Vec<Pnt3>,
+    faces: Vec<HullFace>,
+    centroid: Pnt3,
+    order: Vec<usize>,
+    vertex_ids: Vec<VertexId>,
+    groups: Vec<FaceGroup>,
+    edge_map: HashMap<(usize, usize), EdgeId>,
+    solid_faces: Vec<FaceId>,
+    plan: Plan,
+}
+
+impl ConvexHullJob {
+    const TOL: f64 = 1e-10;
+
+    /// 🧱 Plans the convex hull of `points` (at least four, not all coplanar).
+    pub fn new(points: &[Pnt3]) -> Result<Self, KernelError> {
+        if points.len() < 4 {
+            return Err(KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()));
         }
+        let plan = Plan::new(&[("dedupe", points.len()), ("seed", 1), ("insert", 0), ("vertices", 0), ("merge", 1), ("faces", 0), ("close", 1)]);
+        Ok(Self { input: points.to_vec(), pts: Vec::new(), faces: Vec::new(), centroid: Pnt3::new(0.0, 0.0, 0.0), order: Vec::new(), vertex_ids: Vec::new(), groups: Vec::new(), edge_map: HashMap::new(), solid_faces: Vec::new(), plan })
     }
-    if pts.len() < 4 {
-        return None;
-    }
-    let tet = find_initial_tetrahedron(&pts)?;
-    let mut faces: Vec<HullFace> = Vec::new();
-    let tet_faces = [[tet[0], tet[1], tet[2]], [tet[0], tet[2], tet[3]], [tet[0], tet[3], tet[1]], [tet[1], tet[3], tet[2]]];
-    for &[a, b, c] in &tet_faces {
-        let normal = face_normal(&pts, a, b, c);
-        let d = -normal.dot(pts[a].to_vec());
-        faces.push(HullFace { verts: [a, b, c], normal, d, alive: true });
-    }
-    let centroid = Pnt3::new((pts[tet[0]].x + pts[tet[1]].x + pts[tet[2]].x + pts[tet[3]].x) / 4.0, (pts[tet[0]].y + pts[tet[1]].y + pts[tet[2]].y + pts[tet[3]].y) / 4.0, (pts[tet[0]].z + pts[tet[1]].z + pts[tet[2]].z + pts[tet[3]].z) / 4.0);
-    for face in &mut faces {
-        if signed_distance(face, centroid) > 0.0 {
-            face.normal = -face.normal;
-            face.d = -face.d;
-            face.verts.swap(1, 2);
+
+    /// 🧱 Seeds the four faces of the initial tetrahedron, wound outward.
+    fn seed(&mut self) -> Result<(), KernelError> {
+        let degenerate = || KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into());
+        if self.pts.len() < 4 {
+            return Err(degenerate());
         }
-    }
-    let tet_set: std::collections::HashSet<usize> = tet.iter().copied().collect();
-    for (pi, &point) in pts.iter().enumerate() {
-        if tet_set.contains(&pi) {
-            continue;
+        let tet = find_initial_tetrahedron(&self.pts).ok_or_else(degenerate)?;
+        let pts = &self.pts;
+        let tet_faces = [[tet[0], tet[1], tet[2]], [tet[0], tet[2], tet[3]], [tet[0], tet[3], tet[1]], [tet[1], tet[3], tet[2]]];
+        for &[a, b, c] in &tet_faces {
+            let normal = face_normal(pts, a, b, c);
+            let d = -normal.dot(pts[a].to_vec());
+            self.faces.push(HullFace { verts: [a, b, c], normal, d, alive: true });
         }
-        let visible: Vec<usize> = faces.iter().enumerate().filter(|(_, f)| f.alive && signed_distance(f, point) > tol).map(|(i, _)| i).collect();
+        self.centroid = Pnt3::new((pts[tet[0]].x + pts[tet[1]].x + pts[tet[2]].x + pts[tet[3]].x) / 4.0, (pts[tet[0]].y + pts[tet[1]].y + pts[tet[2]].y + pts[tet[3]].y) / 4.0, (pts[tet[0]].z + pts[tet[1]].z + pts[tet[2]].z + pts[tet[3]].z) / 4.0);
+        let centroid = self.centroid;
+        for face in &mut self.faces {
+            if signed_distance(face, centroid) > 0.0 {
+                face.normal = -face.normal;
+                face.d = -face.d;
+                face.verts.swap(1, 2);
+            }
+        }
+        self.order = (0..pts.len()).filter(|index| !tet.contains(index)).collect();
+        self.plan.grow(INSERT, self.order.len());
+        self.plan.grow(VERTICES, pts.len());
+        Ok(())
+    }
+
+    /// 🧱 Inserts point `pi`: removes the faces it sees and caps the horizon with new faces.
+    fn insert(&mut self, pi: usize) {
+        let point = self.pts[pi];
+        let faces = &mut self.faces;
+        let visible: Vec<usize> = faces.iter().enumerate().filter(|(_, f)| f.alive && signed_distance(f, point) > Self::TOL).map(|(i, _)| i).collect();
         if visible.is_empty() {
-            continue;
+            return;
         }
         let mut horizon: Vec<[usize; 2]> = Vec::new();
         for &fi in &visible {
@@ -731,10 +738,10 @@ fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
         for edge in horizon {
             let a = edge[0];
             let b = edge[1];
-            let normal = face_normal(&pts, a, b, pi);
-            let d = -normal.dot(pts[a].to_vec());
+            let normal = face_normal(&self.pts, a, b, pi);
+            let d = -normal.dot(self.pts[a].to_vec());
             let mut face = HullFace { verts: [a, b, pi], normal, d, alive: true };
-            if signed_distance(&face, centroid) > 0.0 {
+            if signed_distance(&face, self.centroid) > 0.0 {
                 face.normal = -face.normal;
                 face.d = -face.d;
                 face.verts.swap(1, 2);
@@ -742,11 +749,65 @@ fn convex_hull_3d(points: &[Pnt3]) -> Option<ConvexHull> {
             faces.push(face);
         }
     }
-    let out_faces: Vec<[usize; 3]> = faces.into_iter().filter(|f| f.alive).map(|f| f.verts).collect();
-    if out_faces.len() < 4 {
-        return None;
+}
+
+impl StagedOperation for ConvexHullJob {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn progress(&self) -> StageProgress {
+        self.plan.progress()
     }
-    Some(ConvexHull { vertices: pts, faces: out_faces })
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        let unit = self.plan.take().ok_or_else(|| KernelError::Operation("convex hull job already finished".into()))?;
+        match unit.phase {
+            DEDUPE => {
+                let p = self.input[unit.index];
+                if self.pts.iter().all(|q| q.distance(p) >= Self::TOL) {
+                    self.pts.push(p);
+                }
+            }
+            SEED => self.seed()?,
+            INSERT => self.insert(self.order[unit.index]),
+            VERTICES => {
+                if unit.index == 0 && self.faces.iter().filter(|f| f.alive).count() < 4 {
+                    return Err(KernelError::InvalidInput("points are coplanar or degenerate — cannot form a 3D convex hull".into()));
+                }
+                self.vertex_ids.push(make_vertex(body, self.pts[unit.index], Tol::DEFAULT, rec));
+            }
+            MERGE => {
+                let hull = ConvexHull { vertices: std::mem::take(&mut self.pts), faces: self.faces.iter().filter(|f| f.alive).map(|f| f.verts).collect() };
+                self.groups = merge_coplanar_triangles(&hull);
+                self.pts = hull.vertices;
+                self.plan.grow(FACES, self.groups.len());
+            }
+            FACES => {
+                let tol = Tol::DEFAULT;
+                let boundary = &self.groups[unit.index].boundary;
+                let mut members = Vec::with_capacity(boundary.len());
+                for i in 0..boundary.len() {
+                    let ia = boundary[i];
+                    let ib = boundary[(i + 1) % boundary.len()];
+                    let key = (ia.min(ib), ia.max(ib));
+                    let (eid, forward) = if let Some(&existing) = self.edge_map.get(&key) {
+                        let edge = body.edges.get(existing).unwrap();
+                        (existing, edge.v0 == self.vertex_ids[ia])
+                    } else {
+                        let eid = line_edge(body, self.pts[ia], self.pts[ib], self.vertex_ids[ia], self.vertex_ids[ib], tol, rec);
+                        self.edge_map.insert(key, eid);
+                        (eid, true)
+                    };
+                    members.push((eid, forward));
+                }
+                let frame = Frame3::from_normal(self.pts[boundary[0]], self.groups[unit.index].normal).expect("plane frame");
+                let surface = body.surfaces.insert(Surface::Plane { frame });
+                let face = attach_face(body, surface, &members, false, tol, rec);
+                attach_planar_face_pcurves(body, face, frame, &members, tol.value());
+                self.solid_faces.push(face);
+            }
+            _ => return Ok(StageStep::Done(StageOutput::Solid(finish_solid(body, std::mem::take(&mut self.solid_faces), rec)))),
+        }
+        Ok(StageStep::Working)
+    }
 }
 
 // #endregion 🔖️ConvexHull
@@ -785,8 +846,10 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
         let key = plane_key(normal, d);
         clusters.entry(key).or_insert_with(|| (normal, Vec::new())).1.push([a, b, c]);
     }
-    let mut groups = Vec::with_capacity(clusters.len());
-    for (normal, tris) in clusters.into_values() {
+    let mut ordered: Vec<_> = clusters.into_iter().collect();
+    ordered.sort_unstable_by_key(|(key, _)| *key);
+    let mut groups = Vec::with_capacity(ordered.len());
+    for (normal, tris) in ordered.into_iter().map(|(_, cluster)| cluster) {
         let mut directed: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
         for tri in &tris {
             for i in 0..3 {
@@ -799,7 +862,7 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
                 next.insert(a, b);
             }
         }
-        let Some((&start, _)) = next.iter().next() else { continue };
+        let Some(&start) = next.keys().min() else { continue };
         let mut boundary = vec![start];
         let mut current = start;
         while let Some(&n) = next.get(&current) {

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::generation3d::config::SetSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations;
+use crate::standards::v1::subsets::any::schema::mutations::generation3d_document_replacement;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::standards::v1::subsets::any::schema::{PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot, example_snapshot};
@@ -23,14 +23,14 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
     let boot = Generation3dSnapshotRead::new(default_snapshot());
     let hex = Generation3dSnapshotRead::new(example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("bundled example snapshot"));
     assert!(
-        generation3d_host_snapshot_operations(&boot.host_snapshot, &hex.host_snapshot).is_empty(),
+        generation3d_document_replacement(&boot, &hex).is_empty(),
         "the boot document IS the hex-column host_snapshot, so re-picking it authors no gesture — every OTHER pick in the cycle below is the one that publishes"
     );
     for (index, example_id) in BUNDLED_EXAMPLES.into_iter().enumerate() {
         let previous = BUNDLED_EXAMPLES[(index + BUNDLED_EXAMPLES.len() - 1) % BUNDLED_EXAMPLES.len()];
         let target = Generation3dSnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
         let mut base = Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot"));
-        let operations = generation3d_host_snapshot_operations(&base.host_snapshot, &target.host_snapshot);
+        let operations = generation3d_document_replacement(&base, &target);
         assert!(!operations.is_empty(), "example {example_id} authored an empty artifact gesture");
         let mut items = Vec::with_capacity(operations.len());
         for mutation in operations {
@@ -56,7 +56,7 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
         assert_eq!(base.host_snapshot.widgets, target.host_snapshot.widgets, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own widgets — in THIS order");
         assert_eq!(base.host_snapshot.synapses, target.host_snapshot.synapses, "example {example_id}: the replayed gesture does not reach the example's own synapses");
         assert_eq!(base.host_snapshot.layout, target.host_snapshot.layout, "example {example_id}: the replayed gesture leaves the PREVIOUS example's orphaned layout overrides behind");
-        assert_eq!(base.host_snapshot.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).host_snapshot.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_document_load` carries it on the Config lane");
+        assert_eq!(base.host_snapshot.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).host_snapshot.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::document_replacement_ignores_the_camera`) — `config_after_document_load` carries it on the Config lane");
         assert_eq!(base.host_snapshot.schema, target.host_snapshot.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
         let (rows, declared) = folded_rows_against_declaration(&items);
         assert!(rows <= declared, "example {example_id}: the staged gesture folds {rows} rows against a declared envelope of {declared}");

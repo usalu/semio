@@ -1,11 +1,7 @@
-//! 🔺️ SemioDiff — the envelope union's own diff, per the master plan: "same-kind nested diff |
-//! Replace{snapshot}". W2b closer real implementation, replacing the W1b always-full-replace
-//! scaffold: when `base`/`other` carry the SAME subset kind, the diff nests that subset's own
-//! REAL `DiffAlgebra`-driven diff (`SemioBrepDiff`, `SemioAudioDiff`, …) unchanged — zero
-//! reinvention of any of the 13 subsets' own sparse-diff algebra. Only a genuine cross-kind
-//! change (or an explicit `SetSnapshot` mutation) ever produces `Replace` — the same
-//! "same-kind-nested | Replace" split gif/svg's own recursive-node diffs use for their own
-//! heterogeneous variant trees, applied here one level up at the artifact-subset boundary.
+//! 🔺️ SemioDiff — the envelope union's own diff: the same-kind nested diff of the subset the snapshot carries.
+//! The diff nests that subset's own REAL `DiffAlgebra`-driven diff (`SemioBrepDiff`, `SemioAudioDiff`, …) unchanged —
+//! zero reinvention of any subset's own sparse-diff algebra. A genuine cross-kind change has no diff at all: it is a
+//! document load, never a mutation.
 
 use crate::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
 use crate::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};
@@ -32,12 +28,7 @@ use protocol::MutationApplyError;
 use protocol::MutationDiff;
 
 //#region 🔖️Diff
-/// 🔺️ `NoChange` and the 13 same-kind wrappers are the common case (a mutation stayed within its
-/// subset); `Replace` is the escape hatch for the two cases that genuinely have no sparse
-/// representation: an explicit whole-snapshot `SetSnapshot` mutation, and `between(a, b)` where
-/// `a`/`b` carry DIFFERENT subset kinds (there is no such thing as a "sparse diff" between, say,
-/// a brep and a video — the kind itself changed). `Box` keeps this enum's own stack size small
-/// despite embedding 13 heterogeneous, Vec-heavy nested diff types.
+/// 🔺️ `NoChange` and the same-kind wrappers; a subset-kind change has no sparse representation and is a document load.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioDiff {
@@ -62,34 +53,32 @@ pub enum SemioDiff {
     Graph(SemioGraphDiff),
     Object(SemioObjectDiff),
     Kit(SemioKitDiff),
-    Replace(Box<SemioSnapshot>),
 }
 
 impl MutationDiff<SemioSnapshot> for SemioDiff {
-    fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
+    fn apply(&self, base: &SemioSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioSnapshot> {
         use SemioSubsetSnapshot as S;
         let subset = match (self, &base.subset) {
             (SemioDiff::NoChange, s) => s.clone(),
             (SemioDiff::Rejected(error), _) => return Err(error.clone()),
-            (SemioDiff::Replace(snapshot), _) => return Ok((**snapshot).clone()),
-            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(d.apply(b).map_err(|error| error.under(["subset", "brep"]))?),
-            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(d.apply(b).map_err(|error| error.under(["subset", "mesh"]))?),
-            (SemioDiff::Model(d), S::Model(b)) => S::Model(d.apply(b).map_err(|error| error.under(["subset", "model"]))?),
-            (SemioDiff::Value(d), S::Value(b)) => S::Value(d.apply(b).map_err(|error| error.under(["subset", "value"]))?),
-            (SemioDiff::Document(d), S::Document(b)) => S::Document(d.apply(b).map_err(|error| error.under(["subset", "document"]))?),
-            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(d.apply(b).map_err(|error| error.under(["subset", "cad"]))?),
-            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(d.apply(b).map_err(|error| error.under(["subset", "drawing"]))?),
-            (SemioDiff::Image(d), S::Image(b)) => S::Image(d.apply(b).map_err(|error| error.under(["subset", "image"]))?),
-            (SemioDiff::Video(d), S::Video(b)) => S::Video(d.apply(b).map_err(|error| error.under(["subset", "video"]))?),
-            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(d.apply(b).map_err(|error| error.under(["subset", "audio"]))?),
-            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(d.apply(b).map_err(|error| error.under(["subset", "animation"]))?),
-            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(d.apply(b).map_err(|error| error.under(["subset", "presentation"]))?),
-            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(d.apply(b).map_err(|error| error.under(["subset", "flow"]))?),
-            (SemioDiff::Text(d), S::Text(b)) => S::Text(d.apply(b).map_err(|error| error.under(["subset", "text"]))?),
-            (SemioDiff::Table(d), S::Table(b)) => S::Table(d.apply(b).map_err(|error| error.under(["subset", "table"]))?),
-            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(d.apply(b).map_err(|error| error.under(["subset", "graph"]))?),
-            (SemioDiff::Object(d), S::Object(b)) => S::Object(d.apply(b).map_err(|error| error.under(["subset", "object"]))?),
-            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(d.apply(b).map_err(|error| error.under(["subset", "kit"]))?),
+            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(d.apply(b, capability).map_err(|error| error.under(["subset", "brep"]))?),
+            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(d.apply(b, capability).map_err(|error| error.under(["subset", "mesh"]))?),
+            (SemioDiff::Model(d), S::Model(b)) => S::Model(d.apply(b, capability).map_err(|error| error.under(["subset", "model"]))?),
+            (SemioDiff::Value(d), S::Value(b)) => S::Value(d.apply(b, capability).map_err(|error| error.under(["subset", "value"]))?),
+            (SemioDiff::Document(d), S::Document(b)) => S::Document(d.apply(b, capability).map_err(|error| error.under(["subset", "document"]))?),
+            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(d.apply(b, capability).map_err(|error| error.under(["subset", "cad"]))?),
+            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(d.apply(b, capability).map_err(|error| error.under(["subset", "drawing"]))?),
+            (SemioDiff::Image(d), S::Image(b)) => S::Image(d.apply(b, capability).map_err(|error| error.under(["subset", "image"]))?),
+            (SemioDiff::Video(d), S::Video(b)) => S::Video(d.apply(b, capability).map_err(|error| error.under(["subset", "video"]))?),
+            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(d.apply(b, capability).map_err(|error| error.under(["subset", "audio"]))?),
+            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(d.apply(b, capability).map_err(|error| error.under(["subset", "animation"]))?),
+            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(d.apply(b, capability).map_err(|error| error.under(["subset", "presentation"]))?),
+            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(d.apply(b, capability).map_err(|error| error.under(["subset", "flow"]))?),
+            (SemioDiff::Text(d), S::Text(b)) => S::Text(d.apply(b, capability).map_err(|error| error.under(["subset", "text"]))?),
+            (SemioDiff::Table(d), S::Table(b)) => S::Table(d.apply(b, capability).map_err(|error| error.under(["subset", "table"]))?),
+            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(d.apply(b, capability).map_err(|error| error.under(["subset", "graph"]))?),
+            (SemioDiff::Object(d), S::Object(b)) => S::Object(d.apply(b, capability).map_err(|error| error.under(["subset", "object"]))?),
+            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(d.apply(b, capability).map_err(|error| error.under(["subset", "kit"]))?),
             _ => {
                 return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"]));
             }
@@ -103,17 +92,6 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             (Rejected(error), _) | (_, Rejected(error)) => Rejected(error),
             (NoChange, o) => o,
             (s, NoChange) => s,
-            // 🧨 A later full replace always wins outright, regardless of what came before —
-            // matches every other artifact's own "hard reset supersedes prior incremental diffs"
-            // absorb convention.
-            (_, Replace(s2)) => Replace(s2),
-            // 🪢 An earlier replace absorbing a LATER same/foreign-kind diff: fold the later diff
-            // into the replacement snapshot by re-using this impl's own `apply` (self-consistent,
-            // no duplicated dispatch logic) and keep the result as the new replacement.
-            (Replace(s1), o) => match o.apply(&s1) {
-                Ok(snapshot) => Replace(Box::new(snapshot)),
-                Err(error) => Rejected(error),
-            },
             (Brep(mut d1), Brep(d2)) => {
                 d1.absorb(d2);
                 Brep(d1)
@@ -214,14 +192,12 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (S::Graph(b), S::Graph(o)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::between(b, o)),
             (S::Object(b), S::Object(o)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(b, o)),
             (S::Kit(b), S::Kit(o)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::between(b, o)),
-            // 🧭 Different kinds (or, degenerately, the exact same value): a cross-kind change has
-            // no sparse representation, so it's `Replace`; an identical pair collapses to `NoChange`
-            // so `between(a, a).is_empty()` holds even when `a`/`b` happen to share a reference.
+            // 🧭 Different kinds have no sparse representation: a subset-kind change is a document load, never a diff.
             _ => {
                 if base == other {
                     SemioDiff::NoChange
                 } else {
-                    SemioDiff::Replace(Box::new(other.clone()))
+                    SemioDiff::Rejected(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset kinds differ; a subset-kind change is a document load, not a diff").at(["subset"]))
                 }
             }
         }
@@ -232,7 +208,6 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         match (self, &base.subset) {
             (SemioDiff::NoChange, _) => SemioDiff::NoChange,
             (SemioDiff::Rejected(error), _) => SemioDiff::Rejected(error.clone()),
-            (SemioDiff::Replace(_), _) => SemioDiff::Replace(Box::new(base.clone())),
             (SemioDiff::Brep(d), S::Brep(b)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::inverse(d, b)),
             (SemioDiff::Mesh(d), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::inverse(d, b)),
             (SemioDiff::Model(d), S::Model(b)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::inverse(d, b)),
@@ -259,7 +234,6 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         match self {
             SemioDiff::NoChange => true,
             SemioDiff::Rejected(_) => false,
-            SemioDiff::Replace(_) => false,
             SemioDiff::Brep(d) => d.is_empty(),
             SemioDiff::Mesh(d) => d.is_empty(),
             SemioDiff::Model(d) => d.is_empty(),
@@ -282,11 +256,6 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
     }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
-    <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(base, snapshot)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
@@ -340,7 +309,6 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
         let snap = SemioSnapshot { schema: "stdio.semio".into(), subset };
         cases.push(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&snap, &snap));
     }
-    cases.push(SemioDiff::Replace(Box::new(SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Flow(Default::default()) })));
     cases
 }
 //#endregion 🔖️Demo

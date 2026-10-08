@@ -449,6 +449,7 @@ fn dag_retained_config_extent(command: &DagCommand, _snapshot: &DagSnapshot, _in
 const DAG_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
 const DAG_CONFIG_METADATA_BYTES: usize = 64;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagConfigPreparationFactory;
 struct DagConfigPreparation {
     base: Option<store::SnapshotRead<DagConfig>>,

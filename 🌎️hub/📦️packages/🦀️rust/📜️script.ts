@@ -2349,10 +2349,10 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
 
     const sessionSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️.tsx"), "utf8");
     const viteSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"), "utf8");
-    const launch = readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8");
+    const adminDevCommand = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8")).targets?.["dev-secure-admin"]?.options?.command;
     if (sessionSource.includes("sessionStorage") || sessionSource.includes("headers.authorization") || sessionSource.includes("Bearer ${") || !sessionSource.includes("#semio-admin=") || !sessionSource.includes('credentials: "same-origin"'))
       throw new Error("admin SPA regained a browser-owned bearer carrier");
-    if (viteSource.includes('"/admin/api": hubProxy') || !launch.includes("os-hub:dev-secure-admin")) throw new Error("admin relay dev/launch ownership drift");
+    if (viteSource.includes('"/admin/api": hubProxy') || adminDevCommand !== "bun ./📜️script.ts dev secure-admin") throw new Error("admin relay dev target ownership drift");
   } finally {
     await relay?.stop();
     await upstreamServer.stop(true);
@@ -4634,35 +4634,39 @@ type HeadlessStdioMetadataCaptureV1 = Readonly<{
 }>;
 type StableBuildFileReaderV1 = typeof readStableBuildFile;
 
-/** 🏠️ Requires one command's Cargo target to be its own ticket-generated artifact child. */
+/** 🏠️ Requires one command's Cargo target to be its own generated artifact child. */
 function headlessStdioOwnedCargoTarget(artifactRoot: string, cargoTargetDir: string): { artifactRoot: string; cargoTargetDir: string } {
-  if (!isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("headless Stdio command roots must be absolute ticket-generated paths");
+  if (!isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("headless Stdio command roots must be absolute generated paths");
   const ownedArtifactRoot = resolve(artifactRoot), ownedCargoTargetDir = resolve(cargoTargetDir), child = relative(ownedArtifactRoot, ownedCargoTargetDir);
   if (!child || child.startsWith("..") || isAbsolute(child)) throw new Error("headless Stdio Cargo target must be a private child of its command artifact root");
   return { artifactRoot: ownedArtifactRoot, cargoTargetDir: ownedCargoTargetDir };
 }
 
-/** 🧭️ Resolves the current exact command's isolated artifact and Cargo roots. */
-function headlessStdioCommandRoots(): { artifactRoot: string; cargoTargetDir: string } {
+/** 🧭️ Resolves the current exact command's isolated artifact and Cargo roots against the workspace root and hands the absolute roots to every child. */
+function headlessStdioCommandRoots(repoRoot: string): { artifactRoot: string; cargoTargetDir: string } {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = process.env.CARGO_TARGET_DIR;
   if (!artifactRoot || !cargoTargetDir) throw new Error("headless Stdio command requires explicit artifact and Cargo roots");
-  return headlessStdioOwnedCargoTarget(artifactRoot, cargoTargetDir);
+  const roots = headlessStdioOwnedCargoTarget(resolve(repoRoot, artifactRoot), resolve(repoRoot, cargoTargetDir));
+  process.env.SEMIO_TEST_ARTIFACT_DIR = roots.artifactRoot;
+  process.env.CARGO_TARGET_DIR = roots.cargoTargetDir;
+  return roots;
 }
 
-/** 🧩️ Proves the three independently launchable native-catalog commands own distinct nested targets. */
-function proveHeadlessStdioLaunchIsolation(repoRoot: string): void {
-  const launch = readFileSync(join(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8");
-  const rows = [
-    ["⚖️gate📇️native-openable-catalog-provider🌎️hub", "native-openable-catalog-provider-check"],
-    ["⚖️gate📇️headless-native-catalog🗄️stdio", "--stdio-only"],
-    ["⚖️gate📇️native-catalog-selection🌎️hub", "native-catalog-selection-check"],
-  ].map(([name, command]) => {
-    const start = launch.indexOf(`"name": "${name}"`), end = launch.indexOf('\n    {\n      "name":', start + 1), body = launch.slice(start, end < 0 ? undefined : end);
-    const artifactRoot = body.match(/"SEMIO_TEST_ARTIFACT_DIR": "([^"]+)"/u)?.[1], cargoTargetDir = body.match(/"CARGO_TARGET_DIR": "([^"]+)"/u)?.[1];
-    if (start < 0 || !body.includes(command) || !artifactRoot || !cargoTargetDir || cargoTargetDir !== `${artifactRoot}/cargo-target`) throw new Error(`headless Stdio launch is not privately isolated: ${name}`);
-    return { artifactRoot, cargoTargetDir };
+/** 🧩️ Proves the three independently declared native-catalog commands of the owning Nx targets own distinct nested targets inside the repository cache. */
+function proveHeadlessStdioCommandIsolation(repoRoot: string): void {
+  type Declared = { command?: string; args?: string; env?: Record<string, string> };
+  const targets = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8")).targets as Record<string, { options?: Declared; configurations?: Record<string, Declared> }>;
+  const provider = targets["native-openable-catalog-provider-check"], stdioOnly = provider?.configurations?.["stdio-only"], selection = targets["native-catalog-selection-check"], cache = repoCacheDirectory(repoRoot);
+  const rows = ([
+    ["os-hub:native-openable-catalog-provider-check", provider?.options?.command === "bun ./📜️script.ts native-openable-catalog-provider-check", provider?.options?.env],
+    ["os-hub:native-openable-catalog-provider-check:stdio-only", stdioOnly?.command === undefined && stdioOnly?.args === "--stdio-only", stdioOnly?.env],
+    ["os-hub:native-catalog-selection-check", selection?.options?.command === "bun ./📜️script.ts native-catalog-selection-check", selection?.options?.env],
+  ] as const).map(([name, declared, env]) => {
+    const artifactRoot = env?.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = env?.CARGO_TARGET_DIR, cached = artifactRoot ? relative(cache, resolve(repoRoot, artifactRoot)) : "";
+    if (!declared || !artifactRoot || !cargoTargetDir || isAbsolute(artifactRoot) || !artifactRoot.split("/").includes("🗑️generated") || !cached || cached.startsWith("..") || isAbsolute(cached) || cargoTargetDir !== `${artifactRoot}/cargo-target`) throw new Error(`headless Stdio command is not privately isolated: ${name}`);
+    return headlessStdioOwnedCargoTarget(resolve(repoRoot, artifactRoot), resolve(repoRoot, cargoTargetDir));
   });
-  if (new Set(rows.map((row) => row.artifactRoot)).size !== rows.length || new Set(rows.map((row) => row.cargoTargetDir)).size !== rows.length) throw new Error("headless Stdio independently launchable commands share build ownership");
+  if (new Set(rows.map((row) => row.artifactRoot)).size !== rows.length || new Set(rows.map((row) => row.cargoTargetDir)).size !== rows.length) throw new Error("headless Stdio independently declared commands share build ownership");
 }
 
 /**
@@ -4754,7 +4758,7 @@ function headlessStdioImportArguments(capture: HeadlessStdioMetadataCaptureV1, d
  * build-dir compilation unit) to prove the capture never assumes a `<target>/debug/deps` layout.
  */
 function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
-  if (!isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("headless Stdio capture law requires one ticket-generated artifact root");
+  if (!isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("headless Stdio capture law requires one generated artifact root");
   mkdirSync(artifactRoot, { recursive: true });
   const lawRoot = mkdtempSync(join(artifactRoot, "headless-capture-law-"));
   try {
@@ -4910,8 +4914,8 @@ async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Await
 class NativeOpenableCatalogProviderCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (new Set(segments).size !== segments.length || segments.some((segment) => segment !== "--oracle-only" && segment !== "--stdio-only")) throw new Error("unsupported native catalog provider argument");
-    const commandRoots = headlessStdioCommandRoots();
-    proveHeadlessStdioLaunchIsolation(this.repoRoot);
+    const commandRoots = headlessStdioCommandRoots(this.repoRoot);
+    proveHeadlessStdioCommandIsolation(this.repoRoot);
     proveHeadlessStdioMetadataCaptureContract(commandRoots.artifactRoot);
     await (await import("../../../🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts")).proveVcsNativeCodecReceipts(this.repoRoot);
     await proveVcsNativeProviderSelectionFixture(this.repoRoot);
@@ -4977,8 +4981,8 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
 class NativeCatalogSelectionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("unsupported native catalog selection argument");
-    headlessStdioCommandRoots();
-    proveHeadlessStdioLaunchIsolation(this.repoRoot);
+    headlessStdioCommandRoots(this.repoRoot);
+    proveHeadlessStdioCommandIsolation(this.repoRoot);
     await proveTrustedCompiledDependenciesFixture(this.repoRoot);
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;

@@ -13,6 +13,7 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
+use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::brep::representation::arena::{FaceId, SolidId};
 use crate::brep::representation::curve::bspline::{elevate_degree, KnotVector};
 use crate::brep::representation::curve::curve_ops::{interpolate_curve, ParamMethod};
@@ -53,145 +54,196 @@ fn fit_column(points: &[Pnt3], degree: usize) -> NurbsCurve3 {
     interpolate_curve(points, degree, ParamMethod::Uniform, None, false).expect("uniform interpolation of a non-empty column")
 }
 
+/// 🥞 Resumable loft: one unit builds the lateral skin of one profile-edge position (the harmonized
+/// control net, its column fits and the two rail fits), one closing unit retires the interior
+/// profiles, orients the caps and closes the shell. Profiles must have the same loop count and the
+/// same edge count per loop.
+pub struct LoftJob {
+    profiles: Vec<FaceId>,
+    degree_v: usize,
+    loop_sets: Vec<Vec<crate::brep::representation::arena::LoopId>>,
+    items: Vec<(usize, usize)>,
+    laterals: Vec<FaceId>,
+    plan: Plan,
+}
+
+impl LoftJob {
+    /// 🥞 Plans a loft through `profiles`; `smooth` skins with a cubic (C² on ≥4 sections) fit,
+    /// otherwise ruled (degree 1, exact piecewise-linear).
+    pub fn new(body: &Body, profiles: &[FaceId], smooth: bool) -> Result<Self, KernelError> {
+        if profiles.len() < 2 {
+            return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
+        }
+        for &profile in profiles {
+            if body.faces.get(profile).is_none() {
+                return Err(KernelError::MissingEntity(format!("face {profile:?}")));
+            }
+        }
+        let n = profiles.len();
+        let degree_v = if smooth { 3.min(n - 1).max(1) } else { 1 };
+        let loop_sets: Vec<Vec<_>> = profiles.iter().map(|&f| body.face_loops(f)).collect();
+        let loop_count = loop_sets[0].len();
+        if loop_sets.iter().any(|ls| ls.len() != loop_count) {
+            return Err(KernelError::InvalidInput("loft: profiles must all have the same number of loops".into()));
+        }
+        let mut items = Vec::new();
+        for li in 0..loop_count {
+            let coedge_sets: Vec<Vec<_>> = loop_sets.iter().map(|ls| body.loop_coedges(ls[li])).collect();
+            let m = coedge_sets[0].len();
+            if coedge_sets.iter().any(|cs| cs.len() != m) {
+                return Err(KernelError::InvalidInput("loft: corresponding loops must have the same number of edges across all profiles".into()));
+            }
+            items.extend((0..m).map(|k| (li, k)));
+        }
+        let plan = Plan::new(&[("laterals", items.len()), ("close", 1)]);
+        Ok(Self { profiles: profiles.to_vec(), degree_v, loop_sets, items, laterals: Vec::new(), plan })
+    }
+
+    /// 🥞 Builds the lateral face of loop `li`, edge position `k`.
+    fn lateral(&mut self, body: &mut Body, rec: &mut OpRecorder, (li, k): (usize, usize)) -> Result<(), KernelError> {
+        let n = self.profiles.len();
+        let degree_v = self.degree_v;
+        let coedge_sets: Vec<Vec<_>> = self.loop_sets.iter().map(|ls| body.loop_coedges(ls[li])).collect();
+        let (edge0, f0) = {
+            let c = body.coedges.get(coedge_sets[0][k]).unwrap();
+            (c.edge, c.forward)
+        };
+        let range0 = body.edges.get(edge0).unwrap().range;
+        let mut per_profile = Vec::with_capacity(n);
+        let mut target_degree = 0usize;
+        for cs in &coedge_sets {
+            let eid = body.coedges.get(cs[k]).unwrap().edge;
+            let r = body.edges.get(eid).unwrap().range;
+            let curve = body.curves3.get(body.edges.get(eid).unwrap().curve).unwrap().clone();
+            target_degree = target_degree.max(curve.to_nurbs(r).knots.degree);
+            per_profile.push((eid, curve, r));
+        }
+        let harmonized: Vec<NurbsCurve3> = per_profile.iter().map(|(_, c, r)| harmonized_nurbs(c, *r, target_degree)).collect();
+        let cc = harmonized[0].knots.control_point_count();
+        if harmonized.iter().any(|h| h.knots.control_point_count() != cc) {
+            return Err(KernelError::Operation("loft: profile edges are not knot-compatible after degree elevation (full knot-vector-union harmonization not implemented in this pass — see 📓️w2c-sweeps.md)".into()));
+        }
+        let mut u_controls: Vec<Vec<Pnt3>> = vec![Vec::with_capacity(n); cc];
+        for h in &harmonized {
+            for (i, &p) in h.controls.iter().enumerate() {
+                u_controls[i].push(p);
+            }
+        }
+        let mut v_knots: Option<KnotVector> = None;
+        let mut grid = vec![Vec::with_capacity(n); cc];
+        for i in 0..cc {
+            let fit = fit_column(&u_controls[i], degree_v);
+            if v_knots.is_none() {
+                v_knots = Some(fit.knots.clone());
+            }
+            grid[i] = fit.controls;
+        }
+        let weights: Vec<Vec<f64>> = harmonized[0].weights.iter().map(|&w| vec![w; n]).collect();
+        let (vd0, vd1) = v_knots_domain(&grid, cc);
+        let surface = Surface::Nurbs { u_knots: harmonized[0].knots.clone(), v_knots: v_knots.unwrap(), controls: grid, weights };
+        let surf_id = body.surfaces.insert(surface);
+
+        body.edges.get_mut(edge0).unwrap().curve = body.curves3.insert(Curve3::Nurbs { knots: harmonized[0].knots.clone(), controls: harmonized[0].controls.clone(), weights: harmonized[0].weights.clone() });
+        let last_edge = per_profile[n - 1].0;
+        body.edges.get_mut(last_edge).unwrap().curve = body.curves3.insert(Curve3::Nurbs { knots: harmonized[n - 1].knots.clone(), controls: harmonized[n - 1].controls.clone(), weights: harmonized[n - 1].weights.clone() });
+
+        let (start_v0, start_v1) = body.coedge_endpoints(coedge_sets[0][k]).unwrap();
+        let (end_v0, end_v1) = body.coedge_endpoints(coedge_sets[n - 1][k]).unwrap();
+        let last_forward = body.coedges.get(coedge_sets[n - 1][k]).unwrap().forward;
+        let left_positions: Vec<Pnt3> = (0..n)
+            .map(|j| {
+                let (a, _) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
+                body.vertices.get(a).unwrap().position
+            })
+            .collect();
+        let right_positions: Vec<Pnt3> = (0..n)
+            .map(|j| {
+                let (_, b) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
+                body.vertices.get(b).unwrap().position
+            })
+            .collect();
+        let left_fit = fit_column(&left_positions, degree_v);
+        let right_fit = fit_column(&right_positions, degree_v);
+        let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
+        let right_curve = body.curves3.insert(Curve3::Nurbs { knots: right_fit.knots.clone(), controls: right_fit.controls, weights: vec![1.0; n] });
+        let left_rail = crate::brep::operations::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
+        let right_rail = crate::brep::operations::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
+
+        let u0 = harmonized[0].knots.domain().0;
+        let u1 = harmonized[0].knots.domain().1;
+        let bottom_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd0), dir: Vec2::new(u1 - u0, 0.0) });
+        let top_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd1), dir: Vec2::new(u1 - u0, 0.0) });
+        let left_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd0), dir: Vec2::new(0.0, vd1 - vd0) });
+        let right_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u1, vd0), dir: Vec2::new(0.0, vd1 - vd0) });
+
+        let members = vec![(edge0, !f0), (left_rail, true), (last_edge, last_forward), (right_rail, false)];
+        let pcurves = vec![(bottom_pc, range0), (left_pc, left_fit.knots.domain()), (top_pc, per_profile[n - 1].2), (right_pc, right_fit.knots.domain())];
+        let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], false, Tol::DEFAULT, rec);
+        self.laterals.push(face);
+        Ok(())
+    }
+}
+
+impl StagedOperation for LoftJob {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn progress(&self) -> StageProgress {
+        self.plan.progress()
+    }
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        let unit = self.plan.take().ok_or_else(|| KernelError::Operation("loft job already finished".into()))?;
+        if unit.phase == 0 {
+            self.lateral(body, rec, self.items[unit.index])?;
+            return Ok(StageStep::Working);
+        }
+        let n = self.profiles.len();
+        let profiles = &self.profiles;
+        for &f in &profiles[1..n - 1] {
+            let label = body.faces.get(f).unwrap().label;
+            rec.record_deleted(label);
+        }
+        let bottom = profiles[0];
+        let top = profiles[n - 1];
+        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::brep::representation::vector::Vec3::Z);
+        let bottom_origin = body
+            .faces
+            .get(bottom)
+            .and_then(|f| match body.surfaces.get(f.surface) {
+                Some(Surface::Plane { frame }) => Some(frame.origin),
+                _ => None,
+            })
+            .unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
+        let top_origin = body
+            .faces
+            .get(top)
+            .and_then(|f| match body.surfaces.get(f.surface) {
+                Some(Surface::Plane { frame }) => Some(frame.origin),
+                _ => None,
+            })
+            .unwrap_or(bottom_origin);
+        let travel = top_origin - bottom_origin;
+        if n0.dot(travel) > 0.0 {
+            let label = body.faces.get(bottom).unwrap().label;
+            let f = body.faces.get_mut(bottom).unwrap();
+            f.flipped = !f.flipped;
+            rec.record_modified(label);
+        } else {
+            let label = body.faces.get(top).unwrap().label;
+            let f = body.faces.get_mut(top).unwrap();
+            f.flipped = !f.flipped;
+            rec.record_modified(label);
+        }
+        let mut faces = vec![bottom, top];
+        faces.extend(std::mem::take(&mut self.laterals));
+        Ok(StageStep::Done(StageOutput::Solid(finish_solid(body, faces, rec))))
+    }
+}
+
 /// 🥞 Lofts `profiles` (≥2 faces with the same loop count and same edge count per loop) into one
-/// solid. `smooth=true` skins with a cubic (C² on ≥4 sections) fit; `smooth=false` is ruled
-/// (degree 1, exact piecewise-linear).
+/// solid — [`LoftJob`] driven to completion.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn loft_profiles(body: &mut Body, profiles: &[FaceId], smooth: bool, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if profiles.len() < 2 {
-        return Err(KernelError::InvalidInput("loft requires at least two profiles".into()));
-    }
-    let n = profiles.len();
-    let degree_v = if smooth { 3.min(n - 1).max(1) } else { 1 };
-    let loop_sets: Vec<Vec<_>> = profiles.iter().map(|&f| body.face_loops(f)).collect();
-    let loop_count = loop_sets[0].len();
-    if loop_sets.iter().any(|ls| ls.len() != loop_count) {
-        return Err(KernelError::InvalidInput("loft: profiles must all have the same number of loops".into()));
-    }
-    let mut lateral_faces = Vec::new();
-    for li in 0..loop_count {
-        let coedge_sets: Vec<Vec<_>> = loop_sets.iter().map(|ls| body.loop_coedges(ls[li])).collect();
-        let m = coedge_sets[0].len();
-        if coedge_sets.iter().any(|cs| cs.len() != m) {
-            return Err(KernelError::InvalidInput("loft: corresponding loops must have the same number of edges across all profiles".into()));
-        }
-        for k in 0..m {
-            let (edge0, f0) = {
-                let c = body.coedges.get(coedge_sets[0][k]).unwrap();
-                (c.edge, c.forward)
-            };
-            let range0 = body.edges.get(edge0).unwrap().range;
-            let mut per_profile = Vec::with_capacity(n);
-            let mut target_degree = 0usize;
-            for cs in &coedge_sets {
-                let eid = body.coedges.get(cs[k]).unwrap().edge;
-                let r = body.edges.get(eid).unwrap().range;
-                let curve = body.curves3.get(body.edges.get(eid).unwrap().curve).unwrap().clone();
-                target_degree = target_degree.max(curve.to_nurbs(r).knots.degree);
-                per_profile.push((eid, curve, r));
-            }
-            let harmonized: Vec<NurbsCurve3> = per_profile.iter().map(|(_, c, r)| harmonized_nurbs(c, *r, target_degree)).collect();
-            let cc = harmonized[0].knots.control_point_count();
-            if harmonized.iter().any(|h| h.knots.control_point_count() != cc) {
-                return Err(KernelError::Operation("loft: profile edges are not knot-compatible after degree elevation (full knot-vector-union harmonization not implemented in this pass — see 📓️w2c-sweeps.md)".into()));
-            }
-            let mut u_controls: Vec<Vec<Pnt3>> = vec![Vec::with_capacity(n); cc];
-            for h in &harmonized {
-                for (i, &p) in h.controls.iter().enumerate() {
-                    u_controls[i].push(p);
-                }
-            }
-            let mut v_knots: Option<KnotVector> = None;
-            let mut grid = vec![Vec::with_capacity(n); cc];
-            for i in 0..cc {
-                let fit = fit_column(&u_controls[i], degree_v);
-                if v_knots.is_none() {
-                    v_knots = Some(fit.knots.clone());
-                }
-                grid[i] = fit.controls;
-            }
-            let weights: Vec<Vec<f64>> = harmonized[0].weights.iter().map(|&w| vec![w; n]).collect();
-            let (vd0, vd1) = v_knots_domain(&grid, cc);
-            let surface = Surface::Nurbs { u_knots: harmonized[0].knots.clone(), v_knots: v_knots.unwrap(), controls: grid, weights };
-            let surf_id = body.surfaces.insert(surface);
-
-            body.edges.get_mut(edge0).unwrap().curve = body.curves3.insert(Curve3::Nurbs { knots: harmonized[0].knots.clone(), controls: harmonized[0].controls.clone(), weights: harmonized[0].weights.clone() });
-            let last_edge = per_profile[n - 1].0;
-            body.edges.get_mut(last_edge).unwrap().curve = body.curves3.insert(Curve3::Nurbs { knots: harmonized[n - 1].knots.clone(), controls: harmonized[n - 1].controls.clone(), weights: harmonized[n - 1].weights.clone() });
-
-            let (start_v0, start_v1) = body.coedge_endpoints(coedge_sets[0][k]).unwrap();
-            let (end_v0, end_v1) = body.coedge_endpoints(coedge_sets[n - 1][k]).unwrap();
-            let last_forward = body.coedges.get(coedge_sets[n - 1][k]).unwrap().forward;
-            let left_positions: Vec<Pnt3> = (0..n)
-                .map(|j| {
-                    let (a, _) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
-                    body.vertices.get(a).unwrap().position
-                })
-                .collect();
-            let right_positions: Vec<Pnt3> = (0..n)
-                .map(|j| {
-                    let (_, b) = body.coedge_endpoints(coedge_sets[j][k]).unwrap();
-                    body.vertices.get(b).unwrap().position
-                })
-                .collect();
-            let left_fit = fit_column(&left_positions, degree_v);
-            let right_fit = fit_column(&right_positions, degree_v);
-            let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
-            let right_curve = body.curves3.insert(Curve3::Nurbs { knots: right_fit.knots.clone(), controls: right_fit.controls, weights: vec![1.0; n] });
-            let left_rail = crate::brep::operations::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
-            let right_rail = crate::brep::operations::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
-
-            let u0 = harmonized[0].knots.domain().0;
-            let u1 = harmonized[0].knots.domain().1;
-            let bottom_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd0), dir: Vec2::new(u1 - u0, 0.0) });
-            let top_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd1), dir: Vec2::new(u1 - u0, 0.0) });
-            let left_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u0, vd0), dir: Vec2::new(0.0, vd1 - vd0) });
-            let right_pc = body.curves2.insert(Curve2::Line { origin: Pnt2::new(u1, vd0), dir: Vec2::new(0.0, vd1 - vd0) });
-
-            let members = vec![(edge0, !f0), (left_rail, true), (last_edge, last_forward), (right_rail, false)];
-            let pcurves = vec![(bottom_pc, range0), (left_pc, left_fit.knots.domain()), (top_pc, per_profile[n - 1].2), (right_pc, right_fit.knots.domain())];
-            let face = build_face(body, surf_id, &[LoopSpec { members, pcurves }], false, Tol::DEFAULT, rec);
-            lateral_faces.push(face);
-        }
-    }
-    for &f in &profiles[1..n - 1] {
-        let label = body.faces.get(f).unwrap().label;
-        rec.record_deleted(label);
-    }
-    let bottom = profiles[0];
-    let top = profiles[n - 1];
-    let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::brep::representation::vector::Vec3::Z);
-    let bottom_origin = body
-        .faces
-        .get(bottom)
-        .and_then(|f| match body.surfaces.get(f.surface) {
-            Some(Surface::Plane { frame }) => Some(frame.origin),
-            _ => None,
-        })
-        .unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
-    let top_origin = body
-        .faces
-        .get(top)
-        .and_then(|f| match body.surfaces.get(f.surface) {
-            Some(Surface::Plane { frame }) => Some(frame.origin),
-            _ => None,
-        })
-        .unwrap_or(bottom_origin);
-    let travel = top_origin - bottom_origin;
-    if n0.dot(travel) > 0.0 {
-        let label = body.faces.get(bottom).unwrap().label;
-        let f = body.faces.get_mut(bottom).unwrap();
-        f.flipped = !f.flipped;
-        rec.record_modified(label);
-    } else {
-        let label = body.faces.get(top).unwrap().label;
-        let f = body.faces.get_mut(top).unwrap();
-        f.flipped = !f.flipped;
-        rec.record_modified(label);
-    }
-    let mut faces = vec![bottom, top];
-    faces.extend(lateral_faces);
-    Ok(finish_solid(body, faces, rec))
+    drive_solid(&mut LoftJob::new(body, profiles, smooth)?, body, rec)
 }
 
 /// 🥞 The shared `v`-domain every column's fit produced (all identical by [`fit_column`]'s

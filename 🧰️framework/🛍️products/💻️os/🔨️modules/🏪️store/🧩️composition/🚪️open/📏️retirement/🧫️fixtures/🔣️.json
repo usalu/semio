@@ -1,0 +1,9 @@
+{
+  "schema": "semio.member-open.physical-retirement/v1",
+  "maximumAdmissionBytes": 262144,
+  "cases": [
+    { "id": "ascii-spare-capacity", "text": "actor:member", "capacityBytes": 64 },
+    { "id": "unicode-spare-capacity", "text": "actor:📐雪", "capacityBytes": 8194 },
+    { "id": "empty-retained-capacity", "text": "", "capacityBytes": 65536 }
+  ]
+}

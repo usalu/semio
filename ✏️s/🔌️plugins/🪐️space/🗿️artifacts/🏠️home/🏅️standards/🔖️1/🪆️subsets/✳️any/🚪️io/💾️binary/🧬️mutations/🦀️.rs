@@ -9,7 +9,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use protocol::OpBinary;
 
-pub const BINARY_TAGS: &[(&str, u8)] = &[("ChangeCatalogGeneration", crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation::BINARY_TAG)];
+pub const BINARY_TAGS: &[(&str, u8)] = &[("ChangeCatalogGeneration", change_catalog_generation::BINARY_TAG)];
 
 /// 📦️ Encodes an `SHomeMutation` to its binary command form.
 pub fn encode_op(operation: &SHomeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {

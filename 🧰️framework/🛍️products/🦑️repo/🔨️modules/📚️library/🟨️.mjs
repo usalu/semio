@@ -872,6 +872,14 @@ function withLeveledTestTargets(targets) {
   return leveled;
 }
 
+/** 📬️ Explicit repository consumer bodies prepare at Cargo consumption; arbitrary owners retain eager preparation. */
+export function nativeOwnerExecutionRoute(target) {
+  const preparation=target.metadata?.semio?.nativePreparation;
+  if(preparation===undefined)return "owner-command";
+  if(preparation!=="cargo-consumer" || !/^bun\s+(?:"[^"\n]+"|'[^'\n]+'|[^\s]+)\s+test(?:\s+(?:quick|long|exhaustive))?$/u.test(target.options?.command??""))throw Error("Invalid repository Cargo-consumer test body declaration");
+  return "repository-test-body";
+}
+
 /**
  * @param {Record<string, any>} json
  * @param {string} root
@@ -919,7 +927,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"⚡️caching/🦀️cargo/📜️script.ts")));
       const ownerCwd=target.options?.cwd??root;
       const boundCommand=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
-      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native ${nativeOwnerExecutionRoute(policy)} --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
       const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
       if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
       else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
@@ -927,7 +935,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
       if(config.startsWith("../"))throw Error(`Cargo test policy escapes workspace: ${nativeRoot}`);
       policy.cargoTestPolicyInputs=[`{workspaceRoot}/${config}`];
     }
-    if (!policy.options?.command?.includes(" native owner-command ") && targetScriptClosure(policy, workspaceRoot, scripts)?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
+    if (!/ native (?:owner-command|repository-test-body) /u.test(policy.options?.command??"") && targetScriptClosure(policy, workspaceRoot, scripts)?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
       const command=policy.options?.command,ownerCwd=target.options?.cwd??root;
       if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Process owner requires one Bun script command: ${json.name}:${name}`);
       const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"📦️packages/🟦️typescript/📜️script.ts")));

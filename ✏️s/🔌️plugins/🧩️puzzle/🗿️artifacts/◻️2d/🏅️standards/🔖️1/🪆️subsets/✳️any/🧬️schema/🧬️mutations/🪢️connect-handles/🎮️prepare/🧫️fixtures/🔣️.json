@@ -1,0 +1,687 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 96,
+    "largePrefix": "😀é",
+    "largeRepeats": 20000,
+    "advanceAllocation": 0,
+    "closeAllocation": 0
+  },
+  "cases": [
+    {
+      "id": "unconditional-missing-handles",
+      "nodes": [],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "missing",
+        "target": "also-missing",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": null,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "none",
+      "position": 0,
+      "distance": null
+    },
+    {
+      "id": "exact-boundary",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 3,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "none",
+      "position": 0,
+      "distance": 3
+    },
+    {
+      "id": "drifted",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 2,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "too-far",
+      "position": 0,
+      "distance": 3
+    },
+    {
+      "id": "missing-source",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "missing",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 3,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "missing-handle",
+      "position": 0,
+      "distance": null
+    },
+    {
+      "id": "missing-target",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "missing",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 3,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "missing-handle",
+      "position": 0,
+      "distance": null
+    },
+    {
+      "id": "duplicate-before-drift",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [
+        "keep",
+        "e"
+      ],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 0,
+        "index": null
+      },
+      "status": "duplicate-id",
+      "warning": "none",
+      "position": null,
+      "distance": null
+    },
+    {
+      "id": "nonfinite-before-duplicate",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [
+        "e"
+      ],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": "nan",
+        "shift": "infinity",
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": -1,
+        "index": null
+      },
+      "status": "nonfinite-gap",
+      "warning": "none",
+      "position": null,
+      "distance": null
+    },
+    {
+      "id": "negative-before-duplicate",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [
+        "e"
+      ],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": -1,
+        "index": null
+      },
+      "status": "negative-tolerance",
+      "warning": "none",
+      "position": null,
+      "distance": null
+    },
+    {
+      "id": "nonfinite-tolerance",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": "infinity",
+        "index": null
+      },
+      "status": "nonfinite-tolerance",
+      "warning": "none",
+      "position": null,
+      "distance": null
+    },
+    {
+      "id": "ordered-clamp",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [
+        "keep",
+        "last"
+      ],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": null,
+        "index": 500
+      },
+      "status": "changed",
+      "warning": "none",
+      "position": 2,
+      "distance": null
+    },
+    {
+      "id": "first-duplicate-handle",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "second",
+          "x": 100,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 3,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "none",
+      "position": 0,
+      "distance": 3
+    },
+    {
+      "id": "rectangle-north-zero",
+      "nodes": [
+        {
+          "id": "rectangle",
+          "x": 0,
+          "y": 0,
+          "shape": "rectangle",
+          "width": 8,
+          "height": 6,
+          "handles": [
+            {
+              "id": "ha",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "circle",
+          "x": 0,
+          "y": -3,
+          "radius": 2,
+          "handles": [
+            {
+              "id": "hb",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "ha",
+        "target": "hb",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 2,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "none",
+      "position": 0,
+      "distance": 2
+    },
+    {
+      "id": "large-prefix",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "$large:a",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 3,
+          "y": 0,
+          "radius": 1,
+          "handles": [
+            {
+              "id": "$large:b",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [],
+      "mutation": {
+        "id": "e",
+        "source": "$large:a",
+        "target": "$large:b",
+        "edgeKind": null,
+        "gap": 0,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0,
+        "sourceTip": null,
+        "targetTip": null,
+        "tolerance": 2,
+        "index": null
+      },
+      "status": "changed",
+      "warning": "too-far",
+      "position": 0,
+      "distance": 3
+    }
+  ]
+}

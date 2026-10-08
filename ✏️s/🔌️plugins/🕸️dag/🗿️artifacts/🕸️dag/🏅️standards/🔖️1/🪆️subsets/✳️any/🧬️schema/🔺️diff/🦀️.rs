@@ -15,7 +15,6 @@
 //! remaining references after this pass.
 
 use crate::{DagContentChild, DagSnapshot};
-use crate::schema::DagArtifact;
 use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
 
@@ -73,36 +72,17 @@ pub struct DagStringList {
 
 
 //#region 🔖️Apply
-impl DagDiff {
-    /// 🧬️ Applies sparse document fields onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
-        Ok({
-            let mut next = artifact.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(content) = &self.content {
-                next.content = content.clone();
-            }
-            next
-        })
-    }
-}
-
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+    fn apply(&self, snapshot: &DagSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DagSnapshot> {
         self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
-        Ok({
-            let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(content) = &self.content {
-                next.content = content.clone();
-            }
-            next
-        })
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(content) = &self.content {
+            next.content = content.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
@@ -114,6 +94,18 @@ impl MutationDiff<DagSnapshot> for DagDiff {
         }
         take!(schema);
         take!(content);
+    }
+}
+
+impl protocol::DiffAlgebra<DagSnapshot> for DagDiff {
+    fn inverse(&self, base: &DagSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), content: self.content.as_ref().map(|_| base.content.clone()) }
+    }
+    fn between(base: &DagSnapshot, other: &DagSnapshot) -> Self {
+        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), content: (base.content != other.content).then(|| other.content.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.content.is_none()
     }
 }
 //#endregion 🔖️Apply

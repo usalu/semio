@@ -1,6 +1,5 @@
-//! 🧩️ `add-app-extension` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧩️ `add-app-extension` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +16,16 @@ pub struct AddAppExtension {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for AddAppExtension {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "app-extension", kind: "add-app-extension", record: "AddAppExtension" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::AddAppExtension(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index, extension } = self;
+        protocol::MutationOutcome::new({
+            GifDiff { app_extensions: Some(GifAppExtensionsDiff { added: vec![GifAppExtensionAdded { index: (*index).min(base.app_extensions.len()), extension: extension.clone() }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::AddAppExtension(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(vec![GifMutation::RemoveAppExtension(remove_app_extension::RemoveAppExtension { index: (*index).min(base.app_extensions.len()) })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Add app extension", "Anwendungserweiterung hinzufügen")
     }

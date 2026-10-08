@@ -56,8 +56,6 @@ pub fn decode_semio_mutation_json(text: &str) -> Result<SemioMutation, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
     match m {
-        SemioMutation::SetSnapshot(_) => "setSnapshot",
-        SemioMutation::PatchSnapshot(_) => "patchSnapshot",
         SemioMutation::ApplyBrep(_) => "brep",
         SemioMutation::ApplyMesh(_) => "mesh",
         SemioMutation::ApplyModel(_) => "model",
@@ -105,8 +103,6 @@ pub(crate) fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
 pub(crate) fn print_semio_mutation(m: &SemioMutation) -> String {
     let tag = subset_mutation_tag(m);
     match m {
-        SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("{tag}:{}", enc_hex_snapshot(snapshot)),
-        SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => format!("{tag}:{}", semio_s_artifact_stdio_contract::editing::snapshot_patch_hex(patch)),
         SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => format!("{tag}:{}", mutation.print_op()),
         SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => format!("{tag}:{}", mutation.print_op()),
         SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => format!("{tag}:{}", mutation.print_op()),
@@ -132,8 +128,6 @@ pub(crate) fn print_semio_mutation(m: &SemioMutation) -> String {
 pub(crate) fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
     match tag {
-        "setSnapshot" => Ok(SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_hex_snapshot(rest)? })),
-        "patchSnapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(rest).map(|patch| SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "brep" => Ok(SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())? })),
         "mesh" => Ok(SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())? })),
         "model" => Ok(SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())? })),

@@ -85,7 +85,7 @@ pub(crate) mod fixture {
                     Ok(semio_framework::io_schema::IoOutcome{value:(),diagnostics})
                 }
 
-                fn to_sqlite_database(&self, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+                fn to_sqlite_database(&self, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
                     let mut database = store::sqlite_snapshot::SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
                     database.table_mut("fixture_value")?.rows.push(store::sqlite_snapshot::SqliteRow { rowid: 1, values: vec![store::sqlite_snapshot::SqliteValue::Integer(1), store::sqlite_snapshot::SqliteValue::Integer(i64::from(self.value))] });
@@ -93,7 +93,7 @@ pub(crate) mod fixture {
                     Ok(database)
                 }
 
-                fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework::io::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+                fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
                     let table = database.table("fixture_value")?;
                     if table.rows.len() != 1 || table.rows[0].rowid != 1 {
@@ -112,8 +112,19 @@ pub(crate) mod fixture {
             pub(crate) struct $diff {
                 pub value: Option<i32>,
             }
+            impl protocol::DiffAlgebra<$snapshot> for $diff {
+                fn inverse(&self, base: &$snapshot) -> Self {
+                    Self { value: self.value.map(|_| base.value) }
+                }
+                fn between(base: &$snapshot, other: &$snapshot) -> Self {
+                    Self { value: (base.value != other.value).then_some(other.value) }
+                }
+                fn is_empty(&self) -> bool {
+                    self.value.is_none()
+                }
+            }
             impl MutationDiff<$snapshot> for $diff {
-                fn apply(&self, base: &$snapshot) -> protocol::MutationApplyResult<$snapshot> {
+                fn apply(&self, base: &$snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<$snapshot> {
                     Ok($snapshot { value: self.value.unwrap_or(base.value) })
                 }
                 fn absorb(&mut self, other: Self) {
@@ -588,7 +599,7 @@ pub(crate) mod fixture {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         use semio_framework::io::io_mechanism::{NativeSnapshotRegistration, io_entries, io_identify, io_route, io_run, io_run_with_snapshot_control, preflight_native_snapshots};
-        use semio_framework::io::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
+        use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database};
         use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, IoRoute, SQLITE_SNAPSHOT};
         semio_framework::io::register_subset_validator(&SQLITE_FIXTURE_STRICT_VALIDATOR).expect("strict fixture conformance registration");
         let _plugin = Plugin::<FixtureApps>::builder("testkit").label("sqlite-fixture").version("0.0.1").package_id("semio:testkit").declare_artifact(build_declaration()).try_build().expect("fixture assembly");
@@ -617,7 +628,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let IoPayload::Binary(bytes) = &exported else { panic!("SQLite file is binary") };
                 let database = import_sqlite_database(bytes, SqliteDatabaseLimits::default(), &mut |_| true).expect("semantic SQLite database");
                 assert_eq!(semio_framework::io::io_mechanism::sqlite_snapshot_metadata(&database).expect("snapshot metadata").0, dialect);
-                assert_eq!(database.table("fixture_value").expect("semantic value table").rows[0].values[1], semio_framework::io::sqlite_snapshot::SqliteValue::Integer(serde_json::from_str::<serde_json::Value>(text).expect("independent snapshot oracle")["value"].as_i64().expect("value")));
+                assert_eq!(database.table("fixture_value").expect("semantic value table").rows[0].values[1], semio_framework::sqlite_snapshot::SqliteValue::Integer(serde_json::from_str::<serde_json::Value>(text).expect("independent snapshot oracle")["value"].as_i64().expect("value")));
                 assert_eq!(io_identify(&exported).await, vec![(sqlite.clone(), Confidence::High)]);
                 let mut cancellation_phases = Vec::new();
                 assert!(io_run_with_snapshot_control(&export, payload.clone(), SqliteDatabaseLimits::default(), &mut |progress| { cancellation_phases.push(progress.phase); progress.phase != SqliteSnapshotPhase::ProjectSnapshot }).await.is_err());
@@ -782,6 +793,50 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             "the peer half of the presence lane is framework-owned too"
         );
     }
+    #[semio_framework_async_macros::async_test]
+    async fn vcs_app_retained_composition_query_funds_exact_large_identifier() {
+        use crate::app::{PluginApp, VcsArtifactApp};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🌳️graph/📏️demand/🧫️fixtures/🔣️.json")).unwrap();
+        let items = fixture["maximumItems"].as_u64().unwrap() as usize;
+        let extent = fixture["identifierBytes"].as_u64().unwrap() as usize;
+        let admission = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        let identifier = char::from(fixture["identifierByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
+        let parent = char::from(fixture["parentByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
+        let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
+        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        assert_eq!(app.next_close_byte_demand(), app.store.next_close_byte_demand());
+        app.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
+        app.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
+        assert!(app.command_log.is_empty() && app.history_dirty_sequences.is_empty() && app.pending_child_pins.is_empty());
+        let (step, moved) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(items, 0));
+        assert_eq!(step, store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!((moved.requested_bytes, moved.released_bytes), (0, 0));
+        let graph_demand = app.composition.next_close_byte_demand();
+        let app_demand = app.next_close_byte_demand();
+        assert_eq!(graph_demand, extent);
+        for bytes in fixture["deniedBytes"].as_array().unwrap() {
+            let (step, denied) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(items, bytes.as_u64().unwrap() as usize));
+            assert_eq!(step, store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!((denied.requested_bytes, denied.released_bytes), (0, 0));
+            assert_eq!(app.composition.next_close_byte_demand(), extent);
+        }
+        assert!(graph_demand <= admission);
+        let (step, funded) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(items, graph_demand));
+        assert_eq!(step, store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: extent });
+        assert_eq!((funded.requested_bytes, funded.released_bytes, funded.largest_release_bytes), (0, extent, extent));
+        for _ in 0..16 {
+            if app.composition.terminal_is_empty() { break; }
+            let demand = app.composition.next_close_byte_demand();
+            assert!(demand <= admission);
+            app.composition.close_step(items, demand);
+        }
+        assert!(app.composition.terminal_is_empty());
+        assert_eq!(app_demand, graph_demand, "final application phase must forward the exact retained composition allocation");
+        println!("[DEBUG] Vcs composition query={app_demand} exact={graph_demand}; denied0/4096/8193 retain owner; whole8194 releases actual8194 with zero allocation");
+        app.close_owned_stage = 0;
+        artifact_app_laws::close_registered_fixture_app(&mut app);
+    }
+
     include!("⚠️refusal/🦀️.rs");
     //#endregion 🔖️Tests
 }

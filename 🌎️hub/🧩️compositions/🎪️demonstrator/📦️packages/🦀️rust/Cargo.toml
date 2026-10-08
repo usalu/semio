@@ -52,13 +52,11 @@ depends-on = [
 
 [[package.metadata.semio.playground]]
 variant = "demonstrator"
-launch-name-prefix = "♻️mit-bestand🧺️demonstrator"
 app = "s.demonstrator.playground@1/*#editor"
 ports = { react = 6107, wgpu = 6207 }
 
 [[package.metadata.semio.playground]]
 variant = "generator"
-launch-name-prefix = "♻️mit-bestand🌀️procedural🧊️generation3d"
 app = "s.procedural.generation3d@1/*#editor"
 brand = "entwerfen-mit-bestand-generator"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
@@ -67,7 +65,6 @@ ports = { react = 6027, wgpu = 6127 }
 
 [[package.metadata.semio.playground]]
 variant = "koordinator"
-launch-name-prefix = "♻️mit-bestand📐️cad"
 app = "s.cad.cad@1/*#editor"
 brand = "entwerfen-mit-bestand-koordinator"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
@@ -76,7 +73,6 @@ ports = { react = 6028, wgpu = 6128 }
 
 [[package.metadata.semio.playground]]
 variant = "aggregator"
-launch-name-prefix = "♻️mit-bestand🧩️puzzle🧊️3d"
 app = "s.puzzle.puzzle3d@1/*#editor"
 brand = "entwerfen-mit-bestand-aggregator"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
@@ -85,7 +81,6 @@ ports = { react = 6023, wgpu = 6123 }
 
 [[package.metadata.semio.playground]]
 variant = "aussuchen"
-launch-name-prefix = "♻️mit-bestand🪵️sourcing🗂️curation"
 app = "s.sourcing.curation@1/*#editor"
 brand = "entwerfen-mit-bestand-aussuchen"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
@@ -94,7 +89,6 @@ ports = { react = 6030, wgpu = 6130 }
 
 [[package.metadata.semio.playground]]
 variant = "bearbeiten"
-launch-name-prefix = "♻️mit-bestand🏭️process🧊️process3d"
 app = "s.process.process3d@1/*#editor"
 brand = "entwerfen-mit-bestand-bearbeiten"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
@@ -103,7 +97,6 @@ ports = { react = 6031, wgpu = 6131 }
 
 [[package.metadata.semio.playground]]
 variant = "verfolgen"
-launch-name-prefix = "♻️mit-bestand🌍️gis🗺️gismap"
 app = "s.gis.gismap@1/*#editor"
 brand = "entwerfen-mit-bestand-verfolgen"
 devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"

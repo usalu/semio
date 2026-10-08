@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeTimeSeriesScheduleTimestep` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch, TimeSeriesSchedulePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeTimeSeriesScheduleTimestep, base: &EnergyMode
     if existing.timestep_seconds == payload.new_timestep_seconds {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Time series schedule {} already carries this timestep_seconds: {}.", payload.id.0, payload.new_timestep_seconds));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.schedules.time_series.iter_mut().find(|item| item.id == payload.id) {
-        item.timestep_seconds = payload.new_timestep_seconds;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { time_series: Rows::modifying(TimeSeriesSchedulePatch { timestep_seconds: Some(payload.new_timestep_seconds), ..TimeSeriesSchedulePatch::of(payload.id) }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -1,1 +1,72 @@
-type Din16798Diff { annex: String thetaRmC: Float }
+# 🧬️ Din16798 diff schema — sparse scalar fields and ordered per-collection row edits.
+
+enum Din16798RowOp {
+  INSERT
+  REMOVE
+  REPLACE
+  PATCH
+}
+
+type Din16798Diff {
+  annex: String @state(class: ARTIFACT)
+  thetaRmC: Float @state(class: ARTIFACT)
+  outdoorCo2Ppm: Float @state(class: ARTIFACT)
+  envelopeN50HInv: Float @state(class: ARTIFACT)
+  envelopeVolumeM3: Float @state(class: ARTIFACT)
+  cellarAreaM2: Float @state(class: ARTIFACT)
+  cellarVentilationM3H: Float @state(class: ARTIFACT)
+  nightSetbackK: Float @state(class: ARTIFACT)
+  zones: [Din16798ZoneEdit!]! @state(class: ARTIFACT)
+  ventSystems: [Din16798VentSystemEdit!]! @state(class: ARTIFACT)
+}
+
+type Din16798ZoneEdit {
+  op: Din16798RowOp!
+  index: Int!
+  id: String!
+  value: Din16798Zone
+  patch: Din16798ZonePatch
+}
+
+type Din16798VentSystemEdit {
+  op: Din16798RowOp!
+  index: Int!
+  id: String!
+  value: Din16798VentSystem
+  patch: Din16798VentSystemPatch
+}
+
+type Din16798ZonePatch {
+  usageType: String
+  floorAreaM2: Float
+  occupants: Int
+  comfortCategory: String
+  pollutionClass: String
+  comfortModel: String
+  tOpWinterC: Float
+  tOpSummerC: Float
+  airSpeedMS: Float
+  clothingClo: Float
+  metabolicRateMet: Float
+  rhPercent: Float
+  outdoorAirSuppliedM3H: Float
+  co2Ppm: Float
+  illuminanceLx: Float
+  noiseDb: Float
+  turbulenceIntensityPercent: Float
+  ventMethod: String
+  ventSystemId: String
+}
+
+type Din16798VentSystemPatch {
+  systemType: String
+  sfpWM3S: Float
+  sfpRequiredClass: Int
+  heatRecoveryEta: Float
+  odaClass: String
+  filterSupClass: String
+  yearsSinceInspection: Int
+  ductClass: String
+  ductLeakageM3SM2: Float
+  designAirflowM3H: Float
+}

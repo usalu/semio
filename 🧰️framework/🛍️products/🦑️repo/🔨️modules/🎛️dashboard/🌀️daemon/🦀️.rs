@@ -14,8 +14,11 @@ pub mod ipc {
     use std::io::{Read, Write};
     use std::path::{Path, PathBuf};
 
+    /// 🔢 The wire revision both ends state on attach; a mismatch is reported, never tolerated silently.
+    pub const PROTOCOL: u32 = 2;
     pub const KIND_CONTROL: u8 = 1;
     pub const KIND_OUTPUT: u8 = 2;
+    pub const KIND_INPUT: u8 = 3;
     pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 
     /// 📂 Canonical workspace paths retain native command-runtime spelling on Windows.
@@ -34,14 +37,22 @@ pub mod ipc {
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
     pub enum ClientMsg {
+        Hello { client_id: String, protocol: u32, build_id: String, #[serde(default)] env: Vec<(String, String)> },
         Attach { client_id: String },
+        Watch {},
+        Subscribe { session_id: String },
+        Unsubscribe { session_id: String },
         Detach {},
         Spawn { session_id: String, command: SessionCommand },
+        SpawnGroup { group_id: String, stop: GroupStop, members: Vec<GroupMember>, #[serde(default)] requires: Vec<GroupMember> },
         Input { session_id: String, data: Vec<u8> },
         Resize { session_id: String, cols: u16, rows: u16 },
         Kill { session_id: String },
         Stop { session_id: String },
         Restart { session_id: String },
+        StopGroup { group_id: String },
+        KillGroup { group_id: String },
+        Forget { session_id: String },
         List {},
         Shutdown {},
         Ping {},
@@ -51,17 +62,52 @@ pub mod ipc {
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
     pub enum ServerMsg {
-        Attached { daemon_pid: u32 },
+        Attached { daemon_pid: u32, #[serde(default)] protocol: u32, #[serde(default)] build_id: String },
         SessionChanged { session: SessionInfo },
-        Sessions { sessions: Vec<SessionInfo> },
-        ReplayComplete {},
-        Error { message: String },
+        SessionRemoved { session_id: String },
+        Sessions { sessions: Vec<SessionInfo>, #[serde(default)] more: bool },
+        ReplayStart { session_id: String, #[serde(default)] truncated: bool },
+        ReplayComplete { #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
+        Error { message: String, #[serde(default, skip_serializing_if = "String::is_empty")] code: String, #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
         Pong {},
         Shutdown {},
     }
 
-    /// ▶️ The exact task invocation retained for restart and restored views.
+    /// 🏷️ What a running task is called; the registry computes it at launch and it travels with the session.
+    #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(deny_unknown_fields)]
+    pub struct TaskLabel {
+        pub verb: String,
+        pub owner: Vec<String>,
+        pub subject: String,
+        pub qualifier: String,
+        pub parameters: Vec<(String, String)>,
+        pub members: u16,
+    }
+
+    /// 🟢 Ready when the output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(deny_unknown_fields)]
+    pub struct Ready {
+        pub port: u16,
+        pub path: String,
+    }
+
+    /// 🛑 Whether the members of a group stop when one of them stops.
+    #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(rename_all = "snake_case")]
+    pub enum GroupStop { Together, #[default] Independent }
+
+    /// 🧩 One process of a group, started in order under the session identifier its requester chose.
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(deny_unknown_fields)]
+    pub struct GroupMember {
+        pub session_id: String,
+        pub command: SessionCommand,
+    }
+
+    /// ▶️ The exact task invocation retained for restart and restored views.
+    #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(deny_unknown_fields)]
     pub struct SessionCommand {
         pub cmd: String,
@@ -70,15 +116,28 @@ pub mod ipc {
         pub env: Vec<(String, String)>,
         pub cols: u16,
         pub rows: u16,
+        #[serde(default)]
+        pub command_id: String,
+        #[serde(default)]
+        pub label: TaskLabel,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub group: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub ready: Option<Ready>,
     }
 
     /// 🚦 The lifecycle projected from the daemon's persisted local-only events.
-    #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(rename_all = "snake_case")]
-    pub enum SessionStatus { Running, Stopping, Exited, Failed }
+    pub enum SessionStatus { #[default] Pending, Running, Stopping, Exited, Failed, Interrupted }
+
+    impl SessionStatus {
+        /// 🔴 Whether a process may still exist for the session.
+        pub fn live(self) -> bool { matches!(self, Self::Pending | Self::Running | Self::Stopping) }
+    }
 
     /// 📋 A process projection shared by every dashboard attached to this workspace.
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+    #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
     #[serde(deny_unknown_fields)]
     pub struct SessionInfo {
         pub session_id: String,
@@ -88,6 +147,16 @@ pub mod ipc {
         pub pid: Option<u32>,
         #[serde(deserialize_with = "nullable")]
         pub code: Option<i32>,
+        #[serde(default)]
+        pub started_ms: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub ended_ms: Option<u64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub ready_url: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub title: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub group: Option<String>,
     }
 
     fn nullable<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(deserializer: D) -> Result<Option<T>, D::Error> { Option::<T>::deserialize(deserializer) }
@@ -117,7 +186,18 @@ pub mod ipc {
         pub fn validate(&self) -> std::io::Result<()> {
             match self {
                 Self::Spawn { session_id, command } => { validate_id(session_id)?; command.validate() }
-                Self::Input { session_id, .. } | Self::Stop { session_id } | Self::Kill { session_id } | Self::Restart { session_id } => validate_id(session_id),
+                Self::SpawnGroup { group_id, members, requires, .. } => {
+                    validate_id(group_id)?;
+                    if members.is_empty() || members.len() + requires.len() > 64 { return Err(std::io::Error::other("invalid group size")); }
+                    for member in members.iter().chain(requires) { validate_id(&member.session_id)?; member.command.validate()?; }
+                    Ok(())
+                }
+                Self::Hello { env, .. } => {
+                    if env.len() > 8192 || env.iter().any(|(name, value)| name.is_empty() || name.contains(['=', '\0']) || value.contains('\0')) { return Err(std::io::Error::other("invalid client environment")); }
+                    Ok(())
+                }
+                Self::StopGroup { group_id } | Self::KillGroup { group_id } => validate_id(group_id),
+                Self::Input { session_id, .. } | Self::Stop { session_id } | Self::Kill { session_id } | Self::Restart { session_id } | Self::Subscribe { session_id } | Self::Unsubscribe { session_id } | Self::Forget { session_id } => validate_id(session_id),
                 Self::Resize { session_id, cols, rows } => {
                     validate_id(session_id)?;
                     if *cols == 0 || *rows == 0 || *cols > 32767 || *rows > 32767 { return Err(std::io::Error::other("invalid terminal size")); }
@@ -131,9 +211,10 @@ pub mod ipc {
     impl ServerMsg {
         pub fn validate(&self) -> std::io::Result<()> {
             match self {
-                Self::Attached { daemon_pid: 0 } => Err(std::io::Error::other("invalid daemon pid")),
+                Self::Attached { daemon_pid: 0, .. } => Err(std::io::Error::other("invalid daemon pid")),
+                Self::SessionRemoved { session_id } | Self::ReplayStart { session_id, .. } => validate_id(session_id),
                 Self::SessionChanged { session } => { validate_id(&session.session_id)?; if session.pid == Some(0) { return Err(std::io::Error::other("invalid session pid")); } session.command.validate() },
-                Self::Sessions { sessions } => {
+                Self::Sessions { sessions, .. } => {
                     for session in sessions { validate_id(&session.session_id)?; if session.pid == Some(0) { return Err(std::io::Error::other("invalid session pid")); } session.command.validate()?; }
                     Ok(())
                 }
@@ -584,7 +665,7 @@ pub mod supervisor {
 
         pub fn attach_client(&mut self, mut stream: T) -> std::io::Result<u64> {
             if self.clients.len() >= 16 { return Err(std::io::Error::other("workspace dashboard view limit reached")); }
-            ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id() })?;
+            ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id(), protocol: ipc::PROTOCOL, build_id: String::new() })?;
             let id = self.next_client_id;
             self.next_client_id = self.next_client_id.checked_add(1).ok_or_else(|| std::io::Error::other("dashboard client id space exhausted"))?;
             let (sender, receiver) = std::sync::mpsc::sync_channel::<Vec<u8>>(4096);
@@ -606,7 +687,7 @@ pub mod supervisor {
         pub fn handle_for(&mut self, id: u64, msg: ClientMsg) -> std::io::Result<()> {
             match msg {
                 ClientMsg::Attach { .. } => {
-                    self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot() })?;
+                    self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot(), more: false })?;
                     let replay: Vec<_> = self.sessions.iter().map(|(key, session)| (key.clone(), session.output.iter().copied().collect::<Vec<_>>())).collect();
                     for (key, output) in replay {
                         for data in output.chunks(4096) {
@@ -615,14 +696,14 @@ pub mod supervisor {
                             self.send(id, bytes)?;
                         }
                     }
-                    self.send_control(id, &ServerMsg::ReplayComplete {})
+                    self.send_control(id, &ServerMsg::ReplayComplete { session_id: None })
                 }
-                ClientMsg::List {} => self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot() }),
+                ClientMsg::List {} => self.send_control(id, &ServerMsg::Sessions { sessions: self.snapshot(), more: false }),
                 ClientMsg::Detach {} => { self.detach_client(id); Ok(()) }
                 ClientMsg::Ping {} => self.send_control(id, &ServerMsg::Pong {}),
                 message => {
                     if let Err(error) = self.handle_client_msg(message) {
-                        self.send_control(id, &ServerMsg::Error { message: error.to_string() })?;
+                        self.send_control(id, &ServerMsg::Error { message: error.to_string(), code: String::new(), session_id: None })?;
                     }
                     Ok(())
                 }
@@ -661,7 +742,7 @@ pub mod supervisor {
                     self.kill(&session_id)?;
                     self.spawn_session(&session_id, command)
                 }
-                ClientMsg::List {} => { self.broadcast_control(&ServerMsg::Sessions { sessions: self.snapshot() })?; Ok(()) }
+                ClientMsg::List {} => { self.broadcast_control(&ServerMsg::Sessions { sessions: self.snapshot(), more: false })?; Ok(()) }
                 ClientMsg::Shutdown {} => {
                     let ids: Vec<_> = self.sessions.keys().cloned().collect();
                     for id in ids { self.kill(&id)?; }
@@ -669,6 +750,7 @@ pub mod supervisor {
                     self.broadcast_control(&ServerMsg::Shutdown {})?;
                     Ok(())
                 }
+                _ => Err(std::io::Error::other("unsupported control message")),
             }
         }
 
@@ -691,7 +773,7 @@ pub mod supervisor {
                 let cwd = if command.cwd.is_empty() { self.root.clone() } else { PathBuf::from(&command.cwd) };
                 let spawned = Pty::spawn(&command.cmd, &args, &env, &["NX_INVOCATION_ROOT_PID"], Some(&cwd), PtySize { cols: command.cols, rows: command.rows });
                 let (pty, error) = match spawned { Ok(pty) => (Some(pty), None), Err(error) => (None, Some(std::io::Error::other(error.message))) };
-                let info = SessionInfo { session_id: session_id.into(), command, status: if error.is_some() { SessionStatus::Failed } else { SessionStatus::Running }, pid: pty.as_ref().map(Pty::pid), code: error.as_ref().map(|_| -1) };
+                let info = SessionInfo { session_id: session_id.into(), command, status: if error.is_some() { SessionStatus::Failed } else { SessionStatus::Running }, pid: pty.as_ref().map(Pty::pid), code: error.as_ref().map(|_| -1), ..Default::default() };
                 self.sessions.insert(session_id.to_string(), LiveSession { info: info.clone(), output: VecDeque::new(), stop_deadline: None, exit_deadline: None, pty });
                 self.broadcast_control(&ServerMsg::SessionChanged { session: info })?;
                 if let Some(error) = error { Err(error) } else { Ok(()) }
@@ -838,7 +920,7 @@ pub mod supervisor {
             Ok(mut connection) => {
                 let _ = connection.send(&ClientMsg::List {});
                 let messages = connection.receive(std::time::Duration::from_secs(2)).unwrap_or_default();
-                let sessions = messages.iter().find_map(|message| match message { super::client::Message::Control(ServerMsg::Sessions { sessions }) => Some(sessions), _ => None });
+                let sessions = messages.iter().find_map(|message| match message { super::client::Message::Control(ServerMsg::Sessions { sessions, .. }) => Some(sessions), _ => None });
                 let count = sessions.map_or(0, |sessions| sessions.iter().filter(|session| matches!(session.status, SessionStatus::Running | SessionStatus::Stopping)).count());
                 format!("daemon pid {} · {count} active tasks · {}\n", connection.daemon_pid(), ipc::socket_path(root).display())
             }

@@ -578,6 +578,32 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
 //#endregion 🔢️RegistryGenerationBaseline
 
 #[test]
+fn connect_ports_admits_only_declared_neutral_endpoints() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/declared-endpoints/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut host = host_with_test_bridge();
+        let before = host.host_snapshot.synapses.len();
+        let result = host.connect_ports(case["source"].as_str().unwrap(), case["sourcePort"].as_str().unwrap(), case["target"].as_str().unwrap(), case["targetPort"].as_str().unwrap());
+        match case["expected"].as_str().unwrap() {
+            "accepted" => {
+                let id = result.unwrap();
+                let edge = host.host_snapshot.synapses.iter().find(|edge| edge.id == id).unwrap();
+                let oracle: serde_json::Value = serde_json::from_slice(&serde_json::to_vec(edge).unwrap()).unwrap();
+                assert_eq!(oracle["from"], case["source"]);
+                assert_eq!(oracle["to"], case["target"]);
+                assert_eq!(oracle["fromPort"], case["sourcePort"]);
+                assert_eq!(oracle["toPort"], case["targetPort"]);
+            },
+            "unknownOutput" => { assert!(matches!(result, Err(FlowCoreError::UnknownOutputPort(_)))); assert_eq!(host.host_snapshot.synapses.len(), before); },
+            "unknownInput" => { assert!(matches!(result, Err(FlowCoreError::UnknownInputPort(_)))); assert_eq!(host.host_snapshot.synapses.len(), before); },
+            _ => panic!("neutral endpoint verdict is supported"),
+        }
+        host.retire_cold();
+    }
+    println!("[DEBUG] Flow host admitted exact declared typed/untyped endpoints and refused both foreign sides; independent serde_json endpoint bytes matched four neutral cases");
+}
+
+#[test]
 fn connect_ports_allows_fan_out_from_same_output() {
     let mut host = host_with_test_bridge();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 120.0, 120.0).unwrap();
@@ -1435,7 +1461,7 @@ async fn undo_redo_add_widget() {
     assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
-    let mut store = FlowStore::new(envelope).await.expect("valid flow store fixture");
+    let mut store = FlowStore::new(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses every
     // `Apply` without one — `edit history insertion requires its exact mutation retirement factory`.
     // The refusal then drops the replayed projection on the error path, so the FIRST thing this law

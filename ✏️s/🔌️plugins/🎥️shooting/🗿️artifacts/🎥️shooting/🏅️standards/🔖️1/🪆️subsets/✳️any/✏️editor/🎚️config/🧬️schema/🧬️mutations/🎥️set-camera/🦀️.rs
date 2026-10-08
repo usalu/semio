@@ -13,16 +13,14 @@ pub struct SetCamera {
 
 impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
-    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfig> {
-        let mut next = base.clone();
-        next.camera = self.camera.clone();
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &ShootingConfig) -> protocol::MutationOutcome<ShootingConfigDiff> {
+        match base.camera == self.camera {
+            true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Camera is unchanged."),
+            false => protocol::MutationOutcome::new(ShootingConfigDiff { camera: Some(self.camera.clone()), ..Default::default() }),
+        }
     }
     fn inverse(&self, base: &ShootingConfig) -> Result<Vec<ShootingConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    
-    })())
+    Ok(vec![ShootingConfigMutation::SetCamera(Self { camera: base.camera.clone() })])
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")

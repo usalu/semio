@@ -8,9 +8,12 @@ fn allocation() -> FlowCopyAllocationBudget { FlowCopyAllocationBudget::new(16 *
 #[derive(Debug)]
 struct Root { host_snapshot: Option<FlowHostSnapshot>, drops: Arc<AtomicUsize> }
 impl Drop for Root { fn drop(&mut self) { assert!(self.host_snapshot.is_none()); self.drops.fetch_add(1, Ordering::SeqCst); } }
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootFactory;
 struct RootRetirement { root: Option<Arc<Root>>, retirement: Retirement }
 impl SnapshotRetirementFactory<Root> for RootFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<RootRetirement>() }
+
     fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
         assert_eq!(Arc::strong_count(&root), 1, "borrowed frames must release before the root");
         Box::new(RootRetirement { root: Some(root), retirement: Retirement::default() })
@@ -158,6 +161,8 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
         fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.inner) }
     }
     impl SnapshotRetirementFactory<Root> for Factory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Adversary>() }
+
         fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
             Box::new(Adversary { inner: RootRetirement { root: Some(root), retirement: Retirement::default() }, overgrant: true })
         }
@@ -240,6 +245,8 @@ fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_
     }
     struct ChunkyFactory;
     impl SnapshotRetirementFactory<Root> for ChunkyFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Chunky>() }
+
         fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
             Box::new(Chunky { inner: RootRetirement { root: Some(root), retirement: Retirement::default() }, owed: 4096 })
         }
@@ -270,6 +277,8 @@ fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_
     }
     struct StalledFactory;
     impl SnapshotRetirementFactory<Root> for StalledFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<Root>) -> usize { std::mem::size_of::<Stalled>() }
+
         fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
             std::mem::forget(root);
             Box::new(Stalled)

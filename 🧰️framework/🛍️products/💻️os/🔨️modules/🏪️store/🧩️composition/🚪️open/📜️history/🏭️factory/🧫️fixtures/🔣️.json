@@ -137,29 +137,29 @@
     "flow-member"
   ],
   "inputBytes": 257,
-  "retiredBytes": 329,
+  "retiredBytes": 357,
   "caseRetirement": {
-    "selected-flow": 329,
-    "selected-text": 329,
-    "reordered-closed-factory": 329,
-    "foreign-kind": 329,
-    "foreign-standard": 329,
-    "foreign-subset": 332,
-    "no-wildcard-fallback": 326,
-    "missing-selected-arm": 329,
-    "empty-factory": 329,
-    "bounded-factory": 329,
-    "duplicate-selected-arm": 329,
-    "duplicate-foreign-arm": 329,
-    "late-invalid-kind": 329,
-    "late-invalid-schema": 329,
-    "late-unicode-control": 329,
-    "late-overlong-schema": 329,
-    "late-noncanonical-kind": 329,
-    "late-empty-standard": 329,
-    "late-empty-subset": 329,
-    "late-overlong-standard": 329,
-    "late-control-subset": 329
+    "selected-flow": 357,
+    "selected-text": 357,
+    "reordered-closed-factory": 357,
+    "foreign-kind": 357,
+    "foreign-standard": 357,
+    "foreign-subset": 360,
+    "no-wildcard-fallback": 354,
+    "missing-selected-arm": 357,
+    "empty-factory": 357,
+    "bounded-factory": 357,
+    "duplicate-selected-arm": 357,
+    "duplicate-foreign-arm": 357,
+    "late-invalid-kind": 357,
+    "late-invalid-schema": 357,
+    "late-unicode-control": 357,
+    "late-overlong-schema": 357,
+    "late-noncanonical-kind": 357,
+    "late-empty-standard": 357,
+    "late-empty-subset": 357,
+    "late-overlong-standard": 357,
+    "late-control-subset": 357
   },
   "limits": {
     "declarations": 64,
@@ -424,7 +424,7 @@
       "field": "none",
       "value": "stdio.semio",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": null,
       "handoffs": 1
     },
@@ -433,7 +433,7 @@
       "field": "schema",
       "value": "stdio.semio.flow",
       "inputBytes": 265,
-      "retiredBytes": 1361,
+      "retiredBytes": 1389,
       "error": "identity",
       "handoffs": 0
     },
@@ -442,7 +442,7 @@
       "field": "document",
       "value": "evil-member",
       "inputBytes": 272,
-      "retiredBytes": 1368,
+      "retiredBytes": 1396,
       "error": "identity",
       "handoffs": 0
     },
@@ -451,7 +451,7 @@
       "field": "parent",
       "value": "evil-parent!s.flow.flow@1/*",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": "identity",
       "handoffs": 0
     },
@@ -460,7 +460,7 @@
       "field": "slot",
       "value": "foreign",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": "identity",
       "handoffs": 0
     },
@@ -469,7 +469,7 @@
       "field": "child",
       "value": "evil-member",
       "inputBytes": 272,
-      "retiredBytes": 1368,
+      "retiredBytes": 1396,
       "error": "identity",
       "handoffs": 0
     },
@@ -478,7 +478,7 @@
       "field": "kind",
       "value": "s.other.semio",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": "identity",
       "handoffs": 0
     },
@@ -487,7 +487,7 @@
       "field": "standard",
       "value": "v2",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": "identity",
       "handoffs": 0
     },
@@ -496,7 +496,7 @@
       "field": "subset",
       "value": "tree",
       "inputBytes": 260,
-      "retiredBytes": 1356,
+      "retiredBytes": 1384,
       "error": "identity",
       "handoffs": 0
     }
@@ -507,35 +507,35 @@
       "at": "selected",
       "event": "cancel",
       "error": "cancelled",
-      "retiredBytes": 332
+      "retiredBytes": 360
     },
     {
       "id": "dictionary-admission-retains-input",
       "at": "selected",
       "event": "capacity",
       "error": "capacity",
-      "retiredBytes": 332
+      "retiredBytes": 360
     },
     {
       "id": "cancel-before-semantic-handoff",
       "at": "ready",
       "event": "cancel",
       "error": "cancelled",
-      "retiredBytes": 1356
+      "retiredBytes": 1384
     },
     {
       "id": "generation-before-semantic-handoff",
       "at": "ready",
       "event": "generation",
       "error": "stale",
-      "retiredBytes": 1356
+      "retiredBytes": 1384
     },
     {
       "id": "operation-before-semantic-handoff",
       "at": "ready",
       "event": "operation",
       "error": "stale",
-      "retiredBytes": 1356
+      "retiredBytes": 1384
     }
   ],
   "lifecycle": [
@@ -545,7 +545,7 @@
       "event": "none",
       "handoffs": 1,
       "error": null,
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "cancel-before-selection",
@@ -553,7 +553,7 @@
       "event": "cancel",
       "handoffs": 0,
       "error": "cancelled",
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "cancel-before-complete-table",
@@ -561,7 +561,7 @@
       "event": "cancel",
       "handoffs": 0,
       "error": "cancelled",
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "generation-ready",
@@ -569,7 +569,7 @@
       "event": "generation",
       "handoffs": 0,
       "error": "stale",
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "operation-ready",
@@ -577,7 +577,7 @@
       "event": "operation",
       "handoffs": 0,
       "error": "stale",
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "expiry-ready",
@@ -585,7 +585,7 @@
       "event": "expired",
       "handoffs": 0,
       "error": "expired",
-      "retiredBytes": 329
+      "retiredBytes": 357
     },
     {
       "id": "clock-after-handoff",
@@ -593,7 +593,7 @@
       "event": "clock-absent",
       "handoffs": 1,
       "error": "expired",
-      "retiredBytes": 329
+      "retiredBytes": 357
     }
   ],
   "openedActor": "actor:member-opening-fixture"

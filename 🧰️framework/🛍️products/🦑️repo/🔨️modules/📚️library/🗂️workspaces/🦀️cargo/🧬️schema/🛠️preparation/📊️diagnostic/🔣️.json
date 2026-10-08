@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CargoPreparationDiagnostic",
+  "description": "Opt-in source preparation observations. Finished closes the dependency closure; lease waiting and guarded membership publication have separate durations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phase", "owner", "elapsedMs", "items"],
+  "properties": {
+    "phase": {"enum": ["lease-wait", "lease", "discovery", "inventory", "closure", "recipe", "finished", "publication"]},
+    "owner": {"type": "string", "minLength": 1},
+    "elapsedMs": {"type": "number", "minimum": 0},
+    "items": {"type": "integer", "minimum": 0}
+  }
+}

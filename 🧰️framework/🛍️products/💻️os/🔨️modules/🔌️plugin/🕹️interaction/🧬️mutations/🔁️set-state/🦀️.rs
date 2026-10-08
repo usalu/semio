@@ -1,6 +1,6 @@
 //! 🔁️ Direct interaction-state replacement payload, semantics and source-owned metadata.
 
-use super::InteractionConfigMutation;
+use super::{DomainEdit, InteractionConfigMutation, InteractionStateDiff};
 use protocol::InteractionState;
 
 //#region 🔖️Payload
@@ -27,20 +27,18 @@ impl semio_framework_value::FromValue for SetInteractionState {
 //#endregion 🔖️Payload
 
 //#region ⚙️ColdSemantics
-impl SetInteractionState {
-    /// 🧊️ Ordinary mutation evaluation; retained publication supplies its exact prebuilt root separately.
-    pub fn apply(&self) -> protocol::MutationApplyResult<InteractionState> {
-        Ok(self.state.clone())
-    }
-}
-
 impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for SetInteractionState {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "interaction-state", kind: "set-interaction-state", record: "SetInteractionState" };
-    fn diff(&self, _base: &InteractionState) -> protocol::MutationOutcome<InteractionConfigMutation> {
-        protocol::MutationOutcome::new(InteractionConfigMutation::SetInteractionState(self.clone()))
+    fn diff(&self, base: &InteractionState) -> protocol::MutationOutcome<InteractionStateDiff> {
+        protocol::MutationOutcome::new(InteractionStateDiff {
+            selection: DomainEdit::changed(&base.selection, &self.state.selection),
+            hover: DomainEdit::changed(&base.hover, &self.state.hover),
+            active_mode: DomainEdit::changed(&base.active_mode, &self.state.active_mode),
+            active_granularity: DomainEdit::changed(&base.active_granularity, &self.state.active_granularity),
+        })
     }
     fn inverse(&self, base: &InteractionState) -> Result<Vec<InteractionConfigMutation>, semio_framework_value::ValueError> {
-        Ok((|| vec![InteractionConfigMutation::set_state(base.clone())])())
+        Ok(vec![InteractionConfigMutation::SetInteractionState(Self { state: base.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")

@@ -75,6 +75,7 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
   const leaves = owner.memberManifests.map(pattern => new Bun.Glob(pattern.slice(0, -"/Cargo.toml".length)));
   const prefixes = owner.memberManifests.map(pattern => pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u, ""));
   const excluded = owner.contribution.exclude.map(pattern => new Bun.Glob(pattern));
+  const excludedRoots = owner.contribution.exclude.map(pattern => pattern.endsWith("/**") ? new Bun.Glob(pattern.slice(0, -3)) : undefined);
   const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
   const walk = (directory: string): void => {
     if (directory && !prefixes.some(prefix => !prefix || directory.startsWith(prefix + "/") || prefix === directory || prefix.startsWith(directory + "/"))) return;
@@ -83,12 +84,13 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
       const manifest = join(cwd, directory, "Cargo.toml");
       if (existsSync(manifest)) { physical(root, slash(relative(root,manifest))); paths.add(slash(relative(root,manifest))); return; }
     }
-    for (const name of readdirSync(join(cwd,directory))) {
+    for (const entry of readdirSync(join(cwd,directory),{withFileTypes:true})) {
+      const name=entry.name;
+      if(!entry.isDirectory() && (!entry.isFile() || name!=="Cargo.toml"))continue;
       const local=directory?`${directory}/${name}`:name;
-      if(name.startsWith(".") || opaque.has(name) || excluded.some((pattern,index)=>pattern.match(local) || pattern.match(`${local}/`) || owner.contribution.exclude[index]!.endsWith("/**") && new Bun.Glob(owner.contribution.exclude[index]!.slice(0,-3)).match(local)))continue;
-      const entry=lstatSync(join(cwd,local));
+      if(name.startsWith(".") || opaque.has(name) || excluded.some((pattern,index)=>pattern.match(local) || pattern.match(`${local}/`) || excludedRoots[index]?.match(local)))continue;
       if(entry.isDirectory())walk(local);
-      else if(entry.isFile() && name==="Cargo.toml" && local!=="Cargo.toml" && patterns.some(pattern=>pattern.match(local)) && !excluded.some(pattern=>pattern.match(slash(dirname(local)))))paths.add(slash(relative(root,join(cwd,local))));
+      else if(local!=="Cargo.toml" && patterns.some(pattern=>pattern.match(local)) && !excluded.some(pattern=>pattern.match(slash(dirname(local)))))paths.add(slash(relative(root,join(cwd,local))));
     }
   };
   if (patterns.some(pattern => pattern.match("Cargo.toml")) && !excluded.some(pattern => pattern.match(".") || pattern.match("./") || pattern.match("Cargo.toml"))) {
@@ -216,34 +218,48 @@ function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "chec
 }
 
 export type CargoPreparationV1 = Readonly<{ script: string; command: readonly string[] }>;
+export type CargoPreparationDiagnosticPhaseV1 = "lease-wait" | "lease" | "discovery" | "inventory" | "closure" | "recipe" | "finished" | "publication";
+/** 🕰️ Emits opt-in preparation observations separately from machine-readable stdout. */
+export function logCargoPreparationDiagnosticV1(phase: CargoPreparationDiagnosticPhaseV1, owner: string, elapsedMs: number, items: number): void {
+ if(process.env.SEMIO_CARGO_PREPARATION_TIMING==="1")console.error(`[DEBUG] cargo-preparation ${JSON.stringify({phase,owner,elapsedMs,items})}`);
+}
 /** 🧬️ Admits an owner-authored executable recipe with literal argv and no implicit producer identity. */
 export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
  const row=object(value);if(Object.keys(row).some(k=>!["script","command"].includes(k)) || (typeof row.script!=="string" || !row.script || isAbsolute(row.script) || /^[A-Za-z]:\//.test(row.script) || row.script.includes("\\")) || row.script.split("/").at(-1)!=="📜️script.ts" || !Array.isArray(row.command) || !row.command.length || row.command.some((v:unknown)=>typeof v!=="string" || !v || v.includes("\0")))throw new Error("Invalid Cargo preparation recipe");return {script:row.script,command:[...row.command]};
 }
 /** 🔗️ Selects only native scopes reached by the current workspace's authored local dependency paths. */
 export function prepareCargoOwners(root: string, selected: CargoWorkspaceScope, names: readonly string[] = []): void {
+ const timed=process.env.SEMIO_CARGO_PREPARATION_TIMING==="1",started=timed?performance.now():0;
+ const diagnostic=(phase:CargoPreparationDiagnosticPhaseV1,owner:string,start:number,items:number):void=>{if(timed)logCargoPreparationDiagnosticV1(phase,owner,performance.now()-start,items);};
  const scopes=discoverCargoWorkspaces(root), inventories=new Map<string,readonly CargoWorkspacePackage[]>(), documents=new Map<string,Record<string,any>>(), executed=new Set<string>();
+ diagnostic("discovery",selected.manifest,started,scopes.length);
  const document=(manifest:string):Record<string,any>=>{let value=documents.get(manifest);if(!value){value=read(root,manifest);documents.set(manifest,value);}return value;};
- const members=(owner:CargoWorkspaceScope):readonly CargoWorkspacePackage[]=>{let value=inventories.get(owner.directory);if(!value){value=cargoWorkspaceMembers(root,owner);inventories.set(owner.directory,value);}return value;};
- const initial=members(selected), pending=new Set((names.length?names.map(name=>{const pkg=initial.find(pkg=>pkg.name===name);if(!pkg)throw Error(`Unknown selected Cargo package: ${selected.manifest} ${name}`);return pkg;}):initial).map(pkg=>pkg.manifest));
+ const members=(owner:CargoWorkspaceScope):readonly CargoWorkspacePackage[]=>{let value=inventories.get(owner.directory);if(!value){const start=timed?performance.now():0;value=cargoWorkspaceMembers(root,owner);inventories.set(owner.directory,value);diagnostic("inventory",owner.manifest,start,value.length);}return value;};
+ const initial=members(selected), roots=new Set((names.length?names.map(name=>{const pkg=initial.find(pkg=>pkg.name===name);if(!pkg)throw Error(`Unknown selected Cargo package: ${selected.manifest} ${name}`);return pkg;}):initial).map(pkg=>pkg.manifest)),pending=new Set(roots);
  for(const manifest of pending){
+ const start=timed?performance.now():0;
  const owner=scopes.filter(scope=>scope.directory==="." || manifest.startsWith(scope.directory+"/")).sort((a,b)=>b.directory.length-a.directory.length)[0];
  if(!owner)throw Error(`Unknown selected Cargo scope: ${manifest}`);
  const pkg=members(owner).find(pkg=>pkg.manifest===manifest);if(!pkg)throw Error(`Cargo dependency lacks authored member authority: ${manifest}`);
  const current=document(manifest),authority=document(owner.manifest).workspace,groups=[current,...Object.values(current.target??{})] as Record<string,any>[];
- for(const group of groups)for(const kind of ["dependencies","dev-dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){
+ const kinds=roots.has(manifest)?["dependencies","dev-dependencies","build-dependencies"]:["dependencies","build-dependencies"];
+ for(const group of groups)for(const kind of kinds)for(const [alias,value] of Object.entries(group[kind]??{})){
  const entry=value as any;if(!entry || typeof entry!=="object")continue;const dependency=entry.workspace?authority.dependencies?.[alias]:entry;
  if(!dependency)throw Error(`Missing inherited Cargo dependency: ${manifest} ${alias}`);if(typeof dependency.path!=="string")continue;
  const path=resolve(root,entry.workspace?owner.directory:pkg.directory,dependency.path,"Cargo.toml"),local=slash(relative(root,path));
  if(local.startsWith("../") || isAbsolute(local))throw Error(`Cargo dependency escapes preparation authority: ${alias}`);physical(root,local);pending.add(local);
  }
+ diagnostic("closure",manifest,start,pending.size);
  const value=current.package?.metadata?.semio?.preparation;if(value===undefined)continue;
  const recipe=parseCargoPreparation(value),script=physical(root,slash(relative(root,resolve(root,pkg.directory,recipe.script)))),key=JSON.stringify([script,...recipe.command]);
  if(slash(relative(resolve(root,owner.directory),script)).startsWith("../"))throw Error(`Cargo preparation leaves its owner workspace: ${manifest}`);if(executed.has(key))continue;executed.add(key);
  console.log(`[cargo-preparation] ${manifest} ${recipe.command.join(" ")}`);
+ const recipeStart=timed?performance.now():0;
  const result=Bun.spawnSync([process.execPath,script,...recipe.command],{cwd:resolve(root,pkg.directory),env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script},stdout:"pipe",stderr:"inherit",timeout:30_000});
  if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw Error(`Cargo owner preparation failed: ${manifest} (${result.exitCode})`);
+ diagnostic("recipe",manifest,recipeStart,1);
  }
+ diagnostic("finished",selected.manifest,started,pending.size);
 }
 
 /** 🦀️ Uses the owned schema authority for native operations that consume current package inputs. */

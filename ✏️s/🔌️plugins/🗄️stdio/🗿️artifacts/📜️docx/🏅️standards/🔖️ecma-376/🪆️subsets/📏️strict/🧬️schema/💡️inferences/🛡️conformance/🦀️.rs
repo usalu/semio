@@ -81,7 +81,7 @@ pub fn check_strict_conformance(snapshot: &DocxSnapshot) -> Vec<Diagnostic> {
         }
     }
 
-    let mut owners: Vec<&String> = opc.relationships.keys().collect();
+    let mut owners: Vec<_> = opc.relationships.keys().collect();
     owners.sort();
     for owner in owners {
         for rel in opc.relationships.get(owner).expect("enumerated retained relationship owner").iter() {

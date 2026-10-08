@@ -4,64 +4,43 @@ use schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the playground artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.demonstrator.playground")]
 pub struct PlaygroundDiff {
-    #[state(artifact)]
-    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::PlaygroundArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
 }
 //#endregion 🔖️Diff
 
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use crate::standards::v1::subsets::any::schema::PlaygroundArtifact;
 use protocol::MutationDiff;
 
-impl PlaygroundDiff {
-    /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PlaygroundArtifact) -> protocol::MutationApplyResult<PlaygroundArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            next
-        })
-    }
-}
-
 impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
-    fn apply(&self, snapshot: &PlaygroundSnapshot) -> protocol::MutationApplyResult<PlaygroundSnapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            next
-        })
+    fn apply(&self, snapshot: &PlaygroundSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaygroundSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         if other.schema.is_some() {
             self.schema = other.schema;
         }
     }
 }
 
-/// 🖼️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &PlaygroundSnapshot) -> PlaygroundDiff {
-    PlaygroundDiff { artifact: Some(Box::new(PlaygroundArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+impl protocol::DiffAlgebra<PlaygroundSnapshot> for PlaygroundDiff {
+    fn inverse(&self, base: &PlaygroundSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()) }
+    }
+    fn between(base: &PlaygroundSnapshot, other: &PlaygroundSnapshot) -> Self {
+        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.schema.is_none()
+    }
 }
 
 #[cfg(test)]

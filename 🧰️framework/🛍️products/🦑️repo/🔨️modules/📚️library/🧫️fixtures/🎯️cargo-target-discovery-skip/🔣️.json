@@ -29,10 +29,6 @@
   ],
   "execution": {
     "target": "test-cargo-target-discovery-skip",
-    "command": "bun ./📜️script.ts test cargo-target-discovery-skip",
-    "launchName": "🧹clean🧩️taxonomy🎯️cargo-target-discovery-skip",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-cargo-target-discovery-skip --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.2154
+    "command": "bun ./📜️script.ts test cargo-target-discovery-skip"
   }
 }

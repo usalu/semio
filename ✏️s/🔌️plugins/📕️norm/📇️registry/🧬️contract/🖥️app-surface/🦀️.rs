@@ -686,55 +686,191 @@ fn field_label(path: &str, meta: Option<NormFieldMeta>, locale: Locale) -> Strin
     path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']').to_string()
 }
 
-/// 📤️ Projects `document` to its camelCase value tree, runs `edit`, decodes back, and commits `from_snapshot` as one undoable edit
-/// whose history row is labelled by its leaves (design §20.4).
+/// 🧭 One value-tree edit intent addressed by a camelCase path — what the generic `setField` / `insertItem` / `removeItem` /
+/// `applyRemedy` commands raise. A family resolves it to concrete kind mutations; nothing here compares or rewrites a snapshot.
+#[derive(Clone, Debug, PartialEq)]
+pub enum NormEdit {
+    SetField { path: String, value: semio_framework_value::DslValue },
+    InsertItem { path: String, index: usize, value: Option<semio_framework_value::DslValue> },
+    RemoveItem { path: String, index: usize },
+}
+
+/// 🔑 How one path selector (`[index]` / `[id=…]`) is spelled in a leaf payload: its position or its row id.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelectorKey {
+    Index(&'static str),
+    Id(&'static str),
+}
+
+/// ✏️ One settable leaf: the `path` template (`walls[].lengthM`), the semantic `kind` it raises and where its selectors and value go in the payload.
+#[derive(Clone, Copy, Debug)]
+pub struct SetFieldRule {
+    pub path: &'static str,
+    pub kind: &'static str,
+    pub selectors: &'static [SelectorKey],
+    pub value: &'static str,
+}
+
+/// ➕ One insertable list: the `path` template of the array (`walls`, `walls[].openings`) and the kind that inserts a row into it.
+#[derive(Clone, Copy, Debug)]
+pub struct InsertItemRule {
+    pub path: &'static str,
+    pub kind: &'static str,
+    pub selectors: &'static [SelectorKey],
+    pub index: &'static str,
+    pub item: &'static str,
+}
+
+/// ➖ One removable list: the `path` template of the array and the kind that removes the row at an index.
+#[derive(Clone, Copy, Debug)]
+pub struct RemoveItemRule {
+    pub path: &'static str,
+    pub kind: &'static str,
+    pub selectors: &'static [SelectorKey],
+    pub index: &'static str,
+}
+
+/// 📚 A family's declarative edit vocabulary: which paths raise which concrete kind.
+#[derive(Clone, Copy, Debug)]
+pub struct NormEditRules {
+    pub set_field: &'static [SetFieldRule],
+    pub insert_item: &'static [InsertItemRule],
+    pub remove_item: &'static [RemoveItemRule],
+}
+
+struct Addressed {
+    template: String,
+    selected: Vec<(usize, Option<String>)>,
+}
+
+fn address(root: &semio_framework_value::DslValue, segments: &[PathSegment], path: &str) -> Result<Addressed, String> {
+    let mut cursor = root;
+    let mut template = String::new();
+    let mut selected = Vec::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Field(name) => {
+                let semio_framework_value::DslValue::Object(entries) = cursor else {
+                    return Err(format!("expected object before field '{name}' in path '{path}'"));
+                };
+                let Some((_, value)) = entries.iter().find(|(key, _)| key == name) else {
+                    return Err(format!("missing field '{name}' in path '{path}'"));
+                };
+                if !template.is_empty() {
+                    template.push('.');
+                }
+                template.push_str(name);
+                cursor = value;
+            }
+            PathSegment::Index(_) | PathSegment::Id(_) => {
+                let semio_framework_value::DslValue::Array(items) = cursor else {
+                    return Err(format!("expected array before list selector in path '{path}'"));
+                };
+                let index = resolve_list_index(items, segment, path)?;
+                selected.push((index, object_id_field(&items[index]).map(str::to_string)));
+                template.push_str("[]");
+                cursor = &items[index];
+            }
+        }
+    }
+    Ok(Addressed { template, selected })
+}
+
+fn selector_entries(selectors: &[SelectorKey], selected: &[(usize, Option<String>)], path: &str) -> Result<Vec<(String, semio_framework_value::DslValue)>, String> {
+    if selectors.len() != selected.len() {
+        return Err(format!("path '{path}' selects {} list rows, its edit rule addresses {}", selected.len(), selectors.len()));
+    }
+    selectors
+        .iter()
+        .zip(selected)
+        .map(|(key, (index, id))| match key {
+            SelectorKey::Index(name) => Ok(((*name).to_string(), semio_framework_value::DslValue::uint(*index as u64))),
+            SelectorKey::Id(name) => id.clone().map(|id| ((*name).to_string(), semio_framework_value::DslValue::String(id))).ok_or_else(|| format!("path '{path}' selects a row without an id")),
+        })
+        .collect()
+}
+
+impl NormEditRules {
+    /// 🎯 Resolves `edit` against `document` into the concrete kind mutations it denotes: the path names the leaf, the rule names the
+    /// kind, the payload is the selectors the path resolved plus the new value — no snapshot is rewritten or compared.
+    pub fn resolve<D, M>(&self, document: &D, edit: &NormEdit) -> Result<Vec<M>, String>
+    where
+        D: semio_framework_value::ToValue,
+        M: protocol::Mutation<D>,
+    {
+        let tree = semio_framework_value::ToValue::to_value(document);
+        let (kind, entries) = match edit {
+            NormEdit::SetField { path, value } => {
+                let addressed = address(&tree, &parse_path(path)?, path)?;
+                let rule = self.set_field.iter().find(|rule| rule.path == addressed.template).ok_or_else(|| format!("no kind sets '{}' ({path})", addressed.template))?;
+                let mut entries = selector_entries(rule.selectors, &addressed.selected, path)?;
+                entries.push((rule.value.to_string(), value.clone()));
+                (rule.kind, entries)
+            }
+            NormEdit::InsertItem { path, index, value } => {
+                let addressed = address(&tree, &parse_path(path)?, path)?;
+                let rule = self.insert_item.iter().find(|rule| rule.path == addressed.template).ok_or_else(|| format!("no kind inserts into '{}' ({path})", addressed.template))?;
+                let mut entries = selector_entries(rule.selectors, &addressed.selected, path)?;
+                entries.push((rule.index.to_string(), semio_framework_value::DslValue::uint(*index as u64)));
+                entries.push((rule.item.to_string(), value.clone().ok_or_else(|| format!("insertItem '{path}' needs a value"))?));
+                (rule.kind, entries)
+            }
+            NormEdit::RemoveItem { path, index } => {
+                let segments = parse_path(path)?;
+                let (collection, element) = match segments.split_last() {
+                    Some((PathSegment::Index(_) | PathSegment::Id(_), parent)) => {
+                        let parent_address = address(&tree, parent, path)?;
+                        let full = address(&tree, &segments, path)?;
+                        let element = full.selected.last().map(|(position, _)| *position).ok_or_else(|| format!("removeItem '{path}' selects no list row"))?;
+                        (parent_address, element)
+                    }
+                    _ => (address(&tree, &segments, path)?, *index),
+                };
+                let rule = self.remove_item.iter().find(|rule| rule.path == collection.template).ok_or_else(|| format!("no kind removes from '{}' ({path})", collection.template))?;
+                let mut entries = selector_entries(rule.selectors, &collection.selected, path)?;
+                entries.push((rule.index.to_string(), semio_framework_value::DslValue::uint(element as u64)));
+                (rule.kind, entries)
+            }
+        };
+        M::from_payload_value(kind, semio_framework_value::DslValue::object(entries)).map(|mutation| vec![mutation]).map_err(|error| error.to_string())
+    }
+}
+
+fn unresolved(error: String) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("norm.edit-unresolved"), error)
+}
+
+/// ✏️ Generic `setField` — `{path, value}` over the document value tree, resolved by the family to concrete kinds.
 ///
 /// 📐️ **SI convention:** snapshot scalar quantity fields MUST store SI (m, N, Pa, …). `applyRemedy` writes
 /// `Remedy.required.value` (already SI) straight into `remedy.target.path`. Family agents must not store mm/kN/MPa
 /// in snapshot fields — display units are UI-only via [`format_quantity`] / [`NormFieldMeta::unit`].
-pub fn commit_value_tree_edit<D, M, F>(document: &D, edit: impl FnOnce(&mut semio_framework_value::DslValue) -> Result<(), String>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn handle_set_field<D, M, F>(document: &D, path: &str, value: semio_framework_value::DslValue, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let mut tree = semio_framework_value::ToValue::to_value(document);
-    edit(&mut tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?;
-    let target = semio_framework_value::FromValue::from_value(tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-decode"), error.to_string()))?;
-    commit_snapshot_fields(from_snapshot(document, &target))
-}
-
-/// ✏️ Generic `setField` — `{path, value}` over the document value tree.
-pub fn handle_set_field<D, M, F>(document: &D, path: &str, value: semio_framework_value::DslValue, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
-where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
-{
-    let path = path.to_string();
-    commit_value_tree_edit(document, move |tree| set_value_at_path(tree, &path, value), from_snapshot)
+    commit_snapshot_fields(resolve(document, &NormEdit::SetField { path: path.to_string(), value }).map_err(unresolved)?)
 }
 
 /// ➕ Generic `insertItem` — `{path, index, value?}`.
-pub fn handle_insert_item<D, M, F>(document: &D, path: &str, index: usize, value: Option<semio_framework_value::DslValue>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn handle_insert_item<D, M, F>(document: &D, path: &str, index: usize, value: Option<semio_framework_value::DslValue>, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let path = path.to_string();
-    commit_value_tree_edit(document, move |tree| insert_value_at_path(tree, &path, index, value), from_snapshot)
+    commit_snapshot_fields(resolve(document, &NormEdit::InsertItem { path: path.to_string(), index, value }).map_err(unresolved)?)
 }
 
 /// ➖ Generic `removeItem` — `{path, index}`.
-pub fn handle_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn handle_remove_item<D, M, F>(document: &D, path: &str, index: usize, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    let path = path.to_string();
-    commit_value_tree_edit(document, move |tree| remove_value_at_path(tree, &path, index), from_snapshot)
+    commit_snapshot_fields(resolve(document, &NormEdit::RemoveItem { path: path.to_string(), index }).map_err(unresolved)?)
 }
 
-/// 🩹 Resolves a remedy on `report` into a path + value write (numeric SI or OneOf option string).
-pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &mut semio_framework_value::DslValue) -> Result<(), Fault> {
+/// 🩹 Resolves a remedy on `report` into the path it writes and the value it writes there (numeric SI or OneOf option string), reading
+/// the current leaf type from `tree` without touching it.
+pub fn remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &semio_framework_value::DslValue) -> Result<(String, semio_framework_value::DslValue), Fault> {
     let check = report.checks.iter().find(|check| check.id == check_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-check"), format!("check '{check_id}' not in report")))?;
     let remedy = check.remedies.get(remedy_index).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-remedy"), format!("remedy {remedy_index} missing on '{check_id}'")))?;
     if !remedy.applicable {
@@ -786,28 +922,37 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
             _ => semio_framework_value::DslValue::float(remedy.required.value),
         },
     };
+    Ok((path, value))
+}
+
+/// 🩹 Writes a resolved remedy into a value tree — the remedy laws' perturbation helper; the mutation path resolves the same edit
+/// to a concrete kind instead.
+pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &mut semio_framework_value::DslValue) -> Result<(), Fault> {
+    let (path, value) = remedy_edit(report, check_id, remedy_index, option_index, tree)?;
     set_value_at_path(tree, &path, value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))
 }
 
 /// 🩹 Generic `applyRemedy` — re-evaluates, finds `checkId`, writes SI `required` (or OneOf option) into `remedy.target.path`.
-pub fn handle_apply_remedy<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
+pub fn handle_apply_remedy<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, resolve: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
+    F::Document: semio_framework_value::ToValue,
+    Map: FnOnce(&F::Document, &NormEdit) -> Result<Vec<F::Mutation>, String>,
 {
-    handle_apply_remedy_with_option::<F, Map>(document, check_id, remedy_index, 0, from_snapshot)
+    handle_apply_remedy_with_option::<F, Map>(document, check_id, remedy_index, 0, resolve)
 }
 
 /// 🩹 `applyRemedy` with an explicit OneOf `option_index` (ignored for numeric bounds).
-pub fn handle_apply_remedy_with_option<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, option_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
+pub fn handle_apply_remedy_with_option<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, option_index: usize, resolve: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
+    F::Document: semio_framework_value::ToValue,
+    Map: FnOnce(&F::Document, &NormEdit) -> Result<Vec<F::Mutation>, String>,
 {
     let report = cached_report_for::<F>(document).unwrap_or_else(|| F::evaluate(document));
-    commit_value_tree_edit(document, move |tree| apply_remedy_edit(&report, check_id, remedy_index, option_index, tree).map_err(|fault| format!("{:?}", fault)), from_snapshot)
+    let tree = semio_framework_value::ToValue::to_value(document);
+    let (path, value) = remedy_edit(&report, check_id, remedy_index, option_index, &tree)?;
+    commit_snapshot_fields(resolve(document, &NormEdit::SetField { path, value }).map_err(unresolved)?)
 }
 //#endregion 🔖️ValuePath
 
@@ -1629,8 +1774,8 @@ where
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
-/// 📤️ Commits a bundle of targeted semantic mutations as one edit: a `set-snapshot` command payload (or a value-tree
-/// edit) decomposes into one `change-<field>` mutation per persistent field via `XMutation::from_snapshot`, bundled here
+/// 📤️ Commits a bundle of targeted semantic mutations as one edit: a `set-snapshot` command payload decomposes into concrete kinds via
+/// the family's `replacement` plan and a value-tree edit resolves to its one kind via [`NormEditRules::resolve`], bundled here
 /// into a single undo entry whose history row is labelled by its leaves' `SemanticMutation::label` (design §20.4, §20.6).
 pub fn commit_snapshot_fields<M>(mutations: Vec<M>) -> Result<Emit<M, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(mutations))
@@ -1674,45 +1819,42 @@ fn dsl_value_from_json(json: &str) -> Result<semio_framework_value::DslValue, St
 }
 
 /// ✏️ Shared `setField` handler body used by every family's command leaf.
-pub fn dispatch_set_field<D, M, F>(document: &D, path: &str, value_json: &str, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn dispatch_set_field<D, M, F>(document: &D, path: &str, value_json: &str, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
     let value = dsl_value_from_json(value_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-field-value"), error))?;
-    handle_set_field(document, path, value, from_snapshot)
+    handle_set_field(document, path, value, resolve)
 }
 
 /// ➕ Shared `insertItem` handler body.
-pub fn dispatch_insert_item<D, M, F>(document: &D, path: &str, index: usize, value_json: Option<&str>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn dispatch_insert_item<D, M, F>(document: &D, path: &str, index: usize, value_json: Option<&str>, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
     let value = match value_json {
         Some(json) if json != "null" => Some(dsl_value_from_json(json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.insert-item-value"), error))?),
         _ => None,
     };
-    handle_insert_item(document, path, index, value, from_snapshot)
+    handle_insert_item(document, path, index, value, resolve)
 }
 
 /// ➖ Shared `removeItem` handler body.
-pub fn dispatch_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+pub fn dispatch_remove_item<D, M, F>(document: &D, path: &str, index: usize, resolve: F) -> Result<Emit<M, NoConfigMutation>, Fault>
 where
-    D: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    F: FnOnce(&D, &D) -> Vec<M>,
+    F: FnOnce(&D, &NormEdit) -> Result<Vec<M>, String>,
 {
-    handle_remove_item(document, path, index, from_snapshot)
+    handle_remove_item(document, path, index, resolve)
 }
 
 /// 🩹 Shared `applyRemedy` handler body.
-pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<Fam::Mutation, NoConfigMutation>, Fault>
+pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str, remedy_index: usize, resolve: Map) -> Result<Emit<Fam::Mutation, NoConfigMutation>, Fault>
 where
     Fam: NormFamily,
-    Fam::Document: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
-    Map: FnOnce(&Fam::Document, &Fam::Document) -> Vec<Fam::Mutation>,
+    Fam::Document: semio_framework_value::ToValue,
+    Map: FnOnce(&Fam::Document, &NormEdit) -> Result<Vec<Fam::Mutation>, String>,
 {
-    handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, from_snapshot)
+    handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, resolve)
 }
 
 

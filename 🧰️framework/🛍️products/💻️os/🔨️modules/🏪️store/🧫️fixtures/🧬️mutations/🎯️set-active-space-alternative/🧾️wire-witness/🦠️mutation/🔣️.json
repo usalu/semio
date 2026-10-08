@@ -1,0 +1,6 @@
+{
+  "operation": "setActiveSpaceAlternative",
+  "payload": {
+    "alternativeId": null
+  }
+}

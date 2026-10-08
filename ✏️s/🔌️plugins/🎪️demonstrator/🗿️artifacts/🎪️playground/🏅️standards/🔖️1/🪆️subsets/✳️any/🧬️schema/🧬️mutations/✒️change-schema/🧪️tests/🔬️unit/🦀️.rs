@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::mutations::change_schema::{apply_playground_mutation_json,undo_playground_mutation_json};
 use super::*;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 
 fn mutation(schema: &str) -> PlaygroundMutation {
     PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: schema.into() })
@@ -26,11 +26,11 @@ async fn descriptor_inverse_and_outcome_are_complete() {
     assert_eq!(operation.semantics().kind, "change-schema");
     assert_eq!(operation.semantics().record, "ChangedSchema");
     assert_eq!(PlaygroundMutation::kinds().len(), KINDS.len());
-    let after = operation.diff(&base).diff().apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.schema, "playground.changed");
     let mut restored = after;
     for back in operation.inverse(&base).expect("valid retained mutation inverse fixture") {
-        restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
     protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &operation).await;
@@ -44,8 +44,9 @@ async fn inverse_and_absorb_laws_hold() {
     let base = PlaygroundSnapshot { schema: "playground.base".into() };
     let operation = mutation("playground.changed");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &operation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base);
     let first = operation.diff(&base).into_parts().0;
-    let after = first.apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(&first, &base).expect("valid mutation diff");
     let second = mutation("playground.changed-again").diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }

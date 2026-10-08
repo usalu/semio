@@ -4,7 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { lstatSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
-import { parse as parseJsonc, visit as jsoncVisit } from "jsonc-parser";
+import { visit as jsoncVisit } from "jsonc-parser";
 import stringify from "fast-json-stable-stringify";
 import { join as oracleJoin } from "pathe";
 import ts from "typescript";
@@ -382,21 +382,14 @@ for (const row of vector.physicalCases) test("physical preflight publication bou
   }
 }, 15_000);
 
-test("the dedicated preflight gate is registered through Nx and both ordered launch catalogs", () => {
+test("the dedicated preflight gate is registered through Nx as an owner route that is never replayed from cache", () => {
   const expected = vector.execution, library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
   const project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
+  expect(project.targets[expected.target]?.cache).toBe(expected.cache);
   const router = readFileSync(join(root, library, "📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   expect(router.match(/segments\[0\] === "preflight-reference-basis"/gu)).toHaveLength(1);
   expect(router).toContain("🧪️tests/🛫️preflight-reference-basis/🟦️.ts");
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const rows = parseJsonc(readFileSync(join(root, path), "utf8")).configurations;
-    const matches = rows.filter((entry: { name: string }) => entry.name === expected.launchName);
-    expect(matches).toHaveLength(1);
-    expect(matches[0].command).toBe(expected.launchCommand);
-    expect(matches[0].presentation).toEqual({ group: expected.launchGroup, order: expected.launchOrder });
-    expect(rows.filter((entry: any) => entry.presentation?.group === expected.launchGroup && entry.presentation?.order === expected.launchOrder)).toHaveLength(1);
-  }
 });
 
 test("the exercised production slices remain stable across the dedicated gate", () => {

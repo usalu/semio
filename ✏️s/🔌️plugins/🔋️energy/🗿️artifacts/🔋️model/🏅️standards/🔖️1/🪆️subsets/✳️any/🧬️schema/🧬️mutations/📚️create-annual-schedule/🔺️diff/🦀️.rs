@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateAnnualSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, AnnualSchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -25,11 +25,6 @@ pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -
             return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", holiday.0), [holiday.0.to_string()]);
         }
     }
-    let mut model = base.model.clone();
-    model.schedules.annual.insert(
-        payload.index as usize,
-        crate::schedule::AnnualSchedule { id: payload.id, rules: Vec::new(), default_daily_schedule_id: payload.default_daily_schedule_id, holiday_daily_schedule_id: payload.holiday_daily_schedule_id, holiday_dates: Vec::new() },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { schedules: ScheduleSetPatch { annual: Rows::inserting(payload.index as usize, crate::schedule::AnnualSchedule { id: payload.id, rules: Vec::new(), default_daily_schedule_id: payload.default_daily_schedule_id, holiday_daily_schedule_id: payload.holiday_daily_schedule_id, holiday_dates: Vec::new() }), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

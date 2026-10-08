@@ -1,5 +1,6 @@
 /** 🌀️ Exact owned procedural fields and semantic SQLite transfer. */
 export * from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+export * from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️catalogue/🟦️.ts";
 export type{Generation3dSnapshot}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 export type{Generation3dDiff}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
 export * from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";

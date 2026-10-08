@@ -1,0 +1,54 @@
+{
+  "fieldLevelsPerBox": 1,
+  "boxLevelsPerBox": 1,
+  "terminalFieldLevels": 1,
+  "close": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 2,
+    "maximumReleaseBytes": 65536
+  },
+  "cases": [
+    {
+      "boxes": 0,
+      "maximumDepth": 1,
+      "requiredDepth": 1,
+      "accepted": true
+    },
+    {
+      "boxes": 1,
+      "maximumDepth": 2,
+      "requiredDepth": 3,
+      "accepted": false
+    },
+    {
+      "boxes": 1,
+      "maximumDepth": 3,
+      "requiredDepth": 3,
+      "accepted": true
+    },
+    {
+      "boxes": 31,
+      "maximumDepth": 64,
+      "requiredDepth": 63,
+      "accepted": true
+    },
+    {
+      "boxes": 32,
+      "maximumDepth": 64,
+      "requiredDepth": 65,
+      "accepted": false
+    },
+    {
+      "boxes": 255,
+      "maximumDepth": 512,
+      "requiredDepth": 511,
+      "accepted": true
+    },
+    {
+      "boxes": 256,
+      "maximumDepth": 512,
+      "requiredDepth": 513,
+      "accepted": false
+    }
+  ]
+}

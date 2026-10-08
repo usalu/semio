@@ -49,6 +49,250 @@ impl<D, T> Default for IndexedTripleDiff<D, T> {
 }
 //#endregion 🔖️IndexedTriple
 
+//#region 🔖️IndexedAlgebra
+/// 🧮️ The nested diff of one row of an index-keyed collection. `apply_row`/`inverse_row`/`absorb_row` are the row-local
+/// halves of the [`IndexedTripleDiff`] algebra below; `between_row` is for sync/import only, never for mutation leaves.
+pub trait IndexedRow<T>: Clone {
+    fn apply_row(&self, base: &T) -> T;
+    fn inverse_row(&self, base: &T) -> Self;
+    fn absorb_row(&mut self, other: Self);
+    fn row_is_empty(&self) -> bool;
+    fn between_row(base: &T, other: &T) -> Self;
+}
+
+/// 🔁️ Whole-row replacement as a row diff: the modified row takes the carried value; later replacements win.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Replace<T> {
+    pub value: T,
+}
+
+impl<T: Clone + PartialEq> IndexedRow<T> for Replace<T> {
+    fn apply_row(&self, _base: &T) -> T {
+        self.value.clone()
+    }
+    fn inverse_row(&self, base: &T) -> Self {
+        Replace { value: base.clone() }
+    }
+    fn absorb_row(&mut self, other: Self) {
+        self.value = other.value;
+    }
+    fn row_is_empty(&self) -> bool {
+        false
+    }
+    fn between_row(_base: &T, other: &T) -> Self {
+        Replace { value: other.clone() }
+    }
+}
+
+impl<D, T> IndexedTripleDiff<D, T> {
+    /// 🕳️ Whether the triple names no removal, modification or addition.
+    pub fn is_unchanged(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
+    sorted.partition_point(|&v| v <= x)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+    pos - count_le(excluded_sorted, pos)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+    let mut candidate = rank;
+    loop {
+        let next = rank + count_le(excluded_sorted, candidate);
+        if next == candidate {
+            return candidate;
+        }
+        candidate = next;
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
+    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
+}
+
+/// 🧭️ Position-pairwise state delta for sync/import: `0..min(len)` compare as `modified`, base's tail is `removed`, other's tail
+/// is `added`. Forbidden in mutation leaves.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn between_indexed_rows<D: IndexedRow<T>, T: Clone>(base: &[T], other: &[T]) -> IndexedTripleDiff<D, T> {
+    let min = base.len().min(other.len());
+    let mut modified = Vec::new();
+    for i in 0..min {
+        let d = D::between_row(&base[i], &other[i]);
+        if !d.row_is_empty() {
+            modified.push(IndexModified { index: i, diff: d });
+        }
+    }
+    let removed: Vec<usize> = (min..base.len()).collect();
+    let added: Vec<IndexAdded<T>> = (min..other.len()).map(|i| IndexAdded { index: i, item: other[i].clone() }).collect();
+    IndexedTripleDiff { removed, modified, added }
+}
+
+/// ▶️ Apply semantics: modify against BASE indices, remove descending, then insert `added` ascending at `min(index, len)`
+/// against the FINAL positions. Validate with [`validate_indexed_triple`] first.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_indexed_rows<D: IndexedRow<T>, T: Clone>(diff: &IndexedTripleDiff<D, T>, base: &[T]) -> Vec<T> {
+    let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
+    for m in &diff.modified {
+        if let Some(Some(item)) = next.get_mut(m.index) {
+            *item = m.diff.apply_row(item);
+        }
+    }
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.reverse();
+    for &r in &removed_sorted {
+        if r < next.len() {
+            next.remove(r);
+        }
+    }
+    let mut out: Vec<T> = next.into_iter().flatten().collect();
+    let mut added_sorted: Vec<&IndexAdded<T>> = diff.added.iter().collect();
+    added_sorted.sort_by_key(|a| a.index);
+    for a in added_sorted {
+        let at = a.index.min(out.len());
+        out.insert(at, a.item.clone());
+    }
+    out
+}
+
+/// ↩️ The negative diff of an index-keyed triple, given the ORIGINAL base items.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_indexed_rows<D: IndexedRow<T>, T: Clone>(diff: &IndexedTripleDiff<D, T>, base_items: &[T]) -> IndexedTripleDiff<D, T> {
+    let removed_sorted = {
+        let mut v = diff.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added_index_sorted = {
+        let mut v: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
+    let mut inv_removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+    let mut inv_modified: Vec<IndexModified<D>> = Vec::new();
+    for m in &diff.modified {
+        if let Some(orig) = base_items.get(m.index) {
+            let after_index = transport_forward(m.index, &removed_sorted, &added_index_sorted);
+            inv_modified.push(IndexModified { index: after_index, diff: m.diff.inverse_row(orig) });
+        }
+    }
+    let mut inv_added: Vec<IndexAdded<T>> = Vec::new();
+    for &r in &diff.removed {
+        if let Some(orig) = base_items.get(r) {
+            inv_added.push(IndexAdded { index: r, item: orig.clone() });
+        }
+    }
+    inv_removed.sort_unstable();
+    inv_modified.sort_by_key(|m| m.index);
+    inv_added.sort_by_key(|a| a.index);
+    IndexedTripleDiff { removed: inv_removed, modified: inv_modified, added: inv_added }
+}
+
+/// ➕️ Sequential-coalesce absorb (base→mid composed with mid→after): patch∘patch coalesces into one patch, create∘delete
+/// annihilates, delete∘create becomes a replace.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn absorb_indexed_rows<D: IndexedRow<T>, T: Clone>(mine: &mut IndexedTripleDiff<D, T>, other: IndexedTripleDiff<D, T>) {
+    let removed1_sorted = {
+        let mut v = mine.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added1_index_sorted = {
+        let mut v: Vec<usize> = mine.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
+    let removed2_sorted = {
+        let mut v = other.removed.clone();
+        v.sort_unstable();
+        v
+    };
+    let added2_index_sorted = {
+        let mut v: Vec<usize> = other.added.iter().map(|a| a.index).collect();
+        v.sort_unstable();
+        v
+    };
+    let mut merged_added: Vec<IndexAdded<T>> = std::mem::take(&mut mine.added);
+    let mut annihilated: std::collections::HashSet<usize> = Default::default();
+    let mut merged_removed_base: Vec<usize> = removed1_sorted.clone();
+    for &r2 in &removed2_sorted {
+        if added1_index_sorted.binary_search(&r2).is_ok() {
+            annihilated.insert(r2);
+            merged_added.retain(|a| a.index != r2);
+        } else {
+            let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
+        }
+    }
+    merged_removed_base.sort_unstable();
+    merged_removed_base.dedup();
+    let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut mine.modified).into_iter().map(|m| (m.index, m.diff)).collect();
+    for base_index in &merged_removed_base {
+        modified_map.remove(base_index);
+    }
+    for m2 in other.modified {
+        let mp = m2.index;
+        if annihilated.contains(&mp) {
+            continue;
+        }
+        if added1_index_sorted.binary_search(&mp).is_ok() {
+            if let Some(entry) = merged_added.iter_mut().find(|a| a.index == mp) {
+                entry.item = m2.diff.apply_row(&entry.item);
+            }
+        } else {
+            let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            if merged_removed_base.binary_search(&base_index).is_ok() {
+                continue;
+            }
+            match modified_map.entry(base_index) {
+                std::collections::btree_map::Entry::Occupied(mut slot) => slot.get_mut().absorb_row(m2.diff),
+                std::collections::btree_map::Entry::Vacant(slot) => {
+                    slot.insert(m2.diff);
+                }
+            }
+        }
+    }
+    let mut merged_added_final: Vec<IndexAdded<T>> = merged_added
+        .into_iter()
+        .map(|a| {
+            let after_pos = if removed2_sorted.binary_search(&a.index).is_ok() {
+                a.index
+            } else {
+                let post_remove_rank = rank_excluding(a.index, &removed2_sorted);
+                unrank_excluding(post_remove_rank, &added2_index_sorted)
+            };
+            IndexAdded { index: after_pos, item: a.item }
+        })
+        .collect();
+    merged_added_final.extend(other.added);
+    merged_added_final.sort_by_key(|a| a.index);
+    mine.removed = merged_removed_base;
+    mine.modified = modified_map.into_iter().map(|(index, diff)| IndexModified { index, diff }).collect();
+    mine.added = merged_added_final;
+}
+
+/// 🧮️ `Option<IndexedTripleDiff>` slot helpers shared by every diff type that nests an index-keyed collection.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn absorb_indexed_slot<D: IndexedRow<T>, T: Clone>(mine: &mut Option<IndexedTripleDiff<D, T>>, other: Option<IndexedTripleDiff<D, T>>) {
+    match (mine.as_mut(), other) {
+        (Some(slot), Some(theirs)) => absorb_indexed_rows(slot, theirs),
+        (None, Some(theirs)) => *mine = Some(theirs),
+        _ => {}
+    }
+    if mine.as_ref().is_some_and(IndexedTripleDiff::is_unchanged) {
+        *mine = None;
+    }
+}
+//#endregion 🔖️IndexedAlgebra
+
 //#region 🔖️NamedTriple
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

@@ -1,5 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedPackSession, Process3dMountedSnapshotOwner};
-use crate::standards::v1::subsets::any::io::text::snapshot::{process3d_mounted_pack_session};
+use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedPackSession, Process3dMountedSnapshotOwner, process3d_mounted_pack_session};
 use super::*;
 use crate::{ProcessMeasure, StepOrigin, StockQuantity};
 
@@ -167,7 +166,7 @@ fn every_interrupted_grant_closes_into_exact_retirement() {
 
 #[test]
 fn mounted_region_has_no_batch_decoder_edge() {
-    let source = include_str!("../../../../../🧬️schema/📸️snapshot/🦀️.rs");
+    let source = include_str!("../../🦀️.rs");
     let region = source.split_once("//#region 🔖️MountedTypedSnapshotOwner").expect("mounted region start").1.split_once("//#endregion 🔖️MountedTypedSnapshotOwner").expect("mounted region end").0;
     for edge in [concat!("decode_", "document"), concat!("decode_", "pack"), concat!("__dsl_", "from_record"), concat!("read_str", "_lp")] {
         assert_eq!(region.matches(edge).count(), 0, "mounted snapshot owner must not reach {edge}");

@@ -9,7 +9,6 @@ use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutat
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::standards::v1::subsets::drawing::schema::mutations::{
-    set_snapshot::SetSnapshot,
     change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode, drag_nodes::DragNodes, flatten_node::FlattenNode,
     group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath, rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
 };
@@ -77,8 +76,6 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
     match m {
-        SemioDrawingMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioDrawingMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioDrawingMutation::CreateLayer(p) => format!("createLayer:{},{}", p.index, enc_layer(&p.layer)),
         SemioDrawingMutation::DeleteLayer(p) => format!("deleteLayer:{}", enc_str(&p.id)),
         SemioDrawingMutation::CreateNode(p) => format!("createNode:{},{},{}", enc_node_path(&p.parent), p.index, enc_node(&p.node)),
@@ -101,16 +98,11 @@ fn print_drawing_mutation(m: &SemioDrawingMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_drawing_mutation(line: &str) -> Result<SemioDrawingMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioDrawingMutation::PatchSnapshot(crate::standards::v1::subsets::drawing::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioDrawingMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("drawing mutation: missing ':' in {line:?}"))?;
     match tag {
@@ -225,7 +217,6 @@ use crate::standards::v1::subsets::drawing::schema::mutations::rotate_node;
 use crate::standards::v1::subsets::drawing::schema::mutations::scale_node;
 use crate::standards::v1::subsets::drawing::schema::mutations::unflatten_node;
 use crate::standards::v1::subsets::drawing::schema::mutations::ungroup_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

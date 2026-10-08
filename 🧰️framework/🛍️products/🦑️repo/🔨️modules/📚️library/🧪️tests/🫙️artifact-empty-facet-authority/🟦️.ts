@@ -104,7 +104,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   expect(join(repoRoot, vector.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
-  expect(project.targets[vector.target]).toEqual({ executor: "nx:run-commands", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
+  expect(project.targets[vector.target]).toEqual({ executor: "nx:run-commands", cache: vector.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[vector.target]).toBe(`nx run @semio-tech/repo-lib:${vector.target}`);
   const path = join(packageRoot, "📜️script.ts"), source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -117,12 +117,5 @@ test("registers the empty-facet authority through its closed canonical route", a
     const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Empty-facet authority fell through to generic routing"); });
     await router.run([vector.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, vector.source)], options: { cwd: repoRoot } }]);
-  }
-  for (const filename of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const parseErrors: ParseError[] = [], document = parse(readFileSync(join(repoRoot, filename), "utf8"), parseErrors);
-    expect(parseErrors).toEqual([]);
-    const entries = document.configurations.filter((row: { name: string }) => row.name === vector.launchName);
-    expect(entries).toEqual([{ name: vector.launchName, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${vector.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: vector.launchGroup, order: vector.launchOrder } }]);
-    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === vector.launchGroup && row.presentation?.order === vector.launchOrder)).toHaveLength(1);
   }
 });

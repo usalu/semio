@@ -44,3 +44,6 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for DeleteNode {
     }
 }
 //#endregion 🔖️Mutation
+
+#[path = "🎮️prepare/🦀️.rs"]
+pub mod preparation;

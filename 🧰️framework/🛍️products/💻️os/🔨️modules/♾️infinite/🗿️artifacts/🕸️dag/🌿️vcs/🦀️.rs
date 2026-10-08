@@ -14,7 +14,7 @@ use crate::os_spr::Mutation;
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 pub use crate::os_spr::ActorId;
-use crate::os_spr::{Identified, MutationDiff, Patchable};
+use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationDiff, Patchable};
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
 use crate::os_store::ArtifactCommand;
@@ -459,8 +459,153 @@ impl From<DagDelta> for DagDiff {
     }
 }
 
+impl DagDelta {
+    /// ⚛️ One single-slot delta per populated slot, in `apply_into` order, so each can be inverted against the exact state it ran on.
+    fn atoms(&self) -> Vec<DagDelta> {
+        let mut atoms = Vec::new();
+        if self.created_node.is_some() || self.created_node_at.is_some() {
+            atoms.push(DagDelta { created_node: self.created_node.clone(), created_node_at: self.created_node_at, ..DagDelta::default() });
+        }
+        if self.deleted_node_ids.is_some() {
+            atoms.push(DagDelta { deleted_node_ids: self.deleted_node_ids.clone(), ..DagDelta::default() });
+        }
+        if self.renamed_node.is_some() {
+            atoms.push(DagDelta { renamed_node: self.renamed_node.clone(), ..DagDelta::default() });
+        }
+        if self.moved_node.is_some() {
+            atoms.push(DagDelta { moved_node: self.moved_node.clone(), ..DagDelta::default() });
+        }
+        if self.resized_node.is_some() {
+            atoms.push(DagDelta { resized_node: self.resized_node.clone(), ..DagDelta::default() });
+        }
+        if self.changed_node_name.is_some() {
+            atoms.push(DagDelta { changed_node_name: self.changed_node_name.clone(), ..DagDelta::default() });
+        }
+        if self.changed_node_icon.is_some() {
+            atoms.push(DagDelta { changed_node_icon: self.changed_node_icon.clone(), ..DagDelta::default() });
+        }
+        if self.changed_node_abbreviation.is_some() {
+            atoms.push(DagDelta { changed_node_abbreviation: self.changed_node_abbreviation.clone(), ..DagDelta::default() });
+        }
+        if self.changed_node_operator_kind.is_some() {
+            atoms.push(DagDelta { changed_node_operator_kind: self.changed_node_operator_kind.clone(), ..DagDelta::default() });
+        }
+        if self.replaced_node_kind.is_some() {
+            atoms.push(DagDelta { replaced_node_kind: self.replaced_node_kind.clone(), ..DagDelta::default() });
+        }
+        if self.replaced_node_properties.is_some() {
+            atoms.push(DagDelta { replaced_node_properties: self.replaced_node_properties.clone(), ..DagDelta::default() });
+        }
+        if self.reordered_nodes.is_some() {
+            atoms.push(DagDelta { reordered_nodes: self.reordered_nodes.clone(), ..DagDelta::default() });
+        }
+        if self.connected_edge.is_some() || self.connected_edge_at.is_some() {
+            atoms.push(DagDelta { connected_edge: self.connected_edge.clone(), connected_edge_at: self.connected_edge_at, ..DagDelta::default() });
+        }
+        if self.disconnected_edge_ids.is_some() {
+            atoms.push(DagDelta { disconnected_edge_ids: self.disconnected_edge_ids.clone(), ..DagDelta::default() });
+        }
+        if self.rewritten_edge_endpoints.is_some() {
+            atoms.push(DagDelta { rewritten_edge_endpoints: self.rewritten_edge_endpoints.clone(), ..DagDelta::default() });
+        }
+        atoms
+    }
+
+    /// ↩️ The steps that undo one single-slot delta, in application order, read from the state `before` it ran on.
+    fn atom_inverse(&self, before: &DagSnapshot) -> Vec<DagDelta> {
+        let node = |id: &str| before.nodes.iter().find(|node| node.id == id);
+        let mut steps = Vec::new();
+        if let Some(created) = &self.created_node {
+            steps.push(DagDelta { deleted_node_ids: Some(vec![created.id.clone()]), ..DagDelta::default() });
+        }
+        if let Some(ids) = &self.deleted_node_ids {
+            for (at, node) in before.nodes.iter().enumerate().filter(|(_, node)| ids.contains(&node.id)) {
+                steps.push(DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
+            }
+        }
+        if let Some(renamed) = &self.renamed_node {
+            steps.push(DagDelta { renamed_node: Some(RenamedNode { id: renamed.new_id.clone(), new_id: renamed.id.clone() }), ..DagDelta::default() });
+        }
+        if let Some(moved) = &self.moved_node {
+            steps.extend(node(&moved.id).map(|node| DagDelta { moved_node: Some(MovedNode { id: moved.id.clone(), x: node.x, y: node.y }), ..DagDelta::default() }));
+        }
+        if let Some(resized) = &self.resized_node {
+            steps.extend(node(&resized.id).map(|node| DagDelta { resized_node: Some(ResizedNode { id: resized.id.clone(), width: node.width, height: node.height }), ..DagDelta::default() }));
+        }
+        if let Some(changed) = &self.changed_node_name {
+            steps.extend(node(&changed.id).map(|node| DagDelta { changed_node_name: Some(ChangedNodeName { id: changed.id.clone(), new_name: node.name.clone() }), ..DagDelta::default() }));
+        }
+        if let Some(changed) = &self.changed_node_icon {
+            steps.extend(node(&changed.id).map(|node| DagDelta { changed_node_icon: Some(ChangedNodeIcon { id: changed.id.clone(), new_icon: node.icon.clone() }), ..DagDelta::default() }));
+        }
+        if let Some(changed) = &self.changed_node_abbreviation {
+            steps.extend(node(&changed.id).map(|node| DagDelta { changed_node_abbreviation: Some(ChangedNodeAbbreviation { id: changed.id.clone(), new_abbreviation: node.abbreviation.clone() }), ..DagDelta::default() }));
+        }
+        if let Some(changed) = &self.changed_node_operator_kind {
+            steps.extend(node(&changed.id).map(|node| DagDelta { changed_node_operator_kind: Some(ChangedNodeOperatorKind { id: changed.id.clone(), new_operator_kind: node.operator_kind.clone() }), ..DagDelta::default() }));
+        }
+        if let Some(replaced) = &self.replaced_node_kind {
+            steps.extend(node(&replaced.id).map(|node| DagDelta { replaced_node_kind: Some(ReplacedNodeKind { id: replaced.id.clone(), new_kind: node.kind.clone() }), ..DagDelta::default() }));
+        }
+        if let Some(replaced) = &self.replaced_node_properties {
+            steps.extend(node(&replaced.id).map(|node| DagDelta { replaced_node_properties: Some(ReplacedNodeProperties { id: replaced.id.clone(), new_properties: node.properties.clone() }), ..DagDelta::default() }));
+        }
+        if self.reordered_nodes.is_some() {
+            steps.push(DagDelta { reordered_nodes: Some(before.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() });
+        }
+        if let Some(edge) = &self.connected_edge {
+            steps.push(DagDelta { disconnected_edge_ids: Some(vec![edge.id.clone()]), ..DagDelta::default() });
+        }
+        if let Some(ids) = &self.disconnected_edge_ids {
+            for (at, edge) in before.edges.iter().enumerate().filter(|(_, edge)| ids.contains(&edge.id)) {
+                steps.push(DagDelta { connected_edge: Some(edge.clone()), connected_edge_at: Some(dag_index_to_wire(at)), ..DagDelta::default() });
+            }
+        }
+        if let Some(rewrites) = &self.rewritten_edge_endpoints {
+            let restored: Vec<RewrittenEdgeEndpoint> = rewrites
+                .iter()
+                .filter_map(|rewrite| {
+                    before.edges.iter().find(|edge| edge.id == rewrite.id).map(|edge| RewrittenEdgeEndpoint {
+                        id: rewrite.id.clone(),
+                        new_source: rewrite.new_source.as_ref().map(|_| edge.source.clone()),
+                        new_target: rewrite.new_target.as_ref().map(|_| edge.target.clone()),
+                    })
+                })
+                .collect();
+            steps.push(DagDelta { rewritten_edge_endpoints: Some(restored), ..DagDelta::default() });
+        }
+        steps
+    }
+}
+
+impl DiffAlgebra<DagSnapshot> for DagDiff {
+    fn inverse(&self, base: &DagSnapshot) -> Self {
+        let mut state = base.clone();
+        let mut groups = Vec::new();
+        for atom in self.steps.iter().flat_map(DagDelta::atoms) {
+            groups.push(atom.atom_inverse(&state));
+            if atom.apply_into(&mut state).is_err() {
+                return Self::default();
+            }
+        }
+        Self { steps: groups.into_iter().rev().flatten().collect() }
+    }
+
+    fn between(base: &DagSnapshot, other: &DagSnapshot) -> Self {
+        let mut steps = vec![DagDelta { disconnected_edge_ids: Some(base.edges.iter().map(|edge| edge.id.clone()).collect()), ..DagDelta::default() }, DagDelta { deleted_node_ids: Some(base.nodes.iter().map(|node| node.id.clone()).collect()), ..DagDelta::default() }];
+        steps.extend(other.nodes.iter().enumerate().map(|(at, node)| DagDelta { created_node: Some(node.clone()), created_node_at: Some(dag_index_to_wire(at)), ..DagDelta::default() }));
+        steps.extend(other.edges.iter().enumerate().map(|(at, edge)| DagDelta { connected_edge: Some(edge.clone()), connected_edge_at: Some(dag_index_to_wire(at)), ..DagDelta::default() }));
+        steps.retain(|step| step.disconnected_edge_ids.as_ref().is_none_or(|ids| !ids.is_empty()) && step.deleted_node_ids.as_ref().is_none_or(|ids| !ids.is_empty()));
+        Self { steps }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.steps.iter().all(|step| *step == DagDelta::default())
+    }
+}
+
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+    fn apply(&self, snapshot: &DagSnapshot, _capability: ApplyCapability) -> protocol::MutationApplyResult<DagSnapshot> {
         let mut next = snapshot.clone();
         for step in &self.steps {
             step.apply_into(&mut next)?;

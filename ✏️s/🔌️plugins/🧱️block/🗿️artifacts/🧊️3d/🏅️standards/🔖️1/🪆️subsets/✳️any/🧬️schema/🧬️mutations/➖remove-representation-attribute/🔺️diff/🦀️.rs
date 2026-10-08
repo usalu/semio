@@ -1,19 +1,18 @@
 //! 🔺️ Diff for `RemoveRepresentationAttribute`.
 
-use crate::{BlockAttribute, BlockRepresentation};
 use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_plugin_block::{BlockRepresentationsDelta, BlockRepresentationsPatchEntry, BlockRepresentationPatch};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveRepresentationAttribute, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "representation-attribute", payload.id), vec![payload.id.clone()]);
     };
-    let attributes: Vec<BlockAttribute> = existing.attributes.iter().filter(|attribute| attribute.key != payload.key).cloned().collect();
-    let replacement = BlockRepresentation { attributes, ..existing.clone() };
-    protocol::MutationOutcome::new(Block3dDiff {
-        representations: Some(Block3dRepresentationsDelta { patched: vec![Block3dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block3dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }),
-        ..Default::default()
-    })
+    if !existing.attributes.iter().any(|attribute| attribute.key == payload.key) {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("representation attribute \"{}\" is not present", payload.key));
+    }
+    let patch = BlockRepresentationPatch { attributes_removed: vec![payload.key.clone()], ..Default::default() };
+    protocol::MutationOutcome::new(Block3dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

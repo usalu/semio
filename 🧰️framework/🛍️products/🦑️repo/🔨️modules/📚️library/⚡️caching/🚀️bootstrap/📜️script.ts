@@ -367,7 +367,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
 
 if (import.meta.main) {
   const args=process.argv.slice(2);
-  const native=await import("../../../⌨️cli/📦️installation/🟦️.ts"),invocation=args[0]==="nx"?native.dashboardInvocation(args.slice(1)):undefined;
+  const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),invocation=args[0]==="nx"&&native.dashboardInstalled(WORKSPACE_ROOT)?native.dashboardInvocation(args.slice(1)):undefined;
   if(invocation){try{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation);}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=1;}}
   else{publishBootstrapSources(WORKSPACE_ROOT);await new ScriptRouter(WORKSPACE_ROOT).register("nx", NxScript).run(args);}
 }

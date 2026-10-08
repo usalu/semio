@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumCopyBytes",
+    "maximumPhysicalBytes",
+    "maximumTurns",
+    "maximumMillis",
+    "cases",
+    "expectedSchemas"
+  ],
+  "properties": {
+    "maximumCopyBytes": {
+      "const": 64
+    },
+    "maximumPhysicalBytes": {
+      "const": 262144
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "maximumMillis": {
+      "const": 90000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parentTouched",
+          "children",
+          "parentLabel",
+          "childLabel",
+          "childCounts",
+          "expectedOperations",
+          "expectedMemberEdits"
+        ],
+        "properties": {
+          "parentTouched": {
+            "type": "boolean"
+          },
+          "children": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "parentLabel": {
+            "type": "string"
+          },
+          "childLabel": {
+            "type": "string"
+          },
+          "childCounts": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "expectedOperations": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "expectedMemberEdits": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "expectedSchemas": {
+      "const": [
+        "count.set-count",
+        "label.set-label"
+      ]
+    }
+  }
+}

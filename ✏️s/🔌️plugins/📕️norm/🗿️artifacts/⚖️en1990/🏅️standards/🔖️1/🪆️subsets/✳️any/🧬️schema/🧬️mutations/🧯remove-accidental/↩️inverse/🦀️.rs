@@ -1,7 +1,9 @@
-use super::RemoveAccidental; use crate::En1990Mutation; use crate::En1990Snapshot;
-pub fn inverse(_payload: &RemoveAccidental, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    vec![En1990Mutation::ChangeAccidentals(crate::standards::v1::subsets::any::schema::mutations::change_accidentals::ChangeAccidentals { new_accidentals: base.accidentals.clone() })]
+//! 🧯 `remove-accidental` inverse — inserts the removed row back at its position; an absent row leaves nothing to restore.
 
-    })())
+use super::RemoveAccidental;
+use crate::mutations::insert_accidental::InsertAccidental;
+use crate::{En1990Mutation, En1990Snapshot};
+
+pub fn inverse(payload: &RemoveAccidental, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    Ok(base.accidentals.get(payload.index).map(|item| vec![En1990Mutation::InsertAccidental(InsertAccidental { index: payload.index, item: item.clone() })]).unwrap_or_default())
 }

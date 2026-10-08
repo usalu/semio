@@ -2,7 +2,7 @@
 //! `no-op` when the pose is unchanged.
 
 use super::ReplaceSavedCameraView;
-use crate::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
+use crate::diff::ShootingDiff;
 use crate::ShootingSavedCameraPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &ReplaceSavedCameraView, base: &ShootingSnapshot) -> protoc
     if existing.camera == payload.new_camera {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Saved camera \"{}\" view is unchanged.", payload.id));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        saved_cameras: Some(ShootingSavedCamerasDelta { patched: vec![ShootingSavedCameraPatchEntry { id: payload.id.clone(), patch: ShootingSavedCameraPatch { label: None, camera: Some(payload.new_camera.clone()) } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::camera_patches([(payload.id.clone(), ShootingSavedCameraPatch { label: None, camera: Some(payload.new_camera.clone()) })]))
 }

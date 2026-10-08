@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "extents",
+    "logicalCopy",
+    "maximumItems",
+    "maximumAdmission",
+    "queueSlots",
+    "expected",
+    "logicalItems",
+    "cold"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.history.fold-physical-retirement/v1"
+    },
+    "extents": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 262144
+      },
+      "minItems": 5
+    },
+    "logicalCopy": {
+      "const": [
+        1,
+        7,
+        4096
+      ]
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumAdmission": {
+      "const": 262144
+    },
+    "queueSlots": {
+      "const": 128
+    },
+    "expected": {
+      "const": {
+        "undergrantRelease": 0,
+        "fundedRelease": "whole-current-allocation",
+        "cancelWork": 0,
+        "terminalFree": 0
+      }
+    },
+    "logicalItems": {
+      "const": 1
+    },
+    "cold": {
+      "const": {
+        "bytes": 2097152,
+        "logicalPageBytes": 65536,
+        "maximumTurns": 36,
+        "terminalPhases": 4
+      }
+    }
+  }
+}

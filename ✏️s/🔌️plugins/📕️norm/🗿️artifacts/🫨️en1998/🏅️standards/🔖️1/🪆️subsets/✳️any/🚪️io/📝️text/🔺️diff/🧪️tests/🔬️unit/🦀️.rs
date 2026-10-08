@@ -1,7 +1,7 @@
 use super::*;
 use crate::mutations::En1998Mutation;
 use crate::DeSeismicZone;
-use protocol::{Mutation as _, MutationDiff};
+use protocol::{Mutation as _};
 
 #[semio_framework_async_macros::async_test]
 async fn update_site_diff_updates_zone() {
@@ -12,5 +12,5 @@ async fn update_site_diff_updates_zone() {
     let outcome = mutation.diff(&base);
     let mut expected = base.clone();
     expected.site = site;
-    assert_eq!(outcome.diff().apply(&base).expect("valid mutation diff"), expected);
+    assert_eq!(protocol::apply_diff(outcome.diff(), &base).expect("valid mutation diff"), expected);
 }

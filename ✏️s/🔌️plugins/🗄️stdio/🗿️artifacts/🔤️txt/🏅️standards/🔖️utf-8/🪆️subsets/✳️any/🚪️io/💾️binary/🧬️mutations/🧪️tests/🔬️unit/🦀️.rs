@@ -1,16 +1,17 @@
 use crate::standards::v_utf_8::subsets::any::io::binary::mutations::*;
 use crate::schema::snapshot::LineEnding;
+use crate::schema::mutations::{SetTrailingNewlineMutation,SetLineEndingMutation,InsertLineMutation,RemoveLineMutation,SetLineMutation};
 use protocol::OpBinary;
 
 #[test]
 fn generic_framing_tags_payloads_parse_and_walk_all_leaf_frames() {
     let spec = semio_framework_dsl::parse_protocol(COMPONENT_PROTOCOL_SEMIO).expect("parse one-byte tag protocol");
     let frames = [
-        (1, TxtMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewlineMutation { value: true })),
-        (2, TxtMutation::SetLineEnding(set_line_ending::SetLineEndingMutation { value: LineEnding::CrLf })),
-        (3, TxtMutation::InsertLine(insert_line::InsertLineMutation { index: 0, text: "x".into() })),
-        (4, TxtMutation::RemoveLine(remove_line::RemoveLineMutation { index: 0 })),
-        (5, TxtMutation::SetLine(set_line::SetLineMutation { index: 0, text: "x".into() })),
+        (1, TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true })),
+        (2, TxtMutation::SetLineEnding(SetLineEndingMutation { value: LineEnding::CrLf })),
+        (3, TxtMutation::InsertLine(InsertLineMutation { index: 0, text: "x".into() })),
+        (4, TxtMutation::RemoveLine(RemoveLineMutation { index: 0 })),
+        (5, TxtMutation::SetLine(SetLineMutation { index: 0, text: "x".into() })),
     ];
     for (tag, mutation) in frames {
         let frame = mutation.encode_op().expect("encode current leaf frame");

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "epoch": 11,
+  "root": "/Users/ueli/Documents/semio",
+  "ticket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT",
+  "owners": [
+    "ui",
+    "board",
+    "product"
+  ],
+  "epochRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11",
+  "runtimeFilename": "runtime-import-custody15.json",
+  "terminalFilename": "terminal.json",
+  "dispatcherFilename": "dispatcher13-terminal.json",
+  "models": 26,
+  "rootControls": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    ".cargo/config.toml",
+    ".config/nextest.toml",
+    "nx.json",
+    "package.json",
+    "bun.lock",
+    "bunfig.toml",
+    "tsconfig.json"
+  ],
+  "proofOutput": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-live-applicability-3/capture/proof.json",
+  "guardPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/current-native-live-applicability-inputs-3/📜️script.ts",
+  "guardHash": "ebdcbec56f9fc059c5ef782decb5fa18f1ac87b1bde92191ed984d71eb3f5084",
+  "guardReceipt": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-live-applicability-3/laws-green/receipt.json",
+  "guardReceiptHash": "9805a89cc7ce57d56d611691ea88004f0c8b3c6a1250b07062ceeed49f88184b"
+}

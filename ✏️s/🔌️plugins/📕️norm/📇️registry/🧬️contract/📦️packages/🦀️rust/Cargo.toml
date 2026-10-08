@@ -21,9 +21,10 @@ path = "../../../../🪟️results/🎚️config/🧪️tests/🎚️config/🦀
 
 [features]
 default = []
-compliance-testing = ["dep:serde", "dep:serde_json"]
+compliance-testing = ["dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
 
 [dependencies]
+semio-framework-artifact-reference = { workspace = true, optional = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
@@ -45,7 +46,9 @@ semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
 
 [dev-dependencies]
+semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

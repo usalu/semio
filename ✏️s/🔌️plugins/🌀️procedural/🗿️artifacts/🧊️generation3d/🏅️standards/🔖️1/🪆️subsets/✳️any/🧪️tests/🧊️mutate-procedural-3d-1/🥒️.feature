@@ -3,15 +3,15 @@
 @comparison-ordered-json-v1
 @mutations-procedural-3d-1-any
 Feature: Apply every typed generation3d mutation twice — once in Rust, once in Python — and require the same answer
-  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.procedural.generation3d` document and all fourteen typed mutations, written in
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a
+  second implementation of the `s.procedural.generation3d` document and all twenty-two typed mutations, written in
   Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from rules 1, 2, 3
   and 4 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`,
-  and from the fourteen committed quintets. It imports nothing from this repository's Rust.
+  and from the twenty-two committed quintets. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library, and why the previous answer was
   wrong. This case used to argue that the document being a COMPOSITION of two unrelated halves, so that every one of its
-  fourteen kinds lands in exactly one of two top-level fields, "is this subset's own specification, not
+  twenty-two kinds lands in exactly one of two top-level fields, "is this subset's own specification, not
   a fact an external node-graph library could confirm or refute". `mutate-fem2d-1`, `mutate-fem3d-1` and
   `mutate-gismap-1` refuted that in this same wave by taking Python second implementations over this
   same carrier. Which shape a vocabulary takes is not an obstacle to a second implementation; it is
@@ -21,14 +21,13 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
   this carrier.
 
   Four things only the committed vectors state, and both implementations take them from there. This
-  subset tags its mutations EXTERNALLY — a payload is `{"CreateWidget": {…}}`, a PascalCase variant
-  name as the single key. `delete-widget` does NOT cascade: it removes the widget and DELIBERATELY
+  subset tags its mutations with a lowerCamel `mutation` member — a payload is `{"mutation": "createWidget", …}`. `delete-widget` does NOT cascade: it removes the widget and DELIBERATELY
   leaves both the synapse that named it and its layout entry standing, which is why the layout map has
   its own `delete-widget-position` verb and why the reference's own document validator refuses to require live
   endpoints. `create-generation` appends AND selects. `delete-generation` falls back to the first
   remaining generation when the one it removed was selected.
 
-  ✅️ ALL FOURTEEN KINDS ARE ADJUDICATED AND NONE IS REFUSED: this document holds no composed child,
+  ✅️ ALL TWENTY-TWO KINDS ARE ADJUDICATED AND NONE IS REFUSED: this document holds no composed child,
   so nothing here depends on a content-addressing function no specification states — the blocker
   `🧩️mutate-block-3d-1` and `🟩️mutate-program-1` both report.
 
@@ -91,16 +90,24 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | update-widget           | 🩹update-widget/🎚️retunes                        |
       | delete-widget           | ❌delete-widget/🚫️removes           |
       | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
-      | update-synapse          | 🔄️update/📡️repoints                  |
-      | disconnect-synapse      | ✂️disconnect/✂️cuts                |
-      | move-widget             | 📍️move/📍️repositions                        |
-      | delete-widget-position  | 🧹️delete-widget/🧹️unpins                  |
+      | update-synapse          | 🔄️update-synapse/📡️repoints                  |
+      | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts                |
+      | move-widget             | 📍️move-widget/📍️repositions                        |
+      | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins                  |
       | update-camera           | 📷️update-camera/🔍️frames                      |
       | change-schema           | 🔤️change-schema/🏷️restamps                       |
       | create-generation       | ➕create-generation/🌱️appends     |
-      | delete-generation       | 🗑️delete/🚫️removes |
-      | rename-generation       | 🏷️rename/🏷️retitles               |
-      | change-generation-value | 🔧️change/🏢️raises  |
+      | delete-generation       | 🗑️delete-generation/🚫️removes |
+      | rename-generation       | 🏷️rename-generation/🏷️retitles               |
+      | change-generation-value | 🔧️change-generation-value/🏢️raises  |
+      | change-slider-value     | 🎚️change-slider-value/🎚️sets |
+      | drag-transforms         | ✋️drag-transforms/✋️drags |
+      | rotate-transforms       | 🔃️rotate-transforms/🔃️turns |
+      | scale-transforms        | 📏️scale-transforms/📏️scales |
+      | move-nodes              | 🚚️move-nodes/🚚️shifts |
+      | change-widget-input     | 🎛️change-widget-input/🎛️sets |
+      | select-generation       | 👆️select-generation/👆️picks |
+      | change-generation-preview | 📝️change-generation-preview/📝️retexts |
 
   @id-inverse
   @level-exhaustive
@@ -125,21 +132,29 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
       | update-widget           | 🩹update-widget/🎚️retunes                        |
       | delete-widget           | ❌delete-widget/🚫️removes           |
       | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
-      | update-synapse          | 🔄️update/📡️repoints                  |
-      | disconnect-synapse      | ✂️disconnect/✂️cuts                |
-      | move-widget             | 📍️move/📍️repositions                        |
-      | delete-widget-position  | 🧹️delete-widget/🧹️unpins                  |
+      | update-synapse          | 🔄️update-synapse/📡️repoints                  |
+      | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts                |
+      | move-widget             | 📍️move-widget/📍️repositions                        |
+      | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins                  |
       | update-camera           | 📷️update-camera/🔍️frames                      |
       | change-schema           | 🔤️change-schema/🏷️restamps                       |
       | create-generation       | ➕create-generation/🌱️appends     |
-      | delete-generation       | 🗑️delete/🚫️removes |
-      | rename-generation       | 🏷️rename/🏷️retitles               |
-      | change-generation-value | 🔧️change/🏢️raises  |
+      | delete-generation       | 🗑️delete-generation/🚫️removes |
+      | rename-generation       | 🏷️rename-generation/🏷️retitles               |
+      | change-generation-value | 🔧️change-generation-value/🏢️raises  |
+      | change-slider-value     | 🎚️change-slider-value/🎚️sets |
+      | drag-transforms         | ✋️drag-transforms/✋️drags |
+      | rotate-transforms       | 🔃️rotate-transforms/🔃️turns |
+      | scale-transforms        | 📏️scale-transforms/📏️scales |
+      | move-nodes              | 🚚️move-nodes/🚚️shifts |
+      | change-widget-input     | 🎛️change-widget-input/🎛️sets |
+      | select-generation       | 👆️select-generation/👆️picks |
+      | change-generation-preview | 📝️change-generation-preview/📝️retexts |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-widget graph with its two-generation history
-    Given the committed before-snapshot shared://🧬️mutations/🗑️delete/🚫️removes/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🗑️delete-generation/🚫️removes/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

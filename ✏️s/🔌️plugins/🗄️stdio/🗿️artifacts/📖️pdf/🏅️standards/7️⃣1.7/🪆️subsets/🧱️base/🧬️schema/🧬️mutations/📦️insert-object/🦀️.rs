@@ -21,7 +21,10 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "object", kind: "insert-object", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_insert_object(self.id, base.objects.len(), self.value.clone())))
+        if base.objects.iter().any(|object| object.id == self.id) {
+            return MutationOutcome::fatal("mutation.duplicate-id", format!("Object {} {} already exists.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
+        }
+        MutationOutcome::new(diff::graph_edit(diff::diff_insert_object(self.id, base.objects.len(), self.value.clone())))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

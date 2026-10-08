@@ -1,0 +1,17 @@
+> bun ./📜️script.ts root-service-oracles
+
+(node:88205) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+(node:89206) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89205) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed | 1 skipped (2)
+      Tests  3 passed | 146 skipped (149)
+   Start at  02:22:55
+   Duration  33.10s (transform 50.51s, setup 0ms, import 56.87s, tests 680ms, environment 0ms)
+

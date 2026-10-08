@@ -26,7 +26,7 @@ function admitPolicy(value:unknown):CargoTestPolicyV1 { const errors=validateJso
 /** 🧪️ Preserves build selection on compilation and runtime filters on metadata execution. */
 export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
   const reporterOptions = new Set(["--status-level", "--final-status-level"]), seenReporters = new Set<string>();
-  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored", ...reporterOptions]);
+  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored", "--success-output", "--failure-output", ...reporterOptions]);
   const requiredBuildOptions = new Set([
     "-p",
     "--package",
@@ -79,7 +79,7 @@ export function partitionNextestExecutionFilters(args: readonly string[]): { bui
       if (seenReporters.has(key)) throw Error(`Nextest reporter ${key} is repeated`);
       seenReporters.add(key);
     }
-    if (arg === "--ignore-default-filter" || arg === "--no-fail-fast" || (arg.startsWith("-E") && arg.length > 2)) {
+    if (arg === "--ignore-default-filter" || arg === "--no-fail-fast" || arg === "--nocapture" || arg === "--no-capture" || (arg.startsWith("-E") && arg.length > 2)) {
       executionArgs.push(arg);
     } else if (valuedFilters.has(key)) {
       if (arg.includes("=")) {
@@ -140,6 +140,7 @@ export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTest
   try {for(const step of cargoTestPlanV1(request,policy,metadata)){
     const stop=startNativeProgress(`cargo:${step.phase}`), decoder=new StringDecoder("utf8");let output="";
     try {await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:request.signal,budgetMs:step.budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
+    catch(error){if(step.capture)writeFileSync(join(directory,`${step.phase}-failure.stdout.txt`),output+decoder.end());throw error;}
     finally {stop();}
   }} finally {if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}
 }

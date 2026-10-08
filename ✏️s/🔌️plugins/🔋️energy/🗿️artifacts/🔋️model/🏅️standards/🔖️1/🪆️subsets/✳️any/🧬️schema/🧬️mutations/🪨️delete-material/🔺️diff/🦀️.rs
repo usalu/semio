@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteMaterial` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::DeleteMaterial, base: &EnergyModelSnapshot) -> prot
     if base.model.constructions.iter().any(|construction| construction.layer_material_ids.contains(&payload.id)) {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Material {} is still a layer of a construction.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.materials.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { materials: Rows::removing(&base.model.materials, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

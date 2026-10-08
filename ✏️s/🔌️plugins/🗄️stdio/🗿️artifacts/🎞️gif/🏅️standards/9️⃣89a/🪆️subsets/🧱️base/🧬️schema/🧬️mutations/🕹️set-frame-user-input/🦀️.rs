@@ -1,6 +1,5 @@
-//! 🕹️ `set-frame-user-input` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🕹️ `set-frame-user-input` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +16,20 @@ pub struct SetFrameUserInput {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-user-input", kind: "set-frame-user-input", record: "SetFrameUserInput" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::SetFrameUserInput(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index, user_input } = self;
+        protocol::MutationOutcome::new({
+            let d = GifFrameDiff { user_input: Some(*user_input), ..Default::default() };
+            GifDiff { frames: Some(GifFramesDiff { modified: vec![GifFrameModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
+        })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::SetFrameUserInput(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok(match base.frames.get(*index) {
+            Some(f) => vec![GifMutation::SetFrameUserInput(set_frame_user_input::SetFrameUserInput { index: *index, user_input: f.user_input })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frame user input", "Benutzereingabe-Kennung des Einzelbilds setzen")
     }

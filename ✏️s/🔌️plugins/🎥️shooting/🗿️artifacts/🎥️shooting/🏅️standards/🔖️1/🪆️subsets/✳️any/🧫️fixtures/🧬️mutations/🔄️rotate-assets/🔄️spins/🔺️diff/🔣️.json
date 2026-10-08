@@ -1,27 +1,27 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": {
-    "added": [],
-    "removed": [],
+    "edits": [],
     "patched": [
       {
         "id": "asset-hero",
         "patch": {
           "name": null,
           "url": null,
+          "format": null,
           "origin": null,
-          "orientation": [
-            0.0,
-            0.0,
-            0.6816387600233341,
-            0.7316888688738209
-          ],
+          "orientation": {
+            "value": [
+              0.0,
+              0.0,
+              0.6816387600233341,
+              0.7316888688738209
+            ]
+          },
           "scale": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "savedCameras": null,
   "scene": null,

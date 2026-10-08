@@ -6,10 +6,6 @@ import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️dis
 
 
 
-/** 🔎️ Renders the catalog in memory and byte-compares it against `generated/*` plus
- * `.vscode/launch.json` — never writes (a lint/verify step must never let the auto-commit daemon land
- * regenerated files). Launch freshness is folded in here rather than living in a second, unenforced
- * entry point, so one `check` covers every artifact `generate` produces. */
 //#region 🔖️DescriptorGate
 
 

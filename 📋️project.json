@@ -5,7 +5,516 @@
   "sourceRoot": "",
   "metadata": {
     "semio": {
-      "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "dashboard": {
+        "parameters": [
+          {
+            "id": "cache",
+            "kind": "choice",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "check",
+                "build",
+                "verify",
+                "lint",
+                "serve",
+                "activate",
+                "task"
+              ],
+              "playground": false
+            },
+            "default": "use",
+            "values": [
+              {
+                "id": "use"
+              },
+              {
+                "id": "skip-local",
+                "nxFlags": [
+                  "--skip-nx-cache"
+                ]
+              },
+              {
+                "id": "skip-all",
+                "nxFlags": [
+                  "--skip-nx-cache",
+                  "--skip-remote-cache"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "test-level",
+            "kind": "choice",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "verify",
+                "check"
+              ],
+              "playground": false
+            },
+            "values": [
+              {
+                "id": "quick",
+                "env": {
+                  "SEMIO_TEST_LEVEL": "quick"
+                }
+              },
+              {
+                "id": "long",
+                "env": {
+                  "SEMIO_TEST_LEVEL": "long"
+                }
+              },
+              {
+                "id": "exhaustive",
+                "env": {
+                  "SEMIO_TEST_LEVEL": "exhaustive"
+                }
+              }
+            ]
+          },
+          {
+            "id": "dependencies",
+            "kind": "flag",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "verify",
+                "check",
+                "task"
+              ],
+              "playground": false
+            },
+            "nxFlags": [
+              "--excludeTaskDependencies"
+            ]
+          },
+          {
+            "id": "build-mode",
+            "kind": "choice",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "verify",
+                "build",
+                "task"
+              ],
+              "playground": false
+            },
+            "values": [
+              {
+                "id": "ship",
+                "env": {
+                  "SEMIO_BUILD_MODE": "ship"
+                },
+                "nxFlags": [
+                  "--skip-nx-cache",
+                  "--skip-remote-cache"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "nextest-output",
+            "kind": "choice",
+            "appliesTo": {
+              "verbs": [
+                "test"
+              ],
+              "playground": false
+            },
+            "values": [
+              {
+                "id": "immediate",
+                "env": {
+                  "NEXTEST_SUCCESS_OUTPUT": "immediate"
+                }
+              },
+              {
+                "id": "immediate-final",
+                "env": {
+                  "NEXTEST_SUCCESS_OUTPUT": "immediate-final"
+                }
+              },
+              {
+                "id": "final",
+                "env": {
+                  "NEXTEST_SUCCESS_OUTPUT": "final"
+                }
+              },
+              {
+                "id": "never",
+                "env": {
+                  "NEXTEST_SUCCESS_OUTPUT": "never"
+                }
+              }
+            ]
+          },
+          {
+            "id": "cargo-jobs",
+            "kind": "text",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "check",
+                "task"
+              ],
+              "playground": false
+            },
+            "valueEnv": "CARGO_BUILD_JOBS"
+          },
+          {
+            "id": "build-budget",
+            "kind": "text",
+            "appliesTo": {
+              "verbs": [
+                "test",
+                "serve",
+                "activate",
+                "task"
+              ],
+              "playground": false
+            },
+            "valueEnv": "SEMIO_BUILD_BUDGET_MS"
+          }
+        ],
+        "tools": [
+          {
+            "id": "repo-mcp",
+            "verb": "dev",
+            "command": [
+              "bun",
+              "📜️script.ts",
+              "dev",
+              "mcp",
+              "stdio"
+            ],
+            "continuous": true,
+            "parameters": [
+              {
+                "id": "client",
+                "kind": "text",
+                "default": "client",
+                "valuePositional": true
+              }
+            ]
+          },
+          {
+            "id": "os-mcp-stdio",
+            "verb": "dev",
+            "command": [
+              "bun",
+              "📜️script.ts",
+              "dev",
+              "mcp",
+              "stdio",
+              "os"
+            ],
+            "continuous": true
+          },
+          {
+            "id": "os-mcp-http",
+            "verb": "dev",
+            "command": [
+              "bun",
+              "nx",
+              "run",
+              "workspace:dev",
+              "--",
+              "mcp",
+              "http",
+              "os"
+            ],
+            "continuous": true
+          },
+          {
+            "id": "mcp-inspector-os",
+            "verb": "dev",
+            "command": [
+              "bun",
+              "x",
+              "@modelcontextprotocol/inspector",
+              "--config",
+              ".mcp.json",
+              "--server",
+              "semio"
+            ],
+            "continuous": true,
+            "ready": {
+              "port": 6274,
+              "portEnv": "CLIENT_PORT"
+            }
+          },
+          {
+            "id": "bun-test",
+            "verb": "test",
+            "command": [
+              "bun",
+              "nx",
+              "exec",
+              "--projects={project}",
+              "--",
+              "bun",
+              "test"
+            ],
+            "parameters": [
+              {
+                "id": "project",
+                "kind": "text",
+                "default": "workspace"
+              },
+              {
+                "id": "file",
+                "kind": "text",
+                "required": true,
+                "valuePositional": true
+              },
+              {
+                "id": "build-mode",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "ship",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "ship"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "native-cargo",
+            "verb": "run",
+            "command": [
+              "bun",
+              "nx",
+              "exec",
+              "--projects=workspace",
+              "--",
+              "bun",
+              "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+              "native",
+              "cargo"
+            ]
+          },
+          {
+            "id": "gemini",
+            "verb": "run",
+            "command": [
+              "gemini",
+              "--yolo"
+            ],
+            "continuous": true
+          },
+          {
+            "id": "kiro",
+            "verb": "run",
+            "command": [
+              "kiro-cli",
+              "chat",
+              "--trust-all-tools"
+            ],
+            "continuous": true
+          },
+          {
+            "id": "f3d",
+            "verb": "run",
+            "command": [
+              "f3d"
+            ],
+            "continuous": true
+          },
+          {
+            "id": "gitkraken",
+            "verb": "run",
+            "command": [
+              "gitkraken",
+              "--path",
+              "{workspace}"
+            ],
+            "continuous": true
+          }
+        ],
+        "compounds": [
+          {
+            "id": "s-with-hub",
+            "verb": "dev",
+            "stop": "together",
+            "members": [
+              {
+                "run": "os-hub:dev"
+              },
+              {
+                "run": "playground:s",
+                "parameters": {
+                  "renderer": "react"
+                }
+              }
+            ]
+          },
+          {
+            "id": "s-with-os-mcp",
+            "verb": "dev",
+            "stop": "together",
+            "members": [
+              {
+                "run": "tool:workspace/os-mcp-http"
+              },
+              {
+                "run": "playground:s",
+                "parameters": {
+                  "renderer": "react"
+                }
+              }
+            ]
+          },
+          {
+            "id": "s-users-with-hub",
+            "verb": "dev",
+            "stop": "together",
+            "members": [
+              {
+                "run": "os-hub:dev"
+              },
+              {
+                "run": "playground:s",
+                "parameters": {
+                  "renderer": "react",
+                  "user-slot": 1
+                }
+              },
+              {
+                "run": "playground:s",
+                "parameters": {
+                  "renderer": "react",
+                  "user-slot": 2
+                }
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "id": "process-extension-catalogs",
+            "target": "describe",
+            "projects": [
+              "@semio-tech/process-extension-wood-rust",
+              "@semio-tech/process-extension-metal-rust",
+              "@semio-tech/process-extension-concrete-rust",
+              "@semio-tech/process-extension-robotic-rust"
+            ]
+          },
+          {
+            "id": "sourcing-extension-catalogs",
+            "target": "describe",
+            "projects": [
+              "@semio-tech/sourcing-extension-beams-rust",
+              "@semio-tech/sourcing-extension-slabs-rust",
+              "@semio-tech/sourcing-extension-windows-rust"
+            ]
+          },
+          {
+            "id": "extension-catalogs",
+            "target": "describe",
+            "projects": [
+              "@semio-tech/process-extension-wood-rust",
+              "@semio-tech/process-extension-metal-rust",
+              "@semio-tech/process-extension-concrete-rust",
+              "@semio-tech/process-extension-robotic-rust",
+              "@semio-tech/sourcing-extension-beams-rust",
+              "@semio-tech/sourcing-extension-slabs-rust",
+              "@semio-tech/sourcing-extension-windows-rust"
+            ]
+          },
+          {
+            "id": "process-extension-tests",
+            "target": "test",
+            "projects": [
+              "@semio-tech/process-extension-wood-rust",
+              "@semio-tech/process-extension-metal-rust",
+              "@semio-tech/process-extension-concrete-rust",
+              "@semio-tech/process-extension-robotic-rust"
+            ]
+          },
+          {
+            "id": "sourcing-extension-tests",
+            "target": "test",
+            "projects": [
+              "@semio-tech/sourcing-extension-beams-rust",
+              "@semio-tech/sourcing-extension-slabs-rust",
+              "@semio-tech/sourcing-extension-windows-rust"
+            ]
+          },
+          {
+            "id": "stdio-artifact-tests",
+            "target": "test",
+            "projects": [
+              "@semio-tech/stdio-*-rs",
+              "!@semio-tech/stdio-artifact-contract-rs"
+            ]
+          },
+          {
+            "id": "puzzle-spatial-tests",
+            "target": "test",
+            "projects": [
+              "@semio-tech/puzzle-3d-rs",
+              "@semio-tech/puzzle-5d-rs"
+            ]
+          },
+          {
+            "id": "snapshot-sqlite-parent-baselines",
+            "target": "test-snapshot-sqlite-native",
+            "projects": [
+              "@semio-tech/block-2d-rs",
+              "@semio-tech/block-3d-rs",
+              "@semio-tech/block-5d-rs",
+              "@semio-tech/puzzle-3d-rs",
+              "@semio-tech/process-process3d-rs",
+              "@semio-tech/writer-writer-rs",
+              "@semio-tech/mathematical-equation-rs",
+              "@semio-tech/gis-gisterrain-rs",
+              "@semio-tech/gis-gismap-rs",
+              "@semio-tech/trinity-jack-rs",
+              "@semio-tech/layout-layout-rs",
+              "@semio-tech/procedural-generation2d-rs",
+              "@semio-tech/procedural-generation3d-rs",
+              "@semio-tech/imperative-procedure-rs",
+              "@semio-tech/playbook-playbook-rs",
+              "@semio-tech/puzzle-5d-rs",
+              "@semio-tech/trinity-rewriting-rs",
+              "@semio-tech/dag-dag-rs"
+            ]
+          },
+          {
+            "id": "snapshot-sqlite-native",
+            "target": "test-snapshot-sqlite-native",
+            "projects": [
+              "*"
+            ]
+          },
+          {
+            "id": "snapshot-sqlite-source",
+            "target": "test-snapshot-sqlite-source",
+            "projects": [
+              "*"
+            ]
+          },
+          {
+            "id": "dag-actor-wasm",
+            "target": "wasm",
+            "projects": [
+              "semio-framework-os-flow-core",
+              "@semio-tech/framework-surface-rs",
+              "@semio-tech/s-cad-composition-rs",
+              "@semio-tech/s-spatial-kernel-semio-session-rs"
+            ]
+          }
+        ]
+      }
     }
   },
   "namedInputs": {
@@ -674,6 +1183,16 @@
       }
     },
     "dev-storybook": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -685,6 +1204,16 @@
       }
     },
     "dev-storybook-ui": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -696,6 +1225,16 @@
       }
     },
     "dev-storybook-puzzle": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -707,6 +1246,16 @@
       }
     },
     "dev-storybook-puzzle-2d": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -718,6 +1267,16 @@
       }
     },
     "dev-storybook-styling": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -729,6 +1288,16 @@
       }
     },
     "dev-storybook-puzzle-3d": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -740,6 +1309,16 @@
       }
     },
     "dev-storybook-puzzle-5d": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -751,6 +1330,16 @@
       }
     },
     "dev-storybook-framework": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -762,6 +1351,16 @@
       }
     },
     "dev-storybook-framework-hosts": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -773,6 +1372,16 @@
       }
     },
     "dev-storybook-framework-os": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -784,6 +1393,16 @@
       }
     },
     "dev-storybook-infinite": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -795,6 +1414,16 @@
       }
     },
     "dev-storybook-cad": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -806,6 +1435,16 @@
       }
     },
     "dev-storybook-animate": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -817,6 +1456,16 @@
       }
     },
     "dev-mcp": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6274,
+              "portEnv": "CLIENT_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -833,6 +1482,16 @@
       }
     },
     "dev-mcp-repo": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6274,
+              "portEnv": "CLIENT_PORT"
+            }
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -1391,6 +2050,19 @@
       }
     },
     "verify": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "check",
+                "kind": "text",
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {

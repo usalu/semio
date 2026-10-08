@@ -1,6 +1,6 @@
 //! 🌿️ Direct space-alternative creation mutation.
-use super::super::{RemoveSpaceAlternative, RestoreActiveSpaceAlternative, SpaceHistoryMutation};
-use super::super::{SpaceAlternative, SpaceHistoryDiff, SpaceHistorySnapshot};
+use super::super::{RemoveSpaceAlternative, SetActiveSpaceAlternative, SpaceHistoryMutation};
+use super::super::{SpaceAlternative, SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -22,13 +22,13 @@ pub struct CreateSpaceAlternative {
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for CreateSpaceAlternative {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "create", entity: "space-alternative", kind: "create-space-alternative", record: "CreatedSpaceAlternative" };
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { add_alternative: Some(self.alternative.clone()), set_active_alternative_id: Some(Some(self.alternative.id.clone())), ..Default::default() })
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { steps: vec![SpaceHistoryStep::AddAlternative(self.alternative.clone()), SpaceHistoryStep::SetActive { alternative_id: Some(self.alternative.id.clone()) }] })
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![
-            SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
             SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: self.alternative.id.clone() }),
+            SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
         ]
     
     })())

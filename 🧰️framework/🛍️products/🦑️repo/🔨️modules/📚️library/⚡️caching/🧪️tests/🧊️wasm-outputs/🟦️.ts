@@ -23,7 +23,6 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
     assert.ok(target.dependsOn.includes("workspace:deps-wasm-opt"));
     assert.ok(target.options.command.endsWith(`build ${row.profile}`));
     assert.equal(rendererDirectory(path, consumerRoot, row.profile), join(workspace, packagePath, row.output));
-    for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) assert.ok(require("jsonc-parser").parse(readFileSync(join(workspace, file), "utf8")).configurations.some((entry: any) => entry.command === `bun nx run ${fixture.project}:${row.target}`), `${file} must expose the compiler profile`);
   }
   const compiler = join(workspace, fixture.owner, "🏗️compiler/🌐️wasm/📜️script.ts");
   const bundle = await require("esbuild").build({ entryPoints: [compiler], absWorkingDir: workspace, bundle: true, packages: "external", platform: "node", format: "esm", write: false, metafile: true });

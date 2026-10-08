@@ -8,7 +8,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -37,6 +41,149 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive"
       }
+    },
+    "run": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "repo-implementation",
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "rust",
+                    "env": {
+                      "SEMIO_REPO_IMPLEMENTATION": "rust"
+                    }
+                  },
+                  {
+                    "id": "go",
+                    "env": {
+                      "SEMIO_REPO_IMPLEMENTATION": "go",
+                      "GOWORK": "{workspace}/go.work"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts run",
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_NATIVE_OWNER_PROGRESS": "delegated"
+        }
+      },
+      "cache": false
+    },
+    "daemon": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "action",
+                "kind": "choice",
+                "default": "status",
+                "values": [
+                  {
+                    "id": "start",
+                    "args": [
+                      "start"
+                    ]
+                  },
+                  {
+                    "id": "stop",
+                    "args": [
+                      "stop"
+                    ]
+                  },
+                  {
+                    "id": "status",
+                    "args": [
+                      "status"
+                    ]
+                  },
+                  {
+                    "id": "attach",
+                    "args": [
+                      "attach"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts daemon",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "workflow": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts workflow",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts install"
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ]
+    },
+    "preferences": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "action",
+                "kind": "choice",
+                "default": "show",
+                "values": [
+                  {
+                    "id": "show",
+                    "args": [
+                      "show"
+                    ]
+                  },
+                  {
+                    "id": "set",
+                    "args": [
+                      "set"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preferences",
+        "forwardAllArgs": true
+      },
+      "cache": false
     }
   }
 }

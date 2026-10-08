@@ -39,7 +39,7 @@ const REQUIRED_KNOWN_MASK: u32 = crate::REQUIRED_HASH_CHAIN | crate::REQUIRED_SI
 
 /// ✍️ Serializes the 32-byte header: magic, version, flags, `header_crc32` over bytes
 /// `0..20` (CRC-32C, `crate::codec::crc32c`), 8 reserved zero bytes.
-async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEADER_SIZE] {
+pub fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEADER_SIZE] {
     let mut buf = [0u8; HEADER_SIZE];
     buf[0..8].copy_from_slice(&MAGIC);
     buf[8..10].copy_from_slice(&FORMAT_VERSION_MAJOR.to_le_bytes());
@@ -331,7 +331,7 @@ pub struct CommitPayload {
 }
 
 /// ✍️ Serializes a commit's fixed 64-byte payload per the contract's exact field offsets.
-async fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_len: u64, record_count: u32, chain_hash: &[u8; 32]) -> [u8; COMMIT_PAYLOAD_LEN] {
+pub fn write_commit_payload(commit_seq: u64, prev_commit_offset: u64, records_len: u64, record_count: u32, chain_hash: &[u8; 32]) -> [u8; COMMIT_PAYLOAD_LEN] {
     let mut buf = [0u8; COMMIT_PAYLOAD_LEN];
     buf[0..8].copy_from_slice(&commit_seq.to_le_bytes());
     buf[8..16].copy_from_slice(&prev_commit_offset.to_le_bytes());
@@ -452,7 +452,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
         if unknown != 0 {
             return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::UnknownRequiredFlags(unknown))));
         }
-        let header = build_header_bytes(options.required_flags, options.optional_flags).await;
+        let header = build_header_bytes(options.required_flags, options.optional_flags);
         sink.write_all(&header).await?;
         let chain_0 = *semio_framework_hash::hash(&header).as_bytes();
         let mut pending_chain_hasher = semio_framework_hash::Hasher::new();
@@ -543,7 +543,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
 
         let commit_seq = self.next_commit_seq;
         let prev_commit_offset = self.last_commit_offset.unwrap_or(0);
-        let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash).await;
+        let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash);
         let flags = frame_flags(false, true, 0);
         write_frame_retained(&mut self.sink, crate::REC_COMMIT, flags, None, &payload).await?;
 

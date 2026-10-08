@@ -256,7 +256,7 @@ pub struct CsvDiff {
 }
 
 impl MutationDiff<CsvSnapshot> for CsvDiff {
-    fn apply(&self, base: &CsvSnapshot) -> MutationApplyResult<CsvSnapshot> {
+    fn apply(&self, base: &CsvSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<CsvSnapshot> {
         validate_csv_diff(self, base)?;
         Ok(apply_csv_diff_unchecked(self, base))
     }

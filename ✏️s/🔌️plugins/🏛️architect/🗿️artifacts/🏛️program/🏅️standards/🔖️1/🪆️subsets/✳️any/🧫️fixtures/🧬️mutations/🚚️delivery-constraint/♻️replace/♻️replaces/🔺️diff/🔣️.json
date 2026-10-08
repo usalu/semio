@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -39,53 +38,50 @@
   "resilience": null,
   "costs": null,
   "delivery": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "delivery-constraint-a",
-        "patch": {
-          "name": "Delivery Constraint A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "constraintType": "Replaced Delivery Constraint A",
-          "constraintDetails": {
-            "text": ""
-          },
-          "phase": "concept",
-          "hardDeadline": null,
-          "softDeadline": null,
-          "impactedElementIds": [],
-          "impactedRequirementIds": [],
-          "workHours": null,
-          "noiseRestrictions": [],
-          "accessRestrictions": [],
-          "siteLogistics": [],
-          "procurementLeadTime": null,
-          "approvalGates": [],
-          "occupancyConstraints": [],
-          "weatherWindows": [],
-          "penaltyClauses": [],
-          "mitigationOptions": [],
+        "name": "Delivery Constraint A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "riskIds": [],
-          "constraintStatus": "draft"
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "constraintType": "Replaced Delivery Constraint A",
+        "constraintDetails": {
+          "text": ""
+        },
+        "phase": "concept",
+        "hardDeadline": null,
+        "softDeadline": null,
+        "impactedElementIds": [],
+        "impactedRequirementIds": [],
+        "workHours": null,
+        "noiseRestrictions": [],
+        "accessRestrictions": [],
+        "siteLogistics": [],
+        "procurementLeadTime": null,
+        "approvalGates": [],
+        "occupancyConstraints": [],
+        "weatherWindows": [],
+        "penaltyClauses": [],
+        "mitigationOptions": [],
+        "ownerId": null,
+        "riskIds": [],
+        "constraintStatus": "draft"
       }
     ],
+    "removed": [
+      "delivery-constraint-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "risks": null,
@@ -115,9 +111,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

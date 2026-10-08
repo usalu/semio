@@ -65,7 +65,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | set-snapshot | {"snapshot":{"schema":"stdio.gif.89a","width":2,"height":2,"gct":{"sorted":false,"colors":[{"r":4,"g":5,"b":6},{"r":4,"g":5,"b":6}]},"backgroundColorIndex":0,"pixelAspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"lct":{"sorted":false,"colors":[{"r":9,"g":9,"b":9},{"r":9,"g":9,"b":9}]},"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false,"plainText":null}],"comments":["c0"],"appExtensions":[]}} |
       | set-screen-size | {"width":820,"height":810} |
       | set-global-color-table | {"gct":{"sorted":false,"colors":[{"r":10,"g":20,"b":30},{"r":40,"g":50,"b":60}]}} |
       | set-background-color-index | {"index":3} |
@@ -75,7 +74,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | move-frame | {"from":5,"to":20} |
       | set-frame-geometry | {"index":1,"left":0,"top":0,"width":352,"height":401} |
       | set-frame-interlace | {"index":1,"interlace":true} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/backgroundColorIndex", "value": 3}} |
 
   @id-mutate
   @level-exhaustive
@@ -103,7 +101,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
     Then the original semantic projection is recovered
     Examples:
       | id | params |
-      | set-snapshot | {"snapshot":{"schema":"stdio.gif.89a","width":2,"height":2,"gct":{"sorted":false,"colors":[{"r":4,"g":5,"b":6},{"r":4,"g":5,"b":6}]},"backgroundColorIndex":0,"pixelAspectRatio":0,"loopCount":0,"frames":[{"left":0,"top":0,"width":2,"height":2,"interlace":false,"lct":{"sorted":false,"colors":[{"r":9,"g":9,"b":9},{"r":9,"g":9,"b":9}]},"indices":[0,1,1,0],"delayCs":10,"disposal":"doNotDispose","transparentIndex":null,"userInput":false,"plainText":null}],"comments":["c0"],"appExtensions":[]}} |
       | set-screen-size | {"width":820,"height":810} |
       | set-global-color-table | {"gct":{"sorted":false,"colors":[{"r":10,"g":20,"b":30},{"r":40,"g":50,"b":60}]}} |
       | set-background-color-index | {"index":3} |
@@ -113,7 +110,6 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | move-frame | {"from":5,"to":20} |
       | set-frame-geometry | {"index":1,"left":0,"top":0,"width":352,"height":401} |
       | set-frame-interlace | {"index":1,"interlace":true} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/backgroundColorIndex", "value": 3}} |
 
   @id-inverse
   @level-exhaustive

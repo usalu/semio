@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene/✨️polishes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪨️change-scene/✨️polishes/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("change-scene-material-roughness diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("change-scene-material-roughness diff applies")
 }
 
 /// ▶️ `change-scene-material-roughness` writes the one PBR knob this artifact exposes as a
@@ -94,9 +94,9 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-scene-material-roughness/polishes-scene-material-to-quarter: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["scene"]["material"]["roughness"], 0.25, "change-scene-material-roughness/polishes-scene-material-to-quarter: the edited field inside the cloned scene");
-    assert_eq!(committed["scene"]["material"]["metalness"], 0.0, "change-scene-material-roughness/polishes-scene-material-to-quarter: metalness has no mutation and must be cloned, not defaulted");
-    assert_eq!(committed["scene"]["material"]["emissiveIntensity"], 0.0, "change-scene-material-roughness/polishes-scene-material-to-quarter: the whole material struct rides along, camelCased by the diff's own serde attrs");
+    assert_eq!(committed["scene"]["materialRoughness"], 0.25, "change-scene-material-roughness/polishes-scene-material-to-quarter: the edited field inside the cloned scene");
+    assert!(committed["scene"]["materialMetalness"].is_null(), "change-scene-material-roughness/polishes-scene-material-to-quarter: the materialMetalness slot stays null — the delta names only the edited field");
+    assert!(committed["scene"]["materialEmissiveIntensity"].is_null(), "change-scene-material-roughness/polishes-scene-material-to-quarter: the materialEmissiveIntensity slot stays null — the delta names only the edited field");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed whole-scene block round-trips through `ShootingDiff` unchanged.
@@ -112,6 +112,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-scene-material-roughness/polishes-scene-material-to-quarter: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

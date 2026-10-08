@@ -7,9 +7,21 @@
 pub struct WiresDiff {}
 
 impl protocol::MutationDiff<crate::WiresSnapshot> for WiresDiff {
-    fn apply(&self, base: &crate::WiresSnapshot) -> protocol::MutationApplyResult<crate::WiresSnapshot> {
+    fn apply(&self, base: &crate::WiresSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<crate::WiresSnapshot> {
         Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
+}
+
+impl protocol::DiffAlgebra<crate::WiresSnapshot> for WiresDiff {
+    fn inverse(&self, _base: &crate::WiresSnapshot) -> Self {
+        Self {}
+    }
+    fn between(_base: &crate::WiresSnapshot, _other: &crate::WiresSnapshot) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
 }
 //#endregion 🔖️Diff

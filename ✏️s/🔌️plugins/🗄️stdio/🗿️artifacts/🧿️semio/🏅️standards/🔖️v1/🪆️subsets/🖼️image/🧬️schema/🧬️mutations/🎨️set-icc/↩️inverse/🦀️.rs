@@ -1,13 +1,10 @@
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::set_icc;
+//! ↩️ Inverse for `SetIcc`.
 
-/// ↩️ Inverse of set-icc.
+use super::super::*;
+
+//#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, icc: Option<Vec<u8>>) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
-    Ok({
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::SetIcc(set_icc::SetIcc { icc }), base)?
-
-    })
+pub fn inverse(payload: &super::SetIcc, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok(vec![SemioImageMutation::SetIcc(set_icc::SetIcc { icc: base.icc.clone() })])
 }
+//#endregion 🔖️Inverse

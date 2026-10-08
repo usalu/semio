@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeFenestrationArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeFenestrationArea, base: &EnergyModelSnapshot)
     if existing.area_m2 == payload.new_area_m2 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this area.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {
-        item.area_m2 = payload.new_area_m2;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::modifying(FenestrationPatch { area_m2: Some(payload.new_area_m2), ..FenestrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

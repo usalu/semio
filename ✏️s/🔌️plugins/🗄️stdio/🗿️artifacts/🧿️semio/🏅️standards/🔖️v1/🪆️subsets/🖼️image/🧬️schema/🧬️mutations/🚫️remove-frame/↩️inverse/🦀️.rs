@@ -1,13 +1,14 @@
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use protocol::Mutation;
-use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
+//! ↩️ Inverse for `RemoveFrame`.
 
-/// ↩️ Inverse of remove-frame — an `InsertFrame` restoring the removed item at its original index.
+use super::super::*;
+
+//#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, index: usize) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
-    Ok({
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }), base)?
-
-    })
+pub fn inverse(payload: &super::RemoveFrame, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    let super::RemoveFrame { index } = payload;
+    Ok(vec![match base.frames.get(*index) {
+        Some(frame) => SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: *index, frame: frame.clone() }),
+        None => return Ok(Vec::new()),
+    }])
 }
+//#endregion 🔖️Inverse

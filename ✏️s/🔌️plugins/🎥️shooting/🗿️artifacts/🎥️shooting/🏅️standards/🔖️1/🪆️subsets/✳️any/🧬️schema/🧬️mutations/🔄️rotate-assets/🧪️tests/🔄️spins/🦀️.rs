@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-assets/🔄️spins/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-assets/🔄️spins/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("rotate-assets diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("rotate-assets diff applies")
 }
 
 /// ▶️ `rotate-assets` PRE-multiplies the axis-angle delta onto each asset's current orientation
@@ -93,7 +93,7 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-assets/spins-asset-hero-about-z: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["assets"]["patched"][0]["patch"]["orientation"][3], (1.5f64 * 0.5).cos(), "rotate-assets/spins-asset-hero-about-z: the stored w is cos(angle/2), i.e. already composed");
+    assert_eq!(committed["assets"]["patched"][0]["patch"]["orientation"]["value"][3], (1.5f64 * 0.5).cos(), "rotate-assets/spins-asset-hero-about-z: the stored w is cos(angle/2), i.e. already composed");
     assert!(committed["assets"]["patched"][0]["patch"]["origin"].is_null(), "rotate-assets/spins-asset-hero-about-z: a rotation fills only the `orientation` slot");
     assert_eq!(committed["assets"]["patched"].as_array().expect("patched is an array").len(), 1, "rotate-assets/spins-asset-hero-about-z: only the addressed asset gets an entry");
 }
@@ -111,6 +111,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-assets/spins-asset-hero-about-z: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

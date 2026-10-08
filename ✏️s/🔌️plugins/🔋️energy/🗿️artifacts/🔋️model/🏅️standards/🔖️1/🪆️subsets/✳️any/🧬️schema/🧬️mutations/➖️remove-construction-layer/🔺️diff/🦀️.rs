@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveConstructionLayer` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ConstructionPatch, ListEdit, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::RemoveConstructionLayer, base: &EnergyModelSnapshot
     if existing.layer_material_ids.get(payload.index as usize).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Construction {} has no layer at index {}.", payload.id.0, payload.index), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(construction) = model.constructions.iter_mut().find(|item| item.id == payload.id) {
-        construction.layer_material_ids.remove(payload.index as usize);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { constructions: Rows::modifying(ConstructionPatch { layer_material_ids: ListEdit::removing_index(&existing.layer_material_ids, payload.index as usize), ..ConstructionPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

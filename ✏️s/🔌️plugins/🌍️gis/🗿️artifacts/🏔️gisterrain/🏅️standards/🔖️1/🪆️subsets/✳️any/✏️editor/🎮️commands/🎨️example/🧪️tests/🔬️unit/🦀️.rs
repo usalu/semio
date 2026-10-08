@@ -12,7 +12,7 @@ async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
     let ids: Vec<&str> = catalogue.iter().map(|source| source.id()).collect();
     assert_eq!(ids, [crate::examples::demo::ID], "the catalogue is exactly the subset's declared example facets");
     let none = example_document("").expect("the empty id is the catalogue's none arm");
-    assert_eq!(none, crate::schema::empty_gis_terrain_snapshot(), "the none arm is the flat unimported terrain");
+    assert_eq!(none, crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot(), "the none arm is the flat unimported terrain");
     let demo = example_document(crate::examples::demo::ID).expect("the declared example resolves");
     assert_eq!(demo, crate::schema::default_terrain_document(), "the demo id resolves to the bundled reuse terrain itself");
     assert_eq!(demo.exaggeration, 1.5, "the resolved example carries the authored relief, not the flat default");
@@ -60,11 +60,11 @@ async fn set_active_example_empty_then_demo_round_trips_and_undoes() {
     let cleared = dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() })).await;
     assert!(cleared.lanes.iter().any(|lane| matches!(lane, semio_framework_plugin::app::TypedOperationResultLane::Artifact)), "clearing a curated document publishes on the artifact lane: {:?}", cleared.lanes);
     drop(cleared);
-    assert_eq!(app.snapshot().expect("projection").exaggeration, crate::schema::empty_gis_terrain_snapshot().exaggeration);
+    assert_eq!(app.snapshot().expect("projection").exaggeration, crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot().exaggeration);
     dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEFAULT_EXAMPLE_ID.into() })).await;
     assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5, "the declared example restores the authored relief");
     history_verb(&mut app, "undo").await;
-    assert_eq!(app.snapshot().expect("projection").exaggeration, crate::schema::empty_gis_terrain_snapshot().exaggeration, "undo returns to the cleared document");
+    assert_eq!(app.snapshot().expect("projection").exaggeration, crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot().exaggeration, "undo returns to the cleared document");
     close(&mut app);
 }
 

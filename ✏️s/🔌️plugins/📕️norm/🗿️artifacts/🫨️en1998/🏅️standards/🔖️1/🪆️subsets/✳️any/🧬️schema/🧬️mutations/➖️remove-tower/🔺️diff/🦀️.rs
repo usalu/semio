@@ -1,12 +1,13 @@
-//! Diff for `remove-tower`.
+//! ➖️ `remove-tower` diff — removes the row at the index, guarded by the row's own id; an index past the collection's end is a `mutation.target-missing`.
+
 use super::RemoveTower;
-use crate::{En1998Diff, En1998Snapshot};
+use crate::diff::En1998RowEdit as _;
+use crate::diff::{En1998Diff, En1998TowerEdit};
+use crate::En1998Snapshot;
 
 pub fn diff(payload: &RemoveTower, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    if payload.index >= base.towers.len() {
+    let Some(row) = base.towers.get(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("tower #{}", payload.index), [payload.index.to_string()]);
-    }
-    let mut items = base.towers.clone();
-    items.remove(payload.index);
-    protocol::MutationOutcome::new(En1998Diff { towers: Some(items), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(En1998Diff { towers: vec![En1998TowerEdit::remove(payload.index, row.id.clone())], ..Default::default() })
 }

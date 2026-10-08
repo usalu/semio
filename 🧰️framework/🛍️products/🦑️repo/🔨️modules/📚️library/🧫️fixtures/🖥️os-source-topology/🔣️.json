@@ -153,16 +153,6 @@
       "sourceDisposition": "removed"
     },
     {
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts",
-      "kind": "typescript",
-      "anchor": "generateLaunchJson",
-      "consumers": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
-      ],
-      "sourceDisposition": "removed"
-    },
-    {
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📦️main.rs",
       "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/💾️binary/🦀️.rs",
       "kind": "rust",

@@ -14,7 +14,8 @@ const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 type LedgerReseal = { seal: string; coordinates: "changed" | "unchanged"; coordinatesSha256: string; recordedBy: string; reason: string };
 type CatalogDeletion = { path: string; reason: string; revision: string; packageId: string; index: number; row: { destinationPath: string } };
-type CatalogReseal = { seal: string; recordedBy: string; evidence: { revision: string; date: string }; reason: string; renames?: { from: string; to: string }[]; moves?: { from: string; to: string; revision: string }[]; deletions?: CatalogDeletion[] };
+type CatalogConsumerDeletion = { path: string; reason: string; revision: string; index: number; row: { packageId: string; path: string } };
+type CatalogReseal = { seal: string; recordedBy: string; evidence: { revision: string; date: string }; reason: string; renames?: { from: string; to: string }[]; moves?: { from: string; to: string; revision: string }[]; deletions?: CatalogDeletion[]; consumerDeletions?: CatalogConsumerDeletion[] };
 const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedAt: string; pinnedFor: string; contracts: Record<string, { seal: string; coordinatesSha256?: string; reseals?: LedgerReseal[] }>; later: Record<string, { recordedBy: string; reason: string }>; catalogs: Record<string, { family: string; seal: string; sealedBy: string; reseals?: CatalogReseal[] }> };
 
 /** 🧷️ The digest of the coordinates a live sealed document resolves: canonical JSON of `{pointer, kind, value}` in document order. */
@@ -104,7 +105,7 @@ test("one exact encoded historical source is registered without changing the pre
   }
 });
 
-test("every pinned authority catalog matches its ledger: reversing each recorded deletion, exact-path move and directory rename reproduces the previous seal byte for byte", () => {
+test("every pinned authority catalog matches its ledger: reversing each recorded deletion, consumer deletion, exact-path move and directory rename reproduces the previous seal byte for byte", () => {
   const taxonomy = loadCatalogTaxonomy();
   const pinned = [
     ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, "semanticPackageProjectionContracts", contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
@@ -118,13 +119,17 @@ test("every pinned authority catalog matches its ledger: reversing each recorded
     let text = readFileSync(join(root, path), "utf8");
     expect(sha(text)).toBe(digest);
     for (const [index, reseal] of [...(entry.reseals ?? [])].entries().toArray().reverse()) {
-      expect([id, reseal.recordedBy, (reseal.renames?.length ?? 0) + (reseal.moves?.length ?? 0) + (reseal.deletions?.length ?? 0) > 0]).toEqual([id, reseal.recordedBy, true]);
-      if (reseal.deletions?.length) {
-        const value = JSON.parse(text) as { packages: { id: string; mappings: unknown[] }[] };
+      expect([id, reseal.recordedBy, (reseal.renames?.length ?? 0) + (reseal.moves?.length ?? 0) + (reseal.deletions?.length ?? 0) + (reseal.consumerDeletions?.length ?? 0) > 0]).toEqual([id, reseal.recordedBy, true]);
+      if (reseal.deletions?.length || reseal.consumerDeletions?.length) {
+        const value = JSON.parse(text) as { packages: { id: string; mappings: unknown[] }[]; referenceConsumers: unknown[] };
         expect([id, reseal.recordedBy, JSON.stringify(value, null, 2) + "\n" === text]).toEqual([id, reseal.recordedBy, true]);
-        for (const deletion of [...reseal.deletions].sort((left, right) => left.index - right.index)) {
+        for (const deletion of [...(reseal.deletions ?? [])].sort((left, right) => left.index - right.index)) {
           expect([id, deletion.path, text.includes(JSON.stringify(deletion.path)), deletion.row.destinationPath]).toEqual([id, deletion.path, false, deletion.path]);
           value.packages.find((row) => row.id === deletion.packageId)!.mappings.splice(deletion.index, 0, deletion.row);
+        }
+        for (const deletion of [...(reseal.consumerDeletions ?? [])].sort((left, right) => left.index - right.index)) {
+          expect([id, deletion.path, text.includes(JSON.stringify(deletion.path)), deletion.row.path, value.packages.some((row) => row.id === deletion.row.packageId)]).toEqual([id, deletion.path, false, deletion.path, true]);
+          value.referenceConsumers.splice(deletion.index, 0, deletion.row);
         }
         text = JSON.stringify(value, null, 2) + "\n";
       }
@@ -217,14 +222,8 @@ test("the genuine 164-entry snapshot preserves the exact escaped source span and
   expect(lstatSync(physical).mode).toBe(stat.mode);
 });
 
-test("both historical source gates are mounted through Nx and exact launch registrations", () => {
+test("both historical source gates are mounted through Nx", () => {
   const projectSource = readFileSync(join(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"), project = JSON.parse(projectSource);
   expect(getNodeValue(parseTree(projectSource)!)).toEqual(project);
-  for (const row of vector.execution) {
-    expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const document = getNodeValue(parseTree(readFileSync(join(root, path), "utf8"))!), matches = document.configurations.filter((entry: any) => entry.name === row.name);
-      expect(matches).toEqual([{ name: row.name, type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/repo-lib:test-" + row.id + " --skip-nx-cache", cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: row.order } }]);
-    }
-  }
+  for (const row of vector.execution) expect(project.targets["test-" + row.id]?.options.command).toBe("bun ./📜️script.ts test " + row.id);
 });

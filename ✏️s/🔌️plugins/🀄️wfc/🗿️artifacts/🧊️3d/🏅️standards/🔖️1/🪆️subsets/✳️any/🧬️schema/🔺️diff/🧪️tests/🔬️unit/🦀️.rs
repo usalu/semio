@@ -1,66 +1,119 @@
-//! 🧪️ The sparse diff's own laws: it applies, it absorbs structurally, and it refuses an index that
-//! does not address what it claims to.
+//! 🧪️ `Wfc3dDiff` — apply, absorb, inverse and between laws over the id-keyed tile rows.
 
 use super::*;
-use crate::schema::snapshot::Slot3d;
-use protocol::MutationDiff;
+use protocol::{DiffAlgebra, MutationDiff};
+
+fn tile(id: &str, weight: f64) -> Tile {
+    Tile { id: id.into(), weight, ..Default::default() }
+}
 
 fn base() -> Wfc3dSnapshot {
-    crate::examples::two_room_corridor::snapshot()
+    Wfc3dSnapshot { tiles: vec![tile("b", 1.0), tile("d", 2.0)], ..Default::default() }
 }
 
-fn slot(id: &str) -> Slot3d {
-    Slot3d { id: id.into(), x: 0.0, y: 0.0, z: 0.0, width: 1.0, height: 1.0, depth: 1.0, pinned_tile_id: None }
+fn rows(delta: Wfc3dTilesDelta) -> Wfc3dDiff {
+    Wfc3dDiff { tiles: delta, ..Default::default() }
 }
 
+fn reweigh(id: &str, weight: f64) -> Wfc3dRowPatch<Wfc3dTilePatch> {
+    Wfc3dRowPatch { id: id.into(), patch: Wfc3dTilePatch { weight: Some(weight), ..Default::default() } }
+}
+
+fn absorbed(first: Wfc3dDiff, second: Wfc3dDiff) -> Wfc3dDiff {
+    let mut sigma = first;
+    MutationDiff::<Wfc3dSnapshot>::absorb(&mut sigma, second);
+    sigma
+}
+
+fn assert_absorb_law(base: &Wfc3dSnapshot, first: &Wfc3dDiff, second: &Wfc3dDiff) -> Wfc3dDiff {
+    let sigma = absorbed(first.clone(), second.clone());
+    let mid = protocol::apply_diff(first, base).expect("first applies");
+    let sequential = protocol::apply_diff(second, &mid).expect("second applies");
+    assert_eq!(protocol::apply_diff(&sigma, base).expect("absorbed applies"), sequential, "absorb must equal sequential application");
+    sigma
+}
+
+/// 🕳️ The identity delta leaves the document untouched.
 #[test]
-fn an_empty_diff_is_the_identity() {
+fn empty_diff_is_the_identity() {
     let base = base();
-    assert_eq!(Wfc3dDiff::default().apply(&base).expect("the empty diff applies"), base);
+    assert_eq!(protocol::apply_diff(&Wfc3dDiff::default(), &base).expect("identity applies"), base);
+    assert!(DiffAlgebra::<Wfc3dSnapshot>::is_empty(&Wfc3dDiff::default()));
 }
 
+/// 📍 An added row lands at its canonical id position, wherever the diff was built.
 #[test]
-fn a_scalar_lane_replaces_only_its_own_field() {
+fn added_rows_land_at_their_canonical_position() {
+    let after = protocol::apply_diff(&rows(Wfc3dRows { added: vec![tile("c", 3.0), tile("a", 4.0)], ..Default::default() }), &base()).expect("adds apply");
+    let ids: Vec<&str> = after.tiles.iter().map(|tile| tile.id.as_str()).collect();
+    assert_eq!(ids, ["a", "b", "c", "d"]);
+}
+
+/// 🔀 A row created and then deleted cancels out: nothing remains of it.
+#[test]
+fn create_then_delete_cancels() {
     let base = base();
-    let applied = Wfc3dDiff { seed: Some(99), ..Default::default() }.apply(&base).expect("seed applies");
-    assert_eq!(applied.seed, 99);
-    assert_eq!(applied.slots, base.slots);
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dRows { added: vec![tile("c", 3.0)], ..Default::default() }), &rows(Wfc3dRows { removed: vec!["c".into()], ..Default::default() }));
+    assert!(DiffAlgebra::<Wfc3dSnapshot>::is_empty(&sigma));
 }
 
+/// 🔀 A base row patched and then deleted leaves only the deletion.
 #[test]
-fn an_insertion_index_beyond_the_collection_is_refused() {
+fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let error = Wfc3dDiff { slots_upserted: vec![(99, slot("room-z"))], ..Default::default() }.apply(&base).expect_err("an out-of-range index is refused");
-    assert_eq!(error.code, "mutation.apply.invalid-index");
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dRows { patched: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Wfc3dRows { removed: vec!["b".into()], ..Default::default() }));
+    assert_eq!(sigma.tiles.removed, vec!["b".to_string()]);
+    assert!(sigma.tiles.patched.is_empty() && sigma.tiles.added.is_empty());
 }
 
-/// 🧬️ Replacing an EXISTING member must carry that member's own index, or the delta is addressing
-/// something other than what it names.
+/// 🔀 Two patches of one row coalesce into one patch holding the later values.
 #[test]
-fn a_replacement_at_the_wrong_index_is_refused() {
+fn patch_then_patch_coalesces() {
     let base = base();
-    let error = Wfc3dDiff { slots_upserted: vec![(0, slot("room-b"))], ..Default::default() }.apply(&base).expect_err("a mismatched replacement index is refused");
-    assert_eq!(error.code, "mutation.apply.invalid-index");
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dRows { patched: vec![reweigh("b", 8.0)], ..Default::default() }), &rows(Wfc3dRows { patched: vec![reweigh("b", 9.0)], ..Default::default() }));
+    assert_eq!(sigma.tiles.patched.len(), 1);
+    assert_eq!(sigma.tiles.patched[0].patch.weight, Some(9.0));
 }
 
+/// 🔀 A row deleted and created again is one replacement: removed and added together.
 #[test]
-fn removing_something_that_does_not_exist_is_refused() {
+fn delete_then_create_replaces() {
     let base = base();
-    let error = Wfc3dDiff { tiles_removed: vec!["ghost".into()], ..Default::default() }.apply(&base).expect_err("a missing removal target is refused");
-    assert_eq!(error.code, "mutation.apply.missing-target");
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dRows { removed: vec!["b".into()], ..Default::default() }), &rows(Wfc3dRows { added: vec![tile("b", 7.0)], ..Default::default() }));
+    assert_eq!((sigma.tiles.removed, sigma.tiles.added), (vec!["b".to_string()], vec![tile("b", 7.0)]));
 }
 
-/// 🔀 `absorb` is a structural map-merge: a later REMOVE beats an earlier upsert of the same id, and
-/// a later UPSERT clears an earlier remove.
+/// 🔀 A row created and then patched is created already patched.
 #[test]
-fn absorb_lets_the_later_statement_win_per_id() {
-    let mut first = Wfc3dDiff { slots_upserted: vec![(3, slot("room-c"))], ..Default::default() };
-    first.absorb(Wfc3dDiff { slots_removed: vec!["room-c".into()], ..Default::default() });
-    assert!(first.slots_upserted.is_empty());
-    assert_eq!(first.slots_removed, vec!["room-c".to_string()]);
+fn create_then_patch_folds_into_the_row() {
+    let base = base();
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dRows { added: vec![tile("c", 3.0)], ..Default::default() }), &rows(Wfc3dRows { patched: vec![reweigh("c", 4.0)], ..Default::default() }));
+    assert_eq!(sigma.tiles.added, vec![tile("c", 4.0)]);
+    assert!(sigma.tiles.patched.is_empty());
+}
 
-    let mut second = Wfc3dDiff { slots_removed: vec!["room-c".into()], ..Default::default() };
-    second.absorb(Wfc3dDiff { slots_upserted: vec![(3, slot("room-c"))], ..Default::default() });
-    assert!(second.slots_removed.is_empty());
-    assert_eq!(second.slots_upserted.len(), 1);
+/// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
+#[test]
+fn inverse_restores_the_base() {
+    let base = base();
+    let diff = rows(Wfc3dRows { removed: vec!["b".into()], added: vec![tile("a", 5.0)], patched: vec![reweigh("d", 6.0)] });
+    let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+    let inverse = DiffAlgebra::<Wfc3dSnapshot>::inverse(&diff, &base);
+    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+}
+
+/// 🧭️ `between` reaches the other document, and is empty between equal documents.
+#[test]
+fn between_reaches_the_other_document() {
+    let base = base();
+    let other = Wfc3dSnapshot { tiles: vec![tile("a", 5.0), tile("b", 1.5), tile("c", 3.0)], ..Default::default() };
+    let delta = <Wfc3dDiff as DiffAlgebra<Wfc3dSnapshot>>::between(&base, &other);
+    assert_eq!(protocol::apply_diff(&delta, &base).expect("between applies"), other);
+    assert!(DiffAlgebra::<Wfc3dSnapshot>::is_empty(&<Wfc3dDiff as DiffAlgebra<Wfc3dSnapshot>>::between(&base, &base)));
+}
+
+/// 🚫️ Removing a row the base never held is refused, not silently ignored.
+#[test]
+fn apply_refuses_a_missing_removal() {
+    assert!(protocol::apply_diff(&rows(Wfc3dRows { removed: vec!["ghost".into()], ..Default::default() }), &base()).is_err());
 }

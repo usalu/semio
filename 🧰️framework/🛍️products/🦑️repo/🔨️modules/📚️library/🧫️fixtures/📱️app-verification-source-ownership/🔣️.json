@@ -157,8 +157,6 @@
     }
   ],
   "registration": {
-    "name": "🧹clean🧩️taxonomy🧪️app-verification-source-ownership",
-    "command": "bun nx run @semio-tech/repo-lib:test-app-verification-source-ownership",
     "target": "test-app-verification-source-ownership"
   }
 }

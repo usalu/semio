@@ -53,7 +53,7 @@ async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
     assert_eq!(ids, [crate::examples::demo::ID], "the catalogue is exactly the subset's declared example facets");
     assert!(example_document("").expect("the empty id is the catalogue's none arm").positions.is_empty());
     let demo = example_document(crate::examples::demo::ID).expect("the declared example resolves");
-    assert_eq!(demo, crate::schema::default_document(), "the demo id resolves to the bundled reuse map itself");
+    assert_eq!(demo, crate::standards::v1::subsets::any::io::text::snapshot::default_document(), "the demo id resolves to the bundled reuse map itself");
     assert!(!demo.routes.is_empty(), "the resolved example carries real route content");
     assert!(example_document("reuse-map").is_err(), "an id outside the catalogue faults instead of loading the demo");
 }

@@ -19,7 +19,7 @@ pub struct PatchLayer {
 pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     if !matches!(payload.field.as_str(), "locked" | "visible") && crate::schema::drawing_layer_is_locked(document, &payload.layer_id) { return Err(Fault::from("The selected layer is locked")); }
-    let json_value = crate::mutations::parse_layer_field_input(&payload.field, &payload.value);
+    let json_value = crate::standards::v1::subsets::any::io::text::mutations::parse_layer_field_input(&payload.field, &payload.value);
     match drawing_op_for_layer_field(document, &payload.layer_id, &payload.field, &json_value) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Err(Fault::from("Invalid layer field or value")),

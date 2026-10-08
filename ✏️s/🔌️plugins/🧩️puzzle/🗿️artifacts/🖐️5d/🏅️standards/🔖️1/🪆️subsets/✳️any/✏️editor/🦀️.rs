@@ -8585,6 +8585,7 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️StorePreparation
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle5dStorePreparationFactory;
 
 struct Puzzle5dStorePreparation {
@@ -8716,6 +8717,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle5dConfigStorePreparationFactory;
 
 struct Puzzle5dConfigStorePreparation {

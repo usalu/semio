@@ -35,11 +35,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for CreateLayer {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", crate::schema::layer_id(&self.layer)), &format!("Ebene \"{}\" erstellen", crate::schema::layer_id(&self.layer)))
     }

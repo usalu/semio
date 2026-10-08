@@ -119,10 +119,14 @@ fn close_member(member: &mut SemioMembers) {
 }
 
 fn begin_member_open(request: MemberOpenRequest) -> SemioMembersOpen {
-    match <SemioMembers as MemberFactory>::begin_open(request) {
-        Ok(open) => open,
-        Err(mut rejected) => {
-            close(&mut rejected.request);
+    let bytes = <SemioMembers as MemberFactory>::open_birth_bytes(&request).expect("closed Semio member birth query");
+    let mut request = Some(request);
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: bytes, maximum_release_bytes: 0, maximum_depth: 64 };
+    match <SemioMembers as MemberFactory>::begin_open(&mut request, grant) {
+        Ok(Some(open)) => open,
+        rejected => {
+            close(request.as_mut().expect("refused exact factory retains its original request"));
+            assert!(matches!(rejected, Err(_)));
             panic!("closed Semio member-open declaration must admit exact request");
         }
     }

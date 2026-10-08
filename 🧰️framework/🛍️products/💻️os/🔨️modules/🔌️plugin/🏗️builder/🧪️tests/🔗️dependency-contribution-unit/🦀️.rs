@@ -17,7 +17,7 @@ pub(super) fn assert_add_value_contract(descriptor: &str) {
     assert_eq!(<DependencyTestOp as Mutation<DependencyTestSnapshot>>::DESCRIPTORS.len(), 1);
     assert_eq!(operation(5).descriptor().binary_tag, Some(0));
     let base = DependencyTestSnapshot { value: 7 };
-    assert_eq!(operation(5).diff(&base).diff().apply(&base).expect("direct add"), DependencyTestSnapshot { value: 12 });
+    assert_eq!(protocol::apply_diff(operation(5).diff(&base).diff(), &base).expect("direct add"), DependencyTestSnapshot { value: 12 });
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn exact_i32_inverse_and_boundary_laws() {
         for value in row["deltas"].as_array().expect("deltas") {
             let mutation = operation(i32::try_from(value.as_i64().expect("delta")).expect("i32"));
             inverse.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
-            match mutation.diff(&current).diff().apply(&current) {
+            match protocol::apply_diff(mutation.diff(&current).diff(), &current) {
                 Ok(next) => current = next,
                 Err(error) => {
                     assert_eq!(error.code, "mutation.apply.overflow");
@@ -76,7 +76,7 @@ fn exact_i32_inverse_and_boundary_laws() {
             .collect();
         assert_eq!(serde_json::to_value(stored).expect("stored inverse"), row["inverse"]);
         for inverse in inverse.iter().rev() {
-            current = inverse.diff(&current).diff().apply(&current).expect("Store reverse inverse");
+            current = protocol::apply_diff(inverse.diff(&current).diff(), &current).expect("Store reverse inverse");
         }
         assert_eq!(current, base);
     }
@@ -87,9 +87,9 @@ fn ordered_diff_preserves_rejection() {
     let mut diff = DependencyTestDiff { deltas: vec![i32::MAX] };
     diff.absorb(DependencyTestDiff { deltas: vec![-i32::MAX] });
     assert_eq!(diff.deltas, [i32::MAX, -i32::MAX]);
-    assert!(diff.apply(&DependencyTestSnapshot { value: 1 }).is_err());
-    assert_eq!(diff.apply(&DependencyTestSnapshot { value: 0 }).expect("valid sequence").value, 0);
-    assert_eq!(DependencyTestDiff::default().apply(&DependencyTestSnapshot { value: 9 }).expect("identity").value, 9);
+    assert!(protocol::apply_diff(&diff, &DependencyTestSnapshot { value: 1 }).is_err());
+    assert_eq!(protocol::apply_diff(&diff, &DependencyTestSnapshot { value: 0 }).expect("valid sequence").value, 0);
+    assert_eq!(protocol::apply_diff(&DependencyTestDiff::default(), &DependencyTestSnapshot { value: 9 }).expect("identity").value, 9);
 }
 
 #[test]
@@ -99,8 +99,8 @@ fn contribution_plan_matches_direct_leaf() {
     let plan = protocol::plan_of::<DependencyTestSnapshot, DependencyTestOp, AddValue>(&leaf, &base).expect("contribution plan");
     assert_eq!(plan.len(), 1);
     assert!(matches!(&plan[0], protocol::PlanStep::Local(DependencyTestOp::AddValue(AddValue { delta: 5 }))));
-    let direct = operation(5).diff(&base).diff().apply(&base).expect("direct result");
-    let folded = protocol::fold_plan_diff(&leaf, &base).diff().apply(&base).expect("contribution result");
+    let direct = protocol::apply_diff(operation(5).diff(&base).diff(), &base).expect("direct result");
+    let folded = protocol::apply_diff(protocol::fold_plan_diff(&leaf, &base).diff(), &base).expect("contribution result");
     assert_eq!(direct, folded);
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS.kind, "add-value");
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));

@@ -30,12 +30,12 @@ fn ops() -> Vec<Puzzle2dMutation> {
         create_node(node, Some(0)),
         move_node("n1".into(), 4.0, 5.0),
         delete_node("n1".into()),
-        connect_handles("e1".into(), "n1:h0".into(), "n2:h0".into(), Some("wire.link".into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Some("none".into()), Some("arrow".into())),
+        connect_handles("e1".into(), "n1:h0".into(), "n2:h0".into(), Some("wire.link".into()), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Some("none".into()), Some("arrow".into()), None),
         disconnect_handles("e1".into()),
         change_manifest_id(Some("nakagin".into())),
-        drag_selection(vec!["n1".into(), "region-1".into()], 5.0, -2.5),
-        rotate_selection(vec!["n1".into()], 20.0, 10.0, std::f64::consts::FRAC_PI_2),
-        scale_selection(vec!["n1".into(), "region-1".into()], 20.0, 10.0, 0.5),
+        drag_selection(vec!["n1".into(), "region-1".into()].into(), 5.0, -2.5),
+        rotate_selection(vec!["n1".into()].into(), 20.0, 10.0, std::f64::consts::FRAC_PI_2),
+        scale_selection(vec!["n1".into(), "region-1".into()].into(), 20.0, 10.0, 0.5),
     ]
 }
 
@@ -58,9 +58,9 @@ fn operations_round_trip_text_and_binary() {
 #[test]
 fn selection_transforms_print_their_opcode_and_carry_their_tag() {
     for (operation, opcode, tag) in [
-        (drag_selection(vec!["n1".into()], 1.0, 2.0), "drag-selection", 33u8),
-        (rotate_selection(vec!["n1".into()], 0.0, 0.0, 1.0), "rotate-selection", 34),
-        (scale_selection(vec!["n1".into()], 0.0, 0.0, 2.0), "scale-selection", 35),
+        (drag_selection(vec!["n1".into()].into(), 1.0, 2.0), "drag-selection", 33u8),
+        (rotate_selection(vec!["n1".into()].into(), 0.0, 0.0, 1.0), "rotate-selection", 34),
+        (scale_selection(vec!["n1".into()].into(), 0.0, 0.0, 2.0), "scale-selection", 35),
     ] {
         let line = operation.print_op();
         assert!(line.starts_with(&format!("{opcode} ")), "{line}");

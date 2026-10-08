@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -47,50 +46,47 @@
   "options": null,
   "decisions": null,
   "validations": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "validation-record-a",
-        "patch": {
-          "name": "Validation Record A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "subjectId": "",
-          "subjectKind": "Replaced Validation Record A",
-          "validationType": "",
-          "method": null,
-          "criteria": [],
-          "result": "pending",
-          "evidence": [],
-          "validatorIds": [],
-          "validationDate": null,
-          "nextReviewDate": null,
-          "findings": [],
-          "nonConformities": [],
-          "correctiveActions": [],
-          "waivers": [],
-          "standards": [],
-          "traceLinks": [],
-          "reportId": null,
-          "confidenceLevel": null,
-          "validationNotes": []
-        }
+        "name": "Validation Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "subjectId": "",
+        "subjectKind": "Replaced Validation Record A",
+        "validationType": "",
+        "method": null,
+        "criteria": [],
+        "result": "pending",
+        "evidence": [],
+        "validatorIds": [],
+        "validationDate": null,
+        "nextReviewDate": null,
+        "findings": [],
+        "nonConformities": [],
+        "correctiveActions": [],
+        "waivers": [],
+        "standards": [],
+        "traceLinks": [],
+        "reportId": null,
+        "confidenceLevel": null,
+        "validationNotes": []
       }
     ],
+    "removed": [
+      "validation-record-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "performance": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

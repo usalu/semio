@@ -9,7 +9,6 @@ use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::graph::schema::mutations::{
-    set_snapshot::SetSnapshot,
     add_node_port::AddNodePort, add_node_property::AddNodeProperty, change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode,
     drag_nodes::DragNodes, move_node::MoveNode, remove_node_port::RemoveNodePort, remove_node_property::RemoveNodeProperty, rename_node::RenameNode, resize_node::ResizeNode,
     set_node_property::SetNodeProperty, add_edge_property::AddEdgeProperty, remove_edge_property::RemoveEdgeProperty, set_edge_property::SetEdgeProperty,
@@ -117,8 +116,6 @@ fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_graph_mutation(m: &SemioGraphMutation) -> String {
     match m {
-        SemioGraphMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioGraphMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioGraphMutation::CreateNode(p) => format!(
             "createNode:{},{},{},{},{},{},[{}],[{}],{}",
             enc_node_id(&p.id),
@@ -153,16 +150,11 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioGraphMutation::PatchSnapshot(crate::standards::v1::subsets::graph::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-        return Ok(SemioGraphMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("graph mutation: missing ':' in {line:?}"))?;
     match tag {
@@ -278,7 +270,6 @@ impl protocol::OpText for SemioGraphMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
     use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphPortKind;
     vec![
-        SemioGraphMutation::PatchSnapshot(crate::standards::v1::subsets::graph::schema::mutations::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioGraphMutation::CreateNode(CreateNode {
             id: GraphNodeId::new("n1"),
             kind: "source".into(),
@@ -349,7 +340,6 @@ use crate::standards::v1::subsets::graph::schema::mutations::set_node_property;
 /// (`change-node-kind`/`change-node-label`/`move-node`), node nested collections
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
-use crate::standards::v1::subsets::graph::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

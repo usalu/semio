@@ -1,9 +1,9 @@
 //! 📨️ Cooperatively copies one admitted diagnostic without unbounded target-vector growth.
 
 use crate::os_spr::MutationMessage;
-use super::super::{ArtifactStoreMessageLedgerRetirement, ErasedSnapshotRetirement, SnapshotRetirementStep};
+use super::super::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use std::mem::size_of;
+use std::mem::{ManuallyDrop, size_of};
 
 /// 🎟️ Payload copying and retained allocation require independent byte permissions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,8 +32,7 @@ pub enum MessageCopyStep {
 /// 📋️ The caller keeps the borrowed source at one immutable address until this cursor closes.
 pub struct MessageCopyCursor {
     source: Option<usize>,
-    output: Option<MutationMessage>,
-    active: Option<Box<dyn ErasedSnapshotRetirement>>,
+    output: ManuallyDrop<Option<MutationMessage>>,
     segment: usize,
     phase: u8,
     allocated: bool,
@@ -47,7 +46,7 @@ impl Default for MessageCopyCursor {
 
 impl MessageCopyCursor {
     pub fn new() -> Self {
-        Self { source: None, output: None, active: None, segment: 0, phase: 0, allocated: false, cancelled: false, closing: false }
+        Self { source: None, output: ManuallyDrop::new(None), segment: 0, phase: 0, allocated: false, cancelled: false, closing: false }
     }
 
     pub fn advance(&mut self, source: &MutationMessage, grant: MessageCopyGrant) -> Result<MessageCopyStep, ValueError> {
@@ -67,7 +66,7 @@ impl MessageCopyCursor {
             targets.try_reserve_exact(source.target.len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "message target allocation failed"))?;
             let actual = targets.capacity().checked_mul(size_of::<String>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "message target actual capacity overflow"))?;
             if actual > grant.maximum_capacity_bytes { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "message target allocator exceeded capacity")); }
-            self.output = Some(MutationMessage { level: source.level, code: semio_framework_diagnostic::FaultCode(String::new()), message: String::new(), target: targets, op_index: source.op_index });
+            *self.output = Some(MutationMessage { level: source.level, code: semio_framework_diagnostic::FaultCode(String::new()), message: String::new(), target: targets, op_index: source.op_index });
             self.phase = 1;
             return Ok(MessageCopyStep::Pending(MessageCopyProgress { items: 1, copied_bytes: 0, retained_capacity_bytes: actual }));
         }
@@ -118,26 +117,32 @@ impl MessageCopyCursor {
 
     pub fn begin_close(&mut self) { self.closing = true; }
 
+    /// 📏️ Advertises the complete next physical backing release without spending a grant.
+    pub fn next_close_byte_demand(&self) -> usize {
+        let Some(output) = self.output.as_ref() else { return 0 };
+        if let Some(target) = output.target.last() { return target.capacity(); }
+        if output.target.capacity() != 0 { return output.target.capacity().saturating_mul(size_of::<String>()); }
+        if output.code.0.capacity() != 0 { return output.code.0.capacity(); }
+        output.message.capacity()
+    }
+
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> {
         if !self.closing || maximum_items == 0 { return Ok(SnapshotRetirementStep::Blocked); }
-        if let Some(active) = self.active.as_mut() {
-            let step = active.close_step(maximum_items.min(1), maximum_bytes)?;
-            if step == SnapshotRetirementStep::Complete {
-                if !active.terminal_is_empty() { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "message copy retirement has live owners")); }
-                self.active = None;
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
-        }
-        if let Some(output) = self.output.take() {
-            self.active = Some(Box::new(ArtifactStoreMessageLedgerRetirement::new(String::new(), vec![output])));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        let demand = self.next_close_byte_demand();
+        if demand > maximum_bytes { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(output) = self.output.as_mut() {
+            if !output.target.is_empty() { drop(output.target.pop()); }
+            else if output.target.capacity() != 0 { drop(std::mem::take(&mut output.target)); }
+            else if output.code.0.capacity() != 0 { drop(std::mem::take(&mut output.code.0)); }
+            else if output.message.capacity() != 0 { drop(std::mem::take(&mut output.message)); }
+            else { self.output.take(); }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: demand });
         }
         self.source = None;
         Ok(SnapshotRetirementStep::Complete)
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.output.is_none() && self.active.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.output.is_none() }
 
     pub fn into_retirement(mut self) -> Box<dyn ErasedSnapshotRetirement> {
         self.cancel();
@@ -155,10 +160,11 @@ impl MessageCopyCursor {
 impl ErasedSnapshotRetirement for MessageCopyCursor {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, ValueError> { MessageCopyCursor::close_step(self, maximum_items, maximum_bytes) }
     fn terminal_is_empty(&self) -> bool { MessageCopyCursor::terminal_is_empty(self) }
+    fn next_close_byte_demand(&self) -> usize { MessageCopyCursor::next_close_byte_demand(self) }
 }
 
 impl Drop for MessageCopyCursor {
-    fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "message copy cursor dropped before terminal-empty ownership"); }
+    fn drop(&mut self) { let empty = self.terminal_is_empty(); assert!(empty || std::thread::panicking(), "message copy cursor dropped before terminal-empty ownership"); if empty { unsafe { ManuallyDrop::drop(&mut self.output); } } }
 }
 
 #[cfg(test)]

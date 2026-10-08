@@ -1,0 +1,2116 @@
+{
+  "tools": [
+    {
+      "id": "semio-sqlite-10-owners-43-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-ten-owners-forty-three-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-12-owners-51-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-twelve-owners-fifty-one-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-13-owners-55-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-thirteen-owners-fifty-five-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-14-owners-59-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-fourteen-owners-fifty-nine-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-16-owners-67-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-sixteen-owners-sixty-seven-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-19-native-test-canonical-owner-paths",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-nineteen-native-test-canonical-owner-paths"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-19-owners-78-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-nineteen-owners-seventy-eight-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-19-owners-80-paid-complete-semantic-providers",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-nineteen-owners-eighty-paid-complete-semantic-providers"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-7-paid-reconstruction-merge",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "merge"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-7-paid-reconstruction-stage",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-animation-complete-semantic-provider",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-animation-complete-semantic-provider"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-animation-sql-direct-geometry",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-animation-sql-direct-geometry"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-audio-6-format-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-audio-six-format-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-audio-complete-semantic-provider-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-audio-complete-semantic-provider-held"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-audio-shared-hex-utf8-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-audio-shared-hex-utf8-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-audio-source-exact-authority-correction",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-audio-source-exact-authority-correction"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-base-complete-36-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-complete-thirty-six-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-base-complete-individual-source-cases",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-complete-individual-source-cases"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-base-independent-complete-manual-oracle",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-independent-complete-manual-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-base-native-default-required-image-null",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-native-default-required-image-null"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-base-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-brep-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-brep-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-cad-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-cad-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-canonical-8-private-sibling-base-tests-glue",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-canonical-eight-private-sibling-base-tests-glue"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-canonical-io-stale-duplicate-test-glue",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-canonical-io-stale-duplicate-test-glue"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-canonical-reached-native-entry-visibility",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-canonical-reached-native-entry-visibility"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-current-io-2-grouped-native-imports",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-current-io-two-grouped-native-imports"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-current-own-native-compiler-prerequisites",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-current-own-native-compiler-prerequisites"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-document-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-document-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-drawing-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-drawing-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-drawing-successful-empty-workspace-release",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-drawing-successful-empty-workspace-release"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-drawing-successful-workspace-release-preparation",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-drawing-successful-empty-workspace-release-preparation"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-flow-image-complete-semantic-provider",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-flow-image-complete-semantic-provider"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-flow-image-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-flow-image-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-graph-animation-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-graph-animation-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-graph-hex-float-native-grammar-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-graph-hex-float-native-grammar-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-kit-current-grouped-native-io-import",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-kit-current-grouped-native-io-import"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-kit-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-kit-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-mesh-authored-source-url-separator",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mesh-authored-source-url-separator"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-mesh-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mesh-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-mesh-source-exact-word-width-hydration",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mesh-source-exact-word-width-hydration"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-model-independent-late-owned-oracle",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-model-independent-late-owned-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-model-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-model-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-model-nonempty-late-owned-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-model-nonempty-late-owned-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-object-complete-semantic-provider",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-object-complete-semantic-provider"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-object-current-grouped-native-io-import",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-object-current-grouped-native-io-import"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-object-exact-word-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-object-exact-word-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-paid-copy-cancellation-witness",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-paid-copy-cancellation-witness"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-presentation-native-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-presentation-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-properties-6-authored-fixture-inputs",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-properties-six-authored-fixture-inputs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-second-native-io-10-private-domain-imports",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-second-native-io-ten-private-domain-imports"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-second-native-io-4-canonical-glue",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-second-native-io-four-canonical-glue"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-source-flow-loop-and-image-current-fixture",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-source-flow-loop-and-image-current-fixture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-audio-shared-hex-utf8-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-audio-shared-hex-utf8-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-common-borrowed-hex-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-common-borrowed-hex-held"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-complete-semantic-provider-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-complete-semantic-provider-held"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-held-actual-progress-path",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-held-actual-progress-path"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-new-demand-label-correction",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-text-new-demand-label-correction"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-text-signed-identity-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "signed-text"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-value-ordinal-progress-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "value-ordinal"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-value-partial-entry-held",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "value-entry"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-value-table-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-value-table-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-sqlite-video-native-matched-complete-independent-demand",
+      "verb": "build",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-video-native-matched-complete-independent-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "authored-operation-actual-0-field-header",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "authored-header"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "authored-operation-canonical-source-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "authored-operation-source-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-schema-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-schema-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-schema-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-schema-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-schema-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-schema-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-schema-producer-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-schema-producer-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-schema-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-schema-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-authored-static-producer-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-authored-static-producer-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-operation-symbol-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-operation-symbol-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-operation-symbol-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-operation-symbol-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-operation-symbol-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-operation-symbol-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-operation-symbol-refresh",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-operation-symbol-refresh"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-operation-symbol-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-operation-symbol-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-inline-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-inline-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-inline-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-inline-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-os-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-os-kernel",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-os-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-os-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-os-kernel",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-os-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-os-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-os-kernel",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-os-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-owned-source-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-owned-source-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-owned-source-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-owned-source-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-owned-source-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-owned-source-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-refresh",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-refresh"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "borrowed-static-pack-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "borrowed-static-pack-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-array-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-array-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-array-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-array-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-schema-demand",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-schema-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-schema-mount",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-schema-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-schema-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-schema-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "const-unit-schema-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "const-unit-schema-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "custom-borrowed-schema-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "custom-borrowed-schema-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "custom-borrowed-schema-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "custom-borrowed-schema-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "framework-custom-borrowed-schema-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "framework-custom-borrowed-schema-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "framework-custom-borrowed-schema-stage",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-pack-record-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "framework-custom-borrowed-schema-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "gate-repo-artifact-root-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/repo-test-domain:test-artifact-root-source",
+        "--skip-nx-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/worker-repo-artifact-root-source",
+        "SEMIO_TEST_LEVEL": "quick"
+      }
+    },
+    {
+      "id": "gate-rewriting-scenario46-subject",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/repo-test-domain:test-subject",
+        "--skip-nx-cache",
+        "--",
+        "--owner",
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any",
+        "--case",
+        "♻️mutate-rewrite-1",
+        "--implementation",
+        "rust"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_BUILD_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "CARGO_TARGET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-rewriting46-native-artifacts",
+        "SEMIO_TEST_LEVEL": "exhaustive",
+        "SEMIO_TEST_OUTPUT_SCOPE": "root/rewriting46-native"
+      }
+    },
+    {
+      "id": "child-emit-held-original-full-semantic-physical-demand",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-original-carrier-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "child-emit-original-8-semantic-fields-physical-native",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--skip-nx-cache",
+        "--args=quick child_complete_original_semantic_metadata8194_grant4096 --no-fail-fast -- --nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_ROOT": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      }
+    },
+    {
+      "id": "semio-base-full-empty-native-decoder-context",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-base-full-empty-native-decoder-context"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-current-native-55-compiler-prerequisites",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-next-own-native-compiler-prerequisites"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-flow-independent-negative-table-grant",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "flow-negative-tables"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-mounted-base-retained-schema-and-inline-root",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mounted-base-retained-schema-and-inline-root"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-mounted-drawing-node-stage-and-image-negative-tables",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mounted-drawing-node-stage-and-image-negative-tables"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-mounted-owned-controlled-schema-validation",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-mounted-owned-controlled-schema-validation"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-shared-native-decode-owned-ledger",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "semio-shared-native-decode-owned-ledger"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "semio-value-actual-native-root-row-census",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/immutable-seven-reconstruction/📜️script.ts",
+        "value-native-root-census"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "sqlite-6-dedicated-current-owning-test-prerequisites",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "six-dedicated-current-owning-test-prerequisites"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "sqlite-6-dedicated-original-current-native-after",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "run-many",
+        "--projects=@semio-tech/stdio-bcf-rs,@semio-tech/stdio-md-rs,@semio-tech/stdio-las-rs,@semio-tech/vcs-vcs-rs,@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs",
+        "--targets=test-snapshot-sqlite-native",
+        "--parallel=1",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_BUILD_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "CARGO_TARGET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "NX_CACHE_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-data",
+        "RUST_BACKTRACE": "1",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_RETAIN_ARTIFACTS": "true"
+      }
+    },
+    {
+      "id": "sqlite-bcf-current-helpers-and-borrowed-camera-owner",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "bcf-current-canonical-helper-and-borrowed-camera-owner"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "sqlite-md-independent-schema-and-actual-owned-binder",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "md-current-independent-schema-and-owned-binder"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "sqlite-step-ifc-bcf-md-original-current-native-after",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "run-many",
+        "--projects=@semio-tech/stdio-bcf-rs,@semio-tech/stdio-md-rs,@semio-tech/stdio-step-rs,@semio-tech/stdio-ifc-rs",
+        "--targets=test-snapshot-sqlite-native",
+        "--parallel=1",
+        "--skip-nx-cache",
+        "--outputStyle=static"
+      ],
+      "cwd": "",
+      "env": {
+        "CARGO_BUILD_BUILD_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "CARGO_TARGET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "NX_CACHE_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/nx-root-bcf-deflate-before-data",
+        "RUST_BACKTRACE": "1",
+        "SEMIO_TEST_ARTIFACT_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-native-authentic-current",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_RETAIN_ARTIFACTS": "true"
+      }
+    },
+    {
+      "id": "sqlite-step-ifc-whole-derived-current-test-includes",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "step-ifc-whole-derived-current-test-includes"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "sqlite-vcs-transitive-xlsx-current-io-owner",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/canonical-schema-law-owner/📜️script.ts",
+        "vcs-transitive-xlsx-current-clean-io-owner"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-actual-physical-retirement-demand",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-demand"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-held-allocator-event-observer",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-observer-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-held-original-physical-lifetime-demands",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-lifetime-stage"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-independent-physical-event-oracle",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-oracle"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-original-owning-physical-demand-before-and-after",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--skip-nx-cache",
+        "--args=quick child_complete_actual_authored_typed_source_ --no-fail-fast -- --nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_ROOT": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      }
+    },
+    {
+      "id": "typed-source-original-physical-lifetime-demand-mount",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-lifetime-mount"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "typed-source-original-source-and-static-scaffold-native",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-plugin:test",
+        "--skip-nx-cache",
+        "--args=quick child_complete_actual_authored_typed_source_ --no-fail-fast -- --nocapture"
+      ],
+      "cwd": "",
+      "env": {
+        "SEMIO_TEST_ARTIFACTS_ROOT": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/immutable-native-test-artifacts"
+      }
+    },
+    {
+      "id": "typed-source-qualified-allocator-event-observer-mount",
+      "verb": "task",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--nxIgnoreCycles",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/child-paged-complete-family/📜️script.ts",
+        "typed-source-physical-observer-mount"
+      ],
+      "cwd": ""
+    }
+  ]
+}

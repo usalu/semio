@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -32,50 +31,47 @@
   "information": null,
   "communication": null,
   "wayfinding": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "wayfinding-requirement-a",
-        "patch": {
-          "name": "Wayfinding Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "userProfileIds": [],
-          "elementIds": [],
-          "destinationTypes": [],
-          "signageTypes": [],
-          "languages": [],
-          "tactileRequired": true,
-          "audioRequired": false,
-          "digitalWayfinding": false,
-          "landmarkStrategy": [],
-          "colorCoding": [],
-          "symbolStandards": [],
-          "decisionPoints": [],
-          "maximumSignageDistanceM": null,
-          "lightingRequirements": [],
-          "maintenancePlan": null,
-          "emergencyEgress": [],
-          "visitorJourney": [],
-          "staffJourney": [],
-          "brandIntegration": []
-        }
+        "name": "Wayfinding Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "userProfileIds": [],
+        "elementIds": [],
+        "destinationTypes": [],
+        "signageTypes": [],
+        "languages": [],
+        "tactileRequired": true,
+        "audioRequired": false,
+        "digitalWayfinding": false,
+        "landmarkStrategy": [],
+        "colorCoding": [],
+        "symbolStandards": [],
+        "decisionPoints": [],
+        "maximumSignageDistanceM": null,
+        "lightingRequirements": [],
+        "maintenancePlan": null,
+        "emergencyEgress": [],
+        "visitorJourney": [],
+        "staffJourney": [],
+        "brandIntegration": []
       }
     ],
+    "removed": [
+      "wayfinding-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "schedules": null,
@@ -112,9 +108,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

@@ -81,7 +81,7 @@ async fn dep_input_changes_when_a_coefficient_changes() {
 /// 🧪️ Native serde independently checks the neutral logical dependency projection.
 #[semio_framework_async_macros::async_test]
 async fn typed_dependency_matches_neutral_serde_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔑️dependency/🔣.json")).unwrap();
     let mut snapshot = EquationSnapshot::default();
     snapshot.equation = quadratic_with_roots_one_and_two();
     let dependency = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::dep_input(&snapshot, &usize::MAX, &[]);

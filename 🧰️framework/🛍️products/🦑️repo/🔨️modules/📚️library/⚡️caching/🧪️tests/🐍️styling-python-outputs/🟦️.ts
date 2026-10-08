@@ -16,10 +16,6 @@ export async function testStylingPythonOutputs(workspace: string, output: string
   const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, packagePath, "pyproject.toml"), "utf8"));
   assert.deepEqual(manifest["build-system"].requires, [fixture.backend]);
   assert.deepEqual(manifest["dependency-groups"].build, [fixture.backend]);
-  for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const launch = require("jsonc-parser").parse(readFileSync(join(workspace, file), "utf8"));
-    for (const name of Object.keys(project.targets)) assert.ok(launch.configurations.some((row: any) => row.command === `bun nx run ${fixture.project}:${name}`), `${file} must expose ${fixture.project}:${name}`);
-  }
   const compiler = join(workspace, fixture.owner, "🏗️builder/🐍️python/📜️script.ts");
   const bundle = await require("esbuild").build({ entryPoints: [compiler], absWorkingDir: workspace, bundle: true, packages: "external", platform: "node", format: "esm", write: false, metafile: true });
   assert.ok(!Object.keys(bundle.metafile.inputs).some(path => path.endsWith("🎨️styling/🏗️builder/🟦️.ts")), "Wheel compilation must not import its source and wheel tests");

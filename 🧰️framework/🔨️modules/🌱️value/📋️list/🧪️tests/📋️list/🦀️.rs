@@ -1,6 +1,56 @@
 use super::*;
 
 #[test]
+fn retained_paged_list_owner_page_ceiling_preserves_order_and_exact_retirement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️owner-page-ceiling.json")).unwrap();
+    let ceiling = fixture["ownerPayloadPageBytes"].as_u64().unwrap() as usize;
+    for invalid in fixture["invalidPayloadPageBytes"].as_array().unwrap() {
+        assert_eq!(PagedList::<u64, 200>::with_payload_page_bytes(invalid.as_u64().unwrap() as usize).err().unwrap().kind, PagedListRefusalKind::OwnershipLimit);
+    }
+    for count in fixture["boundaryCounts"].as_array().unwrap() {
+        let count = count.as_u64().unwrap() as usize;
+        let mut owner = PagedList::<u64, 200>::with_payload_page_bytes(ceiling).unwrap();
+        let mut admitted = 0;
+        for value in 0..count as u64 {
+            while !owner.has_reserved_slot() {
+                let bytes = owner.next_allocation_bytes().unwrap();
+                assert!(bytes <= ceiling);
+                let before = (owner.capacity(), owner.allocated_bytes(), owner.len());
+                assert!(!owner.reserve_one(bytes - 1).unwrap().progressed);
+                assert_eq!((owner.capacity(), owner.allocated_bytes(), owner.len()), before);
+                let step = owner.reserve_one(bytes).unwrap();
+                assert!(step.progressed);
+                assert_eq!(step.allocated_bytes, bytes);
+                admitted += bytes;
+            }
+            owner.push_reserved(value).unwrap();
+        }
+        assert_eq!(owner.iter().copied().collect::<Vec<_>>(), (0..count as u64).collect::<Vec<_>>());
+        while owner.pop().is_some() {}
+        let mut returned = 0;
+        while !owner.terminal_is_empty() {
+            let bytes = owner.next_release_allocation_bytes().unwrap();
+            assert!(!owner.release_empty_page(bytes - 1).unwrap().progressed);
+            let step = owner.release_empty_page(bytes).unwrap();
+            assert!(step.progressed);
+            returned += step.released_allocation_bytes;
+        }
+        assert_eq!(returned, admitted);
+    }
+    let mut owner = PagedList::<u64, 200>::with_payload_page_bytes(ceiling).unwrap();
+    for value in fixture["input"].as_array().unwrap().iter().chain(fixture["append"].as_array().unwrap()) {
+        while !owner.has_reserved_slot() { assert!(owner.reserve_one(ceiling).unwrap().progressed); }
+        owner.push_reserved(value.as_u64().unwrap()).unwrap();
+    }
+    assert_eq!(serde_json::to_value(owner.iter().copied().collect::<Vec<_>>()).unwrap(), fixture["expected"]);
+    assert_eq!(owner.iter().sum::<u64>(), fixture["sum"].as_u64().unwrap());
+    let mut default = PagedList::<u64, 600>::default();
+    assert!(default.reserve_one(ceiling).unwrap().progressed);
+    assert_eq!(default.next_allocation_bytes().unwrap(), fixture["defaultPayloadPageBytes"].as_u64().unwrap() as usize);
+    println!("[DEBUG] Paged list owner ceiling={} boundary cases={} exact ordered rows={}", ceiling, fixture["boundaryCounts"].as_array().unwrap().len(), owner.len());
+}
+
+#[test]
 fn retained_paged_list_neutral_order_capacity_and_close() {
     let data: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let grant = data["maximumPageBytes"].as_u64().unwrap() as usize;
@@ -124,7 +174,7 @@ fn paged_child_source_returns_genuine8194_backing_to_parent_without_physical_cre
 #[test]
 fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
     use crate::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],6);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),6*size_of::<usize>());
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌳️actual-height.json")).unwrap();assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(fixture["ownerWords"],7);assert_eq!(size_of::<PagedList<u64,{isize::MAX as usize}>>(),7*size_of::<usize>());
     let mut scalar=PagedList::<u64,{isize::MAX as usize}>::empty();let mut allocations=0;while !scalar.has_reserved_slot(){let required=scalar.next_allocation_bytes().unwrap();assert!(required<=4096);let step=scalar.reserve_one(4096).unwrap();assert!(step.progressed);assert_eq!(step.allocated_bytes,required);allocations+=1;}assert!(scalar.push_reserved(fixture["scalar"].as_u64().unwrap()).is_ok());assert!(allocations<=2,"one scalar preallocated maximum-height scaffolding");assert!(scalar.allocated_bytes()<=8192);assert_eq!(scalar[0],7);scalar.pop();while !scalar.terminal_is_empty(){assert!(scalar.release_empty_page(4096).unwrap().progressed)}
     for bytes in fixture["growthPayloadBytes"].as_array().unwrap(){
         let length=bytes.as_u64().unwrap()as usize;let mut owner=PagedList::<u8,{isize::MAX as usize}>::empty();let mut first=None;
@@ -135,7 +185,7 @@ fn paged_actual_height_preserves_maximum_authority_pointer_and_parent_handoff(){
         assert_eq!(owner.len(),length);for(index,byte)in owner.iter().enumerate(){assert_eq!(*byte,(index%251)as u8)}let allocated=owner.allocated_bytes();while owner.pop().is_some(){}let mut parent=ParentAllocationReturn::<512>::try_new(4096,allocated).unwrap();let mut returned=0;
         while !owner.terminal_is_empty(){let before=owner.allocated_bytes();let step=owner.return_empty_page(&mut parent,1).unwrap();assert!(step.progressed);assert_eq!(before-owner.allocated_bytes(),step.returned_allocation_bytes);returned+=step.returned_allocation_bytes;}assert_eq!(returned,allocated);assert_eq!(owner.allocated_bytes(),0);assert_eq!(parent.retained_bytes(),allocated);let mut physical=0;for _ in 0..512+128{match parent.close_step(1,4096){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);physical+=released_bytes;}}}assert!(parent.terminal_is_empty());assert_eq!(physical,allocated);
     }
-    println!("[DEBUG] actual-height paged owners preserve maximum logical authority and existing six-word layout, singleton only leaf+payload allocations,8194/65537 exact source and original pointer, denied growth unchanged and real parent handoff with zero child physical disposal1/4096");
+    println!("[DEBUG] actual-height paged owners preserve maximum logical authority and seven-word owner-ceiling layout, singleton only leaf+payload allocations,8194/65537 exact source and original pointer, denied growth unchanged and real parent handoff with zero child physical disposal1/4096");
 }
 
 #[test]
@@ -175,7 +225,7 @@ fn paged_formatted_exact_extent_retains_every_refused_prefix_and_complete_utf8_b
 fn paged_list_exact_final_extent_preserves_original_8194_and_parent_authority(){
     use crate::{NativeEncodeControl,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📏️exact-final-extent.json")).unwrap();
-    assert_eq!(fixture["ownerWords"],6);assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["sourceCount"],5);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(size_of::<PagedList<u8,{isize::MAX as usize}>>(),6*size_of::<usize>());
+    assert_eq!(fixture["ownerWords"],7);assert_eq!(fixture["sourceBytes"],8194);assert_eq!(fixture["sourceCount"],5);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);assert_eq!(size_of::<PagedList<u8,{isize::MAX as usize}>>(),7*size_of::<usize>());
     let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);let mut owners:[PagedList<u8,{isize::MAX as usize}>;5]=std::array::from_fn(|_|PagedList::empty());let mut pointers=[None;5];let mut total=0;
     for(ordinal,owner)in owners.iter_mut().enumerate(){
         for index in 0..8194{
@@ -196,5 +246,5 @@ fn paged_list_exact_final_extent_preserves_original_8194_and_parent_authority(){
     for _ in 0..512+128{if parent.terminal_is_empty(){break}let required=parent.next_close_byte_demand();if required==2{observed_tail=true;}assert_eq!(parent.close_step(1,required.saturating_sub(1)),AllocationReturnStep::Pending{released_items:0,released_bytes:0});match parent.close_step(1,4096){AllocationReturnStep::Pending{released_items,released_bytes}=>{assert_eq!(released_items,1);assert_eq!(released_bytes,required);assert!(released_bytes<=4096);disposed+=released_bytes;},AllocationReturnStep::Complete=>panic!("genuine parent token disappeared before its physical allocation")}}
     assert!(observed_tail);assert_eq!(disposed,total);assert!(parent.terminal_is_empty());assert!(owners.iter().all(PagedList::terminal_is_empty));
     let mut initial=PagedList::<u8,{isize::MAX as usize}>::empty();let mut allow=|_|true;let mut limited=NativeEncodeControl::new(4096,&mut allow);let metadata=initial.next_exact_capacity_allocation_bytes(8194).unwrap().unwrap();limited.charge(metadata).unwrap();assert!(initial.reserve_exact_capacity_one(8194,4096).unwrap().progressed);let payload=initial.next_exact_capacity_allocation_bytes(8194).unwrap().unwrap();assert_eq!(payload,4096);assert!(limited.charge(payload).is_err());assert_eq!(initial.len(),0);assert_eq!(initial.allocated_bytes(),metadata);while !initial.terminal_is_empty(){assert!(initial.release_empty_page(4096).unwrap().progressed)}
-    eprintln!("[DEBUG] five original8194 literal sources retain exact4096/4096/2 payload pages and actual metadata under unchanged cumulative64k; original six-word wrapper and pointers survive short grants/forbidden extension; initial4096 still refuses actual first payload; real parent alone physically deallocates every full token1/4096");
+    eprintln!("[DEBUG] five original8194 literal sources retain exact4096/4096/2 payload pages and actual metadata under unchanged cumulative64k; seven-word owner-ceiling wrapper and pointers survive short grants/forbidden extension; initial4096 still refuses actual first payload; real parent alone physically deallocates every full token1/4096");
 }

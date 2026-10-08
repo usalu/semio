@@ -8,7 +8,7 @@ fn vectors() -> serde_json::Value {
 }
 
 fn apply_stored_inverse(stored: &[JobTestOp], after: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
-    stored.iter().rev().try_fold(after.clone(), |state, operation| operation.diff(&state).diff().apply(&state))
+    stored.iter().rev().try_fold(after.clone(), |state, operation| protocol::apply_diff(operation.diff(&state).diff(), &state))
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn minimum_inverse_is_stored_as_one_then_maximum() {
         let base = JobTestSnapshot { value };
         let stored = operation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(stored, vec![JobTestOp::AddValue(AddValue { delta: 1 }), JobTestOp::AddValue(AddValue { delta: i32::MAX })]);
-        let after = operation.diff(&base).diff().apply(&base).expect("minimum delta");
+        let after = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("minimum delta");
         assert_eq!(apply_stored_inverse(&stored, &after), Ok(base));
     }
 }
@@ -55,7 +55,7 @@ fn neutral_inverse_vectors_restore_in_store_order() {
     for row in vectors()["inverse"].as_array().expect("inverse cases") {
         let base = JobTestSnapshot { value: serde_json::from_value(row["base"].clone()).expect("base") };
         let operation = JobTestOp::AddValue(AddValue { delta: serde_json::from_value(row["delta"].clone()).expect("delta") });
-        let after = operation.diff(&base).diff().apply(&base).expect("valid direct operation");
+        let after = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("valid direct operation");
         assert_eq!(after.value, serde_json::from_value::<i32>(row["result"].clone()).expect("expected result"));
         let expected: Vec<i32> = serde_json::from_value(row["stored"].clone()).expect("stored inverse deltas");
         let stored = operation.inverse(&base).expect("valid retained mutation inverse fixture");
@@ -74,7 +74,7 @@ fn mixed_inverse_groups_stay_forward_before_store_reversal() {
         for delta in deltas {
             let operation = JobTestOp::AddValue(AddValue { delta });
             stored.extend(operation.inverse(&state).expect("valid retained mutation inverse fixture"));
-            state = operation.diff(&state).diff().apply(&state).expect("valid operation sequence");
+            state = protocol::apply_diff(operation.diff(&state).diff(), &state).expect("valid operation sequence");
         }
         assert_eq!(state.value, serde_json::from_value::<i32>(row["result"].clone()).expect("expected result"));
         let expected: Vec<i32> = serde_json::from_value(row["stored"].clone()).expect("expected stored inverse");

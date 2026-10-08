@@ -1,0 +1,521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ready",
+    "root",
+    "ticket",
+    "models",
+    "rootInputs",
+    "capturedBindings",
+    "memberships",
+    "owners",
+    "sourceWritesOutsideTicket",
+    "nativeExecuted",
+    "publicationReady",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ready": {
+      "const": true
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ticket": {
+      "type": "string",
+      "minLength": 1
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "before",
+          "after",
+          "beforeHash",
+          "afterHash",
+          "forward",
+          "inverse"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "after": {
+            "type": "string"
+          },
+          "beforeHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "afterHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "forward": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "start",
+              "delete",
+              "insert"
+            ],
+            "properties": {
+              "start": {
+                "const": 0
+              },
+              "delete": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "insert": {
+                "type": "string"
+              }
+            }
+          },
+          "inverse": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "start",
+              "delete",
+              "insert"
+            ],
+            "properties": {
+              "start": {
+                "const": 0
+              },
+              "delete": {
+                "type": "string"
+              },
+              "insert": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "minItems": 26,
+      "maxItems": 26
+    },
+    "rootInputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "beforeHash",
+          "afterHash",
+          "model",
+          "reasons"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "beforeHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "afterHash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "minItems": 26
+    },
+    "capturedBindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "scope",
+          "before",
+          "after",
+          "mode"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "enum": [
+              "root",
+              "immutable"
+            ]
+          },
+          "before": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "kind",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory"
+                  ]
+                },
+                "sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "kind",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory"
+                  ]
+                },
+                "sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "mode": {
+            "enum": [
+              "files",
+              "tree"
+            ]
+          }
+        }
+      }
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "planPath",
+          "planHash",
+          "binaryMetadataPath",
+          "binaryMetadataHash",
+          "selectedPackages",
+          "executedPackages",
+          "uncompiledPackages",
+          "depfiles",
+          "dependencies",
+          "joins",
+          "snapshotRoot"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "ui",
+              "board",
+              "product"
+            ]
+          },
+          "planPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "planHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "binaryMetadataPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "binaryMetadataHash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "selectedPackages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "executedPackages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "uncompiledPackages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "depfiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256",
+                "package"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "package": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256",
+                "kind",
+                "rootPath"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "kind": {
+                  "enum": [
+                    "root",
+                    "generated",
+                    "external"
+                  ]
+                },
+                "rootPath": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "joins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "initialPath",
+                "initialHash",
+                "modelPath",
+                "modelHash",
+                "preparedPath",
+                "preparedHash"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "initialPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "initialHash": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "modelPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "modelHash": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "preparedPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "preparedHash": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "snapshotRoot": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "sourceWritesOutsideTicket": {
+      "const": false
+    },
+    "nativeExecuted": {
+      "const": false
+    },
+    "publicationReady": {
+      "const": false
+    },
+    "scope": {
+      "const": "Fresh11 selected live applicability for joint26 publication with negative runtime controls; no atomicity claim"
+    }
+  }
+}

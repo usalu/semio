@@ -124,7 +124,7 @@ pub struct JsonDiff {
 }
 
 impl MutationDiff<JsonSnapshot> for JsonDiff {
-    fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
+    fn apply(&self, base: &JsonSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<JsonSnapshot> {
         if let Some(diff) = &self.value {
             validate_value_diff(diff, &base.value)?;
         }

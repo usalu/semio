@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSpaceList` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SpaceListPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +15,6 @@ pub fn diff(payload: &super::CreateSpaceList, base: &EnergyModelSnapshot) -> pro
     if let Some(missing) = payload.space_ids.iter().find(|candidate| !base.model.spaces.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Space {} does not exist.", missing.0), [missing.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.space_lists.insert(payload.index as usize, crate::model::SpaceList { id: payload.id, name: payload.name.clone(), space_ids: payload.space_ids.clone() });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { space_lists: Rows::inserting(payload.index as usize, crate::model::SpaceList { id: payload.id, name: payload.name.clone(), space_ids: payload.space_ids.clone() }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

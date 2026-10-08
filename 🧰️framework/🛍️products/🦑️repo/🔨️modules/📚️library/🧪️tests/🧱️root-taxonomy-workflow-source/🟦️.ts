@@ -52,13 +52,9 @@ test("removes root implementation declarations and binds direct consumers", () =
   }
 });
 
-test("registers one Bun Nx and launch route", () => {
+test("registers one Bun and Nx route", () => {
   const packageRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"), route = fixture.route;
   const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[route.target]?.options?.command).toBe(route.command);
   expect(JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8")).scripts[route.target]).toBe(`nx run @semio-tech/repo-lib:${route.target}`);
-  const seed = readFileSync(resolve(repoRoot, ".vscode/🧩️launch.seed.jsonc"), "utf8"), launch = readFileSync(resolve(repoRoot, ".vscode/launch.json"), "utf8");
-  expect(seed.split(route.launchName).length - 1).toBe(1);
-  expect(launch.split(route.launchName).length - 1).toBe(1);
-  expect(seed).toContain(route.launchCommand); expect(launch).toContain(route.launchCommand);
 });

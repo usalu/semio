@@ -724,24 +724,6 @@
     },
     {
       "packageId": "wgpu-renderer",
-      "path": ".vscode/launch.json",
-      "transformId": "wgpu-root",
-      "occurrenceCount": 65,
-      "ownership": "generated",
-      "generatorOwnerPaths": [
-        ".vscode/🧩️launch.seed.jsonc",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts"
-      ]
-    },
-    {
-      "packageId": "wgpu-renderer",
-      "path": ".vscode/🧩️launch.seed.jsonc",
-      "transformId": "wgpu-root",
-      "occurrenceCount": 42,
-      "ownership": "authored"
-    },
-    {
-      "packageId": "wgpu-renderer",
       "path": "Cargo.toml",
       "transformId": "wgpu-root",
       "occurrenceCount": 1,

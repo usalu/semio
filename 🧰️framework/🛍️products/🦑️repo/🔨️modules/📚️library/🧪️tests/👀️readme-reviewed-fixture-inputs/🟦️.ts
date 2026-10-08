@@ -317,12 +317,12 @@ test("the unchanged activation module validates a schema snapshot without live h
   expect(input(repo, declaredOwner.destinationPath).sha256).toBe(canonical.sha256);
 });
 
-test("reviewed fixture gate registration matches its package route and both launch catalogs", () => {
+test("reviewed fixture gate registration matches its package route", () => {
   const expected = vector.execution, packagePath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript";
-  const parsed = (path: string, jsonc = false): any => {
-    const bytes = capture(path).bytes, errors: ParseError[] = [], value = parseJson(bytes.toString("utf8"), errors, { disallowComments: !jsonc, allowTrailingComma: jsonc });
+  const parsed = (path: string): any => {
+    const bytes = capture(path).bytes, errors: ParseError[] = [], value = parseJson(bytes.toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false });
     expect(errors, path).toEqual([]);
-    if (!jsonc) expect(value, path).toEqual(JSON.parse(bytes.toString("utf8")));
+    expect(value, path).toEqual(JSON.parse(bytes.toString("utf8")));
     return value;
   };
   const project = parsed(packagePath + "/📋️project.json"), packageManifest = parsed(packagePath + "/package.json");
@@ -332,11 +332,7 @@ test("reviewed fixture gate registration matches its package route and both laun
     ts.forEachChild(node, visit);
   };
   visit(tree);
-  const launches = [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"].map((path) => {
-    const configurations = parsed(path, true).configurations;
-    return { path, rows: configurations.filter((row: any) => row.name === expected.launchName), orderRows: configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder).length };
-  });
-  expect({ packageName: packageManifest.name, packageCommand: packageManifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length, launches }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } }, branches: 1, launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })) });
+  expect({ packageName: packageManifest.name, packageCommand: packageManifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } }, branches: 1 });
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
   expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
 });

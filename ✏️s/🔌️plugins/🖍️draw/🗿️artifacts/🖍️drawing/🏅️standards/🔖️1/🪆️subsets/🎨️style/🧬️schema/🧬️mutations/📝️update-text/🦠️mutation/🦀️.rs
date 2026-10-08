@@ -18,9 +18,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "text", kind: "update-text", record: "UpdatedText" };
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit text", "Text bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.to_string_owner()] }
 }

@@ -1,1 +1,361 @@
-{"schema":"drawing.paged-native-owner/v1","bodyBytes":4096,"text":"Grundstück🧬","repeat":800,"originalUnchanged":true,"terminalEmpty":true}
+{
+  "schema": "drawing.paged-native-owner/v1",
+  "bodyBytes": 4096,
+  "text": "Grundstück🧬",
+  "repeat": 800,
+  "originalUnchanged": true,
+  "terminalEmpty": true,
+  "constructorAllocationBytes": 0,
+  "ownedChunkCapacities": [
+    0,
+    7,
+    1024,
+    4096
+  ],
+  "directLayerFootprint": {
+    "baseTexts": [
+      "id",
+      "name",
+      "blendMode"
+    ],
+    "variantTexts": {
+      "shape": [
+        "shapeKind"
+      ],
+      "path": [],
+      "text": [
+        "content"
+      ],
+      "image": [
+        "imageKey"
+      ],
+      "group": [],
+      "boolean": [
+        "operation",
+        "children/*"
+      ],
+      "trace": [
+        "sourceKey"
+      ]
+    },
+    "nestedGroupFieldsIncluded": false,
+    "retainedBackingMeasured": true
+  },
+  "recordFootprint": {
+    "snapshotTexts": [
+      "schema",
+      "id",
+      "title"
+    ],
+    "assetTexts": [
+      "key",
+      "mime",
+      "data"
+    ],
+    "nestedLayerFieldsIncluded": false,
+    "inlineBytesCountedByParent": true
+  },
+  "textDigest": {
+    "tag": 382,
+    "sha256": "b2b0515a51a03693385e7d47d840b00733297778af79ab0a9936ecf361267d31"
+  },
+  "assetKeyOrder": [
+    "z",
+    "",
+    "long"
+  ],
+  "cancelAt": [
+    0,
+    1,
+    3,
+    7,
+    17
+  ],
+  "lookup": {
+    "cases": [
+      {
+        "target": "shape-a",
+        "name": "Alpha",
+        "path": [
+          0
+        ]
+      },
+      {
+        "target": "group-a",
+        "name": "Caption Group",
+        "path": [
+          1
+        ]
+      },
+      {
+        "target": "text-a",
+        "name": "Caption",
+        "path": [
+          1,
+          0
+        ]
+      },
+      {
+        "target": "missing",
+        "name": null,
+        "path": null
+      }
+    ],
+    "deep": 90,
+    "firstDuplicate": true,
+    "ownedProjection": {
+      "retainRootUntilClosed": true,
+      "targetReborrowedEachTurn": true,
+      "constructorAllocationBytes": 0,
+      "maximumItems": 1,
+      "maximumBytes": 4096
+    }
+  },
+  "rename": {
+    "cases": [
+      {
+        "target": "shape-a",
+        "newName": "Renamed",
+        "disposition": "changed",
+        "inverseName": "Alpha",
+        "path": [
+          0
+        ]
+      },
+      {
+        "target": "shape-a",
+        "newName": "Alpha",
+        "disposition": "no-op",
+        "inverseName": "Alpha",
+        "path": [
+          0
+        ]
+      },
+      {
+        "target": "group-a",
+        "newName": "",
+        "disposition": "changed",
+        "inverseName": "Caption Group",
+        "path": [
+          1
+        ]
+      },
+      {
+        "target": "text-a",
+        "newName": "Different🧬",
+        "repeatNewName": true,
+        "disposition": "changed",
+        "inverseName": "long",
+        "path": [
+          1,
+          0
+        ]
+      },
+      {
+        "target": "missing",
+        "newName": "Refused",
+        "disposition": "missing",
+        "inverseName": null,
+        "path": null
+      },
+      {
+        "target": "text-a",
+        "newName": "Grundstück🧬",
+        "repeatNewName": true,
+        "disposition": "no-op",
+        "inverseName": "long",
+        "path": [
+          1,
+          0
+        ]
+      },
+      {
+        "target": "text-a",
+        "newName": "Grundstück🧬",
+        "repeatNewName": true,
+        "suffix": "!",
+        "disposition": "changed",
+        "inverseName": "long",
+        "path": [
+          1,
+          0
+        ]
+      },
+      {
+        "target": "Grundstück🧬",
+        "repeatTarget": true,
+        "newName": "Identity Renamed",
+        "disposition": "changed",
+        "inverseName": "Long Identity",
+        "path": [
+          2
+        ]
+      },
+      {
+        "target": "deep-rename",
+        "newName": "Deep Renamed",
+        "disposition": "changed",
+        "inverseName": "Deep Original",
+        "path": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "deep": true
+      }
+    ],
+    "ownedProjection": {
+      "retainRootUntilClosed": true,
+      "payloadReborrowedEachTurn": true,
+      "constructorAllocationBytes": 0,
+      "maximumItems": 1,
+      "maximumBytes": 4096,
+      "originalLease": "history/edit/0",
+      "foreignLease": "history/edit/1",
+      "foreignPayloadRefused": true
+    }
+  },
+  "duplicateIdentity": {
+    "prefix": "layer",
+    "suffix": " copy",
+    "material": "originalIdThenSuffix",
+    "nameSuffixOnlyOnRoot": true,
+    "internalReferencesRemapped": true,
+    "ids": ["", "shape-a", "a\u0000b", "🧬ö"]
+  },
+  "decodedFieldClose": {
+    "retirementBirthGranted": true,
+    "terminalScaffoldReleaseGranted": true,
+    "zeroItemGrantInert": true,
+    "zeroByteGrantInert": true,
+    "originalFieldMovedOnce": true,
+    "physicalBackingCapacities": [0, 7, 1024, 4096]
+  },
+  "duplicateClose": {
+    "grants": [0, 1, 7, 4096],
+    "callerGrantPreserved": true,
+    "capacityCopyReleaseSeparate": true,
+    "ownerMoveCopyBytes": true,
+    "faultPropagated": true
+  },
+  "textEquality": [
+    {
+      "left": "",
+      "right": "",
+      "equal": true
+    },
+    {
+      "left": "alpha",
+      "right": "alpha",
+      "equal": true
+    },
+    {
+      "left": "alpha",
+      "right": "alphA",
+      "equal": false
+    },
+    {
+      "left": "a\u0000b",
+      "right": "a\u0000c",
+      "equal": false
+    },
+    {
+      "left": "🧬ö",
+      "right": "🧬ö",
+      "equal": true
+    },
+    {
+      "left": "a",
+      "right": "ab",
+      "equal": false
+    }
+  ]
+}

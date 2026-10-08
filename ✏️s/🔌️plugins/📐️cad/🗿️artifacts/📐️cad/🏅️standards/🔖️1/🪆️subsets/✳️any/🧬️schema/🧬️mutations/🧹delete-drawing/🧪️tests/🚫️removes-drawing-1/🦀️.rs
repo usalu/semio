@@ -50,7 +50,7 @@ async fn inverse_recreates_the_drawing_with_its_target() {
     match &inverse[0] {
         CadMutation::CreateDrawing(step) => {
             assert_eq!(step.child_id, "cad-drawing-1", "the inverse must recreate the removed drawing id");
-            assert_eq!(step.target, "cad-drawing-1!s.stdio.semio@v1/drawing", "the inverse must carry the removed handle's target URI, not a stub");
+            assert_eq!(step.target, semio_framework_artifact_reference::ArtifactRef { artifact_id: "cad-drawing-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }, "the inverse must carry the removed handle's target URI, not a stub");
         }
         other => panic!("delete-drawing must invert to create-drawing, got {other:?}"),
     }

@@ -1,0 +1,58 @@
+# PNG History Input Semantics
+
+The strict native PNG scope completed **2 passed, 1 failed**. The failed generic history journey tried boolean `/result/image/interlace = true` and option `/paint/profile = indexed`; both produced an actual replay Error. Evidence is `🗑️generated/managed-verification/tools-editor-png-named-a/output.log`, lines 20157–20164. No complete PNG editor census receipt exists.
+
+The PaintNativeSamples payload schema exposes a source revision, region, native sample profile and values, and an entire completed result snapshot. Both TypeScript `applyPngMutation` and Rust `MutationKind::diff` require that completed result to equal the result of painting the declared samples onto the original source. Rust validation additionally requires unchanged metadata and matching source image profile. Consequently interlace is derived output, and profile is a source-constrained target discriminator; neither is freely editable intent. Genuine region/sample edits also require preparing a new completed result; the current generic input decoder simply decodes the submitted payload and does not reprepare it.
+
+The existing `MutationLeaf` `input_schema` hook only selects a schema; it does not transform input or regenerate derived output. PNG retained publication presently copies `PaintNativeSamples.result` and validates it against the original region/sample intent. A schema-only control change cannot repair editable sample semantics.
+
+A clean complete fix must separate authored paint intent from prepared output across the domain schemas, wire assets, command producer and bounded preparation factory, or introduce an explicit bounded intent-to-result editor preparation seam. Neither lowering the census fence nor blanket readonly annotations establish the required editable operation proof. PNG PatchSnapshot separately supports path-specific schemas and can provide genuine boolean/option metadata edits when represented by committed fixtures.
+
+No PNG semantic source changes were made by this audit. The earlier actual native codec publication receipt remains valid for its source boundary; a changed protocol requires a fresh strict publisher receipt before generated registry publication.
+
+## Intent Closure In Progress
+
+Tools delegated the complete PNG intent/result boundary. The domain schema now declares only revision, region and paint; revision and sample profile are explicit source discriminators. Every language surface and literal mutation fixture drops frozen result. The TypeScript producer re-evaluates paint from source. Native bounded publication validates/hash-checks source, writes one pixel within its sample-byte grant, and preserves its exact inverse owner. The native command incrementally validates/hashes the immutable source and emits intent; it no longer prepares and duplicates an output image before Store preparation. Its source lease moves into controlled shared retirement.
+
+Actual neutral TDD: first harness5853 failed on Ajv draft selection, then corrected6860 actually failed because the producer parsed missing frozen output (`$: not an object`). New producer10811 passes **4/4, 74 assertions**, 833ms, with Ajv2020, pngjs and SQLite round-trip witnesses, and three visible DEBUG intent receipts (grayscale16/indexed/rgb16). Native bounded publication12747 is pending; no native semantic completion claimed.
+
+The canonical binary protocol still represents tag20 with opaque payload bytes, so its protocol-source SHA is unchanged by these payload schema edits. The earlier receipt remains a valid protocol-source witness; fresh compiled native capture is still required for this changed semantic boundary before publication is credited.
+
+The generic 2/3 PNG failure is not yet closed: no committed path-scoped metadata fixtures currently exercise genuine boolean and option inputs after removing the false completed-result controls. PatchSnapshot's live retained preparation explicitly refuses generic replacement until an appropriate typed field preparation is implemented. These remaining seams must be proved rather than reducing the census or declaring all mutation input controls readonly.
+
+## Metadata neutral current boundary
+
+Final source22594 actually passed5/5,80 assertions,613ms, through Nx exec workspace/excluded task dependencies/skip cache. Ajv2020 validates the real domain snapshot and paint intent schemas, pngjs independently preserves native sample precision, and fast-json-patch agrees with both literal metadata targets. Visible DEBUG proves interlace and saturation sRGB cases. Native12747 now reached Cargo build and waits its artifact lock; the metadata preflight assertion remains intentionally red until actual execution is captured. The private typed scalar patch helper is not yet wired.
+
+Native12747 reached managed30-minute deadline, actual task28m53, after waiting the shared generic Cargo artifact lock with no assertions executed. Physical old controller command absence was checked before exact warm retry; no producer change between these native captures. The metadata refusal test remains authored, its expected native RED still pending, and the scalar patch helper remains unwired. This is not native completion or a failed assertion receipt.
+
+## Native scalar preparation design and current receipts
+
+The five selected publication laws finally executed partially in35696: cancellationPASS, canonical-reader fixtureFAIL, three unrun under fail-fast. The reader fixture had retained a second strong Arc while requesting exclusive retirement, so the factory correctly blocked. It now transfers sole strong ownership and checks Weak strong-count0/upgradeNone at terminal close, retaining all neutral JSON and17-byte chunk assertions. Scoped no-fail-fast45916 now captures all laws; the metadata preflight RED remains pending until it executes.
+
+The scalar helper remains unwired. Its intended producer boundary admits only declared fixed scalar paths: interlace, sRGB intent/null, and a canonical decimal native sample index with u16 profile/palette validation. The existing bounded base validation and exact inverse clone finish first. Metadata writes must receive a separate turn and the precise native field byte grant; zero item/byte grants publish nothing. Paint retains its existing one-pixel sample-byte turn. Unknown/object/array/noncanonical paths continue to refuse; no opaque generic replacement or completed output is introduced. The two metadata neutral rows retain their literal expected snapshots and RFC6902/Ajv independent output. This design is not yet a native runtime completion claim.
+
+## Expanded literal scalar witnesses, 03:00 UTC
+
+Added two ordinary neutral metadata rows to the existing corpus: clear sRGB intent to null and set the second native grayscale16 sample to65535. Both retain the entire literal image metadata and ancillary authorities. The existing real domain snapshot schema, TypeScript mutation implementation and independent RFC6902 library agree with all four metadata outputs. Actual registered source capture `ui-png-expanded-neutral-scalars-oct7` (PID53085) passed5/5,0fail,86 expectations in344ms, terminal03:00:49.500Z, with seven DEBUG receipts for three paint and four metadata witnesses. No test-owned schema authority is added. This source result does not complete retained native scalar preparation; the all-five native red capture45916 is physically still waiting its admitted binaries-only Cargo work.
+
+## Native preflight capture timeout and retained extent caveat
+
+Capture45916 reached its30-minute managed deadline03:10:18.339Z after waiting the shared build lock and entering native UI dependency compilation. It executed zero selected assertions, so it supplies no native metadata RED/GREEN. Literal controller/owner/Nextest/Cargo PIDs45916/45922/45923/45924/46227/47127/47709/47724 were absent before fresh warm57044 starts the unchanged five-law no-fail-fast command. The scalar helper remains deliberately unwired. Current process state is recorded in managed `ui-png-intent-all-warm-red-oct7`.
+
+Read-only retained extent caveat: PNG native samples still use Vec<u16> and text metadata String. Shared VecCursor phase0 admits the complete source.len()*size_of<T> allocation as one capacity demand; it returns zero progress if that demand exceeds its current grant. The semantic publication fixture has32 samples and4096-byte grants, so a passing tiny semantic law would not establish a paged or unbounded artifact owner. This is a source inference, not a new executed runtime failure. Shared Value source is preserved, and richer shared paged clone-close allocator receipts remain distinct from PNG's existing whole-vector representation and release-only producer retirement path.
+
+
+## Large native ownership boundary audit, 05:08 UTC
+
+The current semantic image schema already specifies arrays/text independently from Rust container choices. Native PngImage.samples remains Vec<u16>; text_chunks and ancillary_chunks remain Vec records, ancillary data remains Vec<u8>, and text keyword/value/language_tag/translated_keyword remain String. The bounded snapshot/validation/publication cursor cannot establish large-image admission by demonstrating only the existing32-sample fixture. In particular a vector whose capacity birth exceeds4096 cannot be admitted through that complete backing grant; increasing the grant or reporting the whole allocation as an item would not satisfy the required boundary. Palette/alpha have separate finite PNG cardinality limits, while arbitrary text/chunk data also require genuine paged ownership.
+
+Core confirms the native containers are PagedList<T,{usize::MAX}> and PagedUtf8<{usize::MAX}> with unchanged semantic array/text schemas. Hot construction uses reserve_one/push_reserved; typed retained close_granted/ControlledRetirement must alternate actual copy/capacity totals within4096. Source::from_authority construction stays a cold boundary. This audit does not install those owners or claim a whole-image factory. Current scalar metadata helper remains uninstalled until its actually executed native RED; running12654 is still compilation admission. No concurrent PNG/shared production source changed during this audit.
+
+The exact paged adoption will also need existing IO decoder constructors, SQLite reconstruction, cold diff literals, tests and publication's pixel range slice writes to consume paged owners directly. A contiguous as_slice/String facade would defeat that ownership authority. The existing independent png/PNGJS/SQLite semantic oracles must continue to prove unchanged pixels/metadata, alongside allocation and every paused/returned retirement witness. Final actual strict editor/renderer receipts remain required after source and native laws.
+
+
+Executed12654 metadata RED is retained in the continuation report:4/5passed, only preflight metadata refusal failed,67excluded,0.113s. Canonical reader and all neutral paint profiles actuallypassed withDEBUG. The fixed typed scalar preflight and phase6 exact-byte writes are nowinstalled after this executedRED; fresh23238 nativeall5 and23305 source5law captures arepending. Large paged ownership and genuinely separated rich closure remain uncertified; no final PNG protocol/live receipt or renderer completion is claimed.
+
+
+Current scalar feature TDD closure: native23238 actual5/5,0fail,67 excluded,0.103s at05:50:46.723Z, run919ea6d6-4c2a-420f-958c-3b3bda992cc6. Four neutral metadata intents each emitted exactMetadata=true,691turns. Source23305 independently5/5,86expectations724ms. This closes the concrete preflight refusal defect, while strict generic history and genuine separated copy/capacity/release/large-owner bounds remain unproved.

@@ -6764,6 +6764,7 @@ struct Puzzle3dConfigStorePreparation {
     closing: bool,
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle3dConfigStorePreparationFactory;
 
 /// 🌉️ `serde_json::to_writer` streamed into a byte-counting `Write` sink so an oversize config could
@@ -6923,6 +6924,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
 // kinds (delete/create object, attraction, target volume, reference, compatibility, domain,
 // catalogs). Each kind is batched to `PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK` and the Complete emit
 // is ONE document-replacement edit (no coalesce key), not one store commit per item.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Puzzle3dArtifactStorePreparationFactory;
 
 struct Puzzle3dArtifactStorePreparation {

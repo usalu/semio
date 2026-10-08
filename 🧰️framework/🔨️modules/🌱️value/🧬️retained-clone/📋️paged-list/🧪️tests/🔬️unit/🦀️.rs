@@ -66,7 +66,7 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
-        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DropProbe>(), retained_capacity_bytes: 0 };
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DropProbe>(), retained_capacity_bytes: 0, released_bytes: 0 };
         if !progress.fits(grant) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
@@ -98,6 +98,13 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.output.is_none() && self.source.is_none() && self.close.is_empty()
     }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "drop probe close must begin")); }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        super::super::close_retained_binding(&mut self.source, grant)
+    }
 }
 
 impl RetainedClone for DropProbe {
@@ -125,7 +132,7 @@ struct NonconformingChildCursor {
 impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
     fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         source.bind(&mut self.source)?;
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0 }))
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0, released_bytes: 0 }))
     }
 
     fn take(&mut self) -> Option<NonconformingChild> {
@@ -201,6 +208,14 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.reported && self.source.is_none() && self.output.is_none()
     }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if !self.reported {
+            self.reported = true;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: 0, retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1), released_bytes: grant.maximum_release_bytes.saturating_add(1) }));
+        }
+        super::super::close_retained_binding(&mut self.source, grant)
+    }
 }
 
 impl RetainedClone for NonconformingRetirementChild {
@@ -216,6 +231,100 @@ struct OversizedOwner {
     first: String,
     second: String,
     third: String,
+}
+
+#[derive(crate::RetireOwned)]
+struct ReleaseProbe(u8);
+
+struct ReleaseProbeCursor([u8; 128]);
+static RELEASE_PROBE_DROPS: AtomicUsize = AtomicUsize::new(0);
+static RELEASE_PROBE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+impl Drop for ReleaseProbeCursor {
+    fn drop(&mut self) { RELEASE_PROBE_DROPS.fetch_add(1, Ordering::SeqCst); }
+}
+
+impl RetainedClone for ReleaseProbe {
+    type Cursor = ReleaseProbeCursor;
+    fn retained_clone_cursor() -> Self::Cursor { ReleaseProbeCursor([0;128]) }
+}
+
+impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
+    fn advance(&mut self, source: RetainedCloneRef<'_, ReleaseProbe>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        self.0[0] = 1;
+        self.0[2] = source.get().0;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: 1, ..Default::default() }))
+    }
+    fn take(&mut self) -> Option<ReleaseProbe> {
+        if self.0[0] == 0 { return None; }
+        self.0[0] = 0;
+        Some(ReleaseProbe(std::mem::take(&mut self.0[2])))
+    }
+    fn begin_close(&mut self) -> bool { let started=self.0[1]==0; self.0[1]=1; started }
+    fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, crate::ValueError> { Ok(SnapshotRetirementStep::Complete) }
+    fn close_granted(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, crate::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(0) }
+    fn terminal_is_empty(&self) -> bool { self.0[1]==1 && self.0[0]==0 }
+}
+
+#[test]
+fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
+    use crate::value::observe_retirement_allocations;
+    let _guard=RELEASE_PROBE_LOCK.lock().unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
+    let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
+    let (mut cursor,allocation)=observe_retirement_allocations(super::super::RetainedFieldCursor::<ReleaseProbe>::default);
+    assert_eq!(allocation,(0,0));
+    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:64, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
+    let (birth,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());
+    assert_eq!(allocation,(128,0));assert_eq!(birth.progress().retained_capacity_bytes,128);
+    cursor.advance(source.borrow(),grant).unwrap();assert_eq!(cursor.take().unwrap().0,17);
+    let (before,allocation)=observe_retirement_allocations(||(cursor.next_close_capacity_byte_demand(0).unwrap(),cursor.next_close_release_byte_demand().unwrap()));
+    assert_eq!(allocation,(0,0));assert_eq!(before,(0,0));
+    cursor.begin_close();
+    let (metadata,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap());
+    assert_eq!(metadata.progress().copied_items,1);assert_eq!(allocation,(0,0));
+    let (demand,allocation)=observe_retirement_allocations(||(cursor.next_close_capacity_byte_demand(0).unwrap(),cursor.next_close_release_byte_demand().unwrap()));
+    assert_eq!(allocation,(0,0));assert_eq!(demand,(0,fixture["physicalCursorBytes"].as_u64().unwrap() as usize));
+    let (below,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_release_bytes:127,..grant}).unwrap());
+    assert_eq!(below.progress(),Default::default());assert_eq!(allocation,(0,0));
+    let (exact,allocation)=observe_retirement_allocations(||cursor.close_granted(RetainedCloneGrant {maximum_items:1,maximum_release_bytes:128,..Default::default()}).unwrap());
+    assert_eq!(allocation,(0,128));assert_eq!(exact.progress().released_bytes,128);assert_eq!(exact.progress().copied_bytes,0);
+    cursor.close_granted(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap();assert!(cursor.terminal_is_empty());
+    assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
+    println!("[DEBUG] Typed child exact demand observation0heap; metadata preserves128-byte backing, below127 retains, release-only128 frees exactly once");
+}
+
+#[test]
+fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_physical_extent() {
+    let _guard=RELEASE_PROBE_LOCK.lock().unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
+    let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
+    let mut cursor=super::super::RetainedFieldCursor::<ReleaseProbe>::default();
+    let grant=RetainedCloneGrant { maximum_items:2, maximum_copy_bytes:64, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:64 };
+    assert_eq!(size_of::<ReleaseProbeCursor>(),fixture["physicalCursorBytes"].as_u64().unwrap() as usize);
+    RELEASE_PROBE_DROPS.store(0,Ordering::SeqCst);
+    let birth=cursor.advance(source.borrow(),grant).unwrap().progress();
+    assert_eq!(birth.retained_capacity_bytes,128);
+    let copy=cursor.advance(source.borrow(),grant).unwrap().progress();
+    assert_eq!(copy.copied_bytes,1);
+    assert_eq!(cursor.take().unwrap().0,17);
+    cursor.begin_close();
+    assert_eq!(cursor.close_granted(grant).unwrap().progress().copied_items,1);
+    let below=RetainedCloneGrant { maximum_release_bytes:fixture["oneBelowReleaseBytes"].as_u64().unwrap() as usize, ..grant };
+    assert_eq!(cursor.close_granted(below).unwrap().progress(),RetainedCloneProgress::default());
+    assert_eq!(RELEASE_PROBE_DROPS.load(Ordering::SeqCst),0);
+    assert!(!cursor.terminal_is_empty());
+    let released=cursor.close_granted(RetainedCloneGrant { maximum_release_bytes:128, ..grant }).unwrap().progress();
+    assert_eq!(released.released_bytes,128);
+    assert_eq!(released.copied_bytes,0);
+    assert_eq!(released.retained_capacity_bytes,0);
+    assert_eq!(RELEASE_PROBE_DROPS.load(Ordering::SeqCst),1);
+    for _ in 0..4 { if cursor.terminal_is_empty() { break; } cursor.close_granted(grant).unwrap(); }
+    assert!(cursor.terminal_is_empty());
+    println!("[DEBUG] Independent retained authority copy64/release4096 preserves128-byte owner below127, exact128 releases once without copying");
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -267,6 +376,14 @@ impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChil
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.output.is_none() && self.source.is_none()
     }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_release_bytes < 128 {
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "fixture scaffold cannot progress under its declared 128-byte release grant"));
+        }
+        super::super::close_retained_binding(&mut self.source, grant)
+    }
 }
 
 impl RetainedClone for InsufficientScaffoldChild {
@@ -298,6 +415,7 @@ struct GrantFixture {
     maximum_items: usize,
     maximum_copy_bytes: usize,
     maximum_capacity_bytes: usize,
+    maximum_release_bytes: usize,
     maximum_depth: usize,
 }
 
@@ -319,7 +437,7 @@ fn source(fixture: &Fixture) -> PagedList<String, 1024> {
 }
 
 fn grant(fixture: &Fixture) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: fixture.grant.maximum_items, maximum_copy_bytes: fixture.grant.maximum_copy_bytes, maximum_capacity_bytes: fixture.grant.maximum_capacity_bytes, maximum_depth: fixture.grant.maximum_depth }
+    RetainedCloneGrant { maximum_items: fixture.grant.maximum_items, maximum_copy_bytes: fixture.grant.maximum_copy_bytes, maximum_capacity_bytes: fixture.grant.maximum_capacity_bytes, maximum_depth: fixture.grant.maximum_depth, maximum_release_bytes: fixture.grant.maximum_release_bytes }
 }
 
 #[test]
@@ -384,7 +502,7 @@ fn retained_paged_list_adopts_completed_owner_larger_than_copy_budget() {
     values.push_reserved(expected).expect("oversized owner source placement");
     let source = super::super::RetainedCloneSource::from_owner(values);
     let mut cursor = PagedList::<OversizedOwner, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     let copied = loop {
         match cursor.advance(source.borrow(), grant).expect("oversized owner retained copy") {
             RetainedCloneStep::Progress(progress) => assert_ne!(progress, RetainedCloneProgress::default()),
@@ -413,7 +531,7 @@ fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
     values.push_reserved(InsufficientScaffoldChild).expect("insufficient scaffold source placement");
     let source = super::super::RetainedCloneSource::from_owner(values);
     let mut cursor = PagedList::<InsufficientScaffoldChild, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 64 };
     let error = loop {
         match cursor.advance(source.borrow(), grant) {
             Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
@@ -434,7 +552,7 @@ fn retained_paged_list_refuses_scaffold_grant_that_cannot_release_owner() {
 fn retained_derive_refuses_scaffold_grant_that_cannot_release_field() {
     let source = super::super::RetainedCloneSource::from_owner(DerivedScaffoldOwner { child: InsufficientScaffoldChild });
     let mut cursor = DerivedScaffoldOwner::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 64 };
     let error = loop {
         match cursor.advance(source.borrow(), grant) {
             Ok(RetainedCloneStep::Progress(progress)) => assert_ne!(progress, RetainedCloneProgress::default()),
@@ -492,7 +610,7 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
     assert!(source.push_reserved(NonconformingChild).is_ok());
     let retained = super::super::RetainedCloneSource::from_owner(source);
     let mut cursor = PagedList::<NonconformingChild, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<NonconformingChild>().max(1), maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<NonconformingChild>().max(1), maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     let error = loop {
         match cursor.advance(retained.borrow(), grant) {
             Ok(RetainedCloneStep::Progress(_)) => {}
@@ -524,13 +642,13 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
     assert!(source.push_reserved(NonconformingRetirementChild).is_ok());
     let retained = super::super::RetainedCloneSource::from_owner(source);
     let mut cursor = PagedList::<NonconformingRetirementChild, 1>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     loop {
         match cursor.advance(retained.borrow(), grant) {
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child retirement must be refused before completion"),
             Err(error) => {
-                assert!(error.message.contains("exceeded its retained retirement"));
+                assert!(error.message.contains("exceeded its retained clone"));
                 break;
             }
         }
@@ -561,7 +679,7 @@ fn retained_paged_list_abandonment_panics_without_running_payload_destructors() 
     }
     let retained = super::super::RetainedCloneSource::from_owner(source);
     let mut cursor = PagedList::<DropProbe, 64>::retained_clone_cursor();
-    let grant = RetainedCloneGrant { maximum_items: 5, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 5, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 64, maximum_release_bytes: 4096 };
     while cursor.values.len() < 8 {
         assert!(matches!(cursor.advance(retained.borrow(), grant).expect("drop probe prefix"), RetainedCloneStep::Progress(_)));
     }

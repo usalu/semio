@@ -7,7 +7,7 @@ fn selection_fixture() -> (TiffSnapshot, TiffEditorConfig, Vec<u8>) {
     snapshot.ifds.clear();
     for page in fixture["pages"].as_array().expect("fixture pages") {
         let mut ifd = crate::schema::blank_tiff_snapshot().ifds.remove(0);
-        ifd.storage.chunks[0] = page["rgb"].as_array().expect("fixture RGB").iter().map(|value| value.as_u64().expect("RGB byte") as u8).collect();
+        ifd.blocks[0].samples = page["rgb"].as_array().expect("fixture RGB").iter().map(|value| crate::schema::snapshot::TiffWord64::from_word(value.as_u64().expect("RGB component"))).collect();
         snapshot.ifds.push(ifd);
     }
     let config = TiffEditorConfig { selected_ifd: fixture["selectedIfd"].as_u64().expect("fixture selected IFD") as usize };

@@ -5,9 +5,9 @@ mod mutations_codec {
 use super::*;
 use crate::editor::wfc3d::config::mutations::*;
 use crate::editor::wfc3d::config::Wfc3dConfig;
-use replace_config::ReplaceConfig;
-use change_camera::ChangeCamera;
-use change_active_tile::ChangeActiveTile;
+use crate::editor::wfc3d::config::mutations::ReplaceConfig;
+use crate::editor::wfc3d::config::mutations::ChangeCamera;
+use crate::editor::wfc3d::config::mutations::ChangeActiveTile;
 
 impl protocol::OpBinary for Wfc3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -11,11 +11,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::brep::operations::blend::fillet_edges;
 use crate::brep::operations::euler::{add_shell, add_solid, make_loop, make_vertex, retire_solid_scaffold};
 use crate::brep::operations::intersect::{intersect_surface_surface, IntCurve};
 use crate::brep::operations::primitives::{attach_face, finish_solid, line_edge};
-use crate::brep::operations::transform::copy_faces;
+use crate::brep::operations::staged::{drive_face, drive_solid};
 use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
 use crate::brep::representation::curve::bspline::KnotVector;
 use crate::brep::representation::curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
@@ -240,78 +239,7 @@ fn insert_v_knot_surface(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: 
 /// [`offset_surface`]'s own certified deviation bound).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
-    if !distance.is_finite() {
-        return Err(KernelError::InvalidInput("offset distance must be finite".into()));
-    }
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
-    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
-    let signed = if face_data.flipped { -distance } else { distance };
-    let new_surface = offset_surface(&surface, signed, OFFSET_TOL)?;
-    let new_surface_id = body.surfaces.insert(new_surface.clone());
-
-    let mut loops: Vec<LoopId> = Vec::new();
-    if let Some(o) = face_data.outer {
-        loops.push(o);
-    }
-    loops.extend(face_data.inners.iter().copied());
-    if loops.is_empty() {
-        return Err(KernelError::InvalidInput("face has no loops".into()));
-    }
-    // The offset face's boundary has to live ON the offset surface, so every boundary vertex and
-    // edge is rebuilt through the point map that carries the original support onto the offset one
-    // ([`offset_point_map`]) rather than shared with the original face. Sharing them — what this
-    // used to do — produced a face whose surface had moved but whose rim had not: `thicken_face`
-    // then ruled each side between an edge and ITSELF, so all four sides were degenerate,
-    // zero-area, and the thickened box measured a volume of exactly 0.
-    let map = offset_point_map(&surface, &new_surface).ok_or_else(|| KernelError::Operation(format!("offset_face: no exact boundary map from {surface:?} to its offset")))?;
-    let mut moved_vertices: HashMap<VertexId, VertexId> = HashMap::new();
-    let mut moved_edges: HashMap<EdgeId, EdgeId> = HashMap::new();
-    for lp in &loops {
-        for cid in body.loop_coedges(*lp) {
-            let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?.clone();
-            if moved_edges.contains_key(&coedge.edge) {
-                continue;
-            }
-            let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?.clone();
-            let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?.clone();
-            let moved = curve.transformed(&map);
-            for vertex in [edge.v0, edge.v1] {
-                if !moved_vertices.contains_key(&vertex) {
-                    let position = map.apply_point(body.vertices.get(vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {vertex}")))?.position);
-                    let tol_v = body.vertices.get(vertex).unwrap().tol;
-                    let created = make_vertex(body, position, tol_v, rec);
-                    moved_vertices.insert(vertex, created);
-                }
-            }
-            let curve_id = body.curves3.insert(moved);
-            let created = make_edge_entry(body, curve_id, edge.range, moved_vertices[&edge.v0], moved_vertices[&edge.v1], edge.tol, rec);
-            moved_edges.insert(coedge.edge, created);
-        }
-    }
-    let mut member_lists: Vec<Vec<(EdgeId, bool)>> = Vec::new();
-    for lp in &loops {
-        let mut members = Vec::new();
-        for cid in body.loop_coedges(*lp) {
-            let c = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-            members.push((moved_edges[&c.edge], c.forward));
-        }
-        member_lists.push(members);
-    }
-    let outer_members = member_lists[0].clone();
-    let inner_members = member_lists[1..].to_vec();
-    let new_face = attach_face(body, new_surface_id, &outer_members, face_data.flipped, face_data.tol, rec);
-    for members in &inner_members {
-        let lp = make_loop(body, new_face, members);
-        body.faces.get_mut(new_face).unwrap().inners.push(lp);
-    }
-    let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-    for &moved in moved_edges.values() {
-        let e = body.edges.get(moved).ok_or_else(|| KernelError::MissingEntity(format!("edge {moved:?}")))?;
-        let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", e.curve)))?.clone();
-        edge_geom.insert(moved, (curve, e.range));
-    }
-    set_face_pcurves(body, new_face, &new_surface, &edge_geom, OFFSET_TOL);
-    Ok(new_face)
+    drive_face(&mut OffsetFaceJob::new(body, face, distance)?, body, rec)
 }
 
 /// ↔️ The point map that carries a surface onto its own offset, when that map is a genuine affine
@@ -746,238 +674,6 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
     Ok(body.surfaces.get(fd.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))?.clone())
 }
 
-/// ↔️ Rebuilds `solid`'s boundary against `new_surface_map` (a face present here gets that new
-/// surface; a face absent keeps its original surface/edges/vertices verbatim). Every edge touching
-/// at least one changed face is recomputed: a self-adjacent seam edge via the changed face's own
-/// isocurve trimmed to its two already-repositioned vertex targets (exact, no per-surface-kind
-/// special case); a degenerate pole edge by re-evaluating its (already relocated) vertex; a
-/// real dihedral edge as the exact intersection of the two (possibly one unchanged) adjacent
-/// surfaces via [`intersect_surface_surface`], with the branch and trim range selected by
-/// proximity to `vertex_target`/`edge_target`. Only faces in `materialize` are actually rebuilt
-/// into new [`crate::brep::representation::topology::Face`]s (used by [`shell_solid_with_open_faces`] to
-/// skip the removed open faces while still using their offset surface to trim the kept faces).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rebuild_topology<FV, FE, FF>(
-    body: &mut Body,
-    solid: SolidId,
-    new_surface_map: &HashMap<FaceId, Surface>,
-    materialize: &HashSet<FaceId>,
-    (flip_new, vertex_target, edge_target): (FF, FV, FE),
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<RebuiltTopology, KernelError>
-where
-    FV: Fn(&Body, VertexId, &[(FaceId, Vec3)]) -> Pnt3,
-    FE: Fn(&Body, EdgeId, Vec3) -> Pnt3,
-    FF: Fn(FaceId) -> bool,
-{
-    let solid_faces_vec = body.solid_faces(solid);
-    let solid_faces: HashSet<FaceId> = solid_faces_vec.iter().copied().collect();
-    let edges = solid_edges(body, &solid_faces);
-    let vertices = solid_vertices(body, &edges);
-
-    // Pass 1: vertex positions for every vertex touching at least one changed face — every
-    // touched face's own (deduplicated) outward normal is handed to `vertex_target` so it can
-    // solve the exact multi-face intersection ([`solve_vertex_displacement`]/[`solve_plane_point`])
-    // rather than a single naively-averaged direction (wrong at any real corner, see both helpers'
-    // docstrings).
-    let mut vertex_pos: HashMap<VertexId, Pnt3> = HashMap::new();
-    for &v in &vertices {
-        let mut touched = false;
-        let mut touched_faces: Vec<(FaceId, Vec3)> = Vec::new();
-        for e in body.vertex_edges(v) {
-            if !edges.contains(&e) {
-                continue;
-            }
-            for f in edge_unique_faces(body, &solid_faces, e) {
-                if let Some(cid) = coedge_on_face(body, e, f) {
-                    if new_surface_map.contains_key(&f) {
-                        touched = true;
-                    }
-                    if !touched_faces.iter().any(|&(ef, _)| ef == f) {
-                        touched_faces.push((f, face_normal_at(body, f, cid, Some(v))?));
-                    }
-                }
-            }
-        }
-        if !touched {
-            continue;
-        }
-        vertex_pos.insert(v, vertex_target(body, v, &touched_faces));
-    }
-    let mut vertex_new: HashMap<VertexId, VertexId> = HashMap::new();
-    for (&v, &pos) in &vertex_pos {
-        let tol_v = body.vertices.get(v).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.tol;
-        vertex_new.insert(v, make_vertex(body, pos, tol_v, rec));
-    }
-
-    // Pass 2: edges touching at least one changed face.
-    let mut edge_new: HashMap<EdgeId, (EdgeId, Curve3, (f64, f64))> = HashMap::new();
-    for &e in &edges {
-        let faces_here = edge_unique_faces(body, &solid_faces, e);
-        let edge_ent = body.edges.get(e).ok_or_else(|| KernelError::MissingEntity("edge".into()))?.clone();
-        // An edge whose own two faces are both untouched still has to be rebuilt when one of its
-        // ENDS moved: the vertex it used to stop at no longer exists on this solid. Skipping those
-        // (what this used to do) left the far edges of a drafted box still ending at the ORIGINAL
-        // corner while the drafted face ended at the new one — ten vertices where a box has eight —
-        // so the result was neither the old shape nor the new one and its volume landed between the
-        // two (measured 0.9324 where the trapezoid is 0.8986).
-        if !faces_here.iter().any(|f| new_surface_map.contains_key(f)) && !(vertex_new.contains_key(&edge_ent.v0) || vertex_new.contains_key(&edge_ent.v1)) {
-            continue;
-        }
-        let orig_curve = body.curves3.get(edge_ent.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?.clone();
-        let is_degenerate = edge_ent.v0 == edge_ent.v1 && matches!(&orig_curve, Curve3::Line { dir, .. } if dir.norm() < 1e-12);
-        let nv0 = vertex_new.get(&edge_ent.v0).copied().unwrap_or(edge_ent.v0);
-        let nv1 = vertex_new.get(&edge_ent.v1).copied().unwrap_or(edge_ent.v1);
-
-        if is_degenerate {
-            let pos = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).unwrap().position);
-            let new_curve = Curve3::Line { origin: pos, dir: Vec3::ZERO };
-            let cid = body.curves3.insert(new_curve.clone());
-            let ne = make_edge_entry(body, cid, edge_ent.range, nv0, nv0, edge_ent.tol, rec);
-            edge_new.insert(e, (ne, new_curve, edge_ent.range));
-            continue;
-        }
-
-        if faces_here.len() == 1 {
-            let f = faces_here[0];
-            let ns = face_surface(body, f, new_surface_map)?;
-            let cid_coedge = coedge_on_face(body, e, f).ok_or_else(|| KernelError::Operation("seam edge missing coedge".into()))?;
-            let pid = body.coedges.get(cid_coedge).unwrap().pcurve.ok_or_else(|| KernelError::Operation("seam edge missing pcurve".into()))?;
-            let pc = body.curves2.get(pid).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?.clone();
-            let (dir, konst) = match pc {
-                Curve2::Line { origin, dir } if dir.x.abs() < 1e-9 => (IsoDirection::U, origin.x),
-                Curve2::Line { origin, dir } if dir.y.abs() < 1e-9 => (IsoDirection::V, origin.y),
-                _ => return Err(KernelError::Operation("seam edge pcurve is not axis-aligned".into())),
-            };
-            // The isocurve at the seam's own (unchanged) `u`/`v` constant is exact and already
-            // correctly positioned on the NEW surface (e.g. the new radius) — but its own native
-            // parametrization has no reason to still line up with `edge_ent.range` (growing/
-            // shrinking a solid moves the CAPS a self-adjacent lateral seam spans between, even
-            // though the lateral surface's own frame — hence its isocurve's own v=0 origin — does
-            // not move at all). Trimming it to the two already-correctly-repositioned vertex
-            // targets (same technique the real-dihedral-edge branch below uses) is exact for any
-            // op (offset, shell, draft) and needs no per-surface-kind "seam shift" special case —
-            // this replaced a previous version that reused the SEAM'S OLD p-curve's `offset`/
-            // `scale` verbatim (silently wrong the moment a cap moves, confirmed by a direct debug
-            // run: a rebuilt offset cylinder's seam spanned its OLD z-range, not the new one).
-            let iso = ns.isocurve(dir, konst);
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
-            let v1_target = vertex_pos.get(&edge_ent.v1).copied().unwrap_or(body.vertices.get(edge_ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
-            let search_domain = if matches!(iso, Curve3::Line { .. }) { (-1.0e6, 1.0e6) } else { iso.domain() };
-            let t0 = closest_parameter(&iso, search_domain, v0_target, tol).t;
-            let t1 = closest_parameter(&iso, search_domain, v1_target, tol).t;
-            let new_curve = iso;
-            let cid = body.curves3.insert(new_curve.clone());
-            let ne = make_edge_entry(body, cid, (t0, t1), nv0, nv1, edge_ent.tol, rec);
-            edge_new.insert(e, (ne, new_curve, (t0, t1)));
-            continue;
-        }
-
-        if faces_here.len() != 2 {
-            return Err(KernelError::Operation("offset/draft edge has an unexpected number of adjacent faces".into()));
-        }
-        let (fa, fb) = (faces_here[0], faces_here[1]);
-        let sa = face_surface(body, fa, new_surface_map)?;
-        let sb = face_surface(body, fb, new_surface_map)?;
-        let candidates: Vec<IntCurve> = intersect_surface_surface(&sa, &sb, tol)?;
-        if candidates.is_empty() {
-            return Err(KernelError::Operation("offset/draft: adjacent offset surfaces do not intersect".into()));
-        }
-        let mut mid_normals = Vec::new();
-        for f in [fa, fb] {
-            if let Some(cid) = coedge_on_face(body, e, f) {
-                mid_normals.push(face_normal_at(body, f, cid, None)?);
-            }
-        }
-        let mid_n = average_normal(&mid_normals).unwrap_or(Vec3::Z);
-        let anchor = edge_target(body, e, mid_n);
-        let mut best: Option<(&IntCurve, f64)> = None;
-        for cand in &candidates {
-            let cp = closest_parameter(&cand.curve3, (cand.domain.min, cand.domain.max), anchor, tol);
-            if best.as_ref().is_none_or(|(_, d)| cp.distance < *d) {
-                best = Some((cand, cp.distance));
-            }
-        }
-        let (chosen, _) = best.unwrap();
-        let new_curve = chosen.curve3.clone();
-        let domain = (chosen.domain.min, chosen.domain.max);
-        // A CLOSED edge (`v0 == v1`, e.g. a cylinder cap's own full-circle boundary) has no
-        // second vertex to independently project onto the curve, but it still needs `t0` (hence
-        // `t1 = t0 + period`) to land at the SHARED VERTEX's own position, not merely anywhere
-        // on the curve — this edge's neighbour (a self-adjacent lateral seam, say) starts exactly
-        // where this one's `curve.eval(t0)` sits, and `loop_uv_polygon` stitches consecutive
-        // coedges by CONTINUITY, not by re-deriving positions; landing `t0` anywhere else (e.g.
-        // the SSI candidate's own arbitrary domain start) silently opens a gap in the (u, v)
-        // boundary polygon there, corrupting the sampled area/volume (confirmed directly: with
-        // `t0 = domain.0` verbatim the rebuilt cylinder's lateral area came out ~15% too high).
-        let (t0, t1) = if edge_ent.v0 == edge_ent.v1 {
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
-            let t0 = closest_parameter(&new_curve, domain, v0_target, tol).t;
-            (t0, t0 + (domain.1 - domain.0))
-        } else {
-            let v0_target = vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
-            let v1_target = vertex_pos.get(&edge_ent.v1).copied().unwrap_or(body.vertices.get(edge_ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
-            (closest_parameter(&new_curve, domain, v0_target, tol).t, closest_parameter(&new_curve, domain, v1_target, tol).t)
-        };
-        let cid = body.curves3.insert(new_curve.clone());
-        let ne = make_edge_entry(body, cid, (t0, t1), nv0, nv1, edge_ent.tol, rec);
-        edge_new.insert(e, (ne, new_curve, (t0, t1)));
-    }
-
-    // Pass 3: materialized faces.
-    let mut face_new: HashMap<FaceId, FaceId> = HashMap::new();
-    for &f in &solid_faces {
-        if !materialize.contains(&f) {
-            continue;
-        }
-        let face_data = body.faces.get(f).ok_or_else(|| KernelError::MissingEntity("face".into()))?.clone();
-        let ns = face_surface(body, f, new_surface_map)?;
-        let ns_id = body.surfaces.insert(ns.clone());
-        let mut loops = Vec::new();
-        if let Some(o) = face_data.outer {
-            loops.push(o);
-        }
-        loops.extend(face_data.inners.iter().copied());
-        if loops.is_empty() {
-            return Err(KernelError::Operation("face has no loops".into()));
-        }
-        let mut member_lists: Vec<Vec<(EdgeId, bool)>> = Vec::new();
-        for lp in &loops {
-            let mut members = Vec::new();
-            for cid in body.loop_coedges(*lp) {
-                let c = body.coedges.get(cid).unwrap();
-                let new_edge = edge_new.get(&c.edge).map_or(c.edge, |(ne, _, _)| *ne);
-                members.push((new_edge, c.forward));
-            }
-            member_lists.push(members);
-        }
-        let flipped = flip_new(f);
-        let new_face = attach_face(body, ns_id, &member_lists[0], flipped, face_data.tol, rec);
-        for members in &member_lists[1..] {
-            let lp = make_loop(body, new_face, members);
-            body.faces.get_mut(new_face).unwrap().inners.push(lp);
-        }
-        let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-        for lp in &loops {
-            for cid in body.loop_coedges(*lp) {
-                let c = body.coedges.get(cid).unwrap();
-                if let Some((ne, curve, range)) = edge_new.get(&c.edge) {
-                    edge_geom.insert(*ne, (curve.clone(), *range));
-                } else {
-                    let e = body.edges.get(c.edge).unwrap();
-                    let curve = body.curves3.get(e.curve).unwrap().clone();
-                    edge_geom.insert(c.edge, (curve, e.range));
-                }
-            }
-        }
-        set_face_pcurves(body, new_face, &ns, &edge_geom, tol);
-        face_new.insert(f, new_face);
-    }
-
-    Ok(RebuiltTopology { face_new, edge_new, vertex_new })
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn make_edge_entry(body: &mut Body, curve: crate::brep::representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     crate::brep::operations::euler::make_edge(body, curve, range, v0, v1, tol, rec)
@@ -996,64 +692,14 @@ fn is_planar_only(body: &Body, solid: SolidId) -> bool {
 /// see [`OffsetCorner`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn offset_solid_with_corner(body: &mut Body, solid: SolidId, distance: f64, corner: OffsetCorner, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if !distance.is_finite() {
-        return Err(KernelError::InvalidInput("offset distance must be finite".into()));
-    }
-    if body.solids.get(solid).is_none() {
-        return Err(KernelError::MissingEntity(format!("solid {solid}")));
-    }
-    if distance.abs() <= 1e-15 {
-        return Err(KernelError::Operation("offset distance must be non-zero".into()));
-    }
-    let tol = OFFSET_TOL;
-    let faces_vec = body.solid_faces(solid);
-    let solid_faces: HashSet<FaceId> = faces_vec.iter().copied().collect();
-    let mut new_surface_map = HashMap::new();
-    for &f in &solid_faces {
-        let fd = body.faces.get(f).unwrap().clone();
-        let s = body.surfaces.get(fd.surface).unwrap().clone();
-        let signed = if fd.flipped { -distance } else { distance };
-        new_surface_map.insert(f, offset_surface(&s, signed, tol)?);
-    }
-    let vertex_target = |b: &Body, v: VertexId, touched: &[(FaceId, Vec3)]| -> Pnt3 {
-        let normals: Vec<Vec3> = touched.iter().map(|&(_, n)| n).collect();
-        b.vertices.get(v).unwrap().position + solve_vertex_displacement(&normals, distance)
-    };
-    let edge_target = |b: &Body, e: EdgeId, n: Vec3| -> Pnt3 {
-        let edge = b.edges.get(e).unwrap();
-        let curve = b.curves3.get(edge.curve).unwrap();
-        curve.eval(0.5 * (edge.range.0 + edge.range.1)) + n * distance
-    };
-    let flip_new = |_f: FaceId| false;
-    let materialize = solid_faces;
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
-    let mut faces: Vec<FaceId> = Vec::with_capacity(faces_vec.len());
-    for &f in &faces_vec {
-        faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("offset_solid: face was not rebuilt".into()))?);
-    }
-    let sharp_solid = finish_solid(body, faces, rec);
-    match corner {
-        OffsetCorner::Sharp => Ok(sharp_solid),
-        OffsetCorner::Round => {
-            let round_faces: HashSet<FaceId> = body.solid_faces(sharp_solid).into_iter().collect();
-            // Only real dihedral edges (shared by two *distinct* faces) are meaningful fillet
-            // targets — a self-adjacent seam edge (e.g. a cylinder's own lateral seam) has no
-            // second face to blend against and is skipped.
-            let edges: Vec<EdgeId> = solid_edges(body, &round_faces).into_iter().filter(|&e| edge_unique_faces(body, &round_faces, e).len() == 2).collect();
-            if edges.is_empty() {
-                return Ok(sharp_solid);
-            }
-            fillet_edges(body, sharp_solid, &edges, distance.abs(), rec)
-        }
-    }
+    drive_solid(&mut OffsetSolidJob::new(body, solid, distance, corner)?, body, rec)
 }
 
 /// ↔️ [`offset_solid_with_corner`] with the default corner policy: `Sharp` for a planar-only solid
 /// (a box), `Round` otherwise (a rolling-ball offset for solids that already carry curved faces).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let corner = if is_planar_only(body, solid) { OffsetCorner::Sharp } else { OffsetCorner::Round };
-    offset_solid_with_corner(body, solid, distance, corner, rec)
+    drive_solid(&mut OffsetSolidJob::with_default_corner(body, solid, distance)?, body, rec)
 }
 
 // #endregion 🔖️OffsetSolid
@@ -1101,47 +747,6 @@ fn ruling_nurbs(curve: &Curve3, range: (f64, f64)) -> Result<NurbsCurve3, Kernel
     Ok(nurbs)
 }
 
-/// ↔️ Builds one ruled side face per boundary coedge of `cap0`'s outer loop, connecting it to the
-/// corresponding coedge of `cap1` (same index, same count — guaranteed since `cap1` was built by
-/// [`offset_face`] from `cap0`'s own loop structure).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_ruled_sides(body: &mut Body, cap0: FaceId, cap1: FaceId, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
-    let outer0 = body.faces.get(cap0).unwrap().outer.ok_or_else(|| KernelError::Operation("thicken: cap has no outer loop".into()))?;
-    let outer1 = body.faces.get(cap1).unwrap().outer.ok_or_else(|| KernelError::Operation("thicken: offset cap has no outer loop".into()))?;
-    let ce0 = body.loop_coedges(outer0);
-    let ce1 = body.loop_coedges(outer1);
-    if ce0.len() != ce1.len() {
-        return Err(KernelError::Operation("thicken: cap loop structures diverged".into()));
-    }
-    let mut sides = Vec::with_capacity(ce0.len());
-    for i in 0..ce0.len() {
-        let c0 = body.coedges.get(ce0[i]).unwrap().clone();
-        let c1 = body.coedges.get(ce1[i]).unwrap().clone();
-        let e0 = body.edges.get(c0.edge).unwrap().clone();
-        let e1 = body.edges.get(c1.edge).unwrap().clone();
-        let curve0 = body.curves3.get(e0.curve).unwrap().clone();
-        let curve1 = body.curves3.get(e1.curve).unwrap().clone();
-        let ruled = ruled_surface_from_curves(&curve0, e0.range, &curve1, e1.range)?;
-        let ruled_id = body.surfaces.insert(ruled.clone());
-        let p00 = body.vertices.get(e0.v0).unwrap().position;
-        let p01 = body.vertices.get(e0.v1).unwrap().position;
-        let p10 = body.vertices.get(e1.v0).unwrap().position;
-        let p11 = body.vertices.get(e1.v1).unwrap().position;
-        let vert_a = line_edge(body, p00, p10, e0.v0, e1.v0, Tol::DEFAULT, rec);
-        let vert_b = line_edge(body, p01, p11, e0.v1, e1.v1, Tol::DEFAULT, rec);
-        let members = [(c0.edge, true), (vert_b, true), (c1.edge, false), (vert_a, false)];
-        let face = attach_face(body, ruled_id, &members, false, Tol::DEFAULT, rec);
-        let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-        edge_geom.insert(c0.edge, (curve0, e0.range));
-        edge_geom.insert(c1.edge, (curve1, e1.range));
-        edge_geom.insert(vert_a, (Curve3::Line { origin: p00, dir: p10 - p00 }, (0.0, 1.0)));
-        edge_geom.insert(vert_b, (Curve3::Line { origin: p01, dir: p11 - p01 }, (0.0, 1.0)));
-        set_face_pcurves(body, face, &ruled, &edge_geom, tol);
-        sides.push(face);
-    }
-    Ok(sides)
-}
-
 /// ↔️ Thickens a face into a solid of thickness `distance` — every surface kind, planar included,
 /// builds an [`offset_face`] cap plus ruled side faces ([`build_ruled_sides`]) between the two
 /// caps' boundaries (exact for a plane: the offset cap is a rigid translation and each ruled side
@@ -1149,21 +754,7 @@ fn build_ruled_sides(body: &mut Body, cap0: FaceId, cap1: FaceId, tol: f64, rec:
 /// this file's own analytic-offset machinery rather than the sweep module's shared prism builder).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if !distance.is_finite() || distance.abs() <= 1e-15 {
-        return Err(KernelError::InvalidInput("thicken distance must be non-zero".into()));
-    }
-    let cap1 = offset_face(body, face, distance, rec)?;
-    // The solid grows along the ORIGINAL face's outward normal, so the offset cap already faces
-    // outward and it is the original that now faces INTO the new material. Reversing the far cap
-    // instead (what this used to do) left both caps pointing the same way: the two contributions
-    // then cancelled instead of adding, and a 2 × 1 × 0.5 thickened quad measured 1/3 of its volume.
-    if let Some(fd) = body.faces.get_mut(face) {
-        fd.flipped = !fd.flipped;
-    }
-    let sides = build_ruled_sides(body, face, cap1, OFFSET_TOL, rec)?;
-    let mut faces = vec![face, cap1];
-    faces.extend(sides);
-    Ok(finish_solid(body, faces, rec))
+    drive_solid(&mut ThickenJob::new(body, face, distance)?, body, rec)
 }
 
 // #endregion 🔖️Thicken
@@ -1186,25 +777,7 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
 /// correct `+3.904`). [`euler::retire_solid_scaffold`] hands the faces over and drops the wrapper.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if !thickness.is_finite() || thickness <= 1e-15 {
-        return Err(KernelError::InvalidInput("shell thickness must be positive".into()));
-    }
-    if body.solids.get(solid).is_none() {
-        return Err(KernelError::MissingEntity(format!("solid {solid}")));
-    }
-    let outer_faces = body.solid_faces(solid);
-    let corner = if is_planar_only(body, solid) { OffsetCorner::Sharp } else { OffsetCorner::Round };
-    let inner_solid = offset_solid_with_corner(body, solid, -thickness, corner, rec)?;
-    let inner_faces = body.solid_faces(inner_solid);
-    for &f in &inner_faces {
-        if let Some(fd) = body.faces.get_mut(f) {
-            fd.flipped = !fd.flipped;
-        }
-    }
-    retire_solid_scaffold(body, inner_solid, rec);
-    let outer_shell = add_shell(body, outer_faces, rec);
-    let inner_shell = add_shell(body, inner_faces, rec);
-    Ok(add_solid(body, outer_shell, vec![inner_shell], rec))
+    drive_solid(&mut ShellJob::new(body, solid, thickness, &[])?, body, rec)
 }
 
 /// ↔️ Shells `solid` and leaves `open_faces` open: every non-open face gets its exact `-thickness`
@@ -1215,113 +788,7 @@ pub fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &mut Op
 /// convex hull, `Err` on any construction failure (no silent `continue`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f64, open_faces: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if open_faces.is_empty() {
-        return shell_solid(body, solid, thickness, rec);
-    }
-    if !thickness.is_finite() || thickness <= 1e-15 {
-        return Err(KernelError::InvalidInput("shell thickness must be positive".into()));
-    }
-    if body.solids.get(solid).is_none() {
-        return Err(KernelError::MissingEntity(format!("solid {solid}")));
-    }
-    let tol = OFFSET_TOL;
-    let distance = -thickness;
-    let faces_vec = body.solid_faces(solid);
-    let solid_faces: HashSet<FaceId> = faces_vec.iter().copied().collect();
-    let open_set: HashSet<FaceId> = open_faces.iter().copied().collect();
-    for f in &open_set {
-        if !solid_faces.contains(f) {
-            return Err(KernelError::MissingEntity("open face is not on the solid".into()));
-        }
-    }
-    // An OPEN face is not a wall: the cavity runs right up to it, so its own surface stays put and
-    // only trims the inner faces that meet it. Offsetting it like every other face (what this used
-    // to do) pulled the cavity's roof `thickness` below the opening — a 2³ box shelled at 0.2 with
-    // its top open came out with a 1.6-tall cavity instead of 1.8, and a slanted ruled rim instead
-    // of the flat frame the opening actually is.
-    let mut new_surface_map = HashMap::new();
-    for &f in &solid_faces {
-        let fd = body.faces.get(f).unwrap().clone();
-        let s = body.surfaces.get(fd.surface).unwrap().clone();
-        let signed = if fd.flipped { -distance } else { distance };
-        new_surface_map.insert(f, if open_set.contains(&f) { s } else { offset_surface(&s, signed, tol)? });
-    }
-    let materialize: HashSet<FaceId> = solid_faces.difference(&open_set).copied().collect();
-    // Each touched face contributes its OWN final plane — displaced by `distance` for a wall, not
-    // displaced at all for an opening — so a rim corner lands on the opening's own surface instead
-    // of being dragged inward along its normal with the rest.
-    let vertex_target = |b: &Body, v: VertexId, touched: &[(FaceId, Vec3)]| -> Pnt3 {
-        let base = b.vertices.get(v).unwrap().position;
-        let planes: Vec<(Vec3, f64)> = touched.iter().map(|&(f, n)| (n, n.dot(base.to_vec()) + if open_set.contains(&f) { 0.0 } else { distance })).collect();
-        solve_plane_point(&planes).unwrap_or_else(|| base + solve_vertex_displacement(&touched.iter().map(|&(_, n)| n).collect::<Vec<_>>(), distance))
-    };
-    let edge_target = |b: &Body, e: EdgeId, n: Vec3| -> Pnt3 {
-        let edge = b.edges.get(e).unwrap();
-        let curve = b.curves3.get(edge.curve).unwrap();
-        curve.eval(0.5 * (edge.range.0 + edge.range.1)) + n * distance
-    };
-    let flip_new = |_f: FaceId| true;
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
-
-    let kept_faces: Vec<_> = faces_vec.iter().copied().filter(|face| !open_set.contains(face)).collect();
-    let copied = copy_faces(body, &kept_faces, rec)?;
-    let mut shell_faces = copied.faces;
-    for &f in &faces_vec {
-        if open_set.contains(&f) {
-            continue;
-        }
-        shell_faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("shell: inner face was not built".into()))?);
-    }
-
-    let mut rim_connectors = HashMap::new();
-    for &open_f in &open_set {
-        let face_data = body.faces.get(open_f).unwrap().clone();
-        let mut loops = Vec::new();
-        if let Some(o) = face_data.outer {
-            loops.push(o);
-        }
-        loops.extend(face_data.inners.iter().copied());
-        for lp in loops {
-            for cid in body.loop_coedges(lp) {
-                let c = body.coedges.get(cid).unwrap().clone();
-                let e = c.edge;
-                let neighbours = edge_unique_faces(body, &solid_faces, e);
-                let Some(&neighbour) = neighbours.iter().find(|&&f| f != open_f) else {
-                    continue;
-                };
-                if open_set.contains(&neighbour) {
-                    continue;
-                }
-                let (new_edge, new_curve, new_range) = rebuilt.edge_new.get(&e).cloned().ok_or_else(|| KernelError::Operation("shell: rim edge was not built".into()))?;
-                let orig_edge = body.edges.get(e).unwrap().clone();
-                let orig_curve = body.curves3.get(orig_edge.curve).unwrap().clone();
-                let outer_edge = *copied.edges.get(&e).ok_or_else(|| KernelError::Operation("shell: outer rim edge was not copied".into()))?;
-                let outer_v0 = *copied.vertices.get(&orig_edge.v0).ok_or_else(|| KernelError::Operation("shell: outer rim vertex was not copied".into()))?;
-                let outer_v1 = *copied.vertices.get(&orig_edge.v1).ok_or_else(|| KernelError::Operation("shell: outer rim vertex was not copied".into()))?;
-                let directed = |range: (f64, f64)| if c.forward { range } else { (range.1, range.0) };
-                let rim_surf = ruled_surface_from_curves(&orig_curve, directed(orig_edge.range), &new_curve, directed(new_range))?;
-                let rim_id = body.surfaces.insert(rim_surf.clone());
-                let nv0 = rebuilt.vertex_new.get(&orig_edge.v0).copied().unwrap_or(orig_edge.v0);
-                let nv1 = rebuilt.vertex_new.get(&orig_edge.v1).copied().unwrap_or(orig_edge.v1);
-                let p00 = body.vertices.get(orig_edge.v0).unwrap().position;
-                let p01 = body.vertices.get(orig_edge.v1).unwrap().position;
-                let p10 = body.vertices.get(nv0).unwrap().position;
-                let p11 = body.vertices.get(nv1).unwrap().position;
-                let vert_a = *rim_connectors.entry(orig_edge.v0).or_insert_with(|| line_edge(body, p00, p10, outer_v0, nv0, Tol::DEFAULT, rec));
-                let vert_b = *rim_connectors.entry(orig_edge.v1).or_insert_with(|| line_edge(body, p01, p11, outer_v1, nv1, Tol::DEFAULT, rec));
-                let members = if c.forward { [(outer_edge, true), (vert_b, true), (new_edge, false), (vert_a, false)] } else { [(outer_edge, false), (vert_a, true), (new_edge, true), (vert_b, false)] };
-                let rim_face = attach_face(body, rim_id, &members, face_data.flipped, Tol::DEFAULT, rec);
-                let mut edge_geom: HashMap<EdgeId, (Curve3, (f64, f64))> = HashMap::new();
-                edge_geom.insert(outer_edge, (orig_curve, orig_edge.range));
-                edge_geom.insert(new_edge, (new_curve, new_range));
-                edge_geom.insert(vert_a, (Curve3::Line { origin: p00, dir: p10 - p00 }, (0.0, 1.0)));
-                edge_geom.insert(vert_b, (Curve3::Line { origin: p01, dir: p11 - p01 }, (0.0, 1.0)));
-                set_face_pcurves(body, rim_face, &rim_surf, &edge_geom, tol);
-                shell_faces.push(rim_face);
-            }
-        }
-    }
-    Ok(finish_solid(body, shell_faces, rec))
+    drive_solid(&mut ShellJob::new(body, solid, thickness, open_faces)?, body, rec)
 }
 
 // #endregion 🔖️Shell
@@ -1375,67 +842,19 @@ fn draft_one_surface(surface: &Surface, neutral_plane: &Surface, pull: Vec3, ang
 /// adjacent drafted faces automatically (both surfaces of a shared edge are looked up from the
 /// same substitution map).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: Vec3, (neutral_origin, neutral_normal): (Pnt3, Vec3), angle_rad: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if body.solids.get(solid).is_none() {
-        return Err(KernelError::MissingEntity(format!("solid {solid}")));
-    }
-    if !angle_rad.is_finite() || angle_rad.abs() <= 1e-15 {
-        return Err(KernelError::Operation("draft angle must be non-zero".into()));
-    }
-    if faces.is_empty() {
-        return Err(KernelError::InvalidInput("draft requires at least one face".into()));
-    }
-    let pull = pull_dir.normalized().ok_or_else(|| KernelError::InvalidInput("pull direction must be non-zero".into()))?;
-    let nn = neutral_normal.normalized().ok_or_else(|| KernelError::InvalidInput("neutral plane normal must be non-zero".into()))?;
-    let solid_faces_vec = body.solid_faces(solid);
-    let solid_faces: HashSet<FaceId> = solid_faces_vec.iter().copied().collect();
-    for f in faces {
-        if !solid_faces.contains(f) {
-            return Err(KernelError::MissingEntity("draft face is not on the solid".into()));
-        }
-    }
-    let neutral_plane = Surface::Plane { frame: Frame3::from_normal(neutral_origin, nn).ok_or_else(|| KernelError::InvalidInput("degenerate neutral plane".into()))? };
-    let tol = OFFSET_TOL;
-    let mut new_surface_map = HashMap::new();
-    for &f in faces {
-        let fd = body.faces.get(f).unwrap();
-        let s = body.surfaces.get(fd.surface).unwrap().clone();
-        new_surface_map.insert(f, draft_one_surface(&s, &neutral_plane, pull, angle_rad, tol)?);
-    }
-    // A drafted (or untouched, still-adjacent) planar face's ABSOLUTE plane equation is already
-    // fully known post-rotation — solving the exact multi-plane intersection (see
-    // [`solve_plane_point`]) is what a rotated corner actually needs (unlike offset's uniform
-    // `distance`, there is no single displacement scalar for a rotation); a touched face that
-    // isn't planar (e.g. a general non-Cylinder surface's rigidly-rotated control net) can't
-    // contribute a linear constraint, so it's skipped here and the corner falls back to whichever
-    // planar constraints remain (or the original position if none do).
-    let vertex_target = |b: &Body, v: VertexId, touched: &[(FaceId, Vec3)]| -> Pnt3 {
-        let mut planes: Vec<(Vec3, f64)> = Vec::new();
-        for &(f, _) in touched {
-            let fd = b.faces.get(f).unwrap();
-            let final_surface = new_surface_map.get(&f).cloned().unwrap_or_else(|| b.surfaces.get(fd.surface).unwrap().clone());
-            if let Surface::Plane { frame } = final_surface {
-                planes.push((frame.z, frame.z.dot(frame.origin.to_vec())));
-            }
-        }
-        solve_plane_point(&planes).unwrap_or_else(|| b.vertices.get(v).unwrap().position)
-    };
-    let edge_target = |b: &Body, e: EdgeId, _n: Vec3| -> Pnt3 {
-        let edge = b.edges.get(e).unwrap();
-        let curve = b.curves3.get(edge.curve).unwrap();
-        curve.eval(0.5 * (edge.range.0 + edge.range.1))
-    };
-    let flip_new = |_f: FaceId| false;
-    let materialize = solid_faces;
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
-    let mut out_faces = Vec::with_capacity(solid_faces_vec.len());
-    for &f in &solid_faces_vec {
-        out_faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("draft: face was not rebuilt".into()))?);
-    }
-    Ok(finish_solid(body, out_faces, rec))
+pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: Vec3, neutral: (Pnt3, Vec3), angle_rad: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    drive_solid(&mut DraftJob::new(body, solid, faces, pull_dir, neutral, angle_rad)?, body, rec)
 }
 
 // #endregion 🔖️Draft
+
+// #region 🔖️Jobs
+
+#[path = "⏱️jobs/🦀️.rs"]
+mod jobs;
+pub use jobs::{ClosedShellJob, DraftJob, OffsetFaceJob, OffsetSolidJob, OpenShellJob, ShellJob, ThickenJob};
+
+// #endregion 🔖️Jobs
 
 // #region 🔖️Tests
 

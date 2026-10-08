@@ -55,11 +55,11 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
     let fill = match &base.attributes.fill { Some(FillStyle::Solid { color }) => rgba_to_hex(*color), _ => String::new() };
     let mut rows = Vec::new();
     for (key, label, value, kind, toggle, min, max) in [
-        ("name", labels.name, base.name.clone(), InputKind::Text, false, None, None),
+        ("name", labels.name, base.name.to_string_owner(), InputKind::Text, false, None, None),
         ("visible", labels.visible, base.visible.to_string().into(), InputKind::Text, true, None, None),
         ("locked", labels.locked, base.locked.to_string().into(), InputKind::Text, true, None, None),
         ("opacity", labels.opacity, base.opacity.to_string().into(), InputKind::Number, false, Some(0.0), Some(1.0)),
-        ("blendMode", labels.blend_mode, base.blend_mode.clone(), InputKind::Text, false, None, None),
+        ("blendMode", labels.blend_mode, base.blend_mode.to_string_owner(), InputKind::Text, false, None, None),
         ("fillRule", labels.fill_rule, base.attributes.fill_rule.as_str().into(), InputKind::Text, false, None, None),
         ("fillEnabled", labels.fill_enabled, base.attributes.fill.is_some().to_string().into(), InputKind::Text, true, None, None),
         ("strokeEnabled", labels.stroke_enabled, base.attributes.stroke.is_some().to_string().into(), InputKind::Text, true, None, None),
@@ -80,7 +80,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
     }
     if let DrawingLayerNode::Group(group)=layer {rows.push(Field {key:"isolation",label:labels.isolation,value:group.isolation.to_string(),kind:InputKind::Text,toggle:true,min:None,max:None});}
     if let DrawingLayerNode::Text(text) = layer {
-        rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.clone(), kind: InputKind::LongText, toggle: false, min: None, max: None });
+        rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.to_string_owner(), kind: InputKind::LongText, toggle: false, min: None, max: None });
         rows.push(Field { key: "textSize", label: labels.text_size, value: text.size.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.1), max: None });
     }
     if let DrawingLayerNode::Trace(trace) = layer {
@@ -88,7 +88,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
         rows.push(Field { key: "traceSimplify", label: labels.simplify, value: trace.params.simplify_epsilon.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.0), max: None });
     }
     if let DrawingLayerNode::Boolean(boolean) = layer {
-        rows.push(Field { key: "booleanOperation", label: labels.boolean_operation, value: boolean.operation.clone(), kind: InputKind::Text, toggle: false, min: None, max: None });
+        rows.push(Field { key: "booleanOperation", label: labels.boolean_operation, value: boolean.operation.to_string_owner(), kind: InputKind::Text, toggle: false, min: None, max: None });
     }
     rows
 }
@@ -132,7 +132,7 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
     ui::tree_item(ui::Label(text(field.label.as_str())?)).try_id(format!("{ROOT}.{}", field.key)).map_err(|_| error())?.try_child(control).map_err(|_| error())?.try_build().map_err(|_| error())
 }
 
-fn node_row(layer_id: &str, index: usize, segment: &PathSegment, join_target: Option<usize>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+fn node_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, segment: &PathSegment, join_target: Option<usize>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.node.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}", labels.anchor.as_str(), index + 1))?)).try_id(&id).map_err(|_| error())?;
     let mut points = Vec::new();
@@ -193,7 +193,7 @@ fn node_row(layer_id: &str, index: usize, segment: &PathSegment, join_target: Op
     row.try_build().map_err(|_| error())
 }
 
-fn fill_input(layer_id: &str, id: &str, label: LabelText, kind: InputKind, value: &str, edit: semio_framework_plugin::UiValue, disabled: bool) -> UiAssemblyResult<BuiltNode> {
+fn fill_input(layer_id: &(impl std::fmt::Display + ?Sized), id: &str, label: LabelText, kind: InputKind, value: &str, edit: semio_framework_plugin::UiValue, disabled: bool) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",edit)])?;
     let (action,args) = drawing_play_action("editFill",Some(args))?;
     let mut input = ui::input(kind).value(text(value)?).disabled(disabled).commit(text("blur")?)
@@ -202,7 +202,7 @@ fn fill_input(layer_id: &str, id: &str, label: LabelText, kind: InputKind, value
     input.try_on_with(Trigger::Commit,action,args.ok_or_else(error)?).map_err(|_| error())?.try_build().map_err(|_| error())
 }
 
-fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&FillStyle>, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let kind = match fill { None => "none",Some(FillStyle::Solid { .. }) => "solid",Some(FillStyle::LinearGradient { .. }) => "linearGradient",Some(FillStyle::RadialGradient { .. }) => "radialGradient" };
     let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("type")?),("value",ui_value_text(kind)?)])?)])?;
     let (action,args) = drawing_play_action("editFill",Some(args))?;
@@ -229,7 +229,7 @@ fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, label
     if let Some(fill) = fill {
         let stops = crate::schema::fill::stops(fill);
         if !disabled && !stops.is_empty() && stops.len() < 64 {
-            let offset = stops.windows(2).max_by(|a,b| (a[1].offset-a[0].offset).total_cmp(&(b[1].offset-b[0].offset))).map_or(0.5,|pair| (pair[0].offset+pair[1].offset)/2.0);
+            let offset = (1..stops.len()).max_by(|a,b| (stops[*a].offset-stops[*a-1].offset).total_cmp(&(stops[*b].offset-stops[*b-1].offset))).map_or(0.5,|index| (stops[index-1].offset+stops[index].offset)/2.0);
             let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("addStop")?),("offset",ui_value_number(offset))])?)])?;
             row = row.try_child(semio_framework_plugin::tree_item_with_action("drawing-inspector.fill.add",ui::Label(text(labels.add_stop.as_str())?),None,drawing_play_action("editFill",Some(args))?)?).map_err(|_| error())?;
         }
@@ -237,7 +237,7 @@ fn fill_controls(layer_id: &str, fill: Option<&FillStyle>, disabled: bool, label
     row.try_build().map_err(|_| error())
 }
 
-fn stop_row(layer_id: &str, index: usize, stop: &crate::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &crate::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.fill.stop.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).default_open(true).try_id(&id).map_err(|_| error())?;
     for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,rgba_to_hex(stop.color)),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {

@@ -35,7 +35,7 @@ fn is_false(value: &bool) -> bool {
 /// A `splice` replaces `remove` units at `offset` of the container at `path` with the units of `value` (array items, octets,
 /// UTF-8 bytes of a string, object members by position); `continued` marks a non-final part of one exact multi-part inverse,
 /// whose whole-snapshot invariant the run's final part checks.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 pub enum SnapshotPatch {
     Set {
@@ -197,18 +197,7 @@ impl OpBinary for SnapshotPatch {
         <Self as kernel::OpText>::parse_op(line).map_err(|error| kernel::ProtocolError::Malformed { what: "snapshot patch", offset: 0, detail: error.to_string() })
     }
 }
-/// ♻️ Incremental retirement of a retained patch: its pointers and its value tree retire through the framework cursors, so
-/// a value of up to [`SNAPSHOT_PATCH_MAX_BYTES`] never drops in one turn.
-impl semio_framework_value::retirement::RetireOwned for SnapshotPatch {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Set { path, value } | Self::Insert { path, value, .. } | Self::Splice { path, value, .. } => (path, value).retirement(),
-            Self::Remove { path } => path.retirement(),
-            Self::Move { from, path, .. } => (from, path).retirement(),
-            Self::Rename { path, key } => (path, key).retirement(),
-        }
-    }
-}
+
 //#endregion 🩹️Patch
 
 //#region 🪜️Steps

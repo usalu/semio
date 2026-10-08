@@ -114,13 +114,25 @@ impl FromValue for FailClosedDiff {
     }
 }
 
+impl crate::os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { inner: crate::os_spr::DiffAlgebra::inverse(&self.inner, base), refuse: false }
+    }
+    fn between(base: &DemoSnapshot, other: &DemoSnapshot) -> Self {
+        Self { inner: <DemoDiff as crate::os_spr::DiffAlgebra<DemoSnapshot>>::between(base, other), refuse: false }
+    }
+    fn is_empty(&self) -> bool {
+        !self.refuse && crate::os_spr::DiffAlgebra::<DemoSnapshot>::is_empty(&self.inner)
+    }
+}
+
 impl MutationDiff<DemoSnapshot> for FailClosedDiff {
-    fn apply(&self, base: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+    fn apply(&self, base: &DemoSnapshot, capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
         if self.refuse {
             return Err(crate::os_spr::MutationApplyError { code: "fixture.refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
         }
         count(&PROJECTIONS_APPLIED);
-        self.inner.apply(base)
+        self.inner.apply(base, capability)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -171,6 +183,14 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
 
 impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+
+    fn member_store_owners_birth_bytes() -> usize {
+        document_store_owners_constructor_birth_bytes::<ArtifactStoreCursorDisposer<Self, FailClosedOp>>([
+            semio_framework_value::factory_constructor_birth_bytes::<DemoSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoInitialSnapshotRetirementFactory>(0),
+            semio_framework_value::factory_constructor_birth_bytes::<DemoMutationRetirementFactory>(0),
+        ])
+    }
 
     fn member_store_owners() -> DocumentStoreOwners<Self, FailClosedOp> {
         DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, FailClosedOp>::new()))

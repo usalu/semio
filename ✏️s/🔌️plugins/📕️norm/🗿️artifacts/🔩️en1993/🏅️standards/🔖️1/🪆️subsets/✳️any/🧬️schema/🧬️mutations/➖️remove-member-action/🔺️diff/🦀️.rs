@@ -1,11 +1,13 @@
+//! ➖️ `remove-member-action` diff — removes the row at the index, guarded by the row's own id.
+
 use super::RemoveMemberAction;
-use crate::diff::En1993MemberActionList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993MemberActionEdit};
+use crate::En1993Snapshot;
+
 pub fn diff(payload: &RemoveMemberAction, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    if payload.index >= base.member_actions.len() {
+    let Some(row) = base.member_actions.get(payload.index) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("member-action index {} out of range.", payload.index), Vec::<String>::new());
-    }
-    let mut values = base.member_actions.clone();
-    values.remove(payload.index);
-    protocol::MutationOutcome::new(En1993Diff { member_actions: Some(En1993MemberActionList { values }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(En1993Diff { member_actions: vec![En1993MemberActionEdit::remove(payload.index, row.id.clone())], ..Default::default() })
 }

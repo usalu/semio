@@ -1,8 +1,7 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `delete-selection`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_selection_removal, Generation3dMutation};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -12,20 +11,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-/// 🗑️ Deletes every selected wire, then every selected widget (with the wires it still holds), as the id-keyed leaves of the
-/// graph left behind; a selected id the graph no longer holds is skipped.
+/// 🗑️ Deletes every selected wire (`disconnect-synapse`), then every selected widget with the cascade it holds
+/// (`disconnect-synapse`, `delete-widget-position`, `delete-widget`) as ONE edit; a selected id the graph no longer holds is
+/// skipped.
 fn delete_selected(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let operations = with_host(host_snapshot, |host| {
-        let (wires, widgets): (Vec<&String>, Vec<&String>) = selected.iter().partition(|id| host_snapshot.synapses.iter().any(|synapse| synapse.id == **id));
-        for id in wires {
-            let _skipped_when_gone = host.disconnect(id);
-        }
-        for id in widgets {
-            let _skipped_when_gone = host.remove_widget(id);
-        }
-        commit_host_snapshot(host_snapshot, &host.host_snapshot)
-    });
-    Emit { artifact_mutations: operations, ..Default::default() }
+    Emit { artifact_mutations: generation3d_selection_removal(host_snapshot, selected), ..Default::default() }
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg

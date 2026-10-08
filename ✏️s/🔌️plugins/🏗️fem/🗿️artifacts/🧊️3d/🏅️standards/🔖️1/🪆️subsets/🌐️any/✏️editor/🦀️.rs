@@ -448,6 +448,7 @@ fn admit_fem3d_artifact_mutation(mutation: &Fem3dMutation) -> Result<store::Arti
 /// 📬️ Required by the Artifact publication lane: every document-editing retained tool emits `Fem3dMutation`s, and
 /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
 /// `interactive-job.publication-authority-missing`.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Fem3dArtifactPreparationFactory;
 
 struct Fem3dArtifactPreparation {
@@ -510,7 +511,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fe
         let base = self.base.as_ref().ok_or_else(|| "fem3d-artifact-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "fem3d-artifact-mutation-owner-missing".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "fem3d-artifact-authority-missing".to_string())?;
         let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;

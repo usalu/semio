@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateShwSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ShwSystemConfigPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -20,10 +20,6 @@ pub fn diff(payload: &super::CreateShwSystem, base: &EnergyModelSnapshot) -> pro
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} does not exist.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model
-        .shw_systems
-        .insert(payload.index as usize, crate::model::ShwSystemConfig { id: payload.id, heater_capacity_w: payload.heater_capacity_w, storage_volume_m3: payload.storage_volume_m3, setpoint_c: payload.setpoint_c, schedule_id: payload.schedule_id });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { shw_systems: Rows::inserting(payload.index as usize, crate::model::ShwSystemConfig { id: payload.id, heater_capacity_w: payload.heater_capacity_w, storage_volume_m3: payload.storage_volume_m3, setpoint_c: payload.setpoint_c, schedule_id: payload.schedule_id }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

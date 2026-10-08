@@ -393,7 +393,7 @@ impl GifImagesDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.gif` (87a). No `snapshot: Option<GifSnapshot>` full-replace slot anywhere —
-/// even `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)`.
+/// every mutation leaf names exactly the fields and image rows it changes.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.diff")]
@@ -426,7 +426,7 @@ impl GifDiff {
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
-    fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
+    fn apply(&self, base: &GifSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<GifSnapshot> {
         if let Some(images) = &self.images {
             validate_gif_images(base.images.len(), images)?;
         }
@@ -529,12 +529,6 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
-    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot)
-}
-
 /// 🧪️ P2-FG2: representative `GifDiff` cases for `diff_grammar_conformance_law`/
 /// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
 /// the empty diff, plus a real `between()` result exercising every scalar field, the `gct`
@@ -549,7 +543,7 @@ pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
     ib0.interlace = true;
     ib0.lct = None;
     let b = GifSnapshot { width: 8, height: 8, gct: None, background_color_index: 3, pixel_aspect_ratio: 5, images: vec![ib0, img(6, 3, 3), img(7, 3, 3)], ..GifSnapshot::default() };
-    vec![GifDiff::default(), diff_set_snapshot(&a, &b), diff_set_snapshot(&b, &a)]
+    vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)]
 }
 //#endregion 🔖️Diff
 

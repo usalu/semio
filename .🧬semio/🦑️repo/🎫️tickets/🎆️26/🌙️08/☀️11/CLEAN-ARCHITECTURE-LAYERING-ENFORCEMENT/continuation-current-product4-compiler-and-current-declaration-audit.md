@@ -1,0 +1,9 @@
+# Current Product 4 Compiler Failure and Current Declared Edge
+
+The exact registered original Product default-long whole invocation completed with GUI exit1/cargo101 before assertions. Actual terminal owningExitCode=1, sourcePostUnavailable=False, postRefusal=None, cancelled=False; dispatcher exitCode=1, postRefusal=None. Complete prepared source and runtime postchecks stayed exact. Epoch3 post-refusal remains retained.
+
+The actual compiler reached the Product renderer and reports missing direct semio_framework_artifact_reference imports (16 lib errors/23 lib-test errors) and their consequent trait method resolution failures. Held Product manifest SHA `75893c06a327392132d199caeccd73470f0c91fc6a58f173cb35179e8e2ea443` has no artifact-reference clause. The current physical provider exists at `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml` with package `semio-framework-artifact-reference`.
+
+The live owning manifest has independently advanced to SHA `8871d8abd6df20841338c4c0d446ee256b0abbe76c36e107b934aa8c8e7873b7` and contains `semio-framework-artifact-reference = { workspace = true }` in the native target dependency block. This observation is current-source evidence only; no live manifest write was made here and no validation of that advanced live state is claimed. A fresh current capture and complete metadata/provider/features/import joins are necessary before another original whole request.
+
+Actual leading error log retains 31 error-prefixed lines, including cargo/Nx envelopes. Log `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-4/product-whole4.log`; both terminal receipts remain under `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-4/product`. No assertion count or pass is claimed.

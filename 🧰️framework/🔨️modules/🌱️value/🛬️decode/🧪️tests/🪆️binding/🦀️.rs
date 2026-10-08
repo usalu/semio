@@ -35,6 +35,7 @@ enum BoundOrdinal { First, Second }
 
 thread_local! { static FIELD_RETIREMENTS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)}; }
 struct RetainedField { retired:bool }
+impl semio_framework_dsl_record::BorrowedDslField for RetainedField { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text; }
 impl Drop for RetainedField { fn drop(&mut self){if !self.retired{FIELD_RETIREMENTS.with(|count|count.set(count.get()+1000));}} }
 impl DslField for RetainedField {
     fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Text}
@@ -44,6 +45,7 @@ impl DslField for RetainedField {
     fn retire_decoded(mut self){self.retired=true;FIELD_RETIREMENTS.with(|count|count.set(count.get()+1));}
 }
 struct StagedField;
+impl semio_framework_dsl_record::BorrowedDslField for StagedField { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text; }
 impl DslField for StagedField {
     fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Text}
     fn to_value(&self)->FieldValue{semio_framework_dsl_record::FieldValue::Text("stage".into())}

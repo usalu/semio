@@ -2124,7 +2124,7 @@ macro_rules! snapshot_details_editor_support {
                     factory,
                 );
             )?
-            Some(factory)
+            Some(semio_framework_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::editing::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
         }
 
         fn build_config_store_owners() -> Option<semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {

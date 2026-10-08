@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZonePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::RenameZone, base: &EnergyModelSnapshot) -> protocol
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} is already named \"{}\".", payload.id.0, payload.new_name));
     }
-    let mut model = base.model.clone();
-    if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
-        zone.name = payload.new_name.clone();
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zones: Rows::modifying(ZonePatch { name: Some(payload.new_name.clone()), ..ZonePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

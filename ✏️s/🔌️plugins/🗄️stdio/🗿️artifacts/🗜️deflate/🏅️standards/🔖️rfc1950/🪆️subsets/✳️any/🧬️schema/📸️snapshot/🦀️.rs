@@ -54,8 +54,7 @@ impl DeflateLevelHint {
 ///
 /// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
 /// `store::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).
-/// `DslRecord` only gives this type `DslField` so it can be embedded as
-/// `DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })`'s payload; it does not touch the artifact's own
+/// `DslRecord` only gives this type `DslField` so it can be embedded as a block in a record; it does not touch the artifact's own
 /// honest hex-text/raw-binary envelope format.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]

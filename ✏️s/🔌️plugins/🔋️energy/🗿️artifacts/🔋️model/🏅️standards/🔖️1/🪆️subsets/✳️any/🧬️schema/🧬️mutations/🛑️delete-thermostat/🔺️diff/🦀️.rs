@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteThermostat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ThermostatPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeleteThermostat, base: &EnergyModelSnapshot) -> pr
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.thermostats.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermostats: Rows::removing(&base.model.thermostats, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

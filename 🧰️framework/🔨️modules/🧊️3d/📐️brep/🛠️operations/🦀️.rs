@@ -11,6 +11,8 @@ pub mod intersect;
 pub mod offset;
 #[path = "🧱️primitives/🦀️.rs"]
 pub mod primitives;
+#[path = "⏱️staged/🦀️.rs"]
+pub mod staged;
 #[path = "🧵️sew/🦀️.rs"]
 pub mod sew;
 #[path = "➡️sweep/🦀️.rs"]

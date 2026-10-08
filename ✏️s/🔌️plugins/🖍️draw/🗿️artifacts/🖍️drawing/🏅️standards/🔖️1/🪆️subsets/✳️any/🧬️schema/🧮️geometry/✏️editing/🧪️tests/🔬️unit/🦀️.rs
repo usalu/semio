@@ -19,12 +19,18 @@ fn path_node_editing_shared_cases() {
         let saved = source.clone();
         let result = edit_path(&source, &operation);
         assert_eq!(source, saved);
+        let native: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(case["before"].clone()).unwrap();
+        let native_before = serde_json::to_value(&native).unwrap();
+        let native_result = edit_path(&native, &operation);
+        assert_eq!(native_result.as_ref().map(|value| serde_json::to_value(value).unwrap()), result.as_ref().map(|value| serde_json::to_value(value).unwrap()));
+        assert_eq!(serde_json::to_value(&native).unwrap(), native_before);
         if case["error"] == true { assert!(result.is_err(), "{}", case["name"]); continue; }
         let expected: Vec<PathSegment> = serde_json::from_value(case["after"].clone()).unwrap();
         let actual = result.unwrap();
         assert_geometry(&serde_json::to_value(&actual).unwrap(), &serde_json::to_value(&expected).unwrap());
         assert_eq!(edit_path(&edit_path(&actual, &PathEdit::Reverse).unwrap(), &PathEdit::Reverse).unwrap(), actual);
     }
+    eprintln!("[DEBUG] Drawing persisted paged and computed path geometry preserve every shared edit/reversal/join/refusal fixture through borrowed ordinal access");
 }
 
 #[test]

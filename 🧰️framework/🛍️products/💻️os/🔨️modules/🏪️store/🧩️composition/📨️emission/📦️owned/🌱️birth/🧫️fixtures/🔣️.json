@@ -1,0 +1,38 @@
+{
+  "rows": [
+    {
+      "actor": "birth-user",
+      "group": null,
+      "line": null,
+      "transaction": null,
+      "metadataBytes": 10,
+      "stampedId": null
+    },
+    {
+      "actor": "🧪️ Geburt",
+      "group": "gemeinsam",
+      "line": "branch-ä",
+      "transaction": {
+        "id": "tx-0123",
+        "tool": "cad#import"
+      },
+      "metadataBytes": 49,
+      "stampedId": null
+    },
+    {
+      "actor": "stamp-user",
+      "group": "commit",
+      "line": "server-branch",
+      "transaction": null,
+      "stampedId": "edit-ä🧪️",
+      "metadataBytes": 43
+    }
+  ],
+  "insufficientItems": 0,
+  "insufficientByteDifference": 1,
+  "expectedRefusal": {
+    "allocatedBytes": 0,
+    "releasedBytes": 0,
+    "originalSource": true
+  }
+}

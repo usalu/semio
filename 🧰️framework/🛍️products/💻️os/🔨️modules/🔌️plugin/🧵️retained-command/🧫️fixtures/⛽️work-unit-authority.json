@@ -1,0 +1,1 @@
+{"grantUnits":1,"cases":[{"id":"domain-spends","domainConsumes":1,"domainObserves":1,"remaining":0},{"id":"scalar-fallback","domainConsumes":0,"domainObserves":1,"remaining":0}],"phaseOrder":["preflight","work","publish"],"metadataConsumes":1,"checkpointConsumes":1}

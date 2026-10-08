@@ -11,6 +11,7 @@ pub fn factory()->Arc<dyn store::ArtifactStoreOneItemPreparationFactory<BmpSnaps
     Arc::new(RetainedClonePreparationFactory::new(Arc::new(BmpPublication),Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default()),Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::default()),64).expect("BMP retained publication depth"))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct BmpPublication;
 impl RetainedCloneEdit<BmpSnapshot,BmpMutation> for BmpPublication {
     type Cursor=BmpPublicationCursor;
@@ -35,10 +36,10 @@ impl BmpPublicationCursor {
     pub fn new()->Self {Self{phase:0,copy:Some(BmpSnapshot::retained_clone_cursor()),inverse:None,retirement:RetainedCloneClose::default(),validation:BmpOwnedValidationWork::default(),pixel:0,closing:false,cancelled:false}}
     fn close_copy(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,String> {
         let cursor=self.copy.as_mut().ok_or("bmp: missing copy cursor")?;
-        let step=cursor.close_step(grant.maximum_items,grant.maximum_copy_bytes).map_err(ValueError::into_message)?;
+        let step=cursor.close_step(grant.maximum_items, grant.maximum_release_bytes).map_err(ValueError::into_message)?;
         match step {
             SnapshotRetirementStep::Complete=>{if !cursor.terminal_is_empty(){return Err("bmp: copy close retained ownership".into());}self.copy=None;self.phase+=1;Ok(unit())},
-            SnapshotRetirementStep::Pending{released_items,released_bytes}=>Ok(RetainedCloneProgress{copied_items:released_items,copied_bytes:released_bytes,retained_capacity_bytes:0}),
+            SnapshotRetirementStep::Pending{released_items,released_bytes}=>Ok(RetainedCloneProgress {copied_items:released_items,copied_bytes:released_bytes,retained_capacity_bytes:0, released_bytes: 0 }),
             SnapshotRetirementStep::Blocked=>Ok(RetainedCloneProgress::default()),
         }
     }
@@ -75,7 +76,7 @@ impl RetainedCloneEditCursor<BmpSnapshot,BmpMutation> for BmpPublicationCursor {
             4=>{
                 match self.retirement.step(grant.maximum_items,grant.maximum_copy_bytes).map_err(ValueError::into_message)? {
                     SnapshotRetirementStep::Complete=>{self.phase=5;unit()},
-                    SnapshotRetirementStep::Pending{released_items,released_bytes}=>RetainedCloneProgress{copied_items:released_items,copied_bytes:released_bytes,retained_capacity_bytes:0},
+                    SnapshotRetirementStep::Pending{released_items,released_bytes}=>RetainedCloneProgress {copied_items:released_items,copied_bytes:released_bytes,retained_capacity_bytes:0, released_bytes: 0 },
                     SnapshotRetirementStep::Blocked=>Default::default(),
                 }
             },
@@ -112,7 +113,7 @@ impl RetainedCloneEditCursor<BmpSnapshot,BmpMutation> for BmpPublicationCursor {
                         _=>return Err("bmp: paint storage differs from its owned profile".into()),
                     };
                     self.pixel+=1;if self.pixel==width as usize*height as usize {self.phase=7;}
-                    RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0}
+                    RetainedCloneProgress {copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0, released_bytes: 0 }
                 }
             },
             _=>return Ok(RetainedCloneEditStep::Complete(unit())),

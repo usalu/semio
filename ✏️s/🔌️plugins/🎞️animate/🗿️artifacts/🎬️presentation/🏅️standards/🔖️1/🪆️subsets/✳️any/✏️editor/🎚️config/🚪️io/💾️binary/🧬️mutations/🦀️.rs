@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::animate::config::component::mutations::*;
 use crate::editor::animate::config::component::*;
-use set_engagement_input::SetEngagementInput;
+use crate::editor::animate::config::SetEngagementInput;
 
 impl protocol::OpBinary for PresentationConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

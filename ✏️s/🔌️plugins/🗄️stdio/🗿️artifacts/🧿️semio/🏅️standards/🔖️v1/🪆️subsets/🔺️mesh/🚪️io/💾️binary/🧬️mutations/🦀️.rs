@@ -62,13 +62,10 @@ use crate::standards::v1::subsets::mesh::schema::mutations::set_primitive_topolo
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
-use crate::standards::v1::subsets::mesh::schema::mutations::set_snapshot::SetSnapshot;
 use crate::standards::v1::subsets::mesh::io::text::mutations::{print_semio_mesh_mutation};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioMeshMutation) -> u8 {
     match m {
-        SemioMeshMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioMeshMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioMeshMutation::CreateMesh(_) => TAG_CREATE_MESH,
         SemioMeshMutation::DeleteMesh(_) => TAG_DELETE_MESH,
         SemioMeshMutation::CreatePrimitive(_) => TAG_CREATE_PRIMITIVE,
@@ -107,11 +104,6 @@ pub(crate) fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
 /// second independent encoding.
 impl OpBinary for SemioMeshMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
@@ -124,9 +116,6 @@ impl OpBinary for SemioMeshMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::mesh::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -141,8 +130,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioMeshMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_CREATE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-mesh");
 const TAG_DELETE_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "delete-mesh");
 const TAG_CREATE_PRIMITIVE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "create-primitive");

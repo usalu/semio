@@ -1,0 +1,21 @@
+# Final Cold Release Plan
+
+The final release must invoke the registered `@semio-tech/semio-tech-play:build-fresh` only after all shared source owners confirm structural and runtime stability. The permanent launcher creates a new unique `play-fleet/release-*` generation on every invocation, forcing shipping mode, fresh Nx workspace/cache data, fresh Cargo target/intermediates, local/remote task-cache bypass and private Vite state. Its complete inner graph uses four concurrent tasks and re-publishes the final canonical catalog before site compilation and page publication.
+
+`release-6Z7Lxu` is the isolated native validation workspace created during this task. Its live jobs and compiler outputs remain intact. They are accepted as current-source native test evidence, but will not be reused by the final cold release. Earlier same-generation final rebuild proposals are superseded. No final cold build has been launched yet.
+
+Current pipeline-owned gates are actual green: complete Value174, durable family20, corrected group receipt causal/member ownership, original typed decision allocator witness and canonical command-page owner growth/closure. Process catalog producers are refreshed with all21 strict package unit cases green; Sourcing has all6 strict unit/freshness cases green. Current Pack and remaining domain/physical proofs are recorded by their respective owners. The mounted app consumer and coherent complete native families remain prerequisites before source freeze.
+
+Final acceptance requires an actual successful complete cold release graph, all four new `dist/pages` outputs, descriptor/core digest and publication completeness audits, and the parent agent's full production browser suite. Healthy concurrent processes, shared caches and the native workspace must not be removed. No ephemeral generation path is stored in portable launch commands.
+
+## Current Cache Selector Recheck
+
+The current `build-fresh` target is uncached and has no prerequisite tasks before its new generation is created. Its permanent script uses `mkdtemp(release-)`, discards inherited Nx task identity and graph-reuse flags, and selects private Cargo/Nx directories before invoking the complete inner graph. Cargo's canonical architecture helper resolves its deliverable and compiler-unit root from the selected `CARGO_TARGET_DIR`, so any merged compiler-unit path still belongs to the new generation. Play Vite state derives from the private Nx directory; the Vite producer creates a new staging directory under the ticket and always executes the build before publication. `catalog-release` depends on all 28 release preparation compositions; `prepare-release` waits for that catalog, then the site build consumes the finalized registry.
+
+Current `.cargo/config.toml` and process environment contain no Rust compiler wrapper, sccache/ccache directory selector or incremental override. This is a concrete current-environment observation, not a claim about uninspected external environments. Downloaded toolchains/packages and source asset inputs remain inputs; no shared developer cache is deleted. Final proof must record the new actual generation, compiler paths, producer completion and newly published outputs.
+
+Current Fold boundary now has five native laws green including all original causal failures and exact262144 backing/frame cancellation. The shared Value Collection backing/frame split requires a new full Value receipt; historical174/174 is not relabeled current. Complete causal and persisted native normalization proofs are also pending. No final cold generation has been started.
+
+## Prefinal Current Evidence
+
+Read-only supported Nx build --graph confirms321 tasks/83projects and all60 describe/release/materialize tasks before final catalog. Complete currentValue178/178, causal65/65, source-derived43owners148panes and actual browser acceptance-helper checks are green. CompletePlayunit69run61pass8fail honestly remains blocked on current incomplete generatedcatalog; final canonical refresh and rerun are mandatory. Details and exact files/sequence are retained in 📓️play-prefinal-source-integrity.md. Root mounted runtime integration and publication terminal Store/Process proofs remain required before the new cold release.

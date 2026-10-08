@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceAirflowNetwork` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, OptionChange};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -20,8 +20,6 @@ pub fn diff(payload: &super::ReplaceAirflowNetwork, base: &EnergyModelSnapshot) 
     if base.model.airflow_network == network {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The airflow network already has this value.");
     }
-    let mut model = base.model.clone();
-    model.airflow_network = network;
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { airflow_network: OptionChange::assign(network), ..Default::default() }))
 }
 //#endregion 🔖️Diff

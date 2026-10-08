@@ -3,7 +3,7 @@ use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffTag, TiffValues, TAG_I
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snapshot_with_tags(tags: Vec<TiffTag>) -> TiffSnapshot {
-    TiffSnapshot { ifds: vec![TiffIfd { storage: Default::default(), entries: tags }], ..TiffSnapshot::default() }
+    TiffSnapshot { ifds: vec![TiffIfd { blocks: Vec::new(), entries: tags }], ..TiffSnapshot::default() }
 }
 
 #[semio_framework_async_macros::async_test]

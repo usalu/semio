@@ -79,10 +79,6 @@
   },
   "execution": {
     "target": "test-root-script-compiler",
-    "command": "bun ./📜️script.ts test root-script-compiler",
-    "launchName": "🧹clean🧩️taxonomy🧪️root-script-compiler",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-script-compiler",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.11
+    "command": "bun ./📜️script.ts test root-script-compiler"
   }
 }

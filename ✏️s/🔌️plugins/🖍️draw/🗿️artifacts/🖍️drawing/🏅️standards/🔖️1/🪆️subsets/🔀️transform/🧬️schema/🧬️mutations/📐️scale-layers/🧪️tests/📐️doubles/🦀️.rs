@@ -79,3 +79,10 @@ fn label_reads_the_factors() {
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Scale 1 layer by (2, 0.5)");
     assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Ebene um (2; 0,5) skalieren");
 }
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-document.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before()).await;
+}

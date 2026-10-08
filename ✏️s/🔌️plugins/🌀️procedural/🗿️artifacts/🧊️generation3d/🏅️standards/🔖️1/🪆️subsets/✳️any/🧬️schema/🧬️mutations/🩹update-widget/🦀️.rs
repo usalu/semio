@@ -1,9 +1,6 @@
 //! 🔁 `update-widget` payload — replaces the whole body of an EXISTING id-keyed [`Widget`]
 //! atomically (`Widget` is a discriminated union with no independently-settable scalar fields
 //! exposed here, so whole-body replace is the cohesive facet per `📓️taxonomy.md`'s `update` row).
-//!
-//! Directory kept at its pre-migration `🎛set-widget` path — see `➖remove-widget/🦠️mutation`'s
-//! docstring for why.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;

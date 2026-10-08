@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeRunEndDay` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, RunPeriodPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,12 +12,12 @@ pub fn diff(payload: &super::ChangeRunEndDay, base: &EnergyModelSnapshot) -> pro
     if base.model.run_period.end_day == payload.new_end_day {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The run period end day is already {}.", payload.new_end_day));
     }
-    let mut model = base.model.clone();
-    model.run_period.end_day = payload.new_end_day;
-    if !model.run_period.is_interval() {
+    let mut period = base.model.run_period;
+    period.end_day = payload.new_end_day;
+    if !period.is_interval() {
         let period = base.model.run_period;
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("A end day of {} does not form a calendar interval with the run period {}-{} .. {}-{} of {}.", payload.new_end_day, period.start_month, period.start_day, period.end_month, period.end_day, period.year), Vec::<String>::new());
     }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { run_period: RunPeriodPatch { end_day: Some(payload.new_end_day), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

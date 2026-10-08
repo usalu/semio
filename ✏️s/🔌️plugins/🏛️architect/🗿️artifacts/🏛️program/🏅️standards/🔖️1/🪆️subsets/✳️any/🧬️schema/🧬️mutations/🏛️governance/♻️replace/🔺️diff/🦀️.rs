@@ -2,14 +2,15 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏛️update-governance` per Wave C.
 
 use super::ReplaceGovernance;
+use crate::diff::GovernanceEdit;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ New `Governance` wholesale. Root-scoped singleton — always present, so Warning
+/// 🔁️ Replaces the whole section. Root-scoped singleton — always present, so Warning
 /// `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.
 pub fn diff(payload: &ReplaceGovernance, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.governance == payload.new_governance {
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Governance already matches the requested value.").at([base.governance.id.0.clone()])]);
     }
-    protocol::MutationOutcome::new(ProgramDiff { governance: Some(payload.new_governance.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { governance: Some(GovernanceEdit::replacing(payload.new_governance.clone())), ..Default::default() })
 }

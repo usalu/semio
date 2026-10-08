@@ -232,7 +232,7 @@ fn from_snapshot_yields_one_diff_appliable_mutation_for_a_one_field_change() {
     let mutations = Din4108Mutation::from_snapshot(&base, &target);
     assert_eq!(mutations.len(), 1, "one changed field must decompose into exactly one mutation: {mutations:?}");
     let diff = ::protocol::Mutation::diff(&mutations[0], &base).into_parts().0;
-    let post = ::protocol::MutationDiff::apply(&diff, &base).expect("the from_snapshot mutation's own diff must apply to the base it was derived from");
+    let post = protocol::apply_diff(&diff, &base).expect("the from_snapshot mutation's own diff must apply to the base it was derived from");
     assert_eq!(post, target);
 }
 

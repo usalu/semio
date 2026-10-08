@@ -1,0 +1,3 @@
+# Current Renderer Twelve Actual Source Controls
+
+ExactbothGUI260001 actualNx0, readytrue receipt 🗑️generated/current-engine-layout-12/green-1/admission.json SHA256 `9f04981dae44f51f2cf7bb2e9249308d33cf78cd19c93def7bf12f4d951ed9e2`;60currentbindings/45own-JSON5+5own-AJV outcomes exact. Immediateindependentcurrentdrift 0. CompleteStore113cd5…currenttransition/fullrecipe/captured11baseline retained, exactthree-descriptorfullfixturepair/alloriginalboundedlawassertions/caps/owners/stacks/threshold conserved. All earlierRenderer10latecurrentdrift/11preflightrefusal retained. No physical/native/layout/publicationacceptance; freshcurrentthreeoriginalwholes mandatory, noRootwrite/compiler.

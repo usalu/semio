@@ -4,13 +4,13 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
 //! leaf's own `🔺️diff/🦀️.rs`, which checks both endpoint elements exist, normalizes the pair, forces `normalized = true`, and — because no edge yet joins `element-a`/`element-b` — takes the `added = [normalized edge]` branch.
 //!
-//! That leaf's own contract line reads: 🔌️ Error `mutation.target-missing` if either endpoint element is absent (empty diff); Warning `mutation.no-op` if the edge already carries this exact value (empty diff); else `added = [normalized edge]` if the pair is new, else `patched = [{existing id, full patch}]` — the existing edge's own id is preserved even if `payload.adjacency` carries a different one.
+//! That leaf's own contract line reads: 🔌️ Error `mutation.target-missing` if either endpoint element is absent (empty diff); Warning `mutation.no-op` if the edge already carries this exact value (empty diff); else `added = [normalized edge]` if the pair is new, else the edge is replaced under its own id: `removed = [id]`, `added = [value]`, and `reordered` (the base order) unless the edge was last.
 //!
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🧲️connect/🧲️reception/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn mutation() -> ProgramMutation {
 async fn connect_adjacency_applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let applied = outcome.diff().apply(&base).expect("connect-adjacency/connects-reception-to-waiting: connect-adjacency applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("connect-adjacency/connects-reception-to-waiting: connect-adjacency applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "connect-adjacency/connects-reception-to-waiting: applied state differs from the committed after-snapshot");
 }
 
@@ -46,9 +46,9 @@ async fn connect_adjacency_inverse_restores_before() {
     let forward = mutation();
     let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     undo.reverse();
-    let mut state = forward.diff(&base).diff().apply(&base).expect("connect-adjacency/connects-reception-to-waiting: forward diff applies");
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("connect-adjacency/connects-reception-to-waiting: forward diff applies");
     for step in &undo {
-        state = step.diff(&state).diff().apply(&state).expect("connect-adjacency/connects-reception-to-waiting: inverse step applies");
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("connect-adjacency/connects-reception-to-waiting: inverse step applies");
     }
     assert_eq!(state, base, "connect-adjacency/connects-reception-to-waiting: disconnect-adjacency (the inverse of a pair-creating connect) did not restore the before-snapshot");
 }
@@ -76,7 +76,7 @@ async fn connect_adjacency_declared_outcome_holds() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert!(outcome.messages().is_empty(), "connect-adjacency/connects-reception-to-waiting: connect-adjacency raised a diagnostic on a fixture that declares a clean apply");
-    assert!(outcome.diff().apply(&base).is_ok(), "connect-adjacency/connects-reception-to-waiting: connect-adjacency was rejected by apply on its own before-snapshot");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "connect-adjacency/connects-reception-to-waiting: connect-adjacency was rejected by apply on its own before-snapshot");
 }
 
 /// 🔺️ The sparse delta connect-adjacency produces is exactly the committed diff — this pins WHICH collection
@@ -102,6 +102,12 @@ async fn connect_adjacency_committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn connect_adjacency_committed_diff_applies_to_after() {
     let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("connect-adjacency/connects-reception-to-waiting: committed diff decodes");
-    let produced = decoded.apply(&before()).expect("connect-adjacency/connects-reception-to-waiting: committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("connect-adjacency/connects-reception-to-waiting: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-adjacency/connects-reception-to-waiting: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of connect-adjacency's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn connect_adjacency_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

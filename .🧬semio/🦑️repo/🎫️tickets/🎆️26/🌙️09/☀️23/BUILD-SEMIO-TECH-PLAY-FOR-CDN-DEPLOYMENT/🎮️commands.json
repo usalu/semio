@@ -1,0 +1,318 @@
+{
+  "tools": [
+    {
+      "id": "diagnostic-semio-tech-play-acceptance",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/semio-tech-play",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/acceptance-oracle/📜️script.ts"
+      ],
+      "cwd": "",
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+      }
+    },
+    {
+      "id": "diagnostic-semio-tech-play-browser",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/semio-tech-play",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/📜️script.ts",
+        "browser-capabilities",
+        "{workspace}"
+      ],
+      "cwd": "",
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+      }
+    },
+    {
+      "id": "diagnostic-semio-tech-play-digests",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️publication/📜️script.ts",
+        "verify-hashes"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "diagnostic-semio-tech-play-features",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/semio-tech-play",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/feature-audit/📜️script.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "diagnostic-semio-tech-play-publication",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/semio-tech-play",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️publication/📜️script.ts",
+        "audit"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "diagnostic-semio-tech-play-worker-routing",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔭️routing/📜️script.ts",
+        "probe"
+      ],
+      "cwd": "",
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-brep-borrowed-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/stdio-semio-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️brep-borrowed/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-composition-demand-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️composition-demand/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-hydration-physical-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-os-kernel",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️hydration-demand/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-initializer-oracle",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/process-process3d-rs",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️initializer/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-member-group-publication-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-os-kernel:test-member-group-publication-source",
+        "--skip-nx-cache",
+        "--skip-remote-cache"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_TICKET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-member-group-source-body",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/semio-tech-play",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_TICKET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-owns-group-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-os-kernel",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "test",
+        "{workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_TICKET_DIR": "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-process-catalogs-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/process-extension-wood-rust",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️catalogs/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-sourcing-catalogs-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/sourcing-extension-beams-rust",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️sourcing-catalogs/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    },
+    {
+      "id": "gate-semio-tech-play-typed-string-physical-source",
+      "verb": "gate",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=@semio-tech/framework-plugin",
+        "--excludeTaskDependencies",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️typed-string/📜️script.ts",
+        "oracle"
+      ],
+      "cwd": "",
+      "env": {
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "SEMIO_BUILD_MODE": "ship"
+      }
+    }
+  ]
+}

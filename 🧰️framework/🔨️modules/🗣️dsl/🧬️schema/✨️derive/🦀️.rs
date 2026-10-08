@@ -180,11 +180,12 @@ enum FieldKind {
     /// coexist because each is dispatched by its own field key (always paired with `#[dsl(block)]`
     /// in practice, since an un-blocked one would hit that same one-per-record limit).
     OptionStatements(Box<Type>),
-    /// `#[dsl(statements)] Box<T>` (or bare `T`) — exactly one required tagged value (`layer:
+    /// 🏷️ `#[dsl(statements)] Box<T>` — exactly one required tagged value (`layer:
     /// Box<DrawLayerNode>` on an `AddLayer` operation), the non-optional counterpart of
     /// `OptionStatements`: same `Shape::Statements` reuse, but errors if the count isn't exactly 1
     /// rather than treating 0 as `None`.
     RequiredStatements(Box<Type>),
+    RequiredInlineStatements(Box<Type>),
     Bytes64,
     /// `#[dsl(table)] Vec<T>` (`T: DslRecord`) — Structure-of-Arrays columnar `Shape::Table`.
     /// `to_value`/`from_value` are identical to `VecList` (both produce `FieldValue::List(Vec<
@@ -283,6 +284,7 @@ fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
         }
         return (FieldKind::VecList(Box::new(inner.clone())), inner);
     }
+    if attrs.statements { return (FieldKind::RequiredInlineStatements(Box::new(ty.clone())), ty.clone()); }
     (FieldKind::Scalar, ty.clone())
 }
 //#endregion 🔖️TypeShape
@@ -595,6 +597,18 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     }
                 },
             ),
+            FieldKind::RequiredInlineStatements(inner) => (
+                quote! { ::semio_framework_dsl_record::Shape::Statements(<#inner as ::semio_framework_dsl_record::DslVariants>::variants()) },
+                quote! { ::semio_framework_dsl_record::FieldValue::Statements(vec![::semio_framework_dsl_record::DslVariants::to_named_record(&self.#ident)]) },
+                quote! {
+                    match value {
+                        ::semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => {
+                            <#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1)?
+                        }
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected exactly 1 tagged value, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
+                    }
+                },
+            ),
         };
 
         // `#[dsl(block)]` on a field whose own `FieldKind` doesn't already imply `{ }` wrapping
@@ -660,7 +674,7 @@ fn schema_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
             FieldKind::VecTuple(inner)=>quote!{::semio_framework_dsl_record::Shape::Tuple(::semio_framework_dsl_record::producer::boxed(<#inner as ::semio_framework_dsl_record::DslField>::shape_controlled(control)?,control)?,None)},
             FieldKind::VecTable(inner)=>quote!{::semio_framework_dsl_record::Shape::Table(<#inner>::__dsl_spec_producer())},
             FieldKind::MapField(inner)=>quote!{::semio_framework_dsl_record::Shape::Map(::semio_framework_dsl_record::producer::boxed(<#inner as ::semio_framework_dsl_record::DslField>::shape_controlled(control)?,control)?)},
-            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)=>quote!{::semio_framework_dsl_record::Shape::Statements(<#inner as ::semio_framework_dsl_record::DslVariants>::variants_controlled(control)?)},
+            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)|FieldKind::RequiredInlineStatements(inner)=>quote!{::semio_framework_dsl_record::Shape::Statements(<#inner as ::semio_framework_dsl_record::DslVariants>::variants_controlled(control)?)},
             FieldKind::VecBlockStatements(inner)=>quote!{::semio_framework_dsl_record::Shape::Block(::semio_framework_dsl_record::producer::boxed(::semio_framework_dsl_record::Shape::Statements(<#inner as ::semio_framework_dsl_record::DslVariants>::variants_controlled(control)?),control)?)},
         };
         let shape=if *block{quote!{::semio_framework_dsl_record::Shape::Block(::semio_framework_dsl_record::producer::boxed(#shape,control)? )}}else{shape};
@@ -685,6 +699,7 @@ fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
             FieldKind::VecBlockStatements(inner)=>{let expression=controlled_statements(inner,field_ty);quote!{match value{::semio_framework_dsl_record::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected Block"))}}},
             FieldKind::OptionStatements(inner)=>quote!{match value{::semio_framework_dsl_record::FieldValue::Absent=>None,::semio_framework_dsl_record::FieldValue::Statements(items) if items.is_empty()=>None,::semio_framework_dsl_record::FieldValue::Statements(items) if items.len()==1=>Some(control.scoped_stage(|control|<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?),_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected0or1 tagged values"))}},
             FieldKind::RequiredStatements(inner)=>quote!{match value{::semio_framework_dsl_record::FieldValue::Statements(items) if items.len()==1=>{control.charge(::std::mem::size_of::<#inner>())?;Box::new(control.scoped_stage(|control|<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?)},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected exactly1 tagged value"))}},
+            FieldKind::RequiredInlineStatements(inner)=>quote!{match value{::semio_framework_dsl_record::FieldValue::Statements(items) if items.len()==1=>{control.scoped_stage(|control|<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected exactly1 tagged value"))}},
         };
         let expression=if *block {quote!{match value{::semio_framework_dsl_record::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},::semio_framework_dsl_record::FieldValue::Absent=>{let value=&::semio_framework_dsl_record::FieldValue::Absent;#expression},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected Block"))}}}else{expression};
         let retire=retire_field_codegen(plan,quote!{value});
@@ -709,6 +724,7 @@ fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_macro2::Token
             FieldKind::VecBlockStatements(_)=>quote!{{control.charge(::std::mem::size_of::<::semio_framework_dsl_record::FieldValue>())?;::semio_framework_dsl_record::FieldValue::Block(Box::new(::semio_framework_dsl_record::native_encoding::project_statements(value,control)?))}},
             FieldKind::OptionStatements(_)=>quote!{match value{Some(value)=>::semio_framework_dsl_record::native_encoding::project_statements(::std::slice::from_ref(value),control)?,None=>::semio_framework_dsl_record::FieldValue::Statements(Vec::new())}},
             FieldKind::RequiredStatements(_)=>quote!{::semio_framework_dsl_record::native_encoding::project_statements(::std::slice::from_ref(value.as_ref()),control)?},
+            FieldKind::RequiredInlineStatements(_)=>quote!{::semio_framework_dsl_record::native_encoding::project_statements(::std::slice::from_ref(value),control)?},
         };
         let projection=if *block{quote!{match #projection{::semio_framework_dsl_record::FieldValue::Absent=>::semio_framework_dsl_record::FieldValue::Absent,value=>{let value=::semio_framework_dsl_record::__rt::DecodedFieldOwner::new(value,::semio_framework_dsl_record::native_encoding::retire_field);control.charge(::std::mem::size_of::<::semio_framework_dsl_record::FieldValue>())?;::semio_framework_dsl_record::FieldValue::Block(Box::new(value.take()))}}}}else{projection};
         quote!{let field=control.scoped_stage(|control|{control.begin_stage(0)?;let value=#source;Ok::<_,::semio_framework_value::ValueError>(#projection)}).map_err(|error|error.under(#key))?;record.insert(#id,field)?;control.step()?;}
@@ -727,6 +743,7 @@ fn retire_field_codegen(plan:&FieldPlan,value:proc_macro2::TokenStream)->proc_ma
         FieldKind::VecStatements(inner)|FieldKind::VecBlockStatements(inner)=>quote!{for value in #value{<#inner as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant(value);}},
         FieldKind::OptionStatements(inner)=>quote!{if let Some(value)=#value{<#inner as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant(value);}},
         FieldKind::RequiredStatements(inner)=>quote!{<#inner as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant(*#value);},
+        FieldKind::RequiredInlineStatements(inner)=>quote!{<#inner as ::semio_framework_dsl_record::DslVariants>::retire_decoded_variant(#value);},
     }
 }
 
@@ -761,6 +778,7 @@ fn retained_record_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::Toke
             FieldKind::VecBlockStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Block)}else if path[0]==0{let path=&path[1..];if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(value.len()))}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::OptionStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(usize::from(value.is_some())))}else if path[0]==0{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.as_ref().ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::RequiredStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(1))}else if path[0]==0{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.as_ref(),&path[1..])}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::RequiredInlineStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(1))}else if path[0]==0{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value,&path[1..])}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             _=>quote!{Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::UnsupportedOwner,"tagged source owner has no retained projection"))},
         };
         let projection=if *block{quote!{if path.is_empty(){match {#projection}?{::semio_framework_dsl_record::native_encoding::FieldProjectionView::Absent=>Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Absent),_=>Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Block)}}else if path[0]==0{let path=&path[1..];#projection}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}}else{projection};
@@ -782,6 +800,7 @@ fn retained_record_key_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::
             FieldKind::VecBlockStatements(inner)=>quote!{if path.first()==Some(&0){let path=&path[1..];if path.is_empty(){Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value.get(index).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?).0)}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..],index)}}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::OptionStatements(inner)=>quote!{let value=value.as_ref().ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?;if path.is_empty()&&index==0{Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value).0)}else if path.first()==Some(&0){<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value,&path[1..],index)}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::RequiredStatements(inner)=>quote!{if path.is_empty()&&index==0{Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value.as_ref()).0)}else if path.first()==Some(&0){<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value.as_ref(),&path[1..],index)}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::RequiredInlineStatements(inner)=>quote!{if path.is_empty()&&index==0{Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value).0)}else if path.first()==Some(&0){<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value,&path[1..],index)}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             _=>quote!{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())},
         };
         let projection=if *block{quote!{if path.first()==Some(&0){let path=&path[1..];#projection}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}}else{projection};
@@ -1191,6 +1210,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                     })
                 },
                 FieldKind::RequiredStatements(_) => quote! { ::semio_framework_dsl_record::FieldValue::Statements(vec![::semio_framework_dsl_record::DslVariants::to_named_record(#ident.as_ref())]) },
+                FieldKind::RequiredInlineStatements(_) => quote! { ::semio_framework_dsl_record::FieldValue::Statements(vec![::semio_framework_dsl_record::DslVariants::to_named_record(#ident)]) },
             };
             let to_value_expr = if *block {
                 quote! {
@@ -1265,7 +1285,7 @@ fn borrowed_record_codegen(fields:&Fields,owner:&syn::Ident)->Vec<proc_macro2::T
             FieldKind::Scalar|FieldKind::OptionScalar(_)=>refinement.unwrap_or_else(||quote!{<#elem_ty as ::semio_framework_dsl_record::BorrowedDslField>::SHAPE}),
             FieldKind::VecList(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::List(::semio_framework_dsl_record::borrowed_field_shape::<#inner>)}},
             FieldKind::VecTuple(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::Tuple(::semio_framework_dsl_record::borrowed_field_shape::<#inner>,None)}},
-            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::Statements(<#inner as ::semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS)}},
+            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)|FieldKind::RequiredInlineStatements(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::Statements(<#inner as ::semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS)}},
             FieldKind::VecBlockStatements(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::Block(||::semio_framework_dsl_record::BorrowedShape::Statements(<#inner as ::semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS))}},
             FieldKind::MapField(inner)=>{let inner=borrowed_owner_type(inner,owner);quote!{::semio_framework_dsl_record::BorrowedShape::Map(::semio_framework_dsl_record::borrowed_field_shape::<#inner>)}},
             FieldKind::Bytes64=>quote!{::semio_framework_dsl_record::BorrowedShape::Bytes64},

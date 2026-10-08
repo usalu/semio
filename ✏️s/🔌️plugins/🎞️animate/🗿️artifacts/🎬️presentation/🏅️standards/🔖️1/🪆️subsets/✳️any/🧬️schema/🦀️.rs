@@ -5,7 +5,7 @@ use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ presentation document artifact state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationArtifact {

@@ -33,5 +33,23 @@
         "neutral-kernel"
       ]
     }
-  ]
+  ],
+  "developmentClosure": {
+    "packages": [
+      { "name": "neutral-app", "dependencies": ["bridge"], "build-dependencies": ["builder"], "dev-dependencies": ["root-test"] },
+      { "name": "bridge", "dependencies": ["kernel"], "dev-dependencies": ["transitive-test"] },
+      { "name": "builder", "build-dependencies": ["kernel"], "dev-dependencies": ["transitive-test"] },
+      { "name": "root-test", "dependencies": ["kernel"], "dev-dependencies": ["transitive-test"] },
+      { "name": "transitive-test", "dependencies": ["orphan"] },
+      { "name": "orphan" },
+      { "name": "kernel" }
+    ],
+    "cases": [
+      { "roots": ["neutral-app"], "expected": ["bridge", "builder", "kernel", "neutral-app", "root-test"] },
+      { "roots": ["bridge"], "expected": ["bridge", "kernel", "orphan", "transitive-test"] },
+      { "roots": ["neutral-app", "bridge"], "expected": ["bridge", "builder", "kernel", "neutral-app", "orphan", "root-test", "transitive-test"] },
+      { "roots": ["kernel"], "expected": ["kernel"] },
+      { "roots": [], "expected": ["bridge", "builder", "kernel", "neutral-app", "orphan", "root-test", "transitive-test"] }
+    ]
+  }
 }

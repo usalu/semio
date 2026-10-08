@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "snapshot": "/fixture/snapshot",
+  "manifest": "/fixture/snapshot/crate/Cargo.toml",
+  "cases": [
+    {
+      "id": "absolute",
+      "body": "cargo:rerun-if-changed=/fixture/snapshot/icons\n",
+      "accepted": true,
+      "paths": [
+        "/fixture/snapshot/icons"
+      ]
+    },
+    {
+      "id": "relative",
+      "body": "cargo::rerun-if-changed=../icons\n",
+      "accepted": true,
+      "paths": [
+        "/fixture/snapshot/icons"
+      ]
+    },
+    {
+      "id": "duplicates",
+      "body": "cargo:rerun-if-changed=build.rs\ncargo:rerun-if-changed=build.rs\n",
+      "accepted": true,
+      "paths": [
+        "/fixture/snapshot/crate/build.rs"
+      ]
+    },
+    {
+      "id": "other-cargo",
+      "body": "cargo:rustc-cfg=feature\ncargo:rerun-if-env-changed=OWN_ENV\n",
+      "accepted": true,
+      "paths": []
+    },
+    {
+      "id": "outside-root",
+      "body": "cargo:rerun-if-changed=/foreign/icons\n",
+      "accepted": false,
+      "paths": null
+    },
+    {
+      "id": "relative-escape",
+      "body": "cargo:rerun-if-changed=../../foreign\n",
+      "accepted": false,
+      "paths": null
+    },
+    {
+      "id": "empty",
+      "body": "cargo:rerun-if-changed=\n",
+      "accepted": false,
+      "paths": null
+    },
+    {
+      "id": "nul",
+      "body": "cargo:rerun-if-changed=icons\u0000\n",
+      "accepted": false,
+      "paths": null
+    },
+    {
+      "id": "space",
+      "body": "cargo:rerun-if-changed=../icons with space\n",
+      "accepted": true,
+      "paths": [
+        "/fixture/snapshot/icons with space"
+      ]
+    }
+  ]
+}

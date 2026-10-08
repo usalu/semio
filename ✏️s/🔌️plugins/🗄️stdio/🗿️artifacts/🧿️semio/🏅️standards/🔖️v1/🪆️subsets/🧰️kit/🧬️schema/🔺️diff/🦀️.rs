@@ -76,7 +76,7 @@ impl SemioKitDiff {
 }
 
 impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
-    fn apply(&self, base: &SemioKitSnapshot) -> protocol::MutationApplyResult<SemioKitSnapshot> {
+    fn apply(&self, base: &SemioKitSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioKitSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.types {
             next.types = t.values.clone();

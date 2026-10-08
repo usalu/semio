@@ -2,7 +2,6 @@ syntax = "proto3";
 // 🧬️ SemioBrepMutation facet mirror — see the sibling 🦀️.rs for the real source of
 // truth. SMO's approved 13-verb brep vocabulary; `create-loop`/`delete-loop` deliberately absent.
 package semio.s_stdio_semio_brep.mutations;
-import "📸️set-snapshot/🛰️.proto";
 
 import "../📸️snapshot/🛰️.proto";
 
@@ -20,9 +19,6 @@ enum BrepMutationKind {
   REPLACE_CURVE = 10;
   REPLACE_SURFACE = 11;
   MOVE_VERTEX = 12;
-    SetSnapshot set_snapshot = 1;
-      SetSnapshot set_snapshot = 1;
-      SetSnapshot set_snapshot = 1;
   }
 
 // Flattening keeps fields usable across all 13 variants, so proto presence alone cannot express

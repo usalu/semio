@@ -9,11 +9,12 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
 import fc from "fast-check";
+import Ajv from "ajv";
 import { applyPatch, type Operation as Patch } from "fast-json-patch";
 
 //#region 🧮️Twin
 type Snapshot = { n: number | null };
-type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "restoreN"; n?: number | null };
+type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "assignN"; n?: number | null };
 type Level = "info" | "warning" | "error" | "fatal";
 type Replacement = DemoOperation | "withdrawn";
 type Target = { edit: number; op: number };
@@ -42,7 +43,7 @@ function diff(operation: DemoOperation, state: Snapshot): { patch: Patch[]; wors
       return state.n === null ? { patch: [], worst: "error" } : { patch: [{ op: "replace", path: "/n", value: saturate(state.n + operation.delta) }], worst: "info" };
     case "deleteN":
       return { patch: state.n === null ? [] : [{ op: "replace", path: "/n", value: null }], worst: null };
-    case "restoreN":
+    case "assignN":
       return { patch: [{ op: "replace", path: "/n", value: operation.n ?? null }], worst: null };
   }
 }
@@ -232,7 +233,7 @@ const operation: fc.Arbitrary<DemoOperation> = fc.oneof(
   fc.record({ operation: fc.constant("setN" as const), n: fc.integer({ min: -50, max: 50 }) }),
   fc.record({ operation: fc.constant("addN" as const), delta: fc.integer({ min: -5, max: 5 }) }),
   fc.constant({ operation: "deleteN" as const }),
-  fc.record({ operation: fc.constant("restoreN" as const), n: fc.integer({ min: -50, max: 50 }) }),
+  fc.record({ operation: fc.constant("assignN" as const), n: fc.integer({ min: -50, max: 50 }) }),
 );
 const budget = fc.option(fc.integer({ min: 1, max: 48 }), { nil: null });
 
@@ -265,3 +266,24 @@ test("🎲️ every corpus case adopts the same history under any budget", () =>
   );
 });
 //#endregion 🎲️Properties
+
+
+test("operation-capped replay counts folded mutations independently of structural checkpoints", () => {
+  const law = read("../../🧫️fixtures/📏️reprojection-operation-authority.json");
+  const validate = new Ajv().compile(read("../../🧫️fixtures/📏️reprojection-operation-authority.schema.json"));
+  expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
+  const operations: Patch[] = Array.from({length:law.mutationCount},(_, index)=>({op:"replace",path:"/n",value:(index+1)*law.delta}));
+  let state = {n:0};
+  let turns = 0;
+  for (let offset=0;offset<operations.length;offset+=law.operationCap) {
+    const before = state.n;
+    state = applyPatch(state, operations.slice(offset,offset+law.operationCap),true).newDocument;
+    expect(state.n-before).toBeLessThanOrEqual(law.operationCap*law.delta);
+    turns++;
+  }
+  expect(state.n).toBe(law.expected);
+  expect(turns+1).toBe(law.maximumTurns);
+  expect(law.zeroCapChangesProjection).toBe(false);
+  expect(law.structuralDeadlineChecksRequired).toBe(true);
+  console.log(`[DEBUG] Independent operation authority ${law.mutationCount} folded mutations cap=${law.operationCap} lifecycle turns<=${law.maximumTurns}`);
+});

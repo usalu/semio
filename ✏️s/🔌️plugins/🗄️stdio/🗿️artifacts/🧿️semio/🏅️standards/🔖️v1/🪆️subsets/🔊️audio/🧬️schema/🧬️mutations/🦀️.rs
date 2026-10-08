@@ -48,10 +48,6 @@ pub mod set_format;
 pub mod set_sample_rate;
 /// 📐️ Typed content mutation for `s.stdio.semio.audio`.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "💬set-tag-value/🦀️.rs"]
 pub mod set_tag_value;
 //#endregion 🔖️Leaves
@@ -60,8 +56,6 @@ pub mod set_tag_value;
 #[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAudioMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetSampleRate(set_sample_rate::SetSampleRate),
     SetFormat(set_format::SetFormat),
     InsertChannel(insert_channel::InsertChannel),
@@ -76,22 +70,21 @@ pub enum SemioAudioMutation {
 /// order — what the `🔊️mutate-semio-audio` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
-pub const KINDS: &[&str] = &["set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value", "patch-snapshot"];
+pub const KINDS: &[&str] = &["set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Out-of-range channel/tag indices are no-ops rather than
-/// panics — a stale index (e.g. from a concurrent edit) degrades gracefully.
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
-    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
+    <SemioAudioMutation as protocol::Mutation<SemioAudioSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Free-function face of [`SemioAudioMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
 /// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
-/// generated test host being the concrete case. Paired with [`apply_semio_audio_mutation`] it makes the
+/// generated test host being the concrete case. Paired with `diff_semio_*_mutation` it makes the
 /// undo law reachable without importing a trait the caller cannot name.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
@@ -104,67 +97,9 @@ pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioA
 
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SemioAudioMutation, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
-    protocol::MutationOutcome::new(match this {
-        SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
-        SemioAudioMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation>>::diff(patch, base),
-        SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate }) => SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() },
-        SemioAudioMutation::SetFormat(set_format::SetFormat { format }) => SemioAudioDiff { format: (*format != base.format).then_some(*format), ..Default::default() },
-        SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index, channel }) => {
-            SemioAudioDiff { channels: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.channels.len()), item: channel.clone() }], ..Default::default() }), ..Default::default() }
-        }
-        SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index }) => SemioAudioDiff { channels: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
-        SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index, samples }) => {
-            let d = SemioAudioChannelDiff { samples: Some(samples.clone()) };
-            SemioAudioDiff { channels: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
-        }
-        SemioAudioMutation::InsertTag(insert_tag::InsertTag { index, tag }) => {
-            SemioAudioDiff { tags: Some(IndexedTripleDiff { added: vec![IndexAdded { index: (*index).min(base.tags.len()), item: tag.clone() }], ..Default::default() }), ..Default::default() }
-        }
-        SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index }) => SemioAudioDiff { tags: Some(IndexedTripleDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
-        SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index, value }) => match base.tags.get(*index) {
-            Some(t) => SemioAudioDiff { tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }), ..Default::default() },
-            None => SemioAudioDiff::default(),
-        },
-    })
-}
 
-/// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for every
-/// variant, including the channel/tag-index ops. An index that no longer exists in `base` has
-/// nothing to restore, so those arms return the empty inverse rather than a sentinel no-op mutation
-/// — the convention this migration adopted once `NoMutation` stopped being an available payload.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioAudioMutation, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
-    Ok({
-    vec![match this {
-        SemioAudioMutation::SetSnapshot(_) => SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        SemioAudioMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation>>::inverse(patch, base)?),
-        SemioAudioMutation::SetSampleRate(_) => SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: base.sample_rate }),
-        SemioAudioMutation::SetFormat(_) => SemioAudioMutation::SetFormat(set_format::SetFormat { format: base.format }),
-        SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index, .. }) => SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: (*index).min(base.channels.len()) }),
-        SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index }) => match base.channels.get(*index) {
-            Some(c) => SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: *index, channel: c.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index, .. }) => match base.channels.get(*index) {
-            Some(c) => SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index: *index, samples: c.samples.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioAudioMutation::InsertTag(insert_tag::InsertTag { index, .. }) => SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index: (*index).min(base.tags.len()) }),
-        SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index }) => match base.tags.get(*index) {
-            Some(t) => SemioAudioMutation::InsertTag(insert_tag::InsertTag { index: *index, tag: t.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index, .. }) => match base.tags.get(*index) {
-            Some(t) => SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index: *index, value: t.value.clone() }),
-            None => return Ok(Vec::new()),
-        },
-    }]
 
-    })
-}
+
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -198,8 +133,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
         SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(1.0), channel(2.0), channel(3.0)], tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }], ..SemioAudioSnapshot::default() }
     }
     vec![
-        SemioAudioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioAudioSnapshot { sample_rate: 9_000, ..fixture() } }),
         SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 48_000 }),
         SemioAudioMutation::SetFormat(set_format::SetFormat { format: SemioAudioFormat::Float32 }),
         SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: 1, channel: channel(9.0) }),
@@ -217,15 +150,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
-
-//#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🎧️rerates/🦀️.rs"]
-mod set_snapshot_rerates_to_48_khz_and_rewrites_the_right_channel;
-//#endregion 🧪️FixtureCases
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

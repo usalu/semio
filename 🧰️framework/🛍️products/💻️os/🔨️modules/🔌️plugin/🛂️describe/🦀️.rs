@@ -184,7 +184,7 @@ async fn plugin_contributions<PA: crate::app::PluginApp>(runtime: &crate::plugin
 
 fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
     let value = semio_framework_value::ToValue::to_value(descriptor);
-    store::pack_rt::encode_wire_value(&value)
+    store::pack_rt::encode_wire_value(semio_framework::CanonicalDescriptorValue::new(value).value())
 }
 
 async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {

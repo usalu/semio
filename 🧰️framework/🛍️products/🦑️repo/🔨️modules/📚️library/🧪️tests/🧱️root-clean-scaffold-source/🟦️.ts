@@ -27,12 +27,10 @@ interface CleanScaffoldConsumer {
   readonly owners: readonly string[];
 }
 
-/** 🚀️ The single Nx target and the launch row generated from it. */
+/** 🛣️ The single Nx target and the package script mirroring it. */
 interface CleanScaffoldRoute {
   readonly target: string;
   readonly command: string;
-  readonly launchName: string;
-  readonly launchCommand: string;
 }
 
 /** 🗃️ The zero-touch artifact directory contract `repoTestArtifactEnvironment` implements. */
@@ -192,16 +190,11 @@ test("allocates a neutral caller-owned artifact environment and preserves explic
   for (const route of fixture.artifactEnvironment.routes) expect(text).toContain(`repoTestArtifactEnvironment(this.repoRoot, "${route}")`);
 });
 
-test("registers one Bun Nx and seed-derived launch route", () => {
+test("registers one Bun and Nx route", () => {
   const project: NxProjectManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson: NpmPackageManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const source = readFileSync(resolve(repoRoot, path), "utf8");
-    expect(source.split(fixture.route.launchName).length - 1).toBe(1);
-    expect(source).toContain(fixture.route.launchCommand);
-  }
 });
 
 

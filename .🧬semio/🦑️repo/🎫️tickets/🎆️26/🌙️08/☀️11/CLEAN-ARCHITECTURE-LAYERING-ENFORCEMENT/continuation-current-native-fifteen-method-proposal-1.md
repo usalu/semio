@@ -1,0 +1,5 @@
+# Fresh Fifteen Method Proposal
+
+Preserve all14 actual failures and successes. Fresh15/runtime19/dispatcher17 binds five proposed current receipts including the UI fixture, with28 unique paths pending Renderer6 actual proof. Original all3 routes/budgets/assertions unchanged. Source GUI900.226001–015; next Pub10 reserves227001–002/Guard7/UTF8 canonical join, Builder10 reserves228001–003. No15 laws/capture/compiler/native/application yet.
+
+Actual17 authority rebinding controls are copied before endpoint lookup optimization. Both Source15 and Dispatcher17 use the same per-path endpoint array index preserving exact duplicate-count semantics. Dispatcher17 actual41sourceguard controls now await the SAME asynchronous guard; full endpoint and runtime body hashes yield through cancellable hashFileV1, with64-row progress. Other source/membership/pair/authority semantics are conserved. Native JSON helper already owns actual before/mid cancellation controls for the same chunk hash primitive; no new cancellation success claimed before fresh methods run. Model-authority mapping itself remains synchronous full-body custody, distinct from long complete source-tree hashing.

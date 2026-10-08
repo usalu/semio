@@ -112,8 +112,10 @@ macro_rules! factory {
         impl MemberFactory for $name {
             const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &$rows;
             type Open = crate::os_store::UnsupportedMemberFactoryOpen<Self>;
-            fn begin_open(request: crate::os_store::MemberOpenRequest) -> Result<Self::Open, crate::os_store::MemberOpenAdmissionError> {
-                crate::os_store::UnsupportedMemberFactoryOpen::begin(request)
+            fn open_birth_bytes(request: &crate::os_store::MemberOpenRequest) -> Result<usize, crate::os_store::MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
+            fn member_frame_bytes(&self) -> usize { match *self {} }
+            fn begin_open(request: &mut Option<crate::os_store::MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, crate::os_store::MemberOpenDiagnostic> {
+                crate::os_store::UnsupportedMemberFactoryOpen::begin(request, grant)
             }
             async fn create(_: &str, _: &ArtifactDialect, _: &[u8], _: crate::os_spr::ActorId) -> Result<Self, VcsError> {
                 FACTORY_CALLS.set(FACTORY_CALLS.get() + 1);
@@ -193,23 +195,24 @@ fn input(fixture: &Value, dialect: &[String], history: &[u8]) -> VerifiedMemberH
     panic!("verification did not converge");
 }
 
-fn retire(owner: &mut dyn ErasedSnapshotRetirement, grant: usize) -> usize {
-    let mut retired = 0;
+use super::super::tests::RequestRetirementCensus;
+
+impl<M: MemberFactory> RequestRetirementCensus for MemberFactorySelection<M> {
+    fn request(&self) -> Option<&MemberOpenRequest> { self.input.as_ref().and_then(RequestRetirementCensus::request) }
+}
+impl<M: MemberFactory> RequestRetirementCensus for SelectedMemberHistoryInput<M> {
+    fn request(&self) -> Option<&MemberOpenRequest> { self.input.as_ref().and_then(RequestRetirementCensus::request) }
+}
+impl<M: MemberFactory> RequestRetirementCensus for SelectedMemberHistoryDictionary<M> {
+    fn request(&self) -> Option<&MemberOpenRequest> { self.owner.as_ref().and_then(RequestRetirementCensus::request) }
+}
+impl<M: MemberFactory> RequestRetirementCensus for SelectedVerifiedMemberHistory<M> {
+    fn request(&self) -> Option<&MemberOpenRequest> { self.input.as_ref().and_then(RequestRetirementCensus::request) }
+}
+
+fn retire(owner: &mut dyn RequestRetirementCensus, grant: usize) -> usize {
     assert!(matches!(owner.close_step(0, grant).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    for _ in 0..20000 {
-        match owner.close_step(1, grant).unwrap() {
-            SnapshotRetirementStep::Complete => {
-                assert!(owner.terminal_is_empty());
-                return retired;
-            }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= grant);
-                retired += released_bytes;
-            }
-            SnapshotRetirementStep::Blocked => panic!("private owner close cannot block"),
-        }
-    }
-    panic!("retirement did not converge");
+    super::super::tests::retire(owner, grant)
 }
 
 fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
@@ -265,7 +268,7 @@ fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
     };
     assert_eq!(error, expected_error(row), "{}", row["id"]);
     assert_eq!(selected, row["selected"]);
-    assert_eq!(retired, fixture["caseRetirement"][row["id"].as_str().unwrap()].as_u64().unwrap() as usize);
+    assert_eq!(retired, fixture["caseRetirement"][row["id"].as_str().unwrap()].as_u64().unwrap() as usize, "{}", row["id"]);
 }
 
 #[test]
@@ -299,7 +302,9 @@ fn member_factory_selection_uses_only_complete_closed_declarations() {
     }
     for row in fixture["declarations"].as_array().unwrap() {
         let mut complete = fixture.clone();
-        complete["caseRetirement"]["all-arm"] = serde_json::json!(fixture["inputBytes"].as_u64().unwrap() + 68 + row[2].as_str().unwrap().len() as u64);
+        let fields = fixture["requestIdentity"].as_array().unwrap();
+        let bytes = fields.iter().enumerate().map(|(index, field)| if (1..4).contains(&index) { row[index - 1].as_str().unwrap().len() } else { field.as_str().unwrap().len() }).sum::<usize>() + fixture["openedActor"].as_str().unwrap().len();
+        complete["caseRetirement"]["all-arm"] = serde_json::json!(fixture["inputBytes"].as_u64().unwrap() + bytes as u64);
         let row = serde_json::json!({ "id": "all-arm", "dialect": [row[0], row[1], row[2]], "selected": row, "error": null });
         run_case::<SemioFixture>(&complete, &row, 1);
     }
@@ -308,7 +313,9 @@ fn member_factory_selection_uses_only_complete_closed_declarations() {
     assert_eq!(generated, *fixture["generatedDeclarations"].as_array().unwrap());
     for row in fixture["generatedDeclarations"].as_array().unwrap() {
         let mut complete = fixture.clone();
-        complete["caseRetirement"]["generated-arm"] = serde_json::json!(fixture["inputBytes"].as_u64().unwrap() + 68 + row[2].as_str().unwrap().len() as u64);
+        let fields = fixture["requestIdentity"].as_array().unwrap();
+        let bytes = fields.iter().enumerate().map(|(index, field)| if (1..4).contains(&index) { row[index - 1].as_str().unwrap().len() } else { field.as_str().unwrap().len() }).sum::<usize>() + fixture["openedActor"].as_str().unwrap().len();
+        complete["caseRetirement"]["generated-arm"] = serde_json::json!(fixture["inputBytes"].as_u64().unwrap() + bytes as u64);
         let row = serde_json::json!({ "id": "generated-arm", "dialect": [row[0], row[1], row[2]], "selected": row, "error": null });
         run_case::<Generated>(&complete, &row, 1);
     }

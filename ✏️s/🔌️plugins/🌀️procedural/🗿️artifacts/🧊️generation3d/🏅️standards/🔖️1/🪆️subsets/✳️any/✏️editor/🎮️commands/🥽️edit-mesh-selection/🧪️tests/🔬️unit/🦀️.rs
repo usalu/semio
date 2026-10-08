@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_artifact_flow_flow::Widget;
 
 #[test]
 fn shared_mesh_selection_cases_emit_typed_absolute_inputs() {

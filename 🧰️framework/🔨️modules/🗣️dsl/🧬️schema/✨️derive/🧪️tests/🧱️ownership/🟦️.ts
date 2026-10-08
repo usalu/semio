@@ -13,7 +13,7 @@ test("language-neutral emission modes require explicit projection names and excl
   expect(new Set(fixture.ownedFronts).intersection(new Set(fixture.higherFronts)).size).toBe(0);
   const projection = fixture.cases.find(row => row.mode === "Projection")!;
   expect(Object.values(projection.names!)).toEqual([...projection.members]);
-  expect(projection.traits).toEqual([]);
+  expect(projection.traits).toEqual(["BorrowedDslRecord"]);
   expect(fixture.cases.find(row => row.mode === "Record")!.members).toContain("__dsl_from_record_controlled");
 });
 
@@ -32,4 +32,22 @@ test("every public compiler front uses the owned system token boundary", () => {
   const source = read("🦀️.rs");
   for (const name of ["derive_record", "derive_scalar", "derive_enum", "record_binding", "record_projection", "variant_binding"]) expect(source).toContain(`pub fn ${name}(input: TokenStream) -> TokenStream`);
   for (const spelling of ["::semio_framework_os_kernel", "::store::", "DslArtifact", "DslDiff", "DslOps", "pub use syn", "pub use quote"]) expect(source).not.toContain(spelling);
+});
+
+
+test("a required inline tagged owner has exactly one native variant without boxing", () => {
+  const fixture = JSON.parse(read("🧫️fixtures/🏷️required-inline/🔣️.json")) as {valid: unknown[]; invalid: unknown[]; fieldKinds: {type: string; role: string}[]};
+  const Ajv = require("ajv/dist/2020").default;
+  const schema = JSON.parse(read("🧫️fixtures/🏷️required-inline/🔣️schema.json"));
+  const validate = new Ajv({strict: true}).compile(schema);
+  for (const row of fixture.valid) {
+    expect(validate(row)).toBe(true);
+    expect(JSON.parse(JSON.stringify(row))).toEqual(row);
+  }
+  for (const row of fixture.invalid) expect(validate(row)).toBe(false);
+  console.log(`[DEBUG] required inline native variant agrees with independent Ajv2020: ${fixture.valid.length} valid and ${fixture.invalid.length} invalid`);
+  const source = read("🦀️.rs");
+  expect(source).toContain("RequiredInlineStatements(Box<Type>)");
+  expect(source).toContain("FieldKind::RequiredInlineStatements");
+  expect(fixture.fieldKinds.map(row => row.role)).toEqual(["RequiredInlineStatements", "RequiredStatements", "OptionStatements", "VecStatements"]);
 });

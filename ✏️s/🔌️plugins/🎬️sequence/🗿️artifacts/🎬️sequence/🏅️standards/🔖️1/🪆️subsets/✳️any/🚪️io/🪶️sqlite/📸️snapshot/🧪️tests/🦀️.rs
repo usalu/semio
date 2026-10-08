@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::sqlite::snapshot::SequenceSnapshot;
 
 #[test]
 fn sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer(){
- let expected=crate::standards::v1::subsets::any::io::sqlite::snapshot::default_persisted_snapshot();
+ let expected=crate::standards::v1::subsets::any::schema::snapshot::default_persisted_snapshot();
  assert_eq!(store::ArtifactDsl::print_dsl(&expected),include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"));
 }
 
@@ -29,7 +29,7 @@ fn sqlite_snapshot_sequence_complete_parent_and_empty_reference_fields_are_exact
  let expected=fixture();let d=database(&expected);assert_eq!(d.tables.len(),2);assert_eq!(restore(&import_sqlite_database(&file(&expected),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);
  let empty:SequenceSnapshot=semio_framework_pack_json::from_json_str(r#"{"schema":"","content":{"childId":"","target":{"artifactId":"","dialect":{"artifactKind":"","standard":"","subset":""}}}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(restore(&database(&empty)),empty);
- let materialized=crate::standards::v1::subsets::any::io::sqlite::snapshot::default_snapshot();let projected=database(&materialized);let restored=restore(&projected);assert_eq!(restored,materialized);assert!(restored.content.require_local_owner::<crate::SequenceWorkingScene>().is_err());neural_engine::ColdRetire::retire_cold(materialized);
+ let materialized=crate::default_snapshot();let projected=database(&materialized);let restored=restore(&projected);assert_eq!(restored,materialized);assert!(restored.content.require_local_owner::<crate::SequenceWorkingScene>().is_err());neural_engine::ColdRetire::retire_cold(materialized);
 }
 
 #[test]

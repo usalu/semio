@@ -69,7 +69,7 @@ fn an_applied_summary_is_only_the_header_leaves_it_changed() {
 }
 
 /// ⚖️ LAW (design §20.3): a document-details edit is the domain leaves it changed — `set-compression-params` for the window bits,
-/// `set-preset-dictionary` for the dictionary id, `set-payload` for the payload — never a whole `set-snapshot`, with no
+/// `set-preset-dictionary` for the dictionary id, `set-payload` for the payload, with no
 /// description; an unchanged value moves nothing.
 #[test]
 fn a_document_details_edit_is_only_the_domain_leaves_it_changed() {
@@ -84,17 +84,6 @@ fn a_document_details_edit_is_only_the_domain_leaves_it_changed() {
     assert!(edit("/windowBits", semio_framework_value::DslValue::uint(u64::from(base.window_bits))).artifact_mutations.is_empty(), "an unchanged value moves nothing");
     let payload = DeflateSnapshot { payload: b"hello".to_vec(), ..DeflateSnapshot::default() };
     assert_eq!(super::deflate_net_mutations(&base, &payload), vec![DeflateMutation::SetPayload(crate::schema::mutations::set_payload::SetPayload { payload: b"hello".to_vec() })], "a changed payload is ONE set-payload");
-}
-
-/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot` the details net leaves emit is another document schema; every field
-/// change is its own domain leaf.
-#[test]
-fn only_another_document_schema_is_a_whole_document_set_snapshot() {
-    let base = DeflateSnapshot::default();
-    let fields = DeflateSnapshot { window_bits: 5, dict_id: Some(7), payload: b"x".to_vec(), ..base.clone() };
-    assert!(super::deflate_net_mutations(&base, &fields).iter().all(|leaf| !matches!(leaf, DeflateMutation::SetSnapshot(_))) && super::deflate_net_mutations(&base, &fields).len() == 3);
-    let other = DeflateSnapshot { schema: "stdio.deflate.other-schema".into(), ..base.clone() };
-    assert!(matches!(super::deflate_net_mutations(&base, &other).as_slice(), [DeflateMutation::SetSnapshot(set)] if set.snapshot == other), "another document schema replaces the document");
 }
 
 #[test]

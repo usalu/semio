@@ -193,7 +193,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const empty: string[] = [];
       PLAY_RUNTIME_PANES.forEach((pane: any, index: number) => {
         const published = publishedExamples(index);
-        if (published.source !== "descriptor" || published.ids.length === 0 || pane.example !== undefined) return;
+        if (EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.includes(PLAY_RUNTIME_TARGETS[index].pluginId) || published.source !== "descriptor" || published.ids.length === 0 || pane.example !== undefined) return;
         empty.push(`${pane.variant}: would boot "${published.ids[0]}" by accident`);
       });
       expect(empty).toEqual([]);

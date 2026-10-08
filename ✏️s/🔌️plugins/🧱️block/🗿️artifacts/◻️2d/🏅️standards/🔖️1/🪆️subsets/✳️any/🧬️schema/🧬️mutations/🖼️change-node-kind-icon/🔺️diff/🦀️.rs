@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `ChangeNodeKindIcon`.
 
-use crate::BlockKindIdentity;
 use crate::Block2dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
@@ -9,6 +8,6 @@ pub fn diff(payload: &super::ChangeNodeKindIcon, base: &Block2dSnapshot) -> prot
     if payload.new_icon == base.node_kind.icon {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Node kind icon is unchanged.");
     }
-    protocol::MutationOutcome::new(Block2dDiff { node_kind: Some(BlockKindIdentity { icon: payload.new_icon.clone(), ..base.node_kind.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { node_kind: Some(semio_s_plugin_block::BlockKindIdentityPatch { icon: Some(semio_s_plugin_block::BlockOptionalText { value: payload.new_icon.clone() }), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

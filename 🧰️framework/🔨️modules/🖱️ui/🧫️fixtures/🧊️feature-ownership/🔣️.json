@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "targets": [
     {
       "name": "test",
@@ -23,7 +23,7 @@
       "laws": [
         {
           "name": "closing_input_reports_each_admitted_action_receipt_once",
-          "sha256": "d62f01aeea53feb246b3e33c0c5c7bf15dba6186325eb0cd21e7254292ffc5fa",
+          "sha256": "f853e0e61303c7847e557317d1153cec2dd3860fa2c015a8fb30290299c3fca0",
           "owner": "portable"
         },
         {
@@ -173,12 +173,12 @@
         },
         {
           "name": "an_enabled_shadow_pass_measures_every_caster_before_its_receivers",
-          "sha256": "b7f1d2c424706b9097d1d8b58d8305782cd2452a57e86e95c0077a6673b6d2e6",
+          "sha256": "1baf7aa76754ad05a032d912d30ad77a9e6a1267256dc6ec4bb44da2d1f757a7",
           "owner": "portable"
         },
         {
           "name": "a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry",
-          "sha256": "a644a52837a1c0d37199dacb77f61fb3d239905ac454d745fa15493ee7452fcc",
+          "sha256": "dabed9136ead496a739ad7a2116425b0b08b68aec287b4af2bb534de3f9e1cc1",
           "owner": "portable"
         },
         {
@@ -193,7 +193,7 @@
         },
         {
           "name": "a_disabled_shadow_never_publishes_a_gpu_shadow_scalar",
-          "sha256": "49b3b5e62aba499b4884dcbdb80ce4fd9e479703106fcfaadafb1253ce6182ec",
+          "sha256": "c8899499667b6802b0474e9b681301a465cc5455162963a2240939b70d3e0ea1",
           "owner": "portable"
         },
         {
@@ -350,35 +350,43 @@
       "helpers": [
         {
           "name": "prepared_process_guard",
-          "sha256": "ac4f4975327edc9be8954c55e3ffeeb37698a1cfe3b1f8a0721f7c29ebce3368"
+          "sha256": "ac4f4975327edc9be8954c55e3ffeeb37698a1cfe3b1f8a0721f7c29ebce3368",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "drain_abandoned_atlases",
-          "sha256": "98ec13b92e73a75cd372d0eef22eee57e55e5eedc34e0a471867934c5f2de49a"
+          "sha256": "98ec13b92e73a75cd372d0eef22eee57e55e5eedc34e0a471867934c5f2de49a",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "drain_abandoned_preparations",
-          "sha256": "15040c2386db024a064a217922d1a0ec65493c0ca72ad49dac4b71cc3485fc59"
+          "sha256": "15040c2386db024a064a217922d1a0ec65493c0ca72ad49dac4b71cc3485fc59",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "now_ms",
-          "sha256": "f4100e09d7c1b495f6ec07be98cb0fa670b8b9c9e455e70cef68a069f5e88237"
+          "sha256": "f4100e09d7c1b495f6ec07be98cb0fa670b8b9c9e455e70cef68a069f5e88237",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "drive_preparation_until_terminal",
-          "sha256": "e3a7b7d9b9964c73a8b03fba68df1b034b4e36abb98b216f9456ea65e7be862a"
+          "sha256": "e3a7b7d9b9964c73a8b03fba68df1b034b4e36abb98b216f9456ea65e7be862a",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "packet",
-          "sha256": "13468368309fbc9e2cfbf21a79250751250a8665580d9f15072c602866688156"
+          "sha256": "13468368309fbc9e2cfbf21a79250751250a8665580d9f15072c602866688156",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "retire_raster_upload",
-          "sha256": "8256e53f5fce6abed8db6d551f3bc464bf7abc6ea617afc0eeed6fce5d2ce58d"
+          "sha256": "8256e53f5fce6abed8db6d551f3bc464bf7abc6ea617afc0eeed6fce5d2ce58d",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         },
         {
           "name": "assert_send",
-          "sha256": "8564ab4d718e7590b57f84eb1f8af9ff35bc620a435ba9f97442be8cbabf84c4"
+          "sha256": "8564ab4d718e7590b57f84eb1f8af9ff35bc620a435ba9f97442be8cbabf84c4",
+          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
         }
       ],
       "productionSource": "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
@@ -393,7 +401,7 @@
       "laws": [
         {
           "name": "no_wgpu_target_paints_a_hand_written_colour_literal",
-          "sha256": "e51ca9be3e47f14c6b9d3e8e179b6017d2190d9b12a0025819ea833f25fabdda",
+          "sha256": "d0df0e535a75d33b0e094ebdd8e9482313ee46db7017566560375529abde5161",
           "owner": "portable"
         },
         {
@@ -445,35 +453,43 @@
       "helpers": [
         {
           "name": "repo_root",
-          "sha256": "0d28930e7a17a96eda1a43f3c74fab3fc61cc0d5ad8fcdb96c7a161e135bc341"
+          "sha256": "0d28930e7a17a96eda1a43f3c74fab3fc61cc0d5ad8fcdb96c7a161e135bc341",
+          "source": "🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"
         },
         {
           "name": "channels_are_hand_written",
-          "sha256": "4f117c46c715aadc69213331dc1e19becb9c1fa0c4e6c74c675e47f31e4b4d39"
+          "sha256": "4f117c46c715aadc69213331dc1e19becb9c1fa0c4e6c74c675e47f31e4b4d39",
+          "source": "🧪️testing/🎨️paint-policy/🦀️.rs"
         },
         {
           "name": "call_arguments",
-          "sha256": "63d9ce5198dfa64bd1eb561d6143309ec2ad1e5f10020308d3b808ca8caee38d"
+          "sha256": "63d9ce5198dfa64bd1eb561d6143309ec2ad1e5f10020308d3b808ca8caee38d",
+          "source": "🧪️testing/🎨️paint-policy/🦀️.rs"
         },
         {
           "name": "rust_sources",
-          "sha256": "3ccfe1c68f05296b1cfa01085417ac93d70f977939ae680e94e89dba9ac368d4"
+          "sha256": "3ccfe1c68f05296b1cfa01085417ac93d70f977939ae680e94e89dba9ac368d4",
+          "source": "🧪️testing/🎨️paint-policy/🦀️.rs"
         },
         {
           "name": "enclosing_item",
-          "sha256": "05e73781043607ace2c40822120933d271f187e27a0e5806d16bd800e25d428b"
+          "sha256": "05e73781043607ace2c40822120933d271f187e27a0e5806d16bd800e25d428b",
+          "source": "🧪️testing/🎨️paint-policy/🦀️.rs"
         },
         {
           "name": "is_allowlisted",
-          "sha256": "010ee7f22a4a039b69e3f74d60dc9eb46dc0a3ed9fb037710fe1b4c88e4ae0dc"
+          "sha256": "609a8db676a663901b8c916056e7e8e2062ec422040fdb5b6ccb39056c8417ef",
+          "source": "🧪️testing/🎨️paint-policy/🦀️.rs"
         },
         {
           "name": "generated_palette_hex",
-          "sha256": "166a51290284eae33cda55485ade97ecedac3ed9371e1544af0879a8c7e4d168"
+          "sha256": "166a51290284eae33cda55485ade97ecedac3ed9371e1544af0879a8c7e4d168",
+          "source": "🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"
         },
         {
           "name": "hex_of",
-          "sha256": "f5dc44e6898cafa4c220bf3a7b55df0531ca9a00f1bc93c8afa9192762bae9ac"
+          "sha256": "f5dc44e6898cafa4c220bf3a7b55df0531ca9a00f1bc93c8afa9192762bae9ac",
+          "source": "🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"
         }
       ],
       "productionSource": "🎯️targets/🧊️wgpu/🎨️theme/🦀️.rs",

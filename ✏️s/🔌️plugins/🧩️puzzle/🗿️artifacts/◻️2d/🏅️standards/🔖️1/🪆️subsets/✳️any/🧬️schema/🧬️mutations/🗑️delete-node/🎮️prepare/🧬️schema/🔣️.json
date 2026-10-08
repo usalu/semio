@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Puzzle Borrowed Node Deletion Cascade",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "control",
+    "journeys",
+    "cases",
+    "inverseOwnership"
+  ],
+  "properties": {
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "largePrefix",
+        "largeRepeats",
+        "advanceAllocation",
+        "closeAllocation"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 32
+        },
+        "largePrefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "largeRepeats": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "advanceAllocation": {
+          "const": 0
+        },
+        "closeAllocation": {
+          "const": 0
+        }
+      }
+    },
+    "journeys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "nodes",
+          "edges",
+          "target",
+          "node",
+          "severedEdges",
+          "afterNodes",
+          "afterEdges"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "handles"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "handles": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "source",
+                "target"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "node": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "severedEdges": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uniqueItems": true
+          },
+          "afterNodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "afterEdges": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "inverseOwnership": {
+      "const": {
+        "maximumItems": 1,
+        "maximumTurnBytes": 4096,
+        "changedOwner": "nativePagedInverse",
+        "unchangedOwner": "retainedOriginal",
+        "journeys": [
+          "missingNodeEmpty",
+          "originalNodeOrdinal",
+          "completeNestedNode",
+          "cascadeOriginalOrder",
+          "completeEdgeGeometry",
+          "optionalFlags",
+          "literalIdentifiers",
+          "zeroGrant",
+          "sourceSwap",
+          "cancelDuringNodeCopy",
+          "cancelDuringEdgeCopy",
+          "cancelDuringIdentifierCopy",
+          "cancelDuringOutputAdmission",
+          "takeOnce",
+          "controlledRetirement"
+        ]
+      }
+    }
+  }
+}

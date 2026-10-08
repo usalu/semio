@@ -1,0 +1,364 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "package.json",
+      "json": {
+        "name": "fixture",
+        "scripts": {
+          "nx": "bun bootstrap nx",
+          "dashboard": "bun nx run @fixture/dashboard:run",
+          "dashboard:start": "bun nx run @fixture/dashboard:daemon -- start",
+          "dev": "bun nx run workspace:dev",
+          "test:quiz": "bun nx run @fixture/quiz:test",
+          "test:quiz:e2e": "bun nx run @fixture/quiz:test-e2e",
+          "build:docs": "nx run-many -t build",
+          "lint": "eslint ."
+        }
+      }
+    },
+    {
+      "path": "nx.json",
+      "json": { "targetDefaults": { "dev": { "continuous": true } } }
+    },
+    {
+      "path": "📋️project.json",
+      "json": {
+        "name": "workspace",
+        "metadata": {
+          "semio": {
+            "taxonomy": "taxonomy.json",
+            "dashboard": {
+              "parameters": [
+                {
+                  "id": "cache",
+                  "kind": "choice",
+                  "appliesTo": { "verbs": ["build", "test", "clean"], "playground": false },
+                  "default": "use",
+                  "values": [
+                    { "id": "use" },
+                    { "id": "skip-local", "nxFlags": ["--skip-nx-cache"] },
+                    { "id": "skip-all", "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }
+                  ]
+                },
+                {
+                  "id": "test-level",
+                  "kind": "choice",
+                  "appliesTo": { "verbs": ["test"] },
+                  "values": [
+                    { "id": "quick", "env": { "SEMIO_TEST_LEVEL": "quick" } },
+                    { "id": "long", "env": { "SEMIO_TEST_LEVEL": "long" } }
+                  ]
+                },
+                { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "nxFlags": ["--excludeTaskDependencies"] },
+                {
+                  "id": "build-mode",
+                  "kind": "choice",
+                  "appliesTo": { "verbs": ["build", "test"] },
+                  "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "ship" }, "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }]
+                },
+                { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" },
+                { "id": "hub", "kind": "text", "appliesTo": { "playground": true }, "valueEnv": "S_HUB_URL" },
+                { "id": "data", "kind": "text", "appliesTo": { "playground": true }, "valueEnv": "S_DATA_DIR" },
+                { "id": "trace", "kind": "flag", "env": { "SEMIO_TRACE": "1" } }
+              ],
+              "tools": [
+                {
+                  "id": "inspector",
+                  "verb": "dev",
+                  "command": ["bun", "x", "inspector", "--listen", "{port}"],
+                  "cwd": "🧰️tools/inspector",
+                  "env": { "INSPECTOR_HOME": "{workspace}/🧰️tools", "INSPECTOR_URL": "http://127.0.0.1:{port}" },
+                  "continuous": true,
+                  "ready": { "port": 6274, "portEnv": "CLIENT_PORT", "path": "/?mode=dev" },
+                  "requires": ["hub:dev"]
+                },
+                {
+                  "id": "bun-test",
+                  "verb": "test",
+                  "command": ["bun", "nx", "exec", "--projects={project}", "--", "bun", "test"],
+                  "parameters": [
+                    { "id": "project", "kind": "text", "default": "workspace" },
+                    { "id": "file", "kind": "text", "required": true, "valuePositional": true },
+                    { "id": "bail", "kind": "flag", "args": ["--bail"], "env": { "BUN_TEST_BAIL": "{project}" } }
+                  ]
+                },
+                { "id": "format-notes", "command": ["prettier", "--write", "notes"] },
+                { "id": "viewer", "command": ["f3d"], "continuous": true }
+              ],
+              "compounds": [
+                {
+                  "id": "dev-shell-with-hub",
+                  "stop": "together",
+                  "members": [
+                    { "run": "hub:dev" },
+                    { "run": "playground:shell", "parameters": { "renderer": "react", "hub": "http://127.0.0.1:8787", "data": "{workspace}/.data/shell" } }
+                  ]
+                },
+                {
+                  "id": "users",
+                  "verb": "dev",
+                  "members": [
+                    { "run": "hub:dev", "parameters": { "backend": "postgres" } },
+                    { "run": "playground:shell", "parameters": { "user-slot": 1 } },
+                    { "run": "playground:shell", "parameters": { "user-slot": 2 } }
+                  ]
+                },
+                { "id": "quiz-with-tools", "members": [{ "run": "tool:workspace/inspector" }, { "run": "@fixture/quiz:dev" }] },
+                { "id": "release-checks", "members": [{ "run": "hub:build:production" }, { "run": "@fixture/quiz:test-e2e" }] }
+              ],
+              "groups": [
+                { "id": "artifact-tests", "target": "test", "projects": ["@fixture/artifact-*", "!@fixture/artifact-contract"] },
+                { "id": "all-builds", "target": "build", "projects": ["hub", "@fixture/quiz"] }
+              ]
+            }
+          }
+        },
+        "targets": {
+          "dev": { "executor": "nx:run-commands", "options": { "command": "bun script.ts dev" } },
+          "build": { "executor": "nx:run-commands" },
+          "test": { "executor": "nx:run-commands" },
+          "verify": {
+            "executor": "nx:run-commands",
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "parameters": [
+                    {
+                      "id": "rule",
+                      "kind": "choice",
+                      "required": true,
+                      "values": [
+                        { "id": "dependencies", "args": ["dependencies"] },
+                        { "id": "literal-external", "args": ["dependencies", "literal-external"] }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "report-usage": { "executor": "nx:run-commands" }
+        }
+      }
+    },
+    {
+      "path": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+      "json": {
+        "name": "hub",
+        "targets": {
+          "dev": {
+            "executor": "nx:run-commands",
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "ready": { "port": 8787, "portEnv": "OS_HUB_PORT", "path": "/admin" },
+                  "parameters": [
+                    {
+                      "id": "backend",
+                      "kind": "choice",
+                      "default": "sqlite",
+                      "values": [
+                        { "id": "sqlite", "env": { "OS_HUB_BACKEND": "sqlite" } },
+                        { "id": "postgres", "env": { "OS_HUB_BACKEND": "postgres", "OS_HUB_PORT": "8788" }, "args": ["--migrate"] }
+                      ]
+                    },
+                    { "id": "data", "kind": "text", "default": "{workspace}/.data/hub-{backend}", "valueEnv": "OS_HUB_DATA" }
+                  ]
+                }
+              }
+            }
+          },
+          "build": { "executor": "nx:run-commands", "configurations": { "production": {}, "staging": {} } },
+          "erase": {
+            "executor": "nx:run-commands",
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "verb": "clean",
+                  "parameters": [
+                    { "id": "handle", "kind": "text", "required": true, "valueFlag": "--handle" },
+                    { "id": "older-than", "kind": "text", "default": "7d", "valueFlag": "--older-than=" },
+                    { "id": "dry-run", "kind": "flag", "args": ["--dry-run"] }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "🎓️teaching/❓️quiz/📦️packages/🟦️typescript/📋️project.json",
+      "json": {
+        "name": "@fixture/quiz",
+        "targets": {
+          "dev": {
+            "executor": "nx:run-commands",
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "ready": { "portEnv": "listen" },
+                  "requires": ["hub:dev", "tool:workspace/inspector"],
+                  "parameters": [
+                    { "id": "listen", "kind": "text", "default": "6061", "valueEnv": "QUIZ_PORT" },
+                    { "id": "proctor", "kind": "flag", "default": true, "env": { "PROCTOR_URL": "http://127.0.0.1:{port}/proctor" } }
+                  ]
+                }
+              }
+            }
+          },
+          "test": { "executor": "nx:run-commands" },
+          "test-e2e": {
+            "executor": "nx:run-commands",
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "parameters": [
+                    {
+                      "id": "test-level",
+                      "kind": "choice",
+                      "default": "quick",
+                      "values": [{ "id": "quick", "args": ["quick"] }, { "id": "long", "args": ["long"] }]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "✏️s/🔌️plugins/📄️pdf/📦️packages/🦀️rust/📋️project.json",
+      "json": { "name": "@fixture/artifact-pdf", "targets": { "test": { "executor": "nx:run-commands" }, "watch-tests": { "executor": "nx:run-commands", "continuous": true } } }
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔊️wav/📦️packages/🦀️rust/Cargo.toml",
+      "text": "[package]\nname = \"artifact-wav\"\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust/Cargo.toml",
+      "text": "[package]\nname = \"artifact-contract\"\n"
+    },
+    {
+      "path": ".nx/workspace-data/project-graph.json",
+      "json": {
+        "version": "6.0",
+        "nodes": {
+          "workspace": {
+            "name": "workspace",
+            "type": "lib",
+            "data": {
+              "root": ".",
+              "targets": {
+                "dev": { "executor": "nx:run-commands", "continuous": true },
+                "build": { "executor": "nx:run-commands" },
+                "test": { "executor": "nx:run-commands" },
+                "verify": { "executor": "nx:run-commands" }
+              }
+            }
+          },
+          "hub": {
+            "name": "hub",
+            "type": "lib",
+            "data": {
+              "root": "🌎️hub/📦️packages/🟦️typescript",
+              "targets": {
+                "dev": { "executor": "nx:run-commands", "continuous": true },
+                "build": { "executor": "nx:run-commands", "configurations": { "production": {}, "staging": {} } },
+                "erase": { "executor": "nx:run-commands" },
+                "serve-docs": { "executor": "nx:run-commands", "continuous": true }
+              }
+            }
+          },
+          "@fixture/quiz": {
+            "name": "@fixture/quiz",
+            "type": "lib",
+            "data": {
+              "root": "🎓️teaching/❓️quiz/📦️packages/🟦️typescript",
+              "targets": {
+                "dev": { "executor": "nx:run-commands", "continuous": true },
+                "build": { "executor": "nx:run-commands" },
+                "test": { "executor": "nx:run-commands" },
+                "test:native": { "executor": "nx:run-commands" },
+                "materialize-dev": { "executor": "nx:run-commands" }
+              }
+            }
+          },
+          "@fixture/artifact-pdf": {
+            "name": "@fixture/artifact-pdf",
+            "type": "lib",
+            "data": { "root": "✏️s/🔌️plugins/📄️pdf/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" } } }
+          },
+          "@fixture/artifact-wav": {
+            "name": "@fixture/artifact-wav",
+            "type": "lib",
+            "data": { "root": "✏️s/🔌️plugins/🔊️wav/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" }, "check": { "executor": "nx:run-commands" } } }
+          },
+          "@fixture/artifact-contract": {
+            "name": "@fixture/artifact-contract",
+            "type": "lib",
+            "data": { "root": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" } } }
+          },
+          "@fixture/vanished": {
+            "name": "@fixture/vanished",
+            "type": "lib",
+            "data": { "root": "gone", "targets": { "build": { "executor": "nx:run-commands" } } }
+          }
+        },
+        "dependencies": {}
+      }
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json",
+      "json": [
+        {
+          "variant": "shell",
+          "pluginId": "space",
+          "cratePath": "hub/space",
+          "app": "s.space.shell@1/*#editor",
+          "aliases": [],
+          "ports": { "react": 6070, "wgpu": 6066 },
+          "userPorts": { "react": [6072, 6073], "wgpu": [6067, 6068] },
+          "examples": ["demo", "tower"],
+          "engines": [],
+          "assets": []
+        },
+        { "variant": "cad", "pluginId": "cad", "cratePath": "hub/cad", "aliases": [], "ports": { "react": 6020, "wgpu": 6120 }, "examples": [], "engines": [], "assets": [] }
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/OPEN-PROBE/🎫️ticket.json",
+      "json": { "title": "Open Probe", "emoji": "🔬️", "status": "open", "description": "A ticket with commands.", "goal": "🎯️dashboard" }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/OPEN-PROBE/🎮️commands.json",
+      "json": {
+        "tools": [
+          {
+            "id": "probe",
+            "verb": "test",
+            "command": ["bun", ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/OPEN-PROBE/probe.ts", "--mode={mode}"],
+            "parameters": [
+              { "id": "mode", "kind": "choice", "default": "fast", "values": [{ "id": "fast" }, { "id": "deep", "env": { "PROBE_DEPTH": "9" } }] }
+            ]
+          }
+        ],
+        "compounds": [{ "id": "probe-with-hub", "members": [{ "run": "hub:dev" }, { "run": "ticket:26/09/23/OPEN-PROBE/probe", "parameters": { "mode": "deep" } }] }]
+      }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/CLOSED-PROBE/🎫️ticket.json",
+      "json": { "title": "Closed Probe", "emoji": "🧪️", "status": "closed", "summary": "Superseded.", "goal": "🎯️dashboard" }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/CLOSED-PROBE/🎮️commands.json",
+      "json": { "tools": [{ "id": "stale", "command": ["bun", "stale.ts"] }] }
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎯️goals/dashboard/🎯️goal.json",
+      "json": { "title": "Dashboard", "description": "Goal for the dashboard.", "prompt": "Instructions.", "status": "open", "dates": { "due": "2026-12-31" }, "client": "claude-code", "llm": "claude-opus-5" }
+    }
+  ]
+}

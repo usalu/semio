@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeOutdoorAirSystemMinOaFlow` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, OutdoorAirSystemPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemMinOaFlow, base: &EnergyModel
     if existing.min_oa_flow_m3_s == payload.new_min_oa_flow_m3_s {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Outdoor air system {} already has that minimum outdoor air flow.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.outdoor_air_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.min_oa_flow_m3_s = payload.new_min_oa_flow_m3_s;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { outdoor_air_systems: Rows::modifying(OutdoorAirSystemPatch { min_oa_flow_m3_s: Some(payload.new_min_oa_flow_m3_s), ..OutdoorAirSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

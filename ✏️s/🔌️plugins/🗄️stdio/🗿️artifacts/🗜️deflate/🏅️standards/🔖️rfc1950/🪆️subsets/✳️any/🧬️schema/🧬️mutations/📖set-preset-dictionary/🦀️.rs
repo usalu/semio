@@ -22,14 +22,14 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDicti
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preset-dictionary", kind: "set-preset-dictionary", record: "SetPresetDictionary" };
 
     fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
-        agg_diff(&DeflateMutation::SetPresetDictionary(self.clone()), base)
+        let Self { dict_id } = self;
+        protocol::MutationOutcome::new( diff_set_preset_dictionary(*dict_id) )
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DeflateMutation::SetPresetDictionary(self.clone()), base)?
-    
-    })
-}
+        Ok({
+            vec![DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: base.dict_id })]
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set preset dictionary", "Voreingestelltes Wörterbuch setzen")
     }

@@ -1674,6 +1674,7 @@ fn prepare_generation3d_artifact(base: &Generation3dSnapshot, mutation: Generati
     Ok((post, inverse, mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation3dArtifactStorePreparationFactory;
 
 struct Generation3dArtifactStorePreparation {
@@ -1807,6 +1808,7 @@ fn prepare_generation3d_config(base: &Generation3dConfig, mutation: Generation3d
     Ok((post, inverse, mutation))
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation3dConfigPreparationFactory;
 
 struct Generation3dConfigPreparation {

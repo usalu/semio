@@ -5,7 +5,6 @@ syntax = "proto3";
 // Renumbered clean from 0 -- the pre-rewrite vocabulary this replaced never matched the Rust
 // enum, so there is no wire compatibility to preserve. Nested/structural payload fields whose
 // types belong to the sibling snapshot package (`DrawLayer`/`DrawNode`/`PathSegment`/
-import "📸️set-snapshot/🛰️.proto";
 // `SemioPoint2`/`Quaternion`/`Point3`/`Transform`/`Rgba`) are carried as opaque `bytes ..._wire`
 // (JSON-encoded, per this facet's own `../📸️snapshot`/`🔺️diff` convention) rather than a
 // cross-package message reference -- `NodePath` is the one exception, declared locally since this
@@ -15,9 +14,6 @@ package semio.s_stdio_semio_drawing.mutation;
 message NodePath {
   uint32 layer = 1;
   repeated uint32 path = 2;
-    SetSnapshot set_snapshot = 1;
-      SetSnapshot set_snapshot = 1;
-      SetSnapshot set_snapshot = 1;
   }
 
 enum SemioDrawingMutationTag {

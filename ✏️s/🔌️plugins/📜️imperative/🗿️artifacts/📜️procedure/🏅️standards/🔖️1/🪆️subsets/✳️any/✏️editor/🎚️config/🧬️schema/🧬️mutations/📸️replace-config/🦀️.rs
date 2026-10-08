@@ -13,11 +13,14 @@ pub struct ReplaceConfig {
 
 impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
-    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
+    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfigDiff> {
         if *base == self.config {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "The requested configuration value is already current.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The requested configuration value is already current.");
         }
-        protocol::MutationOutcome::new(self.config.clone())
+        protocol::MutationOutcome::new(ImperativeConfigDiff {
+            run_output_json: (base.run_output_json != self.config.run_output_json).then(|| self.config.run_output_json.clone()),
+            contributions_json: (base.contributions_json != self.config.contributions_json).then(|| self.config.contributions_json.clone()),
+        })
     }
     fn inverse(&self, base: &ImperativeConfig) -> Result<Vec<ImperativeConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -30,5 +33,17 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for Repl
     }
     fn target(&self) -> Vec<String> {
         vec!["config".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[test]
+    fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = ImperativeConfig::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: ImperativeConfig { run_output_json: "{}".into(), contributions_json: "[2]".into() } }), &base);
     }
 }

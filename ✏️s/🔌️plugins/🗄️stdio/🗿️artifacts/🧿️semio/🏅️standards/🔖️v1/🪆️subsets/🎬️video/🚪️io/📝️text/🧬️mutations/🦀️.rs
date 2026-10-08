@@ -62,8 +62,6 @@ pub(crate) fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, St
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
     match m {
-        SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
-        SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => format!("insert-stream index={} stream={}", index, enc_stream(stream)),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => format!("remove-stream index={index}"),
         SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => {
@@ -78,17 +76,12 @@ pub(crate) fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioVideoMutation::PatchSnapshot(crate::standards::v1::subsets::video::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio video mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio video mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     match keyword {
-        "set-snapshot" => Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_video_snapshot(arg("snapshot")?)? })),
         "insert-stream" => Ok(SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: usize_arg("index")?, stream: dec_stream(arg("stream")?)? })),
         "remove-stream" => Ok(SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: usize_arg("index")? })),
         "set-stream-meta" => Ok(SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta {

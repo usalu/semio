@@ -35,6 +35,6 @@ fn existing_children_diff_stays_identity() {
     let base = ChildrenTestSnapshot;
     let mut diff = ChildrenTestDiff {};
     diff.absorb(ChildrenTestDiff {});
-    assert_eq!(diff.apply(&base).expect("identity"), base);
+    assert_eq!(protocol::apply_diff(&diff, &base).expect("identity"), base);
 }
 //#endregion 🧪️EmptyChildrenMutationTests

@@ -81,7 +81,7 @@ impl ArtifactViewer for Process3dViewer {
     }
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `Process3dViewCommand::Noop` variant never carries a

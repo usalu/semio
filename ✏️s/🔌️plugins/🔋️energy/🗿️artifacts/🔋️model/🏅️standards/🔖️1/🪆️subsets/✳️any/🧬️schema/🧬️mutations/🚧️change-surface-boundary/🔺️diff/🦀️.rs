@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSurfaceBoundaryCondition` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SurfacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,10 +18,6 @@ pub fn diff(payload: &super::ChangeSurfaceBoundaryCondition, base: &EnergyModelS
     if existing.outside_boundary_condition == boundary {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Surface {} already has this boundary condition.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {
-        item.outside_boundary_condition = boundary;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { surfaces: Rows::modifying(SurfacePatch { outside_boundary_condition: Some(boundary), ..SurfacePatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

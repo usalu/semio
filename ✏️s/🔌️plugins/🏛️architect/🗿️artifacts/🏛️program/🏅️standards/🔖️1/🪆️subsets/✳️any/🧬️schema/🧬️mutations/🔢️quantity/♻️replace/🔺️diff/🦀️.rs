@@ -2,19 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔢quantities` per Wave C.
 
 use super::ReplaceQuantityRequirement;
-use crate::diff::{ProgramQuantitiesDelta, ProgramQuantitiesPatchEntry};
+use crate::diff::ProgramQuantitiesDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
-use protocol::Patchable;
 
-/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceQuantityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let Some(existing) = base.quantities.iter().find(|row| row.header.id == payload.quantity_requirement.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No quantity requirement exists with this id.", [payload.quantity_requirement.header.id.0.clone()]);
+    let id = &payload.quantity_requirement.header.id;
+    let Some(position) = base.quantities.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No quantity requirement exists with this id.", [id.0.clone()]);
     };
-    if existing == &payload.quantity_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This quantity requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+    if base.quantities[position] == payload.quantity_requirement {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This quantity requirement already matches the requested value.").at([id.0.clone()])]);
     }
-    let patch = existing.diff_patch(&payload.quantity_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { quantities: Some(ProgramQuantitiesDelta { patched: vec![ProgramQuantitiesPatchEntry { id: payload.quantity_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    let reordered = (position + 1 != base.quantities.len()).then(|| base.quantities.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { quantities: Some(ProgramQuantitiesDelta { removed: vec![id.0.clone()], added: vec![payload.quantity_requirement.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

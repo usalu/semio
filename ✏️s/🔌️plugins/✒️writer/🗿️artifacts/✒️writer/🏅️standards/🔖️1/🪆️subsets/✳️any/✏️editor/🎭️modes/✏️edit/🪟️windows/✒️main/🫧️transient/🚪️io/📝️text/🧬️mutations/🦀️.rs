@@ -5,9 +5,9 @@ mod mutations_codec {
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::component::transient::mutations::*;
 use crate::editor::writer::modes::edit::windows::main::component::transient::WriterMainWindowTransient;
-use set_editor_selection::SetEditorSelection;
-use set_lint_generation::SetLintGeneration;
-use set_engagement_input::SetEngagementInput;
+use crate::editor::writer::modes::edit::windows::main::transient::SetEditorSelection;
+use crate::editor::writer::modes::edit::windows::main::transient::SetLintGeneration;
+use crate::editor::writer::modes::edit::windows::main::transient::SetEngagementInput;
 
 impl protocol::OpText for WriterMainWindowTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -36,9 +36,9 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::component::transient::mutations::*;
 use crate::editor::writer::modes::edit::windows::main::component::transient::WriterMainWindowTransient;
-use set_editor_selection::SetEditorSelection;
-use set_lint_generation::SetLintGeneration;
-use set_engagement_input::SetEngagementInput;
+use crate::editor::writer::modes::edit::windows::main::transient::SetEditorSelection;
+use crate::editor::writer::modes::edit::windows::main::transient::SetLintGeneration;
+use crate::editor::writer::modes::edit::windows::main::transient::SetEngagementInput;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `WriterMainWindowTransient`.

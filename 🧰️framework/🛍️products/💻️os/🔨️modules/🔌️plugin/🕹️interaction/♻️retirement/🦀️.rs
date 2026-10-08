@@ -127,9 +127,12 @@ impl Drop for InteractionRetirement {
 //#endregion 📦️OwnedFrontier
 
 //#region 🏪️StoreOwners
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(crate) struct InteractionRetirementFactory;
 
 impl SnapshotRetirementFactory<InteractionState> for InteractionRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<InteractionState>) -> usize { std::mem::size_of::<InteractionRetirement>() }
+
     fn retire(&self, root: Arc<InteractionState>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(InteractionRetirement::shared(root))
     }

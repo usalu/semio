@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateThermalEnclosure` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ThermalEnclosurePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +15,6 @@ pub fn diff(payload: &super::CreateThermalEnclosure, base: &EnergyModelSnapshot)
     if let Some(missing) = payload.zone_ids.iter().find(|candidate| !base.model.zones.iter().any(|row| row.id == **candidate)) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", missing.0), [missing.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.thermal_enclosures.insert(payload.index as usize, crate::model::ThermalEnclosure { id: payload.id, name: payload.name.clone(), zone_ids: payload.zone_ids.clone() });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermal_enclosures: Rows::inserting(payload.index as usize, crate::model::ThermalEnclosure { id: payload.id, name: payload.name.clone(), zone_ids: payload.zone_ids.clone() }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

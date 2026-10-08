@@ -9,11 +9,7 @@
     "target": "test-readme-current-source-revision",
     "command": "bun ./📜️script.ts test readme-current-source-revision",
     "route": "readme-current-source-revision",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts",
-    "launchName": "🧹clean🧩️taxonomy🔖️readme-current-source-revision",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-current-source-revision --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.195
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts"
   },
   "revisionId": "testing-readme-protocol-v2-reviewed",
   "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/⚖️readme-license-owner-authority/🔣️.json",

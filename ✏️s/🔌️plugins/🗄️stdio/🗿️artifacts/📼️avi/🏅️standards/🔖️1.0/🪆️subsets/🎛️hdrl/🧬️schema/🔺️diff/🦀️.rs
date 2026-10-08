@@ -358,7 +358,7 @@ fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
 }
 
 impl MutationDiff<AviSnapshot> for AviDiff {
-    fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
+    fn apply(&self, base: &AviSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<AviSnapshot> {
         if let Some(diff) = &self.streams {
             validate_indexed(&base.streams, diff, validate_stream_diff)?;
         }

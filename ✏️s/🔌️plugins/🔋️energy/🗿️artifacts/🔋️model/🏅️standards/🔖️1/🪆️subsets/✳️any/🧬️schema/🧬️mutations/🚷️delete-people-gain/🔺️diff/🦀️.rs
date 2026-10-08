@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeletePeopleGain` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PeopleGainPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -10,8 +10,6 @@ pub fn diff(payload: &super::DeletePeopleGain, base: &EnergyModelSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("People Gain {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     let _ = existing;
-    let mut model = base.model.clone();
-    model.people.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { people: Rows::removing(&base.model.people, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

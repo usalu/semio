@@ -1,0 +1,27 @@
+{
+  "copyBytes": 64,
+  "cases": [
+    {
+      "operation": 91001,
+      "generation": 1,
+      "turns": 1
+    },
+    {
+      "operation": 91002,
+      "generation": 7,
+      "turns": 65
+    },
+    {
+      "operation": 91003,
+      "generation": 99,
+      "turns": 257
+    }
+  ],
+  "expected": {
+    "turnBirthBytes": 0,
+    "turnReleaseBytes": 0,
+    "unfundedBirthBytes": 0,
+    "unfundedReleaseBytes": 0,
+    "externalAliasBlocks": true
+  }
+}

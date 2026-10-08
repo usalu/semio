@@ -1,0 +1,5 @@
+# Retained Cold Terminal Physical Release
+
+Canonical Value99271 reached native runtime:3pass1fail/169 outside, summary0.041s/Nx1/11.2s. Exact48-byte cold terminal Box freed48 bytes on a47-byte grant in all three original ASCII/Unicode/empty cases. The owner was lost; this is allocator evidence, not source inference. Repair admits the whole terminal frame before taking it and separates the nested body terminal witness from outer physical release. Current4919 passed4/4/169 outside, summary0.051s/Nx0, preserving original ordered-map lookup/insert/cancel/directory laws, original7-byte payload quantum,65536 admission,70 entries/17 growth cases. The source test helper now queries the already active physical frame within its original65536 budget.
+
+The subsequent full173-test native run27101 finished168pass/5fail with no stalls. Five older cold retirement fixture laws conflate logical processing with whole physical frames/backing and still require explicit repair. No full Value GREEN is claimed. Original fixture assertions/deadlines have not been widened.

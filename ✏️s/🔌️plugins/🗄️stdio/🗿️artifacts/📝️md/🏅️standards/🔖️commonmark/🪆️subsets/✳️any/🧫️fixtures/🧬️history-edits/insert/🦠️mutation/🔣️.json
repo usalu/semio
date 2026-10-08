@@ -1,0 +1,71 @@
+{
+  "mutation": {
+    "mutation": "insertBlock",
+    "path": [],
+    "index": 1,
+    "block": {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Middle."
+        }
+      ]
+    }
+  },
+  "before": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "One."
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "One."
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Middle."
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Two."
+          }
+        ]
+      }
+    ]
+  }
+}

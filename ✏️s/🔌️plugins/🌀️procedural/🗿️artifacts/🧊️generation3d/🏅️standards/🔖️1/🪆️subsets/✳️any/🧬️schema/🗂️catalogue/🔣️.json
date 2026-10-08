@@ -1,0 +1,445 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/catalogue.json",
+  "title": "Generation3dCatalogueCategory",
+  "description": "One category file of the generation3d geometry widget catalogue: the category and every widget kind it owns. The catalogue is the single source for the palette, inspector controls, history labels, accessible names and validation of geometry widgets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "kinds"
+  ],
+  "properties": {
+    "category": {
+      "$ref": "#/definitions/Category"
+    },
+    "kinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Kind"
+      }
+    }
+  },
+  "definitions": {
+    "LocalizedText": {
+      "description": "A user-facing string in every supported language: English first, German second.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emoji",
+        "order",
+        "label",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(brep|mesh|math|analysis)\\.[a-z]+$"
+        },
+        "emoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/definitions/LocalizedText"
+        }
+      }
+    },
+    "Quality": {
+      "description": "The fidelity of a kind: the kernel's OpQuality for B-Rep kinds, the mesh fidelity for mesh kinds.",
+      "enum": [
+        "exact-analytic",
+        "exact-numerical",
+        "approximate",
+        "mesh-derived-brep",
+        "polygon-mesh",
+        "tessellated-mesh"
+      ]
+    },
+    "PortType": {
+      "enum": [
+        "number",
+        "integer",
+        "angle",
+        "length",
+        "boolean",
+        "text",
+        "enum",
+        "vector",
+        "point",
+        "plane",
+        "shape",
+        "shapes",
+        "mesh",
+        "selection",
+        "any"
+      ]
+    },
+    "ShapeKind": {
+      "enum": [
+        "solid",
+        "shell",
+        "face",
+        "wire",
+        "edge",
+        "curve",
+        "surface",
+        "vertex",
+        "compound"
+      ]
+    },
+    "Selection": {
+      "description": "A selection of sub-elements of the shape or mesh on the named source port. Component mode takes the element type from the enum port named by modeFrom.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "source",
+        "multiple"
+      ],
+      "properties": {
+        "component": {
+          "enum": [
+            "face",
+            "edge",
+            "vertex",
+            "mode"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "multiple": {
+          "type": "boolean"
+        },
+        "modeFrom": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        }
+      }
+    },
+    "EnumOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "label"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedText"
+        }
+      }
+    },
+    "Port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "label",
+        "description",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "type": {
+          "$ref": "#/definitions/PortType"
+        },
+        "shapeKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/ShapeKind"
+          }
+        },
+        "selection": {
+          "$ref": "#/definitions/Selection"
+        },
+        "list": {
+          "type": "boolean"
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "default": {},
+        "min": {
+          "type": "number"
+        },
+        "exclusiveMin": {
+          "type": "boolean"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/definitions/EnumOption"
+          }
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "selection"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "selection"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "selection"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "enum"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "options"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "options"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "shape",
+                  "shapes"
+                ]
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "shapeKinds"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Pick": {
+      "description": "A picked component seeds a port: a selection port of the same component, a shape port that accepts it, or the mesh port.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "port"
+      ],
+      "properties": {
+        "component": {
+          "enum": [
+            "shape",
+            "mesh",
+            "face",
+            "edge",
+            "vertex"
+          ]
+        },
+        "port": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        }
+      }
+    },
+    "Gumball": {
+      "description": "A gumball motion drives a port: translate a vector, point or plane port (or a scalar port along the picked normal), rotate an angle port about an axis port, scale a factor port about an origin port.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "motion",
+        "port"
+      ],
+      "properties": {
+        "motion": {
+          "enum": [
+            "translate",
+            "rotate",
+            "scale"
+          ]
+        },
+        "port": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "axisPort": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "originPort": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "along": {
+          "enum": [
+            "normal"
+          ]
+        }
+      }
+    },
+    "Interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "pick": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Pick"
+          }
+        },
+        "gumball": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Gumball"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "emoji",
+        "label",
+        "description",
+        "inputs",
+        "outputs",
+        "quality",
+        "preview"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(?:(?:brep|mesh)\\.[a-z]+\\.[a-z][A-Za-z0-9]*|(?:math|analysis)\\.[a-z][A-Za-z0-9]*)$"
+        },
+        "category": {
+          "type": "string",
+          "pattern": "^(brep|mesh|math|analysis)\\.[a-z]+$"
+        },
+        "emoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "description": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Port"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Port"
+          }
+        },
+        "quality": {
+          "$ref": "#/definitions/Quality"
+        },
+        "interaction": {
+          "$ref": "#/definitions/Interaction"
+        },
+        "preview": {
+          "description": "Whether a new widget of this kind shows its geometry in the viewport by default.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

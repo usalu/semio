@@ -1771,11 +1771,11 @@ fn sample_widget(id: &str) -> Widget {
 }
 
 fn round_trip(host_snapshot: &FlowHostSnapshot, operation: &FlowMutation) -> FlowHostSnapshot {
-    let forward = operation.diff(host_snapshot).diff().apply(host_snapshot).expect("valid flow diff");
+    let forward = crate::os_spr::apply_diff(operation.diff(host_snapshot).diff(), host_snapshot).expect("valid flow diff");
     let inverse = operation.inverse(host_snapshot).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in inverse.iter().rev() {
-        let next = back.diff(&restored).diff().apply(&restored).expect("valid inverse flow diff");
+        let next = crate::os_spr::apply_diff(back.diff(&restored).diff(), &restored).expect("valid inverse flow diff");
         restored.retire_cold();
         restored = next;
     }
@@ -1819,7 +1819,7 @@ fn flow_fixture_ops_diffs_widgets_synapses_layout() {
     after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
     let operations = flow_host_snapshot_operations(&before, &after).expect("wire-representable flow fixture");
     let materialized = operations.iter().fold(before.clone(), |acc, operation| {
-        let next = operation.diff(&acc).diff().apply(&acc).expect("valid flow replay diff");
+        let next = crate::os_spr::apply_diff(operation.diff(&acc).diff(), &acc).expect("valid flow replay diff");
         acc.retire_cold();
         next
     });
@@ -1834,7 +1834,7 @@ fn flow_fixture_ops_diffs_widgets_synapses_layout() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_layout_drag_produces_one_edit() {
-    let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.expect("valid flow store fixture");
+    let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs no owner catalog, and every mutating command is refused
     // without one — the refusal drops the replayed projection on its error path, so the law reports
     // `ordered-map root must be explicitly retired before drop` instead of the validation that caused it

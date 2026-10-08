@@ -323,6 +323,29 @@
         "group": "precondition",
         "order": 150
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Insertion index",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Final edge position. Empty appends; positions past the end append.",
+          "de": "Endposition der Kante. Leer fügt am Ende ein; Positionen hinter dem Ende ebenfalls."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "ordering",
+        "order": 160
+      }
     }
   }
 }

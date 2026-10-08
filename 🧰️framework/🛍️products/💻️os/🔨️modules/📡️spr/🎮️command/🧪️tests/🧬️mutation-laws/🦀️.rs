@@ -10,8 +10,26 @@ pub struct CounterDiff {
     pub deltas: Vec<i64>,
 }
 
+impl CounterDiff {
+    fn from_wide(mut delta: i128) -> Self {
+        let mut deltas = Vec::new();
+        while delta != 0 {
+            let step = delta.clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64;
+            deltas.push(step);
+            delta -= i128::from(step);
+        }
+        Self { deltas }
+    }
+}
+
+impl crate::os_spr::DiffAlgebra<Counter> for CounterDiff {
+    fn inverse(&self, _base: &Counter) -> Self { Self { deltas: self.deltas.iter().rev().flat_map(|delta| Self::from_wide(-i128::from(*delta)).deltas).collect() } }
+    fn between(base: &Counter, other: &Counter) -> Self { Self::from_wide(i128::from(*other) - i128::from(*base)) }
+    fn is_empty(&self) -> bool { self.deltas.iter().all(|delta| *delta == 0) }
+}
+
 impl MutationDiff<Counter> for CounterDiff {
-    fn apply(&self, base: &Counter) -> MutationApplyResult<Counter> {
+    fn apply(&self, base: &Counter, _capability: crate::os_spr::ApplyCapability) -> MutationApplyResult<Counter> {
         self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
     }
     fn absorb(&mut self, other: Self) {
@@ -65,6 +83,22 @@ mod tests {
     ];
 
     #[test]
+    fn counter_fixture_current_algebra_matches_neutral_i64_extents() {
+        use crate::os_spr::DiffAlgebra;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️testing/🧬️mutation-laws/🔣️.json")).unwrap();
+        for row in fixture["between"].as_array().unwrap() {
+            let base = row["base"].as_str().unwrap().parse::<i64>().unwrap();
+            let other = row["other"].as_str().unwrap().parse::<i64>().unwrap();
+            let delta = CounterDiff::between(&base, &other);
+            assert_eq!(crate::os_spr::apply_diff(&delta, &base), Ok(other));
+            assert_eq!(crate::os_spr::apply_diff(&delta.inverse(&base), &other), Ok(base));
+            assert_eq!(delta.is_empty(), base == other);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&delta)).unwrap(), serde_json::to_value(&delta).unwrap());
+        }
+        println!("[DEBUG] canonical counter fixture algebra covers neutral i64 MIN/MAX/equal/extents with original checked sequential apply and independent serde wire");
+    }
+
+    #[test]
     fn counter_fixture_codecs_and_descriptors() {
         assert_eq!(<CounterMutation as Mutation<Counter>>::DESCRIPTORS.len(), 5);
         let cases = cases();
@@ -81,10 +115,10 @@ mod tests {
             assert_eq!(CounterMutation::decode_op(&op.encode_op().unwrap()).unwrap(), op);
             assert_eq!(op.timestamp(), None);
             let base = row["before"].as_i64().unwrap();
-            let mut current = op.diff(&base).diff().apply(&base).unwrap();
+            let mut current = crate::os_spr::apply_diff(op.diff(&base).diff(), &base).unwrap();
             assert_eq!(current, row["after"].as_i64().unwrap());
             for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture").iter().rev() {
-                current = inverse.diff(&current).diff().apply(&current).unwrap();
+                current = crate::os_spr::apply_diff(inverse.diff(&current).diff(), &current).unwrap();
             }
             assert_eq!(current, base);
             let mut unknown = wire.clone();
@@ -112,16 +146,16 @@ mod tests {
             let base = row["before"].as_str().unwrap().parse::<i64>().unwrap();
             let deltas = row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect::<Vec<_>>();
             let diff = CounterDiff { deltas };
-            let result = diff.apply(&base);
+            let result = crate::os_spr::apply_diff(&diff, &base);
             if row["error"] == true {
                 assert_eq!(result.unwrap_err().code, "mutation.apply.invariant");
                 continue;
             }
             let expected = row["after"].as_str().unwrap().parse::<i64>().unwrap();
             assert_eq!(result, Ok(expected));
-            assert_eq!(semio_framework_pack_json::from_json_str::<CounterDiff>(&semio_framework_pack_json::to_json_string(&diff), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().apply(&base), Ok(expected));
+            assert_eq!(crate::os_spr::apply_diff(&semio_framework_pack_json::from_json_str::<CounterDiff>(&semio_framework_pack_json::to_json_string(&diff), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), &base), Ok(expected));
             assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
-            assert_eq!(serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap().apply(&base), Ok(expected));
+            assert_eq!(crate::os_spr::apply_diff(&serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap(), &base), Ok(expected));
             let mut joined = CounterDiff::default();
             for delta in &diff.deltas {
                 joined.absorb(CounterDiff { deltas: vec![*delta] });
@@ -135,7 +169,7 @@ mod tests {
         for row in cases()["arithmetic"].as_array().unwrap().iter().filter(|row| row.get("storedInverse").is_some()) {
             let base = row["before"].as_str().unwrap().parse::<i64>().unwrap();
             let kind = AddCounterSequence { deltas: row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect() };
-            let mut current = fold_plan_diff(&kind, &base).diff().apply(&base).unwrap();
+            let mut current = crate::os_spr::apply_diff(fold_plan_diff(&kind, &base).diff(), &base).unwrap();
             assert_eq!(current, row["after"].as_str().unwrap().parse::<i64>().unwrap());
             let stored = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
             let deltas = stored
@@ -147,7 +181,7 @@ mod tests {
                 .collect::<Vec<_>>();
             assert_eq!(serde_json::to_value(deltas).unwrap(), row["storedInverse"]);
             for inverse in stored.iter().rev() {
-                current = inverse.diff(&current).diff().apply(&current).unwrap();
+                current = crate::os_spr::apply_diff(inverse.diff(&current).diff(), &current).unwrap();
             }
             assert_eq!(current, base);
         }
@@ -173,7 +207,7 @@ mod tests {
     fn ordered_diff_preserves_step_admission_and_associativity() {
         let mut left = CounterDiff { deltas: vec![i64::MAX] };
         left.absorb(CounterDiff { deltas: vec![1] });
-        assert_eq!(left.apply(&i64::MIN), Ok(0));
+        assert_eq!(crate::os_spr::apply_diff(&left, &i64::MIN), Ok(0));
         let mut joined = CounterDiff { deltas: vec![2] };
         joined.absorb(CounterDiff { deltas: vec![3] });
         joined.absorb(CounterDiff { deltas: vec![4] });
@@ -182,7 +216,7 @@ mod tests {
         let mut right_grouped = CounterDiff { deltas: vec![2] };
         right_grouped.absorb(suffix);
         assert_eq!(joined, right_grouped);
-        assert_eq!(joined.apply(&0), Ok(9));
-        assert!(CounterDiff { deltas: vec![i64::MAX, 1, -1] }.apply(&0).is_err());
+        assert_eq!(crate::os_spr::apply_diff(&joined, &0), Ok(9));
+        assert!(crate::os_spr::apply_diff(&CounterDiff { deltas: vec![i64::MAX, 1, -1] }, &0).is_err());
     }
 }

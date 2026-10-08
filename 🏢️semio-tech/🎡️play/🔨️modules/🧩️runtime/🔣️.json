@@ -39,6 +39,8 @@
         },
         {
           "variant": "flow",
+          "example": "demo",
+          "exampleLabel": "Demo",
           "label": "Flow",
           "tagline": "Visual dataflow programming",
           "description": "Wire nodes into dataflow graphs that compute values, geometry and building data.",
@@ -295,6 +297,8 @@
       "panes": [
         {
           "variant": "din4108",
+          "example": "demo",
+          "exampleLabel": "Compliant ETICS dwelling",
           "label": "DIN 4108",
           "tagline": "Thermal protection",
           "description": "Check thermal insulation and moisture protection of building components.",
@@ -302,6 +306,8 @@
         },
         {
           "variant": "din16798",
+          "example": "compliant-office",
+          "exampleLabel": "Compliant office",
           "label": "DIN EN 16798",
           "tagline": "Indoor environment",
           "description": "Evaluate indoor environmental input parameters and ventilation of buildings.",
@@ -309,6 +315,8 @@
         },
         {
           "variant": "din18599",
+          "example": "demo",
+          "exampleLabel": "Demo",
           "label": "DIN V 18599",
           "tagline": "Energy efficiency",
           "description": "Assess the overall energy efficiency of buildings.",
@@ -316,6 +324,8 @@
         },
         {
           "variant": "en1990",
+          "example": "high-consequence-office",
+          "exampleLabel": "High Consequence Office",
           "label": "Eurocode 0",
           "tagline": "Basis of structural design",
           "description": "Combine actions and verify limit states with the basis of structural design.",
@@ -323,6 +333,8 @@
         },
         {
           "variant": "en1991",
+          "example": "de-office-compliant",
+          "exampleLabel": "DE Office Compliant",
           "label": "Eurocode 1",
           "tagline": "Actions on structures",
           "description": "Determine dead, imposed, snow, wind and thermal actions on structures.",
@@ -330,6 +342,8 @@
         },
         {
           "variant": "en1992",
+          "example": "compliant-office-frame",
+          "exampleLabel": "Compliant Office Frame",
           "label": "Eurocode 2",
           "tagline": "Concrete structures",
           "description": "Design reinforced and prestressed concrete members.",
@@ -337,6 +351,8 @@
         },
         {
           "variant": "en1993",
+          "example": "heb240-compliant",
+          "exampleLabel": "HEB 240 Compliant Frame",
           "label": "Eurocode 3",
           "tagline": "Steel structures",
           "description": "Design steel members and connections.",
@@ -344,6 +360,8 @@
         },
         {
           "variant": "en1994",
+          "example": "composite-floor-beam",
+          "exampleLabel": "Composite Floor Beam",
           "label": "Eurocode 4",
           "tagline": "Composite structures",
           "description": "Design composite steel and concrete members.",
@@ -351,6 +369,8 @@
         },
         {
           "variant": "en1995",
+          "example": "glulam-floor-beam",
+          "exampleLabel": "Compliant Glulam Floor Beam",
           "label": "Eurocode 5",
           "tagline": "Timber structures",
           "description": "Design timber members and connections.",
@@ -358,6 +378,8 @@
         },
         {
           "variant": "en1996",
+          "example": "loadbearing-wall",
+          "exampleLabel": "Load-bearing Clay Wall",
           "label": "Eurocode 6",
           "tagline": "Masonry structures",
           "description": "Design masonry walls and members.",
@@ -365,6 +387,8 @@
         },
         {
           "variant": "en1997",
+          "example": "demo",
+          "exampleLabel": "Compliant geotechnical package",
           "label": "Eurocode 7",
           "tagline": "Geotechnical design",
           "description": "Verify foundations, retaining structures and ground.",
@@ -372,6 +396,8 @@
         },
         {
           "variant": "en1998",
+          "example": "seismic-rc-frame",
+          "exampleLabel": "Seismic RC frame (DE zone 2, compliant)",
           "label": "Eurocode 8",
           "tagline": "Earthquake resistance",
           "description": "Design structures for earthquake resistance.",
@@ -379,6 +405,8 @@
         },
         {
           "variant": "en1999",
+          "example": "aluminium-roof-purlin",
+          "exampleLabel": "Aluminium roof purlin",
           "label": "Eurocode 9",
           "tagline": "Aluminium structures",
           "description": "Design aluminium members and connections.",
@@ -386,6 +414,8 @@
         },
         {
           "variant": "iso16757",
+          "example": "demo",
+          "exampleLabel": "Conforming catalogue",
           "label": "ISO 16757",
           "tagline": "Building services product data",
           "description": "Describe building services products with standardised data structures.",
@@ -393,6 +423,8 @@
         },
         {
           "variant": "vdi3805",
+          "example": "demo",
+          "exampleLabel": "Demo",
           "label": "VDI 3805",
           "tagline": "Product data exchange",
           "description": "Exchange building services product data between manufacturers and planners.",

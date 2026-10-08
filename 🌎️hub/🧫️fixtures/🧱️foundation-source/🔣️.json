@@ -346,10 +346,6 @@
   "route": {
     "command": "foundation-source-check",
     "target": "foundation-source-check",
-    "launchName": "⚖️gate🧱️hub-foundations📐️source",
-    "launchCommand": "bun nx run os-hub:foundation-source-check",
-    "launchGroup": "4_gate",
-    "launchOrder": 411.10755,
     "inputs": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🧪️testing/🛂️expectation/🟦️.ts",
@@ -375,8 +371,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/{🦀️.rs,📜️script.ts}",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}",
-      "{workspaceRoot}/.vscode/{🧩️launch.seed.jsonc,launch.json}"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/{🏗️bootstrap/🦀️.rs,🏠️workspace/🦀️.rs,🏠️workspace/🔗️remote/🦀️.rs,📦️packages/🦀️rust/📜️script.ts}"
     ]
   },
   "limits": {

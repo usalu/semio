@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "ready": false,
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json",
+      "before": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 21\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n",
+      "after": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 23\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n",
+      "beforeHash": "a070d009ee3e9d0cccf771a00e77d41128403a5d2650e2d4385dd3ad078bb91a",
+      "afterHash": "82534fa8c31be6b4658e8bc83c569a4c9888e98316ab9a6cbf44299f2f03bbf9",
+      "forward": {
+        "start": 0,
+        "delete": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 21\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n",
+        "insert": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 23\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n"
+      },
+      "inverse": {
+        "start": 0,
+        "delete": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 23\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n",
+        "insert": "{\n  \"schemaVersion\": 1,\n  \"windowsStackReserveBytes\": 8388608,\n  \"request\": \"readPage\",\n  \"document\": {\n    \"controlPlane\": \"dashboard\",\n    \"locale\": \"en\",\n    \"terminology\": \"native\"\n  },\n  \"terminalIoOwners\": 0,\n  \"localComponentMaxBytes\": 268435456,\n  \"networkComponentMaxBytes\": 67108864,\n  \"localComponentTestBytes\": 67108865,\n  \"emptySmoke\": {\n    \"exitCode\": 1,\n    \"booted\": false,\n    \"descriptor\": {\n      \"descriptorVersion\": 1,\n      \"packageId\": \"empty-smoke\",\n      \"role\": \"plugin\",\n      \"manifest\": {\n        \"pluginId\": \"empty-smoke\",\n        \"label\": \"Empty Smoke\",\n        \"version\": \"1.0.0\",\n        \"apps\": [],\n        \"examples\": []\n      },\n      \"execution\": \"isolated\",\n      \"executionProtocol\": {\n        \"appChannelVersion\": 21\n      },\n      \"hashes\": {\n        \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"coreWasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"descriptorSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\"\n      }\n    },\n    \"runtime\": {\n      \"version\": 1,\n      \"variant\": \"empty-smoke\",\n      \"profile\": \"dev\",\n      \"modules\": [\n        {\n          \"pluginId\": \"empty-smoke\",\n          \"wasmSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n          \"wasmPath\": \"component.wasm\",\n          \"descriptorPath\": \"descriptor.json\"\n        }\n      ]\n    }\n  }\n}\n"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json",
+      "sha256": "a070d009ee3e9d0cccf771a00e77d41128403a5d2650e2d4385dd3ad078bb91a"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+      "sha256": "541226a06e0294fc337fa00f56213582b3bb26108c7482da34257fbbcb0e90f1"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "sha256": "0c328d650dae01c0b4dca647c697bf7734073e6578960001c4556eee394c3110"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json",
+      "sha256": "207df8f6fae22340483666ac3cd8f83c5edad28329ab6ae7e3c8989b6eea6f09"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts",
+      "sha256": "59525942f3f342d123d61235db8639630ff866b2c2496d18263533dec2c5bc49"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+      "sha256": "613c18a961c22650b72a29129ba48cab23b6a1bc7d916bc9c71270108fcdb8eb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "eab44f448431376bff04125f201dd78882bfe6b4b5fe535ae491700a221ad659"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🟦️.ts",
+      "sha256": "9735600212c1897e363a812cc2195535364df5648dfbece0aef708ff39d7d763"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+      "sha256": "ddb1edd7ab800c376825359e0af169566f2d05bb75cffb5d12c0a9a9de2572b7"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+      "sha256": "1a94845fc7ef0850a91594cfb7feef44e59d570b73e0b4a16c494fbc07284750"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json",
+      "sha256": "a070d009ee3e9d0cccf771a00e77d41128403a5d2650e2d4385dd3ad078bb91a"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+      "sha256": "541226a06e0294fc337fa00f56213582b3bb26108c7482da34257fbbcb0e90f1"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "sha256": "0c328d650dae01c0b4dca647c697bf7734073e6578960001c4556eee394c3110"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/snapshot/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json",
+      "sha256": "207df8f6fae22340483666ac3cd8f83c5edad28329ab6ae7e3c8989b6eea6f09"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/terminal.json",
+      "sha256": "8060e2ed3ea7480e4b3b1edbfcf0c374029bad8b112facd61eff6faceea19c12"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/product/dispatcher13-terminal.json",
+      "sha256": "846a1cd4c017321b8daca0de5fdebed4e45cc16389af47629073c81bc14a480e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/ui/terminal.json",
+      "sha256": "52d7271a21ac34329dcb0f7cd639717d8f2b3686aa362a27e4652a0525205a34"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-origin/epoch-11/board/terminal.json",
+      "sha256": "4eecc66081c7f939482a184ddbb49880ce526f1d472850894711f68f114aef19"
+    }
+  ],
+  "fixturePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🧫️fixtures/🚪️headless/🔣️.json",
+  "consumerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-renderer-io-retained/🦀️.rs",
+  "registryPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+  "pinPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json",
+  "currentChannel": 23,
+  "sourceWritesOutsideTicket": false,
+  "nativeExecuted": false,
+  "publicationReady": false
+}

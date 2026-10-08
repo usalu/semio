@@ -22,15 +22,6 @@ pub struct ShootingPresence {
 
 
 
-impl protocol::MutationDiff<ShootingPresence> for ShootingPresence {
-    fn apply(&self, _base: &ShootingPresence) -> protocol::MutationApplyResult<ShootingPresence> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
-
 impl store::ArtifactDsl for ShootingPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -77,6 +68,9 @@ impl ArtifactPack for ShootingPresence {
 }
 //#endregion 🔖️Presence
 
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod diff;
+pub use diff::ShootingPresenceDiff;
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

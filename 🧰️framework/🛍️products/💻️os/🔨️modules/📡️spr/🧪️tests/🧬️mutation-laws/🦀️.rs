@@ -31,7 +31,7 @@ impl CounterDiff {
 }
 
 impl MutationDiff<i64> for CounterDiff {
-    fn apply(&self, base: &i64) -> MutationApplyResult<i64> {
+    fn apply(&self, base: &i64, _capability: crate::os_spr::ApplyCapability) -> MutationApplyResult<i64> {
         self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
     }
 
@@ -106,7 +106,7 @@ mod tests {
             other => panic!("unexpected fixture outcome {other:?}"),
         };
         assert_eq!(level, row["outcome"].as_str().unwrap());
-        assert_eq!(outcome.diff().apply(&base).unwrap(), row["next"].as_i64().unwrap());
+        assert_eq!(crate::os_spr::apply_diff(outcome.diff(), &base).unwrap(), row["next"].as_i64().unwrap());
         assert_eq!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").len(), usize::try_from(row["inverseCount"].as_u64().unwrap()).unwrap());
     }
 
@@ -118,19 +118,19 @@ mod tests {
             let diff = CounterDiff { deltas: row["deltas"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().parse().unwrap()).collect() };
             match row["expected"].as_str() {
                 Some(expected) => {
-                    let after = diff.apply(&base).unwrap();
+                    let after = crate::os_spr::apply_diff(&diff, &base).unwrap();
                     assert_eq!(after, expected.parse::<i64>().unwrap());
-                    assert_eq!(diff.inverse(&base).apply(&after).unwrap(), base);
+                    assert_eq!(crate::os_spr::apply_diff(&diff.inverse(&base), &after).unwrap(), base);
                 }
-                None => assert!(diff.apply(&base).is_err()),
+                None => assert!(crate::os_spr::apply_diff(&diff, &base).is_err()),
             }
         }
         for row in fixture["between"].as_array().unwrap() {
             let base = row["base"].as_str().unwrap().parse::<i64>().unwrap();
             let other = row["other"].as_str().unwrap().parse::<i64>().unwrap();
             let diff = CounterDiff::between(&base, &other);
-            assert_eq!(diff.apply(&base).unwrap(), other);
-            assert_eq!(diff.inverse(&base).apply(&other).unwrap(), base);
+            assert_eq!(crate::os_spr::apply_diff(&diff, &base).unwrap(), other);
+            assert_eq!(crate::os_spr::apply_diff(&diff.inverse(&base), &other).unwrap(), base);
             assert_eq!(diff.is_empty(), base == other);
         }
         let first = CounterDiff::delta(2);
@@ -144,17 +144,17 @@ mod tests {
         let mut right = first;
         right.absorb(tail);
         assert_eq!(left, right);
-        assert_eq!(left.apply(&10), Ok(19));
+        assert_eq!(crate::os_spr::apply_diff(&left, &10), Ok(19));
     }
 
     #[test]
     fn minimum_add_inverse_obeys_store_reverse_order() {
         let mutation = CounterMutation::AddCounter(AddCounter { delta: i64::MIN });
         let before = i64::MAX;
-        let after = mutation.diff(&before).diff().apply(&before).unwrap();
+        let after = crate::os_spr::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
         let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse, vec![AddCounter { delta: 1 }.into(), AddCounter { delta: i64::MAX }.into()]);
-        let restored = inverse.into_iter().rev().fold(after, |state, operation| operation.diff(&state).diff().apply(&state).unwrap());
+        let restored = inverse.into_iter().rev().fold(after, |state, operation| crate::os_spr::apply_diff(operation.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
     }
 }

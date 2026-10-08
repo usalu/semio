@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `RenameNodeKind`.
 
-use crate::BlockKindIdentity;
 use crate::Block2dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
@@ -11,6 +10,6 @@ pub fn diff(payload: &super::RenameNodeKind, base: &Block2dSnapshot) -> protocol
     if payload.new_name == base.node_kind.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node kind name is already \"{}\".", payload.new_name));
     }
-    protocol::MutationOutcome::new(Block2dDiff { node_kind: Some(BlockKindIdentity { name: payload.new_name.clone(), ..base.node_kind.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { node_kind: Some(semio_s_plugin_block::BlockKindIdentityPatch { name: Some(payload.new_name.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,6 +1,6 @@
 //! 🔧 Writer artifact — OpText/OpBinary codecs + grammar for serializing `WriterMutation`.
 
-use crate::schema::mutations::{apply_writer_mutation, change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText, WriterMutation};
+use crate::schema::mutations::WriterMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

@@ -5,8 +5,8 @@ mod mutations_codec {
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::mutations::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::WriterMainWindowConfig;
-use set_camera::SetCamera;
-use set_editor_settings::SetEditorSettings;
+use crate::editor::writer::modes::edit::windows::main::config::SetCamera;
+use crate::editor::writer::modes::edit::windows::main::config::SetEditorSettings;
 
 impl protocol::OpText for WriterMainWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -36,8 +36,8 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::mutations::*;
 use crate::editor::writer::modes::edit::windows::main::component::config::WriterMainWindowConfig;
-use set_camera::SetCamera;
-use set_editor_settings::SetEditorSettings;
+use crate::editor::writer::modes::edit::windows::main::config::SetCamera;
+use crate::editor::writer::modes::edit::windows::main::config::SetEditorSettings;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `WriterMainWindowConfig`.

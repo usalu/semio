@@ -1,6 +1,5 @@
-//! 🗑️ `remove-frame` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🗑️ `remove-frame` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from
+//! its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +14,17 @@ pub struct RemoveFrame {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "frame", kind: "remove-frame", record: "RemoveFrame" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<<GifMutation as Mutation<GifSnapshot>>::Diff> {
-        agg_diff(&GifMutation::RemoveFrame(self.clone()), base)
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+        let Self { index } = self;
+        protocol::MutationOutcome::new(GifDiff { frames: Some(GifFramesDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&GifMutation::RemoveFrame(self.clone()), base)?
-    
-    })
-}
+        let Self { index } = self;
+        Ok(match base.frames.get(*index) {
+            Some(frame) => vec![GifMutation::InsertFrame(insert_frame::InsertFrame { index: *index, frame: frame.clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove frame", "Einzelbild entfernen")
     }

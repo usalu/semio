@@ -1,1 +1,140 @@
-type En1998Diff { annex: String }
+# 🧬️ En1998 diff schema — sparse scalar fields and ordered per-collection row edits.
+
+enum En1998RowOp {
+  INSERT
+  REMOVE
+  REPLACE
+  PATCH
+}
+
+type En1998Diff {
+  annex: String @state(class: ARTIFACT)
+  site: En1998Site @state(class: ARTIFACT)
+  buildings: [En1998BuildingEdit!]! @state(class: ARTIFACT)
+  bridges: [En1998BridgeEdit!]! @state(class: ARTIFACT)
+  assessments: [En1998AssessmentEdit!]! @state(class: ARTIFACT)
+  silos: [En1998SiloEdit!]! @state(class: ARTIFACT)
+  tanks: [En1998TankEdit!]! @state(class: ARTIFACT)
+  foundations: [En1998FoundationEdit!]! @state(class: ARTIFACT)
+  retainingWalls: [En1998RetainingWallEdit!]! @state(class: ARTIFACT)
+  towers: [En1998TowerEdit!]! @state(class: ARTIFACT)
+}
+
+type En1998BuildingEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Building
+  patch: En1998BuildingPatch
+}
+
+type En1998BridgeEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Bridge
+  patch: En1998BridgePatch
+}
+
+type En1998AssessmentEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Assessment
+  patch: En1998AssessmentPatch
+}
+
+type En1998SiloEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Silo
+}
+
+type En1998TankEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Tank
+}
+
+type En1998FoundationEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Foundation
+}
+
+type En1998RetainingWallEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998RetainingWall
+}
+
+type En1998TowerEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Tower
+  patch: En1998TowerPatch
+}
+
+type En1998SystemEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998System
+  patch: En1998SystemPatch
+}
+
+type En1998StoreyEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Storey
+  patch: En1998StoreyPatch
+}
+
+type En1998MemberEdit {
+  op: En1998RowOp!
+  index: Int!
+  id: String!
+  value: En1998Member
+  patch: En1998MemberPatch
+}
+
+type En1998BuildingPatch {
+  planRegular: Boolean
+  elevationRegular: Boolean
+  masonryWallAreaRatio: Float
+  systems: [En1998SystemEdit!]!
+  storeys: [En1998StoreyEdit!]!
+  members: [En1998MemberEdit!]!
+}
+
+type En1998BridgePatch {
+  vRdN: Float
+}
+
+type En1998AssessmentPatch {
+  rKN: Float
+}
+
+type En1998TowerPatch {
+  mRdNm: Float
+}
+
+type En1998SystemPatch {
+  baseShearResistanceN: Float
+}
+
+type En1998StoreyPatch {
+  permanentGkN: Float
+  stiffnessX: Float
+  driftXM: Float
+}
+
+type En1998MemberPatch {
+  detailingCompatibleWithQ: Boolean
+}

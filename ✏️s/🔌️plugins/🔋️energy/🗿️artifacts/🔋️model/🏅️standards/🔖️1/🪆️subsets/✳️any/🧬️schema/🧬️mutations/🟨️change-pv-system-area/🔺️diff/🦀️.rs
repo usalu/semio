@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangePvSystemArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangePvSystemArea, base: &EnergyModelSnapshot) -> 
     if existing.area_m2 == payload.new_area_m2 {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("PV system {} already carries this aperture area (m²): {}.", payload.id.0, payload.new_area_m2));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.area_m2 = payload.new_area_m2;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { pv_systems: Rows::modifying(PvSystemAssignmentPatch { area_m2: Some(payload.new_area_m2), ..PvSystemAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

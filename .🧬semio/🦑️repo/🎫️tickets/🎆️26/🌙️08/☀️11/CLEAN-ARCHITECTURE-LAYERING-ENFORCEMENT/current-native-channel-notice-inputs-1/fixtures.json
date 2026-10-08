@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "baseVersion": 23,
+  "code": "plugin.channel-mismatch",
+  "forbiddenFragment": "speaks app channel",
+  "cases": [
+    {
+      "id": "older-guest-en",
+      "name": "older-guest",
+      "guestOffset": -1,
+      "hostOffset": 0,
+      "locale": "en",
+      "guest": 22,
+      "host": 23,
+      "admitted": false,
+      "text": "This plugin was built for app channel 22, but this app uses app channel 23 — rebuild the plugin."
+    },
+    {
+      "id": "older-guest-de",
+      "name": "older-guest",
+      "guestOffset": -1,
+      "hostOffset": 0,
+      "locale": "de",
+      "guest": 22,
+      "host": 23,
+      "admitted": false,
+      "text": "Dieses Plugin wurde für App-Kanal 22 gebaut, diese App spricht aber App-Kanal 23 — Plugin neu bauen."
+    },
+    {
+      "id": "newer-guest-en",
+      "name": "newer-guest",
+      "guestOffset": 1,
+      "hostOffset": 0,
+      "locale": "en",
+      "guest": 24,
+      "host": 23,
+      "admitted": false,
+      "text": "This plugin was built for app channel 24, but this app uses app channel 23 — rebuild the plugin."
+    },
+    {
+      "id": "newer-guest-de",
+      "name": "newer-guest",
+      "guestOffset": 1,
+      "hostOffset": 0,
+      "locale": "de",
+      "guest": 24,
+      "host": 23,
+      "admitted": false,
+      "text": "Dieses Plugin wurde für App-Kanal 24 gebaut, diese App spricht aber App-Kanal 23 — Plugin neu bauen."
+    },
+    {
+      "id": "far-older-guest-en",
+      "name": "far-older-guest",
+      "guestOffset": -20,
+      "hostOffset": 0,
+      "locale": "en",
+      "guest": 3,
+      "host": 23,
+      "admitted": false,
+      "text": "This plugin was built for app channel 3, but this app uses app channel 23 — rebuild the plugin."
+    },
+    {
+      "id": "far-older-guest-de",
+      "name": "far-older-guest",
+      "guestOffset": -20,
+      "hostOffset": 0,
+      "locale": "de",
+      "guest": 3,
+      "host": 23,
+      "admitted": false,
+      "text": "Dieses Plugin wurde für App-Kanal 3 gebaut, diese App spricht aber App-Kanal 23 — Plugin neu bauen."
+    },
+    {
+      "id": "this-guest-at-the-previous-host-en",
+      "name": "this-guest-at-the-previous-host",
+      "guestOffset": 0,
+      "hostOffset": -1,
+      "locale": "en",
+      "guest": 23,
+      "host": 22,
+      "admitted": false,
+      "text": "This plugin was built for app channel 23, but this app uses app channel 22 — rebuild the plugin."
+    },
+    {
+      "id": "this-guest-at-the-previous-host-de",
+      "name": "this-guest-at-the-previous-host",
+      "guestOffset": 0,
+      "hostOffset": -1,
+      "locale": "de",
+      "guest": 23,
+      "host": 22,
+      "admitted": false,
+      "text": "Dieses Plugin wurde für App-Kanal 23 gebaut, diese App spricht aber App-Kanal 22 — Plugin neu bauen."
+    },
+    {
+      "id": "this-guest-at-the-next-host-en",
+      "name": "this-guest-at-the-next-host",
+      "guestOffset": 0,
+      "hostOffset": 1,
+      "locale": "en",
+      "guest": 23,
+      "host": 24,
+      "admitted": false,
+      "text": "This plugin was built for app channel 23, but this app uses app channel 24 — rebuild the plugin."
+    },
+    {
+      "id": "this-guest-at-the-next-host-de",
+      "name": "this-guest-at-the-next-host",
+      "guestOffset": 0,
+      "hostOffset": 1,
+      "locale": "de",
+      "guest": 23,
+      "host": 24,
+      "admitted": false,
+      "text": "Dieses Plugin wurde für App-Kanal 23 gebaut, diese App spricht aber App-Kanal 24 — Plugin neu bauen."
+    }
+  ]
+}

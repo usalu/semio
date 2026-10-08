@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::base::schema::diff::*;
 
 /// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=18` = the 18 wrapped subset
 /// kinds (same enum declaration order as [`crate::standards::v1::subsets::base::schema::snapshot::subset_ordinal`],
-/// offset by one to make room for `NoChange`), `19` = `Replace`.
+/// offset by one to make room for `NoChange`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_tag(d: &SemioDiff) -> u8 {
     match d {
@@ -33,7 +33,6 @@ fn diff_tag(d: &SemioDiff) -> u8 {
         SemioDiff::Graph(_) => 16,
         SemioDiff::Object(_) => 17,
         SemioDiff::Kit(_) => 18,
-        SemioDiff::Replace(_) => 19,
     }
 }
 use crate::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
@@ -68,16 +67,13 @@ impl protocol::DiffBinary for SemioDiff {
 /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`diff_tag`]) as two genuine,
 /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload —
 /// for the 13 same-kind variants, that payload is exactly the wrapped subset's OWN real
-/// `DiffBinary::encode_diff()` bytes (genuine reuse, never re-derived here); for `Replace`, the
-/// wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes (📸️snapshot's real binary
-/// delegation, applied one level deeper); `NoChange` carries no payload at all.
+/// `DiffBinary::encode_diff()` bytes (genuine reuse, never re-derived here); `NoChange` carries no payload at all.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
     let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
     let payload: Vec<u8> = match self {
         SemioDiff::NoChange => Vec::new(),
         SemioDiff::Rejected(error) => enc_rejection(error).into_bytes(),
-        SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioDiff::Brep(d) => d.encode_diff()?,
         SemioDiff::Mesh(d) => d.encode_diff()?,
         SemioDiff::Model(d) => d.encode_diff()?,
@@ -131,7 +127,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         16 => SemioDiff::Graph(SemioGraphDiff::decode_diff(payload)?),
         17 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload)?),
         18 => SemioDiff::Kit(SemioKitDiff::decode_diff(payload)?),
-        19 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
         20 => SemioDiff::Rejected(
             dec_rejection(std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "rejected diff", offset: 2, detail: error.to_string() })?).map_err(|error| protocol::ProtocolError::Malformed {
                 what: "rejected diff",

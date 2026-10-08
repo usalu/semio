@@ -82,6 +82,7 @@ fn event(value: &serde_json::Value) -> SnapshotEditEvent {
     semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture event")
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ProbePreparationFactory {
     accepts: fn(&u8) -> bool,
     retained_bytes: usize,

@@ -170,6 +170,13 @@ impl ArtifactOwnedToolJobFactory for SemioModelEditorExampleFactory {
 #[derive(Default, Clone, Copy)]
 pub struct SemioModelEditor;
 
+/// 🌱️ Prices the exact selected Model wire and bounded preparation constructors.
+pub(crate) fn member_preparation_birth_bytes() -> usize {
+    store::operation_wire_preparation_factory_birth_bytes::<SemioModelSnapshot, SemioModelMutation>(
+        semio_framework_plugin::bounded_config_store_one_item_preparation_factory_birth_bytes::<SemioModelSnapshot, SemioModelMutation>(),
+    )
+}
+
 impl ArtifactEditor for SemioModelEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
@@ -243,7 +250,7 @@ impl ArtifactEditor for SemioModelEditor {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::operation_wire_preparation_factory(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), <Self as editing::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
     }
 
     fn command_id(command: &Self::Command) -> &'static str { semioModelEditor_command_id(command) }
@@ -284,6 +291,8 @@ impl ArtifactEditor for SemioModelEditor {
 
 
 impl editing::SnapshotEditingEditor for SemioModelEditor {
+    fn snapshot_operation_wire_source(mutation: &Self::Mutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> { crate::standards::v1::subsets::model::io::binary::mutations::prepared_operation_wire_source(mutation) }
+
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { SemioModelEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }

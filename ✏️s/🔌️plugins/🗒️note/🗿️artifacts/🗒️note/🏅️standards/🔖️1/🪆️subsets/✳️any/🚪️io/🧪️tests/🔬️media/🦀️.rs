@@ -52,7 +52,7 @@ async fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
 /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 #[semio_framework_async_macros::async_test]
 async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
-    let mut document = crate::schema::empty_note_snapshot();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     document.blocks.push(NoteBlockNode::Text {
         content: crate::note_text_child_record("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
         id: "t1".into(),
@@ -112,7 +112,7 @@ async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
 /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 #[semio_framework_async_macros::async_test]
 async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
-    let mut document = crate::schema::empty_note_snapshot();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
     document.blocks.push(NoteBlockNode::Image { id: "im1".into(), name: "Image".into(), x: 0.0, y: 0.0, width: 4.0, height: 4.0, rotation: 0.0, visible: true, locked: false, image_key: "asset-1".into() });
 
@@ -123,7 +123,7 @@ async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
 /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 #[semio_framework_async_macros::async_test]
 async fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
-    let mut document = crate::schema::empty_note_snapshot();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
     let mut ids = crate::schema::NoteIdOwner::new("io-test", 0);
     document.blocks.push(crate::schema::create_block_by_kind(&mut ids, "text", 5.0, 6.0));
     let mut hidden = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);

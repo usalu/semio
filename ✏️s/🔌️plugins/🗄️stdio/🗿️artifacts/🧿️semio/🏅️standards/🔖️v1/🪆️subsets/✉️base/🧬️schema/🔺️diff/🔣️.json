@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/diff.json",
   "title": "SemioDiff",
-  "description": "The envelope union's own diff — real mirror of the Rust `SemioDiff`. `NoChange`, 13 same-kind wrappers each nesting that subset's own REAL diff schema (cross-file $ref, never redeclared), and `Replace` (cross-kind change or explicit SetSnapshot — no sparse representation exists for a subset-kind change). Tag key is `kind` (distinct from the snapshot facet's `subset` tag key).",
+  "description": "The envelope union's own diff — real mirror of the Rust `SemioDiff`. `NoChange`, 13 same-kind wrappers each nesting that subset's own REAL diff schema (cross-file $ref, never redeclared). Tag key is `kind` (distinct from the snapshot facet's `subset` tag key).",
   "oneOf": [
     {
       "type": "object",
@@ -220,22 +220,6 @@
         "flow": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/diff.json",
           "description": "SemioFlowDiff (flow subset's own diff schema)"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "required": [
-        "kind",
-        "snapshot"
-      ],
-      "properties": {
-        "kind": {
-          "const": "replace"
-        },
-        "snapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/snapshot.json",
-          "description": "SemioSnapshot (this subset's own snapshot schema)"
         }
       }
     }

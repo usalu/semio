@@ -1,0 +1,12 @@
+{
+  "title": "Keep Print Windows Whole Across Page Breaks",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "zwischenbericht mit bestand: Windows should never break, and when they do then they repeat the full silhouette. E.g. an Abbildung such as Stützengenerator wrongly has the header of the window on one page and the body on the next page.",
+  "summary": "Kind windows emitted their title tab before a breakable tcolorbox knew its body height, so a body that did not fit left the tab orphaned and restarted headerless on the next page. semio-window.sty now emits the tab from a whole-keep split start: a window that fits a page moves there whole, a taller one breaks with full chrome on every part and starts on a fresh page when its first block does not fit, and unbreakable windows always tie tab to body. Verified with a seven-scenario probe and a full Zwischenbericht build (pages 18, 20, 23). Manual bookkeeping (ticket_reopen returned a malformed result). Report: 📓️report.md.",
+  "goal": "🎯runningprint",
+  "sessions": [],
+  "files": [
+    "🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty"
+  ]
+}

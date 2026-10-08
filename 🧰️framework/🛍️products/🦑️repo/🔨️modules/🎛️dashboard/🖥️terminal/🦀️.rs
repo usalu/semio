@@ -8,7 +8,7 @@ use ui_styling::appearance::AppearanceName;
 use ui_tui::tui::backend::{NativeTerminal, TerminalBackend};
 use ui_tui::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
 use ui_tui::tui::engine::Tui;
-use ui_tui::tui::event::{mods, Event, Key, KeyEvent};
+use ui_tui::tui::event::{mods, Event, Key};
 use ui_tui::tui::geometry::Size;
 use ui_tui::tui::layout::{activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, zoom_window, WindowLayout, WindowLayoutWindowNode};
 use ui_tui::tui::layout::{Constraint, Dimension, Direction};
@@ -39,28 +39,6 @@ enum LeaderMode {
 #[derive(Clone, Copy)]
 enum Locale { English, German }
 // #endregion 🔖️Window
-
-// #region 🔖️Keys
-fn key_to_pty_bytes(ev: &KeyEvent) -> Option<Vec<u8>> {
-    match ev.key {
-        Key::Char(c) if ev.mods == 0 => Some(c.to_string().into_bytes()),
-        Key::Char(c) if ev.mods & mods::CTRL != 0 && c.is_ascii_lowercase() => Some(vec![(c as u8) & 0x1f]),
-        Key::Enter => Some(vec![b'\r']),
-        Key::Tab => Some(vec![b'\t']),
-        Key::Backspace => Some(vec![0x7f]),
-        Key::Esc => Some(vec![0x1b]),
-        Key::Up => Some(b"\x1b[A".to_vec()),
-        Key::Down => Some(b"\x1b[B".to_vec()),
-        Key::Right => Some(b"\x1b[C".to_vec()),
-        Key::Left => Some(b"\x1b[D".to_vec()),
-        Key::Home => Some(b"\x1b[H".to_vec()),
-        Key::End => Some(b"\x1b[F".to_vec()),
-        Key::PageUp => Some(b"\x1b[5~".to_vec()),
-        Key::PageDown => Some(b"\x1b[6~".to_vec()),
-        _ => None,
-    }
-}
-// #endregion 🔖️Keys
 
 // #region 🔖️Dashboard
 struct Dashboard {
@@ -120,7 +98,7 @@ impl Dashboard {
             WindowBody::Launcher { widget } => (*widget, self.commands.iter().map(|(label, _)| label.clone()).collect()),
             WindowBody::Overview { widget } => {
                 let mut options = vec![self.text("New task — type to find a command", "Neue Aufgabe — Befehl suchen"), self.text("Settings", "Einstellungen"), self.text("Refresh commands", "Befehle aktualisieren"), self.text("Cancel discovery", "Suche abbrechen")];
-                options.extend(self.sessions.values().map(|session| format!("[{}{}] {} {}", match session.status { SessionStatus::Running => self.text("running", "läuft"), SessionStatus::Stopping => self.text("stopping", "stoppt"), SessionStatus::Exited => self.text("exited", "beendet"), SessionStatus::Failed => self.text("failed", "fehlgeschlagen") }, session.code.map(|code| format!(" · exit {code}")).unwrap_or_default(), session.command.cmd, session.command.args.join(" "))));
+                options.extend(self.sessions.values().map(|session| format!("[{}{}] {} {}", match session.status { SessionStatus::Running => self.text("running", "läuft"), SessionStatus::Stopping => self.text("stopping", "stoppt"), SessionStatus::Exited => self.text("exited", "beendet"), SessionStatus::Failed => self.text("failed", "fehlgeschlagen"), SessionStatus::Pending => self.text("waiting", "wartet"), SessionStatus::Interrupted => self.text("interrupted", "unterbrochen") }, session.code.map(|code| format!(" · exit {code}")).unwrap_or_default(), session.command.cmd, session.command.args.join(" "))));
                 (*widget, options)
             }
             WindowBody::Settings { widget } => (*widget, vec![format!("{}: {}", self.text("Language", "Sprache"), self.preferences.language), format!("{}: {}", self.text("Appearance", "Darstellung"), self.preferences.appearance), format!("{}: {}", self.text("Terminology", "Begriffe"), self.preferences.terminology), format!("{}: {}", self.text("Preferred renderer", "Bevorzugter Renderer"), self.preferences.renderer), format!("{}: {}", self.text("Output layout", "Ausgabelayout"), self.preferences.layout), format!("{}: {}", self.text("Save scope", "Speicherbereich"), if self.shared_preferences { self.text("workspace shared", "Arbeitsbereich gemeinsam") } else { self.text("local only", "nur lokal") }), self.text("Back to tasks", "Zurück zu Aufgaben")]),
@@ -255,8 +233,9 @@ impl Dashboard {
     }
 
     fn spawn_output(&mut self, tui: &mut Tui, win_id: &str, spec: CommandSpec) {
-        let command = SessionCommand { cmd: spec.cmd, args: spec.args, cwd: spec.cwd.display().to_string(), env: spec.env, cols: 80, rows: 24 };
-        if let Some(session) = self.sessions.values().find(|session| matches!(session.status, SessionStatus::Running | SessionStatus::Stopping) && session.command.same_task(&command)).cloned() {
+        let command = SessionCommand { cmd: spec.cmd, args: spec.args, cwd: spec.cwd.display().to_string(), env: spec.env, cols: 80, rows: 24, ..Default::default() };
+        let launch = |command: &SessionCommand| { let mut command = command.clone(); command.env.retain(|(key, _)| key != crate::inventory::GRAPH_REUSE.0); command };
+        if let Some(session) = self.sessions.values().find(|session| matches!(session.status, SessionStatus::Running | SessionStatus::Stopping) && launch(&session.command).same_task(&launch(&command))).cloned() {
             self.hidden.remove(&session.session_id);
             self.update_session(tui, session.clone());
             if let Some(window) = self.windows.iter().find(|window| matches!(&window.body, WindowBody::Output { session: Some(info), .. } if info.session_id == session.session_id)) {
@@ -275,7 +254,7 @@ impl Dashboard {
         command.rows = term_size.height.max(1);
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos();
         let session_id = format!("task-{}-{nonce}", std::process::id());
-        let session = SessionInfo { session_id: session_id.clone(), command: command.clone(), status: SessionStatus::Running, pid: None, code: None };
+        let session = SessionInfo { session_id: session_id.clone(), command: command.clone(), status: SessionStatus::Running, pid: None, code: None, ..Default::default() };
         let request = ClientMsg::Spawn { session_id, command };
         if self.pending_starts.len() >= 128 { Dashboard::feed(tui, term_id, "[semio] pending task limit reached\n"); return; }
         if self.connection.is_some() {
@@ -308,6 +287,21 @@ impl Dashboard {
         self.connection.as_mut().ok_or_else(|| std::io::Error::other("dashboard daemon disconnected"))?.send(message)
     }
 
+    /// 🛑️ Requests daemon shutdown and waits for its confirmation so leaving the view cannot drop the request.
+    fn shutdown_daemon(&mut self) -> std::io::Result<()> {
+        let connection = self.connection.as_mut().ok_or_else(|| std::io::Error::other("dashboard daemon disconnected"))?;
+        connection.send(&ClientMsg::Shutdown {})?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while std::time::Instant::now() < deadline {
+            match connection.receive(std::time::Duration::from_millis(100)) {
+                Ok(messages) if messages.iter().any(|message| matches!(message, Message::Control(ServerMsg::Shutdown {}))) => return Ok(()),
+                Ok(_) => {}
+                Err(_) => return Ok(()),
+            }
+        }
+        Err(std::io::Error::other("daemon shutdown timed out"))
+    }
+
     fn focused_session(&self) -> Option<String> {
         self.focused_window().and_then(|window| match &window.body { WindowBody::Output { session: Some(session), .. } => Some(session.session_id.clone()), _ => None })
     }
@@ -334,7 +328,7 @@ impl Dashboard {
             self.remount(tui);
             self.windows.len() - 1
         };
-        let status = match info.status { SessionStatus::Running => self.text("running", "läuft"), SessionStatus::Stopping => self.text("stopping", "stoppt"), SessionStatus::Exited => self.text("exited", "beendet"), SessionStatus::Failed => self.text("failed", "fehlgeschlagen") };
+        let status = match info.status { SessionStatus::Running => self.text("running", "läuft"), SessionStatus::Stopping => self.text("stopping", "stoppt"), SessionStatus::Exited => self.text("exited", "beendet"), SessionStatus::Failed => self.text("failed", "fehlgeschlagen"), SessionStatus::Pending => self.text("waiting", "wartet"), SessionStatus::Interrupted => self.text("interrupted", "unterbrochen") };
         let window = &mut self.windows[index];
         let detail = info.code.map(|code| format!("exit {code}")).or_else(|| info.pid.map(|pid| format!("pid {pid}"))).unwrap_or_default();
         if let Some(ChromeState::Window(chrome)) = tui.scene.node_mut(window.chrome).chrome() {
@@ -429,8 +423,10 @@ impl Dashboard {
                     }
                 },
                 WindowBody::Launcher { .. } => {
-                    if let Some((_, leaf)) = self.commands.get(selected).cloned() {
-                        match leaf { CommandLeaf::Process(mut spec) => { self.preferences.bind(&mut spec); self.spawn_output(tui, win_id, spec); }, CommandLeaf::Repo(action) => self.show_repo_output(tui, win_id, &action) }
+                    if let Some((label, leaf)) = self.commands.get(selected).cloned() {
+                        let published = crate::inventory::starts_from_published_graph(&label) && crate::inventory::graph_is_current(&self.root);
+                        let prepare = |preferences: &crate::preferences::Preferences, spec: &mut CommandSpec| { preferences.bind(spec); spec.env.retain(|(key, _)| key != crate::inventory::GRAPH_REUSE.0); if published { spec.env.push((crate::inventory::GRAPH_REUSE.0.into(), crate::inventory::GRAPH_REUSE.1.into())); } };
+                        match leaf { CommandLeaf::Process(mut spec) => { prepare(&self.preferences, &mut spec); self.spawn_output(tui, win_id, spec); }, CommandLeaf::Compound(specs) => for mut spec in specs { prepare(&self.preferences, &mut spec); self.spawn_output(tui, win_id, spec); }, CommandLeaf::Repo(action) => self.show_repo_output(tui, win_id, &action) }
                     }
                 }
                 WindowBody::Settings { .. } => {
@@ -492,7 +488,7 @@ impl Dashboard {
         let changed = connected || !messages.is_empty();
         for message in messages {
             match message {
-                Message::Control(ServerMsg::Sessions { sessions }) => {
+                Message::Control(ServerMsg::Sessions { sessions, .. }) => {
                     if self.restoring {
                         for window in &self.windows {
                             if let WindowBody::Output { terminal, .. } = window.body {
@@ -514,8 +510,8 @@ impl Dashboard {
                         }
                     }
                 }
-                Message::Control(ServerMsg::ReplayComplete {}) => { self.restoring = false; self.resize_terminals(tui); }
-                Message::Control(ServerMsg::Error { message }) => {
+                Message::Control(ServerMsg::ReplayComplete { .. }) => { self.restoring = false; self.resize_terminals(tui); }
+                Message::Control(ServerMsg::Error { message, .. }) => {
                     self.connection_status = message.clone();
                     if let Some(window) = self.focused_window() {
                         if let WindowBody::Output { terminal, .. } = window.body { Dashboard::feed(tui, terminal, &format!("[semio] {message}\n")); }
@@ -624,13 +620,13 @@ pub fn run_with(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
     dash.windows.push(w1); dash.sort_commands(); dash.remount(&mut tui);
     tui.set_focus(Some(dash.windows[0].focus)); dash.sync_chrome_focus(&mut tui);
     if let Some(ChromeState::Footer(footer)) = tui.scene.node_mut(dash.shell.footer).chrome() { footer.hints = dash.footer_hints(); }
-    term.present(&tui.render_full()).ok();
+    term.present(&tui.render_full(), None).ok();
     if std::env::var_os("SEMIO_DASHBOARD_TRACE").is_some() { eprintln!("[DEBUG] dashboard usable first frame elapsed_us={}", started.elapsed().as_micros()); }
     dash.inventory = Some(crate::inventory::start(root, false));
 
     loop {
         let output_changed = dash.poll_sessions(&mut tui) | dash.poll_inventory(&mut tui);
-        let events = term.poll(std::time::Duration::from_millis(80)).unwrap_or_default();
+        let events = term.wait(Some(std::time::Instant::now() + std::time::Duration::from_millis(80))).unwrap_or_default();
         let mut quit = false;
         let mut need_paint = output_changed || !events.is_empty();
 
@@ -645,7 +641,7 @@ pub fn run_with(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
                     for (chrome_id, signal) in tui.dispatch(event) {
                         if let Some(win_id) = dash.window_id_for_chrome(chrome_id) {
                             match signal {
-                                WidgetSignal::WindowClose => {
+                                WidgetSignal::WindowClose(_) => {
                                     if dash.close_window(&mut tui, &win_id) {
                                         quit = true;
                                     }
@@ -737,7 +733,7 @@ pub fn run_with(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
                             }
                             Key::Char('d') => { quit = true; dash.leader = LeaderMode::Idle; true }
                             Key::Char('Q') => {
-                                match dash.send(&ClientMsg::Shutdown {}) { Ok(()) => quit = true, Err(error) => dash.connection_status = error.to_string() }
+                                match dash.shutdown_daemon() { Ok(()) => quit = true, Err(error) => dash.connection_status = error.to_string() }
                                 dash.leader = LeaderMode::Idle;
                                 true
                             }
@@ -866,8 +862,8 @@ pub fn run_with(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
                             };
                             tui.set_focus(Some(term_id));
                             for (_, signal) in tui.dispatch(event) {
-                                if signal == WidgetSignal::TerminalPassthrough {
-                                    if let (Some(data), Some(session_id)) = (key_to_pty_bytes(k), dash.focused_session()) {
+                                if let WidgetSignal::TerminalInput(data) = signal {
+                                    if let Some(session_id) = dash.focused_session() {
                                         if let Err(error) = dash.send(&ClientMsg::Input { session_id, data }) { dash.connection_status = error.to_string(); }
                                     }
                                 }
@@ -908,7 +904,7 @@ pub fn run_with(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
             }
         }
         if need_paint {
-            term.present(&tui.render_full()).ok();
+            term.present(&tui.render_full(), None).ok();
         }
     }
 

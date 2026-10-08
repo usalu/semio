@@ -27,11 +27,12 @@
   },
   "payloadByteLength": 2097152,
   "payloadModulo": 251,
-  "recursiveDepth": 256,
+  "recursiveDepth": 255,
   "grant": {
     "maximumItems": 4096,
     "maximumCopyBytes": 4096,
     "maximumCapacityBytes": 4194304,
+    "maximumReleaseBytes": 4096,
     "maximumDepth": 512
   },
   "insufficientCapacityBytes": 1048576,

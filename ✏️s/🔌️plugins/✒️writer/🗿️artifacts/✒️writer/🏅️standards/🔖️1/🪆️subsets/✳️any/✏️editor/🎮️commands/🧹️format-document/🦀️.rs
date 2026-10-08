@@ -1,6 +1,6 @@
 //! ✍️ ✍️ Writer play app commands command — `format-document`.
 
-use crate::op::{EditText, WriterMutation};
+use crate::mutations::{EditText, WriterMutation};
 use crate::schema::format_writer_text;
 use crate::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

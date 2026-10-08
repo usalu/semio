@@ -12,7 +12,7 @@ mod tests {
         let faces: Vec<CadFace> = (0..6).map(|i| CadFace { id: format!("f{i}"), wire_ids: vec![format!("w{i}")], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } }).collect();
         let shell = CadShell { id: "s0".into(), face_ids: (0..6).map(|i| format!("f{i}")).collect() };
         let solid = CadSolid { id: "sol0".into(), shell_ids: vec!["s0".into()] };
-        CadGeometry { anchors: Vec::new(), vertices, edges, wires, faces, shells: vec![shell], solids: vec![solid] }
+        CadGeometry { anchors: Vec::new(), vertices, edges, wires, faces, shells: vec![shell], solids: vec![solid], owned_meshes: Default::default(), owned_breps: Default::default() }
     }
 
     #[semio_framework_async_macros::async_test]

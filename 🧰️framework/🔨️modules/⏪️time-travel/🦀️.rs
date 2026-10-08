@@ -1012,7 +1012,7 @@ impl TimeTravelLabel {
             Self::ActionRerun => ("actionRerun", "Replay again", "Erneut anwenden"),
             Self::PreparationProgress => ("preparationProgress", "Preparing history preview", "Verlaufsvorschau wird vorbereitet"),
             Self::PreparationProgressValueText => ("preparationProgressValueText", "Preparing history preview: {done} of {total} steps", "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten"),
-            Self::ReplayProgressValueText => ("replayProgressValueText", "Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet"),
+            Self::ReplayProgressValueText => ("replayProgressValueText", "Replaying history: {done} of {total} steps", "Verlauf wird neu angewendet: {done} von {total} Schritten"),
             Self::Processed => ("processed", "Work completed: {processed}", "Arbeitsfortschritt: {processed}"),
             Self::RefusalBusy => ("refusalBusy", "History editing is busy: finish the running tool or the other history edit first", "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"),
             Self::RefusalUnknownMutation => ("refusalUnknownMutation", "This mutation is no longer in the history", "Diese Mutation ist nicht mehr im Verlauf"),

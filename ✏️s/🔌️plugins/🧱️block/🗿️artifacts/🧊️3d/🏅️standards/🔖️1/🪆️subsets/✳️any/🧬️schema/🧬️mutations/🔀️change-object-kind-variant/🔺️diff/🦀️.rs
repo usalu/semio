@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `ChangeObjectKindVariant`.
 
-use crate::BlockKindIdentity;
 use crate::Block3dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
 
@@ -9,6 +8,6 @@ pub fn diff(payload: &super::ChangeObjectKindVariant, base: &Block3dSnapshot) ->
     if payload.new_variant == base.object_kind.variant {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Object kind variant is unchanged.");
     }
-    protocol::MutationOutcome::new(Block3dDiff { object_kind: Some(BlockKindIdentity { variant: payload.new_variant.clone(), ..base.object_kind.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff { object_kind: Some(semio_s_plugin_block::BlockKindIdentityPatch { variant: Some(semio_s_plugin_block::BlockOptionalText { value: payload.new_variant.clone() }), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

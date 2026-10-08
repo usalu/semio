@@ -1701,9 +1701,14 @@ fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
         purpose: WorldRayPickPurpose::Paint,
         origin: Vec3::new(0.0, 0.0, 1.0),
         direction: Vec3::new(0.0, 0.0, -1.0),
+        local_x: 0.0,
+        local_y: 0.0,
+        viewport: render_pick_viewport(&state),
+        view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&state.orbit.to_camera(), state.projection_spec, render_pick_viewport(&state).w, render_pick_viewport(&state).h),
+        projection_spec: state.projection_spec,
         draw: 0,
         instance: 0,
-        triangle: 0,
+        primitive: 0,
         mesh: None,
         mesh_probe: 0,
         merge: 0,
@@ -1744,9 +1749,14 @@ fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
         purpose: WorldRayPickPurpose::Surface,
         origin: Vec3::new(0.0, 0.0, 1.0),
         direction: Vec3::new(0.0, 0.0, -1.0),
+        local_x: 0.0,
+        local_y: 0.0,
+        viewport: render_pick_viewport(&state),
+        view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&state.orbit.to_camera(), state.projection_spec, render_pick_viewport(&state).w, render_pick_viewport(&state).h),
+        projection_spec: state.projection_spec,
         draw: 0,
         instance: 0,
-        triangle: 0,
+        primitive: 0,
         mesh: None,
         mesh_probe: 0,
         merge: 0,
@@ -2118,6 +2128,9 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             points_json: None,
             status_json: None,
             tool_run_trace: None,
+            annotations: None,
+            scalar_field: None,
+            modelling_options: None,
             domain_id: domain.map(|(id, _)| id.to_string()),
             domain_granularity_id: domain.map(|(_, granularity)| granularity.to_string()),
             lanes: Vec::new(),
@@ -6725,3 +6738,95 @@ fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
     for (name, result) in results { assert!(result.is_ok(), "{name}: actual original GPU upload {result:?}"); }
     println!("[DEBUG] originalPrimaryGpuUpload actualDevice=true originalBridgeLeases=3 indexCount=0 fabricatedTriangles=false uploadAndResidentRetirement=true independentThree=true");
 }
+
+//#region 🔖️Modelling
+const MODELLING_FIXTURE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json");
+
+fn modelling_fixture() -> serde_json::Value {
+    serde_json::from_str(MODELLING_FIXTURE).expect("world3d modelling fixture")
+}
+
+fn state_with_guest_selection(granularity: &str) -> World3dState {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    sync_world3d_scene_selection(&mut state, &format!(r#"{{"granularity":"{granularity}","componentIds":[3,4],"hoveredComponent":{{"objectId":"a","mode":"{granularity}","id":3}},"targets":{{"vertex":true,"edge":true,"face":true}}}}"#));
+    state
+}
+
+#[test]
+fn the_scene_pick_filter_admits_exactly_the_fixture_granularity_on_the_native_selection_channels() {
+    for row in modelling_fixture()["pickTargets"].as_array().unwrap() {
+        let filter = ui_wgpu::wgpu::World3dPickGranularity::parse(row["filter"].as_str().unwrap()).unwrap();
+        let mut state = state_with_guest_selection("face");
+        apply_world3d_pick_filter(&mut state, Some(filter));
+        let targets = &row["targets"];
+        assert_eq!((state.selection_targets.vertex, state.selection_targets.edge, state.selection_targets.face), (targets["vertex"].as_bool().unwrap(), targets["edge"].as_bool().unwrap(), targets["face"].as_bool().unwrap()), "{filter:?}");
+        let mode = if filter == ui_wgpu::wgpu::World3dPickGranularity::Shape { "mesh" } else { filter.as_str() };
+        assert_eq!(state.granularity, mode);
+        let keeps = filter == ui_wgpu::wgpu::World3dPickGranularity::Face;
+        assert_eq!(state.component_ids.is_empty(), !keeps, "components of another granularity are dropped, those of the chosen one kept ({filter:?})");
+        assert_eq!(state.hovered_component_mode.is_some(), keeps);
+    }
+}
+
+#[test]
+fn the_scene_pick_filter_is_idempotent_and_absent_filter_leaves_the_guest_channels_alone() {
+    let mut state = state_with_guest_selection("face");
+    let before = (state.granularity.clone(), state.selection_targets.clone(), state.component_ids.clone(), state.interaction_revision);
+    apply_world3d_pick_filter(&mut state, None);
+    assert_eq!((state.granularity.clone(), state.selection_targets.clone(), state.component_ids.clone(), state.interaction_revision), before);
+    apply_world3d_pick_filter(&mut state, Some(ui_wgpu::wgpu::World3dPickGranularity::Edge));
+    let after_first = state.interaction_revision;
+    assert_ne!(after_first, before.3);
+    apply_world3d_pick_filter(&mut state, Some(ui_wgpu::wgpu::World3dPickGranularity::Edge));
+    assert_eq!(state.interaction_revision, after_first, "re-applying the same filter must not churn the view revision");
+}
+
+fn tetrahedron() -> WorldMeshBuffers {
+    let mut data = WorldMeshBuffers::default();
+    data.positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
+    data.indices = vec![0, 1, 2, 0, 1, 3, 0, 2, 3, 1, 2, 3];
+    data
+}
+
+fn field_named(name: &str, values: serde_json::Value) -> ui_wgpu::wgpu::World3dScalarField {
+    let entry = modelling_fixture()["valid"].as_array().unwrap().iter().find(|entry| entry["name"] == name).unwrap().clone();
+    let mut value = entry["value"].clone();
+    value["values"] = values;
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture scalar field")
+}
+
+#[test]
+fn a_vertex_scalar_field_paints_the_canonical_linear_vertex_colours_and_a_wrong_count_leaves_the_mesh_alone() {
+    let field = field_named("scalar-vertex-inferno", serde_json::json!([0.0, 0.5, 1.0, null]));
+    let mut data = tetrahedron();
+    assert!(world3d_apply_scalar_field(&mut data, &field));
+    assert_eq!(data.colors.len(), 16);
+    let to_linear = |hex: &str| -> [f32; 3] { [1, 3, 5].map(|at| srgb_byte_to_linear(u8::from_str_radix(&hex[at..at + 2], 16).unwrap())) };
+    let fixture = modelling_fixture();
+    let middle = fixture["ramps"]["inferno"]["samples"].as_array().unwrap().iter().find(|sample| sample["t"] == 0.5).unwrap()["hex"].as_str().unwrap().to_string();
+    for (vertex, hex) in ["#000004".to_string(), middle, "#fcffa4".to_string(), fixture["noDataHex"].as_str().unwrap().to_string()].iter().enumerate() {
+        let want = to_linear(hex);
+        for axis in 0..3 {
+            assert!((data.colors[vertex * 4 + axis] - want[axis]).abs() < 1e-6, "vertex {vertex} axis {axis}");
+        }
+        assert_eq!(data.colors[vertex * 4 + 3], 1.0);
+    }
+    let mut untouched = tetrahedron();
+    assert!(!world3d_apply_scalar_field(&mut untouched, &field_named("scalar-vertex-inferno", serde_json::json!([0.0, 1.0]))));
+    assert!(untouched.colors.is_empty() && untouched.attributes.is_empty());
+}
+
+#[test]
+fn a_face_scalar_field_becomes_one_constant_colour_attribute_per_triangle_and_replaces_authored_colours() {
+    let field = field_named("scalar-face-coolwarm", serde_json::json!([10.0, 12.0, 18.0, 20.0]));
+    let mut data = tetrahedron();
+    data.colors = vec![1.0; 16];
+    data.attributes.insert("authored".into(), semio_framework::MeshAttribute { domain: semio_framework::MeshAttributeDomain::Vertex, semantic: semio_framework::MeshAttributeSemantic::Color, interpolation: semio_framework::MeshAttributeInterpolation::Linear, values: Vec::new(), indices: None });
+    assert!(world3d_apply_scalar_field(&mut data, &field));
+    assert!(data.colors.is_empty());
+    assert!(!data.attributes.contains_key("authored"), "an authored colour channel never fights the analysis colours");
+    let attribute = &data.attributes["scalarField"];
+    assert_eq!((attribute.domain, attribute.semantic, attribute.interpolation), (semio_framework::MeshAttributeDomain::Face, semio_framework::MeshAttributeSemantic::Color, semio_framework::MeshAttributeInterpolation::Constant));
+    assert_eq!(attribute.values.len(), 4);
+}
+//#endregion 🔖️Modelling

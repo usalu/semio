@@ -1,6 +1,6 @@
 //! 🧹️ Direct space-alternative removal mutation.
-use super::super::{CreateSpaceAlternative, RestoreActiveSpaceAlternative, SpaceHistoryMutation};
-use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
+use super::super::{CreateSpaceAlternative, SetActiveSpaceAlternative, SpaceHistoryMutation};
+use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub struct RemoveSpaceAlternative {
 impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for RemoveSpaceAlternative {
     const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "remove", entity: "space-alternative", kind: "remove-space-alternative", record: "RemovedSpaceAlternative" };
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { remove_alternative_id: Some(self.alternative_id.clone()), ..Default::default() })
+        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::RemoveAlternative { alternative_id: self.alternative_id.clone() }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -31,7 +31,7 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
             .find(|value| value.id == self.alternative_id)
             .map(|alternative| {
                 vec![
-                    SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
+                    SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() }),
                     SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative: alternative.clone() }),
                 ]
             })

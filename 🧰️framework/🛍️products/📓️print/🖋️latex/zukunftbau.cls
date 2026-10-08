@@ -44,8 +44,8 @@
     \renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/bmwsb/logo.png}%
   }%
 }{}
-\IfFileExists{asset/demonstrator/aggegator.png}{%
-  \renewcommand{\semio@cover@arbeitsprobe@image}{asset/demonstrator/aggegator.png}%
+\IfFileExists{asset/demonstrator/arbeitsprobe.png}{%
+  \renewcommand{\semio@cover@arbeitsprobe@image}{asset/demonstrator/arbeitsprobe.png}%
 }{}
 \makeatother
 %endregion

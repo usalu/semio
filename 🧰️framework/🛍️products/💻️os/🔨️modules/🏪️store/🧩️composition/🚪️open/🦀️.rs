@@ -12,6 +12,10 @@ use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
 
+#[path = "🌱️genesis/🦀️.rs"]
+mod genesis;
+pub use genesis::{MemberGenesisEnvelopeEncoder, MemberGenesisEnvelopeProgress, MemberGenesisEnvelopeSource};
+
 pub const MEMBER_OPEN_IDENTITY_BYTES: usize = 256;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -85,6 +89,8 @@ pub trait MemberOpenOperation {
     fn step(&mut self, cx: &mut StepContext<'_>) -> MemberOpenStep<Self::Member>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self) -> bool;
+    fn next_close_byte_demand(&self) -> usize;
+    fn terminal_drop_byte_demand(&self) -> Option<usize>;
 }
 
 pub struct MemberOpenRequest {
@@ -95,9 +101,7 @@ pub struct MemberOpenRequest {
     expected: ManuallyDrop<Option<ArtifactRef>>,
     owner: ManuallyDrop<Option<OwnerRef>>,
     pages: ManuallyDrop<Option<OwnedSchemaDecodePages>>,
-    closing_page: Option<OwnedSchemaDecodePage>,
-    closing_bytes: usize,
-    closing_identity: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    closing_identity_field: u8,
     input_offset: usize,
     snapshot_bytes: u64,
     framed: Option<MemberOpenFrame>,
@@ -117,9 +121,7 @@ impl MemberOpenRequest {
             expected: ManuallyDrop::new(Some(expected)),
             owner: ManuallyDrop::new(owner),
             pages: ManuallyDrop::new(Some(pages)),
-            closing_page: None,
-            closing_bytes: 0,
-            closing_identity: ManuallyDrop::new(None),
+            closing_identity_field: 0,
             input_offset: 0,
             snapshot_bytes: 0,
             framed: None,
@@ -157,7 +159,7 @@ impl MemberOpenRequest {
         self.expires_at_us
     }
     pub fn retained_input_bytes(&self) -> usize {
-        self.pages.as_ref().map_or(0, OwnedSchemaDecodePages::byte_count) + self.closing_bytes
+        self.pages.as_ref().map_or(0, OwnedSchemaDecodePages::byte_count)
     }
 
     pub fn admit(mut self, now_us: u64) -> Result<Self, MemberOpenAdmissionError> {
@@ -284,53 +286,73 @@ impl MemberOpenRequest {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         self.closing = true;
-        if self.closing_page.is_some() {
-            if self.closing_bytes != 0 {
-                let bytes = maximum_bytes.min(self.closing_bytes);
-                self.closing_bytes -= bytes;
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: bytes });
-            }
-            self.closing_page.take();
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(pages) = self.pages.as_mut() {
             if let Some(page) = pages.close_take_page() {
-                self.closing_bytes = page.len();
-                self.closing_page = Some(page);
-                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                let _ = page;
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             assert!(pages.terminal_is_empty(), "input page registry must be terminal before release");
-            self.pages.take();
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            let released_bytes = pages.allocation_byte_demand();
+            if released_bytes > maximum_bytes { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            drop(self.pages.take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
-        if let Some(identity) = self.closing_identity.as_mut() {
-            return match identity.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if identity.terminal_is_empty() => {
-                    self.closing_identity.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member request identity returned false terminal")),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
-                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member request identity exceeded its close grant"))
-                }
-                step => Ok(step),
-            };
+        if self.closing_identity_field < 11 {
+            let field = self.identity_string_mut();
+            let released_bytes = field.as_ref().map_or(0, |field| field.capacity());
+            if released_bytes > maximum_bytes { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if let Some(field) = field { drop(std::mem::take(field)); }
+            self.closing_identity_field += 1;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
         }
-        if !self.actor.0.is_empty() {
-            *self.closing_identity = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.actor.0)));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(expected) = self.expected.take() {
-            *self.closing_identity = Some(semio_framework_value::retirement::owned_retirement((expected, self.owner.take())));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        assert!(self.owner.is_none());
+        drop(self.expected.take());
+        drop(self.owner.take());
         self.detached = true;
         Ok(SnapshotRetirementStep::Complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.detached && self.actor.0.is_empty() && self.expected.is_none() && self.owner.is_none() && self.pages.is_none() && self.closing_page.is_none() && self.closing_identity.is_none()
+        self.detached && self.actor.0.capacity() == 0 && self.expected.is_none() && self.owner.is_none() && self.pages.is_none()
+    }
+
+    fn identity_string_mut(&mut self) -> Option<&mut String> {
+        match self.closing_identity_field {
+            0 => Some(&mut self.actor.0),
+            1 => self.expected.as_mut().map(|value| &mut value.artifact_id),
+            2 => self.expected.as_mut().map(|value| &mut value.dialect.artifact_kind),
+            3 => self.expected.as_mut().map(|value| &mut value.dialect.standard),
+            4 => self.expected.as_mut().map(|value| &mut value.dialect.subset),
+            5 => self.owner.as_mut().map(|value| &mut value.parent.artifact_id),
+            6 => self.owner.as_mut().map(|value| &mut value.parent.dialect.artifact_kind),
+            7 => self.owner.as_mut().map(|value| &mut value.parent.dialect.standard),
+            8 => self.owner.as_mut().map(|value| &mut value.parent.dialect.subset),
+            9 => self.owner.as_mut().map(|value| &mut value.slot),
+            10 => self.owner.as_mut().map(|value| &mut value.child_id),
+            _ => None,
+        }
+    }
+
+    /// 📏️ Queries the next original whole allocation without creating a retirement owner.
+    pub fn next_close_byte_demand(&self) -> usize {
+        if self.detached { return 0; }
+        if let Some(pages) = self.pages.as_ref() { return if pages.terminal_is_empty() { pages.allocation_byte_demand() } else { 0 }; }
+        let expected = self.expected.as_ref();
+        let owner = self.owner.as_ref();
+        let field = match self.closing_identity_field {
+            0 => Some(&self.actor.0),
+            1 => expected.map(|value| &value.artifact_id),
+            2 => expected.map(|value| &value.dialect.artifact_kind),
+            3 => expected.map(|value| &value.dialect.standard),
+            4 => expected.map(|value| &value.dialect.subset),
+            5 => owner.map(|value| &value.parent.artifact_id),
+            6 => owner.map(|value| &value.parent.dialect.artifact_kind),
+            7 => owner.map(|value| &value.parent.dialect.standard),
+            8 => owner.map(|value| &value.parent.dialect.subset),
+            9 => owner.map(|value| &value.slot),
+            10 => owner.map(|value| &value.child_id),
+            _ => None,
+        };
+        field.map_or(1, |field| field.capacity().max(1))
     }
 }
 
@@ -341,6 +363,7 @@ impl ErasedSnapshotRetirement for MemberOpenRequest {
     fn terminal_is_empty(&self) -> bool {
         MemberOpenRequest::terminal_is_empty(self)
     }
+    fn next_close_byte_demand(&self) -> usize { MemberOpenRequest::next_close_byte_demand(self) }
 }
 
 impl Drop for MemberOpenRequest {
@@ -477,19 +500,7 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         self.reject(MemberOpenDiagnostic::Cancelled);
-        if let Some(active) = self.active.as_mut() {
-            return match active.close_step(1, maximum_bytes)? {
-                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                    self.active.take();
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open nested owner reported false terminal")),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
-                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open nested owner exceeded its close grant"))
-                }
-                step => Ok(step),
-            };
-        }
+        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, 1, maximum_bytes); }
         let owners = self.owners.as_ref().expect("member-open retirement retains the original owner bundle");
         if let Some(runtime) = self.runtime.as_mut() {
             return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
@@ -530,13 +541,10 @@ where
                 step => Ok(step),
             };
         }
-        let disposer = &mut self.owners.as_mut().expect("original owner bundle remains until rejection is terminal").store_disposer;
-        match disposer.close_uninstalled_step(1)? {
-            SnapshotRetirementStep::Complete if disposer.uninstalled_terminal_is_empty() => {}
-            SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open uninstalled disposer reported false terminal")),
-            SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes != 0 => {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open uninstalled disposer exceeded its close grant"));
-            }
+        let owners = self.owners.as_mut().expect("original owner bundle remains until rejection is terminal");
+        match owners.close_uninstalled_owners_step(1, maximum_bytes)? {
+            SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {}
+            SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member-open catalog reported false terminal")),
             step => return Ok(step),
         }
         self.owners.take();
@@ -546,6 +554,13 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.request.is_none() && self.owners.is_none() && self.history.is_none() && self.initial.is_none() && self.pending_edit.is_none() && self.envelope.is_none() && self.runtime.is_none() && self.active.is_none()
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_byte_demand(active); }
+        if let Some(runtime) = self.runtime.as_ref() { return runtime.next_close_byte_demand(); }
+        if self.pending_edit.is_some() || self.envelope.is_some() || self.initial.is_some() || self.history.is_some() { return 1; }
+        self.request.as_ref().map_or_else(|| self.owners.as_ref().map_or(usize::from(!self.terminal), super::DocumentStoreOwners::next_close_byte_demand), MemberOpenRequest::next_close_byte_demand)
     }
 }
 

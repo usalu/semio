@@ -560,37 +560,35 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
 /// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
 /// actually evaluates and exports.
 #[cfg(feature = "component-app-assembly")]
-pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
+pub fn ensure_gumball_node(editor: &mut crate::standards::v1::subsets::any::schema::GraphEditor<'_>, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
     let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
     let selected_id = widget_id_from_instance_id(selected_id);
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    let source_kind = host.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
-    let source_info = infos.get(source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
+    let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind.clone()), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
+    let source_info = infos.get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
     let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
     let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
     let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
     if source_port.cardinality.is_collection() { return Err(GumballRefusal::ListOutput); }
     let own_suffix = format!("__gumball_{operation}");
-    if selected_id.ends_with(&own_suffix) && source_kind == &transform_kind { return Ok(selected_id.to_string()); }
+    if selected_id.ends_with(&own_suffix) && source_kind == transform_kind { return Ok(selected_id.to_string()); }
     let transform_id = gumball_widget_id(selected_id, operation);
-    if let Some(widget) = host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == transform_id) {
-        if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && host.host_snapshot.synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
+    if let Some(widget) = editor.snapshot().widgets.iter().find(|widget| widget_id(widget) == transform_id) {
+        if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && editor.snapshot().synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
         return Err(GumballRefusal::IdentifierOccupied);
     }
     let transform_output = infos.get(&transform_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(transform_kind.clone()))?;
-    let (source_x, source_y) = host.host_snapshot.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
+    let (source_x, source_y) = editor.snapshot().layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let descriptor = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
         ("kind".to_string(), semio_framework_value::DslValue::String("neuron".into())),
         ("id".to_string(), semio_framework_value::DslValue::String(transform_id.clone())),
         ("neuronKind".to_string(), semio_framework_value::DslValue::String(transform_kind)),
     ]));
-    host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| GumballRefusal::HostEdit(err.to_string()))?;
-    host.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(|err| GumballRefusal::HostEdit(err.to_string()))?;
-    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == transform_id) { *preview = true; }
-    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
-        *preview = false;
-    }
+    editor.add_widget(&descriptor, source_x + 220.0, source_y).map_err(GumballRefusal::HostEdit)?;
+    editor.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(GumballRefusal::HostEdit)?;
+    editor.set_preview(&transform_id, true);
+    editor.set_preview(selected_id, false);
     Ok(transform_id)
 }
 }

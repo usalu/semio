@@ -1,17 +1,15 @@
-//! 🧬️ Fem2d diff schema — sparse field delta over the artifact.
+//! 🧬️ Fem2d diff schema — sparse id-keyed delta over the artifact.
 
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the fem2d artifact.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+/// 🔺️ Sparse delta for the fem2d artifact: per-collection id-keyed rows plus an owned-field analysis patch.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dDiff {
-    #[state(artifact)]
-    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::Fem2dArtifact>>,
     #[state(artifact)]
     pub nodes: Option<Fem2dNodesDelta>,
     #[state(artifact)]
@@ -29,13 +27,13 @@ pub struct Fem2dDiff {
     #[state(artifact)]
     pub combinations: Option<Fem2dCombinationsDelta>,
     #[state(artifact)]
-    pub analysis: Option<FemAnalysisSettings>,
+    pub analysis: Option<Fem2dAnalysisPatch>,
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
 /// 🧩 Identified-collection delta for `nodes`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dNodesDelta {
     pub added: Vec<FemNode>,
@@ -45,7 +43,7 @@ pub struct Fem2dNodesDelta {
 }
 
 /// 🩹 One patched `nodes` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dNodesPatchEntry {
     pub id: String,
@@ -53,9 +51,10 @@ pub struct Fem2dNodesPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `elements`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dElementsDelta {
+    #[dsl(statements, block)]
     pub added: Vec<FemElement>,
     pub removed: Vec<String>,
     pub patched: Vec<Fem2dElementsPatchEntry>,
@@ -63,15 +62,16 @@ pub struct Fem2dElementsDelta {
 }
 
 /// 🩹 One patched `elements` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dElementsPatchEntry {
     pub id: String,
-    pub item: FemElement,
+    #[dsl(statements)]
+    pub item: Box<FemElement>,
 }
 
 /// 🧩 Identified-collection delta for `regions`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dRegionsDelta {
     pub added: Vec<FemRegion>,
@@ -81,7 +81,7 @@ pub struct Fem2dRegionsDelta {
 }
 
 /// 🩹 One patched `regions` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dRegionsPatchEntry {
     pub id: String,
@@ -89,7 +89,7 @@ pub struct Fem2dRegionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `materials`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dMaterialsDelta {
     pub added: Vec<FemMaterial>,
@@ -99,7 +99,7 @@ pub struct Fem2dMaterialsDelta {
 }
 
 /// 🩹 One patched `materials` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dMaterialsPatchEntry {
     pub id: String,
@@ -107,7 +107,7 @@ pub struct Fem2dMaterialsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `sections`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dSectionsDelta {
     pub added: Vec<FemSection>,
@@ -117,7 +117,7 @@ pub struct Fem2dSectionsDelta {
 }
 
 /// 🩹 One patched `sections` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dSectionsPatchEntry {
     pub id: String,
@@ -125,7 +125,7 @@ pub struct Fem2dSectionsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `supports`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dSupportsDelta {
     pub added: Vec<FemSupport>,
@@ -135,7 +135,7 @@ pub struct Fem2dSupportsDelta {
 }
 
 /// 🩹 One patched `supports` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dSupportsPatchEntry {
     pub id: String,
@@ -143,7 +143,7 @@ pub struct Fem2dSupportsPatchEntry {
 }
 
 /// 🧩 Identified-collection delta for `loadCases`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dLoadCasesDelta {
     pub added: Vec<FemLoadCase>,
@@ -152,16 +152,45 @@ pub struct Fem2dLoadCasesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-/// 🩹 One patched `loadCases` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+/// 🩹 One patched `loadCases` entry: only the fields the mutation owns.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadCasesPatchEntry {
     pub id: String,
-    pub item: FemLoadCase,
+    pub patch: Fem2dLoadCasePatch,
+}
+
+/// 🩹 Owned-field patch of one load case: a rename, a self-weight switch and/or keyed load rows.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct Fem2dLoadCasePatch {
+    pub name: Option<String>,
+    pub self_weight: Option<bool>,
+    pub loads: Option<Fem2dLoadsDelta>,
+}
+
+/// 🧩 Identified-collection delta for the `loads` of one load case.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct Fem2dLoadsDelta {
+    #[dsl(statements, block)]
+    pub added: Vec<FemLoad>,
+    pub removed: Vec<String>,
+    pub patched: Vec<Fem2dLoadsPatchEntry>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🩹 One patched `loads` entry (whole-load replacement).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct Fem2dLoadsPatchEntry {
+    pub id: String,
+    #[dsl(statements)]
+    pub item: Box<FemLoad>,
 }
 
 /// 🧩 Identified-collection delta for `combinations`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dCombinationsDelta {
     pub added: Vec<FemCombination>,
@@ -171,20 +200,29 @@ pub struct Fem2dCombinationsDelta {
 }
 
 /// 🩹 One patched `combinations` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dCombinationsPatchEntry {
     pub id: String,
     pub item: FemCombination,
 }
 
+/// 🎛️ Owned-field patch of the analysis settings: exactly the fields the mutation sets.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct Fem2dAnalysisPatch {
+    pub modal_count: Option<usize>,
+    pub buckling_count: Option<usize>,
+    pub deformation_scale: Option<f64>,
+}
 //#endregion 🔖️DeltaHelpers
 
-use crate::standards::v1::subsets::any::schema::Fem2dArtifact;
 use crate::element_id;
+use crate::load_id;
 use crate::Fem2dSnapshot;
-use protocol::MutationDiff;
+use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
+//#region 🔖️RowAlgebra
 pub(crate) trait HasId {
     fn id(&self) -> &str;
 }
@@ -225,6 +263,12 @@ impl HasId for FemLoadCase {
     }
 }
 
+impl HasId for FemLoad {
+    fn id(&self) -> &str {
+        load_id(self)
+    }
+}
+
 impl HasId for FemCombination {
     fn id(&self) -> &str {
         &self.id
@@ -237,424 +281,460 @@ impl HasId for FemRegion {
     }
 }
 
-fn apply_delta<T: HasId + Clone, P>(items: &[T], delta: &P) -> protocol::MutationApplyResult<Vec<T>>
-where
-    P: DeltaAccess<T>,
-{
-    for (index, id) in delta.removed().iter().enumerate() {
-        if !items.iter().any(|item| item.id() == id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed".to_string(), index.to_string()]));
-        }
-        if delta.removed()[..index].contains(id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed".to_string(), index.to_string()]));
-        }
-    }
-    for (index, item) in delta.added().iter().enumerate() {
-        if items.iter().any(|existing| existing.id() == item.id()) || delta.added()[..index].iter().any(|existing| existing.id() == item.id()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added".to_string(), index.to_string()]));
-        }
-    }
-    let patched = delta.patched();
-    for (index, (id, item)) in patched.iter().enumerate() {
-        if !items.iter().any(|existing| existing.id() == id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched".to_string(), index.to_string()]));
-        }
-        if delta.removed().contains(id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "item cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
-        }
-        if patched[..index].iter().any(|(prior, _)| prior == id) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched".to_string(), index.to_string()]));
-        }
-        if item.id() != id && (items.iter().any(|existing| existing.id() == item.id()) || delta.added().iter().any(|added| added.id() == item.id())) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched item identity collides with another item").at(["patched".to_string(), index.to_string()]));
-        }
-    }
-    let mut next = items.to_vec();
-    for id in delta.removed() {
-        next.retain(|item| item.id() != id);
-    }
-    for item in delta.added() {
-        if let Some(pos) = next.iter().position(|existing| existing.id() == item.id()) {
-            next[pos] = item.clone();
-        } else {
-            next.push(item.clone());
-        }
-    }
-    for (id, item) in patched {
-        if let Some(pos) = next.iter().position(|existing| existing.id() == id) {
-            next[pos] = item.clone();
-        }
-    }
-    let mut resulting_ids = std::collections::HashSet::new();
-    if !next.iter().all(|item| resulting_ids.insert(item.id())) {
-        return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting collection contains duplicate identities").at(["identities"]));
-    }
-    if let Some(order) = delta.reordered() {
-        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|item| item.id() == id)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered"]));
-        }
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (item.id().to_string(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order {
-            ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered item does not exist").at(["reordered".to_string(), id.clone()]))?);
-        }
-        next = ordered;
-    }
-    Ok(next)
+/// 🩹 How one patch row edits one item: applied forward, inverted against a base item, composed with a later row.
+pub(crate) trait RowPatch<T>: Clone + Sized {
+    fn applied(&self, item: &T) -> MutationApplyResult<T>;
+    fn inverse_against(&self, base: &T) -> Self;
+    fn composed(&mut self, later: Self);
+    fn between(base: &T, other: &T) -> Option<Self>;
 }
 
-trait DeltaAccess<T: HasId + Clone> {
-    fn added(&self) -> &[T];
+impl<T: Clone + PartialEq> RowPatch<T> for T {
+    fn applied(&self, _item: &T) -> MutationApplyResult<T> {
+        Ok(self.clone())
+    }
+    fn inverse_against(&self, base: &T) -> Self {
+        base.clone()
+    }
+    fn composed(&mut self, later: Self) {
+        *self = later;
+    }
+    fn between(base: &T, other: &T) -> Option<Self> {
+        (base != other).then(|| other.clone())
+    }
+}
+
+impl RowPatch<FemElement> for Box<FemElement> {
+    fn applied(&self, _item: &FemElement) -> MutationApplyResult<FemElement> {
+        Ok((**self).clone())
+    }
+    fn inverse_against(&self, base: &FemElement) -> Self {
+        Box::new(base.clone())
+    }
+    fn composed(&mut self, later: Self) {
+        *self = later;
+    }
+    fn between(base: &FemElement, other: &FemElement) -> Option<Self> {
+        (base != other).then(|| Box::new(other.clone()))
+    }
+}
+
+impl RowPatch<FemLoad> for Box<FemLoad> {
+    fn applied(&self, _item: &FemLoad) -> MutationApplyResult<FemLoad> {
+        Ok((**self).clone())
+    }
+    fn inverse_against(&self, base: &FemLoad) -> Self {
+        Box::new(base.clone())
+    }
+    fn composed(&mut self, later: Self) {
+        *self = later;
+    }
+    fn between(base: &FemLoad, other: &FemLoad) -> Option<Self> {
+        (base != other).then(|| Box::new(other.clone()))
+    }
+}
+
+impl RowPatch<FemLoadCase> for Fem2dLoadCasePatch {
+    fn applied(&self, item: &FemLoadCase) -> MutationApplyResult<FemLoadCase> {
+        let loads = match &self.loads {
+            Some(delta) => apply_delta(&item.loads, delta).map_err(|error| error.under(["loads"]))?,
+            None => item.loads.clone(),
+        };
+        Ok(FemLoadCase { id: item.id.clone(), name: self.name.clone().unwrap_or_else(|| item.name.clone()), loads, self_weight: self.self_weight.unwrap_or(item.self_weight) })
+    }
+    fn inverse_against(&self, base: &FemLoadCase) -> Self {
+        Self {
+            name: self.name.as_ref().map(|_| base.name.clone()),
+            self_weight: self.self_weight.map(|_| base.self_weight),
+            loads: self.loads.as_ref().map(|delta| inverse_delta(delta, &base.loads)),
+        }
+    }
+    fn composed(&mut self, later: Self) {
+        self.name = later.name.or_else(|| self.name.take());
+        self.self_weight = later.self_weight.or(self.self_weight);
+        self.loads = match (self.loads.take(), later.loads) {
+            (Some(first), Some(second)) => Some(absorb_delta(first, second)),
+            (first, None) => first,
+            (None, second) => second,
+        };
+    }
+    fn between(base: &FemLoadCase, other: &FemLoadCase) -> Option<Self> {
+        let patch = Self {
+            name: (base.name != other.name).then(|| other.name.clone()),
+            self_weight: (base.self_weight != other.self_weight).then_some(other.self_weight),
+            loads: between_delta(&base.loads, &other.loads),
+        };
+        (patch != Self::default()).then_some(patch)
+    }
+}
+
+impl Fem2dAnalysisPatch {
+    fn applied(&self, base: &FemAnalysisSettings) -> FemAnalysisSettings {
+        FemAnalysisSettings {
+            modal_count: self.modal_count.unwrap_or(base.modal_count),
+            buckling_count: self.buckling_count.unwrap_or(base.buckling_count),
+            deformation_scale: self.deformation_scale.unwrap_or(base.deformation_scale),
+        }
+    }
+    fn inverse_against(&self, base: &FemAnalysisSettings) -> Self {
+        Self { modal_count: self.modal_count.map(|_| base.modal_count), buckling_count: self.buckling_count.map(|_| base.buckling_count), deformation_scale: self.deformation_scale.map(|_| base.deformation_scale) }
+    }
+    fn composed(&mut self, later: Self) {
+        self.modal_count = later.modal_count.or(self.modal_count);
+        self.buckling_count = later.buckling_count.or(self.buckling_count);
+        self.deformation_scale = later.deformation_scale.or(self.deformation_scale);
+    }
+    fn between(base: &FemAnalysisSettings, other: &FemAnalysisSettings) -> Option<Self> {
+        let patch = Self {
+            modal_count: (base.modal_count != other.modal_count).then_some(other.modal_count),
+            buckling_count: (base.buckling_count != other.buckling_count).then_some(other.buckling_count),
+            deformation_scale: (base.deformation_scale != other.deformation_scale).then_some(other.deformation_scale),
+        };
+        (patch != Self::default()).then_some(patch)
+    }
+}
+
+/// 🧩 The shared shape of every id-keyed collection delta.
+pub(crate) trait Delta: Default + Clone {
+    type Item: HasId + Clone;
+    type Patch: RowPatch<Self::Item>;
+    fn added(&self) -> &[Self::Item];
     fn removed(&self) -> &[String];
-    fn patched(&self) -> Vec<(String, T)>;
+    fn patched(&self) -> Vec<(&str, &Self::Patch)>;
     fn reordered(&self) -> Option<&[String]>;
+    fn from_parts(added: Vec<Self::Item>, removed: Vec<String>, patched: Vec<(String, Self::Patch)>, reordered: Option<Vec<String>>) -> Self;
 }
 
-macro_rules! impl_delta_access {
-    ($delta:ty, $item:ty, $entry:ty) => {
-        impl DeltaAccess<$item> for $delta {
+macro_rules! impl_delta {
+    ($delta:ty, $item:ty, $patch:ty, $entry:ident, $field:ident) => {
+        impl Delta for $delta {
+            type Item = $item;
+            type Patch = $patch;
             fn added(&self) -> &[$item] {
                 &self.added
             }
             fn removed(&self) -> &[String] {
                 &self.removed
             }
-            fn patched(&self) -> Vec<(String, $item)> {
-                self.patched.iter().map(|e| (e.id.clone(), e.item.clone())).collect()
+            fn patched(&self) -> Vec<(&str, &$patch)> {
+                self.patched.iter().map(|entry| (entry.id.as_str(), &entry.$field)).collect()
             }
             fn reordered(&self) -> Option<&[String]> {
                 self.reordered.as_deref()
             }
+            fn from_parts(added: Vec<$item>, removed: Vec<String>, patched: Vec<(String, $patch)>, reordered: Option<Vec<String>>) -> Self {
+                Self { added, removed, patched: patched.into_iter().map(|(id, $field)| $entry { id, $field }).collect(), reordered }
+            }
         }
     };
 }
 
-impl_delta_access!(Fem2dNodesDelta, FemNode, Fem2dNodesPatchEntry);
+impl_delta!(Fem2dNodesDelta, FemNode, FemNode, Fem2dNodesPatchEntry, item);
+impl_delta!(Fem2dElementsDelta, FemElement, Box<FemElement>, Fem2dElementsPatchEntry, item);
+impl_delta!(Fem2dRegionsDelta, FemRegion, FemRegion, Fem2dRegionsPatchEntry, item);
+impl_delta!(Fem2dMaterialsDelta, FemMaterial, FemMaterial, Fem2dMaterialsPatchEntry, item);
+impl_delta!(Fem2dSectionsDelta, FemSection, FemSection, Fem2dSectionsPatchEntry, item);
+impl_delta!(Fem2dSupportsDelta, FemSupport, FemSupport, Fem2dSupportsPatchEntry, item);
+impl_delta!(Fem2dLoadCasesDelta, FemLoadCase, Fem2dLoadCasePatch, Fem2dLoadCasesPatchEntry, patch);
+impl_delta!(Fem2dLoadsDelta, FemLoad, Box<FemLoad>, Fem2dLoadsPatchEntry, item);
+impl_delta!(Fem2dCombinationsDelta, FemCombination, FemCombination, Fem2dCombinationsPatchEntry, item);
+//#endregion 🔖️RowAlgebra
 
-impl_delta_access!(Fem2dElementsDelta, FemElement, Fem2dElementsPatchEntry);
+//#region 🔖️DeltaAlgebra
+fn rejection(code: &str, message: &str, at: [String; 2]) -> MutationApplyError {
+    MutationApplyError::new(code, message).at(at)
+}
 
-impl_delta_access!(Fem2dRegionsDelta, FemRegion, Fem2dRegionsPatchEntry);
+fn apply_delta<D: Delta>(items: &[D::Item], delta: &D) -> MutationApplyResult<Vec<D::Item>> {
+    for (index, id) in delta.removed().iter().enumerate() {
+        if !items.iter().any(|item| item.id() == id) {
+            return Err(rejection("mutation.apply.missing-target", "removed item does not exist", ["removed".into(), index.to_string()]));
+        }
+        if delta.removed()[..index].contains(id) {
+            return Err(rejection("mutation.apply.duplicate-target", "item is removed more than once", ["removed".into(), index.to_string()]));
+        }
+    }
+    for (index, item) in delta.added().iter().enumerate() {
+        let survives = items.iter().any(|existing| existing.id() == item.id()) && !delta.removed().iter().any(|id| id == item.id());
+        if survives || delta.added()[..index].iter().any(|existing| existing.id() == item.id()) {
+            return Err(rejection("mutation.apply.duplicate-target", "added item identity already exists", ["added".into(), index.to_string()]));
+        }
+    }
+    let patched = delta.patched();
+    for (index, (id, _)) in patched.iter().enumerate() {
+        if !items.iter().any(|existing| existing.id() == *id) {
+            return Err(rejection("mutation.apply.missing-target", "patched item does not exist", ["patched".into(), index.to_string()]));
+        }
+        if delta.removed().iter().any(|removed| removed == id) {
+            return Err(rejection("mutation.apply.conflicting-target", "item cannot be removed and patched", ["patched".into(), index.to_string()]));
+        }
+        if patched[..index].iter().any(|(prior, _)| prior == id) {
+            return Err(rejection("mutation.apply.duplicate-target", "item is patched more than once", ["patched".into(), index.to_string()]));
+        }
+    }
+    let mut next: Vec<D::Item> = items.iter().filter(|item| !delta.removed().iter().any(|id| id == item.id())).cloned().collect();
+    next.extend(delta.added().iter().cloned());
+    for (id, patch) in patched {
+        if let Some(position) = next.iter().position(|existing| existing.id() == id) {
+            next[position] = patch.applied(&next[position]).map_err(|error| error.under(["patched", id]))?;
+        }
+    }
+    let mut resulting_ids = std::collections::HashSet::new();
+    if !next.iter().all(|item| resulting_ids.insert(item.id())) {
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "resulting collection contains duplicate identities").at(["identities"]));
+    }
+    if let Some(order) = delta.reordered() {
+        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|item| item.id() == id)) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered"]));
+        }
+        let mut by_id: std::collections::BTreeMap<String, D::Item> = next.into_iter().map(|item| (item.id().to_string(), item)).collect();
+        let mut ordered = Vec::with_capacity(order.len());
+        for id in order {
+            ordered.push(by_id.remove(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "reordered item does not exist").at(["reordered".to_string(), id.clone()]))?);
+        }
+        next = ordered;
+    }
+    Ok(next)
+}
 
-impl_delta_access!(Fem2dMaterialsDelta, FemMaterial, Fem2dMaterialsPatchEntry);
+fn is_empty_delta<D: Delta>(delta: &D) -> bool {
+    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().is_empty() && delta.reordered().is_none()
+}
 
-impl_delta_access!(Fem2dSectionsDelta, FemSection, Fem2dSectionsPatchEntry);
+enum Net<T, P> {
+    Patch(P),
+    Remove,
+    Add(T),
+    Replace(T),
+}
 
-impl_delta_access!(Fem2dSupportsDelta, FemSupport, Fem2dSupportsPatchEntry);
+/// ➕️ Composes `first` then `second` per id (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace) in a canonical row order.
+fn absorb_delta<D: Delta>(first: D, second: D) -> D {
+    let mut nets: std::collections::BTreeMap<String, Net<D::Item, D::Patch>> = std::collections::BTreeMap::new();
+    let mut appended: Vec<String> = Vec::new();
+    let second_removed: Vec<String> = second.removed().to_vec();
+    let second_added: Vec<String> = second.added().iter().map(|item| item.id().to_string()).collect();
+    let first_order = first.reordered().map(<[String]>::to_vec);
+    let second_order = second.reordered().map(<[String]>::to_vec);
+    for delta in [first, second] {
+        let added = delta.added().to_vec();
+        let removed = delta.removed().to_vec();
+        let patched: Vec<(String, D::Patch)> = delta.patched().into_iter().map(|(id, patch)| (id.to_string(), patch.clone())).collect();
+        for id in removed {
+            match nets.remove(&id) {
+                Some(Net::Add(_)) => appended.retain(|existing| existing != &id),
+                Some(Net::Replace(_)) => {
+                    appended.retain(|existing| existing != &id);
+                    nets.insert(id, Net::Remove);
+                }
+                _ => {
+                    nets.insert(id, Net::Remove);
+                }
+            }
+        }
+        for item in added {
+            let id = item.id().to_string();
+            let net = match nets.remove(&id) {
+                Some(Net::Remove) => Net::Replace(item),
+                _ => Net::Add(item),
+            };
+            appended.retain(|existing| existing != &id);
+            appended.push(id.clone());
+            nets.insert(id, net);
+        }
+        for (id, patch) in patched {
+            let net = match nets.remove(&id) {
+                None => Net::Patch(patch),
+                Some(Net::Remove) => Net::Remove,
+                Some(Net::Patch(mut earlier)) => {
+                    earlier.composed(patch);
+                    Net::Patch(earlier)
+                }
+                Some(Net::Add(item)) => match patch.applied(&item) {
+                    Ok(patched) => Net::Add(patched),
+                    Err(_) => Net::Add(item),
+                },
+                Some(Net::Replace(item)) => match patch.applied(&item) {
+                    Ok(patched) => Net::Replace(patched),
+                    Err(_) => Net::Replace(item),
+                },
+            };
+            nets.insert(id, net);
+        }
+    }
+    let reordered = match (second_order, first_order) {
+        (Some(order), _) => Some(order),
+        (None, Some(order)) => Some(order.into_iter().filter(|id| !second_removed.contains(id)).chain(second_added.into_iter().filter(|id| nets.contains_key(id))).collect()),
+        (None, None) => None,
+    };
+    let mut removed = Vec::new();
+    let mut patched = Vec::new();
+    let mut adds: std::collections::BTreeMap<String, D::Item> = std::collections::BTreeMap::new();
+    for (id, net) in nets {
+        match net {
+            Net::Patch(patch) => patched.push((id, patch)),
+            Net::Remove => removed.push(id),
+            Net::Add(item) => {
+                adds.insert(id, item);
+            }
+            Net::Replace(item) => {
+                removed.push(id.clone());
+                adds.insert(id, item);
+            }
+        }
+    }
+    let mut added: Vec<D::Item> = Vec::with_capacity(adds.len());
+    if reordered.is_some() {
+        added.extend(adds.into_values());
+    } else {
+        for id in &appended {
+            if let Some(item) = adds.remove(id) {
+                added.push(item);
+            }
+        }
+    }
+    D::from_parts(added, removed, patched, reordered)
+}
 
-impl_delta_access!(Fem2dLoadCasesDelta, FemLoadCase, Fem2dLoadCasesPatchEntry);
+fn absorb_optional<D: Delta>(first: &mut Option<D>, second: Option<D>) {
+    let Some(second) = second else { return };
+    let merged = absorb_delta(first.take().unwrap_or_default(), second);
+    *first = (!is_empty_delta(&merged)).then_some(merged);
+}
 
-impl_delta_access!(Fem2dCombinationsDelta, FemCombination, Fem2dCombinationsPatchEntry);
-
-impl Fem2dDiff {
-    /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Fem2dArtifact) -> protocol::MutationApplyResult<Fem2dArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(delta) = &self.nodes {
-                next.nodes = apply_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
-            }
-            if let Some(delta) = &self.elements {
-                next.elements = apply_delta(&next.elements, delta).map_err(|error| error.under(["elements"]))?;
-            }
-            if let Some(delta) = &self.regions {
-                next.regions = apply_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
-            }
-            if let Some(delta) = &self.materials {
-                next.materials = apply_delta(&next.materials, delta).map_err(|error| error.under(["materials"]))?;
-            }
-            if let Some(delta) = &self.sections {
-                next.sections = apply_delta(&next.sections, delta).map_err(|error| error.under(["sections"]))?;
-            }
-            if let Some(delta) = &self.supports {
-                next.supports = apply_delta(&next.supports, delta).map_err(|error| error.under(["supports"]))?;
-            }
-            if let Some(delta) = &self.load_cases {
-                next.load_cases = apply_delta(&next.load_cases, delta).map_err(|error| error.under(["loadCases"]))?;
-            }
-            if let Some(delta) = &self.combinations {
-                next.combinations = apply_delta(&next.combinations, delta).map_err(|error| error.under(["combinations"]))?;
-            }
-            if let Some(value) = &self.analysis {
-                next.analysis = value.clone();
-            }
-            next
-        })
+fn forward_order<D: Delta>(base_ids: &[String], delta: &D) -> Vec<String> {
+    let mut ids: Vec<String> = base_ids.iter().filter(|id| !delta.removed().contains(id)).cloned().collect();
+    ids.extend(delta.added().iter().map(|item| item.id().to_string()));
+    match delta.reordered() {
+        Some(order) => order.to_vec(),
+        None => ids,
     }
 }
 
+/// 🔁️ The negative delta against `base`: patches restore base rows, adds become removes, removes re-add base rows.
+fn inverse_delta<D: Delta>(delta: &D, base: &[D::Item]) -> D {
+    let find = |id: &str| base.iter().find(|item| item.id() == id);
+    let removed: Vec<String> = delta.added().iter().map(|item| item.id().to_string()).collect();
+    let added: Vec<D::Item> = delta.removed().iter().filter_map(|id| find(id).cloned()).collect();
+    let patched: Vec<(String, D::Patch)> = delta.patched().into_iter().filter_map(|(id, patch)| find(id).map(|item| (id.to_string(), patch.inverse_against(item)))).collect();
+    let base_ids: Vec<String> = base.iter().map(|item| item.id().to_string()).collect();
+    let mut simulated: Vec<String> = forward_order(&base_ids, delta).into_iter().filter(|id| !removed.contains(id)).collect();
+    simulated.extend(added.iter().map(|item| item.id().to_string()));
+    let reordered = (simulated != base_ids).then_some(base_ids);
+    D::from_parts(added, removed, patched, reordered)
+}
+
+fn inverse_optional<D: Delta>(delta: &Option<D>, base: &[D::Item]) -> Option<D> {
+    delta.as_ref().map(|delta| inverse_delta(delta, base))
+}
+
+fn between_delta<D: Delta>(base: &[D::Item], other: &[D::Item]) -> Option<D> {
+    let removed: Vec<String> = base.iter().filter(|item| !other.iter().any(|candidate| candidate.id() == item.id())).map(|item| item.id().to_string()).collect();
+    let added: Vec<D::Item> = other.iter().filter(|item| !base.iter().any(|candidate| candidate.id() == item.id())).cloned().collect();
+    let patched: Vec<(String, D::Patch)> = base
+        .iter()
+        .filter_map(|item| other.iter().find(|candidate| candidate.id() == item.id()).and_then(|candidate| D::Patch::between(item, candidate)).map(|patch| (item.id().to_string(), patch)))
+        .collect();
+    let mut natural: Vec<String> = base.iter().filter(|item| !removed.iter().any(|id| id == item.id())).map(|item| item.id().to_string()).collect();
+    natural.extend(added.iter().map(|item| item.id().to_string()));
+    let target: Vec<String> = other.iter().map(|item| item.id().to_string()).collect();
+    let reordered = (natural != target).then_some(target);
+    (!(removed.is_empty() && added.is_empty() && patched.is_empty() && reordered.is_none())).then(|| D::from_parts(added, removed, patched, reordered))
+}
+//#endregion 🔖️DeltaAlgebra
+
+//#region 🔖️Apply
 impl MutationDiff<Fem2dSnapshot> for Fem2dDiff {
-    fn apply(&self, snapshot: &Fem2dSnapshot) -> protocol::MutationApplyResult<Fem2dSnapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(delta) = &self.nodes {
-                next.nodes = apply_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
-            }
-            if let Some(delta) = &self.elements {
-                next.elements = apply_delta(&next.elements, delta).map_err(|error| error.under(["elements"]))?;
-            }
-            if let Some(delta) = &self.regions {
-                next.regions = apply_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
-            }
-            if let Some(delta) = &self.materials {
-                next.materials = apply_delta(&next.materials, delta).map_err(|error| error.under(["materials"]))?;
-            }
-            if let Some(delta) = &self.sections {
-                next.sections = apply_delta(&next.sections, delta).map_err(|error| error.under(["sections"]))?;
-            }
-            if let Some(delta) = &self.supports {
-                next.supports = apply_delta(&next.supports, delta).map_err(|error| error.under(["supports"]))?;
-            }
-            if let Some(delta) = &self.load_cases {
-                next.load_cases = apply_delta(&next.load_cases, delta).map_err(|error| error.under(["loadCases"]))?;
-            }
-            if let Some(delta) = &self.combinations {
-                next.combinations = apply_delta(&next.combinations, delta).map_err(|error| error.under(["combinations"]))?;
-            }
-            if let Some(value) = &self.analysis {
-                next.analysis = value.clone();
-            }
-            next
-        })
+    fn apply(&self, snapshot: &Fem2dSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<Fem2dSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(delta) = &self.nodes {
+            next.nodes = apply_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
+        }
+        if let Some(delta) = &self.elements {
+            next.elements = apply_delta(&next.elements, delta).map_err(|error| error.under(["elements"]))?;
+        }
+        if let Some(delta) = &self.regions {
+            next.regions = apply_delta(&next.regions, delta).map_err(|error| error.under(["regions"]))?;
+        }
+        if let Some(delta) = &self.materials {
+            next.materials = apply_delta(&next.materials, delta).map_err(|error| error.under(["materials"]))?;
+        }
+        if let Some(delta) = &self.sections {
+            next.sections = apply_delta(&next.sections, delta).map_err(|error| error.under(["sections"]))?;
+        }
+        if let Some(delta) = &self.supports {
+            next.supports = apply_delta(&next.supports, delta).map_err(|error| error.under(["supports"]))?;
+        }
+        if let Some(delta) = &self.load_cases {
+            next.load_cases = apply_delta(&next.load_cases, delta).map_err(|error| error.under(["loadCases"]))?;
+        }
+        if let Some(delta) = &self.combinations {
+            next.combinations = apply_delta(&next.combinations, delta).map_err(|error| error.under(["combinations"]))?;
+        }
+        if let Some(patch) = &self.analysis {
+            next.analysis = patch.applied(&next.analysis);
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
-        macro_rules! take {
-            ($field:ident) => {
-                if other.$field.is_some() {
-                    self.$field = other.$field;
-                }
-            };
-        }
-        take!(analysis);
-        merge_delta(&mut self.nodes, other.nodes);
-        merge_delta(&mut self.elements, other.elements);
-        merge_delta(&mut self.regions, other.regions);
-        merge_delta(&mut self.materials, other.materials);
-        merge_delta(&mut self.sections, other.sections);
-        merge_delta(&mut self.supports, other.supports);
-        merge_delta(&mut self.load_cases, other.load_cases);
-        merge_delta(&mut self.combinations, other.combinations);
-    }
-}
-
-fn merge_delta<D: DeltaMerge>(dst: &mut Option<D>, src: Option<D>) {
-    match (dst.as_mut(), src) {
-        (Some(d), Some(s)) => d.merge_from(s),
-        (None, Some(s)) => *dst = Some(s),
-        _ => {}
-    }
-}
-
-trait DeltaMerge {
-    fn merge_from(&mut self, other: Self);
-}
-
-macro_rules! impl_merge {
-    ($t:ty) => {
-        impl DeltaMerge for $t {
-            fn merge_from(&mut self, other: Self) {
-                self.added.extend(other.added);
-                self.removed.extend(other.removed);
-                self.patched.extend(other.patched);
-                if other.reordered.is_some() {
-                    self.reordered = other.reordered;
-                }
+        absorb_optional(&mut self.nodes, other.nodes);
+        absorb_optional(&mut self.elements, other.elements);
+        absorb_optional(&mut self.regions, other.regions);
+        absorb_optional(&mut self.materials, other.materials);
+        absorb_optional(&mut self.sections, other.sections);
+        absorb_optional(&mut self.supports, other.supports);
+        absorb_optional(&mut self.load_cases, other.load_cases);
+        absorb_optional(&mut self.combinations, other.combinations);
+        if let Some(later) = other.analysis {
+            match &mut self.analysis {
+                Some(earlier) => earlier.composed(later),
+                None => self.analysis = Some(later),
             }
         }
-    };
+    }
 }
 
-impl_merge!(Fem2dNodesDelta);
-
-impl_merge!(Fem2dElementsDelta);
-
-impl_merge!(Fem2dRegionsDelta);
-
-impl_merge!(Fem2dMaterialsDelta);
-
-impl_merge!(Fem2dSectionsDelta);
-
-impl_merge!(Fem2dSupportsDelta);
-
-impl_merge!(Fem2dLoadCasesDelta);
-
-impl_merge!(Fem2dCombinationsDelta);
-
-/// 🏗️ Set-node field delta.
-pub fn diff_set_node(index: usize, item: FemNode, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dNodesPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.nodes.iter().any(|existing| existing.id() == id) {
-        Fem2dNodesDelta { patched: vec![Fem2dNodesPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.nodes.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dNodesDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { nodes: Some(delta), ..Default::default() }
+impl DiffAlgebra<Fem2dSnapshot> for Fem2dDiff {
+    fn inverse(&self, base: &Fem2dSnapshot) -> Self {
+        Self {
+            nodes: inverse_optional(&self.nodes, &base.nodes),
+            elements: inverse_optional(&self.elements, &base.elements),
+            regions: inverse_optional(&self.regions, &base.regions),
+            materials: inverse_optional(&self.materials, &base.materials),
+            sections: inverse_optional(&self.sections, &base.sections),
+            supports: inverse_optional(&self.supports, &base.supports),
+            load_cases: inverse_optional(&self.load_cases, &base.load_cases),
+            combinations: inverse_optional(&self.combinations, &base.combinations),
+            analysis: self.analysis.as_ref().map(|patch| patch.inverse_against(&base.analysis)),
+        }
+    }
+    fn between(base: &Fem2dSnapshot, other: &Fem2dSnapshot) -> Self {
+        Self {
+            nodes: between_delta(&base.nodes, &other.nodes),
+            elements: between_delta(&base.elements, &other.elements),
+            regions: between_delta(&base.regions, &other.regions),
+            materials: between_delta(&base.materials, &other.materials),
+            sections: between_delta(&base.sections, &other.sections),
+            supports: between_delta(&base.supports, &other.supports),
+            load_cases: between_delta(&base.load_cases, &other.load_cases),
+            combinations: between_delta(&base.combinations, &other.combinations),
+            analysis: Fem2dAnalysisPatch::between(&base.analysis, &other.analysis),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.nodes.as_ref().is_none_or(is_empty_delta)
+            && self.elements.as_ref().is_none_or(is_empty_delta)
+            && self.regions.as_ref().is_none_or(is_empty_delta)
+            && self.materials.as_ref().is_none_or(is_empty_delta)
+            && self.sections.as_ref().is_none_or(is_empty_delta)
+            && self.supports.as_ref().is_none_or(is_empty_delta)
+            && self.load_cases.as_ref().is_none_or(is_empty_delta)
+            && self.combinations.as_ref().is_none_or(is_empty_delta)
+            && self.analysis.as_ref().is_none_or(|patch| patch == &Fem2dAnalysisPatch::default())
+    }
 }
+//#endregion 🔖️Apply
 
-/// 🏗️ Remove-node field delta.
-pub fn diff_remove_node(id: String) -> Fem2dDiff {
-    Fem2dDiff { nodes: Some(Fem2dNodesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-element field delta.
-pub fn diff_set_element(index: usize, item: FemElement, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dElementsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.elements.iter().any(|existing| existing.id() == id) {
-        Fem2dElementsDelta { patched: vec![Fem2dElementsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.elements.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dElementsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { elements: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-element field delta.
-pub fn diff_remove_element(id: String) -> Fem2dDiff {
-    Fem2dDiff { elements: Some(Fem2dElementsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-region field delta.
-pub fn diff_set_region(index: usize, item: FemRegion, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dRegionsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.regions.iter().any(|existing| existing.id() == id) {
-        Fem2dRegionsDelta { patched: vec![Fem2dRegionsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.regions.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dRegionsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { regions: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-region field delta.
-pub fn diff_remove_region(id: String) -> Fem2dDiff {
-    Fem2dDiff { regions: Some(Fem2dRegionsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-material field delta.
-pub fn diff_set_material(index: usize, item: FemMaterial, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dMaterialsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.materials.iter().any(|existing| existing.id() == id) {
-        Fem2dMaterialsDelta { patched: vec![Fem2dMaterialsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.materials.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dMaterialsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { materials: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-material field delta.
-pub fn diff_remove_material(id: String) -> Fem2dDiff {
-    Fem2dDiff { materials: Some(Fem2dMaterialsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-section field delta.
-pub fn diff_set_section(index: usize, item: FemSection, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dSectionsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.sections.iter().any(|existing| existing.id() == id) {
-        Fem2dSectionsDelta { patched: vec![Fem2dSectionsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.sections.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dSectionsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { sections: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-section field delta.
-pub fn diff_remove_section(id: String) -> Fem2dDiff {
-    Fem2dDiff { sections: Some(Fem2dSectionsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-support field delta.
-pub fn diff_set_support(index: usize, item: FemSupport, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dSupportsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.supports.iter().any(|existing| existing.id() == id) {
-        Fem2dSupportsDelta { patched: vec![Fem2dSupportsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.supports.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dSupportsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { supports: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-support field delta.
-pub fn diff_remove_support(id: String) -> Fem2dDiff {
-    Fem2dDiff { supports: Some(Fem2dSupportsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-load_case field delta.
-pub fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.load_cases.iter().any(|existing| existing.id() == id) {
-        Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.load_cases.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dLoadCasesDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { load_cases: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-load_case field delta.
-pub fn diff_remove_load_case(id: String) -> Fem2dDiff {
-    Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Set-combination field delta.
-pub fn diff_set_combination(index: usize, item: FemCombination, base: &Fem2dSnapshot) -> Fem2dDiff {
-    use crate::standards::v1::subsets::any::schema::diff::Fem2dCombinationsPatchEntry;
-    let id = item.id().to_string();
-    let delta = if base.combinations.iter().any(|existing| existing.id() == id) {
-        Fem2dCombinationsDelta { patched: vec![Fem2dCombinationsPatchEntry { id, item }], ..Default::default() }
-    } else {
-        let mut order: Vec<String> = base.combinations.iter().map(|existing| existing.id().to_string()).collect();
-        let at = index.min(order.len());
-        order.insert(at, id);
-        Fem2dCombinationsDelta { added: vec![item], reordered: Some(order), ..Default::default() }
-    };
-    Fem2dDiff { combinations: Some(delta), ..Default::default() }
-}
-
-/// 🏗️ Remove-combination field delta.
-pub fn diff_remove_combination(id: String) -> Fem2dDiff {
-    Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
-}
-
-/// 🏗️ Analysis settings field delta.
-pub fn diff_set_analysis(settings: FemAnalysisSettings) -> Fem2dDiff {
-    Fem2dDiff { analysis: Some(settings), ..Default::default() }
-}
-
-/// 🏗️ Whole-snapshot replacement field delta.
-pub fn diff_set_snapshot(snapshot: Fem2dSnapshot) -> Fem2dDiff {
-    Fem2dDiff { artifact: Some(Box::new(Fem2dArtifact::from_snapshot(snapshot))), ..Default::default() }
-}
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

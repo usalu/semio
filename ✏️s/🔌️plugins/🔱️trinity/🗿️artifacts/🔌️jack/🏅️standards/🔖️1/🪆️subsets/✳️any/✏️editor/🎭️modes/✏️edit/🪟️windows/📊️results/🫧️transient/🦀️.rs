@@ -99,6 +99,7 @@ impl Drop for JackResultsWindowTransientRetirement {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct JackResultsWindowTransientRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<JackResultsWindowTransient> for JackResultsWindowTransientRetirementFactory {

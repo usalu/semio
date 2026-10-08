@@ -1,4 +1,4 @@
-use super::super::{RunArtifact, RunDiff, RunMutation, RunNodeRecord};
+use super::super::{RetractRunNode, RunArtifact, RunDiff, RunMutation, RunNodeRecord, RunStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -15,14 +15,14 @@ pub struct FinishRunNode {
 impl protocol::MutationKind<RunArtifact, RunMutation> for FinishRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "finish", entity: "run-node", kind: "finish-run-node", record: "FinishedRunNode" };
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::NodeFinished { node_record: self.node_record.clone() })
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::Node { node_id: self.node_record.node_id.clone(), record: Some(self.node_record.clone()) }))
     }
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id).map(|node_record| vec![RunMutation::FinishRunNode(Self { node_record: node_record.clone() })]).unwrap_or_default()
-    
-    })())
-}
+        Ok(vec![match base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id) {
+            Some(node_record) => RunMutation::FinishRunNode(Self { node_record: node_record.clone() }),
+            None => RunMutation::RetractRunNode(RetractRunNode { node_id: self.node_record.node_id.clone() }),
+        }])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Finish run node {}", self.node_record.node_id), &format!("Laufknoten {} abschließen", self.node_record.node_id))
     }

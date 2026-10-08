@@ -37,6 +37,7 @@ impl store::ArtifactPack for Process3dSnapshot {
 }
 pub use snapshot_codec::*;
 
+#[path = "."]
 mod mounted_snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
@@ -592,10 +593,5 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 use store::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-/// 🧩️ Shared capability-parameter/rule builders for every built-in domain catalog below — pulled out
-/// of the four (formerly per-material-file) private copies so the identical helper exists exactly once.
-pub(crate) fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
-    CapabilityParameter { id: id.into(), label: label.into(), value }
-}
 }
 pub use snapshot_wire_codec::*;

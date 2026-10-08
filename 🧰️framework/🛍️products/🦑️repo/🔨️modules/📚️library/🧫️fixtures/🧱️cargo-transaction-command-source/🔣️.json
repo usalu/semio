@@ -206,7 +206,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
       "owners": [
         "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
       ]
@@ -298,33 +298,23 @@
   "routes": {
     "source": {
       "target": "test-cargo-transaction-command-source",
-      "command": "bun ./📜️script.ts test cargo-transaction-command-source",
-      "launchName": "⚖️test-cargo-transaction-command-source📚️library🟦️",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-cargo-transaction-command-source"
+      "command": "bun ./📜️script.ts test cargo-transaction-command-source"
     },
     "go": {
       "target": "go-test",
-      "command": "bun ./📜️script.ts go-test",
-      "launchName": "⚖️test-go-dispatch📚️library🟦️",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-dispatch"
+      "command": "bun ./📜️script.ts go-test"
     },
     "goProjection": {
       "target": "test-go-input-projection",
-      "command": "bun ./📜️script.ts test go-input-projection",
-      "launchName": "⚖️test-go-input-projection📚️library🟦️",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-input-projection"
+      "command": "bun ./📜️script.ts test go-input-projection"
     },
     "goDispatch": {
       "target": "test-go-dispatch",
-      "command": "bun ./📜️script.ts test go-test-dispatch",
-      "launchName": "⚖️test-go-dispatch📚️library🟦️",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-go-dispatch"
+      "command": "bun ./📜️script.ts test go-test-dispatch"
     },
     "transaction": {
       "target": "test-transaction-v2",
-      "command": "bun ./📜️script.ts test transaction-v2",
-      "launchName": "⚖️test-transaction-v2📚️library🟦️",
-      "launchCommand": "bun nx run @semio-tech/repo-lib:test-transaction-v2"
+      "command": "bun ./📜️script.ts test transaction-v2"
     }
   },
   "nativeArguments": [

@@ -2,7 +2,7 @@
 
 use super::set_af_relationship::SetAfRelationship;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,11 +17,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "af-relationship", kind: "remove-af-relationship", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        if let Some(id) = support::file_spec_named(&next, &self.file_name) {
-            support::remove_entry(&mut next, id, "AFRelationship");
-        }
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        let rows = support::file_spec_named(base, &self.file_name).map_or_else(PdfDiff::default, |id| support::remove_entry_rows(base, id, "AFRelationship"));
+        MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {

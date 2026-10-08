@@ -8,9 +8,9 @@ fn valid_color(color:&[f64;4])->bool {color.iter().all(|value|unit(*value))}
 
 pub struct GradientRamp {stops:Vec<GradientStop>}
 impl GradientRamp {
-    pub fn new(stops:&[GradientStop])->Result<Self,&'static str> {
+    pub fn new(stops:&semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>)->Result<Self,&'static str> {
         if stops.len()>MAX_PAINT_STOPS||stops.iter().any(|stop|!unit(stop.offset)||!valid_color(&stop.color)) {return Err("Invalid gradient stops");}
-        let mut stops=stops.to_vec();
+        let mut stops: Vec<GradientStop> = stops.iter().cloned().collect();
         stops.sort_by(|a,b|a.offset.partial_cmp(&b.offset).expect("finite offsets"));
         Ok(Self {stops})
     }

@@ -1,0 +1,107 @@
+{
+  "slots": 64,
+  "routes": [
+    {
+      "id": "copy",
+      "lanes": [
+        "HostOnly"
+      ]
+    },
+    {
+      "id": "cut",
+      "lanes": [
+        "Artifact",
+        "Child"
+      ]
+    },
+    {
+      "id": "paste",
+      "lanes": [
+        "Artifact",
+        "Child"
+      ]
+    },
+    {
+      "id": "import-media",
+      "lanes": [
+        "Artifact",
+        "Child"
+      ]
+    },
+    {
+      "id": "undo",
+      "lanes": [
+        "HostOnly"
+      ]
+    },
+    {
+      "id": "redo",
+      "lanes": [
+        "HostOnly"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "occupied": 0,
+      "admitted": true
+    },
+    {
+      "occupied": 63,
+      "admitted": true
+    },
+    {
+      "occupied": 64,
+      "admitted": false
+    }
+  ],
+  "producerBeforeReservation": false,
+  "sameOperationIdentity": true,
+  "foreignReservationsPreserved": true,
+  "refusals": [
+    {
+      "id": "cancelled-completion",
+      "completedOriginal": true,
+      "retained": true,
+      "cancelled": true
+    },
+    {
+      "id": "stale-completion",
+      "completedOriginal": true,
+      "retained": true,
+      "cancelled": true
+    },
+    {
+      "id": "missing-completion",
+      "completedOriginal": false,
+      "retained": false,
+      "cancelled": true
+    },
+    {
+      "id": "ordinary-completion",
+      "completedOriginal": true,
+      "retained": false,
+      "cancelled": false
+    }
+  ],
+  "completionRefusals": [
+    {
+      "id": "busy",
+      "sameOperation": true,
+      "retainedCompletion": true,
+      "cancelled": true
+    },
+    {
+      "id": "poisoned",
+      "sameOperation": true,
+      "retainedCompletion": true,
+      "cancelled": true
+    },
+    {
+      "id": "wrong-download",
+      "sameOperation": true,
+      "retainedCompletion": true,
+      "cancelled": true
+    }
+  ]
+}

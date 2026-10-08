@@ -5,7 +5,6 @@ import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import stringify from "fast-json-stable-stringify";
 import fastGlob from "fast-glob";
-import { parse as parseJsonc } from "jsonc-parser";
 import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 import { publishTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
 import { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards, type TaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/🧩️shards/🟦️.ts";
@@ -176,13 +175,7 @@ test("publication verifies canonical violations and rejects inconsistent replace
   expect(existsSync(inputPath)).toBe(true);
 });
 
-test("inventory shard consistency gate is registered through Nx and both launch catalogs", () => {
+test("inventory shard consistency gate is registered through Nx", () => {
   const project = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[vector.execution.target]?.options.command).toBe(vector.execution.command);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const entries = parseJsonc(readFileSync(join(repoRoot, path), "utf8")).configurations.filter((row: { name: string }) => row.name === vector.execution.launchName);
-    expect(entries).toHaveLength(1);
-    expect(entries[0].command).toBe(vector.execution.launchCommand);
-    expect(entries[0].presentation).toEqual({ group: vector.execution.group, order: vector.execution.order });
-  }
 });

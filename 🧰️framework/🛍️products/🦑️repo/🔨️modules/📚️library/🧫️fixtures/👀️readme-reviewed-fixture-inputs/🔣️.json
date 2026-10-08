@@ -7,11 +7,7 @@
     "target": "test-readme-reviewed-fixture-inputs",
     "command": "bun ./📜️script.ts test readme-reviewed-fixture-inputs",
     "route": "readme-reviewed-fixture-inputs",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-reviewed-fixture-inputs.ts",
-    "launchName": "🧹clean🧩️taxonomy👀️readme-reviewed-fixture-inputs",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.206
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-reviewed-fixture-inputs.ts"
   },
   "fixtureAuthority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json",
   "fixtureAuthoritySha256": "081ff80b401f1b6d3c5c94a70a0c3875e0987b03289145dd0ae60fb6c983f1ab",
@@ -33,8 +29,6 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-    ".vscode/🧩️launch.seed.jsonc",
-    ".vscode/launch.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🟢️readme-current-source-activation/🔣️.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🟢️readme-current-source-activation/🔣️.json",

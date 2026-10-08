@@ -32,7 +32,7 @@ fn replacing_a_document_reaches_the_payload() {
     let reached = replace(&before, &after).iter().fold(before.clone(), |document, mutation| {
         let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, &document);
         assert!(raised.messages().is_empty(), "{mutation:?} raised {:?}", raised.messages());
-        <crate::En1993Diff as protocol::MutationDiff<En1993Snapshot>>::apply(raised.diff(), &document).expect("apply")
+        protocol::apply_diff(raised.diff(), &document).expect("apply")
     });
     assert_eq!(reached, after);
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeIdealLoadsSystemMinCoolingSupplyAirTemp` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemMinCoolingSupplyAirTemp, base
     if existing.min_cooling_supply_air_temp_c == payload.new_min_cooling_supply_air_temp_c {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Ideal loads system {} already has that minimum cooling supply air temperature.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {
-        item.min_cooling_supply_air_temp_c = payload.new_min_cooling_supply_air_temp_c;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::modifying(IdealLoadsSystemPatch { min_cooling_supply_air_temp_c: Some(payload.new_min_cooling_supply_air_temp_c), ..IdealLoadsSystemPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

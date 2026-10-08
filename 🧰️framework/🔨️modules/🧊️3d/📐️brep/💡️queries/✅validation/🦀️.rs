@@ -17,7 +17,7 @@ use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, VertexId};
 use crate::brep::representation::curve::curve_ops;
 use crate::brep::representation::error::ValidationIssue;
 use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::Body;
+use crate::brep::representation::topology::{Body, ReachSet};
 use crate::brep::representation::vector::Pnt3;
 
 // #region 🔖️Topology
@@ -192,7 +192,7 @@ fn same_parameter_deviations(
 /// edge also has `v0 == v1` but a non-zero length, so it stays subject to the ordinary two-use
 /// rule.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
+pub(crate) fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
     let Some(edge) = body.edges.get(edge_id) else { return false };
     if edge.v0 != edge.v1 {
         return false;
@@ -387,6 +387,39 @@ fn check_self_intersection_probe(body: &Body, issues: &mut Vec<ValidationIssue>)
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate_body(body: &Body) -> Vec<ValidationIssue> {
     BodyValidationJob::new(body).run_to_completion(body)
+}
+
+/// 🎯️ Whether one [`ValidationIssue`]'s entity label names anything inside `reach`.
+///
+/// A label is a run of `<store>-<raw index>` pairs — `"edge-3"`, `"solid-11-void-shell-12"`,
+/// `"face-4-face-9"` — and the issue belongs to a shape when ANY pair it names is reachable from
+/// it. A label none of whose pairs can be read is treated as belonging to every shape: a verdict
+/// must refuse a shape it cannot vouch for, and an unreadable diagnostic is not a clean bill of
+/// health (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn issue_reaches(reach: &ReachSet, label: &str) -> bool {
+    let parts: Vec<&str> = label.split('-').collect();
+    let mut readable = false;
+    for pair in parts.windows(2) {
+        let Ok(index) = pair[1].parse::<u32>() else { continue };
+        let matched = match pair[0] {
+            "vertex" => reach.vertices.iter().any(|id| id.raw_index() == index),
+            "edge" => reach.edges.iter().any(|id| id.raw_index() == index),
+            "coedge" => reach.coedges.iter().any(|id| id.raw_index() == index),
+            "loop" => reach.loops.iter().any(|id| id.raw_index() == index),
+            "face" => reach.faces.iter().any(|id| id.raw_index() == index),
+            "shell" => reach.shells.iter().any(|id| id.raw_index() == index),
+            "solid" => reach.solids.iter().any(|id| id.raw_index() == index),
+            "curve" => reach.curves3.iter().any(|id| id.raw_index() == index),
+            "surface" => reach.surfaces.iter().any(|id| id.raw_index() == index),
+            _ => continue,
+        };
+        readable = true;
+        if matched {
+            return true;
+        }
+    }
+    !readable
 }
 
 // #endregion 🔖️Report

@@ -1,0 +1,859 @@
+{
+  "category": {
+    "id": "brep.transform",
+    "emoji": "🔁️",
+    "order": 70,
+    "label": {
+      "en": "Transforms and patterns",
+      "de": "Transformationen und Muster"
+    },
+    "description": {
+      "en": "Move, rotate, scale, mirror and copy shapes, and repeat them in linear, circular and grid patterns.",
+      "de": "Formen verschieben, drehen, skalieren, spiegeln und kopieren sowie in linearen, kreisförmigen und Rastermustern wiederholen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.transform.translate",
+      "category": "brep.transform",
+      "emoji": "➡️",
+      "label": {
+        "en": "Move",
+        "de": "Verschieben"
+      },
+      "description": {
+        "en": "Moves a shape by an offset vector.",
+        "de": "Verschiebt eine Form um einen Versatzvektor."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along X, Y and Z.",
+            "de": "Verschiebung entlang X, Y und Z."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The moved shape.",
+            "de": "Die verschobene Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "offset"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.rotate",
+      "category": "brep.transform",
+      "emoji": "🔃️",
+      "label": {
+        "en": "Rotate about origin",
+        "de": "Um Ursprung drehen"
+      },
+      "description": {
+        "en": "Rotates a shape around an axis through the world origin.",
+        "de": "Dreht eine Form um eine Achse durch den Weltursprung."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the rotation axis.",
+            "de": "Richtung der Drehachse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Rotation angle; positive values turn counter-clockwise around the axis.",
+            "de": "Drehwinkel; positive Werte drehen gegen den Uhrzeigersinn um die Achse."
+          },
+          "type": "angle",
+          "default": 0.7853981633974483,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The rotated shape.",
+            "de": "Die gedrehte Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "rotate",
+            "port": "angle",
+            "axisPort": "axis"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.rotateAbout",
+      "category": "brep.transform",
+      "emoji": "🔄️",
+      "label": {
+        "en": "Rotate about point",
+        "de": "Um Punkt drehen"
+      },
+      "description": {
+        "en": "Rotates a shape around an axis through a chosen point.",
+        "de": "Dreht eine Form um eine Achse durch einen gewählten Punkt."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "origin",
+          "label": {
+            "en": "Pivot",
+            "de": "Drehpunkt"
+          },
+          "description": {
+            "en": "A point on the rotation axis.",
+            "de": "Ein Punkt auf der Drehachse."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the rotation axis.",
+            "de": "Richtung der Drehachse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "angle",
+          "label": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "description": {
+            "en": "Rotation angle; positive values turn counter-clockwise around the axis.",
+            "de": "Drehwinkel; positive Werte drehen gegen den Uhrzeigersinn um die Achse."
+          },
+          "type": "angle",
+          "default": 0.7853981633974483,
+          "step": 0.017453292519943295,
+          "unit": "rad"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The rotated shape.",
+            "de": "Die gedrehte Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "rotate",
+            "port": "angle",
+            "axisPort": "axis",
+            "originPort": "origin"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.scale",
+      "category": "brep.transform",
+      "emoji": "↔️",
+      "label": {
+        "en": "Scale",
+        "de": "Skalieren"
+      },
+      "description": {
+        "en": "Scales a shape independently along each axis about a center point.",
+        "de": "Skaliert eine Form unabhängig entlang jeder Achse um einen Mittelpunkt."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "factor",
+          "label": {
+            "en": "Scale factor",
+            "de": "Skalierfaktor"
+          },
+          "description": {
+            "en": "Scale factor per axis; negative values mirror.",
+            "de": "Skalierfaktor je Achse; negative Werte spiegeln."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "center",
+          "label": {
+            "en": "Center",
+            "de": "Zentrum"
+          },
+          "description": {
+            "en": "The point that stays fixed.",
+            "de": "Der Punkt, der fest bleibt."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The scaled shape.",
+            "de": "Die skalierte Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "scale",
+            "port": "factor",
+            "originPort": "center"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.mirror",
+      "category": "brep.transform",
+      "emoji": "🪞️",
+      "label": {
+        "en": "Mirror",
+        "de": "Spiegeln"
+      },
+      "description": {
+        "en": "Reflects a shape across a plane.",
+        "de": "Spiegelt eine Form an einer Ebene."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "plane",
+          "label": {
+            "en": "Plane",
+            "de": "Ebene"
+          },
+          "description": {
+            "en": "The mirror plane.",
+            "de": "Die Spiegelebene."
+          },
+          "type": "plane",
+          "default": {
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The mirrored shape.",
+            "de": "Die gespiegelte Form."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ],
+        "gumball": [
+          {
+            "motion": "translate",
+            "port": "plane"
+          },
+          {
+            "motion": "rotate",
+            "port": "plane"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.copy",
+      "category": "brep.transform",
+      "emoji": "📋️",
+      "label": {
+        "en": "Copy",
+        "de": "Kopieren"
+      },
+      "description": {
+        "en": "Creates an independent copy of a shape.",
+        "de": "Erzeugt eine unabhängige Kopie einer Form."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The copy.",
+            "de": "Die Kopie."
+          },
+          "type": "shape"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.linearPattern",
+      "category": "brep.transform",
+      "emoji": "📶️",
+      "label": {
+        "en": "Linear pattern",
+        "de": "Lineares Muster"
+      },
+      "description": {
+        "en": "Repeats a shape along a direction at a fixed spacing.",
+        "de": "Wiederholt eine Form entlang einer Richtung mit festem Abstand."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "direction",
+          "label": {
+            "en": "Direction",
+            "de": "Richtung"
+          },
+          "description": {
+            "en": "Direction of the operation.",
+            "de": "Richtung des Vorgangs."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "spacing",
+          "label": {
+            "en": "Spacing",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "Distance between neighbouring copies.",
+            "de": "Abstand zwischen benachbarten Kopien."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "count",
+          "label": {
+            "en": "Count",
+            "de": "Anzahl"
+          },
+          "description": {
+            "en": "Number of copies, including the original.",
+            "de": "Anzahl der Kopien einschließlich des Originals."
+          },
+          "type": "integer",
+          "default": 3,
+          "min": 1,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Pattern",
+            "de": "Muster"
+          },
+          "description": {
+            "en": "All copies as one compound.",
+            "de": "Alle Kopien als ein Verbund."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "compound"
+          ]
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.circularPattern",
+      "category": "brep.transform",
+      "emoji": "🎡️",
+      "label": {
+        "en": "Circular pattern",
+        "de": "Kreismuster"
+      },
+      "description": {
+        "en": "Repeats a shape evenly around an axis through the origin.",
+        "de": "Wiederholt eine Form gleichmäßig um eine Achse durch den Ursprung."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "axis",
+          "label": {
+            "en": "Axis",
+            "de": "Achse"
+          },
+          "description": {
+            "en": "Direction of the axis.",
+            "de": "Richtung der Achse."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "name": "count",
+          "label": {
+            "en": "Count",
+            "de": "Anzahl"
+          },
+          "description": {
+            "en": "Number of copies, including the original.",
+            "de": "Anzahl der Kopien einschließlich des Originals."
+          },
+          "type": "integer",
+          "default": 4,
+          "min": 1,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Pattern",
+            "de": "Muster"
+          },
+          "description": {
+            "en": "All copies as one compound.",
+            "de": "Alle Kopien als ein Verbund."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "compound"
+          ]
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "brep.transform.gridPattern",
+      "category": "brep.transform",
+      "emoji": "🔳️",
+      "label": {
+        "en": "Grid pattern",
+        "de": "Rastermuster"
+      },
+      "description": {
+        "en": "Repeats a shape in a two-dimensional grid.",
+        "de": "Wiederholt eine Form in einem zweidimensionalen Raster."
+      },
+      "inputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "description": {
+            "en": "The shape to operate on.",
+            "de": "Die Form, auf die der Vorgang angewendet wird."
+          },
+          "type": "shape"
+        },
+        {
+          "name": "dirX",
+          "label": {
+            "en": "Direction X",
+            "de": "Richtung X"
+          },
+          "description": {
+            "en": "First grid direction.",
+            "de": "Erste Rasterrichtung."
+          },
+          "type": "vector",
+          "default": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "dirY",
+          "label": {
+            "en": "Direction Y",
+            "de": "Richtung Y"
+          },
+          "description": {
+            "en": "Second grid direction.",
+            "de": "Zweite Rasterrichtung."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "spacingX",
+          "label": {
+            "en": "Spacing X",
+            "de": "Abstand X"
+          },
+          "description": {
+            "en": "Distance between copies along the first direction.",
+            "de": "Abstand der Kopien entlang der ersten Richtung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "spacingY",
+          "label": {
+            "en": "Spacing Y",
+            "de": "Abstand Y"
+          },
+          "description": {
+            "en": "Distance between copies along the second direction.",
+            "de": "Abstand der Kopien entlang der zweiten Richtung."
+          },
+          "type": "length",
+          "default": 1,
+          "min": 0,
+          "exclusiveMin": true,
+          "step": 0.1
+        },
+        {
+          "name": "countX",
+          "label": {
+            "en": "Count X",
+            "de": "Anzahl X"
+          },
+          "description": {
+            "en": "Copies along the first direction.",
+            "de": "Kopien entlang der ersten Richtung."
+          },
+          "type": "integer",
+          "default": 2,
+          "min": 1,
+          "max": 1024,
+          "step": 1
+        },
+        {
+          "name": "countY",
+          "label": {
+            "en": "Count Y",
+            "de": "Anzahl Y"
+          },
+          "description": {
+            "en": "Copies along the second direction.",
+            "de": "Kopien entlang der zweiten Richtung."
+          },
+          "type": "integer",
+          "default": 2,
+          "min": 1,
+          "max": 1024,
+          "step": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "shape",
+          "label": {
+            "en": "Pattern",
+            "de": "Muster"
+          },
+          "description": {
+            "en": "All copies as one compound.",
+            "de": "Alle Kopien als ein Verbund."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "compound"
+          ]
+        }
+      ],
+      "quality": "mesh-derived-brep",
+      "interaction": {
+        "pick": [
+          {
+            "component": "shape",
+            "port": "shape"
+          }
+        ]
+      },
+      "preview": true
+    }
+  ]
+}

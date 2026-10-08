@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/world3d/modelling",
+  "title": "World3d Modelling Primitives",
+  "description": "Domain-neutral world-3d scene primitives a B-Rep or mesh modelling app needs: an annotation layer, scalar field colouring with legend, a pick granularity filter, a section plane and sub-element highlight tokens. Each root property is one typed scene lane (annotations, scalarField, modellingOptions). Rust (World3dAnnotationLayer, World3dScalarField, World3dModellingOptions) and TypeScript (the same names) are pinned against this document and against the fixtures beside it.",
+  "type": "object",
+  "properties": {
+    "annotations": { "$ref": "#/$defs/annotationLayer" },
+    "scalarField": { "$ref": "#/$defs/scalarField" },
+    "modellingOptions": { "$ref": "#/$defs/modellingOptions" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "vec3": {
+      "description": "A world-space point or direction. Components are finite numbers.",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "vec2": {
+      "description": "A screen-space offset in CSS pixels, x right and y down.",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "text": {
+      "description": "Caller-supplied text in every supported language. The renderer never translates and has no default language: it shows the entry for the active locale.",
+      "type": "object",
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "de": { "type": "string", "minLength": 1, "pattern": "\\S" }
+      },
+      "required": ["en", "de"],
+      "additionalProperties": false
+    },
+    "tone": {
+      "description": "A theme colour token. neutral resolves to the foreground, the others to the palette token of the same name, so every theme and dark mode customises it.",
+      "enum": ["neutral", "primary", "secondary", "tertiary", "success", "warning", "danger", "info"]
+    },
+    "id": { "type": "string", "minLength": 1 },
+    "dimension": {
+      "description": "A linear dimension between two world points, drawn displaced by offset with arrowheads and text of screen-constant size.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "dimension" },
+        "id": { "$ref": "#/$defs/id" },
+        "from": { "$ref": "#/$defs/vec3" },
+        "to": { "$ref": "#/$defs/vec3" },
+        "offset": { "$ref": "#/$defs/vec3" },
+        "text": { "$ref": "#/$defs/text" },
+        "tone": { "$ref": "#/$defs/tone", "default": "neutral" }
+      },
+      "required": ["kind", "id", "from", "to", "offset", "text"],
+      "additionalProperties": false
+    },
+    "angle": {
+      "description": "An angle at vertex between two non-zero directions, drawn as an arc of radiusPx screen pixels.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "angle" },
+        "id": { "$ref": "#/$defs/id" },
+        "vertex": { "$ref": "#/$defs/vec3" },
+        "directionA": { "$ref": "#/$defs/vec3" },
+        "directionB": { "$ref": "#/$defs/vec3" },
+        "radiusPx": { "type": "number", "minimum": 16, "maximum": 256, "default": 48 },
+        "text": { "$ref": "#/$defs/text" },
+        "tone": { "$ref": "#/$defs/tone", "default": "neutral" }
+      },
+      "required": ["kind", "id", "vertex", "directionA", "directionB", "text"],
+      "additionalProperties": false
+    },
+    "marker": {
+      "description": "A point marker. Its text is the accessible alternative and the tooltip.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "marker" },
+        "id": { "$ref": "#/$defs/id" },
+        "position": { "$ref": "#/$defs/vec3" },
+        "shape": { "enum": ["dot", "cross", "ring"], "default": "dot" },
+        "text": { "$ref": "#/$defs/text" },
+        "tone": { "$ref": "#/$defs/tone", "default": "neutral" }
+      },
+      "required": ["kind", "id", "position", "text"],
+      "additionalProperties": false
+    },
+    "leader": {
+      "description": "A text label connected to a world anchor by a leader line; labelOffsetPx displaces the label on screen.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "leader" },
+        "id": { "$ref": "#/$defs/id" },
+        "anchor": { "$ref": "#/$defs/vec3" },
+        "labelOffsetPx": { "$ref": "#/$defs/vec2" },
+        "text": { "$ref": "#/$defs/text" },
+        "tone": { "$ref": "#/$defs/tone", "default": "neutral" }
+      },
+      "required": ["kind", "id", "anchor", "labelOffsetPx", "text"],
+      "additionalProperties": false
+    },
+    "annotation": {
+      "oneOf": [
+        { "$ref": "#/$defs/dimension" },
+        { "$ref": "#/$defs/angle" },
+        { "$ref": "#/$defs/marker" },
+        { "$ref": "#/$defs/leader" }
+      ]
+    },
+    "annotationLayer": {
+      "description": "The annotation layer. Item ids are unique; every item is listed for assistive technology through its text.",
+      "type": "object",
+      "properties": {
+        "title": { "$ref": "#/$defs/text" },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/annotation" }, "maxItems": 512 }
+      },
+      "required": ["items"],
+      "additionalProperties": false
+    },
+    "colorRamp": {
+      "description": "A named colour ramp. Stops are pinned by the fixture; colours interpolate linearly per sRGB channel between equally spaced stops.",
+      "enum": ["viridis", "inferno", "coolwarm", "grayscale"]
+    },
+    "scalarField": {
+      "description": "A scalar analysis field painted as a heatmap on every instance of meshId. vertex domain: one value per mesh vertex. face domain: one value per mesh triangle. null marks no data. Out-of-range values clamp to the ramp ends.",
+      "type": "object",
+      "properties": {
+        "meshId": { "$ref": "#/$defs/id" },
+        "domain": { "enum": ["vertex", "face"] },
+        "values": { "type": "array", "items": { "type": ["number", "null"] }, "minItems": 1, "maxItems": 4000000 },
+        "ramp": { "$ref": "#/$defs/colorRamp" },
+        "range": {
+          "type": "object",
+          "properties": { "min": { "type": "number" }, "max": { "type": "number" } },
+          "required": ["min", "max"],
+          "additionalProperties": false
+        },
+        "legend": {
+          "type": "object",
+          "properties": {
+            "title": { "$ref": "#/$defs/text" },
+            "unit": { "type": "string", "minLength": 1 },
+            "ticks": { "type": "integer", "minimum": 2, "maximum": 9, "default": 5 }
+          },
+          "required": ["title"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["meshId", "domain", "values", "ramp", "range", "legend"],
+      "additionalProperties": false
+    },
+    "pickGranularity": {
+      "description": "The only granularity hover and selection reach: a whole shape, a face, an edge or a vertex.",
+      "enum": ["shape", "face", "edge", "vertex"]
+    },
+    "section": {
+      "description": "A section plane through origin. Geometry on the side normal points to is removed. cap closes the cut with a solid face.",
+      "type": "object",
+      "properties": {
+        "origin": { "$ref": "#/$defs/vec3" },
+        "normal": { "$ref": "#/$defs/vec3" },
+        "cap": {
+          "type": "object",
+          "properties": { "tone": { "$ref": "#/$defs/tone", "default": "neutral" } },
+          "additionalProperties": false
+        }
+      },
+      "required": ["origin", "normal"],
+      "additionalProperties": false
+    },
+    "subElementStyle": {
+      "type": "object",
+      "properties": {
+        "hover": { "$ref": "#/$defs/tone" },
+        "selected": { "$ref": "#/$defs/tone" },
+        "widthPx": { "type": "number", "minimum": 1, "maximum": 8 }
+      },
+      "additionalProperties": false
+    },
+    "highlight": {
+      "description": "Sub-element hover and selection highlight tokens per granularity. An absent entry keeps the theme default (secondary for hover, primary for selection).",
+      "type": "object",
+      "properties": {
+        "face": { "$ref": "#/$defs/subElementStyle" },
+        "edge": { "$ref": "#/$defs/subElementStyle" },
+        "vertex": { "$ref": "#/$defs/subElementStyle" }
+      },
+      "additionalProperties": false
+    },
+    "modellingOptions": {
+      "type": "object",
+      "properties": {
+        "pickFilter": { "$ref": "#/$defs/pickGranularity" },
+        "section": { "$ref": "#/$defs/section" },
+        "highlight": { "$ref": "#/$defs/highlight" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

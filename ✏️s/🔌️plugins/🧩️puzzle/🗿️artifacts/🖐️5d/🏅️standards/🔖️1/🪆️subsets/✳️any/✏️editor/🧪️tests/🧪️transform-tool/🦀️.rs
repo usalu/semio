@@ -149,7 +149,7 @@ fn the_transform_chart_obeys_the_shared_phase_fixture() {
             "abort" => GesturePhase::Abort(semio_framework_tool_machine::ToolAbortReason::Frozen),
             _ => unreachable!(),
         };
-        let request = TransformToolRequest { base: Arc::new(scene()), records: vec![Puzzle5dSelectionRecord::new(["a".to_string()], Puzzle5dSelectionMotion::Drag { offset })] };
+        let request = TransformToolRequest { base: Arc::new(scene()), records: vec![Puzzle5dSelectionRecord::new(["a".to_string()], Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset }))] };
         let drive = semio_framework_tool_machine::drive_chart_gesture::<transform_tool::TransformTool>(None, "translateSelection", phase, Some(request), "seed", "base").expect("one dispatch");
         assert_eq!(drive.committed.as_ref().map_or(0, |(_, leaves)| leaves.len()), case.get("committed").unwrap().as_u64().unwrap() as usize);
         assert!(drive.next.is_none(), "the release-only chart holds no transaction");

@@ -1,0 +1,57 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "borrowed",
+    "allocatedBytes",
+    "liveAuthorityChanged"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.member.private-projection/v1"
+    },
+    "borrowed": {
+      "const": true
+    },
+    "allocatedBytes": {
+      "const": 0
+    },
+    "liveAuthorityChanged": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "member",
+          "readMember",
+          "typed",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "member": {
+            "type": "string"
+          },
+          "readMember": {
+            "type": "string"
+          },
+          "typed": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

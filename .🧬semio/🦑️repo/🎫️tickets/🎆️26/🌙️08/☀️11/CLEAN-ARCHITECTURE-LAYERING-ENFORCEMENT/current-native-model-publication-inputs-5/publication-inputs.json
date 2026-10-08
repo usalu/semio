@@ -1,0 +1,20 @@
+{
+  "owners": [
+    {
+      "owner": "ui",
+      "directory": "\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/ui",
+      "dispatcherTerminal": "dispatcher8-terminal.json"
+    },
+    {
+      "owner": "board",
+      "directory": "\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/board",
+      "dispatcherTerminal": "dispatcher8-terminal.json"
+    },
+    {
+      "owner": "product",
+      "directory": "\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/product",
+      "dispatcherTerminal": "dispatcher8-terminal.json"
+    }
+  ],
+  "independentPublication": "\ud83d\uddd1\ufe0fgenerated/current-native-origin/epoch-7/model-publication-release.json"
+}

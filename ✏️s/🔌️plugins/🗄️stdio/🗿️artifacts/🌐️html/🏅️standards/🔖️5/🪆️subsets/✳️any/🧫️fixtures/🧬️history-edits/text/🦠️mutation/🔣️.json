@@ -1,0 +1,91 @@
+{
+  "mutation": {
+    "mutation": "setText",
+    "path": [
+      1,
+      0,
+      0
+    ],
+    "text": "Hallo 😀"
+  },
+  "before": {
+    "schema": "stdio.html",
+    "doctype": "DOCTYPE html",
+    "root": {
+      "kind": "element",
+      "name": "html",
+      "attributes": [],
+      "children": [
+        {
+          "kind": "element",
+          "name": "head",
+          "attributes": [],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "name": "body",
+          "attributes": [],
+          "children": [
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "lead"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "One"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.html",
+    "doctype": "DOCTYPE html",
+    "root": {
+      "kind": "element",
+      "name": "html",
+      "attributes": [],
+      "children": [
+        {
+          "kind": "element",
+          "name": "head",
+          "attributes": [],
+          "children": []
+        },
+        {
+          "kind": "element",
+          "name": "body",
+          "attributes": [],
+          "children": [
+            {
+              "kind": "element",
+              "name": "p",
+              "attributes": [
+                {
+                  "name": "class",
+                  "value": "lead"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Hallo 😀"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

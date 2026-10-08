@@ -5,8 +5,5 @@
   "target": "test-taxonomy-pattern-compiler-reuse",
   "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/♻️taxonomy-pattern-compiler-reuse/🟦️.ts",
   "runner": "runTestBudgeted",
-  "budget": "default",
-  "launchName": "🧹clean🧩️taxonomy♻️taxonomy-pattern-compiler-reuse",
-  "launchGroup": "4_gate",
-  "launchOrder": 410.207
+  "budget": "default"
 }

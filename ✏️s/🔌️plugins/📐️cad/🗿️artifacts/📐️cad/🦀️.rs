@@ -71,6 +71,9 @@ pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
 pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 
+/// 🧊️ Exact owned topology sibling of a pane model's geometry reference.
+pub type CadBrepChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>;
+
 /// 🪪️ Validates one owned CAD child reference before it enters a parent diff.
 pub fn cad_child<S>(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
     if child_id.is_empty() || target.artifact_id.is_empty() || target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
@@ -84,6 +87,9 @@ pub fn cad_model_child(child_id: &str, target: &semio_framework_artifact_referen
 
 /// 📐️ Validates a composed drawing child handle.
 pub fn cad_drawing_child(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef) -> Result<CadDrawingChild, String> { cad_child(child_id, target, "drawing") }
+
+/// 🧊️ Validates the topology child's exact dialect and local identity.
+pub fn cad_brep_child(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef) -> Result<CadBrepChild, String> { cad_child(child_id, target, "brep") }
 
 //#region 🔖️WorkingScene
 /// 🧱️ EPHEMERAL working representation of per-pane object content and raw geometry — never persisted, never a
@@ -196,6 +202,9 @@ pub const CAD_DRAWINGS_SLOT: &str = "drawings";
 /// no genesis.
 pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
+    if slot == "breps" {
+        return snapshot.breps.iter().any(|child| child.child_id == child_id).then(|| <semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as ArtifactPack>::encode_pack(&Default::default()));
+    }
     if slot == CAD_DRAWINGS_SLOT {
         return snapshot.drawings.iter().any(|child| child.child_id == child_id).then(|| <SemioDrawingSnapshot as ArtifactPack>::encode_pack(&SemioDrawingSnapshot::default()));
     }
@@ -238,13 +247,14 @@ pub(crate) fn cad_scene_pane_geometry(scene: &CadWorkingScene, pane: CadPaneId) 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct CadComposedPane {
     pub(crate) objects: Vec<standards::v1::subsets::any::schema::geometry::CadObject>,
+    pub(crate) owned_geometry: Option<standards::v1::subsets::any::schema::geometry::CadGeometry>,
     pub(crate) genesis: Option<std::sync::Arc<CadWorkingScene>>,
 }
 
 impl CadComposedPane {
     /// 📐️ The pane's raw genesis geometry, when its child id names a bundled scene.
     pub(crate) fn geometry(&self, pane: CadPaneId) -> Option<&standards::v1::subsets::any::schema::geometry::CadGeometry> {
-        self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane))
+        self.owned_geometry.as_ref().or_else(|| self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)))
     }
 }
 
@@ -268,7 +278,18 @@ impl CadComposedPanes {
                 Some(content) => objects_from_model_snapshot(&content),
                 None => genesis.as_deref().map(|scene| cad_scene_pane_objects(scene, pane).to_vec()).unwrap_or_default(),
             };
-            CadComposedPane { objects, genesis }
+            let mut geometry = genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)).cloned().unwrap_or_default();
+            for child in snapshot.breps.iter().filter(|child| objects.iter().any(|object| object.solid_handle.as_ref() == Some(&child.child_id))) {
+                geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(semio_framework_plugin::MeshData::default()));
+                if let Ok(content) = children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>("breps", &child.child_id) {
+                    geometry.owned_breps.insert(child.child_id.clone(), std::sync::Arc::new((*content).clone()));
+                    if let Ok(mesh) = standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&content) {
+                        geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(mesh));
+                    }
+                }
+            }
+            let owned_geometry = (!geometry.owned_meshes.is_empty()).then_some(geometry);
+            CadComposedPane { objects, genesis, owned_geometry }
         }))
     }
 
@@ -444,6 +465,7 @@ pub fn empty_cad_snapshot() -> CadSnapshot {
         energy_model: None,
         structure_classic_model: None,
         drawings: Vec::new(),
+        breps: Vec::new(),
         references_by_model_definition_id: CadReferenceIndex::new(),
         nodes: Vec::new(),
     }
@@ -901,6 +923,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🧪️tests/📐️appends-drawing-2/🦀️.rs"]
                             mod tests_appends_drawing_2;
                         }
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-brep/🦀️.rs"]
+                        pub mod create_brep;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-brep/🦀️.rs"]
+                        pub mod delete_brep;
                         #[path = "."]
                         pub mod delete_drawing {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🦀️.rs"]

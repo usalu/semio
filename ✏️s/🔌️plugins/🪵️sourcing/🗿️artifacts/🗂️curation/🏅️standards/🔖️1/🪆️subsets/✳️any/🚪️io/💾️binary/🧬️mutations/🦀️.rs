@@ -32,7 +32,7 @@ mod tests;
 
 
 pub const BINARY_TAGS: &[(&str, u8)] =
-    &[("CreateCuratedItem", crate::standards::v1::subsets::any::schema::mutations::create_curated_item::BINARY_TAG), ("DeleteCuratedItem", crate::standards::v1::subsets::any::schema::mutations::delete_curated_item::BINARY_TAG), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::schema::mutations::change_curated_item_count::BINARY_TAG)];
+    &[("CreateCuratedItem", crate::standards::v1::subsets::any::io::binary::mutations::create_curated_item::BINARY_TAG), ("DeleteCuratedItem", crate::standards::v1::subsets::any::io::binary::mutations::delete_curated_item::BINARY_TAG), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::io::binary::mutations::change_curated_item_count::BINARY_TAG)];
 
 #[path = "🗑️delete-curated-item/🦀️.rs"]
 pub mod delete_curated_item;

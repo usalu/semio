@@ -1,0 +1,20 @@
+{
+  "operation": "setRunHeader",
+  "workflowRef": "space.space",
+  "workflowCheckpointId": "ck-1",
+  "inputCollectionRef": "collections/in",
+  "inputSnapshotId": "snap-1",
+  "parameterValues": [
+    {
+      "parameterId": "p1",
+      "value": "10"
+    }
+  ],
+  "outputCollectionRef": "collections/out",
+  "trigger": {
+    "kind": "manual",
+    "actor": "dev"
+  },
+  "status": "pending",
+  "startedAt": ""
+}

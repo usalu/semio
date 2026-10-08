@@ -14,7 +14,7 @@ use semio_framework_plugin::PluginApp;
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree() {
     let mut app = note_app().await;
-    let document = crate::schema::semio_example_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
     // ♻️ The seed envelope is printed from inside the owner-installing store guard
     // (`🚪️io/💾️binary/📸️snapshot`), which walks the bounded close loop on drop. A bare
     // `create_document_envelope` handed straight to `print_document_pack` and then dropped asserts

@@ -36995,8 +36995,8 @@
         "class": "data",
         "form": "value"
       },
-      "sizeBytes": 95211,
-      "sha256": "9eb8a1f5d78776b56babda20f0116e9e2a4bf1df0e312ca50e815c4d5d451623"
+      "sizeBytes": 95217,
+      "sha256": "9c1be83f8e38b9eb1833e82e7f83f64f7d3187b8dbabbded62f32321575fbafa"
     },
     {
       "name": "📚️examples/s.puzzle.puzzle2d.1.-/concrete-forest.dsl.semio",
@@ -37004,8 +37004,8 @@
         "class": "data",
         "form": "value"
       },
-      "sizeBytes": 2270,
-      "sha256": "efd4ff3deac8e87b4bc24c9b6f8bd700c39d78823422db403f023289c7d26ae6"
+      "sizeBytes": 2276,
+      "sha256": "ad71f3e099898e97abe6a959b60be477a472cc1078b907979ef732ecdc81bad8"
     },
     {
       "name": "📚️examples/s.puzzle.puzzle3d.1.-/concrete-forest.dsl.semio",
@@ -37013,8 +37013,8 @@
         "class": "threeD",
         "form": "design"
       },
-      "sizeBytes": 7780,
-      "sha256": "45703172c214a2d35c51f22c6ee54832f68fbe7cc92fce06ab742953317bc1ce"
+      "sizeBytes": 7781,
+      "sha256": "98024502e54cac50db03ce3c1c5cb2f5c9f03fe4c17d13e0201f286d4d406653"
     },
     {
       "name": "📚️examples/s.puzzle.puzzle3d.1.-/nakagin-capsule-tower.dsl.semio",
@@ -37022,8 +37022,8 @@
         "class": "threeD",
         "form": "design"
       },
-      "sizeBytes": 130395,
-      "sha256": "b4203f45035288a907a2fcf5961537275de942d00598f309c28cad676f297f8b"
+      "sizeBytes": 130396,
+      "sha256": "9b2eea6ae5eeb2af5a8b26f04d54bbc492835365a4a5a90c603f26d9976f2348"
     },
     {
       "name": "📚️examples/s.puzzle.puzzle5d.1.-/nakagin-capsule-tower.dsl.semio",
@@ -37054,8 +37054,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "14053ac39020fe35b28f1c963e8f96f410bea179c1fed87ff0693d5114c9b4fd",
-    "coreWasmSha256": "1bbcceb5934fb6644996f9342c5b65e839910c4c7bcff9cd52fcbbec8ee9b808",
-    "descriptorSha256": "58a38836019e4925f571d2647ad72f562a37c38c70e9fa6b351a60debeaf3b27"
+    "wasmSha256": "b661e07a482f046c48be7be086fb45f717e92d6cd16e71da0ceb87d2a447aa73",
+    "coreWasmSha256": "c6fd3ca4b436e8d15c794eb3d033f254beb49078eb291728c7d11aa5e1357a38",
+    "descriptorSha256": "4c17f5376bb420a07338bf9dd912fc0cf69f6d41da090f3b28548025d50aea3b"
   }
 }

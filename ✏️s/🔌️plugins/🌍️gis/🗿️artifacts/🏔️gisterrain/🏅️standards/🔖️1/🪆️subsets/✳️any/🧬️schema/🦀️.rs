@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 
 //#region 🔖️Artifact
 /// 🧬️ GIS terrain document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {

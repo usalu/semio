@@ -92,10 +92,10 @@
       ],
       "properties": {
         "operation": {
-          "const": "restoreActiveSpaceAlternative"
+          "const": "setActiveSpaceAlternative"
         },
         "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/mutation/restore-active-space-alternative/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/mutation/set-active-space-alternative/schema.json"
         }
       }
     }

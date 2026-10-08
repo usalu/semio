@@ -12,13 +12,12 @@ pub fn diff(payload: &super::CreateTargetRegion, base: &Puzzle2dSnapshot) -> pro
     if base.target_regions.iter().any(|entry| entry.id == payload.target_region.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target region"), vec![payload.target_region.id.to_string_owner()]);
     }
-    let mut delta = Puzzle2dTargetRegionsDelta { added: vec![payload.target_region.clone()], ..Default::default() };
-    if let Some(index) = payload.index {
+    let reordered = payload.index.filter(|index| *index < base.target_regions.len()).map(|index| {
         let mut order: Vec<semio_framework_value::paged::PagedUtf8<{usize::MAX}>> = base.target_regions.iter().map(|entry| entry.id.clone()).collect();
-        let at = index.min(order.len());
-        order.insert(at, payload.target_region.id.clone());
-        delta.reordered = Some(order);
-    }
+        order.insert(index, payload.target_region.id.clone());
+        order
+    });
+    let delta = Puzzle2dTargetRegionsDelta::adding(payload.target_region.clone(), reordered);
     protocol::MutationOutcome::new(Puzzle2dDiff { target_regions: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

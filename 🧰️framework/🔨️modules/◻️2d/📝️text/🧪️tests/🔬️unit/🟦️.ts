@@ -17,3 +17,15 @@ for (const item of fixture.cases) test(`line layout ${JSON.stringify(item.conten
   });
   expect(lines).toEqual(expected);
 });
+for (const item of fixture.chunkCases) test(`native page boundary ${item.prefixRepeat}`, () => {
+  const content = item.prefix.repeat(item.prefixRepeat) + item.suffix;
+  const oracle = new LinesAndColumns(content);
+  const count = oracle.locationForIndex(content.length)!.line + 1;
+  const columns = Array.from({length:count}, (_, line) => {
+    const start = oracle.indexForLocation({line,column:0})!;
+    const end = oracle.indexForLocation({line:line+1,column:0}) ?? content.length;
+    return [...content.slice(start,end).replace(/(?:\r\n|[\r\n])$/, "")].length;
+  });
+  expect([Math.max(...columns) * item.size * 0.6, count * item.size * 1.2]).toEqual(item.extent);
+  expect(drawingTextFallbackExtent(content,item.size)).toEqual(item.extent);
+});

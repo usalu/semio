@@ -1,20 +1,15 @@
-//! 🔺️ `upsert-tension-component` — sparse diff construction.
+//! 🪢️ `update-tension-component-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
 use super::UpdateTensionComponentInputs;
-use crate::diff::En1993TensionList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993TensionComponentEdit};
+use crate::En1993Snapshot;
 
-//#region 🔖️Diff
 pub fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    let mut values = base.tension_components.clone();
-    if let Some(idx) = values.iter().position(|x| x.id == payload.tension_component.id) {
-        if values[idx] == payload.tension_component {
-            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
-        }
-        values[idx] = payload.tension_component.clone();
-    } else {
-        values.push(payload.tension_component.clone());
-    }
-    protocol::MutationOutcome::new(En1993Diff { tension_components: Some(En1993TensionList { values }), ..Default::default() })
+    let edit = match base.tension_components.iter().position(|row| row.id == payload.tension_component.id) {
+        Some(index) if base.tension_components[index] == payload.tension_component => return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value."),
+        Some(index) => En1993TensionComponentEdit::replace(index, payload.tension_component.id.clone(), payload.tension_component.clone()),
+        None => En1993TensionComponentEdit::insert(base.tension_components.len(), payload.tension_component.clone()),
+    };
+    protocol::MutationOutcome::new(En1993Diff { tension_components: vec![edit], ..Default::default() })
 }
-//#endregion 🔖️Diff

@@ -5,7 +5,7 @@
 //! document collection (`fonts`, `images`, `forms`, graphics states, shadings, patterns, named
 //! colour spaces and property lists, embedded files) is an id-keyed triple of whole values;
 //! `outlines`, `named_destinations`, `page_labels`, `output_intents` are index-keyed triples;
-//! the catalog scalars are tri-state (`Clear`/`Set`); `info` is whole-value replaced; and the
+//! the catalog scalars are tri-state (`Clear`/`Set`); `info` is a field-wise tri-state patch; and the
 //! retained COS lanes keep their recursive `PdfValueDiff` patches (`objects` keyed by `ObjRef`,
 //! `trailer`/`catalog_extra` name-keyed).
 //!
@@ -20,7 +20,7 @@ use crate::standards::v1_7::subsets::base::io::carry_graph_edit;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{ApplyCapability, MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️TriState
@@ -216,6 +216,64 @@ enum Slot<T> {
     Modified(usize, T),
     Added(T),
 }
+
+/// 🧱️ Where one position of a triple's FINAL state came from: a surviving BASE index or the n-th `added` row.
+#[derive(Clone, Copy)]
+enum Origin {
+    Base(usize),
+    Added(usize),
+}
+
+/// 🧭️ The final layout of an index triple over `base_len` base items, in `apply` order: removals descending, additions
+/// ascending at their final index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn triple_layout(base_len: usize, removed: &[usize], added: &[usize]) -> Vec<Origin> {
+    let mut layout: Vec<Origin> = (0..base_len).map(Origin::Base).collect();
+    let mut removed = removed.to_vec();
+    removed.sort_unstable_by(|a, b| b.cmp(a));
+    removed.dedup();
+    for index in removed {
+        if index < layout.len() {
+            layout.remove(index);
+        }
+    }
+    let mut order: Vec<usize> = (0..added.len()).collect();
+    order.sort_by_key(|tag| added[*tag]);
+    for tag in order {
+        layout.insert(added[tag].min(layout.len()), Origin::Added(tag));
+    }
+    layout
+}
+
+impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
+    /// ↩️ The negative triple over `base`: it removes what this one added, restores every modified item to its base value at
+    /// the position the item holds in the final state, and re-adds every removed base item at its base index.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &[T]) -> Self {
+        let added: Vec<usize> = self.added.iter().map(|item| item.index).collect();
+        let mut inverse = Self::default();
+        for (position, origin) in triple_layout(base.len(), &self.removed, &added).into_iter().enumerate() {
+            match origin {
+                Origin::Added(_) => inverse.removed.push(position),
+                Origin::Base(index) if self.modified.iter().any(|item| item.index == index) => {
+                    if let Some(previous) = base.get(index) {
+                        inverse.modified.push(PdfIndexedItem { index: position, value: previous.clone() });
+                    }
+                }
+                Origin::Base(_) => {}
+            }
+        }
+        let mut removed = self.removed.clone();
+        removed.sort_unstable();
+        removed.dedup();
+        for index in removed {
+            if let Some(previous) = base.get(index) {
+                inverse.added.push(PdfIndexedItem { index, value: previous.clone() });
+            }
+        }
+        inverse
+    }
+}
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️KeyedTriple
@@ -358,6 +416,18 @@ impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
         }
         out.added.sort_by_key(|item| item.index);
         out
+    }
+
+    /// ↩️ The negative triple over `base`: it removes what this one added, restores every modified item to its base value and
+    /// re-adds every removed base item at its base index.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &[T]) -> Self {
+        let mut inverse = Self::default();
+        inverse.removed = self.added.iter().map(|item| item.value.key().to_string()).collect();
+        inverse.modified = self.modified.iter().filter_map(|item| base.iter().find(|candidate| candidate.key() == item.key).map(|previous| PdfKeyedItem { key: item.key.clone(), value: previous.clone() })).collect();
+        inverse.added = self.removed.iter().filter_map(|key| base.iter().position(|candidate| candidate.key() == key).map(|index| PdfIndexedItem { index, value: base[index].clone() })).collect();
+        inverse.added.sort_by_key(|item| item.index);
+        inverse
     }
 }
 //#endregion 🔖️KeyedTriple
@@ -539,7 +609,131 @@ fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
         }
     };
 }
+/// ↩️ The negative patch for `diff` over `page`: every field the patch names is set back to the value `page` holds.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_page_diff(diff: &PdfPageDiff, page: &PdfPage) -> PdfPageDiff {
+    PdfPageDiff {
+        media_box: diff.media_box.map(|_| page.media_box),
+        crop_box: diff.crop_box.as_ref().map(|_| PdfSet::from_option(&page.crop_box)),
+        bleed_box: diff.bleed_box.as_ref().map(|_| PdfSet::from_option(&page.bleed_box)),
+        trim_box: diff.trim_box.as_ref().map(|_| PdfSet::from_option(&page.trim_box)),
+        art_box: diff.art_box.as_ref().map(|_| PdfSet::from_option(&page.art_box)),
+        rotate: diff.rotate.map(|_| page.rotate),
+        user_unit: diff.user_unit.as_ref().map(|_| PdfSet::from_option(&page.user_unit)),
+        content: diff.content.as_ref().map(|content| content.inverse(&page.content)),
+        annotations: diff.annotations.as_ref().map(|annotations| annotations.inverse(&page.annotations)),
+        group: diff.group.as_ref().map(|_| PdfSet::from_option(&page.group)),
+        thumbnail: diff.thumbnail.as_ref().map(|_| PdfSet::from_option(&page.thumbnail)),
+        struct_parents: diff.struct_parents.as_ref().map(|_| PdfSet::from_option(&page.struct_parents)),
+        transition: diff.transition.as_ref().map(|_| PdfSet::from_option(&page.transition)),
+        duration: diff.duration.as_ref().map(|_| PdfSet::from_option(&page.duration)),
+        metadata: diff.metadata.as_ref().map(|_| PdfSet::from_option(&page.metadata)),
+        additional_actions: diff.additional_actions.as_ref().map(|_| page.additional_actions.clone()),
+        extra: diff.extra.as_ref().map(|extra| inverse_dict_diff(extra, &page.extra)),
+    }
+}
 //#endregion 🔖️PageDiff
+
+//#region 🔖️InfoDiff
+/// 📇️ Sparse patch for the document `/Info` dictionary: every scalar field is tri-state (`Clear`/`Set`), `extra` is replaced
+/// whole when it moves.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct PdfInfoDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub author: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub keywords: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub creator: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub producer: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub creation_date: Option<PdfSet<PdfDate>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub modification_date: Option<PdfSet<PdfDate>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub trapped: Option<PdfSet<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub extra: Option<Vec<PdfDictEntry>>,
+}
+
+impl PdfInfoDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
+        self == &PdfInfoDiff::default()
+    }
+
+    /// 🧭️ The patch that carries `base` to `other`: only the fields the two differ in.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn between(base: &PdfInfo, other: &PdfInfo) -> Self {
+        Self {
+            title: tri(&base.title, &other.title),
+            author: tri(&base.author, &other.author),
+            subject: tri(&base.subject, &other.subject),
+            keywords: tri(&base.keywords, &other.keywords),
+            creator: tri(&base.creator, &other.creator),
+            producer: tri(&base.producer, &other.producer),
+            creation_date: tri(&base.creation_date, &other.creation_date),
+            modification_date: tri(&base.modification_date, &other.modification_date),
+            trapped: tri(&base.trapped, &other.trapped),
+            extra: (base.extra != other.extra).then(|| other.extra.clone()),
+        }
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn apply(&self, base: &PdfInfo) -> PdfInfo {
+        let mut next = base.clone();
+        apply_tri(&mut next.title, &self.title);
+        apply_tri(&mut next.author, &self.author);
+        apply_tri(&mut next.subject, &self.subject);
+        apply_tri(&mut next.keywords, &self.keywords);
+        apply_tri(&mut next.creator, &self.creator);
+        apply_tri(&mut next.producer, &self.producer);
+        apply_tri(&mut next.creation_date, &self.creation_date);
+        apply_tri(&mut next.modification_date, &self.modification_date);
+        apply_tri(&mut next.trapped, &self.trapped);
+        if let Some(extra) = &self.extra {
+            next.extra = extra.clone();
+        }
+        next
+    }
+
+    /// ↩️ The negative patch: every field this one names is set back to what `base` holds.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &PdfInfo) -> Self {
+        Self {
+            title: self.title.as_ref().map(|_| PdfSet::from_option(&base.title)),
+            author: self.author.as_ref().map(|_| PdfSet::from_option(&base.author)),
+            subject: self.subject.as_ref().map(|_| PdfSet::from_option(&base.subject)),
+            keywords: self.keywords.as_ref().map(|_| PdfSet::from_option(&base.keywords)),
+            creator: self.creator.as_ref().map(|_| PdfSet::from_option(&base.creator)),
+            producer: self.producer.as_ref().map(|_| PdfSet::from_option(&base.producer)),
+            creation_date: self.creation_date.as_ref().map(|_| PdfSet::from_option(&base.creation_date)),
+            modification_date: self.modification_date.as_ref().map(|_| PdfSet::from_option(&base.modification_date)),
+            trapped: self.trapped.as_ref().map(|_| PdfSet::from_option(&base.trapped)),
+            extra: self.extra.as_ref().map(|_| base.extra.clone()),
+        }
+    }
+
+    /// ➕️ Sequential coalesce: a later write of a field wins.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn absorb(&mut self, other: Self) {
+        macro_rules! later {
+            ($($field:ident),*) => {
+                $(if other.$field.is_some() {
+                    self.$field = other.$field;
+                })*
+            };
+        }
+        later!(title, author, subject, keywords, creator, producer, creation_date, modification_date, trapped, extra);
+    }
+}
+//#endregion 🔖️InfoDiff
 
 //#region 🔖️PagesTriple
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -708,6 +902,32 @@ fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: &PdfPagesDiff) -> PdfPagesDiff {
     }
     out
 }
+/// ↩️ The negative page triple over `base`: it removes what `diff` added, patches every modified page back through its own
+/// negative patch at the position the page holds in the final state, and re-adds every removed base page at its base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> PdfPagesDiff {
+    let added: Vec<usize> = diff.added.iter().map(|item| item.index).collect();
+    let mut inverse = PdfPagesDiff::default();
+    for (position, origin) in triple_layout(base.len(), &diff.removed, &added).into_iter().enumerate() {
+        match origin {
+            Origin::Added(_) => inverse.removed.push(position),
+            Origin::Base(index) => {
+                if let (Some(modified), Some(page)) = (diff.modified.iter().find(|item| item.index == index), base.get(index)) {
+                    inverse.modified.push(PdfPageModified { index: position, diff: inverse_page_diff(&modified.diff, page) });
+                }
+            }
+        }
+    }
+    let mut removed = diff.removed.clone();
+    removed.sort_unstable();
+    removed.dedup();
+    for index in removed {
+        if let Some(page) = base.get(index) {
+            inverse.added.push(PdfPageAdded { index, page: page.clone() });
+        }
+    }
+    inverse
+}
 //#endregion 🔖️PagesTriple
 
 //#region 🔖️DictDiff (reused for nested Dict/Stream.dict AND top-level trailer)
@@ -836,6 +1056,20 @@ fn absorb_dict_diff(d1: PdfDictDiff, d2: PdfDictDiff) -> PdfDictDiff {
     removed.sort();
     removed.dedup();
     PdfDictDiff { removed, modified, added }
+}
+/// ↩️ The negative dictionary patch over `base`: it removes the keys `diff` added, patches every modified entry back through
+/// its negative value diff and re-adds every removed entry at its base position.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> PdfDictDiff {
+    PdfDictDiff {
+        removed: diff.added.iter().map(|item| item.key.clone()).collect(),
+        modified: diff.modified.iter().filter_map(|item| base.iter().find(|entry| entry.key == item.key).map(|entry| PdfDictModified { key: item.key.clone(), diff: inverse_value_diff(&item.diff, &entry.value) })).collect(),
+        added: {
+            let mut added: Vec<PdfDictAdded> = diff.removed.iter().filter_map(|key| base.iter().position(|entry| &entry.key == key).map(|index| PdfDictAdded { index, key: key.clone(), item: base[index].value.clone() })).collect();
+            added.sort_by_key(|item| item.index);
+            added
+        },
+    }
 }
 //#endregion 🔖️DictDiff
 
@@ -1026,6 +1260,32 @@ fn absorb_array_diff(d1: PdfArrayDiff, d2: &PdfArrayDiff) -> PdfArrayDiff {
     final_removed.dedup();
     PdfArrayDiff { removed: final_removed, modified, added }
 }
+/// ↩️ The negative array patch over `base`: it removes what `diff` added, patches every modified item back through its
+/// negative value diff at the position the item holds in the final state, and re-adds every removed item at its base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> PdfArrayDiff {
+    let added: Vec<usize> = diff.added.iter().map(|item| item.index).collect();
+    let mut inverse = PdfArrayDiff::default();
+    for (position, origin) in triple_layout(base.len(), &diff.removed, &added).into_iter().enumerate() {
+        match origin {
+            Origin::Added(_) => inverse.removed.push(position),
+            Origin::Base(index) => {
+                if let (Some(modified), Some(item)) = (diff.modified.iter().find(|item| item.index == index), base.get(index)) {
+                    inverse.modified.push(PdfArrayModified { index: position, diff: inverse_value_diff(&modified.diff, item) });
+                }
+            }
+        }
+    }
+    let mut removed = diff.removed.clone();
+    removed.sort_unstable();
+    removed.dedup();
+    for index in removed {
+        if let Some(item) = base.get(index) {
+            inverse.added.push(PdfArrayAdded { index, item: item.clone() });
+        }
+    }
+    inverse
+}
 //#endregion 🔖️ArrayDiff
 
 //#region 🔖️ValueDiff
@@ -1214,6 +1474,24 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         (_, other) => other, // defensive LWW fallback; real sequential diffs never hit this arm.
     }
 }
+/// ↩️ The negative node diff over `base`: the node's old scalar or kind-changing replacement, or the negative collection patch
+/// of a structural diff.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfValueDiff {
+    match (diff, base) {
+        (PdfValueDiff::Array { diff }, PdfObject::Array(items)) => PdfValueDiff::Array { diff: inverse_array_diff(diff, items) },
+        (PdfValueDiff::Dict { diff }, PdfObject::Dict(entries)) => PdfValueDiff::Dict { diff: inverse_dict_diff(diff, entries) },
+        (PdfValueDiff::Stream { dict, data, filters }, PdfObject::Stream { dict: base_dict, data: base_data, filters: base_filters }) => PdfValueDiff::Stream { dict: dict.as_ref().map(|dict| inverse_dict_diff(dict, base_dict)), data: data.as_ref().map(|_| base_data.clone()), filters: filters.as_ref().map(|_| base_filters.clone()) },
+        (PdfValueDiff::Replace { .. }, _) => PdfValueDiff::Replace { value: base.clone() },
+        (PdfValueDiff::Bool { .. }, PdfObject::Bool(value)) => PdfValueDiff::Bool { value: *value },
+        (PdfValueDiff::Int { .. }, PdfObject::Int(value)) => PdfValueDiff::Int { value: *value },
+        (PdfValueDiff::Real { .. }, PdfObject::Real(value)) => PdfValueDiff::Real { value: value.clone() },
+        (PdfValueDiff::Str { .. }, PdfObject::Str(value)) => PdfValueDiff::Str { value: value.clone() },
+        (PdfValueDiff::Name { .. }, PdfObject::Name(value)) => PdfValueDiff::Name { value: value.clone() },
+        (PdfValueDiff::Ref { .. }, PdfObject::Ref(value)) => PdfValueDiff::Ref { value: *value },
+        _ => PdfValueDiff::Replace { value: base.clone() },
+    }
+}
 //#endregion 🔖️ValueDiff
 
 //#region 🔖️ObjectsTriple
@@ -1340,6 +1618,20 @@ fn absorb_law_objects_diff(d1: PdfObjectsDiff, d2: PdfObjectsDiff) -> PdfObjects
     }
     added.sort_by_key(|a| a.index);
     PdfObjectsDiff { removed, modified, added }
+}
+/// ↩️ The negative objects triple over `base`: it removes the objects `diff` added, patches every modified object back through
+/// its negative value diff and re-adds every removed object at its base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> PdfObjectsDiff {
+    PdfObjectsDiff {
+        removed: diff.added.iter().map(|item| item.id).collect(),
+        modified: diff.modified.iter().filter_map(|item| base.iter().find(|object| object.id == item.id).map(|object| PdfObjectModified { id: item.id, diff: inverse_value_diff(&item.diff, &object.value) })).collect(),
+        added: {
+            let mut added: Vec<PdfObjectAdded> = diff.removed.iter().filter_map(|id| base.iter().position(|object| &object.id == id).map(|index| PdfObjectAdded { index, id: *id, value: base[index].value.clone() })).collect();
+            added.sort_by_key(|item| item.index);
+            added
+        },
+    }
 }
 //#endregion 🔖️ObjectsTriple
 
@@ -1544,7 +1836,10 @@ fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> M
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.pdf.1.7`. `schema` is an identity field and is never diffed. `info` is a
-/// WEAK value struct (whole-value replaced, never sub-diffed).
+/// field-wise tri-state patch (@see [`PdfInfoDiff`]). `graph_edit` marks a diff whose `objects`/`trailer` rows edit
+/// the retained COS graph directly: applying it carries every typed lane the edited graph reads differently
+/// (@see `io::carry_graph_edit`), so a direct COS edit and the typed model never disagree and the next write spells the edit
+/// instead of re-stating a stale typed lane over it.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7.diff")]
@@ -1629,7 +1924,7 @@ pub struct PdfDiff {
     pub encryption: Option<PdfSet<PdfEncryption>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub info: Option<PdfInfo>,
+    pub info: Option<PdfInfoDiff>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub catalog_extra: Option<PdfDictDiff>,
@@ -1639,6 +1934,14 @@ pub struct PdfDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub trailer: Option<PdfDictDiff>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "is_false")]
+    pub graph_edit: bool,
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1689,8 +1992,8 @@ fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
     if let Some(v) = &diff.declared_version {
         next.declared_version = v.clone();
     }
-    if let Some(v) = &diff.info {
-        next.info = v.clone();
+    if let Some(info) = &diff.info {
+        next.info = info.apply(&base.info);
     }
     if let Some(pd) = &diff.pages {
         next.pages = apply_pages_diff(pd, &base.pages);
@@ -1723,6 +2026,9 @@ fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
     if let Some(td) = &diff.trailer {
         next.trailer = apply_dict_diff(td, &base.trailer);
     }
+    if diff.graph_edit {
+        carry_graph_edit(base, &mut next);
+    }
     next
 }
 
@@ -1736,7 +2042,7 @@ fn absorb_option<T>(slot: &mut Option<T>, other: Option<T>, merge: impl FnOnce(T
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+    fn apply(&self, base: &PdfSnapshot, _capability: ApplyCapability) -> MutationApplyResult<PdfSnapshot> {
         validate_pdf_diff(self, base)?;
         Ok(apply_pdf_diff_unchecked(self, base))
     }
@@ -1747,9 +2053,10 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
         if other.declared_version.is_some() {
             self.declared_version = other.declared_version;
         }
-        if other.info.is_some() {
-            self.info = other.info;
-        }
+        absorb_option(&mut self.info, other.info, |mut a, b| {
+            a.absorb(b);
+            (!a.is_empty()).then_some(a)
+        });
         absorb_option(&mut self.pages, other.pages, |a, b| {
             let m = absorb_law_pages_diff(a, &b);
             (!m.is_empty()).then_some(m)
@@ -1783,15 +2090,59 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             let m = absorb_dict_diff(a, b);
             (!m.is_empty()).then_some(m)
         });
+        self.graph_edit = (self.graph_edit || other.graph_edit) && (self.objects.is_some() || self.trailer.is_some());
     }
 }
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction): the
-    /// state delta from `self.apply(base)` back to `base`.
+    /// 🔁️ Diff-level undo, built lane by lane from `base`: every lane this diff names is set back to what `base` holds, so
+    /// the negative diff applied after `self` restores `base`. A graph edit's negative diff is a graph edit too.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = apply_pdf_diff_unchecked(self, base);
-        Self::between(&mid, base)
+        macro_rules! keyed_lanes {
+            ($($field:ident),*) => {
+                $(let $field = self.$field.as_ref().map(|lane| lane.inverse(&base.$field));)*
+            };
+        }
+        keyed_lanes!(fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, embedded_files, outlines, named_destinations, page_labels, output_intents);
+        macro_rules! set_lanes {
+            ($($field:ident),*) => {
+                $(let $field = self.$field.as_ref().map(|_| PdfSet::from_option(&base.$field));)*
+            };
+        }
+        set_lanes!(acro_form, optional_content, page_layout, page_mode, viewer_preferences, open_action, language, mark_info, metadata, document_id, encryption);
+        PdfDiff {
+            declared_version: self.declared_version.as_ref().map(|_| base.declared_version.clone()),
+            pages: self.pages.as_ref().map(|pages| inverse_pages_diff(pages, &base.pages)),
+            fonts,
+            images,
+            forms,
+            ext_g_states,
+            shadings,
+            patterns,
+            color_spaces,
+            properties,
+            outlines,
+            named_destinations,
+            page_labels,
+            embedded_files,
+            output_intents,
+            acro_form,
+            optional_content,
+            page_layout,
+            page_mode,
+            viewer_preferences,
+            open_action,
+            language,
+            mark_info,
+            metadata,
+            document_id,
+            encryption,
+            info: self.info.as_ref().map(|info| info.inverse(&base.info)),
+            catalog_extra: self.catalog_extra.as_ref().map(|extra| inverse_dict_diff(extra, &base.catalog_extra)),
+            objects: self.objects.as_ref().map(|objects| inverse_objects_diff(objects, &base.objects)),
+            trailer: self.trailer.as_ref().map(|trailer| inverse_dict_diff(trailer, &base.trailer)),
+            graph_edit: self.graph_edit,
+        }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `pages` positionally matched, id collections by key,
@@ -1844,10 +2195,14 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
             metadata: tri(&base.metadata, &other.metadata),
             document_id: tri(&base.document_id, &other.document_id),
             encryption: tri(&base.encryption, &other.encryption),
-            info: (base.info != other.info).then(|| other.info.clone()),
+            info: {
+                let info = PdfInfoDiff::between(&base.info, &other.info);
+                (!info.is_empty()).then_some(info)
+            },
             catalog_extra: dict(&base.catalog_extra, &other.catalog_extra),
             objects,
             trailer: dict(&base.trailer, &other.trailer),
+            graph_edit: false,
         }
     }
 
@@ -1956,8 +2311,9 @@ pub fn diff_move_page(base: &PdfSnapshot, from: usize, to: usize) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { removed: vec![from], added: vec![PdfPageAdded { index: final_to, page: page.clone() }], ..Default::default() }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_info(info: PdfInfo) -> PdfDiff {
-    PdfDiff { info: Some(info), ..Default::default() }
+pub fn diff_set_info(base: &PdfSnapshot, info: &PdfInfo) -> PdfDiff {
+    let diff = PdfInfoDiff::between(&base.info, info);
+    PdfDiff { info: (!diff.is_empty()).then_some(diff), ..Default::default() }
 }
 
 /// 🆔 Upsert of one keyed collection item: `modified` when the key exists in `base`, `added`
@@ -2144,20 +2500,21 @@ pub fn diff_remove_trailer_entry(base: &PdfSnapshot, key: &str) -> PdfDiff {
     }
     PdfDiff { trailer: Some(PdfDictDiff { removed: vec![key.to_string()], ..Default::default() }), ..Default::default() }
 }
-/// 🪢 A retained-graph edit together with the typed lanes it moves: `graph` edits only `objects`
-/// and `trailer`, and the result also carries every lane the edited graph reads differently
-/// (@see `io::carry_graph_edit`), so a direct COS edit and the typed model never disagree.
+
+/// 🪢 Marks `rows` — a diff of the retained COS graph (`objects`, `trailer`) — as a graph edit: applying it carries every typed
+/// lane the edited graph reads differently (@see `io::carry_graph_edit`). A diff without graph rows stays unmarked.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_graph_edit(base: &PdfSnapshot, graph: PdfDiff) -> PdfDiff {
-    let mut next = base.clone();
-    if let Some(objects) = &graph.objects {
-        next.objects = apply_objects_diff(objects, &base.objects);
-    }
-    if let Some(trailer) = &graph.trailer {
-        next.trailer = apply_dict_diff(trailer, &base.trailer);
-    }
-    carry_graph_edit(base, &mut next);
-    PdfDiff { objects: graph.objects, trailer: graph.trailer, ..<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next) }
+pub fn graph_edit(rows: PdfDiff) -> PdfDiff {
+    let graph = rows.objects.is_some() || rows.trailer.is_some();
+    PdfDiff { graph_edit: graph, ..rows }
+}
+
+/// ➕️ `first` then `second` as one diff — the rows of two edits that touch different entities, coalesced by [`MutationDiff::absorb`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn sequence(first: PdfDiff, second: PdfDiff) -> PdfDiff {
+    let mut diff = first;
+    MutationDiff::absorb(&mut diff, second);
+    diff
 }
 
 /// 📐 Which optional page box a mutation addresses.

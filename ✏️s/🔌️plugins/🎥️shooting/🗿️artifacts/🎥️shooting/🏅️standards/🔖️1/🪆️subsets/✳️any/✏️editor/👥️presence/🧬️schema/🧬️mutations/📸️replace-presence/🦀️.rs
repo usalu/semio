@@ -13,14 +13,18 @@ pub struct ReplacePresence {
 
 impl protocol::MutationKind<ShootingPresence, ShootingPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
-    fn diff(&self, _base: &ShootingPresence) -> protocol::MutationOutcome<ShootingPresence> {
-        protocol::MutationOutcome::new(self.presence.clone())
+    fn diff(&self, base: &ShootingPresence) -> protocol::MutationOutcome<ShootingPresenceDiff> {
+        let diff = ShootingPresenceDiff {
+            selected_shot_ids: (base.selected_shot_ids != self.presence.selected_shot_ids).then(|| self.presence.selected_shot_ids.clone()),
+            camera: (base.camera != self.presence.camera).then(|| self.presence.camera.clone()),
+        };
+        match protocol::DiffAlgebra::<ShootingPresence>::is_empty(&diff) {
+            true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Presence is unchanged."),
+            false => protocol::MutationOutcome::new(diff),
+        }
     }
     fn inverse(&self, base: &ShootingPresence) -> Result<Vec<ShootingPresenceMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
-    
-    })())
+    Ok(vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })])
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")

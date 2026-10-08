@@ -1128,6 +1128,7 @@ fn a_released_node_drag_commits_one_transaction_of_its_leaves() {
     assert_eq!(transaction, TransactionRef::mint(&actor, &at, tool));
     assert_eq!(committed, leaves);
     assert_eq!(node_drag_commit::<Value>(tool, actor, text(&commit["gesture"]), Vec::new(), at), None, "an empty release leaves zero trace");
+    eprintln!("[DEBUG] released node drag retained exact guest leaves in one actor/clock/tool transaction; empty release emitted nothing");
 }
 //#endregion 🔖️NodeDragLaws
 
@@ -1141,6 +1142,7 @@ fn a_one_step_tool_commits_one_transaction_of_its_leaves() {
     assert_eq!((transaction.tool.as_str(), leaves), ("demo@1/*#editor#place", vec![1, 2]));
     assert_eq!(tool_once_emit::<i64>("demo@1/*#editor", "place", "seed", Vec::new()), NodeDragEmit::Nothing);
     assert_eq!(tool_once_emit("demo@1/*#editor", "place", "", vec![3]), NodeDragEmit::Plain(vec![3]));
+    eprintln!("[DEBUG] one-step tool emitted its two exact leaves in one admitted transaction, zero leaves emitted nothing, and unadmitted leaves remained plain");
 }
 //#endregion 🎯️OnceLaws
 
@@ -1153,4 +1155,5 @@ fn independent_one_step_dispatches_never_share_a_transaction() {
         assert!(ids.insert(transaction.id), "each independent gesture owns its transaction");
     }
     assert_eq!(ids.len() as u64, fixture["independentReleases"]["uniqueTransactions"].as_u64().expect("unique transactions"));
+    eprintln!("[DEBUG] independent one-step dispatches retained {} distinct transactions against the authored release census", ids.len());
 }

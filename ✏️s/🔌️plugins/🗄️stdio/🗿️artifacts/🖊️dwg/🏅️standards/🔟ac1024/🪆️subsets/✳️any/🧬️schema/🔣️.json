@@ -47,7 +47,7 @@
       "x-semio-state": "artifact"
     },
     "summary": {
-      "type": "object",
+      "$ref": "#/$defs/DwgSummaryInfo",
       "x-semio-state": "artifact"
     },
     "application": {
@@ -367,6 +367,120 @@
         "revisions"
       ],
       "additionalProperties": false
+    },
+    "DwgSummaryInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "subject",
+        "author",
+        "keywords",
+        "comments",
+        "lastSavedBy",
+        "revisionNumber",
+        "hyperlinkBase"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Title",
+              "de": "Titel"
+            },
+            "description": {
+              "en": "Drawing summary title.",
+              "de": "Titel der Zeichnungszusammenfassung."
+            }
+          }
+        },
+        "subject": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "comments": {
+          "type": "string"
+        },
+        "lastSavedBy": {
+          "type": "string"
+        },
+        "revisionNumber": {
+          "type": "string"
+        },
+        "hyperlinkBase": {
+          "type": "string"
+        },
+        "totalEditingTime": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "createdAt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "days": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "milliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "days",
+            "milliseconds"
+          ]
+        },
+        "modifiedAt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "days": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "milliseconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "days",
+            "milliseconds"
+          ]
+        },
+        "customProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "value"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {

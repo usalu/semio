@@ -19,7 +19,7 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let binary = mutation.encode_op().unwrap();
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&binary).unwrap(), source);
     assert_eq!(InteractionConfigMutation::decode_op(&binary).unwrap(), mutation);
-    assert_eq!(mutation.apply(&InteractionState::default()).unwrap(), state);
+    assert_eq!(protocol::apply_diff(&mutation, &InteractionState::default()).unwrap(), state);
     let inverse = mutation.inverse(&InteractionState::default()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse[0].apply(&state).unwrap(), InteractionState::default());
+    assert_eq!(protocol::apply_diff(&inverse[0], &state).unwrap(), InteractionState::default());
 }

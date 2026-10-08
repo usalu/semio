@@ -1,11 +1,11 @@
 //! 🧭 `topology` — one named inference: a real pre-order traversal of `DrawingSnapshot.layers`'
-//! structural nesting (`DrawingLayerNode::Group.children: Vec<DrawingLayerNode>` is a genuine tree, owned
+//! structural nesting (`DrawingLayerNode::Group.children` is a native paged tree, owned
 //! by value — not an id-reference graph like `sequence`'s step DAG). `topoOrder` is document order
 //! with every ancestor preceding its descendants (already a valid topological order for a tree);
 //! `depth` is each layer's nesting depth from its root (0 at the top level); `cycleFree` is always
-//! `true` — a Rust `Vec<Self>` embedded by value cannot express a structural cycle, unlike an
+//! `true` — native nodes embedded by value cannot express a structural cycle, unlike an
 //! id-reference graph, so this is a static invariant, not an empirical result; `nodeCount` is the
-//! total flattened layer count. `DrawingLayerNode::Boolean.children: Vec<String>` are id REFERENCES
+//! total flattened layer count. `DrawingLayerNode::Boolean.children` holds native identity references
 //! (like an asset key), not structural nesting, so they are honestly excluded from this topology —
 //! conflating the two would let a dangling/self reference fabricate a fake cycle in what is
 //! otherwise a real tree invariant.
@@ -14,7 +14,7 @@ use crate::{DrawingLayerNode, DrawingSnapshot};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-fn layer_id(layer: &DrawingLayerNode) -> &str {
+fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
     match layer {
         DrawingLayerNode::Shape(body) => &body.base.id,
         DrawingLayerNode::Path(body) => &body.base.id,
@@ -26,9 +26,9 @@ fn layer_id(layer: &DrawingLayerNode) -> &str {
     }
 }
 
-fn walk(layers: &[DrawingLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+fn walk(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
-        let id = layer_id(layer).to_string();
+        let id = layer_id(layer).to_string_owner();
         topo_order.push(id.clone());
         depth.insert(id, level);
         if let DrawingLayerNode::Group(group) = layer {

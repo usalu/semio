@@ -120,13 +120,6 @@ test("reference coverage gate is registered through its exact default-budget rou
     await operation.call({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
     expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "./🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
   }
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const errors: ParseError[] = [], document = parse(readFileSync(join(root, path), "utf8"), errors, { allowTrailingComma: true });
-    expect(errors).toEqual([]);
-    const rows = document.configurations.filter((row: { name: string }) => row.name === expected.launchName);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toEqual({ name: expected.launchName, type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/repo-lib:" + expected.target + " --skip-nx-cache", cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: expected.launchOrder } });
-  }
 });
 
 afterAll(() => {

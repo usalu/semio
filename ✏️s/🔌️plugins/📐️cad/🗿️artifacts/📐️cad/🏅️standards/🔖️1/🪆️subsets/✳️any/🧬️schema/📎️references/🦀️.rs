@@ -77,7 +77,19 @@ pub(crate) fn close<T: RetireOwned>(value: T) {
     while !retirement.terminal_is_empty() { retirement.close_step(256, 65536).expect("CAD native cold retirement grant"); }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for CadReferenceIndex {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Map(semio_framework_dsl_record::borrowed_field_shape::<CadReferenceList>);
+}
+
 impl DslField for CadReferenceIndex {
+    fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, ValueError> {
+        if path.is_empty() { return Ok(semio_framework_dsl_record::native_encoding::FieldProjectionView::Map(self.len())); }
+        self.entries.get(path[0]).ok_or_else(semio_framework_dsl_record::native_encoding::projection_path_error)?.1.projection_view(&path[1..])
+    }
+    fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, ValueError> {
+        if path.is_empty() { return self.entries.get(index).map(|(key, _)| key.as_str()).ok_or_else(semio_framework_dsl_record::native_encoding::projection_path_error); }
+        self.entries.get(path[0]).ok_or_else(semio_framework_dsl_record::native_encoding::projection_path_error)?.1.projection_key(&path[1..], index)
+    }
     fn shape() -> Shape { Shape::Map(Box::new(<CadReferenceList as DslField>::shape())) }
     fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> {
         control.scoped_depth(64, |control| Ok(Shape::Map(semio_framework_dsl_record::producer::boxed(<CadReferenceList as DslField>::shape_controlled(control)?, control)?)))

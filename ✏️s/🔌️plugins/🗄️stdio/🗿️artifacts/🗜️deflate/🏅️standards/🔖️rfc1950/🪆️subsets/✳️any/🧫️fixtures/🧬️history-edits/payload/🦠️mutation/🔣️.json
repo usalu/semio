@@ -1,0 +1,31 @@
+{
+  "mutation": {
+    "mutation": "setPayload",
+    "payload": [
+      104,
+      105,
+      33
+    ]
+  },
+  "before": {
+    "schema": "stdio.deflate",
+    "compressionMethod": 8,
+    "windowBits": 7,
+    "compressionLevelHint": "default",
+    "payload": [
+      104,
+      105
+    ]
+  },
+  "after": {
+    "schema": "stdio.deflate",
+    "compressionMethod": 8,
+    "windowBits": 7,
+    "compressionLevelHint": "default",
+    "payload": [
+      104,
+      105,
+      33
+    ]
+  }
+}

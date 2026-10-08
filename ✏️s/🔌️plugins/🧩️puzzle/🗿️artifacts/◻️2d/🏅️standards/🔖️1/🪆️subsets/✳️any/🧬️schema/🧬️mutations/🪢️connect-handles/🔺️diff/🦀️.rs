@@ -1,4 +1,4 @@
-//! 🔺️ Sparse diff builder for `ConnectHandles` — a real append-only insert (never a
+//! 🔺️ Sparse diff builder for `ConnectHandles` — an exact ordered insert (never a
 //! whole-snapshot capture). No-op when the id already exists in `base`. A payload that states a `tolerance` connects
 //! on any base and warns `mutation.precondition-drifted` where its two handles are no longer within it.
 use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
@@ -35,7 +35,13 @@ pub fn diff(payload: &super::ConnectHandles, base: &Puzzle2dSnapshot) -> protoco
         visible: None,
         locked: None,
     };
-    protocol::MutationOutcome::new(Puzzle2dDiff { edges: Some(Puzzle2dEdgesDelta { added: vec![edge], ..Default::default() }), ..Default::default() }).absorb_messages(drift(payload, base))
+    let reordered = payload.index.filter(|index| *index < base.edges.len()).map(|index| {
+        let mut order: Vec<_> = base.edges.iter().map(|edge| edge.id.clone()).collect();
+        order.insert(index, payload.id.clone());
+        order
+    });
+    let delta = Puzzle2dEdgesDelta::adding(edge, reordered);
+    protocol::MutationOutcome::new(Puzzle2dDiff { edges: Some(delta), ..Default::default() }).absorb_messages(drift(payload, base))
 }
 
 /// 🧲️ The warning of a recorded proximity that no longer holds on `base`: the payload states a `tolerance`, and its two

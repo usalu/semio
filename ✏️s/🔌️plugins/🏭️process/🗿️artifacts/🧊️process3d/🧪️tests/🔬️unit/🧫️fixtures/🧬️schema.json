@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "variants",
+    "deleteSteps",
+    "cursorInsertions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "variants": {
+      "type": "object",
+      "required": [
+        "measureRecipe",
+        "workingSolid",
+        "processMeasure"
+      ],
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "deleteSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "hex"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$"
+          }
+        }
+      }
+    },
+    "cursorInsertions": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "stepCount",
+          "cursor",
+          "index",
+          "next"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stepCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cursor": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "next": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

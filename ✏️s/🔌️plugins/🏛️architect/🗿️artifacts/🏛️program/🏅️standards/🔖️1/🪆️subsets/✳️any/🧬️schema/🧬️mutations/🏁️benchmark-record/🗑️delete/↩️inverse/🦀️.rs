@@ -8,8 +8,7 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteBenchmarkRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let records = crate::program_benchmarks(base);
-    match records.iter().find(|row| row.header.id == payload.id) {
+    match base.benchmarks_payload.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateBenchmarkRecord(super::super::create_benchmark_record::CreateBenchmarkRecord { benchmark_record: existing.clone() })],
         None => Vec::new(),
     }

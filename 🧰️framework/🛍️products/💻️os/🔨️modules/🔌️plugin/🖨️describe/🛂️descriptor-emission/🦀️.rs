@@ -20,7 +20,7 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
+use semio_framework::{CanonicalDescriptorValue, PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
 use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef, TurnFault};
 
 //#region 🔖️ActorBindings
@@ -502,38 +502,6 @@ async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pa
 /// both output files under `out_dir` — only after the kind-identity law and the codec census pass on the same
 /// compiled component ([`kind_identity_faults`], [`first_owned_codec`]). Returns the patched descriptor for the caller to print/verify.
 ///
-/// 🔤️ A descriptor value whose every object holds its members in UTF-8 key-byte order, at every depth (design §22.19 of
-/// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the only value [`descriptor_pack`] encodes, so the emitted bytes are the
-/// canonical ones every verifier re-derives, whatever member order a value encoder keeps.
-#[derive(Clone, Debug, PartialEq)]
-pub struct CanonicalDescriptorValue(semio_framework_value::DslValue);
-
-impl CanonicalDescriptorValue {
-    /// 🔃️ Orders the members of every object by key bytes; members of equal keys keep their authored order.
-    pub fn new(value: semio_framework_value::DslValue) -> Self {
-        Self(canonical_members(value))
-    }
-
-    /// 👁️ The canonical value itself.
-    pub fn value(&self) -> &semio_framework_value::DslValue {
-        &self.0
-    }
-}
-
-/// 🪜️ [`CanonicalDescriptorValue::new`] through every array and object of `value`.
-fn canonical_members(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
-    use semio_framework_value::DslValue;
-    match value {
-        DslValue::Array(items) => DslValue::Array(items.into_iter().map(canonical_members).collect()),
-        DslValue::Object(entries) => {
-            let mut entries: Vec<(String, DslValue)> = entries.into_iter().map(|(key, entry)| (key, canonical_members(entry))).collect();
-            entries.sort_by(|left, right| left.0.as_bytes().cmp(right.0.as_bytes()));
-            DslValue::Object(entries)
-        }
-        scalar => scalar,
-    }
-}
-
 /// 📦️ The pack bytes of a descriptor: its canonical value through the wire value encoder.
 pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {
     store::pack_rt::encode_wire_value(value.value())

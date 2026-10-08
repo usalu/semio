@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the layout artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
@@ -49,12 +49,12 @@ pub struct LayoutDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🧾️ A present change distinguishes clearing ownership from replacing it with an empty dictionary.
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,ToValue,FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(deny_unknown_fields)]
 pub struct FormDictionaryChange {pub dictionary:Option<crate::FormDictionary>}
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -62,7 +62,7 @@ pub struct LayoutStringList {
     pub values: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -73,7 +73,7 @@ pub struct LayoutPagesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -82,7 +82,7 @@ pub struct LayoutPagePatchEntry {
     pub patch: PagePatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -93,7 +93,7 @@ pub struct LayoutStoriesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -102,7 +102,7 @@ pub struct LayoutStoryPatchEntry {
     pub patch: TextStoryPatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -113,7 +113,7 @@ pub struct LayoutLinksDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -122,7 +122,7 @@ pub struct LayoutLinkPatchEntry {
     pub patch: ImageLinkPatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -133,7 +133,7 @@ pub struct LayoutParagraphStylesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -142,7 +142,7 @@ pub struct LayoutParagraphStylePatchEntry {
     pub patch: ParagraphStylePatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -153,7 +153,7 @@ pub struct LayoutCharacterStylesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -162,7 +162,7 @@ pub struct LayoutCharacterStylePatchEntry {
     pub patch: CharacterStylePatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -173,7 +173,7 @@ pub struct LayoutParentPagesDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -182,7 +182,7 @@ pub struct LayoutParentPagePatchEntry {
     pub patch: ParentPagePatch,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -193,7 +193,7 @@ pub struct LayoutSpreadsDelta {
     pub reordered: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -203,7 +203,7 @@ pub struct LayoutSpreadPatchEntry {
 }
 
 /// 🩹 Sparse patch for a {@link ParagraphStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -218,7 +218,7 @@ pub struct ParagraphStylePatch {
 }
 
 /// 🩹 Sparse patch for a {@link CharacterStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -233,7 +233,7 @@ pub struct CharacterStylePatch {
 }
 
 /// 🩹 Sparse patch for a {@link ParentPage}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -244,7 +244,7 @@ pub struct ParentPagePatch {
 }
 
 /// 🩹 Sparse patch for a {@link Spread}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]

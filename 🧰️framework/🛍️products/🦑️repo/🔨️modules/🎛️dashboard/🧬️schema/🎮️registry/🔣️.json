@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json",
+  "title": "🎮️ Dashboard command registry",
+  "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from Nx targets, root workspace scripts, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `semio commands --json` and the daemon exchange.",
+  "$ref": "#/$defs/TicketCommands",
+  "$defs": {
+    "Slug": {
+      "type": "string",
+      "description": "🔑️ A declared identifier: lowercase words joined by `-`, `.` or `_`. It never contains `/`, `:`, `=` or whitespace, so it stays unambiguous inside a command id and a `key=value` pair.",
+      "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "Verb": {
+      "type": "string",
+      "description": "🗂️ The verb a command is filed under (`dev`, `test`, `build`, …). A verb outside the launcher's verb list is listed after the known ones.",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "maxLength": 32
+    },
+    "EnvName": {
+      "type": "string",
+      "description": "🌱️ An environment variable name. The runner variables the dashboard owns are never declared.",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "not": { "enum": ["NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
+    },
+    "Text": {
+      "type": "string",
+      "description": "🔤️ One process word or environment value. Tokens: `{workspace}` is the workspace root, `{port}` the resolved ready port, `{<parameter id>}` the chosen value of a parameter. A literal absolute path is never stored; write `{workspace}/…`.",
+      "pattern": "^[^\\u0000]*$",
+      "not": { "pattern": "^(~[/\\\\]|/(Users|home|root|private|tmp|var|opt|usr|etc|mnt|workspaces|Volumes)/|[A-Za-z]:[/\\\\])" }
+    },
+    "RelativePath": {
+      "type": "string",
+      "description": "📁️ A workspace-relative directory, forward-slashed; empty for the workspace root.",
+      "pattern": "^(?![/~\\\\])(?![A-Za-z]:)(?!(.*/)?\\.\\.(/|$))[^\\u0000\\\\]*$"
+    },
+    "EnvMap": {
+      "type": "object",
+      "description": "🌱️ Variables added to the process environment.",
+      "propertyNames": { "$ref": "#/$defs/EnvName" },
+      "additionalProperties": { "$ref": "#/$defs/Text" }
+    },
+    "NxFlags": {
+      "type": "array",
+      "description": "🚩️ Words placed before `--` of the Nx invocation (`--skip-nx-cache`, `--excludeTaskDependencies`, …). Only commands Nx runs accept them.",
+      "items": { "type": "string", "pattern": "^--?[A-Za-z][^\\s\\u0000]*$" }
+    },
+    "Args": {
+      "type": "array",
+      "description": "➡️ Words placed after `--` of the Nx invocation, or appended to a tool's command.",
+      "items": { "$ref": "#/$defs/Text" }
+    },
+    "Reference": {
+      "type": "string",
+      "description": "🔗️ Another command: `<project>:<target>[:configuration]`, `playground:<variant>`, `tool:<project>/<id>` or `ticket:<ticket id>/<id>`.",
+      "pattern": "^[^\\s:]+:\\S+$",
+      "not": { "pattern": "^((compound|group|script):|repo:(ticket\\.(show|files|close|reopen):.|(goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))" }
+    },
+    "AppliesTo": {
+      "type": "object",
+      "description": "🎯️ Where a global axis is offered: on every command Nx runs whose verb is listed, and on playgrounds when `playground` is true. Without `appliesTo` the axis is offered on every command Nx runs.",
+      "properties": {
+        "verbs": { "type": "array", "items": { "$ref": "#/$defs/Verb" }, "minItems": 1, "uniqueItems": true },
+        "playground": { "type": "boolean" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "ParameterValue": {
+      "type": "object",
+      "description": "🎚️ One value of a choice together with its effect.",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[^\\s=\\u0000]+$", "maxLength": 128, "description": "🔑️ The value as chosen and as substituted for `{<parameter id>}`." },
+        "env": { "$ref": "#/$defs/EnvMap" },
+        "nxFlags": { "$ref": "#/$defs/NxFlags" },
+        "args": { "$ref": "#/$defs/Args" }
+      },
+      "required": ["id"],
+      "additionalProperties": false
+    },
+    "Parameter": {
+      "type": "object",
+      "description": "🎛️ Something chosen at launch. A `choice` carries one effect per value, a `flag` one effect when switched on, a `text` states where the typed value goes. Effect semantics: `env` is added to the process environment, `nxFlags` go before `--`, `args` after `--`.",
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "kind": { "enum": ["choice", "text", "flag"] },
+        "appliesTo": { "$ref": "#/$defs/AppliesTo", "description": "🎯️ Global axes only (parameters of the workspace root project)." },
+        "default": { "anyOf": [{ "type": "string" }, { "type": "boolean" }], "description": "🧷️ The value applied when nothing is chosen; absent: not applied unless chosen. A choice names one of its values, a flag states `true` or `false`." },
+        "required": { "type": "boolean", "description": "❗️ The command does not start without a value." },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/ParameterValue" }, "minItems": 1 },
+        "env": { "$ref": "#/$defs/EnvMap" },
+        "nxFlags": { "$ref": "#/$defs/NxFlags" },
+        "args": { "$ref": "#/$defs/Args" },
+        "valueEnv": { "$ref": "#/$defs/EnvName", "description": "🌱️ The typed text becomes this environment variable." },
+        "valueFlag": { "type": "string", "pattern": "^--?[A-Za-z][A-Za-z0-9_.-]*=?$", "description": "🚩️ The typed text follows this flag after `--`: two words, or one word when the flag ends with `=`." },
+        "valuePositional": { "const": true, "description": "➡️ The typed text is one word after `--`." }
+      },
+      "required": ["id", "kind"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "choice" } }, "required": ["kind"] },
+          "then": {
+            "required": ["values"],
+            "properties": { "default": { "type": "string" }, "env": false, "nxFlags": false, "args": false, "valueEnv": false, "valueFlag": false, "valuePositional": false }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "flag" } }, "required": ["kind"] },
+          "then": {
+            "properties": { "default": { "type": "boolean" }, "values": false, "valueEnv": false, "valueFlag": false, "valuePositional": false },
+            "anyOf": [{ "required": ["env"] }, { "required": ["nxFlags"] }, { "required": ["args"] }]
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "text" } }, "required": ["kind"] },
+          "then": {
+            "properties": { "default": { "type": "string" }, "values": false, "env": false, "nxFlags": false, "args": false },
+            "not": { "anyOf": [{ "required": ["valueEnv", "valueFlag"] }, { "required": ["valueEnv", "valuePositional"] }, { "required": ["valueFlag", "valuePositional"] }] }
+          }
+        }
+      ]
+    },
+    "ReadyDeclaration": {
+      "type": "object",
+      "description": "🟢️ The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`. With `portEnv` and `port` the port is also exported under that variable; without `port`, `portEnv` names the parameter or environment value that carries it.",
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "portEnv": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$" },
+        "path": { "type": "string", "pattern": "^[/?#][^\\s\\u0000]*$" }
+      },
+      "anyOf": [{ "required": ["port"] }, { "required": ["portEnv"] }],
+      "additionalProperties": false
+    },
+    "Tool": {
+      "type": "object",
+      "description": "🧰️ A command that is not an Nx target: `command` is the argument list, started in `cwd`.",
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of `id` when it is a known verb, else `task`." },
+        "command": { "type": "array", "items": { "$ref": "#/$defs/Text" }, "minItems": 1 },
+        "cwd": { "$ref": "#/$defs/RelativePath" },
+        "env": { "$ref": "#/$defs/EnvMap" },
+        "continuous": { "type": "boolean", "description": "♾️ The tool keeps running until it is stopped." },
+        "ready": { "$ref": "#/$defs/ReadyDeclaration" },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/Reference" }, "uniqueItems": true },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" } }
+      },
+      "required": ["id", "command"],
+      "additionalProperties": false
+    },
+    "CompoundMember": {
+      "type": "object",
+      "description": "🧩️ One member of a compound with the parameter values it is pinned to.",
+      "properties": {
+        "run": { "$ref": "#/$defs/Reference" },
+        "parameters": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "boolean" }, { "type": "integer" }] }
+        }
+      },
+      "required": ["run"],
+      "additionalProperties": false
+    },
+    "Compound": {
+      "type": "object",
+      "description": "🧭️ Several commands started in order, each after the previous member is ready when that member declares `ready`.",
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of `id` when it is a known verb, else the verb of the first member." },
+        "stop": { "enum": ["together", "independent"], "description": "🛑️ `together` stops all members when one stops; default `independent`." },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/CompoundMember" }, "minItems": 1 }
+      },
+      "required": ["id", "members"],
+      "additionalProperties": false
+    },
+    "Group": {
+      "type": "object",
+      "description": "👥️ One target over a named project set (`nx run-many`).",
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "target": { "type": "string", "pattern": "^[^\\s,]+$" },
+        "projects": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "📋️ Project names or Nx project patterns: `*` matches any run of characters, a leading `!` excludes." }
+      },
+      "required": ["id", "target", "projects"],
+      "additionalProperties": false
+    },
+    "TargetDeclaration": {
+      "type": "object",
+      "description": "🎯️ `targets.<name>.metadata.semio.dashboard`: what the dashboard knows about one Nx target beyond Nx itself.",
+      "properties": {
+        "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of the target name when it is a known verb, else `task`." },
+        "ready": { "$ref": "#/$defs/ReadyDeclaration" },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/Reference" }, "uniqueItems": true, "description": "🔗️ Services started (or reused) and awaited before this target starts." },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" }, "description": "🎛️ Target-owned parameters; one with the id of a global axis replaces that axis on this target." }
+      },
+      "additionalProperties": false
+    },
+    "ProjectDeclaration": {
+      "type": "object",
+      "description": "📋️ `metadata.semio.dashboard` of a project: tools, compounds and groups it owns. `parameters` are the global axes and belong to the workspace root project only.",
+      "properties": {
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Parameter" } },
+        "tools": { "type": "array", "items": { "$ref": "#/$defs/Tool" } },
+        "compounds": { "type": "array", "items": { "$ref": "#/$defs/Compound" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/Group" } }
+      },
+      "additionalProperties": false
+    },
+    "TicketCommands": {
+      "type": "object",
+      "description": "🎫️ `<ticket folder>/🎮️commands.json`: the tools and compounds of one ticket, offered while the ticket is open.",
+      "properties": {
+        "$schema": { "type": "string" },
+        "tools": { "type": "array", "items": { "$ref": "#/$defs/Tool" } },
+        "compounds": { "type": "array", "items": { "$ref": "#/$defs/Compound" } }
+      },
+      "additionalProperties": false
+    },
+    "ProjectManifest": {
+      "type": "object",
+      "description": "📋️ The dashboard parts of a whole `📋️project.json`; every other member is Nx's.",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "properties": { "semio": { "type": "object", "properties": { "dashboard": { "$ref": "#/$defs/ProjectDeclaration" } } } }
+        },
+        "targets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "metadata": {
+                "type": "object",
+                "properties": { "semio": { "type": "object", "properties": { "dashboard": { "$ref": "#/$defs/TargetDeclaration" } } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CommandId": {
+      "type": "string",
+      "description": "🪪️ The identity of a command. Chosen parameters follow an id as `key=value` pairs.",
+      "oneOf": [
+        { "pattern": "^playground:[^\\s:/]+$", "description": "🛝️ A playground variant of the generated catalog." },
+        { "pattern": "^tool:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🧰️ `tool:<project>/<id>`." },
+        { "pattern": "^compound:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🧭️ `compound:<project>/<id>`." },
+        { "pattern": "^group:\\S+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "👥️ `group:<project>/<id>`." },
+        { "pattern": "^script:\\S+$", "description": "📜️ A root workspace script that calls Nx." },
+        { "pattern": "^ticket:\\d{2}/\\d{2}/\\d{2}/[^\\s/]+/[a-z0-9]+([._-][a-z0-9]+)*$", "description": "🎫️ `ticket:<ticket id>/<id>`." },
+        { "pattern": "^repo:(ticket\\.(show|files|close|reopen):\\S+|goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$", "description": "🦑️ A repo-domain action answered in process." },
+        { "pattern": "^(?!(playground|tool|compound|group|script|ticket):)(?!repo:(ticket\\.(show|files|close|reopen):.|(goals\\.(list|tree)|analyze:[a-z]+|tree\\.(monorepo|goal|statute|territory)|statutes\\.catalog)$))[^\\s:]+:\\S+$", "description": "🎯️ `<project>:<target>[:configuration]`." }
+      ]
+    },
+    "Pair": {
+      "type": "array",
+      "prefixItems": [{ "type": "string" }, { "type": "string" }],
+      "items": false,
+      "minItems": 2
+    },
+    "TaskLabel": {
+      "type": "object",
+      "description": "🏷️ What a running task is called. Tab text and window title are pure functions of it: `verb subject [qualifier]`.",
+      "properties": {
+        "verb": { "$ref": "#/$defs/Verb" },
+        "owner": { "type": "array", "items": { "type": "string" }, "description": "🧭️ The taxonomy path of the owner, outermost first." },
+        "subject": { "type": "string" },
+        "qualifier": { "type": "string", "description": "🔖️ What tells this task from its siblings (target, configuration, renderer); may be empty." },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/Pair" } },
+        "members": { "type": "integer", "minimum": 0, "maximum": 65535, "description": "🧩️ The number of processes of a compound; 0 for a single process." }
+      },
+      "required": ["verb", "owner", "subject", "qualifier", "parameters", "members"],
+      "additionalProperties": false
+    },
+    "Ready": {
+      "type": "object",
+      "description": "🟢️ The resolved readiness of a process: ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.",
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "path": { "type": "string" }
+      },
+      "required": ["port", "path"],
+      "additionalProperties": false
+    },
+    "ParameterInfo": {
+      "type": "object",
+      "description": "🎛️ One parameter a command accepts, as listed.",
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "kind": { "enum": ["choice", "text", "flag"] },
+        "values": { "type": "array", "items": { "type": "string" } },
+        "default": { "type": "string" },
+        "required": { "type": "boolean" },
+        "origin": { "enum": ["axis", "target", "tool", "playground", "configuration", "member"] }
+      },
+      "required": ["id", "kind", "values", "required", "origin"],
+      "additionalProperties": false
+    },
+    "RegistryEntry": {
+      "type": "object",
+      "description": "📇️ One command as `semio commands --json` lists it.",
+      "properties": {
+        "id": { "$ref": "#/$defs/CommandId" },
+        "kind": { "enum": ["target", "playground", "tool", "compound", "group", "script", "ticket", "repo"] },
+        "verb": { "$ref": "#/$defs/Verb" },
+        "label": { "type": "string" },
+        "owner": { "type": "array", "items": { "type": "string" } },
+        "longRunning": { "type": "boolean" },
+        "ready": { "$ref": "#/$defs/Ready" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/ParameterInfo" } },
+        "source": { "type": "string", "description": "📄️ The workspace-relative file that declares the command; empty for commands built into the dashboard." }
+      },
+      "required": ["id", "kind", "verb", "label", "owner", "longRunning", "parameters", "source"],
+      "additionalProperties": false
+    },
+    "LaunchProcess": {
+      "type": "object",
+      "description": "▶️ One process of a resolved launch.",
+      "properties": {
+        "commandId": { "$ref": "#/$defs/CommandId" },
+        "cmd": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "cwd": { "type": "string", "description": "📁️ Workspace-relative working directory, forward-slashed; empty for the workspace root." },
+        "env": { "type": "array", "items": { "$ref": "#/$defs/Pair" } },
+        "label": { "$ref": "#/$defs/TaskLabel" },
+        "ready": { "$ref": "#/$defs/Ready" },
+        "longRunning": { "type": "boolean" }
+      },
+      "required": ["commandId", "cmd", "args", "cwd", "env", "label", "longRunning"],
+      "additionalProperties": false
+    },
+    "Launch": {
+      "type": "object",
+      "description": "🚀️ `(id, chosen parameters, extra arguments)` resolved: the processes in start order, what must be ready first and how the group stops.",
+      "properties": {
+        "commandId": { "$ref": "#/$defs/CommandId" },
+        "label": { "$ref": "#/$defs/TaskLabel" },
+        "processes": { "type": "array", "items": { "$ref": "#/$defs/LaunchProcess" }, "minItems": 1 },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/Launch" }, "description": "🔗️ Services started (or reused) and awaited before the first process starts." },
+        "group": { "type": "string", "description": "🧭️ The compound the processes belong to; absent for a single process." },
+        "stop": { "enum": ["together", "independent"] }
+      },
+      "required": ["commandId", "label", "processes", "requires", "stop"],
+      "additionalProperties": false
+    }
+  }
+}

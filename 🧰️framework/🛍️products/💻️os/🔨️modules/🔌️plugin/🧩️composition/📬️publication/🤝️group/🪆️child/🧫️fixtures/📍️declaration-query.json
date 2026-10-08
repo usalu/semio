@@ -1,0 +1,76 @@
+{
+  "declarations": [
+    {
+      "kind": "test",
+      "standard": "1",
+      "subset": "*"
+    },
+    {
+      "kind": "kind-δ",
+      "standard": "1",
+      "subset": "*"
+    }
+  ],
+  "cases": [
+    {
+      "kind": "test",
+      "matchOrdinal": 0,
+      "capacityReadyAfterOrdinals": [
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "kind": "kind-δ",
+      "matchOrdinal": 1,
+      "capacityReadyAfterOrdinals": [
+        false,
+        false,
+        true
+      ]
+    }
+  ],
+  "pageAdmissionCases": [
+    {
+      "pages": 1,
+      "wholeBirthBytes": 4098,
+      "deniedCapacityBytes": 4097,
+      "outputOwnerReady": false,
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "birthBytes": 0,
+      "freeBytes": 0
+    },
+    {
+      "pages": 2,
+      "wholeBirthBytes": 8196,
+      "deniedCapacityBytes": 8195,
+      "outputOwnerReady": false,
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "birthBytes": 0,
+      "freeBytes": 0
+    }
+  ],
+  "completionCases": [
+    {
+      "phase": "metadata",
+      "innerComplete": true,
+      "outerReady": false,
+      "complete": false
+    },
+    {
+      "phase": "genesis-close",
+      "innerComplete": true,
+      "outerReady": false,
+      "complete": false
+    },
+    {
+      "phase": "input-ready",
+      "innerComplete": true,
+      "outerReady": true,
+      "complete": true
+    }
+  ]
+}

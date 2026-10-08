@@ -1,0 +1,1735 @@
+{
+  "$comment": "Language-neutral fixture of the world-3d modelling primitives. Rust (🧪️tests/🔬️world3d-modelling-unit) and TypeScript (🧪️tests/📏️world3d-modelling) are pinned against it and against 🧬️schema/📏️world3d-modelling/🔣️.json. Ramp, legend, scalar and section expectations were produced with three.js (Color.lerp with colour management off, Plane, Vector3) and never by our own code.",
+  "noDataHex": "#808080",
+  "ramps": {
+    "viridis": {
+      "stops": [
+        "#440154",
+        "#3b528b",
+        "#21918c",
+        "#5ec962",
+        "#fde725"
+      ],
+      "samples": [
+        {
+          "t": 0,
+          "hex": "#440154"
+        },
+        {
+          "t": 0.05,
+          "hex": "#42115f"
+        },
+        {
+          "t": 0.1,
+          "hex": "#40216a"
+        },
+        {
+          "t": 0.25,
+          "hex": "#3b528b"
+        },
+        {
+          "t": 0.3333333333333333,
+          "hex": "#32678b"
+        },
+        {
+          "t": 0.5,
+          "hex": "#21918c"
+        },
+        {
+          "t": 0.6,
+          "hex": "#39a77b"
+        },
+        {
+          "t": 0.75,
+          "hex": "#5ec962"
+        },
+        {
+          "t": 0.9,
+          "hex": "#bddb3d"
+        },
+        {
+          "t": 0.97,
+          "hex": "#eae32c"
+        },
+        {
+          "t": 1,
+          "hex": "#fde725"
+        }
+      ]
+    },
+    "inferno": {
+      "stops": [
+        "#000004",
+        "#57106e",
+        "#bc3754",
+        "#f98e09",
+        "#fcffa4"
+      ],
+      "samples": [
+        {
+          "t": 0,
+          "hex": "#000004"
+        },
+        {
+          "t": 0.05,
+          "hex": "#110319"
+        },
+        {
+          "t": 0.1,
+          "hex": "#23062e"
+        },
+        {
+          "t": 0.25,
+          "hex": "#57106e"
+        },
+        {
+          "t": 0.3333333333333333,
+          "hex": "#791d65"
+        },
+        {
+          "t": 0.5,
+          "hex": "#bc3754"
+        },
+        {
+          "t": 0.6,
+          "hex": "#d45a36"
+        },
+        {
+          "t": 0.75,
+          "hex": "#f98e09"
+        },
+        {
+          "t": 0.9,
+          "hex": "#fbd266"
+        },
+        {
+          "t": 0.97,
+          "hex": "#fcf191"
+        },
+        {
+          "t": 1,
+          "hex": "#fcffa4"
+        }
+      ]
+    },
+    "coolwarm": {
+      "stops": [
+        "#3b4cc0",
+        "#8db0fe",
+        "#dddddd",
+        "#f4987a",
+        "#b40426"
+      ],
+      "samples": [
+        {
+          "t": 0,
+          "hex": "#3b4cc0"
+        },
+        {
+          "t": 0.05,
+          "hex": "#4b60cc"
+        },
+        {
+          "t": 0.1,
+          "hex": "#5c74d9"
+        },
+        {
+          "t": 0.25,
+          "hex": "#8db0fe"
+        },
+        {
+          "t": 0.3333333333333333,
+          "hex": "#a8bff3"
+        },
+        {
+          "t": 0.5,
+          "hex": "#dddddd"
+        },
+        {
+          "t": 0.6,
+          "hex": "#e6c1b5"
+        },
+        {
+          "t": 0.75,
+          "hex": "#f4987a"
+        },
+        {
+          "t": 0.9,
+          "hex": "#ce3f48"
+        },
+        {
+          "t": 0.97,
+          "hex": "#bc1630"
+        },
+        {
+          "t": 1,
+          "hex": "#b40426"
+        }
+      ]
+    },
+    "grayscale": {
+      "stops": [
+        "#000000",
+        "#ffffff"
+      ],
+      "samples": [
+        {
+          "t": 0,
+          "hex": "#000000"
+        },
+        {
+          "t": 0.05,
+          "hex": "#0d0d0d"
+        },
+        {
+          "t": 0.1,
+          "hex": "#1a1a1a"
+        },
+        {
+          "t": 0.25,
+          "hex": "#404040"
+        },
+        {
+          "t": 0.3333333333333333,
+          "hex": "#555555"
+        },
+        {
+          "t": 0.5,
+          "hex": "#808080"
+        },
+        {
+          "t": 0.6,
+          "hex": "#999999"
+        },
+        {
+          "t": 0.75,
+          "hex": "#bfbfbf"
+        },
+        {
+          "t": 0.9,
+          "hex": "#e6e6e6"
+        },
+        {
+          "t": 0.97,
+          "hex": "#f7f7f7"
+        },
+        {
+          "t": 1,
+          "hex": "#ffffff"
+        }
+      ]
+    }
+  },
+  "valid": [
+    {
+      "name": "annotations-mixed",
+      "def": "annotationLayer",
+      "value": {
+        "title": {
+          "en": "Measurements",
+          "de": "Messungen"
+        },
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          },
+          {
+            "kind": "angle",
+            "id": "ang-corner",
+            "vertex": [
+              0,
+              0,
+              0
+            ],
+            "directionA": [
+              1,
+              0,
+              0
+            ],
+            "directionB": [
+              0,
+              1,
+              0
+            ],
+            "radiusPx": 56,
+            "text": {
+              "en": "Angle 90 degrees",
+              "de": "Winkel 90 Grad"
+            }
+          },
+          {
+            "kind": "marker",
+            "id": "mk-centroid",
+            "position": [
+              10,
+              5,
+              2
+            ],
+            "shape": "ring",
+            "text": {
+              "en": "Centroid",
+              "de": "Schwerpunkt"
+            },
+            "tone": "warning"
+          },
+          {
+            "kind": "leader",
+            "id": "ld-fillet",
+            "anchor": [
+              20,
+              0,
+              10
+            ],
+            "labelOffsetPx": [
+              48,
+              -32
+            ],
+            "text": {
+              "en": "Fillet radius 2",
+              "de": "Verrundungsradius 2"
+            }
+          }
+        ]
+      },
+      "normalized": {
+        "title": {
+          "en": "Measurements",
+          "de": "Messungen"
+        },
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          },
+          {
+            "kind": "angle",
+            "id": "ang-corner",
+            "vertex": [
+              0,
+              0,
+              0
+            ],
+            "directionA": [
+              1,
+              0,
+              0
+            ],
+            "directionB": [
+              0,
+              1,
+              0
+            ],
+            "radiusPx": 56,
+            "text": {
+              "en": "Angle 90 degrees",
+              "de": "Winkel 90 Grad"
+            },
+            "tone": "neutral"
+          },
+          {
+            "kind": "marker",
+            "id": "mk-centroid",
+            "position": [
+              10,
+              5,
+              2
+            ],
+            "shape": "ring",
+            "text": {
+              "en": "Centroid",
+              "de": "Schwerpunkt"
+            },
+            "tone": "warning"
+          },
+          {
+            "kind": "leader",
+            "id": "ld-fillet",
+            "anchor": [
+              20,
+              0,
+              10
+            ],
+            "labelOffsetPx": [
+              48,
+              -32
+            ],
+            "text": {
+              "en": "Fillet radius 2",
+              "de": "Verrundungsradius 2"
+            },
+            "tone": "neutral"
+          }
+        ]
+      }
+    },
+    {
+      "name": "annotations-empty",
+      "def": "annotationLayer",
+      "value": {
+        "items": []
+      },
+      "normalized": {
+        "items": []
+      }
+    },
+    {
+      "name": "scalar-vertex-inferno",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "normalized": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm",
+          "ticks": 5
+        }
+      }
+    },
+    {
+      "name": "scalar-face-coolwarm",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "face",
+        "values": [
+          10,
+          15,
+          20
+        ],
+        "ramp": "coolwarm",
+        "range": {
+          "min": 10,
+          "max": 20
+        },
+        "legend": {
+          "title": {
+            "en": "Draft angle",
+            "de": "Entformungswinkel"
+          },
+          "unit": "deg",
+          "ticks": 3
+        }
+      },
+      "normalized": {
+        "meshId": "mesh:part",
+        "domain": "face",
+        "values": [
+          10,
+          15,
+          20
+        ],
+        "ramp": "coolwarm",
+        "range": {
+          "min": 10,
+          "max": 20
+        },
+        "legend": {
+          "title": {
+            "en": "Draft angle",
+            "de": "Entformungswinkel"
+          },
+          "unit": "deg",
+          "ticks": 3
+        }
+      }
+    },
+    {
+      "name": "options-empty",
+      "def": "modellingOptions",
+      "value": {},
+      "normalized": {}
+    },
+    {
+      "name": "options-pick-face",
+      "def": "modellingOptions",
+      "value": {
+        "pickFilter": "face"
+      },
+      "normalized": {
+        "pickFilter": "face"
+      }
+    },
+    {
+      "name": "options-section-open",
+      "def": "modellingOptions",
+      "value": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            5
+          ],
+          "normal": [
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "normalized": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            5
+          ],
+          "normal": [
+            0,
+            0,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "name": "options-section-capped-highlight",
+      "def": "modellingOptions",
+      "value": {
+        "pickFilter": "edge",
+        "section": {
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            1,
+            1,
+            0
+          ],
+          "cap": {
+            "tone": "secondary"
+          }
+        },
+        "highlight": {
+          "face": {
+            "hover": "info",
+            "selected": "danger",
+            "widthPx": 3
+          },
+          "edge": {
+            "selected": "success"
+          }
+        }
+      },
+      "normalized": {
+        "pickFilter": "edge",
+        "section": {
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            1,
+            1,
+            0
+          ],
+          "cap": {
+            "tone": "secondary"
+          }
+        },
+        "highlight": {
+          "face": {
+            "hover": "info",
+            "selected": "danger",
+            "widthPx": 3
+          },
+          "edge": {
+            "selected": "success"
+          }
+        }
+      }
+    },
+    {
+      "name": "options-section-cap-default-tone",
+      "def": "modellingOptions",
+      "value": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "cap": {}
+        }
+      },
+      "normalized": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "cap": {
+            "tone": "neutral"
+          }
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "annotation-unknown-kind",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "radius",
+            "id": "r",
+            "text": {
+              "en": "r",
+              "de": "r (de)"
+            }
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "kind is one of dimension, angle, marker, leader"
+    },
+    {
+      "name": "annotation-missing-german",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width"
+            },
+            "tone": "primary"
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "text needs en and de"
+    },
+    {
+      "name": "annotation-extra-field",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary",
+            "colour": "red"
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "no unknown fields"
+    },
+    {
+      "name": "annotation-blank-text",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "   ",
+              "de": "Breite"
+            },
+            "tone": "primary"
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "text must not be blank"
+    },
+    {
+      "name": "annotation-vec3-short",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "a point has three components"
+    },
+    {
+      "name": "annotation-unknown-tone",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "pink"
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "tone is a theme token"
+    },
+    {
+      "name": "annotation-angle-radius-small",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "angle",
+            "id": "ang-corner",
+            "vertex": [
+              0,
+              0,
+              0
+            ],
+            "directionA": [
+              1,
+              0,
+              0
+            ],
+            "directionB": [
+              0,
+              1,
+              0
+            ],
+            "radiusPx": 4,
+            "text": {
+              "en": "Angle 90 degrees",
+              "de": "Winkel 90 Grad"
+            }
+          }
+        ]
+      },
+      "ajvAccepts": false,
+      "reason": "radiusPx within 16..256"
+    },
+    {
+      "name": "annotation-duplicate-id",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          },
+          {
+            "kind": "marker",
+            "id": "dim-width",
+            "position": [
+              10,
+              5,
+              2
+            ],
+            "shape": "ring",
+            "text": {
+              "en": "Centroid",
+              "de": "Schwerpunkt"
+            },
+            "tone": "warning"
+          }
+        ]
+      },
+      "ajvAccepts": true,
+      "reason": "ids are unique"
+    },
+    {
+      "name": "annotation-dimension-degenerate",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              0,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          }
+        ]
+      },
+      "ajvAccepts": true,
+      "reason": "from and to differ"
+    },
+    {
+      "name": "annotation-angle-zero-direction",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "angle",
+            "id": "ang-corner",
+            "vertex": [
+              0,
+              0,
+              0
+            ],
+            "directionA": [
+              1,
+              0,
+              0
+            ],
+            "directionB": [
+              0,
+              0,
+              0
+            ],
+            "radiusPx": 56,
+            "text": {
+              "en": "Angle 90 degrees",
+              "de": "Winkel 90 Grad"
+            }
+          }
+        ]
+      },
+      "ajvAccepts": true,
+      "reason": "directions are non-zero"
+    },
+    {
+      "name": "scalar-unknown-domain",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "edge",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "domain is vertex or face"
+    },
+    {
+      "name": "scalar-unknown-ramp",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "rainbow",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "ramp is a named ramp"
+    },
+    {
+      "name": "scalar-ticks-low",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm",
+          "ticks": 1
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "ticks within 2..9"
+    },
+    {
+      "name": "scalar-ticks-high",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm",
+          "ticks": 12
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "ticks within 2..9"
+    },
+    {
+      "name": "scalar-no-values",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "at least one value"
+    },
+    {
+      "name": "scalar-no-legend-title",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "legend needs a title"
+    },
+    {
+      "name": "scalar-range-empty",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 1,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": true,
+      "reason": "range min is below max"
+    },
+    {
+      "name": "scalar-range-reversed",
+      "def": "scalarField",
+      "value": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 2,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ajvAccepts": true,
+      "reason": "range min is below max"
+    },
+    {
+      "name": "options-unknown-granularity",
+      "def": "modellingOptions",
+      "value": {
+        "pickFilter": "solid"
+      },
+      "ajvAccepts": false,
+      "reason": "pickFilter is shape, face, edge or vertex"
+    },
+    {
+      "name": "options-section-short-normal",
+      "def": "modellingOptions",
+      "value": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            1
+          ]
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "a normal has three components"
+    },
+    {
+      "name": "options-highlight-width",
+      "def": "modellingOptions",
+      "value": {
+        "highlight": {
+          "edge": {
+            "widthPx": 20
+          }
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "widthPx within 1..8"
+    },
+    {
+      "name": "options-highlight-unknown",
+      "def": "modellingOptions",
+      "value": {
+        "highlight": {
+          "body": {}
+        }
+      },
+      "ajvAccepts": false,
+      "reason": "highlight covers face, edge, vertex"
+    },
+    {
+      "name": "options-section-zero-normal",
+      "def": "modellingOptions",
+      "value": {
+        "section": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "ajvAccepts": true,
+      "reason": "normal is non-zero"
+    }
+  ],
+  "pickTargets": [
+    {
+      "filter": "shape",
+      "targets": {
+        "mesh": true,
+        "face": false,
+        "edge": false,
+        "vertex": false
+      }
+    },
+    {
+      "filter": "face",
+      "targets": {
+        "mesh": false,
+        "face": true,
+        "edge": false,
+        "vertex": false
+      }
+    },
+    {
+      "filter": "edge",
+      "targets": {
+        "mesh": false,
+        "face": false,
+        "edge": true,
+        "vertex": false
+      }
+    },
+    {
+      "filter": "vertex",
+      "targets": {
+        "mesh": false,
+        "face": false,
+        "edge": false,
+        "vertex": true
+      }
+    }
+  ],
+  "scalarColors": [
+    {
+      "field": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "colors": [
+        "#000004",
+        "#57106e",
+        "#bc3754",
+        "#808080",
+        "#fcffa4",
+        "#fcffa4",
+        "#000004"
+      ]
+    },
+    {
+      "field": {
+        "meshId": "mesh:part",
+        "domain": "face",
+        "values": [
+          10,
+          15,
+          20
+        ],
+        "ramp": "coolwarm",
+        "range": {
+          "min": 10,
+          "max": 20
+        },
+        "legend": {
+          "title": {
+            "en": "Draft angle",
+            "de": "Entformungswinkel"
+          },
+          "unit": "deg",
+          "ticks": 3
+        }
+      },
+      "colors": [
+        "#3b4cc0",
+        "#dddddd",
+        "#b40426"
+      ]
+    }
+  ],
+  "legends": [
+    {
+      "field": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm"
+        }
+      },
+      "ticks": [
+        {
+          "value": 0,
+          "hex": "#000004"
+        },
+        {
+          "value": 0.25,
+          "hex": "#57106e"
+        },
+        {
+          "value": 0.5,
+          "hex": "#bc3754"
+        },
+        {
+          "value": 0.75,
+          "hex": "#f98e09"
+        },
+        {
+          "value": 1,
+          "hex": "#fcffa4"
+        }
+      ]
+    },
+    {
+      "field": {
+        "meshId": "mesh:part",
+        "domain": "face",
+        "values": [
+          10,
+          15,
+          20
+        ],
+        "ramp": "coolwarm",
+        "range": {
+          "min": 10,
+          "max": 20
+        },
+        "legend": {
+          "title": {
+            "en": "Draft angle",
+            "de": "Entformungswinkel"
+          },
+          "unit": "deg",
+          "ticks": 3
+        }
+      },
+      "ticks": [
+        {
+          "value": 10,
+          "hex": "#3b4cc0"
+        },
+        {
+          "value": 15,
+          "hex": "#dddddd"
+        },
+        {
+          "value": 20,
+          "hex": "#b40426"
+        }
+      ]
+    }
+  ],
+  "sectionPlanes": [
+    {
+      "section": {
+        "origin": [
+          0,
+          0,
+          5
+        ],
+        "normal": [
+          0,
+          0,
+          2
+        ]
+      },
+      "plane": [
+        0,
+        0,
+        -1,
+        5
+      ]
+    },
+    {
+      "section": {
+        "origin": [
+          1,
+          2,
+          3
+        ],
+        "normal": [
+          1,
+          1,
+          0
+        ],
+        "cap": {
+          "tone": "secondary"
+        }
+      },
+      "plane": [
+        -0.7071067811865475,
+        -0.7071067811865475,
+        0,
+        2.1213203435596424
+      ]
+    }
+  ],
+  "laneRoundTrip": {
+    "scene": {
+      "annotations": {
+        "title": {
+          "en": "Measurements",
+          "de": "Messungen"
+        },
+        "items": [
+          {
+            "kind": "dimension",
+            "id": "dim-width",
+            "from": [
+              0,
+              0,
+              0
+            ],
+            "to": [
+              40,
+              0,
+              0
+            ],
+            "offset": [
+              0,
+              -8,
+              0
+            ],
+            "text": {
+              "en": "Width 40 mm",
+              "de": "Breite 40 mm"
+            },
+            "tone": "primary"
+          },
+          {
+            "kind": "angle",
+            "id": "ang-corner",
+            "vertex": [
+              0,
+              0,
+              0
+            ],
+            "directionA": [
+              1,
+              0,
+              0
+            ],
+            "directionB": [
+              0,
+              1,
+              0
+            ],
+            "radiusPx": 56,
+            "text": {
+              "en": "Angle 90 degrees",
+              "de": "Winkel 90 Grad"
+            },
+            "tone": "neutral"
+          },
+          {
+            "kind": "marker",
+            "id": "mk-centroid",
+            "position": [
+              10,
+              5,
+              2
+            ],
+            "shape": "ring",
+            "text": {
+              "en": "Centroid",
+              "de": "Schwerpunkt"
+            },
+            "tone": "warning"
+          },
+          {
+            "kind": "leader",
+            "id": "ld-fillet",
+            "anchor": [
+              20,
+              0,
+              10
+            ],
+            "labelOffsetPx": [
+              48,
+              -32
+            ],
+            "text": {
+              "en": "Fillet radius 2",
+              "de": "Verrundungsradius 2"
+            },
+            "tone": "neutral"
+          }
+        ]
+      },
+      "scalarField": {
+        "meshId": "mesh:part",
+        "domain": "vertex",
+        "values": [
+          0,
+          0.25,
+          0.5,
+          null,
+          1,
+          2,
+          -1
+        ],
+        "ramp": "inferno",
+        "range": {
+          "min": 0,
+          "max": 1
+        },
+        "legend": {
+          "title": {
+            "en": "Wall thickness",
+            "de": "Wandstaerke"
+          },
+          "unit": "mm",
+          "ticks": 5
+        }
+      },
+      "modellingOptions": {
+        "pickFilter": "face",
+        "section": {
+          "origin": [
+            1,
+            2,
+            3
+          ],
+          "normal": [
+            1,
+            1,
+            0
+          ],
+          "cap": {
+            "tone": "secondary"
+          }
+        },
+        "highlight": {
+          "face": {
+            "hover": "info",
+            "selected": "danger",
+            "widthPx": 3
+          },
+          "edge": {
+            "selected": "success"
+          }
+        }
+      }
+    },
+    "laneKeys": [
+      "framework.scene.world3d.annotations",
+      "framework.scene.world3d.scalarField",
+      "framework.scene.world3d.modellingOptions"
+    ]
+  },
+  "glbSubElementIds": {
+    "$comment": "The GLB convention for sub-element ids on the native renderer: a triangle primitive may carry the custom per-vertex attributes faceAttribute and vertexAttribute (SCALAR UNSIGNED_INT, one per POSITION). The resident mesh table receives one face id per triangle, read at the triangle's first corner, and one vertex id per vertex. A primitive without them publishes no id table. The mesh below is a quad of two triangles over four vertices.",
+    "faceAttribute": "_FACE_ID",
+    "vertexAttribute": "_VERTEX_ID",
+    "indices": [
+      0,
+      1,
+      2,
+      2,
+      1,
+      3
+    ],
+    "faceIds": [
+      7,
+      7,
+      9,
+      9
+    ],
+    "vertexIds": [
+      100,
+      101,
+      102,
+      103
+    ],
+    "expectedTriangleFaceIds": [
+      7,
+      9
+    ]
+  }
+}

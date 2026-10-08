@@ -1,0 +1,7 @@
+# Current Renderer Slot Source Control Route
+
+Dedicated source driver: `cargo-inputs/📥️current-engine-layout/📜️script.ts source-controls red-1`, then `source-controls green-2`. Exact supplied GUI rows are `gui-source-controls-1.json`; each uses the dedicated empty Nx workspace `🧪️nx`, Bun and Nx exec. Generated receipts/logs remain under `🗑️generated/current-engine-layout/<epoch>`. No compiler or native process is part of these commands.
+
+The authored closed schema precedes implementation. Eighteen cases specify exact acceptance/refusal for the current one-row measured endpoint, stack/worker/threshold/capacity/owner/other-row conservation, complete hashes/splices/path/bindings, and original whole assertion body. JSON.parse and installed JSON5 independently parse candidate bodies; the own closed-schema interpreter is compared with installed AJV. The first driver intentionally implements only the descriptor endpoint check; executing the complete authored cases must reveal the missing conservation guards before they are implemented. No failed epoch emits admission authority.
+
+Expected successful receipt: `🗑️generated/current-engine-layout/green-2/admission.json`. It may authorize only separately guarded held-model/native verification. Fresh original owning whole equality and bounded constructor remain required before any test fixture application; production World/DAG/GPU pairs remain held.

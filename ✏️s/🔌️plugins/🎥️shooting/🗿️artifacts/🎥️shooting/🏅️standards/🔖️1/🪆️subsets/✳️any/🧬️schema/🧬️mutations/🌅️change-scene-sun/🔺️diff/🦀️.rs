@@ -11,7 +11,5 @@ pub fn diff(payload: &ChangeSceneSunElevation, base: &ShootingSnapshot) -> proto
     if base.scene.sun.elevation == payload.new_elevation {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun elevation is already {} degrees.", payload.new_elevation));
     }
-    let mut scene = base.scene.clone();
-    scene.sun.elevation = payload.new_elevation;
-    protocol::MutationOutcome::new(ShootingDiff { scene: Some(scene), ..Default::default() })
+    protocol::MutationOutcome::new(ShootingDiff { scene: Some(crate::ShootingScenePatch { sun_elevation: Some(payload.new_elevation), ..Default::default() }), ..Default::default() })
 }

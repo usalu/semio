@@ -60,3 +60,13 @@ fn drawing_viewer_camera_refuses_stale_or_wrong_windows() {
     let view = ViewModel { window_id: Some("foreign".into()),window_instances: vec![ViewWindowInstance { id: "foreign".into(),window_kind_id: "other".into() }],..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert!(addressed(&view,config).is_err());
 }
+
+/// ⚖️ The viewer camera configuration's concrete inverse sums to exactly the negative of its sparse diff, and `between` is its state delta.
+#[semio_framework_async_macros::async_test]
+async fn config_inverse_sums_to_the_negative_diff() {
+    let base = DrawingViewerCanvasWindowConfig::default();
+    let next = DrawingViewerCanvasWindowConfig { viewport: store::Viewport2d { x: 18.0, y: -9.0, zoom: 2.5 }, framed: true };
+    let mutation = DrawingViewerCanvasWindowConfigMutation::Set { viewport: next.viewport.clone(), framed: next.framed };
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<DrawingViewerCanvasWindowConfig, super::DrawingViewerCanvasWindowConfigDiff>(&base, &next).await;
+}

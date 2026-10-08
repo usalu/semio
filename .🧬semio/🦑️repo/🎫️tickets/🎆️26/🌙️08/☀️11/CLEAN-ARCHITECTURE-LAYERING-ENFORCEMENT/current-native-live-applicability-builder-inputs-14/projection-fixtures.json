@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ascii",
+      "input": [
+        "b.rs",
+        "a.rs"
+      ],
+      "paths": [
+        "a.rs",
+        "b.rs"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "private-use-versus-emoji",
+      "input": [
+        "model/\ud83d\ude00.rs",
+        "model/\ue000.rs"
+      ],
+      "paths": [
+        "model/\ue000.rs",
+        "model/\ud83d\ude00.rs"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "variation",
+      "input": [
+        "x\ud83d\udd25\ufe0f.rs",
+        "x\ud83d\udd25.rs"
+      ],
+      "paths": [
+        "x\ud83d\udd25.rs",
+        "x\ud83d\udd25\ufe0f.rs"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "prefix",
+      "input": [
+        "p/b",
+        "p/a/z",
+        "p/a"
+      ],
+      "paths": [
+        "p/a",
+        "p/a/z",
+        "p/b"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "duplicate",
+      "input": [
+        "a",
+        "a"
+      ],
+      "paths": null,
+      "accepted": false
+    },
+    {
+      "id": "invalid-utf8",
+      "input": [
+        "\ud800"
+      ],
+      "paths": null,
+      "accepted": false
+    }
+  ]
+}

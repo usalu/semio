@@ -92,3 +92,72 @@ use std::collections::BTreeMap;
 pub use snapshot_wire_codec::*;
 
 crate::impl_norm_artifact_record!(@text crate::Iso16757Snapshot, extension="iso16757", envelope_id="norm.iso16757");
+
+use crate::{CatalogueId,CatalogueValue,part_5::PartNumberRule};
+
+impl semio_framework_dsl_record::DslField for CatalogueId {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control).map(Self)}
+
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Text
+    }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Text(s) => Ok(CatalogueId(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
+impl semio_framework_dsl_record::DslField for CatalogueValue {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_decoding::catalogue_value(value,control)}
+    fn retire_decoded(self){crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_value(self)}
+
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Value
+    }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Value(dsl_value) => {
+                semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string())
+            }
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
+impl semio_framework_dsl_record::DslField for PartNumberRule {
+    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
+        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_decoding::part_number(value,control)}
+
+        fn shape() -> semio_framework_dsl_record::Shape {
+            semio_framework_dsl_record::Shape::Value
+        }
+        fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+            semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
+        }
+        fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+            match value {
+                semio_framework_dsl_record::FieldValue::Value(dsl_value) => semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string()),
+                other => Err(format!("expected Value, found {other:?}")),
+            }
+        }
+    }
+
+impl semio_framework_dsl_record::BorrowedDslField for CatalogueId { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Text; }
+impl semio_framework_dsl_record::BorrowedDslField for CatalogueValue { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value; }
+impl semio_framework_dsl_record::BorrowedDslField for PartNumberRule { const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value; }
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;

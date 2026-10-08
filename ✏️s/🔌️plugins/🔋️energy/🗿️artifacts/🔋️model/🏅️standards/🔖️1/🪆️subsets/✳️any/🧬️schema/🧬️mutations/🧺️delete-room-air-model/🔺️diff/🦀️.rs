@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteRoomAirModelAssignment` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, RoomAirModelAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeleteRoomAirModelAssignment, base: &EnergyModelSna
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.room_air_models.retain(|item| item.zone_id != payload.zone_id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { room_air_models: Rows::removing(&base.model.room_air_models, &payload.zone_id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

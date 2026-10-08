@@ -1,11 +1,13 @@
+//! ➖️ `remove-load-case` diff — removes the row at the index, guarded by the row's own id.
+
 use super::RemoveLoadCase;
-use crate::diff::En1993LoadCaseList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993LoadCaseEdit};
+use crate::En1993Snapshot;
+
 pub fn diff(payload: &RemoveLoadCase, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
-    if payload.index >= base.load_cases.len() {
+    let Some(row) = base.load_cases.get(payload.index) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("load-case index {} out of range.", payload.index), Vec::<String>::new());
-    }
-    let mut values = base.load_cases.clone();
-    values.remove(payload.index);
-    protocol::MutationOutcome::new(En1993Diff { load_cases: Some(En1993LoadCaseList { values }), ..Default::default() })
+    };
+    protocol::MutationOutcome::new(En1993Diff { load_cases: vec![En1993LoadCaseEdit::remove(payload.index, row.id.clone())], ..Default::default() })
 }

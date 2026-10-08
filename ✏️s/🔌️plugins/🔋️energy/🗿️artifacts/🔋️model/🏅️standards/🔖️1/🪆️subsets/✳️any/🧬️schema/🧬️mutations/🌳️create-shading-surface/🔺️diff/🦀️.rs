@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateShadingSurface` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ShadingSurfacePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -18,9 +18,7 @@ pub fn diff(payload: &super::CreateShadingSurface, base: &EnergyModelSnapshot) -
     if payload.transmittance_schedule_id.is_some_and(|schedule| !base.model.schedules.contains(schedule)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "The named transmittance schedule is not defined by this model.", [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    let position = model.shading_surfaces.iter().position(|item| item.id > payload.id).unwrap_or(model.shading_surfaces.len());
-    model.shading_surfaces.insert(position, crate::model::ShadingSurface { id: payload.id, name: payload.name.clone(), vertices_m: payload.vertices_m.clone(), transmittance_schedule_id: payload.transmittance_schedule_id });
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    let position = base.model.shading_surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.shading_surfaces.len());
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { shading_surfaces: Rows::inserting(position, crate::model::ShadingSurface { id: payload.id, name: payload.name.clone(), vertices_m: payload.vertices_m.clone(), transmittance_schedule_id: payload.transmittance_schedule_id }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

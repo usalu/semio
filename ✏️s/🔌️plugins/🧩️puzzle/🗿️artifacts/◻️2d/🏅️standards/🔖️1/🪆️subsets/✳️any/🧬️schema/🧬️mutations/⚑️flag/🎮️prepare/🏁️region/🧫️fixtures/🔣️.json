@@ -1,0 +1,599 @@
+{
+  "format": 1,
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 17,
+    "largePrefix": "幅🙂",
+    "largeRepeats": 5000
+  },
+  "cases": [
+    {
+      "id": "region-hidden-set",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": false
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "region-hidden-clear",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": true
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-hidden-same-true",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": true
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": true
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-hidden-same-false",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": false
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-hidden-missing",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "other",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null,
+      "inverse": [],
+      "after": null
+    },
+    {
+      "id": "region-hidden-duplicate-first",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        },
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": true
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": false
+        },
+        {
+          "id": "target",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-hidden-duplicate-no-op",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        },
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "target",
+          "newHidden": false
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-hidden-empty",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "",
+          "newHidden": false
+        }
+      ],
+      "after": [
+        {
+          "id": "",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "region-hidden-unicode-nul",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "領域\u0000🙂",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "領域\u0000🙂",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "領域\u0000🙂",
+          "newHidden": true
+        }
+      ],
+      "after": [
+        {
+          "id": "領域\u0000🙂",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-hidden-large-prefix",
+      "kind": "region-hidden",
+      "rows": [
+        {
+          "id": "$large:other",
+          "value": false
+        },
+        {
+          "id": "$large:target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "$large:target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionHidden",
+          "id": "$large:target",
+          "newHidden": true
+        }
+      ],
+      "after": [
+        {
+          "id": "$large:other",
+          "value": false
+        },
+        {
+          "id": "$large:target",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-locked-set",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": false
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "region-locked-clear",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": true
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-locked-same-true",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": true
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": true
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-locked-same-false",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": false
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-locked-missing",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "other",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "missing",
+        "value": false
+      },
+      "status": "target-missing",
+      "index": null,
+      "previous": null,
+      "inverse": [],
+      "after": null
+    },
+    {
+      "id": "region-locked-duplicate-first",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": true
+        },
+        {
+          "id": "target",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": true
+        }
+      ],
+      "after": [
+        {
+          "id": "target",
+          "value": false
+        },
+        {
+          "id": "target",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-locked-duplicate-no-op",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "target",
+          "value": false
+        },
+        {
+          "id": "target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "target",
+        "value": false
+      },
+      "status": "no-op",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "target",
+          "newLocked": false
+        }
+      ],
+      "after": null
+    },
+    {
+      "id": "region-locked-empty",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "",
+          "value": false
+        }
+      ],
+      "mutation": {
+        "id": "",
+        "value": true
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": false,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "",
+          "newLocked": false
+        }
+      ],
+      "after": [
+        {
+          "id": "",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "region-locked-unicode-nul",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "領域\u0000🙂",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "領域\u0000🙂",
+        "value": false
+      },
+      "status": "changed",
+      "index": 0,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "領域\u0000🙂",
+          "newLocked": true
+        }
+      ],
+      "after": [
+        {
+          "id": "領域\u0000🙂",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "region-locked-large-prefix",
+      "kind": "region-locked",
+      "rows": [
+        {
+          "id": "$large:other",
+          "value": false
+        },
+        {
+          "id": "$large:target",
+          "value": true
+        }
+      ],
+      "mutation": {
+        "id": "$large:target",
+        "value": false
+      },
+      "status": "changed",
+      "index": 1,
+      "previous": true,
+      "inverse": [
+        {
+          "mutation": "changeTargetRegionLocked",
+          "id": "$large:target",
+          "newLocked": true
+        }
+      ],
+      "after": [
+        {
+          "id": "$large:other",
+          "value": false
+        },
+        {
+          "id": "$large:target",
+          "value": false
+        }
+      ]
+    }
+  ]
+}

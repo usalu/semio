@@ -1,10 +1,26 @@
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
-/** 🧬️ GifMutation union. Mirrors only `SetSnapshot` of the Rust `GifMutation` enum's 11 variants
- * — `../📸️snapshot/🟦️.ts`'s `GifSnapshot` is still a raw-`entries` stub with no
- * structured screen/GCT/image model, so the other 10 variants (SetScreenSize,
- * SetGlobalColorTable, SetBackgroundColorIndex, SetPixelAspectRatio, InsertImage, RemoveImage,
- * MoveImage, SetImageGeometry, SetImagePixels, SetImageInterlace) have no TS payload types to
- * mirror against yet; see `🦀️.rs` in this directory. */
+/** 🧬️ One GIF87a palette entry. */
+export interface GifRgb { readonly r: number; readonly g: number; readonly b: number }
+/** 🎨️ A Global or Local Color Table. */
+export interface GifColorTable { readonly sorted: boolean; readonly colors: readonly GifRgb[] }
+/** 🖼️ One table-based image: rectangle, optional Local Color Table, interlace flag and palette indices. */
+export interface GifImage {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+  readonly interlace: boolean;
+  readonly lct: GifColorTable | null;
+  readonly indices: readonly number[];
+}
+/** 🧬️ GifMutation union, one member per Rust `GifMutation` leaf (87a). */
 export type GifMutation =
-  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').GifSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
+  | { readonly mutation: 'setScreenSize'; readonly width: number; readonly height: number }
+  | { readonly mutation: 'setGlobalColorTable'; readonly gct: GifColorTable | null }
+  | { readonly mutation: 'setBackgroundColorIndex'; readonly index: number }
+  | { readonly mutation: 'setPixelAspectRatio'; readonly ratio: number }
+  | { readonly mutation: 'insertImage'; readonly index: number; readonly image: GifImage }
+  | { readonly mutation: 'removeImage'; readonly index: number }
+  | { readonly mutation: 'moveImage'; readonly from: number; readonly to: number }
+  | { readonly mutation: 'setImageGeometry'; readonly index: number; readonly left: number; readonly top: number; readonly width: number; readonly height: number }
+  | { readonly mutation: 'setImagePixels'; readonly index: number; readonly indices: readonly number[] }
+  | { readonly mutation: 'setImageInterlace'; readonly index: number; readonly interlace: boolean };

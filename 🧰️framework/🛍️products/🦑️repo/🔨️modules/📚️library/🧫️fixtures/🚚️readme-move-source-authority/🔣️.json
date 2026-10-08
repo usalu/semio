@@ -9,11 +9,7 @@
     "packageCommand": "nx run @semio-tech/repo-lib:test-readme-move-source-authority",
     "command": "bun ./📜️script.ts test readme-move-source-authority",
     "route": "readme-move-source-authority",
-    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
-    "launchName": "🧹clean🧩️taxonomy🚚️readme-move-source-authority",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache",
-    "launchGroup": "4_gate",
-    "launchOrder": 410.197
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts"
   },
   "semantics": {
     "syntax": "Closed shape and exact roles; syntax alone does not authenticate a well-shaped hash or know whether a source requires authority.",

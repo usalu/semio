@@ -1,11 +1,8 @@
 /** 🧬️ SemioVideoMutation — named-variant enum, discriminated on `mutation`. Mirrors
  * `🧬️mutations/🦀️.rs` field for field. */
 import type { SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind } from "../📸️snapshot/🟦️.ts";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioVideoMutation =
-  | { mutation: "setSnapshot"; snapshot: SemioVideoSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "insertStream"; index: number; stream: SemioVideoStream }
   | { mutation: "removeStream"; index: number }
   | { mutation: "setStreamMeta"; index: number; kind: SemioVideoStreamKind; codec: string; width: number; height: number; rate: SemioRational }

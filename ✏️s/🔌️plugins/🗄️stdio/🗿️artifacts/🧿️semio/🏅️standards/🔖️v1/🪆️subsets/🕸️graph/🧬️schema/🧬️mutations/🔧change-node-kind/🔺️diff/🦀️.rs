@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `ChangeNodeKind`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeList};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeDiff};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -12,9 +13,7 @@ pub fn diff(payload: &super::ChangeNodeKind, base: &SemioGraphSnapshot) -> proto
     if node.kind == payload.new_kind {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" kind is already \"{}\".", payload.id.value, payload.new_kind));
     }
-    let mut nodes = base.nodes.clone();
-    let node = nodes.iter_mut().find(|n| n.id == payload.id).expect("checked above");
-    node.kind = payload.new_kind.clone();
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
+    let at = base.nodes.iter().position(|n| n.id == payload.id).expect("checked above");
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(IndexedTripleDiff { modified: vec![IndexModified { index: at, diff: SemioGraphNodeDiff { kind: Some(payload.new_kind.clone()), ..Default::default() } }], ..Default::default() }), edges: None })
 }
 //#endregion 🔖️Diff

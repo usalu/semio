@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️create-shot/📸️appends/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️create-shot/📸️appends/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("create-shot diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("create-shot diff applies")
 }
 
 /// ▶️ `create-shot` stores the payload's shot record verbatim, including its absent `background`
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_and_duplicate_shot_id_is_fatal() {
     assert_eq!(second.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "create-shot/appends-shot-macro: re-creating \"shot-macro\" must be Fatal");
     assert_eq!(second.messages()[0].code.0, "mutation.duplicate-id", "create-shot/appends-shot-macro: the duplicate guard's frozen code");
     assert_eq!(second.messages()[0].target, vec!["shot-macro".to_string()], "create-shot/appends-shot-macro: the duplicate is reported against the colliding shot id");
-    let unchanged = second.into_parts().0.apply(&expected_after()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff(&second.into_parts().0, &expected_after()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, expected_after(), "create-shot/appends-shot-macro: a Fatal duplicate must leave the snapshot untouched");
 }
 
@@ -94,8 +94,8 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-shot/appends-shot-macro: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["shots"]["added"][0]["id"], "shot-macro", "create-shot/appends-shot-macro: the new record travels in `shots.added`, by value");
-    assert!(committed["shots"]["added"][0].get("cameraId").is_none(), "create-shot/appends-shot-macro: `ShootingShot.camera_id` skips serializing when None, so the key is absent, not null");
+    assert_eq!(committed["shots"]["edits"][0]["item"]["id"], "shot-macro", "create-shot/appends-shot-macro: the new record travels in `shots.added`, by value");
+    assert!(committed["shots"]["edits"][0]["item"].get("cameraId").is_none(), "create-shot/appends-shot-macro: `ShootingShot.camera_id` skips serializing when None, so the key is absent, not null");
     assert!(committed["assets"].is_null() && committed["savedCameras"].is_null(), "create-shot/appends-shot-macro: creating a shot must touch no other collection");
 }
 
@@ -112,6 +112,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-shot/appends-shot-macro: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -1,0 +1,10 @@
+{
+  "parentSchema": "s.flow.flow",
+  "widgetIds": ["slider", "add", "preview"],
+  "synapseCount": 2,
+  "layout": {
+    "slider": { "x": 40.0, "y": -40.0 },
+    "add": { "x": 120.0, "y": -40.0 },
+    "preview": { "x": 240.0, "y": -40.0 }
+  }
+}

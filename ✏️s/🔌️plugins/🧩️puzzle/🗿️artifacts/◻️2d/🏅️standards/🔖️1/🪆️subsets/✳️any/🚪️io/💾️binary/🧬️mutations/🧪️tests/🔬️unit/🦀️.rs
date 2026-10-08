@@ -1,4 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
+use crate::host::owned::{puzzle2d_store, close_puzzle2d_store};
 
 #[test]
 fn puzzle2d_document_vcs_replays_granular_operations() {

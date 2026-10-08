@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -41,52 +40,49 @@
   "delivery": null,
   "risks": null,
   "conflicts": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "conflict-a",
-        "patch": {
-          "name": "Conflict A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "kind": "capacity",
-          "summary": {
-            "text": ""
-          },
-          "entityAId": "",
-          "entityBId": "",
-          "severity": "cosmetic",
-          "detectedBy": null,
-          "detectionDate": null,
-          "tradeOffOptions": [],
-          "recommendedResolution": null,
-          "decisionId": null,
-          "stakeholderIds": [],
-          "requirementIds": [],
-          "costImpact": null,
-          "scheduleImpact": null,
-          "qualityImpact": [],
-          "resolutionStatus": "pending",
+        "name": "Conflict A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
           "ownerId": null,
-          "escalationLevel": null,
-          "relatedRiskIds": []
-        }
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "kind": "capacity",
+        "summary": {
+          "text": ""
+        },
+        "entityAId": "",
+        "entityBId": "",
+        "severity": "cosmetic",
+        "detectedBy": null,
+        "detectionDate": null,
+        "tradeOffOptions": [],
+        "recommendedResolution": null,
+        "decisionId": null,
+        "stakeholderIds": [],
+        "requirementIds": [],
+        "costImpact": null,
+        "scheduleImpact": null,
+        "qualityImpact": [],
+        "resolutionStatus": "pending",
+        "ownerId": null,
+        "escalationLevel": null,
+        "relatedRiskIds": []
       }
     ],
+    "removed": [
+      "conflict-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "requirements": null,
@@ -114,9 +110,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::wfc3d::transient::mutations::*;
 use crate::editor::wfc3d::transient::Wfc3dTransient;
-use set_solve::SetSolve;
+use crate::editor::wfc3d::transient::mutations::SetSolve;
 
 impl protocol::OpText for Wfc3dTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -34,7 +34,7 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::wfc3d::transient::mutations::*;
 use crate::editor::wfc3d::transient::Wfc3dTransient;
-use set_solve::SetSolve;
+use crate::editor::wfc3d::transient::mutations::SetSolve;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Wfc3dTransient`.

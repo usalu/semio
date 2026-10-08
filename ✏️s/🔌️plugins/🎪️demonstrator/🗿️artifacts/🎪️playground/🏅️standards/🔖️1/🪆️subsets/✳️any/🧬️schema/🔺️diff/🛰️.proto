@@ -5,11 +5,5 @@ package semio.s.demonstrator.playground.diff;
 
 message PlaygroundDiff {
   // @state artifact
-  optional PlaygroundArtifact artifact = 1;
-  // @state artifact
-  optional string schema = 2;
-}
-
-message PlaygroundArtifact {
-  string schema = 1;
+  optional string schema = 1;
 }

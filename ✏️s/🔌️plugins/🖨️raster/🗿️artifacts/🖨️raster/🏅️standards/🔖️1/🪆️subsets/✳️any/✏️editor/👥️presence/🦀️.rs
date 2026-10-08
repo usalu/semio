@@ -179,9 +179,12 @@ pub fn raster_presence_is_terminal_empty(_presence: &RasterPresence) -> bool {
 /// the disposer below, every close of a registry-backed app faulted
 /// `interactive-job.close-owned-disposer-missing … presence-store` (mounted boot test of ticket
 /// 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RasterPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<RasterPresence> for RasterPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<RasterPresence>) -> usize { std::mem::size_of::<RasterPresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<RasterPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(RasterPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
     }

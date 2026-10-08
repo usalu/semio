@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "parserCases",
+    "expectations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none-before",
+              "none-after",
+              "unrelated-root",
+              "selected-root",
+              "model-after-before",
+              "model-before-after",
+              "new-model-created-before",
+              "new-model-missing-after",
+              "immutable-change",
+              "immutable-missing",
+              "watch-add",
+              "watch-remove",
+              "watch-change",
+              "watch-kind",
+              "generated-change",
+              "external-change",
+              "external-add",
+              "helper-change",
+              "witness-change",
+              "missing-source",
+              "unknown-phase",
+              "extra-proof",
+              "missing-model",
+              "pair-hash",
+              "pair-forward",
+              "pair-inverse",
+              "model-absence-kind",
+              "binding-symlink"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 28,
+      "maxItems": 28
+    },
+    "parserCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "paths",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "expectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelCount",
+        "ownerCount",
+        "scope"
+      ],
+      "properties": {
+        "modelCount": {
+          "const": 21
+        },
+        "ownerCount": {
+          "const": 3
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

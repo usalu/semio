@@ -1,0 +1,20 @@
+{
+  "maximumAdmissionBytes": 65536,
+  "cases": [
+    {
+      "id": "ascii",
+      "text": "key",
+      "capacity": 16
+    },
+    {
+      "id": "unicode",
+      "text": "δ😀",
+      "capacity": 8194
+    },
+    {
+      "id": "empty",
+      "text": "",
+      "capacity": 65536
+    }
+  ]
+}

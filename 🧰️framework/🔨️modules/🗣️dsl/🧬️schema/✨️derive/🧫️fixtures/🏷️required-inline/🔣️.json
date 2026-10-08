@@ -1,0 +1,68 @@
+{
+  "format": 1,
+  "valid": [
+    {
+      "statement": {
+        "kind": "rect",
+        "width": 12.5
+      }
+    },
+    {
+      "statement": {
+        "kind": "text",
+        "text": "Größe\u0000幅"
+      }
+    }
+  ],
+  "invalid": [
+    {},
+    {
+      "statement": null
+    },
+    {
+      "statement": []
+    },
+    {
+      "statement": [
+        {
+          "kind": "rect",
+          "width": 1
+        },
+        {
+          "kind": "text",
+          "text": "two"
+        }
+      ]
+    },
+    {
+      "statement": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "statement": {
+        "kind": "rect",
+        "width": 1,
+        "text": "wrong"
+      }
+    }
+  ],
+  "fieldKinds": [
+    {
+      "type": "Variant",
+      "role": "RequiredInlineStatements"
+    },
+    {
+      "type": "Box<Variant>",
+      "role": "RequiredStatements"
+    },
+    {
+      "type": "Option<Variant>",
+      "role": "OptionStatements"
+    },
+    {
+      "type": "Vec<Variant>",
+      "role": "VecStatements"
+    }
+  ]
+}

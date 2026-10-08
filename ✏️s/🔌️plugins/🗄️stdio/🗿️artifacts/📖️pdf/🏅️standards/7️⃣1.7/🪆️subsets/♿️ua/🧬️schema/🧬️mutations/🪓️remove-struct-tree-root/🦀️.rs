@@ -2,9 +2,7 @@
 
 use super::set_struct_tree_root::SetStructTreeRoot;
 use super::PdfUaMutation;
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,17 +15,14 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveStructTreeRoot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "struct-tree-root", kind: "remove-struct-tree-root", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::remove_catalog_entry(&mut next, "StructTreeRoot");
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "StructTreeRoot")))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})]
-    
+        support::catalog_entry(base, "StructTreeRoot").map(|_| PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})).into_iter().collect()
     })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel entfernen")

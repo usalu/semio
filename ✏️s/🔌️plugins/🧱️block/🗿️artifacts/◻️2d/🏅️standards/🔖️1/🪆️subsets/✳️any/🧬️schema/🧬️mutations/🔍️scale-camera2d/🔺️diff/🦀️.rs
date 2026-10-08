@@ -1,6 +1,5 @@
 //! 🔺️ Diff for `ScaleCamera2d`.
 
-use crate::BlockCamera2d;
 use crate::Block2dSnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
 
@@ -12,6 +11,6 @@ pub fn diff(payload: &super::ScaleCamera2d, base: &Block2dSnapshot) -> protocol:
     if payload.new_zoom == base.camera2d.zoom {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Camera zoom is already {}.", payload.new_zoom));
     }
-    protocol::MutationOutcome::new(Block2dDiff { camera2d: Some(BlockCamera2d { zoom: payload.new_zoom, ..base.camera2d.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff { camera2d: Some(semio_s_plugin_block::BlockCamera2dPatch { zoom: Some(payload.new_zoom), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

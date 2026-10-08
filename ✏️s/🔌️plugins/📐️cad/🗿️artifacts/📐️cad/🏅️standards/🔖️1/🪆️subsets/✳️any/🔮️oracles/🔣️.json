@@ -287,7 +287,9 @@
         "change-reference-width",
         "move-reference",
         "replace-reference-media",
-        "replace-references"
+        "replace-references",
+        "create-brep",
+        "delete-brep"
       ],
       "deferredKinds": [
         "create-object",

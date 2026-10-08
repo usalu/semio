@@ -12,17 +12,6 @@
       ],
       "x-semio-state": "artifact"
     },
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "id": {
       "type": [
         "string",

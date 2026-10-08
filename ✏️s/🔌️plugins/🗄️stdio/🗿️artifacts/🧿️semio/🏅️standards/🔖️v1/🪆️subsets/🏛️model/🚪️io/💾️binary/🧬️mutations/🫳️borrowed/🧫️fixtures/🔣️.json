@@ -1,0 +1,107 @@
+{
+  "copyBytes": 64,
+  "grants": [
+    1,
+    3,
+    7,
+    64,
+    256
+  ],
+  "cancelStops": [
+    0,
+    1,
+    3,
+    17,
+    65
+  ],
+  "elements": [
+    {
+      "id": "column-δ😀\u0000",
+      "class": {
+        "kind": "column"
+      },
+      "placement": {
+        "translation": {
+          "x": 0,
+          "y": 1.5,
+          "z": -2
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "geometry": {
+        "kind": "brep",
+        "brepId": "brep-α"
+      },
+      "spatialId": null,
+      "psets": []
+    },
+    {
+      "id": "other-β",
+      "class": {
+        "kind": "other",
+        "name": "任意😀"
+      },
+      "placement": {
+        "translation": {
+          "x": 0,
+          "y": 1.5,
+          "z": -2
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      },
+      "geometry": {
+        "kind": "mesh",
+        "meshId": "mesh-δ"
+      },
+      "spatialId": "storey-甲",
+      "psets": [
+        {
+          "name": "測定",
+          "properties": [
+            {
+              "key": "text",
+              "value": {
+                "kind": "text",
+                "value": "δ\u0000😀"
+              }
+            },
+            {
+              "key": "number",
+              "value": {
+                "kind": "number",
+                "value": 1.5
+              }
+            },
+            {
+              "key": "flag",
+              "value": {
+                "kind": "boolean",
+                "value": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

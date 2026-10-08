@@ -12,7 +12,7 @@ import { applyPatch, type Operation } from "fast-json-patch";
 
 //#region 🧮️DemoOracle
 type Snapshot = { n: number | null };
-type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "restoreN"; n?: number | null };
+type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "assignN"; n?: number | null };
 type Level = "info" | "warning" | "error" | "fatal";
 type Message = { level: Level; code: string };
 type Outcome = { edit: number; op: number; worst: Level | null; codes: string[]; superseded: boolean; withdrawn: boolean };
@@ -24,6 +24,19 @@ const rank: Record<Level, number> = { info: 0, warning: 1, error: 2, fatal: 3 };
 const saturate = (value: number) => Math.min(2147483647, Math.max(-2147483648, value));
 const missing: Message = { level: "error", code: "mutation.target-missing" };
 
+test("retained clone alternating grants keep one combined native byte allowance", () => {
+  const law = read("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json");
+  expect(law.grant.alternateCapacityPayloadAndRelease).toBe(true);
+  for (const axis of ["capacity", "payload", "release"] as const) {
+    const source = {capacity:0,payload:0,release:0};
+    source[axis] = law.grant.maximumBytes;
+    const oracle = applyPatch({capacity:0,payload:0,release:0}, [{op:"replace",path:`/${axis}`,value:law.grant.maximumBytes}], true, false).newDocument;
+    expect(source).toEqual(oracle);
+    expect(oracle.capacity + oracle.payload + oracle.release).toBe(law.grant.combinedCapacityCopyAndReleaseMaximum);
+  }
+  console.log("[DEBUG] retained clone capacity/payload/release alternating grants preserve one 4096-byte allowance");
+});
+
 /** 🧮️ One demo operation as the JSON Patch it writes and the messages it raises against `state`. */
 function diff(operation: DemoOperation, state: Snapshot): { patch: Operation[]; messages: Message[] } {
   switch (operation.operation) {
@@ -33,7 +46,7 @@ function diff(operation: DemoOperation, state: Snapshot): { patch: Operation[]; 
       return state.n === null ? { patch: [], messages: [missing] } : { patch: [{ op: "replace", path: "/n", value: saturate(state.n + operation.delta) }], messages: [{ level: "info", code: "mutation.cascade" }] };
     case "deleteN":
       return { patch: state.n === null ? [] : [{ op: "replace", path: "/n", value: null }], messages: [] };
-    case "restoreN":
+    case "assignN":
       return { patch: [{ op: "replace", path: "/n", value: operation.n ?? null }], messages: [] };
   }
 }
@@ -90,6 +103,28 @@ test("📨️ cooperative message copy matches independent UTF-8 and JSON Patch 
   expect(law.emptySegments.count * 24 <= law.capacityGrant).toBe(law.emptySegments.accepted);
 });
 
+test("📨️ copied diagnostic closure admits each actual backing release", () => {
+  const base = "../../🔁️replay/🎮️operation/📨️messages/";
+  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  for (const row of law.cases) {
+    const owners = [row.code, row.message, ...row.target].map((value: string) => Buffer.byteLength(value, "utf8")).filter((bytes: number) => bytes > 0);
+    let current = { owners };
+    while (current.owners.length) {
+      const demand = current.owners[0];
+      expect(demand <= 0).toBe(law.closure.emptyReleaseAccepted);
+      expect(demand <= demand - 1).toBe(law.closure.partialReleaseAccepted);
+      expect(demand).toBeLessThanOrEqual(law.closure.maximumReleaseBytes);
+      const next = applyPatch(current, [{ op: "remove", path: "/owners/0" }], true, false).newDocument;
+      expect(current.owners.length - next.owners.length).toBe(law.closure.sameTurnBackingReleases);
+      current = next;
+    }
+  }
+  const producer = readFileSync(new URL(`${base}🦀️.rs`, import.meta.url), "utf8");
+  expect(producer.includes("pub fn next_close_byte_demand")).toBe(true);
+  expect(producer.includes("vec![output]")).toBe(false);
+  console.log("[DEBUG] diagnostic closure independent UTF-8 allocation ledger removes one exact backing after full grant");
+});
+
 test("🎮️ cooperative semantic preparation matches independent JSON Patch before refusal policy", () => {
   const law = read("../../🔁️replay/🎮️operation/🧫️fixtures/🔣️.json");
   const capacity = BigInt(law.capacityRelease.emptySlots) * BigInt(law.capacityRelease.slotBytes);
@@ -137,6 +172,10 @@ test("🧮️ an independent fast-json-patch replay reproduces every expected st
 /** ⌛️ The same bounded-read law is projected independently with JSON Patch before either cursor runs. */
 test("🕰️ bounded history reads stop at the selected mutation and replay the complete changed history", () => {
   const law = corpus.boundedHistoryRead;
+  expect(law.closeGrant.maximumItems).toBe(1);
+  expect(law.closeGrant.maximumReleaseBytes).toBe(4096);
+  expect(new Uint8Array(law.physicalInversePageBytes).byteLength).toBe(4096);
+  expect(law.physicalInversePageBytes).toBeLessThanOrEqual(law.closeGrant.maximumReleaseBytes);
   const prefix = { name: "preview", initial: law.initial, edits: law.edits.slice(0, law.target.edit + 1).map((edit: DemoOperation[], index: number) => index === law.target.edit ? edit.slice(0, law.target.op) : edit), supersessions: law.accepted };
   const before = replay(prefix as Case).state;
   expect(before.n).toBe(law.expected.before);

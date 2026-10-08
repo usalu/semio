@@ -12,7 +12,7 @@ type CommandOwnership = Readonly<{
   routers: readonly Readonly<{ id: "root" | "composition-package"; path: string; defaultCommand: string; commands: readonly string[] }>[];
   artifactDefinitions: readonly string[];
   inputs: Readonly<Record<"build" | "contract" | "graph", readonly string[]>>;
-  registration: Readonly<{ projectPath: string; packagePath: string; launchSeedPath: string; launchPath: string; projectName: string }>;
+  registration: Readonly<{ projectPath: string; packagePath: string; projectName: string }>;
 }>;
 
 /** 🧭️ Named Nx input that carries each declared input set of the command-ownership contract. */
@@ -69,7 +69,7 @@ export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<v
   await assertStdioArtifactNxGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
 }
 
-/** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, Nx inputs, package scripts and launch entries to the command-ownership contract. */
+/** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, Nx inputs and package scripts to the command-ownership contract. */
 export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");
@@ -95,7 +95,6 @@ export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot())
   const manifest = readStdioJson(join(repoRoot, fixture.registration.packagePath)) as JsonMap;
   assert.equal(project.name, fixture.registration.projectName);
   for (const [set, name] of Object.entries(STDIO_NAMED_INPUTS)) assert.deepEqual(project.namedInputs?.[name], fixture.inputs[set as keyof CommandOwnership["inputs"]], `named input ${name}`);
-  const launches = [fixture.registration.launchSeedPath, fixture.registration.launchPath].map((path) => readFileSync(join(repoRoot, path), "utf8"));
   const compositionRouter = fixture.routers.find((router) => router.id === "composition-package")!;
   for (const command of compositionRouter.commands) {
     const set = STDIO_COMMAND_INPUTS[command];
@@ -104,7 +103,6 @@ export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot())
     assert.equal(project.targets[command].options?.command, `bun ./📜️script.ts ${command}`);
     const invocation = `bun nx run ${fixture.registration.projectName}:${command}`;
     assert.equal(manifest.scripts?.[command], invocation, `package script ${command}`);
-    for (const [index, launch] of launches.entries()) assert(launch.includes(`"command": "${invocation}"`), `${index === 0 ? fixture.registration.launchSeedPath : fixture.registration.launchPath} misses ${invocation}`);
   }
   console.log(`[stdio-command-ownership] owners=${fixture.owners.length} routers=${fixture.routers.length} artifacts=${fixture.artifactDefinitions.length} commands=${compositionRouter.commands.length}`);
 }

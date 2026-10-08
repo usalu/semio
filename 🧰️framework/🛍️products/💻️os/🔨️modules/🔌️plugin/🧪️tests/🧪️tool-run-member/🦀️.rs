@@ -142,7 +142,7 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
     for bytes in ops {
         let op = <TestMutation as ::protocol::OpBinary>::decode_op(bytes).expect("a member op decodes");
         let outcome = <TestMutation as Mutation<TestSnapshot>>::diff(&op, &state);
-        state = <<TestMutation as Mutation<TestSnapshot>>::Diff as protocol::MutationDiff<TestSnapshot>>::apply(outcome.diff(), &state).expect("a member op applies");
+        state = protocol::apply_diff(outcome.diff(), &state).expect("a member op applies");
     }
     state
 }

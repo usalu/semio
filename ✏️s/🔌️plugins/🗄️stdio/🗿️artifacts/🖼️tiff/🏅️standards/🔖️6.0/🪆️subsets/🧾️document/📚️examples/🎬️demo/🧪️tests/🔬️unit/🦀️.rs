@@ -6,7 +6,7 @@ async fn demo_source_nonempty() {
     let literal = <crate::TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
     let native = crate::standards::v6_0::subsets::document::io::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
     assert_eq!(literal, native, "handcrafted demo text retains the complete genuine native owner");
-    eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={} byte_order={:?}", literal.ifds.len(), literal.byte_order);
+    eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={}", literal.ifds.len());
 }
 
 /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's

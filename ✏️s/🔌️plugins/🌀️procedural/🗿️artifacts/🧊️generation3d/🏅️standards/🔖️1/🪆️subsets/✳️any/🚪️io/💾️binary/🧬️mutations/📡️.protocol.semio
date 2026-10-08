@@ -51,3 +51,7 @@ record move-nodes tag=18
 field payload bytes
 record change-widget-input tag=19
 field payload bytes
+record select-generation tag=20
+field payload bytes
+record change-generation-preview tag=21
+field payload bytes

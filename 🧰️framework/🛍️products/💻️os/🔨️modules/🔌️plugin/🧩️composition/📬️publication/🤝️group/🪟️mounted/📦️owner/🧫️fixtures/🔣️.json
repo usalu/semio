@@ -1,0 +1,1 @@
+{"schema":"semio.mounted-private-group.frame/v1","maximumChildren":64,"copyBytes":64,"cases":[{"id":"zero-items","items":0,"capacity":"frame","admitted":false},{"id":"one-below-frame","items":1,"capacity":"frame-1","admitted":false},{"id":"exact-frame","items":1,"capacity":"frame","admitted":true}]}

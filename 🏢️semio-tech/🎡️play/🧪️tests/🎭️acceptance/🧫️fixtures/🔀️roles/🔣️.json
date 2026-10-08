@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "initialRole": "editor",
+  "dismissControlId": "ui.introduction.skip",
+  "settlement": { "controlId": "playground.navbar.roles", "busy": false, "beforePaint": true },
+  "domPaintCases": [
+    { "id": "empty-chrome", "markup": "<div data-slot=\"window-body\"><div data-slot=\"pane-host-root\" style=\"height:40px\"><div data-window-content-layout=\"chrome-aware\"></div><div data-slot=\"pane-host\"></div></div><div data-slot=\"window-measures-overlay\">Size: 20</div></div>", "painted": false },
+    { "id": "pending-chrome", "markup": "<div data-slot=\"window-body\"><div data-slot=\"pane-host-root\" style=\"height:40px\"><div role=\"status\" aria-busy=\"true\">Loading<div></div><div></div></div><div data-slot=\"pane-host\"></div></div><div data-slot=\"window-engagement-overlay\">Move</div></div>", "painted": false },
+    { "id": "portal-only", "markup": "<div data-slot=\"window-body\"><div data-slot=\"pane-host-root\" style=\"height:40px\"><div data-window-content-layout=\"chrome-aware\"></div><div data-slot=\"pane-host\"><button>Action</button></div></div></div>", "painted": false },
+    { "id": "document-content", "markup": "<div data-slot=\"window-body\"><div data-slot=\"pane-host-root\" style=\"height:40px\"><article>Document content</article><div data-slot=\"pane-host\">Overlay</div></div><div data-slot=\"window-search-overlay\">Search</div></div>", "painted": true }
+  ],
+  "steps": [
+    { "role": "viewer", "controlId": "playground.navbar.roles.viewer", "painted": true },
+    { "role": "editor", "controlId": "playground.navbar.roles.editor", "painted": true }
+  ]
+}

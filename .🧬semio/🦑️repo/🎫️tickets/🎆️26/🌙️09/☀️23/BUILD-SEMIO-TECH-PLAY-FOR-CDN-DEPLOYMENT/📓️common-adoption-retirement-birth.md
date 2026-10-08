@@ -1,0 +1,41 @@
+# Common Adoption Retirement Birth Audit
+
+The editor source audit found a real remaining final-decision gap in durable_group::adopt_staged_store_member: after shared visibility commits, it constructs a cursor retirement Box and optional history/revision/report/string/snapshot/authority retirement owners. Those are allocation births after the common decision. The original typed-lane native test retains its exact zero-allocation decision assertion; its execution is pending. No semantic baseline or source repair is claimed yet.
+
+A narrow candidate is one preborn outgoing-root retirement frame funded during private staging. Adoption fills that frame with the outgoing cursor/history/revision/report/tail/current owners by constant moves, then moves the preborn Box into already reserved displaced storage. Actual child factory births and physical retirement occur later under their phase-specific queried grant. Existing snapshot alias rules, exact old roots, refused/cancelled owners, reservation authority and fixed budgets must remain intact. This is a design candidate, not an implemented behavior. The production hunk remains unchanged pending actual allocator baseline and root coordination.
+
+## Exact Existing Owner Boundaries
+
+The current adoption helper creates ArtifactStoreCursorRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStorePendingReportRetirement, snapshot factory owners and ArtifactStoreOneItemLiveAuthority retirement owners. A preborn aggregate frame must retain all of those original outgoing fields, including the displaced cursor returned by adopt_group_owned and the old tail snapshot alias classification.
+
+The existing cursor and revision retirement classes also terminate by dropping their remaining cursor/accumulator once entries are empty. Their local implementations have no explicit next_byte_demand method. This is source evidence to account for in the new frame's physical closure design, not an executed defect claim. The aggregate frame must not simply move allocation births to an unfunded later callback or silently reuse a logical receipt as exact physical closure. No broad existing-owner rewrite was performed during this audit.
+
+## Current Baseline And Factory Admission Boundary
+
+The prior typed-lane31111 attempt ended interrupted before its zero-allocation decision assertion. The existing exact three-lane native law is now registered as gate12.2 in both launch files for one focused current-source baseline. Existing SnapshotRetirementFactory only exposes retire(snapshot), with no borrowed allocation-birth query. Therefore a preborn aggregate frame cannot simply fund an unknown dynamic factory cursor later with a presumed page grant; any deferred dynamic birth must have exact first-party query/admission or be prepared with safely reversible ownership before the common flip. No production change has been made yet.
+
+Focused current-source adoption87090 naturally exited1 after2m29 at compilation, before any native assertion: the just-mounted operation-wire module line3 imported bounded_clone::RetainedCloneGrant instead of retained_clone::RetainedCloneGrant. The codec owner was notified to correct its canonical import. This compiler-only attempt is not a semantic adoption baseline; no production adoption change is justified by it.
+
+Codec-ready96978 reached actual native runtime: one test failed,1088 outside selection,0.144s assertion phase,Nx exit1 after4m15. It refused at Surface typed-lane fixture line1281 before staging: member requires its exact retained typed preparation and retirement authority. The fixture owner was notified to install its exact authority while preserving all original vector/undergrant/zero-allocation decision assertions. This is a real earlier admission failure, not a reached post-flip allocation baseline. The production adoption hunk remains unchanged.
+
+## Public Kernel Decision Baseline
+
+The existing public three-lane common-root law now observes each unchanged adopt loop through the actual System-backed allocator and compares to new schema-first neutral decisionRequestedBytes=0/decisionReleasedBytes=0. All original histories0/1/65/257, SQLite source oracles, exact grants, root/projection assertions, commit/abort routes, acknowledgement and close ordering remain intact. This isolates the core decision birth from concurrent Plugin fixture installation. Production adoption remains unchanged before the semantic baseline.
+
+Public Kernel91200 now supplies actual core semantic RED: first committed empty-history lane allocated728bytes against neutral0. Empty-history abort already passed;1testfailed,1246 outside,.060s,Nxexit1/38.8s. Independent SQLite/Ajv22799 supplies actual4pass/0fail/76assertions/.139s. The production repair will prebirth the outgoing-root frame during private staging, transfer inline original owners at adoption, and explicitly query/fund dynamic snapshot-retirement cursor birth later. No old-root clone or admission widening is planned.
+
+## Preborn frame authored
+
+The actual public Kernel adoption law failed at the first committed lane with 728 allocated bytes against the neutral strict zero. Source oracle completed 4/4 cases and 76 assertions. The staged durable root now owns one outgoing-root frame allocated before the visibility decision. Adoption moves cursor, both history catalogs, revision map, report, tail string, snapshot leases and authority into inline slots and transfers the preborn box to the reserved retirement catalog. Aborted candidates retain this box for bounded terminal closure. Snapshot cursor creation occurs in a later close turn, after its required borrowed factory birth query is funded. All 53 concrete factory implementations are aligned; no default query was introduced. Generic Presence/Transient factories retain their existing DSL sizing work; their query identifies the retained frame only, and these unrelated constructors are not claimed allocation-free.
+
+Current native run: `common-adoption-preborn-frame-native.log`, exact public Kernel common-root selection, same private cold generation/cache bypass. No green result yet.
+
+First production compile attempt7194 ended before assertions with one E0107: SpaceHistoryOwnedRetirement query omitted its Arc<SpaceHistorySnapshot> generic. Corrected that and independently found ProbeOwnedRetirement<Arc<ProbeSnapshot>>. Current retry11218 uses current coherent source. Historical Cad/Process E0407 logs captured concurrent interface authoring; they are compiler-only, not runtime regressions or green evidence.
+
+Actual core11218 GREEN: Nx exit0, one native law passed, 1248 outside selection, assertion time16.54s. Every committed lane adopts with allocator requested0/released0 under all4 histories; original abort/private-read/authority laws remain. Broader durable15068 ran20:19pass/1failure. Its recovery deliberately removes the live snapshot factory after stage; the new preborn implementation no longer checked this authority and advanced. Exact preborn/live factory Arc authority is now validated before adoption, preserving the original Fault/restore/retry law. No assertions changed. Four describes80387 exposed a missed multiline Semio macro factory (21 concrete expansions); required frame query added there. A full multiline scan now finds54 factory implementation blocks, zero missing required queries.
+
+## Current Durable Recovery Family
+
+Current exact live/staged factory identity guard passes the full20 durable tests:20passed,1230 outside selection,2.745s,Nx exit0. Historical19/20 recovery refusal failure was semantic RED. Current Plugin typed lane decision test is still pending after editor aligned the fixture catalog's exact existing factory; no final Plugin decision allocator claim.
+
+Current original Plugin typed-lane law now exited0:1pass,1092 outside selection,0.247s. Existing fixture semantic factory is paired with its exact installed owner catalog (editor-owned repair). All eight original cancellation stops/common commit paths pass; each decision has requested/released zero with all original vector/pointer/terminal assertions. Both Kernel public common allocator law and original Plugin private typed decision are now actual green.

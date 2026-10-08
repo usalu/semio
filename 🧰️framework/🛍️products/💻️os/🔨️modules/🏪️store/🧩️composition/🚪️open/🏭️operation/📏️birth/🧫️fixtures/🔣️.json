@@ -1,0 +1,37 @@
+{
+  "schema": "semio.member.open-birth/v1",
+  "historyPageBytes": 4096,
+  "maximumAdmissionBytes": 262144,
+  "cases": [
+    {
+      "id": "first",
+      "artifactId": "member:first",
+      "actor": "actor:first",
+      "dialect": {
+        "artifact_kind": "s.test.member",
+        "standard": "v1",
+        "subset": "first"
+      }
+    },
+    {
+      "id": "second-unicode",
+      "artifactId": "member:δ",
+      "actor": "actor:Grüße-😀",
+      "dialect": {
+        "artifact_kind": "s.test.member",
+        "standard": "v1",
+        "subset": "second"
+      }
+    }
+  ],
+  "denied": [
+    {
+      "maximumItems": 0,
+      "belowBirth": false
+    },
+    {
+      "maximumItems": 1,
+      "belowBirth": true
+    }
+  ]
+}

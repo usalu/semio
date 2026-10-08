@@ -14,35 +14,35 @@ async fn header_round_trips_via_begin_and_validate() {
 
 #[semio_framework_async_macros::async_test]
 async fn header_rejects_bad_magic() {
-    let mut bytes = build_header_bytes(0, 0).await.to_vec();
+    let mut bytes = build_header_bytes(0, 0).to_vec();
     bytes[0] = 0x00;
     assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::BadMagic)))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_rejects_unknown_required_flags() {
-    let bytes = build_header_bytes(1 << 5, 0).await.to_vec();
+    let bytes = build_header_bytes(1 << 5, 0).to_vec();
     let err = validate_header(&bytes).await.unwrap_err();
     assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::UnknownRequiredFlags(bits))) if bits == 1 << 5));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_rejects_corrupted_crc() {
-    let mut bytes = build_header_bytes(0, 0).await.to_vec();
+    let mut bytes = build_header_bytes(0, 0).to_vec();
     bytes[15] ^= 0xFF;
     assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::ChecksumMismatch { .. })))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn read_header_exposes_decoded_fields_to_downstream_crates() {
-    let bytes = build_header_bytes(crate::REQUIRED_HASH_CHAIN, crate::OPTIONAL_CANONICAL).await.to_vec();
+    let bytes = build_header_bytes(crate::REQUIRED_HASH_CHAIN, crate::OPTIONAL_CANONICAL).to_vec();
     let header = read_header(&bytes).await.unwrap();
     assert_eq!(header, Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: crate::OPTIONAL_CANONICAL });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn read_header_propagates_validation_failures() {
-    let mut bytes = build_header_bytes(0, 0).await.to_vec();
+    let mut bytes = build_header_bytes(0, 0).to_vec();
     bytes[0] = 0x00;
     assert!(matches!(read_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::BadMagic)))));
 }

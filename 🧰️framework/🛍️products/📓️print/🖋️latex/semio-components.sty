@@ -85,7 +85,7 @@
   \clearpage
   \bool_if:NF \g_semio_open_any_bool {
     \legacy_if:nT { @twoside } {
-      \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+      \Ifsemiopagerecto { } { \null\thispagestyle{empty}\newpage }
     }
   }
 }
@@ -94,14 +94,13 @@
   \semio_cover_geometry_restore:
   \semio_clear_to_recto:
   \setcounter{page}{1}
+  \use:c { semio@page@parity@align }
   \renewcommand{\thepage}{\arabic{page}}
   \use:c { semio@chrome@heading@set } { }
 }
 
 \NewDocumentCommand{\makemainmatter}{}{\semio_mainmatter_begin:}
 
-\newcounter{semio@shippedpages}
-\AddToHook{shipout/before}{\stepcounter{semio@shippedpages}}
 % 📄 Signature padding: for print binding the document is padded with trailing
 % empty pages up to a multiple of four. Digital-only deliverables don't want
 % those blanks — \SemioSignaturePadding{false} disables the padding at the
@@ -164,7 +163,7 @@
     % 3.3 the address block ran into the logo row.
     \tl_set:Nn \l_semio_cover_institution_weight_tl { 7 }
     \tl_set:Nn \l_semio_cover_logo_weight_tl { 5 }
-    \begin{WindowArrangement}[height=\dimexpr\textheight-1.2cm\relax]
+    \begin{WindowArrangement}[height=\textheight]
       \begin{WindowColumn}
         \cs_if_exist:cTF { zukunftbau@type } {
           \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
@@ -222,19 +221,12 @@
           }
         }
         \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
+          % 🖼️ 10.3 of the zwischenbericht column's 24.55 gives the window the
+          % 2:1 proportion of the Arbeitsprobe capture, so cover-fit reaches
+          % all four frame edges without cropping it.
           \WindowItem[10.3]{
-            \begin{Window}[title=Arbeitsprobe, anchor=s]
-              \begin{minipage}[c]{\linewidth}
-                \centering
-                \includegraphics[
-                  width=\linewidth,
-                  height=\dimexpr\l_semio_window_pending_height_dim-\semio@chrome@titlebar@height
-                    -\semio@window@bodypad-\semio@window@bodypad
-                    -\semio@stroke@hairline-\semio@stroke@hairline
-                  \relax,
-                  keepaspectratio,
-                ]{\semio@cover@arbeitsprobe@image}
-              \end{minipage}
+            \begin{Window}[title=Arbeitsprobe, image-fit=cover, anchor=center]
+              \SemioImage{\semio@cover@arbeitsprobe@image}
             \end{Window}
           }
         }
@@ -300,9 +292,8 @@
           }
         }
         % LR-cover-logos: funder logos stay on page 1 with everything else. Their
-        % weight is kept small so the Arbeitsprobe image above can take the
-        % maximum remaining height (largest possible image while all cover
-        % windows stay together on one page).
+        % weight is kept small so the Arbeitsprobe above takes the remaining
+        % height; the column itself guarantees the single page.
         \WindowItem[\tl_use:N \l_semio_cover_logo_weight_tl]{
           \begin{WindowRow}
             \WindowItem{

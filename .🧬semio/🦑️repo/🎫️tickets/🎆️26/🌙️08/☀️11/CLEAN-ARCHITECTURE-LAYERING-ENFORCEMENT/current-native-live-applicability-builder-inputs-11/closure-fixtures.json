@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "base": {
+    "snapshot": "/fixture/snapshot",
+    "specs": [
+      {
+        "package": "a",
+        "sources": [
+          "/fixture/snapshot/a.rs"
+        ]
+      },
+      {
+        "package": "b",
+        "sources": [
+          "/fixture/snapshot/b.rs"
+        ]
+      },
+      {
+        "package": "c",
+        "sources": [
+          "/fixture/snapshot/c.rs"
+        ]
+      }
+    ],
+    "units": [
+      {
+        "path": "/fixture/target/a.d",
+        "sources": [
+          "/fixture/snapshot/a.rs",
+          "/fixture/target/generated.rs"
+        ]
+      },
+      {
+        "path": "/fixture/target/b.d",
+        "sources": [
+          "/fixture/snapshot/b.rs"
+        ]
+      },
+      {
+        "path": "/fixture/target/external.d",
+        "sources": [
+          "/registry/external.rs"
+        ]
+      }
+    ],
+    "required": [
+      "a"
+    ]
+  },
+  "cases": [
+    {
+      "id": "normative",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "explicit-uncompiled",
+      "mutation": "missing-optional",
+      "accepted": true
+    },
+    {
+      "id": "required-uncompiled",
+      "mutation": "required-uncompiled",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-spec",
+      "mutation": "duplicate-spec",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-unit",
+      "mutation": "duplicate-unit",
+      "accepted": false
+    },
+    {
+      "id": "ambiguous-unit",
+      "mutation": "ambiguous-unit",
+      "accepted": false
+    },
+    {
+      "id": "foreign-selected-source",
+      "mutation": "foreign-selected-source",
+      "accepted": false
+    },
+    {
+      "id": "empty-required",
+      "mutation": "empty-required",
+      "accepted": false
+    },
+    {
+      "id": "unknown-required",
+      "mutation": "unknown-required",
+      "accepted": false
+    },
+    {
+      "id": "empty-unit",
+      "mutation": "empty-unit",
+      "accepted": false
+    },
+    {
+      "id": "escaped-selected-root",
+      "mutation": "escaped-selected-root",
+      "accepted": false
+    },
+    {
+      "id": "unknown-root-unit",
+      "mutation": "unknown-root-unit",
+      "accepted": false
+    }
+  ]
+}

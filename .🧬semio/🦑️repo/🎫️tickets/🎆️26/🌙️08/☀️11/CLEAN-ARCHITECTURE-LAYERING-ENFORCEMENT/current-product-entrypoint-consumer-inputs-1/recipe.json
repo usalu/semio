@@ -1,0 +1,7 @@
+{
+  "binary": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs",
+  "unit": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+  "driver": "drive_native_entrypoint",
+  "from": "BINARY_SOURCE.matches(\"drive_entrypoint(\")",
+  "to": "BINARY_SOURCE.matches(\"drive_native_entrypoint(\")"
+}

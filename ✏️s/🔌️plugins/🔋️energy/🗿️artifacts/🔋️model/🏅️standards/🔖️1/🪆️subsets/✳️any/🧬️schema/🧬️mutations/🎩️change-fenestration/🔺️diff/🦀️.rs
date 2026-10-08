@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeFenestrationOverhangOffset` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeFenestrationOverhangOffset, base: &EnergyMode
     if existing.overhang_offset_m == payload.new_overhang_offset_m {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this overhang offset.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {
-        item.overhang_offset_m = payload.new_overhang_offset_m;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::modifying(FenestrationPatch { overhang_offset_m: Some(payload.new_overhang_offset_m), ..FenestrationPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

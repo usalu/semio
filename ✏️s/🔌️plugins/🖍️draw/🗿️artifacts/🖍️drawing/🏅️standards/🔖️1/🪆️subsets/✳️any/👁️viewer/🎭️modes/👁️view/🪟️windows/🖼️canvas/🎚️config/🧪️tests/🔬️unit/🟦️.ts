@@ -16,7 +16,7 @@ test("viewer cameras are independent and restore from the same neutral trace",as
   for (const step of fixture.steps) {
     const config = { viewport: step.camera,framed: true };
     expect(validate(config)).toBe(true);
-    own[step.window] = applyDrawingViewerCanvasWindowConfigMutation(own[step.window] ?? fixture.base,{ kind: "snapshot",config });
+    own[step.window] = applyDrawingViewerCanvasWindowConfigMutation(own[step.window] ?? fixture.base,{ kind: "set",...config });
     oracle[step.window] = applyPatch(structuredClone(oracle[step.window] ?? fixture.base),[{ op: "replace",path: "",value: config }]).newDocument;
   }
   expect(own).toEqual(fixture.expected);

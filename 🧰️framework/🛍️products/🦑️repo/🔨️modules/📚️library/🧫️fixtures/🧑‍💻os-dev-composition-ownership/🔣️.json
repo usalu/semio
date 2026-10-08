@@ -433,9 +433,7 @@
     "target": "test-os-dev-composition-ownership",
     "command": "bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership",
     "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-    "derivedLaunchPath": ".vscode/launch.json",
-    "launchContribution": "declaredProjectTargets"
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"
   },
   "contextChains": [
     {

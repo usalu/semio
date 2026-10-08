@@ -93,9 +93,12 @@ fn note_presence_is_terminal_empty(presence: &NotePresence) -> bool {
 }
 
 /// 👥️ Returns the exact local or peer Note presence root in one bounded item.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NotePresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<NotePresence> for NotePresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<NotePresence>) -> usize { std::mem::size_of::<NotePresenceRetirement>() }
+
     fn retire(&self, root: std::sync::Arc<NotePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(NotePresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))
     }

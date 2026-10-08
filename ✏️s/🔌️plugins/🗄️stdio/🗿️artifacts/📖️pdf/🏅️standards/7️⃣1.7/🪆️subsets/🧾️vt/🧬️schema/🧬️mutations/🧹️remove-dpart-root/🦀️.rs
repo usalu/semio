@@ -2,9 +2,7 @@
 
 use super::set_dpart_root::SetDpartRoot;
 use super::PdfVtMutation;
-#[cfg(test)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -17,17 +15,14 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartRoot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dpart-root", kind: "remove-dpart-root", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let mut next = base.clone();
-        support::remove_catalog_entry(&mut next, "DPartRoot");
-        MutationOutcome::new(support::graph_edit_diff(base, next))
+        MutationOutcome::new(diff::graph_edit(support::remove_catalog_entry_owned_rows(base, "DPartRoot")))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default() })]
-    
+        support::catalog_entry(base, "DPartRoot").map(|_| PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default() })).into_iter().collect()
     })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/VT document partition", "PDF/VT-Dokumentpartition entfernen")

@@ -178,6 +178,41 @@
         "label": "世界",
         "kind": "unknown literal"
       }
+    ],
+    "breps": [
+      {
+        "childId": "brep local\u0000",
+        "target": {
+          "artifactId": "topology 🧪️",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      },
+      {
+        "childId": "duplicate",
+        "target": {
+          "artifactId": "topology 🧪️",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      },
+      {
+        "childId": "duplicate",
+        "target": {
+          "artifactId": "distinct target",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          }
+        }
+      }
     ]
   },
   "binary64Words": [
@@ -197,7 +232,8 @@
     "cad_drawing_child": 3,
     "cad_reference_group": 3,
     "cad_reference": 4,
-    "cad_node": 3
+    "cad_node": 3,
+    "cad_brep_child": 3
   },
   "malformedSql": [
     "DELETE FROM cad_document",
@@ -220,7 +256,12 @@
     "UPDATE cad_reference SET origin_y_bits='bad' WHERE id=1",
     "UPDATE cad_node SET document_id=99 WHERE id=1",
     "UPDATE cad_node SET ordinal=0 WHERE ordinal=1",
-    "ALTER TABLE cad_node ADD COLUMN accidental_state TEXT"
+    "ALTER TABLE cad_node ADD COLUMN accidental_state TEXT",
+    "UPDATE cad_brep_child SET subset='model' WHERE ordinal=0",
+    "UPDATE cad_brep_child SET document_id=999 WHERE ordinal=0",
+    "UPDATE cad_brep_child SET ordinal=7 WHERE ordinal=1",
+    "UPDATE cad_brep_child SET ordinal=0 WHERE ordinal=1",
+    "UPDATE cad_brep_child SET artifact_kind='other' WHERE ordinal=0"
   ],
   "ownership": {
     "semanticBudget": "completeSqlScalarBytes",
@@ -275,8 +316,16 @@
       "intrinsicNull",
       "addressedBinary"
     ],
-    "childPublication": "unavailable",
+    "childPublication": "insertElement",
+    "childSlot": "shapeModel",
+    "geometryOwner": "persistedArtifact",
+    "geometrySlot": "breps",
+    "geometrySubset": "brep",
+    "parentOperation": "createBrep",
+    "atomicChildren": 2,
     "positionCount": 6,
+    "analyticVertexCount": 6,
+    "triangleCount": 2,
     "bounds": [
       [
         0,
@@ -289,5 +338,158 @@
         2
       ]
     ]
+  },
+  "brepMutation": {
+    "create": {
+      "mutation": "createBrep",
+      "childId": "brep local\u0000",
+      "target": {
+        "artifactId": "topology 🧪️",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "brep"
+        }
+      },
+      "index": 1
+    },
+    "delete": {
+      "mutation": "deleteBrep",
+      "childId": "brep local\u0000"
+    },
+    "invalidIndices": [
+      -1,
+      0.5,
+      4294967296,
+      9007199254740992
+    ],
+    "invalidSubsets": [
+      "model",
+      "drawing"
+    ],
+    "validIndices": [
+      0,
+      1,
+      4294967295
+    ]
+  },
+  "publicSchemas": {
+    "fields": [
+      "schema",
+      "id",
+      "shapeModel",
+      "buildingModel",
+      "energyModel",
+      "structureClassicModel",
+      "drawings",
+      "breps",
+      "referencesByModelDefinitionId",
+      "nodes"
+    ],
+    "mutationTypes": [
+      "CreateShapeModel",
+      "DeleteShapeModel",
+      "CreateBuildingModel",
+      "DeleteBuildingModel",
+      "CreateEnergyModel",
+      "DeleteEnergyModel",
+      "CreateStructureClassicModel",
+      "DeleteStructureClassicModel",
+      "CreateDrawing",
+      "DeleteDrawing",
+      "CreateNode",
+      "DeleteNode",
+      "RenameNode",
+      "ChangeReferenceHidden",
+      "ChangeReferenceLocked",
+      "ChangeReferenceWidth",
+      "MoveReference",
+      "ReplaceReferenceMedia",
+      "ReplaceReferences",
+      "CreateBrep",
+      "DeleteBrep"
+    ],
+    "indexMaximum": 4294967295,
+    "mutationFields": {
+      "CreateShapeModel": [
+        "childId",
+        "target"
+      ],
+      "DeleteShapeModel": [],
+      "CreateBuildingModel": [
+        "childId",
+        "target"
+      ],
+      "DeleteBuildingModel": [],
+      "CreateEnergyModel": [
+        "childId",
+        "target"
+      ],
+      "DeleteEnergyModel": [],
+      "CreateStructureClassicModel": [
+        "childId",
+        "target"
+      ],
+      "DeleteStructureClassicModel": [],
+      "CreateDrawing": [
+        "childId",
+        "target"
+      ],
+      "DeleteDrawing": [
+        "childId"
+      ],
+      "CreateNode": [
+        "node"
+      ],
+      "DeleteNode": [
+        "nodeId"
+      ],
+      "RenameNode": [
+        "nodeId",
+        "newLabel"
+      ],
+      "ChangeReferenceHidden": [
+        "modelDefinitionId",
+        "referenceId",
+        "newHidden"
+      ],
+      "ChangeReferenceLocked": [
+        "modelDefinitionId",
+        "referenceId",
+        "newLocked"
+      ],
+      "ChangeReferenceWidth": [
+        "modelDefinitionId",
+        "referenceId",
+        "newWidthWorld"
+      ],
+      "MoveReference": [
+        "modelDefinitionId",
+        "referenceId",
+        "newOrigin"
+      ],
+      "ReplaceReferenceMedia": [
+        "modelDefinitionId",
+        "referenceId",
+        "newSourceUrl",
+        "newMediaKind",
+        "newOrientation",
+        "newScale",
+        "newOpacity"
+      ],
+      "ReplaceReferences": [
+        "modelDefinitionId",
+        "references"
+      ],
+      "CreateBrep": [
+        "childId",
+        "target",
+        "index"
+      ],
+      "DeleteBrep": [
+        "childId"
+      ]
+    },
+    "graphqlContext": "enum StateClass { ARTIFACT } directive @state(class: StateClass!) on FIELD_DEFINITION"
   }
 }

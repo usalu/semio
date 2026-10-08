@@ -1,15 +1,14 @@
 {
-  "artifact": null,
   "schema": null,
   "assets": {
-    "added": [],
-    "removed": [],
+    "edits": [],
     "patched": [
       {
         "id": "asset-hero",
         "patch": {
           "name": null,
           "url": null,
+          "format": null,
           "origin": [
             5.0,
             1.0,
@@ -24,6 +23,7 @@
         "patch": {
           "name": null,
           "url": null,
+          "format": null,
           "origin": [
             4.0,
             -1.0,
@@ -33,8 +33,7 @@
           "scale": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "savedCameras": null,
   "scene": null,

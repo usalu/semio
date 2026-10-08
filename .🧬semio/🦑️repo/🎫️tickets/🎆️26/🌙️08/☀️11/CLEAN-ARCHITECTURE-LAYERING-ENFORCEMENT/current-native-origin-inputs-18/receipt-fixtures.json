@@ -1,0 +1,24 @@
+[
+  {
+    "id": "nested-unicode",
+    "value": {
+      "body": "🧬😀\\\n",
+      "null": null,
+      "rows": [
+        {},
+        [],
+        0,
+        false
+      ]
+    }
+  },
+  {
+    "id": "full-numeric",
+    "value": [
+      0,
+      -1,
+      1.5,
+      9007199254740991
+    ]
+  }
+]

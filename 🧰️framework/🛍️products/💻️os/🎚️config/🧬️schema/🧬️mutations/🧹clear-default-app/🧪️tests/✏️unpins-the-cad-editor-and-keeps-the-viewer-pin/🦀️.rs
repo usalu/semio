@@ -6,14 +6,13 @@
 //! matching entry out. The point this case pins: clearing the EDITOR pin must not disturb the
 //! `viewer` pin for the very same dialect — the coordinate is the pair, not the dialect.
 //!
-//! 🎚️ Shape note: this config facet's `Mutation::Diff` IS `OpeningPreferences` itself — a
-//! whole-record diff whose `apply` ignores `base` — so the committed `../✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json` is
-//! the full post-op preferences record, not a sparse delta.
+//! 🎚️ Shape note: this config facet's `Mutation::Diff` is the sparse `OpeningDiff` — one absolute pin row for the touched
+//! `(dialect, role)` — so the committed `🔺️diff` names only that coordinate.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use super::super::super::OpeningPreferences;
+use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 
 const BEFORE: &str = include_str!("../../🧫️fixtures/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json");
@@ -41,7 +40,7 @@ fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value
 fn unpins_the_editor_and_leaves_the_viewer_pin_standing() {
     let base = before();
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
-    let applied = protocol::MutationDiff::apply(outcome.diff(), &base).expect("clear-default-app applies to its committed before-preferences");
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("clear-default-app applies to its committed before-preferences");
     assert_eq!(applied, expected_after(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the unpinned preferences differ from the committed after-snapshot");
     assert_eq!(applied.defaults.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: exactly one pin is dropped");
     assert!(applied.defaults.iter().all(|entry| entry.role != semio_framework::AppRole::Editor), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: no editor pin may survive the clear");
@@ -57,10 +56,10 @@ fn repinning_the_cleared_app_restores_before() {
     assert_eq!(inverse.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: clearing an occupied coordinate proposes exactly one undo step");
     assert!(matches!(inverse[0], OpeningConfigMutation::SetDefaultApp(_)), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the undo of a clear is a set, carrying the prior app back");
     let forward = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward clear-default-app applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward clear-default-app applies");
     for step in &inverse {
         let undo = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the set-default-app inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the set-default-app inverse step applies");
     }
     assert_eq!(snapshot, base, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: re-pinning the cleared editor did not restore the before-preferences");
 }
@@ -91,8 +90,7 @@ fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: an accepted clear emits no diagnostics");
 }
 
-/// 🔺️ The committed diff is the whole post-op `OpeningPreferences` record — the surviving viewer
-/// pin restated in full, and the dropped editor pin simply absent.
+/// 🔺️ The produced sparse diff is the committed `🔺️diff`.
 #[test]
 fn produces_committed_diff() {
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
@@ -101,21 +99,20 @@ fn produces_committed_diff() {
     assert_eq!(produced, committed, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
-/// 🔣️ The committed diff decodes to `OpeningPreferences` and re-encodes unchanged.
+/// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
-    assert_eq!(decoded.defaults.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the whole-record diff must restate the one surviving pin");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
+    assert_eq!(decoded.pins.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the sparse diff names exactly the touched coordinate");
     let reencoded = json_value(&decoded);
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed diff JSON is not canonical");
 }
 
-/// 🩹 The committed diff carries the before-record to the after-record — and because this facet's
-/// `apply` ignores `base` outright, the diff IS the after-record.
+/// 🩹 The committed diff carries the before-record to the after-record through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-preferences");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed diff did not carry before to after");
 }

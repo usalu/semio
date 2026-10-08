@@ -1,0 +1,5 @@
+{
+  "mutation": {"mutation":"setHasHeader","hasHeader":true},
+  "before": {"schema":"stdio.csv","hasHeader":false,"records":[{"fields":[{"value":"One","quoted":false},{"value":"Two","quoted":true}]},{"fields":[{"value":"Three","quoted":false},{"value":"Four","quoted":true}]}]},
+  "after": {"schema":"stdio.csv","hasHeader":true,"records":[{"fields":[{"value":"One","quoted":false},{"value":"Two","quoted":true}]},{"fields":[{"value":"Three","quoted":false},{"value":"Four","quoted":true}]}]}
+}

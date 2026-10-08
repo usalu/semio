@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteAirLoop` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelAirLoopPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::DeleteAirLoop, base: &EnergyModelSnapshot) -> proto
     if base.model.outdoor_air_systems.iter().any(|system| system.air_loop_id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Air loop {} still serves an outdoor air system.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.air_loops.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { air_loops: Rows::removing(&base.model.air_loops, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

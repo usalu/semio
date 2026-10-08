@@ -80,7 +80,7 @@ pub enum PdfAMutation {
 pub fn apply_a_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfAMutation) -> protocol::MutationOutcome<PdfDiff> {
     use protocol::Mutation;
     let outcome = mutation.diff(snapshot);
-    outcome.apply_to(snapshot)
+    crate::standards::v1_7::subsets::base::schema::mutations::apply_outcome(outcome, snapshot)
 }
 
 /// 🧾️ Returns the derive-owned semantic catalog in declaration order.

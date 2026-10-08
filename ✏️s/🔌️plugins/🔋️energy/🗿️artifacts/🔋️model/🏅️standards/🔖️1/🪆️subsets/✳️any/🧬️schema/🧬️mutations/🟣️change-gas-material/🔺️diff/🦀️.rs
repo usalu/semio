@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeGasMaterialThickness` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GasMaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeGasMaterialThickness, base: &EnergyModelSnaps
     if existing.thickness_m == payload.new_thickness_m {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Gas material {} already carries this gap width (m): {}.", payload.id.0, payload.new_thickness_m));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.gas_materials.iter_mut().find(|item| item.id == payload.id) {
-        item.thickness_m = payload.new_thickness_m;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { gas_materials: Rows::modifying(GasMaterialPatch { thickness_m: Some(payload.new_thickness_m), ..GasMaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -1,5 +1,5 @@
 //! 🏛️ Architect parent capability and literal typed ownership baselines.
-use super::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use crate::kernel::EntityId;
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
 semio_framework_dispatch_macros::dyn_enum_close!{

@@ -6,7 +6,16 @@ import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {parseEditableSvgTransform} from "../../🟦️.ts";
+import {readFileSync} from "node:fs";
 import {drawingTransformToMatrix} from "../../../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
+test("decoded native SVG transforms use the same semantic operation authority",()=>{
+  for(const row of fixture.filter(row=>row.matrix!==null)){
+    const actual=drawingTransformToMatrix(parseEditableSvgTransform(row.source));
+    for(let i=0;i<6;i++)expect(actual[i]!).toBeCloseTo(row.matrix![i]!,10);
+  }
+  const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+  expect(native.includes("pub fn editable_svg_transform_operations")).toBe(true);
+});
 for(const row of fixture)test(`editable SVG transform: ${row.name}`,()=>{
   expect(new Ajv({strict:true}).compile(schema)(row.source)).toBe(true);
   if(row.matrix===null){expect(()=>parseEditableSvgTransform(row.source)).toThrow();return;}

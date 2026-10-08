@@ -5,9 +5,9 @@ mod mutations_codec {
 use super::*;
 use crate::editor::wfc2d::config::mutations::*;
 use crate::editor::wfc2d::config::Wfc2dConfig;
-use replace_config::ReplaceConfig;
-use change_camera::ChangeCamera;
-use change_active_tile::ChangeActiveTile;
+use crate::editor::wfc2d::config::mutations::ReplaceConfig;
+use crate::editor::wfc2d::config::mutations::ChangeCamera;
+use crate::editor::wfc2d::config::mutations::ChangeActiveTile;
 
 impl protocol::OpText for Wfc2dConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -36,9 +36,9 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::wfc2d::config::mutations::*;
 use crate::editor::wfc2d::config::Wfc2dConfig;
-use replace_config::ReplaceConfig;
-use change_camera::ChangeCamera;
-use change_active_tile::ChangeActiveTile;
+use crate::editor::wfc2d::config::mutations::ReplaceConfig;
+use crate::editor::wfc2d::config::mutations::ChangeCamera;
+use crate::editor::wfc2d::config::mutations::ChangeActiveTile;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Wfc2dConfig`.

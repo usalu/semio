@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `SetNodeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeList};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEntryDiff, SemioGraphNodeDiff};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
 
 //#region 🔖️Diff
 /// 🧮️ An empty key is a Fatal `mutation.invariant`; a node the graph lacks, or a key the node lacks, is
@@ -21,10 +22,9 @@ pub fn diff(payload: &super::SetNodeProperty, base: &SemioGraphSnapshot) -> prot
     if current.value == payload.value {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Property \"{}\" of node \"{}\" already has that value.", payload.key, payload.node_id.value));
     }
-    let mut nodes = base.nodes.clone();
-    if let Some(property) = nodes.iter_mut().filter(|node| node.id == payload.node_id).flat_map(|node| node.properties.iter_mut()).find(|property| property.key == payload.key) {
-        property.value = payload.value.clone();
-    }
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
+    let at = base.nodes.iter().position(|row| row.id == payload.node_id).expect("checked above");
+    let index = base.nodes[at].properties.iter().position(|property| property.key == payload.key).expect("checked above");
+    let properties = IndexedTripleDiff { modified: vec![IndexModified { index, diff: SemioGraphEntryDiff { value: Some(payload.value.clone()) } }], ..Default::default() };
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(IndexedTripleDiff { modified: vec![IndexModified { index: at, diff: SemioGraphNodeDiff { properties: Some(properties), ..Default::default() } }], ..Default::default() }), edges: None })
 }
 //#endregion 🔖️Diff

@@ -3,7 +3,7 @@
 use crate::{ErasedSnapshotRetirement, SnapshotRetirementStep, retirement::RetireOwned};
 use std::{
     any::Any,
-    mem::size_of,
+    mem::{size_of, size_of_val},
     sync::{
         Arc,
         atomic::{AtomicU64, Ordering},
@@ -19,6 +19,9 @@ pub mod paged_list;
 #[path = "📋️field/🦀️.rs"]
 mod field;
 pub use field::RetainedFieldCursor;
+#[path = "🔗️projection/🦀️.rs"]
+mod owned_projection;
+pub use owned_projection::RetainedOwnedProjection;
 
 static RETAINED_CLONE_SOURCE_IDS: AtomicU64 = AtomicU64::new(1);
 
@@ -51,6 +54,12 @@ impl<T: Send + Sync + 'static> RetainedCloneSource<T> {
 
     pub fn borrow(&self) -> RetainedCloneRef<'_, T> {
         RetainedCloneRef { value: self.owner.as_ref(), lease: &self.lease, projection: RetainedCloneProjection { parent: self.owner.as_ref() as *const T as usize, address: self.owner.as_ref() as *const T as usize, discriminator: 0 } }
+    }
+
+    /// 🔗️ Retains a projected native field through the actual immutable root lease.
+    pub fn project_owned<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F) -> RetainedOwnedProjection<U>
+    where F: for<'source> FnOnce(&'source T) -> &'source U {
+        unsafe { RetainedOwnedProjection::from_source(self.borrow().project(discriminator, project)) }
     }
 }
 
@@ -144,21 +153,27 @@ fn retained_clone_exclusive_ref<'a, T: ?Sized>(value: &'a T, lease: &'a Arc<Reta
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct RetainedCloneGrant {
     pub maximum_items: usize,
-    /// 🧮️ Bounds payload copying and completed-child scaffold release within one clone turn.
+    /// 🧮️ Bounds payload copying within one clone turn.
     pub maximum_copy_bytes: usize,
     pub maximum_capacity_bytes: usize,
+    /// ♻️ Bounds physical owner and scaffold release independently of copying.
+    pub maximum_release_bytes: usize,
     pub maximum_depth: usize,
 }
 
 impl RetainedCloneGrant {
     /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.
     pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
-        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_depth }
+        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: 0, maximum_depth }
     }
 
     /// 🎟️ Admits one payload turn while reserving no allocation-capacity credit.
     pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
-        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_depth }
+        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth }
+    }
+    /// ♻️ Admits one release turn without copy or allocation credit.
+    pub fn one_release_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
+        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth }
     }
 }
 
@@ -167,6 +182,7 @@ pub struct RetainedCloneProgress {
     pub copied_items: usize,
     pub copied_bytes: usize,
     pub retained_capacity_bytes: usize,
+    pub released_bytes: usize,
 }
 
 impl RetainedCloneProgress {
@@ -174,17 +190,27 @@ impl RetainedCloneProgress {
         Ok(Self {
             copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone item progress overflow"))?,
             copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone byte progress overflow"))?,
+            released_bytes: self.released_bytes.checked_add(other.released_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone release progress overflow"))?,
             retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained clone capacity progress overflow"))?,
         })
     }
 
     pub fn fits(self, grant: RetainedCloneGrant) -> bool {
-        self.copied_items <= grant.maximum_items && self.copied_bytes <= grant.maximum_copy_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes
+        self.copied_items <= grant.maximum_items && self.copied_bytes <= grant.maximum_copy_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes && self.released_bytes <= grant.maximum_release_bytes
     }
 }
 
 pub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, scope: &str) -> Result<RetainedCloneProgress, crate::ValueError> {
-    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("{scope} exceeded its retained clone item, copy, or capacity grant"))) }
+    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("{scope} exceeded its retained clone item, copy, capacity, or release grant"))) }
+}
+
+/// 🛡️ Checks both granted closure work and the child's exact terminal ownership witness.
+pub fn admit_retained_clone_close(grant: RetainedCloneGrant, step: RetainedCloneStep, terminal: bool, scope: &str) -> Result<RetainedCloneStep, crate::ValueError> {
+    admit_retained_clone_progress(grant, step.progress(), scope)?;
+    if matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
+        return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("{scope} completed with retained owners")));
+    }
+    Ok(step)
 }
 
 pub fn admit_retained_clone_retirement(step: SnapshotRetirementStep, maximum_items: usize, maximum_bytes: usize, scope: &str) -> Result<SnapshotRetirementStep, crate::ValueError> {
@@ -220,8 +246,8 @@ impl RetainedCloneStep {
 }
 
 /// 🧬️ Creates a one-shot cursor for an immutable owner retained at one stable address until completion or cancellation.
-/// The cursor owner must retain it through `begin_close` and bounded `close_step` calls until
-/// `terminal_is_empty`; dropping an active cursor is outside this low-level ownership contract.
+/// The cursor owner retains it through `begin_close` and capacity-bearing `close_granted` turns until
+/// `terminal_is_empty`; raw `close_step` is an explicit cold lifecycle, with no granted fallback.
 pub trait RetainedClone: RetireOwned + Send + Sync + Sized + 'static {
     type Cursor: RetainedCloneCursor<Self>;
     fn retained_clone_cursor() -> Self::Cursor;
@@ -234,16 +260,79 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn begin_close(&mut self) -> bool;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError>;
     fn terminal_is_empty(&self) -> bool;
+    /// 🧮️ Observes the next payload-work grant without allocating or releasing retained owners.
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close work demand"))
+    }
+    /// 📐️ Observes the next granted close birth; unsupported cursors retain their owners.
+    fn next_close_capacity_byte_demand(&self, _maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close birth demand"))
+    }
+    /// 📐️ Observes the next body or scaffold release independently of payload copying.
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close release demand"))
+    }
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor has no capacity-bearing close authority"))
+    }
+}
+
+trait ControlledCloneRetirement: Send {
+    fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError>;
+    fn terminal_is_empty(&self) -> bool;
+    fn next_copy_byte_demand(&self) -> usize;
+    fn next_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError>;
+    fn next_release_byte_demand(&self) -> Result<usize, crate::ValueError>;
+}
+
+impl<T: RetireOwned> ControlledCloneRetirement for crate::retirement::controlled::ControlledRetirement<T> {
+    fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> { self.step(grant) }
+    fn terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
+    fn next_copy_byte_demand(&self) -> usize { self.next_copy_byte_demand() }
+    fn next_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> { self.next_capacity_byte_demand(maximum_release_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, crate::ValueError> { self.next_release_byte_demand() }
 }
 
 #[derive(Default)]
 pub struct RetainedCloneClose {
     retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    controlled: Option<Box<dyn ControlledCloneRetirement>>,
+    controlled_bytes: usize,
 }
 
 impl RetainedCloneClose {
+    /// 🔍️ Borrows the active cold owner's body or whole terminal Box release without moving it.
+    pub fn next_cold_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if self.controlled.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "controlled clone retirement cannot enter cold demand")); }
+        Ok(self.retirement.as_ref().map_or(0, |owner| if owner.terminal_is_empty() { size_of_val(owner.as_ref()) } else { owner.next_close_byte_demand() }))
+    }
+
+    /// 🧮️ Borrows the active typed retirement's minimum payload work independently of physical release.
+    pub fn next_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if self.retirement.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "cold clone retirement has no controlled work demand")); }
+        Ok(self.controlled.as_ref().map_or(0, |owner| owner.next_copy_byte_demand()))
+    }
+    /// 📐️ Observes the actual controlled owner Box required by the next handoff.
+    pub fn next_owner_capacity_byte_demand<T: RetireOwned>(&self, present: bool, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.is_empty() { return self.next_capacity_byte_demand(maximum_release_bytes); }
+        if present && !T::controlled_retirement_supported() { return Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "typed owner has no controlled close birth authority")); }
+        Ok(if present { size_of::<crate::retirement::controlled::ControlledRetirement<T>>() } else { 0 })
+    }
+    /// 📐️ Observes the next controlled child birth without allocating or moving an owner.
+    pub fn next_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if self.retirement.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "cold clone retirement has no controlled birth demand")); }
+        self.controlled.as_ref().map_or(Ok(0), |owner| owner.next_capacity_byte_demand(maximum_release_bytes))
+    }
+
+    /// 📐️ Observes the next physical body or terminal scaffold release independently of copying.
+    pub fn next_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if self.retirement.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::UnsupportedOwner, "cold clone retirement has no controlled release demand")); }
+        self.controlled.as_ref().map_or(Ok(0), |owner| if owner.terminal_is_empty() { Ok(self.controlled_bytes) } else { owner.next_release_byte_demand() })
+    }
+
     pub fn begin<T: RetireOwned>(&mut self, value: T) -> Result<(), crate::ValueError> {
-        if self.retirement.is_some() {
+        if !self.is_empty() {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained clone retirement frontier is occupied"));
         }
         self.retirement = Some(super::retirement::owned_retirement(value));
@@ -251,14 +340,20 @@ impl RetainedCloneClose {
     }
 
     pub fn step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
+        if self.controlled.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "granted clone retirement cannot enter cold close")); }
         let Some(retirement) = self.retirement.as_mut() else { return Ok(SnapshotRetirementStep::Complete) };
+        if retirement.terminal_is_empty() {
+            let bytes = size_of_val(retirement.as_ref());
+            if maximum_items == 0 || maximum_bytes < bytes { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            drop(self.retirement.take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
         let step = admit_retained_clone_retirement(retirement.close_step(maximum_items, maximum_bytes)?, maximum_items, maximum_bytes, "retained clone owner retirement")?;
         if step == SnapshotRetirementStep::Complete {
             if !retirement.terminal_is_empty() {
                 return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained clone retirement completed with a live owner"));
             }
-            self.retirement.take();
-            return Ok(SnapshotRetirementStep::Complete);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         Ok(step)
     }
@@ -277,8 +372,61 @@ impl RetainedCloneClose {
         Ok(Some(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }))
     }
 
+    pub fn begin_granted<T: RetireOwned>(&mut self, value: &mut Option<T>, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, crate::ValueError> {
+        if !self.is_empty() || value.is_none() { return Ok(None); }
+        let bytes = size_of::<crate::retirement::controlled::ControlledRetirement<T>>();
+        let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: bytes, ..Default::default() };
+        if !progress.fits(grant) { return Ok(Some(RetainedCloneStep::Progress(Default::default()))); }
+        let owner = value.take().unwrap();
+        let retirement = match crate::retirement::controlled::ControlledRetirement::new(owner) {
+            Ok(retirement) => retirement,
+            Err((error, owner)) => { *value = Some(owner); return Err(error); }
+        };
+        self.controlled = Some(Box::new(retirement));
+        self.controlled_bytes = bytes;
+        Ok(Some(RetainedCloneStep::Progress(progress)))
+    }
+
+    pub fn begin_default_granted<T: RetireOwned + Default>(&mut self, value: &mut T, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, crate::ValueError> {
+        if !self.is_empty() { return Ok(None); }
+        let bytes = size_of::<crate::retirement::controlled::ControlledRetirement<T>>();
+        if grant.maximum_items == 0 || bytes > grant.maximum_capacity_bytes { return Ok(Some(RetainedCloneStep::Progress(Default::default()))); }
+        let mut owner = Some(std::mem::take(value));
+        match self.begin_granted(&mut owner, grant) {
+            Ok(step) => { if let Some(owner) = owner { *value = owner; } Ok(step) }
+            Err(error) => { if let Some(owner) = owner { *value = owner; } Err(error) }
+        }
+    }
+
+    pub fn step_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if self.retirement.is_some() { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "cold clone retirement cannot enter granted close")); }
+        let Some(retirement) = self.controlled.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if retirement.terminal_is_empty() {
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: self.controlled_bytes };
+            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            self.controlled = None;
+            self.controlled_bytes = 0;
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        let step = retirement.step(grant)?;
+        let progress = admit_retained_clone_progress(grant, step.progress(), "controlled clone retirement")?;
+        if matches!(step, RetainedCloneStep::Complete(_)) && !retirement.terminal_is_empty() {
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "controlled clone retirement completed with owners"));
+        }
+        Ok(RetainedCloneStep::Progress(progress))
+    }
+
     pub fn is_empty(&self) -> bool {
-        self.retirement.is_none()
+        self.retirement.is_none() && self.controlled.is_none()
+    }
+}
+
+pub fn close_retained_binding(binding: &mut Option<RetainedCloneBinding>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    match RetainedCloneBinding::close_one(binding, grant.maximum_items)? {
+        SnapshotRetirementStep::Complete => Ok(RetainedCloneStep::Complete(Default::default())),
+        SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes })),
+        SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained binding close blocked")),
     }
 }
 
@@ -307,11 +455,12 @@ where
         if self.spent {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained scalar clone cursor is spent"));
         }
+        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         if self.value.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), retained_capacity_bytes: 0 };
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), retained_capacity_bytes: 0, released_bytes: 0 };
         if !progress.fits(grant) {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
@@ -344,6 +493,28 @@ where
             self.source = None;
         }
         Ok(step)
+    }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement")); }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.value, grant)? { return Ok(step); }
+        close_retained_binding(&mut self.source, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_copy_byte_demand()
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_owner_capacity_byte_demand::<T>(self.value.is_some(), maximum_release_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_release_byte_demand()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -385,12 +556,13 @@ impl RetainedCloneCursor<String> for StringCursor {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained string clone cursor is closing"));
         }
+        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         let source = source.get();
         match self.phase {
             0 => {
                 let planned = source.len();
-                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };
+                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
@@ -427,7 +599,7 @@ impl RetainedCloneCursor<String> for StringCursor {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
                 output.push_str(&source[start..end]);
-                let progress = RetainedCloneProgress { copied_items: 0, copied_bytes: end - start, retained_capacity_bytes: 0 };
+                let progress = RetainedCloneProgress { copied_items: 0, copied_bytes: end - start, retained_capacity_bytes: 0, released_bytes: 0 };
                 Ok(RetainedCloneStep::Progress(progress))
             }
             2 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
@@ -461,6 +633,28 @@ impl RetainedCloneCursor<String> for StringCursor {
             self.source = None;
         }
         Ok(step)
+    }
+
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement")); }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        close_retained_binding(&mut self.source, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_copy_byte_demand()
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_owner_capacity_byte_demand::<String>(self.output.is_some(), maximum_release_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        self.close.next_release_byte_demand()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -498,11 +692,12 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector clone cursor is closing"));
         }
+        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         let source_value = source.get();
         if self.phase == 0 {
             let planned = source_value.len().checked_mul(size_of::<T>()).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained vector clone capacity overflow"))?;
-            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned };
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };
             if !progress.fits(grant) {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             }
@@ -526,35 +721,18 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
                 maximum_items: grant.maximum_items.saturating_sub(used.copied_items),
                 maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(used.copied_bytes),
                 maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(used.retained_capacity_bytes),
-                maximum_depth: grant.maximum_depth,
-            };
+                maximum_depth: grant.maximum_depth, maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(used.released_bytes) };
             if let Some(child) = self.child.as_mut() {
                 if self.child_value.is_some() {
                     if !child.terminal_is_empty() {
                         if remaining.maximum_items == 0 {
                             return Ok(RetainedCloneStep::Progress(used));
                         }
-                        match admit_retained_clone_scaffold_retirement(child.close_step(remaining.maximum_items, remaining.maximum_copy_bytes)?, remaining.maximum_items, remaining.maximum_copy_bytes, "retained vector child scaffold close")? {
-                            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                                let progress = admit_retained_clone_progress(remaining, RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }, "retained vector child scaffold close")?;
-                                if progress == RetainedCloneProgress::default() {
-                                    return Ok(RetainedCloneStep::Progress(used));
-                                }
-                                used = used.checked_add(progress)?;
-                                if used.copied_items == grant.maximum_items || used.copied_bytes == grant.maximum_copy_bytes {
-                                    return Ok(RetainedCloneStep::Progress(used));
-                                }
-                                continue;
-                            }
-                            SnapshotRetirementStep::Blocked => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector child scaffold close blocked")),
-                            SnapshotRetirementStep::Complete => {
-                                if !child.terminal_is_empty() {
-                                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector child scaffold completed with a live owner"));
-                                }
-                                used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
-                                continue;
-                            }
-                        }
+                        let step = child.close_granted(remaining)?;
+                        let progress = admit_retained_clone_close(remaining, step, child.terminal_is_empty(), "retained vector child scaffold close")?.progress();
+                        if progress == RetainedCloneProgress::default() { return Ok(RetainedCloneStep::Progress(used)); }
+                        used = used.checked_add(progress)?;
+                        continue;
                     }
                     if remaining.maximum_items == 0 {
                         return Ok(RetainedCloneStep::Progress(used));
@@ -578,7 +756,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
                 used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
                 return Ok(RetainedCloneStep::Complete(used));
             }
-            if remaining.maximum_items == 0 && remaining.maximum_copy_bytes == 0 && remaining.maximum_capacity_bytes == 0 {
+            if remaining.maximum_items == 0 && remaining.maximum_copy_bytes == 0 && remaining.maximum_capacity_bytes == 0 && remaining.maximum_release_bytes == 0 {
                 return Ok(RetainedCloneStep::Progress(used));
             }
             let child = self.child.get_or_insert_with(T::retained_clone_cursor);
@@ -663,9 +841,41 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
         Ok(SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.values.is_empty() && (size_of::<T>() == 0 || self.values.capacity() == 0) && self.child.is_none() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none()
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement")); }
+        if let Some(child) = self.child.as_mut() {
+            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !child.terminal_is_empty() { let step = child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
+            let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            self.child = None;
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.child_value, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        if self.values.capacity() > 0 { if let Some(step) = self.close.begin_default_granted(&mut self.values, grant)? { return Ok(step); } }
+        close_retained_binding(&mut self.source, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child) = self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_copy_byte_demand() }; }
+        self.close.next_copy_byte_demand()
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_capacity_byte_demand(maximum_release_bytes) }; }
+        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
+        if self.child_value.is_some() { return self.close.next_owner_capacity_byte_demand::<T>(true,maximum_release_bytes); }
+        self.close.next_owner_capacity_byte_demand::<Vec<T>>(self.output.is_some()||!self.values.is_empty()||(size_of::<T>()!=0&&self.values.capacity()!=0),maximum_release_bytes)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_release_byte_demand() }; }
+        self.close.next_release_byte_demand()
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.values.is_empty() && (size_of::<T>() == 0 || self.values.capacity() == 0) && self.child.is_none() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 
 impl<T: RetainedClone> RetainedClone for Vec<T> {
@@ -703,6 +913,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
         let first = self.source.is_none();
+        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         let source_value = source.get();
         if first {
@@ -724,16 +935,8 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
                         if grant.maximum_items == 0 {
                             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                         }
-                        return match admit_retained_clone_scaffold_retirement(self.child.close_step(grant.maximum_items, grant.maximum_copy_bytes)?, grant.maximum_items, grant.maximum_copy_bytes, "retained optional child scaffold close")? {
-                            SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-                            SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional child scaffold close blocked")),
-                            SnapshotRetirementStep::Complete => {
-                                if !self.child.terminal_is_empty() {
-                                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional child scaffold completed with a live owner"));
-                                }
-                                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-                            }
-                        };
+                        let step = self.child.close_granted(grant)?;
+                    return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.child.terminal_is_empty(), "retained optional child scaffold close")?.progress()));
                     }
                     if grant.maximum_items == 0 {
                         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -804,9 +1007,37 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
         Ok(SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.child.terminal_is_empty() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none()
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement")); }
+        if !self.child.terminal_is_empty() {
+            if self.child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            let step = self.child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.child.terminal_is_empty(), "retained child close")?.progress()));
+        }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.child_value, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        close_retained_binding(&mut self.source, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.child.terminal_is_empty() { return self.child.next_close_copy_byte_demand(); }
+        self.close.next_copy_byte_demand()
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.child.terminal_is_empty() { return self.child.next_close_capacity_byte_demand(maximum_release_bytes); }
+        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
+        if self.child_value.is_some() { return self.close.next_owner_capacity_byte_demand::<T>(true,maximum_release_bytes); }
+        self.close.next_owner_capacity_byte_demand::<Option<T>>(self.output.is_some(),maximum_release_bytes)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if !self.child.terminal_is_empty() { return self.child.next_close_release_byte_demand(); }
+        self.close.next_release_byte_demand()
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.child.terminal_is_empty() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 
 impl<T: RetainedClone> RetainedClone for Option<T> {
@@ -843,6 +1074,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
+        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         source.bind(&mut self.source)?;
         if self.value.is_some() {
             if let Some(child) = self.child.as_mut() {
@@ -850,25 +1082,19 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
                     if grant.maximum_items == 0 {
                         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                     }
-                    return match admit_retained_clone_scaffold_retirement(child.close_step(grant.maximum_items, grant.maximum_copy_bytes)?, grant.maximum_items, grant.maximum_copy_bytes, "retained box child scaffold close")? {
-                        SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-                        SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained box child scaffold close blocked")),
-                        SnapshotRetirementStep::Complete => {
-                            if !child.terminal_is_empty() {
-                                return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained box child scaffold completed with a live owner"));
-                            }
-                            Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-                        }
-                    };
+                    let step = child.close_granted(grant)?;
+                    return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained box child scaffold close")?.progress()));
                 }
                 if grant.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
                 }
+                let bytes = size_of::<T::Cursor>();
+                if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 self.child = None;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: bytes }));
             }
             let capacity = size_of::<T>();
-            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity };
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity, released_bytes: 0 };
             if !progress.fits(grant) {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             }
@@ -881,7 +1107,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
                 return Err(crate::ValueError::new(crate::ValueRefusalKind::DepthLimit, "retained box clone structural depth limit exceeded"));
             }
             let capacity = size_of::<T::Cursor>();
-            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity };
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: capacity, released_bytes: 0 };
             if !progress.fits(grant) {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             }
@@ -955,9 +1181,41 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         Ok(SnapshotRetirementStep::Complete)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.child.is_none() && self.value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none()
+    fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "native owner must begin close before granted retirement")); }
+        if let Some(child) = self.child.as_mut() {
+            if child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !child.terminal_is_empty() { let step = child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: size_of::<T::Cursor>() };
+            if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            self.child = None;
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
+        if !self.close.is_empty() { return self.close.step_granted(grant); }
+        if let Some(step) = self.close.begin_granted(&mut self.value, grant)? { return Ok(step); }
+        if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+        close_retained_binding(&mut self.source, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child) = self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_copy_byte_demand() }; }
+        self.close.next_copy_byte_demand()
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(0) } else { child.next_close_capacity_byte_demand(maximum_release_bytes) }; }
+        if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
+        if self.value.is_some() { return self.close.next_owner_capacity_byte_demand::<T>(true,maximum_release_bytes); }
+        self.close.next_owner_capacity_byte_demand::<Box<T>>(self.output.is_some(),maximum_release_bytes)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+        if !self.closing { return Ok(0); }
+        if let Some(child)=self.child.as_ref() { return if child.terminal_is_empty() { Ok(size_of::<T::Cursor>()) } else { child.next_close_release_byte_demand() }; }
+        self.close.next_release_byte_demand()
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.child.is_none() && self.value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none() }
 }
 
 impl<T: RetainedClone> RetainedClone for Box<T> {
@@ -1000,25 +1258,15 @@ macro_rules! retained_clone_tuple {
                 if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
                 if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
                 if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-                source.bind(&mut self.source)?;
+                if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        source.bind(&mut self.source)?;
                 if self.draining {
                     match self.phase {
                         $($index => {
                             if !self.$child.terminal_is_empty() {
                                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                                return match admit_retained_clone_scaffold_retirement(
-                                    self.$child.close_step(grant.maximum_items, grant.maximum_copy_bytes)?,
-                                    grant.maximum_items,
-                                    grant.maximum_copy_bytes,
-                                    "retained tuple child scaffold close",
-                                )? {
-                                    SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 })),
-                                    SnapshotRetirementStep::Blocked => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple child scaffold close blocked")),
-                                    SnapshotRetirementStep::Complete => {
-                                        if !self.$child.terminal_is_empty() { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple child scaffold completed with a live owner")); }
-                                        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-                                    }
-                                };
+                                let step = self.$child.close_granted(grant)?;
+                    return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), "retained tuple child scaffold close")?.progress()));
                             }
                             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
                             self.draining = false;
@@ -1092,6 +1340,36 @@ macro_rules! retained_clone_tuple {
                 Ok(SnapshotRetirementStep::Complete)
             }
 
+            fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+                if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+                if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "tuple must begin close before granted retirement")); }
+                $(if !self.$child.terminal_is_empty() {
+                    if self.$child.begin_close() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+                    let step = self.$child.close_granted(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), "retained child close")?.progress()));
+                })+
+                if !self.close.is_empty() { return self.close.step_granted(grant); }
+                $(if let Some(step) = self.close.begin_granted(&mut self.$value, grant)? { return Ok(step); })+
+                if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
+                close_retained_binding(&mut self.source, grant)
+            }
+
+            fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
+                if !self.closing { return Ok(0); }
+                $(if !self.$child.terminal_is_empty() { return self.$child.next_close_copy_byte_demand(); })+
+                self.close.next_copy_byte_demand()
+            }
+            fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, crate::ValueError> {
+                if !self.closing { return Ok(0); }
+                $(if !self.$child.terminal_is_empty() { return self.$child.next_close_capacity_byte_demand(maximum_release_bytes); })+
+                if !self.close.is_empty() { return self.close.next_capacity_byte_demand(maximum_release_bytes); }
+                $(if self.$value.is_some() { return self.close.next_owner_capacity_byte_demand::<$type>(true,maximum_release_bytes); })+
+                self.close.next_owner_capacity_byte_demand::<($($type,)+)>(self.output.is_some(),maximum_release_bytes)
+            }
+            fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> {
+                if !self.closing { return Ok(0); }
+                $(if !self.$child.terminal_is_empty() { return self.$child.next_close_release_byte_demand(); })+
+                self.close.next_release_byte_demand()
+            }
             fn terminal_is_empty(&self) -> bool {
                 self.closing && self.output.is_none() && self.close.is_empty() && self.source.is_none() $(&& self.$value.is_none() && self.$child.terminal_is_empty())+
             }

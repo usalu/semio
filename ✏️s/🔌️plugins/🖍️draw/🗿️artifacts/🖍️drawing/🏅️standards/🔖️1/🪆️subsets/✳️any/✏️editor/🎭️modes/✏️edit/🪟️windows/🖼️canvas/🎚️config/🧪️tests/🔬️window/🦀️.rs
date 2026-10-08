@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::drawing::modes::edit::windows::canvas::transient::{DrawingCanvasWindowTransient, DrawingCanvasWindowTransientMutation, DrawingCanvasWindowTransientOwner};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_drawing_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -121,9 +121,9 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let after = config_mutation.diff(&base_config).diff().apply(&base_config).unwrap();
+    let after = protocol::apply_diff(config_mutation.diff(&base_config).diff(), &base_config).unwrap();
     assert_eq!(after, next_config);
-    let restored = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let restored = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, base_config);
     assert_eq!(DrawingCanvasWindowConfig::parse_dsl(&base_config.print_dsl()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfig::decode_pack(&base_config.encode_pack()).unwrap(), base_config);
@@ -133,12 +133,23 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     let base_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["nextTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let transient_mutation: DrawingCanvasWindowTransientMutation = semio_framework_pack_json::from_json_str(&fixture["transientMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let after = transient_mutation.diff(&base_transient).diff().apply(&base_transient).unwrap();
+    let after = protocol::apply_diff(transient_mutation.diff(&base_transient).diff(), &base_transient).unwrap();
     assert_eq!(after, next_transient);
-    let restored = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let restored = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, base_transient);
     assert_eq!(DrawingCanvasWindowTransient::parse_dsl(&base_transient.print_dsl()).unwrap(), base_transient);
     assert_eq!(DrawingCanvasWindowTransient::decode_pack(&base_transient.encode_pack()).unwrap(), base_transient);
     assert_eq!(DrawingCanvasWindowTransientMutation::parse_op(&transient_mutation.print_op()).unwrap(), transient_mutation);
     assert_eq!(DrawingCanvasWindowTransientMutation::decode_op(&transient_mutation.encode_op().unwrap()).unwrap(), transient_mutation);
+}
+
+/// ⚖️ The canvas configuration's concrete inverse sums to exactly the negative of its sparse diff, and `between` is its state delta.
+#[semio_framework_async_macros::async_test]
+async fn config_inverse_sums_to_the_negative_diff() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let base_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let next_config: DrawingCanvasWindowConfig = semio_framework_pack_json::from_json_str(&fixture["nextConfig"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&config_mutation, &base_config).await;
+    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<DrawingCanvasWindowConfig, super::DrawingCanvasWindowConfigDiff>(&base_config, &next_config).await;
 }

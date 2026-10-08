@@ -56,7 +56,8 @@ pub use derived_composition::*;
 // `register_schema_specs` cluster (superseded by `declaration()` in the artifact root, zero real
 // callers) were deleted outright, not relocated. `blank_jpg_snapshot`/`demo_jpg_snapshot` moved to
 // `../🧬️schema` (pure helpers over the document type).
-use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment};
+use crate::schema::snapshot::{JfifDensityUnits,JfifThumbnail,JpgSegment};
+use binary::snapshot::observations::{JpgFrameComponent,JpgFrameHeader,JpgHuffmanClass,JpgHuffmanTable,JpgQuantTable,JpgScanComponent,JpgNativeObservations,JpgDecodedDocument};
 use crate::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
@@ -923,6 +924,12 @@ pub fn decode_jpg_source(data: &dyn JpgByteSource) -> Result<JpgSnapshot, JpgErr
     }
 }
 
+/// 🧾️ Admits logical content and exact native observations as separate owners.
+pub fn decode_jpg_with_observations(data:&dyn JpgByteSource)->Result<JpgDecodedDocument,JpgError>{
+    let mut decoder=JpgStepDecoder::new(data)?;
+    loop {if let Some(snapshot)=decoder.step(data,usize::MAX)? {let observations=decoder.take_observations().ok_or_else(||JpgError::Malformed("native JPEG observations missing after completion".into()))?;return Ok(JpgDecodedDocument{snapshot,observations});}}
+}
+
 /// 🧾️ Everything the marker segments before `SOS` declared, plus where the entropy-coded scan
 /// starts — the parse half of [`JpgStepDecoder`].
 struct JpgHeader {
@@ -1182,6 +1189,7 @@ fn read_u16(data: &dyn JpgByteSource, at: usize) -> Result<usize, JpgError> {
 /// (`pos`/`acc`/`nbits`) and the DC predictors persist between steps, so a stepped decode reads
 /// every source byte exactly as often as a one-shot decode and yields the identical raster.
 pub struct JpgStepDecoder {
+    observations:Option<JpgNativeObservations>,
     header: Option<Box<JpgHeader>>,
     planes: Vec<Vec<f64>>,
     plane_dims: Vec<(usize, usize)>,
@@ -1201,6 +1209,8 @@ pub struct JpgStepDecoder {
 }
 
 impl JpgStepDecoder {
+    /// 🧾️ Transfers exact native observations after the decoded content completed.
+    pub fn take_observations(&mut self)->Option<JpgNativeObservations>{self.observations.take()}
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
         Self::from_header(parse_jpg_header(data)?, true)
@@ -1226,7 +1236,7 @@ impl JpgStepDecoder {
         }
         let dc_pred = vec![0i32; frame.components.len()];
         let pos = header.scan_start;
-        Ok(Self { header: Some(Box::new(header)), planes, plane_dims, hmax, vmax, mcus_x, mcus_y, mcu: 0, mcus_since_restart: 0, dc_pred, pos, acc: 0, nbits: 0, entropy_done: false, rgba: Vec::new(), row: 0 })
+        Ok(Self { observations:None,header: Some(Box::new(header)), planes, plane_dims, hmax, vmax, mcus_x, mcus_y, mcu: 0, mcus_since_restart: 0, dc_pred, pos, acc: 0, nbits: 0, entropy_done: false, rgba: Vec::new(), row: 0 })
     }
 
     /// ⏱️ One bounded unit of work: `Ok(None)` while decoding continues, `Ok(Some(snapshot))` once.
@@ -1342,13 +1352,7 @@ impl JpgStepDecoder {
         }
         let header = *self.header.take().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
         self.planes = Vec::new();
-        // 🏅️ sof_marker/arithmetic: real data the header parse already computed transiently (the
-        // SOF0 marker byte, the DAC rejection) — persisted so
-        // `subsets::baseline::analyzer::check_baseline_conformance`
-        // (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES) has real fields to check
-        // instead of an unmodeled gap. `dc_huffman_table_count`/`ac_huffman_table_count` are
-        // DERIVED from `huffman_tables` by the analyzer (ticket
-        // 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION) — one source of truth.
+        self.observations=Some(JpgNativeObservations{frame:header.frame,sof_marker:header.sof_marker,arithmetic:false,quant_tables:header.quant_tables,huffman_tables:header.huffman_tables,restart_interval:header.restart_interval});
         Ok(Some(JpgSnapshot {
             schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
             width: width as u32,
@@ -1359,12 +1363,6 @@ impl JpgStepDecoder {
             jfif_x_density: header.jfif_x_density,
             jfif_y_density: header.jfif_y_density,
             jfif_thumbnail: header.jfif_thumbnail,
-            frame: Some(header.frame),
-            sof_marker: header.sof_marker,
-            arithmetic: false,
-            quant_tables: header.quant_tables,
-            huffman_tables: header.huffman_tables,
-            restart_interval: header.restart_interval,
             other_segments: header.other_segments,
         }))
     }

@@ -552,7 +552,7 @@ export const TIME_TRAVEL_LABELS = {
   actionRerun: { en: "Replay again", de: "Erneut anwenden" },
   preparationProgress: { en: "Preparing history preview", de: "Verlaufsvorschau wird vorbereitet" },
   preparationProgressValueText: { en: "Preparing history preview: {done} of {total} steps", de: "Verlaufsvorschau wird vorbereitet: {done} von {total} Schritten" },
-  replayProgressValueText: { en: "Replaying {done} of {total} mutations", de: "{done} von {total} Mutationen werden neu angewendet" },
+  replayProgressValueText: { en: "Replaying history: {done} of {total} steps", de: "Verlauf wird neu angewendet: {done} von {total} Schritten" },
   processed: { en: "Work completed: {processed}", de: "Arbeitsfortschritt: {processed}" },
   refusalBusy: { en: "History editing is busy: finish the running tool or the other history edit first", de: "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen" },
   refusalUnknownMutation: { en: "This mutation is no longer in the history", de: "Diese Mutation ist nicht mehr im Verlauf" },

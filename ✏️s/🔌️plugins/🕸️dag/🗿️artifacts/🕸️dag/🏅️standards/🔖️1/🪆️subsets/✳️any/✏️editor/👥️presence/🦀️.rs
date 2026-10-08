@@ -24,12 +24,62 @@ impl Default for DagPresence {
     }
 }
 
-impl protocol::MutationDiff<DagPresence> for DagPresence {
-    fn apply(&self, _base: &DagPresence) -> protocol::MutationApplyResult<DagPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse field delta over [`DagPresence`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct DagPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_x: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_y: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_zoom: Option<f64>,
+}
+
+impl protocol::MutationDiff<DagPresence> for DagPresenceDiff {
+    fn apply(&self, base: &DagPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DagPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x = value.clone();
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y = value.clone();
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.camera_x.is_some() {
+            self.camera_x = other.camera_x;
+        }
+        if other.camera_y.is_some() {
+            self.camera_y = other.camera_y;
+        }
+        if other.camera_zoom.is_some() {
+            self.camera_zoom = other.camera_zoom;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<DagPresence> for DagPresenceDiff {
+    fn inverse(&self, base: &DagPresence) -> Self {
+        Self {
+            camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
+            camera_y: self.camera_y.as_ref().map(|_| base.camera_y.clone()),
+            camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom.clone()),
+        }
+    }
+    fn between(base: &DagPresence, other: &DagPresence) -> Self {
+        Self {
+            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
+            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
+            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none()
     }
 }
 

@@ -1,2 +1,2 @@
 semio flow.flow.dsl v1
-schema=s.flow.flow content=childId=content target=artifactId="literal target!@/日本" artifactKind=s.stdio.semio standard=v1 subset=flow
+schema=s.flow.flow content=child_id=content target=artifact-id="literal target!@/日本" artifact-kind=s.stdio.semio standard=v1 subset=flow

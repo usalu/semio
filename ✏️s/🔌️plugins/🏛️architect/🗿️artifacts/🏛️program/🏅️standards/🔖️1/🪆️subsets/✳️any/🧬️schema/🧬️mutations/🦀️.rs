@@ -594,15 +594,21 @@ pub const KINDS: &[&str] = &[
     "replace-governance",
 ];
 
-/// 🧮️ Applies `mutation` to `snapshot` and hands back the whole `protocol::MutationOutcome`, the
-/// diagnostics included — the shape an external conformance host needs, since a committed
-/// `🎯️outcome` vector declares a status AND its diagnostic codes. This facet is dispatch-only and
-/// has never carried an apply helper of its own; every in-crate caller goes through
-/// `store::ArtifactStore`, which an external host cannot construct.
+/// 🧮️ Applies `mutation` to `snapshot` through the central applier and hands back the next snapshot together with the whole
+/// `protocol::MutationOutcome`, the diagnostics included — the shape an external conformance host needs, since a committed
+/// `🎯️outcome` vector declares a status AND its diagnostic codes. A diff the central applier rejects becomes a fatal message on an
+/// empty outcome and leaves the snapshot unchanged.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn apply_program_mutation_outcome(snapshot: &mut ProgramSnapshot, mutation: &ProgramMutation) -> protocol::MutationOutcome<ProgramDiff> {
+pub fn apply_program_mutation_outcome(snapshot: &ProgramSnapshot, mutation: &ProgramMutation) -> (ProgramSnapshot, protocol::MutationOutcome<ProgramDiff>) {
     let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    match protocol::apply_diff(outcome.diff(), snapshot) {
+        Ok(next) => (next, outcome),
+        Err(error) => {
+            let (_, mut messages) = outcome.into_parts();
+            messages.push(protocol::MutationMessage::fatal(error.code, error.message).at(error.target));
+            (snapshot.clone(), protocol::MutationOutcome::empty().absorb_messages(messages))
+        }
+    }
 }
 
 /// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`

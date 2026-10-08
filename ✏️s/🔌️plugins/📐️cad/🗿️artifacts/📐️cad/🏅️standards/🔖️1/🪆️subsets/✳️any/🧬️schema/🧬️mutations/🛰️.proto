@@ -1,37 +1,50 @@
 syntax = "proto3";
 package semio.s.cad.cad.mutation;
-
-// 🧬️ CadMutation schema.
-
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🛰️.proto";
+import "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message CadMutation {
-  // @state artifact
-  string schema = 1;
-  // @state artifact
-  string id = 2;
-  // @state artifact
-  repeated CadObject objects = 3;
-  // @state artifact
-  repeated CadObject building_objects = 4;
-  // @state artifact
-  repeated CadObject energy_objects = 5;
-  // @state artifact
-  repeated CadObject structure_classic_objects = 6;
-  // @state artifact
-  map<string, CadReferenceList> references_by_model_definition_id = 7;
-  // @state artifact
-  repeated CadNode nodes = 8;
-  // @state artifact
-  optional CadGeometry shape_geometry = 9;
-  // @state artifact
-  optional CadGeometry building_geometry = 10;
-  // @state artifact
-  optional CadGeometry energy_geometry = 11;
-  // @state artifact
-  optional CadGeometry structure_classic_geometry = 12;
+  oneof mutation {
+    CreateShapeModel create_shape_model = 1;
+    DeleteShapeModel delete_shape_model = 2;
+    CreateBuildingModel create_building_model = 3;
+    DeleteBuildingModel delete_building_model = 4;
+    CreateEnergyModel create_energy_model = 5;
+    DeleteEnergyModel delete_energy_model = 6;
+    CreateStructureClassicModel create_structure_classic_model = 7;
+    DeleteStructureClassicModel delete_structure_classic_model = 8;
+    CreateDrawing create_drawing = 9;
+    DeleteDrawing delete_drawing = 10;
+    CreateNode create_node = 11;
+    DeleteNode delete_node = 12;
+    RenameNode rename_node = 13;
+    ChangeReferenceHidden change_reference_hidden = 14;
+    ChangeReferenceLocked change_reference_locked = 15;
+    ChangeReferenceWidth change_reference_width = 16;
+    MoveReference move_reference = 17;
+    ReplaceReferenceMedia replace_reference_media = 18;
+    ReplaceReferences replace_references = 19;
+    CreateBrep create_brep = 20;
+    DeleteBrep delete_brep = 21;
+  }
 }
-
-message CadObject { string id = 1; }
-message CadNode { string id = 1; }
-message CadReferenceList { repeated string values = 1; }
-message CadGeometry { string anchors_json = 1; }
-message CadCamera { double zoom = 1; }
+message CreateShapeModel { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message DeleteShapeModel {  }
+message CreateBuildingModel { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message DeleteBuildingModel {  }
+message CreateEnergyModel { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message DeleteEnergyModel {  }
+message CreateStructureClassicModel { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message DeleteStructureClassicModel {  }
+message CreateDrawing { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message DeleteDrawing { string child_id = 1; }
+message CreateNode { semio.s.cad.cad.artifact.CadNode node = 1; }
+message DeleteNode { string node_id = 1; }
+message RenameNode { string node_id = 1; string new_label = 2; }
+message ChangeReferenceHidden { string model_definition_id = 1; string reference_id = 2; bool new_hidden = 3; }
+message ChangeReferenceLocked { string model_definition_id = 1; string reference_id = 2; bool new_locked = 3; }
+message ChangeReferenceWidth { string model_definition_id = 1; string reference_id = 2; double new_width_world = 3; }
+message MoveReference { string model_definition_id = 1; string reference_id = 2; repeated double new_origin = 3; }
+message ReplaceReferenceMedia { string model_definition_id = 1; string reference_id = 2; string new_source_url = 3; string new_media_kind = 4; repeated double new_orientation = 5; optional double new_scale = 6; optional double new_opacity = 7; }
+message ReplaceReferences { string model_definition_id = 1; repeated semio.s.cad.cad.artifact.CadReference references = 2; }
+message CreateBrep { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; uint32 index = 3; }
+message DeleteBrep { string child_id = 1; }

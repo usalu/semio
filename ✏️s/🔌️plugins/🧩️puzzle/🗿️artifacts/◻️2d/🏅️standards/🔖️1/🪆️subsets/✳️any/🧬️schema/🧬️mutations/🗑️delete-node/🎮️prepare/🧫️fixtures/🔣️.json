@@ -1,0 +1,308 @@
+{
+  "control": {
+    "maximumItems": 1,
+    "maximumBytes": 32,
+    "largePrefix": "😀é",
+    "largeRepeats": 20000,
+    "advanceAllocation": 0,
+    "closeAllocation": 0
+  },
+  "journeys": [
+    "firstNodeOnly",
+    "sourceEndpoint",
+    "targetEndpoint",
+    "selfEdgeOnce",
+    "originalEdgeOrder",
+    "missingNode",
+    "emptyHandles",
+    "largeUtf8",
+    "zeroGrant",
+    "sourceSwap",
+    "cancelDuringComparison",
+    "boundedClose"
+  ],
+  "cases": [
+    {
+      "id": "missing",
+      "nodes": [
+        {
+          "id": "a",
+          "handles": [
+            "ha"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "e",
+          "source": "ha",
+          "target": "hb"
+        }
+      ],
+      "target": "missing",
+      "node": null,
+      "severedEdges": [],
+      "afterNodes": [
+        "a"
+      ],
+      "afterEdges": [
+        "e"
+      ]
+    },
+    {
+      "id": "empty",
+      "nodes": [],
+      "edges": [],
+      "target": "a",
+      "node": null,
+      "severedEdges": [],
+      "afterNodes": [],
+      "afterEdges": []
+    },
+    {
+      "id": "no-handles",
+      "nodes": [
+        {
+          "id": "a",
+          "handles": []
+        },
+        {
+          "id": "b",
+          "handles": [
+            "hb"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "e",
+          "source": "other",
+          "target": "hb"
+        }
+      ],
+      "target": "a",
+      "node": 0,
+      "severedEdges": [],
+      "afterNodes": [
+        "b"
+      ],
+      "afterEdges": [
+        "e"
+      ]
+    },
+    {
+      "id": "both-endpoints",
+      "nodes": [
+        {
+          "id": "a",
+          "handles": [
+            "ha1",
+            "ha2"
+          ]
+        },
+        {
+          "id": "b",
+          "handles": [
+            "hb"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "source",
+          "source": "ha1",
+          "target": "hb"
+        },
+        {
+          "id": "keep",
+          "source": "hb",
+          "target": "other"
+        },
+        {
+          "id": "target",
+          "source": "other",
+          "target": "ha2"
+        },
+        {
+          "id": "self",
+          "source": "ha1",
+          "target": "ha2"
+        }
+      ],
+      "target": "a",
+      "node": 0,
+      "severedEdges": [
+        0,
+        2,
+        3
+      ],
+      "afterNodes": [
+        "b"
+      ],
+      "afterEdges": [
+        "keep"
+      ]
+    },
+    {
+      "id": "first-duplicate",
+      "nodes": [
+        {
+          "id": "same",
+          "handles": [
+            "first"
+          ]
+        },
+        {
+          "id": "same",
+          "handles": [
+            "second"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "first-edge",
+          "source": "first",
+          "target": "outside"
+        },
+        {
+          "id": "second-edge",
+          "source": "second",
+          "target": "outside"
+        }
+      ],
+      "target": "same",
+      "node": 0,
+      "severedEdges": [
+        0
+      ],
+      "afterNodes": [
+        "same"
+      ],
+      "afterEdges": [
+        "second-edge"
+      ]
+    },
+    {
+      "id": "duplicate-handles",
+      "nodes": [
+        {
+          "id": "a",
+          "handles": [
+            "h",
+            "h"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "self",
+          "source": "h",
+          "target": "h"
+        }
+      ],
+      "target": "a",
+      "node": 0,
+      "severedEdges": [
+        0
+      ],
+      "afterNodes": [],
+      "afterEdges": []
+    },
+    {
+      "id": "unicode-controls",
+      "nodes": [
+        {
+          "id": "😀\u0000\"",
+          "handles": [
+            "é/~\u0000"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "removed",
+          "source": "é/~\u0000",
+          "target": "other"
+        },
+        {
+          "id": "retained",
+          "source": "é/~\u0000",
+          "target": "other"
+        }
+      ],
+      "target": "😀\u0000\"",
+      "node": 0,
+      "severedEdges": [
+        0
+      ],
+      "afterNodes": [],
+      "afterEdges": [
+        "retained"
+      ]
+    },
+    {
+      "id": "large-prefix",
+      "nodes": [
+        {
+          "id": "$large:a",
+          "handles": [
+            "$large:handle-a"
+          ]
+        },
+        {
+          "id": "$large:b",
+          "handles": [
+            "$large:handle-b"
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "keep",
+          "source": "$large:handle-b",
+          "target": "other"
+        },
+        {
+          "id": "sever",
+          "source": "other",
+          "target": "$large:handle-a"
+        }
+      ],
+      "target": "$large:a",
+      "node": 0,
+      "severedEdges": [
+        1
+      ],
+      "afterNodes": [
+        "$large:b"
+      ],
+      "afterEdges": [
+        "keep"
+      ]
+    }
+  ],
+  "inverseOwnership": {
+    "maximumItems": 1,
+    "maximumTurnBytes": 4096,
+    "changedOwner": "nativePagedInverse",
+    "unchangedOwner": "retainedOriginal",
+    "journeys": [
+      "missingNodeEmpty",
+      "originalNodeOrdinal",
+      "completeNestedNode",
+      "cascadeOriginalOrder",
+      "completeEdgeGeometry",
+      "optionalFlags",
+      "literalIdentifiers",
+      "zeroGrant",
+      "sourceSwap",
+      "cancelDuringNodeCopy",
+      "cancelDuringEdgeCopy",
+      "cancelDuringIdentifierCopy",
+      "cancelDuringOutputAdmission",
+      "takeOnce",
+      "controlledRetirement"
+    ]
+  }
+}

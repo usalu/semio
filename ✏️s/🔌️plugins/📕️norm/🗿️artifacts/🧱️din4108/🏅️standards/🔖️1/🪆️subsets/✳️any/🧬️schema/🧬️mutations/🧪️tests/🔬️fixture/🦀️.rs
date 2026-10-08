@@ -96,7 +96,7 @@ fn vector_breaches(bundle: &Path, mutation: &Din4108Mutation, reached: &mut BTre
     }
     if status == "applied" {
         let steps = inverse_din4108_mutation(mutation, &before).expect("valid retained mutation inverse fixture");
-        let restored = steps.iter().fold(applied, |document, step| apply(&document, step).0);
+        let restored = steps.iter().rev().fold(applied, |document, step| apply(&document, step).0);
         if steps.is_empty() || restored != before {
             breaches.push(format!("{name}: the mutation's own inverse ({} step(s)) does not restore the before-snapshot", steps.len()));
         }

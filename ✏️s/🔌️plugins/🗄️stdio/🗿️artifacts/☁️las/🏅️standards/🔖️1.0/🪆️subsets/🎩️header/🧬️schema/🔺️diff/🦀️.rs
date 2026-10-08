@@ -737,7 +737,7 @@ fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 }
 
 impl MutationDiff<LasSnapshot> for LasDiff {
-    fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
+    fn apply(&self, base: &LasSnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<LasSnapshot> {
         if let Some(diff) = &self.vlrs {
             validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
         }

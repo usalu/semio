@@ -1,10 +1,14 @@
-//! Diff for `change-assessment-r-k-n`.
+//! 🏋️ `change-assessment-rkn` diff — patches the one field of the row at the index; a missing row is a `mutation.target-missing`.
+
 use super::ChangeAssessmentRKN;
-use crate::{En1998Diff, En1998Snapshot};
+use crate::diff::En1998RowEdit as _;
+use crate::diff::{En1998Diff, En1998AssessmentEdit, En1998AssessmentPatch};
+use crate::En1998Snapshot;
 
 pub fn diff(payload: &ChangeAssessmentRKN, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    let mut assessments = base.assessments.clone();
-    let Some(a) = assessments.get_mut(payload.index) else { return protocol::MutationOutcome::error("mutation.target-missing", "assessment", Vec::<String>::new()); };
-    a.r_k_n = payload.new_r_k_n;
-    protocol::MutationOutcome::new(En1998Diff { assessments: Some(assessments), ..Default::default() })
+    let Some(row) = base.assessments.get(payload.index) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "assessment", Vec::<String>::new());
+    };
+    let patch = En1998AssessmentPatch { r_k_n: Some(payload.new_r_k_n), ..Default::default() };
+    protocol::MutationOutcome::new(En1998Diff { assessments: vec![En1998AssessmentEdit::patch(payload.index, row.id.clone(), patch)], ..Default::default() })
 }

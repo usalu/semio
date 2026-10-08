@@ -160,14 +160,14 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "document",
+    "invocationId",
+    "groupId",
+    "editId",
+    "fallbackAuthor",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "payloadCapacity",
+    "inverseTexts",
+    "operations",
+    "cancelTurns",
+    "inverseWireHex",
+    "zeroInverseWireHex"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "document": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "invocationId": {
+      "type": "string"
+    },
+    "groupId": {
+      "type": "string"
+    },
+    "editId": {
+      "type": "string"
+    },
+    "fallbackAuthor": {
+      "type": "string"
+    },
+    "maximumCopyBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "const": 64
+    },
+    "maximumCapacityBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "const": 1048576
+    },
+    "payloadCapacity": {
+      "type": "integer",
+      "minimum": 0,
+      "const": 8194
+    },
+    "inverseTexts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "schema",
+          "suffix",
+          "author",
+          "dependencies",
+          "baseVersion",
+          "clock"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "suffix": {
+            "type": "string"
+          },
+          "author": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "baseVersion": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clock": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "cancelTurns": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 8
+    },
+    "inverseWireHex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})+$"
+    },
+    "zeroInverseWireHex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})+$"
+    }
+  }
+}

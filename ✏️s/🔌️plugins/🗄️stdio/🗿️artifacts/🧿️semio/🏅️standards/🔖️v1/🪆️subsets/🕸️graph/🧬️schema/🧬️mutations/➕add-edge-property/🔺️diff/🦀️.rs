@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `AddEdgeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeList};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
+use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
 
 //#region 🔖️Diff
 /// 🧮️ An empty key is a Fatal `mutation.invariant`; an edge the graph lacks is `mutation.target-missing`; a key the edge
@@ -17,10 +18,8 @@ pub fn diff(payload: &super::AddEdgeProperty, base: &SemioGraphSnapshot) -> prot
     if edge.properties.iter().any(|property| property.key == payload.property.key) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Edge \"{}\" already has a property \"{}\".", payload.edge_id.value, payload.property.key));
     }
-    let mut edges = base.edges.clone();
-    if let Some(edge) = edges.iter_mut().find(|edge| edge.id == payload.edge_id) {
-        edge.properties.insert(payload.index.min(edge.properties.len()), payload.property.clone());
-    }
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(SemioGraphEdgeList { values: edges }) })
+    let at = base.edges.iter().position(|row| row.id == payload.edge_id).expect("checked above");
+    let properties = IndexedTripleDiff { added: vec![IndexAdded { index: payload.index.min(base.edges[at].properties.len()), item: payload.property.clone() }], ..Default::default() };
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(IndexedTripleDiff { modified: vec![IndexModified { index: at, diff: SemioGraphEdgeDiff { properties: Some(properties), ..Default::default() } }], ..Default::default() }) })
 }
 //#endregion 🔖️Diff

@@ -320,7 +320,7 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
     let drafts: BTreeMap<MutationId, protocol::InputReplacement> =
         [(edited_operation, protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::SetN(SetN { n: 10 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     let mut replay = author.begin_report_replay(&drafts, None).expect("the session replay");
-    assert!(matches!(replay.step(author.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+    drive_test_report_replay(&mut replay, author.replay_edits());
     let finished = replay.finish().expect("a finished replay yields its result");
     author.commit_finished_replay(finished, HistoryFinalization::Alternative { name: "edited".into() }).await.expect("finalize as a new alternative");
     let edited = author.envelope().active_alternative_id.clone().expect("the author stands on the new alternative");
@@ -409,7 +409,7 @@ type SeverityStore = ArtifactStore<DemoSnapshot, SeverityMutation>;
 async fn finalized(store: &mut SeverityStore, target: &MutationId, operation: SeverityMutation, finalization: HistoryFinalization) {
     let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().expect("severity operations encode") })].into_iter().collect();
     let mut replay = store.begin_report_replay(&drafts, None).expect("the session replay");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+    drive_test_report_replay(&mut replay, store.replay_edits());
     let finished = replay.finish().expect("a finished replay yields its result");
     store.commit_finished_replay(finished, finalization).await.expect("the history edit finalizes");
 }
@@ -537,7 +537,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
     let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::AddN(AddN { delta: 80 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     assert_eq!(a.state_before(&target, &drafts).expect("the preview base").n, Some(100));
     let mut early = a.begin_report_replay(&drafts, None).expect("a replay begun before the peer's write");
-    assert!(matches!(early.step(a.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+    drive_test_report_replay(&mut early, a.replay_edits());
     let early = early.finish().expect("a finished replay yields its result");
 
     apply(&mut b, vec![DemoMutation::AddN(AddN { delta: 1000 })]).await;
@@ -551,7 +551,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
     assert!(matches!(a.commit_finished_replay(early, HistoryFinalization::Overwrite).await, Err(VcsError::Stale { .. })), "a replay begun before the base move is stale");
 
     let mut replay = a.begin_report_replay(&drafts, None).expect("accept: the replay over the moved base");
-    assert!(matches!(replay.step(a.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+    drive_test_report_replay(&mut replay, a.replay_edits());
     let accepted = replay.finish().expect("a finished replay yields its result");
     let report = a.replay_report(&accepted).expect("the report");
     assert!(report.outcomes.iter().any(|outcome| outcome.mutation_id == peer_edit), "accept replays the peer's edit too");
@@ -584,7 +584,7 @@ async fn a_port_rebinding_moves_no_content_and_keeps_a_finished_replay() {
     let drafts: BTreeMap<MutationId, protocol::InputReplacement> = [(target, protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: DemoMutation::SetN(SetN { n: 10 }).encode_op().expect("demo operations encode") })].into_iter().collect();
     let finish = |store: &DemoStore| {
         let mut replay = store.begin_report_replay(&drafts, None).expect("the session replay");
-        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), ReplayStep::Finished(_)));
+        drive_test_report_replay(&mut replay, store.replay_edits());
         replay.finish().expect("a finished replay yields its result")
     };
     let kept = finish(&store);

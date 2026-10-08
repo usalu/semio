@@ -1,6 +1,4 @@
-//! 🧾 `set-slide-notes` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧾 `set-slide-notes` — authored as its own mutation leaf; its diff and inverse live in `🔺️diff` and `↩️inverse`.
 
 use super::*;
 
@@ -16,11 +14,11 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "slide-notes", kind: "set-slide-notes", record: "SetSlideNotes" };
 
     fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::Diff> {
-        agg_diff(&SemioPresentationMutation::SetSlideNotes(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioPresentationMutation::SetSlideNotes(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -32,3 +30,10 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

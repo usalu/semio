@@ -12,7 +12,7 @@ mod set_contributions;
 pub use set_contributions::SetContributions;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
-#[mutations(snapshot = ImperativeConfig, diff = ImperativeConfig, schema = "imperative.config")]
+#[mutations(snapshot = ImperativeConfig, diff = ImperativeConfigDiff, schema = "imperative.config")]
 pub enum ImperativeConfigMutation {
     #[dsl(key = "replace-config")]
     ReplaceConfig(ReplaceConfig),

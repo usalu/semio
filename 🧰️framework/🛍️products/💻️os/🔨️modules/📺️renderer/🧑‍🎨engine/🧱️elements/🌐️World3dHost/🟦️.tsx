@@ -93,10 +93,29 @@ import {
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/assets";
 import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAINT, toolRunTraceDataAttributes, useToolRunProvisional, useToolRunTraceCursorEcho, useToolRunTraceStore, type ToolRunTraceRecordStore } from "./⏯️tool-run-trace/🟦️.tsx";
+import {
+  createWorld3dAnnotationStore,
+  resolveWorld3dHighlightPaint,
+  useStableWorld3dLane,
+  useWorld3dScalarFieldMeshes,
+  World3dAnnotationOverlay,
+  World3dAnnotationProjector,
+  World3dScalarLegendView,
+  World3dSectionClip,
+  world3dModellingDataAttributes,
+  world3dModellingStrings,
+  resolveWorld3dToneHex,
+  world3dSelectionWithPickFilter,
+  world3dSubElementPaint,
+  type World3dSubElementPaint,
+} from "./📏️modelling/🟦️.tsx";
 
 const { useFrame, useLoader, useThree } = sceneHostPort.fiber;
 import {
   GestureRecognizer,
+  parseWorld3dAnnotationLayer,
+  parseWorld3dModellingOptions,
+  parseWorld3dScalarField,
   parseViewport3dProjectionFramePolicy,
   windowElementId,
   world3dComputeStatusV1,
@@ -173,6 +192,8 @@ export type WorldMeshData = {
   readonly textures?: Record<string, { readonly mime: string; readonly bytes: readonly number[] }>;
   readonly edgeUvs?: readonly number[];
   readonly edgeIsSeam?: readonly number[];
+  /** 🌡️ Set by the host on the mesh a scalar field paints: its colours are an analysis heatmap and survive hover and selection paint. */
+  readonly heatmap?: true;
 };
 
 export type WorldMeshAttribute = { readonly domain: "vertex" | "corner" | "face" | "edge"; readonly semantic: "normal" | "uv" | "color" | "material" | "custom"; readonly interpolation: "linear" | "nearest" | "constant"; readonly values: readonly unknown[]; readonly indices?: readonly number[] };
@@ -237,6 +258,8 @@ type WorldSelectionTargets = {
   readonly vertex?: boolean;
   readonly edge?: boolean;
   readonly face?: boolean;
+  /** 🎯️ Set by the pick filter: a sub-element miss never falls back to hovering or picking the whole shape. */
+  readonly exclusive?: boolean;
 };
 
 type WorldHoverComponent = {
@@ -2289,6 +2312,7 @@ export type MeshVisuals = { readonly record:WorldMeshRecord;readonly geometry:Bu
 export function buildMeshVisuals(record:WorldMeshRecord):MeshVisuals {
   if(!record.data)return {record,geometry:null,border:null,vertexPick:null,edge:null,appearance:null,closed:false};
   const geometry=geometryFromMesh(record.data);
+  if(record.data.heatmap)geometry.userData.world3dHeatmap=true;
   let border:EdgesGeometry|null=null;let vertexPick:VertexPickData|null=null;let edge:BufferGeometry|null=null;let appearance:WorldMeshAppearance|null=null;
   try {appearance=buildWorldMeshAppearance(record.data,geometry);border=new EdgesGeometry(geometry);vertexPick=buildVertexPickData(record.data);edge=buildEdgeGeometry(record.data);return {record,geometry,border,vertexPick,edge,appearance,closed:false};}
   catch(error){geometry.dispose();border?.dispose();vertexPick?.geometry.dispose();edge?.dispose();if(appearance)disposeWorldMeshAppearance(appearance);throw error;}
@@ -2401,6 +2425,11 @@ function paintTextureUrl(base64: string): string {
   return `data:image/png;base64,${base64}`;
 }
 
+/** 🌡️ How much of the hover or selection emissive tint a heatmap keeps, so the analysis colours stay readable under it. */
+const WORLD_HEATMAP_TINT_SHARE = 0.5;
+/** ✂️ Marks the shaded solid of an instance: the section cap stencils exactly these meshes. */
+const WORLD_SOLID_MESH_USER_DATA = { world3dSolid: true } as const;
+
 function PaintTexturedMesh({
   geometry,
   style,
@@ -2428,10 +2457,12 @@ function PaintTexturedMesh({
   // three.js — white lets them show through in the neutral/disabled styles only. Selected/hovered paint
   // must match url-backed meshes (puzzle 3d, cad): solid token fill + emissive, not a guest-side bake.
   const hasVertexColors = geometry.hasAttribute("color");
-  const preserveVertexColors = hasVertexColors && (styleKind === "neutral" || styleKind === "disabled");
+  const heatmap = geometry.userData.world3dHeatmap === true && styleKind !== "provisional" && styleKind !== "celebrated";
+  const preserveVertexColors = hasVertexColors && (styleKind === "neutral" || styleKind === "disabled" || heatmap);
+  const heatmapTint = preserveVertexColors && styleKind !== "neutral" && styleKind !== "disabled";
   const celebrating = styleKind === "celebrated" && !preserveVertexColors;
   return (
-    <mesh geometry={geometry} {...meshProps}>
+    <mesh geometry={geometry} userData={WORLD_SOLID_MESH_USER_DATA} {...meshProps}>
       {authored ? <primitive object={appearance.materials} attach="material" dispose={null} /> : celebrating ? (
         <CelebratingConicMaterial opacity={style.opacity} />
       ) : (
@@ -2444,8 +2475,8 @@ function PaintTexturedMesh({
           flatShading={flatShading}
           metalness={0}
           roughness={1}
-          emissive={preserveVertexColors ? "#000000" : style.meshColor}
-          emissiveIntensity={preserveVertexColors ? 0 : style.emissiveIntensity}
+          emissive={preserveVertexColors && !heatmapTint ? "#000000" : style.meshColor}
+          emissiveIntensity={preserveVertexColors && !heatmapTint ? 0 : style.emissiveIntensity * (heatmapTint ? WORLD_HEATMAP_TINT_SHARE : 1)}
           transparent={style.opacity < 1}
           opacity={style.opacity}
         />
@@ -3267,6 +3298,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   environmentShadowEnabled,
   faceDragActive,
   onFaceDragStart,
+  subElementPaint,
   onRootRef,
 }: {
   readonly instance: WorldInstanceRecord;
@@ -3307,6 +3339,8 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   readonly previewInstanceSelected?: boolean;
   readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
   readonly environmentShadowEnabled?: boolean;
+  /** 🖍️ Sub-element hover and selection paint: theme defaults unless the scene's highlight tokens override a granularity. */
+  readonly subElementPaint: World3dSubElementPaint;
   /** ⚡️ Registers the instance root group for imperative mid-drag gumball live preview. */
   readonly onRootRef?: (id: string, group: Group | null) => void;
 }) {
@@ -3331,6 +3365,8 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const glbEmissive = glbUsesEnvironmentColor && environmentMaterial?.emissive ? environmentMaterial.emissive : style.meshColor;
   const glbEmissiveIntensity = glbUsesEnvironmentColor && environmentMaterial?.emissive ? (environmentMaterial.emissiveIntensity ?? 1) : style.emissiveIntensity;
   const instancePickEnabled = pickEnabled && !instance.disabled && !provisional;
+  const meshReachable = !targets.exclusive || targets.mesh === true;
+  const wholePickEnabled = instancePickEnabled && meshReachable;
   const lockedClickClears = instance.disabled === true;
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
@@ -3357,7 +3393,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const curveLineWidth = styleKind === "neutral" ? 2 : 4;
 
   return (
-    <group ref={rootRef} position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
+    <group ref={rootRef} position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion} userData={WORLD_INSTANCE_ROOT_USER_DATA}>
       {meshData ? (
         <>
           {hasShadedMesh && geometry ? (
@@ -3424,7 +3460,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                   mode: "face",
                   id: meshData.faceIds[event.faceIndex]!,
                 });
-              } else {
+              } else if (meshReachable) {
                 onInstancePointerMove(instance.id);
               }
             }}
@@ -3518,7 +3554,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
                 if (!targets.vertex) {
-                  onInstancePointerMove(instance.id);
+                  if (meshReachable) onInstancePointerMove(instance.id);
                   return;
                 }
                 const idx = event.index ?? 0;
@@ -3535,59 +3571,59 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
           ) : null}
           {faceSelectedOverlay ? (
             <mesh geometry={faceSelectedOverlay} raycast={() => null}>
-              <meshBasicMaterial color={colors.select} transparent opacity={0.62} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
+              <meshBasicMaterial color={subElementPaint.faceSelect} transparent opacity={0.62} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
             </mesh>
           ) : null}
           {faceHoveredOverlay ? (
             <mesh geometry={faceHoveredOverlay} raycast={() => null}>
-              <meshBasicMaterial color={colors.hover} transparent opacity={0.48} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-3} />
+              <meshBasicMaterial color={subElementPaint.faceHover} transparent opacity={0.48} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-3} />
             </mesh>
           ) : null}
           {facePreviewOverlay ? (
             <mesh geometry={facePreviewOverlay} raycast={() => null}>
-              <meshBasicMaterial color={colors.hover} transparent opacity={0.36} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-4} />
+              <meshBasicMaterial color={subElementPaint.faceHover} transparent opacity={0.36} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-4} />
             </mesh>
           ) : null}
           {edgeSelectedOverlay ? (
             <lineSegments geometry={edgeSelectedOverlay} raycast={() => null} renderOrder={3}>
-              <lineBasicMaterial color={colors.select} linewidth={3} depthTest={false} />
+              <lineBasicMaterial color={subElementPaint.edgeSelect} linewidth={subElementPaint.edgeWidth} depthTest={false} />
             </lineSegments>
           ) : null}
           {edgeHoveredOverlay ? (
             <lineSegments geometry={edgeHoveredOverlay} raycast={() => null} renderOrder={4}>
-              <lineBasicMaterial color={colors.edgeHover} linewidth={3} depthTest={false} />
+              <lineBasicMaterial color={subElementPaint.edgeHover} linewidth={subElementPaint.edgeWidth} depthTest={false} />
             </lineSegments>
           ) : null}
           {edgePreviewOverlay ? (
             <lineSegments geometry={edgePreviewOverlay} raycast={() => null} renderOrder={3}>
-              <lineBasicMaterial color={colors.edgeHover} linewidth={2} depthTest={false} />
+              <lineBasicMaterial color={subElementPaint.edgeHover} linewidth={Math.min(2, subElementPaint.edgeWidth)} depthTest={false} />
             </lineSegments>
           ) : null}
           {vertexSelectedOverlay ? (
             <points geometry={vertexSelectedOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.select} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
+              <pointsMaterial color={subElementPaint.vertexSelect} size={subElementPaint.vertexMarkPx} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
           {vertexHoveredOverlay ? (
             <points geometry={vertexHoveredOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.hover} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
+              <pointsMaterial color={subElementPaint.vertexHover} size={subElementPaint.vertexMarkPx} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
           {vertexPreviewOverlay ? (
             <points geometry={vertexPreviewOverlay} raycast={() => null}>
-              <pointsMaterial color={colors.hover} size={WORLD_VERTEX_MARK_PX} sizeAttenuation={false} depthTest={false} />
+              <pointsMaterial color={subElementPaint.vertexHover} size={subElementPaint.vertexMarkPx} sizeAttenuation={false} depthTest={false} />
             </points>
           ) : null}
         </>
       ) : meshRecord?.url ? (
         <group
           onPointerDown={(event) => {
-            if (!instancePickEnabled && !lockedClickClears) return;
+            if (!wholePickEnabled && !(lockedClickClears && meshReachable)) return;
             event.stopPropagation();
             onInstancePointerDown(instance.id, index, event);
           }}
           onPointerMove={(event) => {
-            if (!instancePickEnabled) return;
+            if (!wholePickEnabled) return;
             event.stopPropagation();
             onInstancePointerMove(instance.id);
           }}
@@ -3605,15 +3641,15 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               material={environmentMaterial}
               shadowEnabled={environmentShadowEnabled}
               revision={styleKind}
-              pickEnabled={instancePickEnabled}
+              pickEnabled={wholePickEnabled}
             />
           </Suspense>
         </group>
       ) : (
         <mesh
-          raycast={worldInstanceMeshRaycast(instancePickEnabled)}
+          raycast={worldInstanceMeshRaycast(wholePickEnabled)}
           onPointerDown={(event) => {
-            if (!instancePickEnabled && !lockedClickClears) return;
+            if (!wholePickEnabled && !(lockedClickClears && meshReachable)) return;
             event.stopPropagation();
             onInstancePointerDown(instance.id, index, event);
           }}
@@ -3629,6 +3665,8 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
 
 //#region WorldInstancesLayer
 const WORLD_INSTANCE_UNIT_SCALE: readonly [number, number, number] = [1, 1, 1];
+/** ✂️ Marks an instance root: the section plane clips the materials under these groups and nothing else. */
+const WORLD_INSTANCE_ROOT_USER_DATA = { world3dInstanceRoot: true } as const;
 const WORLD_INSTANCE_QUATERNION = new WeakMap<WorldInstanceRecord, Quaternion>();
 
 /** 🪪️ One `Quaternion` per instance record object, so an unchanged record (kept by `advanceWorldInstanceResidency`) hands its
@@ -3716,6 +3754,7 @@ function WorldInstancesLayer({
   mergedInstanceIds,
   blockPick,
   environment,
+  subElementPaint,
 }: {
   readonly meshVisuals:ReadonlyMap<string,MeshVisuals>;
   readonly instances: readonly WorldInstanceRecord[];
@@ -3755,6 +3794,7 @@ function WorldInstancesLayer({
   /** Disables instance picking; passed for brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
+  readonly subElementPaint: World3dSubElementPaint;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
   // 🖱️ The component (vertex/edge/face) under the pointer, painted from THIS pane's own raycast the
@@ -4170,6 +4210,7 @@ function WorldInstancesLayer({
               onFaceDragStart={onFaceDragStart}
               environmentMaterial={environment?.material}
               environmentShadowEnabled={environment?.shadow?.enabled === true}
+              subElementPaint={subElementPaint}
               onRootRef={registerInstanceRoot}
             />
           );
@@ -6048,7 +6089,9 @@ export function world3dMarkerInteractionTarget(layer: World3dMarkerLayer, id: st
  * individually paged text carrier beside the surface node and reattached by the Interpreter's
  * `PagedSurfaceView` before this host ever sees it (ticket 26/09/02 wave P). Every `*Json` field is
  * therefore still a plain string here, and the per-lane `useMemo`s below stay the incremental seam:
- * a lane whose content did not change keeps its identical string, so its parse never re-runs. */
+ * a lane whose content did not change keeps its identical string, so its parse never re-runs. The three
+ * modelling lanes (`annotations`, `scalarField`, `modellingOptions`) arrive already typed (`encoding: "json"`)
+ * and keep their identity by lane hash (`useStableWorld3dLane`). */
 export function World3dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
   // 🪟️ Non-empty only — an empty-string `domainId` (never emitted by the Rust side, but defensive
@@ -6218,6 +6261,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     };
     return registerTutorialCameraDriver(windowInstanceId, driver);
   }, [retainViewport, windowInstanceId]);
+  // 📏️ The typed modelling lanes keep their identity while their content hash is unchanged, so an unrelated refresh
+  // that re-parses every JSON lane never re-validates a multi-megabyte scalar field.
+  const laneHash = (lane: string) => scene?.lanes?.find((reference) => reference.lane === lane)?.hash;
+  const rawAnnotations = useStableWorld3dLane(scene?.annotations, laneHash("annotations"));
+  const rawScalarField = useStableWorld3dLane(scene?.scalarField, laneHash("scalarField"));
+  const rawModellingOptions = useStableWorld3dLane(scene?.modellingOptions, laneHash("modellingOptions"));
+  const annotationLayer = useMemo(() => (rawAnnotations === undefined ? undefined : parseWorld3dAnnotationLayer(rawAnnotations) ?? undefined), [rawAnnotations]);
+  const scalarField = useMemo(() => (rawScalarField === undefined ? undefined : parseWorld3dScalarField(rawScalarField) ?? undefined), [rawScalarField]);
+  const modellingOptions = useMemo(() => (rawModellingOptions === undefined ? undefined : parseWorld3dModellingOptions(rawModellingOptions) ?? undefined), [rawModellingOptions]);
+  const annotationStore = useMemo(createWorld3dAnnotationStore, []);
+  const highlightPaint = useMemo(() => resolveWorld3dHighlightPaint(modellingOptions?.highlight), [modellingOptions?.highlight, meshStylePalette]);
+  const subElementPaint = useMemo(() => world3dSubElementPaint(colors, highlightPaint, { edgeWidth: 3, vertexMarkPx: WORLD_VERTEX_MARK_PX }), [colors, highlightPaint]);
+  const sectionCapHex = useMemo(() => (modellingOptions?.section?.cap ? resolveWorld3dToneHex(modellingOptions.section.cap.tone) : undefined), [modellingOptions?.section?.cap, meshStylePalette]);
   // 🧊️ The retained mesh set advances per mesh, so a refresh that republishes an unchanged mesh keeps
   // that record's object identity and the instanced layer keeps its already-built buffers.
   const meshResidencyRef = useRef<WorldMeshResidencyV1 | null>(null);
@@ -6226,9 +6282,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     meshResidencyRef.current = advanced;
     return advanced.records as WorldMeshRecord[];
   }, [scene?.meshesJson]);
-  const meshVisuals=useWorldMeshVisuals(meshes);
+  const heatmap = useWorld3dScalarFieldMeshes(meshes, scalarField);
+  const meshVisuals=useWorldMeshVisuals(heatmap.records as readonly WorldMeshRecord[]);
   const paneLeftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, () => leftoverWorldWindowOverlayV1(windowInstanceId), () => leftoverWorldWindowOverlayV1(windowInstanceId));
-  const selection = useMemo(() => mergeWorldSelectionWithLeftoverV1(parseSelection(scene?.selectionJson ?? "{}"), paneLeftover, instances), [paneLeftover, scene?.selectionJson, instances]);
+  const mergedSelection = useMemo(() => mergeWorldSelectionWithLeftoverV1(parseSelection(scene?.selectionJson ?? "{}"), paneLeftover, instances), [paneLeftover, scene?.selectionJson, instances]);
+  const selection = useMemo(() => world3dSelectionWithPickFilter(mergedSelection, modellingOptions?.pickFilter), [mergedSelection, modellingOptions?.pickFilter]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
   const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
@@ -6255,6 +6313,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if ((minimum as number[]).every((value, axis) => value === (maximum as number[])[axis])) return null;
     return [minimum, maximum];
   }, [fit?.boundsMin, fit?.boundsMax]);
+  /** ✂️ Half the side of the section cap plane: twice the delivered extent's diagonal, so the cap covers the cut wherever the plane origin sits. */
+  const sectionExtent = useMemo(() => {
+    if (autoFitBounds) return Math.max(1, 2 * Math.hypot(autoFitBounds[1][0]! - autoFitBounds[0][0]!, autoFitBounds[1][1]! - autoFitBounds[0][1]!, autoFitBounds[1][2]! - autoFitBounds[0][2]!));
+    if (contentBounds) return Math.max(1, 4 * Math.hypot(contentBounds.halfExtent[0], contentBounds.halfExtent[1], contentBounds.halfExtent[2]));
+    return 100;
+  }, [autoFitBounds, contentBounds]);
   liveFitRevisionRef.current = fit?.revision ?? 0;
   // 🧵️ Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
   // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
@@ -7974,6 +8038,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
       data-sun-json={world3dSunDomJson(environment)}
+      {...world3dModellingDataAttributes({ pickFilter: modellingOptions?.pickFilter, section: modellingOptions?.section, scalarField, scalarStatus: heatmap.status, annotationCount: annotationLayer?.items.length })}
       {...toolRunTraceDataAttributes(toolRunTrace.store)}
       onContextMenu={(event) => {
         const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
@@ -8029,12 +8094,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         cameraUp={(cameraState.up as [number, number, number] | undefined) ?? [0, 0, 1]}
         cameraFov={cameraState.fov}
         background={environment && !isTransparentWorldBackground(environment.background) ? environment.background : undefined}
-        gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true } : undefined}
+        gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true, stencil: true } : undefined}
         shadows={environment?.shadow?.enabled === true ? true : undefined}
         onPointerMissed={handleEmptyClick}
         overlay={
           <>
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
+            {annotationLayer ? <World3dAnnotationOverlay layer={annotationLayer} store={annotationStore} locale={shellScope?.i18n.language} /> : null}
+            {scalarField && heatmap.status === "applied" ? <World3dScalarLegendView field={scalarField} locale={shellScope?.i18n.language} className={cn("pointer-events-none absolute bottom-2 left-2 z-40 rounded px-single py-half text-xs shadow-sm", glassClass)} /> : null}
+            {scalarField && heatmap.status === "mismatch" ? (
+              <div role="status" data-slot="world-scalar-field-mismatch" className={cn("pointer-events-none absolute bottom-2 left-2 z-40 rounded px-single py-half text-xs shadow-sm", glassClass)}>
+                {world3dModellingStrings(shellScope?.i18n.language).mismatch}
+              </div>
+            ) : null}
             <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} windowElementSegment={windowInstanceId ?? node.surfaceId} />
             {/* 🚧️ Scene overlays are window CONTENT, so they start below the window's own floating chrome
                 control row ({@link windowChromeClearedTopOffset}) and stay out of the top-left corner the
@@ -8197,8 +8269,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 mergedInstanceIds={visibleSelectionPreview.mergedInstanceIds}
                 blockPick={worldInstancePickBlocked(activeUtility)}
                 environment={environment}
+                subElementPaint={subElementPaint}
               />
             </group>
+            {annotationLayer ? <World3dAnnotationProjector layer={annotationLayer} store={annotationStore} /> : null}
+            {modellingOptions?.section ? <World3dSectionClip section={modellingOptions.section} groupRef={instancesGroupRef} capHex={sectionCapHex} extent={sectionExtent} /> : null}
             <WorldVortexMarkers
               vortices={previewVortices}
               palette={meshStylePalette}

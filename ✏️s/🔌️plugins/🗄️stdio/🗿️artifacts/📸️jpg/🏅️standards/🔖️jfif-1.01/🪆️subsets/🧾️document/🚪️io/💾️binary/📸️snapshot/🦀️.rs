@@ -32,3 +32,6 @@ impl store::ArtifactPack for JpgSnapshot {
 }
 }
 pub use snapshot_codec::*;
+
+#[path="🧾️observations/🦀️.rs"]
+pub mod observations;

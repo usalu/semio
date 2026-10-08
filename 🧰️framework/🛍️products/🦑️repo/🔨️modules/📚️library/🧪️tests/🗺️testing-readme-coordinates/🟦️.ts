@@ -135,7 +135,7 @@ test("documentation correction leaves the original forty-row authority and basel
   expect(sha(readOwned(vector.documents.readme))).not.toBe(row.preimage.sha256);
 });
 
-test("documentation gate registration matches the declared Nx route and both launch catalogs", () => {
+test("documentation gate registration matches the declared Nx route", () => {
   const expected = vector.execution, packagePath = relative(root, libraryRoot).split("\\").join("/") + "/📦️packages/🟦️typescript";
   const projectSource = readOwned(packagePath + "/📋️project.json").toString("utf8"), project = JSON.parse(projectSource), errors: ParseError[] = [];
   expect(parseJson(projectSource, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(project);
@@ -150,10 +150,4 @@ test("documentation gate registration matches the declared Nx route and both lau
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
   expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const errors: ParseError[] = [], configurations = parseJson(readOwned(path).toString("utf8"), errors).configurations;
-    expect(errors, path).toEqual([]);
-    expect(configurations.filter((row: any) => row.name === expected.launchName), path).toEqual([{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }]);
-    expect(configurations.filter((row: any) => row.presentation?.group === expected.launchGroup && row.presentation?.order === expected.launchOrder), path).toHaveLength(1);
-  }
 });

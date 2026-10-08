@@ -681,6 +681,19 @@
       }
     },
     "native-release": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "variant",
+                "kind": "text",
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
       "executor": "nx:run-commands",
       "cache": false,
       "continuous": true,
@@ -861,7 +874,10 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test worker-cell"
+        "command": "bun ./📜️script.ts test worker-cell",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/worker-cell/🗑️generated"
+        }
       }
     }
   },

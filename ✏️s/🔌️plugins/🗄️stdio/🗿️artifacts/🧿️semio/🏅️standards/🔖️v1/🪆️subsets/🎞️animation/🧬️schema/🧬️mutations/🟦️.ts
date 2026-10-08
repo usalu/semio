@@ -1,11 +1,8 @@
 /** 🧬️ SemioAnimationMutation schema — real mirror of `🦀️.rs` (the source of truth).
  * Discriminated union on the `mutation` tag (`#[serde(tag = "mutation", rename_all = "camelCase")]`). */
 import type { SemioAnimationSnapshot, AnimTimeline, AnimChannel, AnimKeyframe, AnimTarget, AnimInterpolation, AnimValue } from "../📸️snapshot/🟦️";
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type SemioAnimationMutation =
-  | { mutation: "setSnapshot"; snapshot: SemioAnimationSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: "insertTimeline"; index: number; timeline: AnimTimeline }
   | { mutation: "removeTimeline"; index: number }
   | { mutation: "setTimelineName"; index: number; name: string | null }

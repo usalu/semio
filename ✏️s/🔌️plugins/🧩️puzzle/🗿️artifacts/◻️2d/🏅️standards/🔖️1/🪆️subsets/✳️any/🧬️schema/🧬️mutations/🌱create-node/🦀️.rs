@@ -8,8 +8,7 @@ use crate::{Puzzle2dNode, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload at an optional FINAL-state `index` (`None`
-/// appends). A duplicate `node.id` is a no-op (an id-keyed entity that already exists cannot be
-/// re-created).
+/// appends). A duplicate `node.id` refuses creation.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -47,3 +46,6 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for CreateNode {
     }
 }
 //#endregion 🔖️Mutation
+
+#[path = "🎮️prepare/🦀️.rs"]
+pub mod preparation;

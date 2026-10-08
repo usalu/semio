@@ -6,6 +6,6 @@ start document
 document = header body
 header = "semio" SP "flow.flow.dsl" SP "v1" NL
 body = "schema=" TEXT SP "content=" child NL?
-child = "childId=" TEXT SP "target=" target
-target = "artifactId=" TEXT SP "artifactKind=" TEXT SP "standard=" TEXT SP "subset=" TEXT
+child = "child_id=" TEXT SP "target=" target
+target = "artifact-id=" TEXT SP "artifact-kind=" TEXT SP "standard=" TEXT SP "subset=" TEXT
 TEXT = BARE_TEXT | QUOTED_TEXT

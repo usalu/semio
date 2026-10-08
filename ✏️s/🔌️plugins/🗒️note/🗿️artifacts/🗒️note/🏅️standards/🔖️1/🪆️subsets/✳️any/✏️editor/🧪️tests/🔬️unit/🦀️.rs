@@ -374,7 +374,7 @@ async fn the_block_verbs_refuse_what_they_cannot_apply() {
     let mut ids = crate::schema::NoteIdOwner::new("block-verb-refusals", 0);
     let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
     let target = crate::schema::block_id(&block).to_string();
-    let document = NoteSnapshot { blocks: vec![block], ..crate::schema::empty_note_snapshot() };
+    let document = NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let history = semio_framework_plugin::HistoryView::empty();
     let config = semio_framework_plugin::NoConfig::default();
     let doc = semio_framework_plugin::ArtifactView::new(&document, &history);
@@ -445,7 +445,7 @@ async fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_co
 /// links — a top-level block has no parent, every group child's parent is the group's own row id.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_walks_group_nesting_into_parent_links() {
-    let document = crate::schema::semio_example_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -480,7 +480,7 @@ async fn delete_selection_deletes_the_selected_blocks() {
     let mut ids = crate::schema::NoteIdOwner::new("delete-selection-test", 0);
     let block = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
     let target = crate::schema::block_id(&block).to_string();
-    let document = NoteSnapshot { blocks: vec![block], ..crate::schema::empty_note_snapshot() };
+    let document = NoteSnapshot { blocks: vec![block], ..crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot() };
     let history = semio_framework_plugin::HistoryView::empty();
     let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: vec![target.clone()], id_owner: crate::schema::NoteIdOwner::new("delete-selection-test", 1), view_state: None, window_transient: Default::default(), window_transient_owner: None };
     let emit = delete_selection::handle(&delete_selection::DeleteSelection {}, &semio_framework_plugin::ArtifactView::new(&document, &history), &semio_framework_plugin::ConfigView { snapshot: &semio_framework_plugin::NoConfig::default(), window: None }, &mut ctx).expect("delete selection");

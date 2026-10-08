@@ -75,13 +75,10 @@ use super::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
 pub enum SemioBrepMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateVertex(create_vertex::CreateVertex),
     DeleteVertex(delete_vertex::DeleteVertex),
     CreateEdge(create_edge::CreateEdge),
@@ -102,24 +99,22 @@ pub enum SemioBrepMutation {
 /// `🧊️mutate-semio-brep`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
 /// the_catalog` below is what keeps this list honest against the enum, since the framework never
 /// parses Rust.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
+pub const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioBrepBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &SemioBrepMutation) -> protocol::MutationOutcome<SemioBrepDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
+    <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🧊️mutate-semio-brep` test adapter, whose `inverse-<kind>` scenarios
 /// need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_brep_mutation`] alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -175,7 +170,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
     use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
-        SemioBrepMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }, tol: 2e-7 }),
         SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() }),
         SemioBrepMutation::CreateEdge(create_edge::CreateEdge {

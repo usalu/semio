@@ -8,6 +8,7 @@
 //! are interaction, never mutations: the session derives their selection query from the tool's context at the release.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_value::{list::PagedList,paged::{PagedUtf8,Utf8Text}};
 use crate::editor::drawing::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
 use crate::editor::drawing::interaction::points;
 use crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
@@ -69,7 +70,7 @@ fn append_lasso_point(context: &mut DrawingToolContext, point: [f64;2], spacing:
 /// selection bounds when a transform handle was hit — or path points.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DrawingGrab {
-    Layers { targets: Vec<String>, handle: Option<(usize, [f64; 4])> },
+    Layers { targets: PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>, handle: Option<(usize, [f64; 4])> },
     Points { targets: Vec<DrawingPathPointTarget> },
 }
 
@@ -820,7 +821,7 @@ pub(crate) struct TracePickCandidate {
 // impl — never serialized in this plugin (grep-confirmed).
 pub(crate) struct TracePointerJob {
     app_instance_id: u32,
-    document_id: String,
+    document_id: PagedUtf8<{usize::MAX}>,
     operation_id: u64,
     generation: u64,
     base_revision: String,
@@ -885,7 +886,7 @@ impl TracePointerJob {
     fn new_operation(operation: &AppOperationContext, document: &DrawingSnapshot, world: [f64; 2]) -> Self {
         let mut job = Self::new_bound(operation.generation, document, world, operation.canonical_base_revision_hex());
         job.app_instance_id = operation.app_instance_id;
-        job.document_id = operation.parent_document_id.clone();
+        job.document_id = operation.parent_document_id.as_str().into();
         job.operation_id = operation.operation_id;
         job
     }
@@ -967,7 +968,7 @@ impl TracePointerJob {
                         let Some(DrawingLayerNode::Path(layer))=drawing_layer_at_path(&document.layers,&path)else{return Err(Fault::from("Authored control path changed"));};
                         if let Some(segment)=layer.segments.get(next){
                             if let Some((point,distance))=path_point_hit(segment,matrix,self.world,self.tolerance){
-                                if self.node_editing&&self.selected_ids.contains(&layer.base.id)&&self.node_hit.as_ref().is_none_or(|(previous,_,_,old)|previous.indices==path.indices&&previous.len==path.len&&distance<*old){self.node_hit=Some((path,next,point,distance));}
+                                if self.node_editing&&self.selected_ids.iter().any(|id|layer.base.id.eq_str(id))&&self.node_hit.as_ref().is_none_or(|(previous,_,_,old)|previous.indices==path.indices&&previous.len==path.len&&distance<*old){self.node_hit=Some((path,next,point,distance));}
                                 if self.include_control_points&&self.best.as_ref().is_none_or(|best|best.generality<4){self.best=Some(TracePickCandidate{generality:4,layer_id:scene.plan.nodes[index].id.clone(),image_key:None,path});}
                             }
                             self.push_work(TracePointerWork::ControlSegments{index,path,next:next+1,matrix});
@@ -1018,7 +1019,7 @@ impl TracePath{
  fn from_source(source:&[u16])->Option<Self>{if source.is_empty()||source.len()>TRACE_POINTER_MAX_DEPTH{return None;}let mut path=Self{indices:[0;TRACE_POINTER_MAX_DEPTH],len:source.len()as u8};path.indices[..source.len()].copy_from_slice(source);Some(path)}
 }
 
-fn drawing_layer_at_path<'a>(roots: &'a [DrawingLayerNode], path: &TracePath) -> Option<&'a DrawingLayerNode> {
+fn drawing_layer_at_path<'a>(roots: &'a PagedList<DrawingLayerNode,{usize::MAX}>, path: &TracePath) -> Option<&'a DrawingLayerNode> {
     let mut indices = path.indices();
     let mut layer = roots.get(indices.next()?)?;
     for index in indices {
@@ -1028,13 +1029,17 @@ fn drawing_layer_at_path<'a>(roots: &'a [DrawingLayerNode], path: &TracePath) ->
     Some(layer)
 }
 
-fn trace_path_matrix(roots: &[DrawingLayerNode], path: &TracePath) -> Option<[f64;6]> {
+fn trace_path_matrix(roots: &PagedList<DrawingLayerNode,{usize::MAX}>, path: &TracePath) -> Option<[f64;6]> {
     let mut layers=roots;
     let mut matrix=[1.0,0.0,0.0,1.0,0.0,0.0];
-    for index in path.indices() {
+    let mut indices=path.indices().peekable();
+    while let Some(index)=indices.next() {
         let layer=layers.get(index)?;
         matrix=crate::schema::geometry::multiply(matrix,crate::schema::drawing_transform_to_matrix(&trace_layer_base(layer).transform));
-        layers=if let DrawingLayerNode::Group(group)=layer { &group.children } else { &[] };
+        if indices.peek().is_some() {
+            let DrawingLayerNode::Group(group)=layer else {return None;};
+            layers=&group.children;
+        }
     }
     Some(matrix)
 }
@@ -1122,7 +1127,7 @@ struct LayerGrabPreparation {
     ids: Vec<String>,
     next: Option<TracePath>,
     found: usize,
-    targets: Vec<(TracePath, String)>,
+    targets: Vec<(TracePath, PagedUtf8<{usize::MAX}>)>,
     handle: Option<(usize, [f64; 4])>,
 }
 
@@ -1157,7 +1162,7 @@ impl LayerGrabPreparation {
         if matches!(layer,DrawingLayerNode::Group(group) if !group.children.is_empty()) && usize::from(path.len)>=TRACE_POINTER_MAX_DEPTH { return Err(Fault::from("Selection exceeds the gesture traversal depth")); }
         self.next=next_layer_path(document,path);
         let base=trace_layer_base(layer);
-        if !self.ids.contains(&base.id) { return Ok(false); }
+        if !self.ids.iter().any(|id|base.id.eq_str(id)) { return Ok(false); }
         self.found+=1;
         if self.targets.iter().any(|(target,_)|crate::schema::geometry::translation::path_contains(&target.indices[..usize::from(target.len)],&path.indices[..usize::from(path.len)])) { return Ok(false); }
         let mut prefix=path;
@@ -1438,7 +1443,7 @@ impl DrawingSession {
                 let Some(candidate)=query.cursor.best.as_ref() else {query.grab_prepared=true;return Ok(true);};
                 let mut prefix=candidate.path;
                 while prefix.len>0 {
-                    if drawing_layer_at_path(&document.layers,&prefix).is_some_and(|layer|ids.contains(&trace_layer_base(layer).id)) {query.preserve_selection=true;break;}
+                    if drawing_layer_at_path(&document.layers,&prefix).is_some_and(|layer|ids.iter().any(|id|trace_layer_base(layer).id.eq_str(id))) {query.preserve_selection=true;break;}
                     prefix.len-=1;
                 }
                 if query.preserve_selection {ids.to_vec()} else {vec![candidate.layer_id.clone()]}
@@ -1473,16 +1478,16 @@ impl DrawingSession {
         Ok(())
     }
 
-    fn take_trace_pointer(&mut self, app_instance_id: u32, document_id: &str, operation_id: u64, generation: u64, base_revision: &str) -> Option<TracePointerJob> {
+    fn take_trace_pointer(&mut self, app_instance_id: u32, document_id: &(impl Utf8Text+?Sized), operation_id: u64, generation: u64, base_revision: &str) -> Option<TracePointerJob> {
         let job = self.trace_pointer.as_ref()?;
-        if job.app_instance_id != app_instance_id || job.document_id != document_id || job.operation_id != operation_id || job.generation != generation || job.base_revision != base_revision {
+        if job.app_instance_id != app_instance_id || !job.document_id.eq_text(document_id) || job.operation_id != operation_id || job.generation != generation || job.base_revision != base_revision {
             return None;
         }
         self.trace_pointer.take()
     }
 
-    pub(crate) fn cancel_trace_pointer(&mut self, app_instance_id: u32, document_id: &str, generation: u64) -> bool {
-        let matches = self.trace_pointer.as_ref().is_some_and(|job| job.app_instance_id == app_instance_id && job.document_id == document_id && generation != 0 && job.generation == generation);
+    pub(crate) fn cancel_trace_pointer(&mut self, app_instance_id: u32, document_id: &(impl Utf8Text+?Sized), generation: u64) -> bool {
+        let matches = self.trace_pointer.as_ref().is_some_and(|job| job.app_instance_id == app_instance_id && job.document_id.eq_text(document_id) && generation != 0 && job.generation == generation);
         if matches {
             self.trace_pointer = None;
         }
@@ -1510,7 +1515,7 @@ impl DrawingSession {
                     None => Some([1.0, 0.0, 0.0, 1.0, context.cursor[0] - context.start[0], context.cursor[1] - context.start[1]]),
                     Some((handle, bounds)) => handle_motion(*handle, *bounds, context.start, context.cursor, context.constrained, context.centered).map(HandleMotion::matrix),
                 };
-                (matrix.map(|matrix| (targets.clone(), matrix)), None)
+                (matrix.map(|matrix| (targets.iter().map(PagedUtf8::to_string_owner).collect(), matrix)), None)
             }
             Some(grab @ DrawingGrab::Points { targets }) => match drawing_grab_leaf(grab, context.start, context.cursor, context.constrained, context.centered) {
                 Some(DrawingMutation::DragPathPoints(drag)) => (None, Some(DrawingNodeTranslation { targets: targets.clone(), delta: [drag.dx, drag.dy] })),
@@ -1536,7 +1541,7 @@ fn retain_trace_progress(session: &mut DrawingSession, job: &TracePointerJob) {
 fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Effect {
     let continuation = CanvasPointerDown {
         app_instance_id: Some(job.app_instance_id),
-        parent_document_id: Some(job.document_id.clone()),
+        parent_document_id: Some(job.document_id.to_string_owner()),
         operation_id: Some(job.operation_id),
         generation: Some(job.generation),
         base_revision: Some(job.base_revision.clone()),
@@ -1566,7 +1571,7 @@ fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob,
         let _ = session.retain_trace_pointer(job);
         return Ok(Emit { effects: vec![effect], ..Default::default() });
     }
-    let source_key = job.best.and_then(|candidate| candidate.image_key).or_else(|| base.document.assets.keys().next().cloned());
+    let source_key = job.best.and_then(|candidate| candidate.image_key).or_else(|| base.document.assets.keys().next().map(PagedUtf8::to_string_owner));
     session.window_transient.trace_pointer_generation = 0;
     session.window_transient.trace_pointer_completed_work = 0;
     session.window_transient.trace_pointer_pending_work = 0;

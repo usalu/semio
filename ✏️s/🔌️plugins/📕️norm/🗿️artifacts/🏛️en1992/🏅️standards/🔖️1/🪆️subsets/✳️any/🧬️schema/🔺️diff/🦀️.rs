@@ -4,7 +4,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for En1992.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -36,7 +36,7 @@ pub struct En1992Diff {
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -44,7 +44,7 @@ pub struct En1992ConcreteGradeList {
     pub values: Vec<crate::ConcreteGrade>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -52,7 +52,7 @@ pub struct En1992ReinforcementGradeList {
     pub values: Vec<crate::ReinforcementGrade>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -60,7 +60,7 @@ pub struct En1992PrestressSteelList {
     pub values: Vec<crate::PrestressSteel>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -68,7 +68,7 @@ pub struct En1992MemberList {
     pub values: Vec<crate::RcMember>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -76,7 +76,7 @@ pub struct En1992AnchorList {
     pub values: Vec<crate::Anchor>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]

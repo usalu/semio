@@ -92,15 +92,6 @@ describe("manifestless source closure", () => {
     }
   });
 
-  test("registers the closure gate in both editor launch authorities", () => {
-    const name = "🧹clean🧩️taxonomy🧪️manifestless-source-closure";
-    const command = "bun nx run @semio-tech/repo-lib:test-manifestless-source-closure";
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const launch = Bun.JSONC.parse(readFileSync(resolve(repoRoot, path), "utf8")) as { readonly configurations: readonly { readonly name?: string; readonly command?: string }[] };
-      expect(launch.configurations.filter((row) => row.name === name && row.command === command), path).toHaveLength(1);
-    }
-  });
-
   test("executes the descriptor probe in native Node and rejects an incomplete actor API", async () => {
     const descriptor = await import(pathToFileURL(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts")).href);
     const root = mkdtempSync(join(tmpdir(), "semio-manifestless-descriptor-"));

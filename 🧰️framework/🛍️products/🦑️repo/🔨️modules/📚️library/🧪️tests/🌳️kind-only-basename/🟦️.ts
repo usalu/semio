@@ -121,18 +121,6 @@ describe("kind-only implementation leaf taxonomy", () => {
     expect(implementationLeafBasenameFinding("🧰️naked/📦️packages/🦀️rust/build.rs", taxonomy)).toMatchObject({ breachId: "taxonomy/kind-only-basename", expectedBasename: "🦀️.rs", exemptionAuthorityId: null });
   });
 
-  test("derives every focused implementation command from the launch seed authority", () => {
-    const expected = [
-      ["🧹clean🧩️taxonomy🧪️kind-only-basename", "bun nx run @semio-tech/repo-lib:test-kind-only-basename"],
-      ["📦️verify🧩️taxonomy🌳️implementation📋️report", "bun nx run workspace:verify-taxonomy-implementation-report"],
-      ["📦️verify🧩️taxonomy🌳️implementation🚦️enforce", "bun nx run workspace:verify-taxonomy-implementation-enforce"],
-    ] as const;
-    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const document = Bun.JSONC.parse(readFileSync(join(repoRoot, path), "utf8")) as { readonly configurations: readonly { readonly name?: string; readonly command?: string }[] };
-      for (const [name, command] of expected) expect(document.configurations.filter((row) => row.name === name && row.command === command), `${path}: ${name}`).toHaveLength(1);
-    }
-  });
-
   test("discovers only target-first packages and rejects the inverse topology", () => {
     const root = materialize();
     try {

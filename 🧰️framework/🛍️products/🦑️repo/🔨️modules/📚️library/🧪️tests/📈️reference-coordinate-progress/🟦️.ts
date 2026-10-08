@@ -184,22 +184,15 @@ test("actual plan and apply callers forward progress without changing the marker
   expect(ts.isArrowFunction(calls("capturePreflightReferenceBasis", "referenceCoordinateRoots")[0]!.arguments[4]!)).toBe(true);
 });
 
-test("registration only: coordinate progress has one exact route package and launch owner", () => {
+test("registration only: coordinate progress has one exact route and package owner", () => {
   const registration = vector.registration;
   const project = JSON.parse(input(packageRoot + "/📋️project.json").toString("utf8"));
   const packageJson = JSON.parse(input(packageRoot + "/package.json").toString("utf8"));
   const router = input(packageRoot + "/📜️script.ts").toString("utf8");
-  const launches = [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"].map((path) => parseJsonc(input(path).toString("utf8")));
   expect(project.targets[registration.target]?.options?.command).toBe("bun ./📜️script.ts test " + registration.command);
   expect(packageJson.scripts?.[registration.target]).toBe("nx run @semio-tech/repo-lib:" + registration.target);
   expect(router).toContain('"' + registration.command + '"');
   expect(router).toContain(registration.testPath);
-  for (const data of launches) {
-    const rows = data.configurations.filter((row: any) => row.name === registration.launchName);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.command).toBe(registration.nxCommand);
-    expect(rows[0]?.presentation).toEqual({ group: registration.group, order: registration.order });
-  }
 });
 
 afterAll(() => {

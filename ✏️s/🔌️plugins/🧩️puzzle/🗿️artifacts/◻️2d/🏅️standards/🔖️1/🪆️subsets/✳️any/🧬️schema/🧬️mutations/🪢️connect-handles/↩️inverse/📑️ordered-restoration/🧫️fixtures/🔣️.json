@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "journeys": [
+    "firstEdge",
+    "middleEdge",
+    "lastEdge",
+    "allCascadeEdges",
+    "selfEdgeOnce",
+    "optionalFalse",
+    "optionalTrue",
+    "absentFlags",
+    "unicodeNul",
+    "clampedInsertion"
+  ],
+  "cases": [
+    {
+      "name": "firstFalse",
+      "edges": [
+        {
+          "id": "first",
+          "source": "handle",
+          "target": "outside",
+          "visible": false,
+          "locked": false
+        },
+        {
+          "id": "retained",
+          "source": "outside",
+          "target": "outside"
+        }
+      ],
+      "removed": [
+        0
+      ]
+    },
+    {
+      "name": "middleTrue",
+      "edges": [
+        {
+          "id": "a",
+          "source": "outside",
+          "target": "outside"
+        },
+        {
+          "id": "middle",
+          "source": "handle",
+          "target": "outside",
+          "visible": true,
+          "locked": true
+        },
+        {
+          "id": "b",
+          "source": "outside",
+          "target": "outside"
+        }
+      ],
+      "removed": [
+        1
+      ]
+    },
+    {
+      "name": "lastAbsent",
+      "edges": [
+        {
+          "id": "retained",
+          "source": "outside",
+          "target": "outside"
+        },
+        {
+          "id": "last",
+          "source": "outside",
+          "target": "handle"
+        }
+      ],
+      "removed": [
+        1
+      ]
+    },
+    {
+      "name": "cascadeInterleaved",
+      "edges": [
+        {
+          "id": "source",
+          "source": "handle",
+          "target": "outside",
+          "visible": false,
+          "locked": true
+        },
+        {
+          "id": "retainedA",
+          "source": "outside",
+          "target": "outside"
+        },
+        {
+          "id": "self",
+          "source": "handle",
+          "target": "handle",
+          "visible": true,
+          "locked": false
+        },
+        {
+          "id": "retainedB",
+          "source": "outside",
+          "target": "outside"
+        },
+        {
+          "id": "target",
+          "source": "outside",
+          "target": "handle"
+        }
+      ],
+      "removed": [
+        0,
+        2,
+        4
+      ]
+    },
+    {
+      "name": "unicodeNul",
+      "edges": [
+        {
+          "id": "😀\u0000é",
+          "source": "handle",
+          "target": "outside",
+          "visible": false
+        },
+        {
+          "id": "é",
+          "source": "outside",
+          "target": "outside"
+        },
+        {
+          "id": "é",
+          "source": "outside",
+          "target": "handle",
+          "locked": false
+        }
+      ],
+      "removed": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "allRemoved",
+      "edges": [
+        {
+          "id": "a",
+          "source": "handle",
+          "target": "outside",
+          "visible": true
+        },
+        {
+          "id": "b",
+          "source": "outside",
+          "target": "handle",
+          "locked": true
+        }
+      ],
+      "removed": [
+        0,
+        1
+      ]
+    }
+  ],
+  "insertions": [
+    {
+      "before": [
+        "a",
+        "b"
+      ],
+      "index": null,
+      "after": [
+        "a",
+        "b",
+        "new"
+      ]
+    },
+    {
+      "before": [
+        "a",
+        "b"
+      ],
+      "index": 0,
+      "after": [
+        "new",
+        "a",
+        "b"
+      ]
+    },
+    {
+      "before": [
+        "a",
+        "b"
+      ],
+      "index": 1,
+      "after": [
+        "a",
+        "new",
+        "b"
+      ]
+    },
+    {
+      "before": [
+        "a",
+        "b"
+      ],
+      "index": 2,
+      "after": [
+        "a",
+        "b",
+        "new"
+      ]
+    },
+    {
+      "before": [
+        "a",
+        "b"
+      ],
+      "index": 99,
+      "after": [
+        "a",
+        "b",
+        "new"
+      ]
+    },
+    {
+      "before": [],
+      "index": 0,
+      "after": [
+        "new"
+      ]
+    }
+  ]
+}

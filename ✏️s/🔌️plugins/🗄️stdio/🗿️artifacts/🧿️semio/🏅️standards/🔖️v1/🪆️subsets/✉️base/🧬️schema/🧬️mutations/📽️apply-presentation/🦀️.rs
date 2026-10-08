@@ -1,7 +1,6 @@
 //! 📽️ `apply-presentation` — authored as its own mutation leaf. Routes this envelope's own dispatch to
 //! `stdio.semio`'s Presentation subset: `diff`/`inverse` delegate straight through to
-//! `SemioPresentationMutation`'s own already-real `Mutation` impl (via `agg_diff`/`agg_inverse`, lifted
-//! verbatim from the former hand-rolled `impl Mutation`), never re-deriving that subset's own
+//! `SemioPresentationMutation`'s own already-real `Mutation` impl (via its `🔺️diff` and `↩️inverse`), never re-deriving that subset's own
 //! per-field logic — the envelope routes, it does not redefine.
 
 use super::*;
@@ -17,11 +16,11 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyPresentation 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "presentation", kind: "apply-presentation", record: "ApplyPresentation" };
 
     fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<<SemioMutation as Mutation<SemioSnapshot>>::Diff> {
-        agg_diff(&SemioMutation::ApplyPresentation(self.clone()), base)
+        diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&SemioMutation::ApplyPresentation(self.clone()), base)?
+        inverse::inverse(self, base)?
     
     })
 }
@@ -33,3 +32,10 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyPresentation 
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+mod inverse;
+//#endregion 🪢️TaxonomyMounts

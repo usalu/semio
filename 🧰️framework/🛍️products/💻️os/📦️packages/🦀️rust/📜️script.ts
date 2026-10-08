@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-os-kernel` task router. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -1877,7 +1878,8 @@ class CanonicalArchitectureScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -2555,6 +2557,22 @@ class MemberDialectSourceScript extends BundleScript {
   }
 }
 
+/** 🪪️ Check retained input identity costs with independent UTF8 byte authorities. */
+class MemberInputCensusSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments, "quick");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
+  }
+}
+
+/** 🤝️ Check common member publication against independent SQLite isolation. */
+class MemberGroupPublicationSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments, "quick");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
+  }
+}
+
 class MemberDialectCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { testMemberDialectFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts");
@@ -2760,6 +2778,8 @@ const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-
   .register("test-group-visibility-source", GroupVisibilitySourceScript)
   .register("test-backbone-detach-source", BackboneDetachSourceScript)
   .register("test-member-dialect-source", MemberDialectSourceScript)
+  .register("test-member-input-census-source", MemberInputCensusSourceScript)
+  .register("test-member-group-publication-source", MemberGroupPublicationSourceScript)
   .register("member-dialect-check", MemberDialectCheckScript);
 
 router.register("document-http-check", DocumentHttpCheckScript);

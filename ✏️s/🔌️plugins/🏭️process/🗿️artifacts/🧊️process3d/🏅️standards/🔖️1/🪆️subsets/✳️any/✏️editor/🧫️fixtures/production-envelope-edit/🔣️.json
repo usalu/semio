@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "name": "explicit trunk",
+      "edit": {
+        "id": "neutral-edit",
+        "actor": "neutral-actor",
+        "forwards": [
+          "00"
+        ],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "1",
+        "line": null
+      },
+      "accepted": true
+    },
+    {
+      "name": "authored Unicode branch",
+      "edit": {
+        "id": "neutral-edit",
+        "actor": "neutral-actor",
+        "forwards": [
+          "00"
+        ],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "1",
+        "line": "branch:🪵️-Ä"
+      },
+      "accepted": true
+    },
+    {
+      "name": "missing branch provenance",
+      "edit": {
+        "id": "neutral-edit",
+        "actor": "neutral-actor",
+        "forwards": [
+          "00"
+        ],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "1"
+      },
+      "accepted": false
+    }
+  ]
+}

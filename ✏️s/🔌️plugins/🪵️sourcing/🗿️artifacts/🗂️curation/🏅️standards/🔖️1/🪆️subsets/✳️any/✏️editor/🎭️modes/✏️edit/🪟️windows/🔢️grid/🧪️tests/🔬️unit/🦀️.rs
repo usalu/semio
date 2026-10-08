@@ -15,7 +15,7 @@ fn scene_instance_count(node: &semio_framework_plugin::BuiltNode) -> usize {
 /// 🎬️ Default `line-behind` stacks copies along −Z instead of filling the sqrt grid.
 #[semio_framework_async_macros::async_test]
 async fn grid_instance_count_matches_curated_counts_and_normalizes_scale() {
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig::default();
@@ -30,7 +30,7 @@ async fn grid_instance_count_matches_curated_counts_and_normalizes_scale() {
 
 #[semio_framework_async_macros::async_test]
 async fn representative_mode_shows_one_mesh_per_curated_row() {
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() };
@@ -41,7 +41,7 @@ async fn representative_mode_shows_one_mesh_per_curated_row() {
 
 #[semio_framework_async_macros::async_test]
 async fn representative_with_count_adds_glyph_instances() {
-    let mut document = crate::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT.into() };
@@ -55,7 +55,7 @@ async fn representative_with_count_adds_glyph_instances() {
 /// 🧺️ A fresh curation renders an empty grid — stock lives in the pool, not the grid.
 #[semio_framework_async_macros::async_test]
 async fn grid_renders_empty_when_nothing_is_curated() {
-    let document = crate::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = SourcingCurationConfig::default();
     let node = render(&document, &cfg, &GridWindowConfig::default()).expect("bounded empty grid");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");

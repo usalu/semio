@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "views",
+    "cases"
+  ],
+  "properties": {
+    "views": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root",
+          "pages",
+          "entries"
+        ],
+        "properties": {
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "identity",
+          "retainers",
+          "items",
+          "retained",
+          "releasedBytes"
+        ],
+        "properties": {
+          "scope": {
+            "enum": [
+              "root",
+              "page",
+              "entry"
+            ]
+          },
+          "identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "retainers": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "items": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "retained": {
+            "type": "boolean"
+          },
+          "releasedBytes": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

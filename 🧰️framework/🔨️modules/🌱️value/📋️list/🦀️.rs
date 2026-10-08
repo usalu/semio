@@ -162,17 +162,26 @@ pub struct PagedList<T, const N: usize> {
     length: usize,
     capacity: usize,
     allocated: usize,
+    payload_page_bytes: usize,
 }
 
 impl<T, const N: usize> Default for PagedList<T, N> {
     fn default() -> Self {
-        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 }
+        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0, payload_page_bytes: PAGE_BYTES }
     }
 }
 
 impl<T, const N: usize> PagedList<T, N> {
     pub const fn empty() -> Self {
-        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 }
+        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0, payload_page_bytes: PAGE_BYTES }
+    }
+
+    /// 🎟️ Selects a payload allocation ceiling before this owner acquires any backing.
+    pub fn with_payload_page_bytes(maximum_bytes: usize) -> Result<Self, PagedListError> {
+        if maximum_bytes == 0 || maximum_bytes < size_of::<T>() {
+            return Err(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "payload page ceiling cannot own one complete element" });
+        }
+        Ok(Self { payload_page_bytes: maximum_bytes.min(PAGE_BYTES), ..Self::empty() })
     }
 
     /// 🌱️ Builds a paged owner without first materializing a contiguous collection.
@@ -207,11 +216,11 @@ impl<T, const N: usize> PagedList<T, N> {
         }
         Ok(output)
     }
-    fn page_items() -> usize {
+    fn page_items(&self) -> usize {
         if size_of::<T>() == 0 {
             N.max(1)
         } else {
-            (PAGE_BYTES / size_of::<T>()).max(1).min(N.max(1))
+            (self.payload_page_bytes / size_of::<T>()).max(1).min(N.max(1))
         }
     }
     fn height(&self) -> usize {
@@ -258,7 +267,7 @@ impl<T, const N: usize> PagedList<T, N> {
 
     fn leaf(&self, index: usize) -> Option<&Vec<T>> {
         let mut link = &self.root;
-        let page = index / Self::page_items();
+        let page = index / self.page_items();
         let root_height = self.height();
         if Self::page_height(page) > root_height { return None; }
         for height in (0..=root_height).rev() {
@@ -271,7 +280,7 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     fn leaf_mut(&mut self, index: usize) -> Option<&mut Vec<T>> {
-        let page = index / Self::page_items();
+        let page = index / self.page_items();
         let root_height = self.height();
         if Self::page_height(page) > root_height { return None; }
         let mut link = &mut self.root;
@@ -288,14 +297,15 @@ impl<T, const N: usize> PagedList<T, N> {
         if index >= self.length {
             return None;
         }
-        self.leaf(index)?.get(index % Self::page_items())
+        self.leaf(index)?.get(index % self.page_items())
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index >= self.length {
             return None;
         }
-        self.leaf_mut(index)?.get_mut(index % Self::page_items())
+        let offset = index % self.page_items();
+        self.leaf_mut(index)?.get_mut(offset)
     }
 
     pub fn swap(&mut self, left: usize, right: usize) {
@@ -385,8 +395,8 @@ impl<T, const N: usize> PagedList<T, N> {
         if limit > N || self.capacity >= limit {
             return Err(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
         }
-        if self.capacity % Self::page_items() != 0 { return Err(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "funded final payload extent cannot extend or reallocate" }); }
-        let page = self.capacity / Self::page_items();
+        if self.capacity % self.page_items() != 0 { return Err(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "funded final payload extent cannot extend or reallocate" }); }
+        let page = self.capacity / self.page_items();
         let root_height = self.height();
         if Self::page_height(page) > root_height { return Ok(size_of::<Page<T>>()); }
         let mut link = &self.root;
@@ -394,7 +404,7 @@ impl<T, const N: usize> PagedList<T, N> {
             match link.first() {
                 None => return Ok(size_of::<Page<T>>()),
                 Some(Page::Branch { children, .. }) => link = &children[Self::slot(page, height)],
-                Some(Page::Leaf { .. }) => return Self::page_items().min(limit - self.capacity).checked_mul(size_of::<T>()).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list allocation overflow" }),
+                Some(Page::Leaf { .. }) => return self.page_items().min(limit - self.capacity).checked_mul(size_of::<T>()).ok_or(PagedListError { kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list allocation overflow" }),
             }
         }
         Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list page authority is missing" })
@@ -456,7 +466,8 @@ impl<T, const N: usize> PagedList<T, N> {
             return Ok(PagedListProgress::default());
         }
         self.allocated.checked_add(requested).filter(|total| *total <= isize::MAX as usize).ok_or_else(|| rejected(PagedListRefusalKind::OwnershipLimit, "fixed list allocation counter exceeds addressable ownership"))?;
-        let page = self.capacity / Self::page_items();
+        let page_items = self.page_items();
+        let page = self.capacity / page_items;
         let root_height = self.height();
         if Self::page_height(page) > root_height {
             let mut root = Vec::new();
@@ -493,7 +504,7 @@ impl<T, const N: usize> PagedList<T, N> {
             match &mut link[0] {
                 Page::Branch { children, .. } => link = &mut children[Self::slot(page, height)],
                 Page::Leaf { items, slots } => {
-                    let admitted_slots = Self::page_items().min(limit - self.capacity);
+                    let admitted_slots = page_items.min(limit - self.capacity);
                     A::reserve(items, admitted_slots).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list payload allocation failed"))?;
                     let actual = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
                     *slots = admitted_slots;
@@ -712,7 +723,7 @@ impl<'a, T, const N: usize> IntoIterator for &'a mut PagedList<T, N> {
 /// 🧊️ Cold copies allocate each backing page explicitly; retained work uses admission and placement steps.
 impl<T: Clone, const N: usize> Clone for PagedList<T, N> {
     fn clone(&self) -> Self {
-        let mut copy = Self::default();
+        let mut copy = Self { payload_page_bytes: self.payload_page_bytes, ..Self::empty() };
         for item in self.iter() {
             while !copy.has_reserved_slot() {
                 let bytes = copy.next_allocation_bytes().expect("source fits logical list capacity");

@@ -1,12 +1,14 @@
+//! ➕️ `insert-tower-leg` diff — inserts the row at its position, clamped to the end of the collection.
+
 use super::InsertTowerLeg;
-use crate::diff::En1993TowerList;
-use crate::{En1993Diff, En1993Snapshot};
+use crate::diff::En1993RowEdit as _;
+use crate::diff::{En1993Diff, En1993TowerLegEdit};
+use crate::En1993Snapshot;
+
 pub fn diff(payload: &InsertTowerLeg, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.tower_legs.iter().any(|existing| existing.id == payload.tower_leg.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Tower leg id {} already exists.", payload.tower_leg.id), [payload.tower_leg.id.clone()]);
     }
-    let mut values = base.tower_legs.clone();
-    let at = payload.index.min(values.len());
-    values.insert(at, payload.tower_leg.clone());
-    protocol::MutationOutcome::new(En1993Diff { tower_legs: Some(En1993TowerList { values }), ..Default::default() })
+    let index = payload.index.min(base.tower_legs.len());
+    protocol::MutationOutcome::new(En1993Diff { tower_legs: vec![En1993TowerLegEdit::insert(index, payload.tower_leg.clone())], ..Default::default() })
 }

@@ -29,12 +29,92 @@ impl Default for ArchitectPresence {
     }
 }
 
-impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresence {
-    fn apply(&self, _base: &ArchitectPresence) -> protocol::MutationApplyResult<ArchitectPresence> {
-        Ok(self.clone())
+/// 🎯️ Sets the optional adjacency-kind filter to `value`, `None` clearing it — a present edit is how a diff writes an optional field,
+/// so clearing the filter stays distinguishable from leaving it alone.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct AdjacencyKindFilterSet {
+    pub value: Option<AdjacencyKind>,
+}
+
+/// 🔺️ Sparse field diff of the architect presence: each present field is written, the rest of the presence is untouched.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct ArchitectPresenceDiff {
+    pub active_register: Option<String>,
+    pub adjacency_kind_filter: Option<AdjacencyKindFilterSet>,
+    pub graph_camera_x: Option<f64>,
+    pub graph_camera_y: Option<f64>,
+    pub graph_camera_zoom: Option<f64>,
+}
+
+impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresenceDiff {
+    fn apply(&self, base: &ArchitectPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ArchitectPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.active_register {
+            next.active_register = value.clone();
+        }
+        if let Some(filter) = &self.adjacency_kind_filter {
+            next.adjacency_kind_filter = filter.value.clone();
+        }
+        if let Some(value) = self.graph_camera_x {
+            next.graph_camera_x = value;
+        }
+        if let Some(value) = self.graph_camera_y {
+            next.graph_camera_y = value;
+        }
+        if let Some(value) = self.graph_camera_zoom {
+            next.graph_camera_zoom = value;
+        }
+        Ok(next)
     }
+
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.active_register.is_some() {
+            self.active_register = other.active_register;
+        }
+        if other.adjacency_kind_filter.is_some() {
+            self.adjacency_kind_filter = other.adjacency_kind_filter;
+        }
+        if other.graph_camera_x.is_some() {
+            self.graph_camera_x = other.graph_camera_x;
+        }
+        if other.graph_camera_y.is_some() {
+            self.graph_camera_y = other.graph_camera_y;
+        }
+        if other.graph_camera_zoom.is_some() {
+            self.graph_camera_zoom = other.graph_camera_zoom;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ArchitectPresence> for ArchitectPresenceDiff {
+    fn inverse(&self, base: &ArchitectPresence) -> Self {
+        Self {
+            active_register: self.active_register.as_ref().map(|_| base.active_register.clone()),
+            adjacency_kind_filter: self.adjacency_kind_filter.as_ref().map(|_| AdjacencyKindFilterSet { value: base.adjacency_kind_filter.clone() }),
+            graph_camera_x: self.graph_camera_x.map(|_| base.graph_camera_x),
+            graph_camera_y: self.graph_camera_y.map(|_| base.graph_camera_y),
+            graph_camera_zoom: self.graph_camera_zoom.map(|_| base.graph_camera_zoom),
+        }
+    }
+
+    fn between(base: &ArchitectPresence, other: &ArchitectPresence) -> Self {
+        Self {
+            active_register: (base.active_register != other.active_register).then(|| other.active_register.clone()),
+            adjacency_kind_filter: (base.adjacency_kind_filter != other.adjacency_kind_filter).then(|| AdjacencyKindFilterSet { value: other.adjacency_kind_filter.clone() }),
+            graph_camera_x: (base.graph_camera_x != other.graph_camera_x).then_some(other.graph_camera_x),
+            graph_camera_y: (base.graph_camera_y != other.graph_camera_y).then_some(other.graph_camera_y),
+            graph_camera_zoom: (base.graph_camera_zoom != other.graph_camera_zoom).then_some(other.graph_camera_zoom),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
     }
 }
 

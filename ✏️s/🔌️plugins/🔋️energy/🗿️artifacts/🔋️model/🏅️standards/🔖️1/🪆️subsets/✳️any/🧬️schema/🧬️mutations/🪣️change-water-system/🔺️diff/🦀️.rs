@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeWaterSystemFixtureCount` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, WaterSystemConfigPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeWaterSystemFixtureCount, base: &EnergyModelSn
     if existing.fixture_count == payload.new_fixture_count {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Water system {} already carries this fixture_count: {}.", payload.id.0, payload.new_fixture_count));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.water_systems.iter_mut().find(|item| item.id == payload.id) {
-        item.fixture_count = payload.new_fixture_count;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { water_systems: Rows::modifying(WaterSystemConfigPatch { fixture_count: Some(payload.new_fixture_count), ..WaterSystemConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

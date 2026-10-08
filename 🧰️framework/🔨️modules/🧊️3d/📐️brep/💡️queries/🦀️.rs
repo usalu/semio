@@ -9,3 +9,5 @@ pub mod mass_properties;
 pub mod tessellation;
 #[path = "✅validation/🦀️.rs"]
 pub mod validation;
+#[path = "🔎️analysis/🦀️.rs"]
+pub mod analysis;

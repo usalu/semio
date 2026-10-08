@@ -268,39 +268,6 @@ retire_struct!(brep::BrepSolidShell { shell, is_void });
 retire_struct!(brep::BrepSolid { id, shells });
 retire_struct!(brep::BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev });
 retire_struct!(brep::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label });
-impl RetireOwned for brep::BrepCurve2 {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Line { origin, direction } => seq![origin, direction],
-            Self::Circle { center, radius } => seq![center, radius],
-            Self::Ellipse { center, x_axis, radius_major, radius_minor } => seq![center, x_axis, radius_major, radius_minor],
-            Self::Nurbs { control_points, weights, degree, knots } => seq![control_points, weights, degree, knots],
-        }
-    }
-}
-impl RetireOwned for brep::BrepCurve {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Line { origin, direction } => seq![origin, direction],
-            Self::Circle { center, axis, radius } => seq![center, axis, radius],
-            Self::Ellipse { center, axis, radius_major, radius_minor } => seq![center, axis, radius_major, radius_minor],
-            Self::Nurbs { control_points, weights, degree, knots } => seq![control_points, weights, degree, knots],
-        }
-    }
-}
-impl RetireOwned for brep::BrepSurface {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Plane { origin, normal } => seq![origin, normal],
-            Self::Cylinder { origin, axis, radius } => seq![origin, axis, radius],
-            Self::Cone { origin, axis, radius, half_angle } => seq![origin, axis, radius, half_angle],
-            Self::Sphere { center, radius } => seq![center, radius],
-            Self::Torus { center, axis, major_radius, minor_radius } => seq![center, axis, major_radius, minor_radius],
-            Self::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => seq![control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v],
-        }
-    }
-}
-
 retire_struct!(cad::CadLayer { name, color_index, line_type, visible });
 retire_struct!(cad::CadEntityRecord { handle, layer, entity });
 retire_struct!(cad::CadBlock { name, base_point, entities });
@@ -418,40 +385,6 @@ retire_struct!(model::PropertySet { name, properties });
 retire_struct!(model::SemioModelElement { id, class, placement, geometry, spatial_id, psets });
 retire_struct!(model::ModelRelation { id, kind, from, to });
 retire_struct!(model::SemioModelSnapshot { schema, spatial, elements, relations });
-impl RetireOwned for model::ElementClass {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Other { name } => name.retirement(),
-            _ => seq![],
-        }
-    }
-}
-impl RetireOwned for model::GeometryRef {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Brep { brep_id } => brep_id.retirement(),
-            Self::Mesh { mesh_id } => mesh_id.retirement(),
-            Self::None => seq![],
-        }
-    }
-}
-impl RetireOwned for model::PsetValue {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Text { value } => value.retirement(),
-            Self::Number { value } => value.retirement(),
-            Self::Boolean { value } => value.retirement(),
-        }
-    }
-}
-impl RetireOwned for model::RelationKind {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self {
-            Self::Other { label } => label.retirement(),
-            _ => seq![],
-        }
-    }
-}
 retire_struct!(object::SemioObjectSnapshot { schema, transform, brep, mesh, properties });
 retire_struct!(presentation::SlidePictureImage { asset_id, mime, bytes });
 retire_struct!(presentation::SlideTableCell { blocks });
@@ -511,8 +444,6 @@ impl RetireOwned for value_mutation::SemioValuePathSegment {
 impl RetireOwned for animation_mutation::SemioAnimationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertTimeline(animation_mutation::insert_timeline::InsertTimeline { index, timeline }) => seq![index, timeline],
             Self::RemoveTimeline(animation_mutation::remove_timeline::RemoveTimeline { index }) => index.retirement(),
             Self::SetTimelineName(animation_mutation::set_timeline_name::SetTimelineName { index, name }) => seq![index, name],
@@ -531,8 +462,6 @@ impl RetireOwned for animation_mutation::SemioAnimationMutation {
 impl RetireOwned for audio_mutation::SemioAudioMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetSampleRate(audio_mutation::set_sample_rate::SetSampleRate { sample_rate }) => sample_rate.retirement(),
             Self::SetFormat(audio_mutation::set_format::SetFormat { format }) => format.retirement(),
             Self::InsertChannel(audio_mutation::insert_channel::InsertChannel { index, channel }) => seq![index, channel],
@@ -548,8 +477,6 @@ impl RetireOwned for audio_mutation::SemioAudioMutation {
 impl RetireOwned for cad_mutation::SemioCadMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::AddLayer(cad_mutation::add_layer::AddLayer { layer }) => layer.retirement(),
             Self::RemoveLayer(cad_mutation::remove_layer::RemoveLayer { name }) => name.retirement(),
             Self::SetLayer(cad_mutation::set_layer::SetLayer { name, color_index, line_type, visible }) => seq![name, color_index, line_type, visible],
@@ -571,8 +498,6 @@ impl RetireOwned for cad_mutation::SemioCadMutation {
 impl RetireOwned for document_mutation::SemioDocumentMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertBlock(document_mutation::insert_block::InsertBlock { path, block }) => seq![path, block],
             Self::SetBlockContent(document_mutation::set_block_content::SetBlockContent { path, block }) => seq![path, block],
             Self::RemoveBlock(document_mutation::remove_block::RemoveBlock { path }) => path.retirement(),
@@ -596,8 +521,6 @@ impl RetireOwned for document_mutation::SemioDocumentMutation {
 impl RetireOwned for flow_mutation::SemioFlowMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertNode(flow_mutation::insert_node::InsertNode { node }) => node.retirement(),
             Self::RemoveNode(flow_mutation::remove_node::RemoveNode { id }) => id.retirement(),
             Self::SetNodeKind(flow_mutation::set_node_kind::SetNodeKind { id, kind }) => seq![id, kind],
@@ -617,8 +540,6 @@ impl RetireOwned for flow_mutation::SemioFlowMutation {
 impl RetireOwned for image_mutation::SemioImageMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetDimensions(image_mutation::set_dimensions::SetDimensions { width, height }) => seq![width, height],
             Self::SetColorspace(image_mutation::set_colorspace::SetColorspace { colorspace }) => colorspace.retirement(),
             Self::SetBitDepth(image_mutation::set_bit_depth::SetBitDepth { bit_depth }) => bit_depth.retirement(),
@@ -637,29 +558,42 @@ impl RetireOwned for image_mutation::SemioImageMutation {
 impl RetireOwned for model_mutation::SemioModelMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
-            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => node.retirement(),
-            Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => id.retirement(),
-            Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => seq![id, kind, name, parent_id, placement],
-            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => element.retirement(),
-            Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => id.retirement(),
-            Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => seq![id, class, placement, geometry, spatial_id, psets],
-            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => relation.retirement(),
-            Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => id.retirement(),
-            Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => seq![id, kind, from, to],
-            Self::DragElements(model_mutation::drag_elements::DragElements { targets, offset }) => seq![targets, offset],
-            Self::RotateElements(model_mutation::rotate_elements::RotateElements { targets, axis, angle }) => seq![targets, axis, angle],
-            Self::ScaleElements(model_mutation::scale_elements::ScaleElements { targets, factors }) => seq![targets, factors],
+            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(node)]),
+            Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(kind), semio_framework_value::retirement::deferred(name), semio_framework_value::retirement::deferred(parent_id), semio_framework_value::retirement::deferred(placement)]),
+            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(element)]),
+            Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(class), semio_framework_value::retirement::deferred(placement), semio_framework_value::retirement::deferred(geometry), semio_framework_value::retirement::deferred(spatial_id), semio_framework_value::retirement::deferred(psets)]),
+            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(relation)]),
+            Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id)]),
+            Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(id), semio_framework_value::retirement::deferred(kind), semio_framework_value::retirement::deferred(from), semio_framework_value::retirement::deferred(to)]),
+            Self::DragElements(model_mutation::drag_elements::DragElements { targets, offset }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(targets), semio_framework_value::retirement::deferred(offset)]),
+            Self::RotateElements(model_mutation::rotate_elements::RotateElements { targets, axis, angle }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(targets), semio_framework_value::retirement::deferred(axis), semio_framework_value::retirement::deferred(angle)]),
+            Self::ScaleElements(model_mutation::scale_elements::ScaleElements { targets, factors }) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(targets), semio_framework_value::retirement::deferred(factors)]),
         }
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        match self {
+            Self::InsertSpatialNode(model_mutation::insert_spatial_node::InsertSpatialNode { node }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(node)]),
+            Self::RemoveSpatialNode(model_mutation::remove_spatial_node::RemoveSpatialNode { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::SetSpatialNode(model_mutation::set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(kind), semio_framework_value::retirement::deferred_birth_bytes_for(name), semio_framework_value::retirement::deferred_birth_bytes_for(parent_id), semio_framework_value::retirement::deferred_birth_bytes_for(placement)]),
+            Self::InsertElement(model_mutation::insert_element::InsertElement { element }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(element)]),
+            Self::RemoveElement(model_mutation::remove_element::RemoveElement { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::SetElement(model_mutation::set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(class), semio_framework_value::retirement::deferred_birth_bytes_for(placement), semio_framework_value::retirement::deferred_birth_bytes_for(geometry), semio_framework_value::retirement::deferred_birth_bytes_for(spatial_id), semio_framework_value::retirement::deferred_birth_bytes_for(psets)]),
+            Self::InsertRelation(model_mutation::insert_relation::InsertRelation { relation }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(relation)]),
+            Self::RemoveRelation(model_mutation::remove_relation::RemoveRelation { id }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id)]),
+            Self::SetRelation(model_mutation::set_relation::SetRelation { id, kind, from, to }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(id), semio_framework_value::retirement::deferred_birth_bytes_for(kind), semio_framework_value::retirement::deferred_birth_bytes_for(from), semio_framework_value::retirement::deferred_birth_bytes_for(to)]),
+            Self::DragElements(model_mutation::drag_elements::DragElements { targets, offset }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(targets), semio_framework_value::retirement::deferred_birth_bytes_for(offset)]),
+            Self::RotateElements(model_mutation::rotate_elements::RotateElements { targets, axis, angle }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(targets), semio_framework_value::retirement::deferred_birth_bytes_for(axis), semio_framework_value::retirement::deferred_birth_bytes_for(angle)]),
+            Self::ScaleElements(model_mutation::scale_elements::ScaleElements { targets, factors }) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(targets), semio_framework_value::retirement::deferred_birth_bytes_for(factors)]),
+        }
+    }
+    fn controlled_retirement_supported() -> bool { true }
 }
 
 impl RetireOwned for presentation_mutation::SemioPresentationMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertSlide(presentation_mutation::insert_slide::InsertSlide { index, slide }) => seq![index, slide],
             Self::RemoveSlide(presentation_mutation::remove_slide::RemoveSlide { index }) => index.retirement(),
             Self::SetSlideLayout(presentation_mutation::set_slide_layout::SetSlideLayout { index, layout_id }) => seq![index, layout_id],
@@ -680,8 +614,6 @@ impl RetireOwned for presentation_mutation::SemioPresentationMutation {
 impl RetireOwned for value_mutation::SemioValueMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::SetValue(value_mutation::set_value::SetValue { path, value }) => seq![path, value],
             Self::SetMapEntry(value_mutation::set_map_entry::SetMapEntry { path, key, value }) => seq![path, key, value],
             Self::RemoveMapEntry(value_mutation::remove_map_entry::RemoveMapEntry { path, key }) => seq![path, key],
@@ -696,8 +628,6 @@ impl RetireOwned for value_mutation::SemioValueMutation {
 impl RetireOwned for video_mutation::SemioVideoMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(payload) => payload.snapshot.retirement(),
-            Self::PatchSnapshot(payload) => payload.patch.retirement(),
             Self::InsertStream(video_mutation::insert_stream::InsertStream { index, stream }) => seq![index, stream],
             Self::RemoveStream(video_mutation::remove_stream::RemoveStream { index }) => index.retirement(),
             Self::SetStreamMeta(video_mutation::set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => seq![index, kind, codec, width, height, rate],
@@ -712,8 +642,6 @@ impl RetireOwned for video_mutation::SemioVideoMutation {
 impl RetireOwned for mesh_mutation::SemioMeshMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateMesh(value) => value.mesh.retirement(),
             Self::DeleteMesh(value) => value.id.retirement(),
             Self::CreatePrimitive(value) => seq![value.mesh_id, value.primitive],
@@ -738,8 +666,6 @@ impl RetireOwned for mesh_mutation::SemioMeshMutation {
 impl RetireOwned for drawing_mutation::SemioDrawingMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateLayer(value) => seq![value.index, value.layer],
             Self::DeleteLayer(value) => value.id.retirement(),
             Self::CreateNode(value) => seq![value.parent, value.index, value.node],
@@ -764,8 +690,6 @@ impl RetireOwned for drawing_mutation::SemioDrawingMutation {
 impl RetireOwned for table_mutation::SemioTableMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateColumn(value) => seq![value.name, value.kind, value.index],
             Self::DeleteColumn(value) => value.name.retirement(),
             Self::RenameColumn(value) => seq![value.name, value.new_name],
@@ -781,30 +705,44 @@ impl RetireOwned for table_mutation::SemioTableMutation {
 impl RetireOwned for brep_mutation::SemioBrepMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
-            Self::CreateVertex(value) => seq![value.id, value.point],
-            Self::DeleteVertex(value) => value.id.retirement(),
-            Self::CreateEdge(value) => seq![value.id, value.start_vertex, value.end_vertex, value.curve],
-            Self::DeleteEdge(value) => value.id.retirement(),
-            Self::CreateFace(value) => seq![value.id, value.outer_loop, value.inner_loops, value.surface, value.orientation],
-            Self::DeleteFace(value) => value.id.retirement(),
-            Self::CreateShell(value) => seq![value.id, value.faces],
-            Self::DeleteShell(value) => value.id.retirement(),
-            Self::CreateSolid(value) => seq![value.id, value.shells],
-            Self::DeleteSolid(value) => value.id.retirement(),
-            Self::ReplaceCurve(value) => seq![value.edge_id, value.new_curve],
-            Self::ReplaceSurface(value) => seq![value.face_id, value.new_surface],
-            Self::MoveVertex(value) => seq![value.vertex_id, value.new_point],
+            Self::CreateVertex(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id), semio_framework_value::retirement::deferred(value.point)]),
+            Self::DeleteVertex(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id)]),
+            Self::CreateEdge(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id), semio_framework_value::retirement::deferred(value.start_vertex), semio_framework_value::retirement::deferred(value.end_vertex), semio_framework_value::retirement::deferred(value.curve)]),
+            Self::DeleteEdge(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id)]),
+            Self::CreateFace(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id), semio_framework_value::retirement::deferred(value.outer_loop), semio_framework_value::retirement::deferred(value.inner_loops), semio_framework_value::retirement::deferred(value.surface), semio_framework_value::retirement::deferred(value.orientation)]),
+            Self::DeleteFace(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id)]),
+            Self::CreateShell(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id), semio_framework_value::retirement::deferred(value.faces)]),
+            Self::DeleteShell(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id)]),
+            Self::CreateSolid(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id), semio_framework_value::retirement::deferred(value.shells)]),
+            Self::DeleteSolid(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.id)]),
+            Self::ReplaceCurve(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.edge_id), semio_framework_value::retirement::deferred(value.new_curve)]),
+            Self::ReplaceSurface(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.face_id), semio_framework_value::retirement::deferred(value.new_surface)]),
+            Self::MoveVertex(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(value.vertex_id), semio_framework_value::retirement::deferred(value.new_point)]),
         }
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        match self {
+            Self::CreateVertex(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.point)]),
+            Self::DeleteVertex(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id)]),
+            Self::CreateEdge(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.start_vertex), semio_framework_value::retirement::deferred_birth_bytes_for(&value.end_vertex), semio_framework_value::retirement::deferred_birth_bytes_for(&value.curve)]),
+            Self::DeleteEdge(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id)]),
+            Self::CreateFace(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.outer_loop), semio_framework_value::retirement::deferred_birth_bytes_for(&value.inner_loops), semio_framework_value::retirement::deferred_birth_bytes_for(&value.surface), semio_framework_value::retirement::deferred_birth_bytes_for(&value.orientation)]),
+            Self::DeleteFace(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id)]),
+            Self::CreateShell(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.faces)]),
+            Self::DeleteShell(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id)]),
+            Self::CreateSolid(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.shells)]),
+            Self::DeleteSolid(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.id)]),
+            Self::ReplaceCurve(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.edge_id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.new_curve)]),
+            Self::ReplaceSurface(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.face_id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.new_surface)]),
+            Self::MoveVertex(value) => semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&value.vertex_id), semio_framework_value::retirement::deferred_birth_bytes_for(&value.new_point)]),
+        }
+    }
+    fn controlled_retirement_supported() -> bool { true }
 }
 
 impl RetireOwned for graph_mutation::SemioGraphMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateNode(value) => seq![value.id, value.kind, value.label, value.position, value.width, value.height, value.ports, value.properties, value.at],
             Self::DeleteNode(value) => value.id.retirement(),
             Self::ChangeNodeKind(value) => seq![value.id, value.new_kind],
@@ -830,8 +768,6 @@ impl RetireOwned for graph_mutation::SemioGraphMutation {
 impl RetireOwned for object_mutation::SemioObjectMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::MoveObject(value) => value.translation.retirement(),
             Self::RotateObject(value) => value.rotation.retirement(),
             Self::ScaleObject(value) => value.scale.retirement(),
@@ -848,8 +784,6 @@ impl RetireOwned for object_mutation::SemioObjectMutation {
 impl RetireOwned for kit_mutation::SemioKitMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::CreateObject(value) => seq![value.child_id, value.target],
             Self::DeleteObject(value) => value.child_id.retirement(),
             Self::CreateModel(value) => seq![value.child_id, value.target],
@@ -872,8 +806,6 @@ impl RetireOwned for kit_mutation::SemioKitMutation {
 impl RetireOwned for text_mutation::SemioTextMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::SetSnapshot(value) => value.snapshot.retirement(),
-            Self::PatchSnapshot(value) => value.patch.retirement(),
             Self::InsertRun(value) => seq![value.index, value.run],
             Self::RemoveRun(value) => value.index.retirement(),
             Self::EditRun(value) => seq![value.index, value.new_content],
@@ -885,7 +817,9 @@ impl RetireOwned for text_mutation::SemioTextMutation {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct SemioSnapshotRetirementFactory<P>(PhantomData<fn() -> P>);
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct SemioOwnedValueRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioOwnedValueRetirementFactory<T> {
@@ -894,6 +828,7 @@ impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioOwnedV
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct SemioMutationRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioMutationRetirementFactory<T> {
@@ -947,6 +882,10 @@ macro_rules! member_owners {
         impl dsl::SnapshotRetirementFactory<subsets::$module::schema::snapshot::$snapshot>
             for SemioSnapshotRetirementFactory<subsets::$module::schema::snapshot::$snapshot>
         {
+            fn retirement_birth_bytes(&self, _snapshot: &Arc<subsets::$module::schema::snapshot::$snapshot>) -> usize {
+                semio_framework_value::retirement::shared_retirement_birth_bytes::<subsets::$module::schema::snapshot::$snapshot>()
+            }
+
             fn retire(
                 &self,
                 snapshot: Arc<subsets::$module::schema::snapshot::$snapshot>,
@@ -976,6 +915,12 @@ macro_rules! member_owners {
                     return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 if let Some(active) = self.active.as_mut() {
+                    if active.terminal_is_empty() {
+                        let bytes = std::mem::size_of_val(active.as_ref());
+                        if bytes > maximum_bytes { return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+                        drop(self.active.take());
+                        return Ok(dsl::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+                    }
                     return match active.close_step(maximum_items, maximum_bytes)? {
                         dsl::SnapshotRetirementStep::Pending { released_items, released_bytes }
                             if released_items <= maximum_items && released_bytes <= maximum_bytes =>
@@ -988,8 +933,7 @@ macro_rules! member_owners {
                             if !active.terminal_is_empty() {
                                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"semio store nested retirement reported Complete without its terminal-empty witness"));
                             }
-                            drop(self.active.take());
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                         }
                     };
                 }
@@ -1210,6 +1154,10 @@ macro_rules! member_owners {
                 }
             }
 
+            fn next_close_byte_demand(&self) -> usize {
+                self.active.as_ref().map_or(1, |active| if active.terminal_is_empty() { std::mem::size_of_val(active.as_ref()) } else { active.next_close_byte_demand() })
+            }
+
             fn terminal_is_empty(
                 &self,
                 store: &dsl::ArtifactStore<
@@ -1240,6 +1188,14 @@ macro_rules! member_owners {
             for subsets::$module::schema::snapshot::$snapshot
         {
             semio_snapshot_open!($module, subsets::$module::schema::snapshot::$snapshot);
+
+            fn member_store_owners_birth_bytes() -> usize {
+                dsl::document_store_owners_constructor_birth_bytes::<SemioStoreOwnedDisposer<Self, subsets::$module::schema::mutations::$mutation>>([
+                    semio_framework_value::factory_constructor_birth_bytes::<SemioSnapshotRetirementFactory<Self>>(0),
+                    semio_framework_value::factory_constructor_birth_bytes::<SemioOwnedValueRetirementFactory<Self>>(0),
+                    semio_framework_value::factory_constructor_birth_bytes::<SemioMutationRetirementFactory<subsets::$module::schema::mutations::$mutation>>(0),
+                ])
+            }
 
             fn member_store_owners() -> dsl::DocumentStoreOwners<
                 Self,
@@ -1550,10 +1506,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod delete_edge {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
@@ -2161,10 +2113,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod create_node {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/🦀️.rs"]
@@ -2741,10 +2689,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod create_mesh {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🦀️.rs"]
@@ -3438,10 +3382,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod insert_run {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📥insert-run/🦀️.rs"]
@@ -3575,10 +3515,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod create_column {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/🦀️.rs"]
@@ -3736,10 +3672,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod create_node {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏗️create-node/🦀️.rs"]
@@ -3970,10 +3902,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod move_object {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🚚move-object/🦀️.rs"]
@@ -4114,10 +4042,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "."]
                         pub mod create_object {
                             #[path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏗️create-object/🦀️.rs"]

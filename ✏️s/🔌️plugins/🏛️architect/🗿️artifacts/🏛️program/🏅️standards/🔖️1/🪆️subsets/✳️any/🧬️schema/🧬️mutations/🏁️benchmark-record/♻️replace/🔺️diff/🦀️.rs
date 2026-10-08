@@ -2,20 +2,20 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏁benchmarks` per Wave C.
 
 use super::ReplaceBenchmarkRecord;
+use crate::diff::ProgramBenchmarksDelta;
 use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
-/// 🔁️ Whole-value swap of one row's non-identity content within the working-scene cache, then
-/// re-mint a fresh content-addressed `table` child handle. Error `mutation.target-missing` if
-/// absent, Warning `mutation.no-op` if the value is unchanged (both empty diff).
+/// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the row is unchanged (both empty diff), else the replacement the kind owns:
+/// `removed = [id]`, `added = [payload row]`, and `reordered` (the base order) unless the row was last, so the new row keeps its position.
 pub fn diff(payload: &ReplaceBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
-    let mut records = crate::program_benchmarks(base);
-    let Some(existing) = records.iter_mut().find(|row| row.header.id == payload.benchmark_record.header.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.benchmark_record.header.id.0.clone()]);
+    let id = &payload.benchmark_record.header.id;
+    let Some(position) = base.benchmarks_payload.iter().position(|row| row.header.id == *id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [id.0.clone()]);
     };
-    if *existing == payload.benchmark_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This benchmark record already matches the requested value.").at([payload.benchmark_record.header.id.0.clone()])]);
+    if base.benchmarks_payload[position] == payload.benchmark_record {
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This benchmark record already matches the requested value.").at([id.0.clone()])]);
     }
-    *existing = payload.benchmark_record.clone();
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    let reordered = (position + 1 != base.benchmarks_payload.len()).then(|| base.benchmarks_payload.iter().map(|row| row.header.id.0.clone()).collect());
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(ProgramBenchmarksDelta { removed: vec![id.0.clone()], added: vec![payload.benchmark_record.clone()], reordered, ..Default::default() }), ..Default::default() })
 }

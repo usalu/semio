@@ -21,3 +21,17 @@ pub struct FemResultsWindowTransient {
     #[dsl(block)]
     pub clock: Option<FemPlaybackClock>,
 }
+
+/// 🔺️ Owned-field diff of [`FemResultsWindowTransient`]: a present change carries the clock the window now holds, `None` meaning it stopped.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct FemResultsWindowTransientDiff {
+    pub clock: Option<FemPlaybackClockChange>,
+}
+
+/// 🔺️ One clock publication inside a [`FemResultsWindowTransientDiff`]; the inner `None` clears the clock.
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FemPlaybackClockChange {
+    pub clock: Option<FemPlaybackClock>,
+}

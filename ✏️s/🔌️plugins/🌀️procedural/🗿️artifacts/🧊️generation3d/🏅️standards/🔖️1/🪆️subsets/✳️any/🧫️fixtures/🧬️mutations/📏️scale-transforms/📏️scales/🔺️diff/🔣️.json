@@ -1,0 +1,48 @@
+{
+  "artifact": null,
+  "hostSnapshot": {
+    "schema": "flow.hostSnapshot",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "node-a",
+        "text": "Base plate"
+      },
+      {
+        "kind": "neuron",
+        "id": "extrude__gumball_scale",
+        "neuronKind": "brep.xform.scale",
+        "params": {
+          "factor": {
+            "$schema": "vector",
+            "x": 2.0,
+            "y": 2.0,
+            "z": 0.5
+          },
+          "center": {
+            "$schema": "point",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        },
+        "inputPorts": [],
+        "outputPorts": [],
+        "preview": false
+      }
+    ],
+    "synapses": [],
+    "layout": {
+      "node-a": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "generation": null
+}

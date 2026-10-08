@@ -2,7 +2,6 @@ import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts"
 import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
 import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
-import { declaredLaunchNamePrefix } from "../../🚀️launch/🏷️name-prefix/🧬️schema/🟦️.ts";
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -36,7 +35,6 @@ export type PlaygroundEntry = {
   readonly app?: string;
   /** 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
-  readonly launchNamePrefix?: string;
   readonly devContribution?: string;
   readonly nativeHost?: PlaygroundNativeHostV1;
   readonly mcpHost?: PlaygroundNativeHostV1;
@@ -45,7 +43,7 @@ export type PlaygroundEntry = {
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
   /** 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
-   * studio dev launchers) — one port per concurrent user, over and above the single-user `ports` row. */
+   * studio dev servers) — one port per concurrent user, over and above the single-user `ports` row. */
   readonly userPorts?: { readonly react: readonly number[]; readonly wgpu: readonly number[] };
   readonly examples: readonly string[];
   /** 🔌️ Crate paths whose `wasm` build target must run for this playground variant. */
@@ -71,7 +69,6 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const catalogDefault = declaredPlaygroundCatalogDefaultV1(block);
   const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
   const brand = block.match(/^brand\s*=\s*"([^"]+)"/m)?.[1];
-  const launchNamePrefix = declaredLaunchNamePrefix(block);
   const devContribution = block.match(/^devContribution\s*=\s*"([^"]+)"/m)?.[1];
   const distDir = block.match(/^distDir\s*=\s*"([^"]+)"/m)?.[1];
   const aliases = parseTomlStringArray(block, "aliases");
@@ -86,7 +83,7 @@ export function parsePlaygroundBlock(block: string, pluginId: string, cratePath:
   const engines = parseTomlStringArray(block, "engines");
   const nativeHost = parsePlaygroundNativeHostV1(block) as PlaygroundNativeHostV1 | undefined;
   const mcpHost = parsePlaygroundNativeHostV1(block,"mcpHost") as PlaygroundNativeHostV1 | undefined;
-  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, ...(launchNamePrefix === undefined ? {} : { launchNamePrefix }), devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
+  return { variant, ...(catalogDefault === undefined ? {} : { catalogDefault }), pluginId, cratePath, app, brand, devContribution, distDir, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [], ...(nativeHost ? {nativeHost} : {}),...(mcpHost ? {mcpHost} : {}) };
 }
 
 
@@ -207,7 +204,8 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
 }
 
 
-/** 🚀️ Source-only playground rows of withheld plugins: launch rows stay stable while the dev catalog withholds a stale-channel plugin. */
+/** 🧷️ Source-only playground rows of withheld plugins: every declared variant stays runnable — the path to re-describing —
+ * while the dev catalog withholds a stale-channel plugin. */
 export function generateWithheldPlaygroundRegistry(repoRoot: string, diagnostics: readonly RegistryChannelDiagnosticV1[], view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): PlaygroundEntry[] {
   return diagnostics.flatMap(({ pluginId, cratePath }) => {
     const manifestPath = join(repoRoot, cratePath, "Cargo.toml");

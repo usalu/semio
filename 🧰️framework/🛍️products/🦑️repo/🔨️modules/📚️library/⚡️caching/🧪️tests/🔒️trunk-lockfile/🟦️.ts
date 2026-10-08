@@ -71,11 +71,6 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.equal(cacheInternals.targetPolicy(fixture.target, target).cache, true, "the lock guard replays once every manifest it validates is hashed");
     assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
     assert.deepEqual(cacheInternals.nativeLockInputs('bun "script.ts" native cargo check --manifest "Cargo.toml"'), []);
-    for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const editor = Bun.JSONC.parse(readFileSync(join(workspace, file), "utf8")) as { readonly configurations: readonly { readonly command?: string }[] };
-      assert.equal(editor.configurations.filter((value) => value.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1, file);
-      assert.equal(editor.configurations.filter((value) => value.command === `bun nx run workspace:${fixture.tooling.target}`).length, 1, file);
-    }
     if (native) {
       const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
       const temporary = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "trunk-config-"));

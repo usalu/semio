@@ -1,0 +1,52 @@
+{
+  "mutation": {
+    "mutation": "renameMember",
+    "path": [],
+    "from": "title",
+    "to": "heading"
+  },
+  "before": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "string",
+            "value": "Old"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "heading",
+          "value": {
+            "kind": "string",
+            "value": "Old"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    }
+  }
+}

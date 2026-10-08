@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeGroundDeep` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, GroundTemperatureConfigPatch, ModelPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,8 +12,6 @@ pub fn diff(payload: &super::ChangeGroundDeep, base: &EnergyModelSnapshot) -> pr
     if base.model.ground_temperature.deep_c == payload.new_temperature_c {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The deep ground temperature is already {} °C.", payload.new_temperature_c));
     }
-    let mut model = base.model.clone();
-    model.ground_temperature.deep_c = payload.new_temperature_c;
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ground_temperature: GroundTemperatureConfigPatch { deep_c: Some(payload.new_temperature_c), ..Default::default() }, ..Default::default() }))
 }
 //#endregion 🔖️Diff

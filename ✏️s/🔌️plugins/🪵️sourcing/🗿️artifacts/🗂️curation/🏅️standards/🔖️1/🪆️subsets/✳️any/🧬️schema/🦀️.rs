@@ -709,10 +709,10 @@ pub mod slabs {
 /// below without tripping the `private_interfaces` lint — construction stays internal to this module.
 #[derive(Clone)]
 pub struct ContributedSourcingModule {
-    module_id: String,
-    label: String,
-    typology: TypologyNode,
-    kinds: Vec<ObjectKind>,
+    pub(crate) module_id: String,
+    pub(crate) label: String,
+    pub(crate) typology: TypologyNode,
+    pub(crate) kinds: Vec<ObjectKind>,
 }
 
 impl SourcingModule for ContributedSourcingModule {
@@ -745,7 +745,7 @@ dyn_enum_close! {
     }
 }
 
-const SOURCING_CURATION_APP_ID: &str = "sourcing-curation";
+pub(crate) const SOURCING_CURATION_APP_ID: &str = "sourcing-curation";
 
 /// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
 //#region 🔖️SourcingModuleTopicPayload
@@ -777,7 +777,7 @@ pub const SOURCING_MAXIMUM_MODULES: usize = 8;
 
 /// 🔎️ Looks up a single module by id.
 pub fn module_for(contributions_json: &str, module_id: &str) -> Option<SourcingModules> {
-    sourcing_modules(contributions_json).into_iter().find(|module| module.module_id() == module_id)
+    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(contributions_json).into_iter().find(|module| module.module_id() == module_id)
 }
 //#endregion 🔖️Modules
 
@@ -792,7 +792,7 @@ pub struct ModuleCatalogue {
 }
 
 pub fn available_modules(contributions_json: &str) -> Vec<ModuleCatalogue> {
-    sourcing_modules(contributions_json).into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
+    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(contributions_json).into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖️ModuleCatalogue
 
@@ -828,7 +828,7 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 /// order. Single source of truth for `default_document`'s catalog content and every test fixture that
 /// used to independently duplicate `sourcing_modules("[]").iter().flat_map(...)`.
 pub fn demo_stock() -> Vec<ObjectKind> {
-    sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
+    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
 

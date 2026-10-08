@@ -264,20 +264,5 @@ async fn concrete_forest_example_replays_every_step_on_the_kernel() {
     }
 }
 
-/// 🌉️ Regenerates every shipped example fixture via the REAL `process_working_scene_to_snapshot`
-/// + `print_dsl()`, writing their text to `$PROCESS3D_FIXTURE_OUT` for manual copy into the asset
-/// files / `PROCESS_3D_PLATE_EXAMPLE_TEXT`.
-/// `#[ignore]`d: a one-shot authoring tool, not part of the regular test run.
-#[semio_framework_async_macros::async_test]
-#[ignore]
-async fn regenerate_example_fixtures() {
-    let timber = process_working_scene_to_snapshot(&timber_beam_joinery_scene(), timber_workshop());
-    let plate = process_working_scene_to_snapshot(&drilled_plate_scene(), Workshop::default());
-    let concrete_forest = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop());
-    let out_dir = std::path::PathBuf::from(std::env::var("PROCESS3D_FIXTURE_OUT").expect("PROCESS3D_FIXTURE_OUT names the output folder"));
-    std::fs::write(out_dir.join("timber.dsl.semio"), print_dsl(&timber)).expect("write timber fixture");
-    std::fs::write(out_dir.join("plate.dsl.semio"), print_dsl(&plate)).expect("write plate fixture");
-    std::fs::write(out_dir.join("concrete-forest.dsl.semio"), print_dsl(&concrete_forest)).expect("write concrete forest fixture");
-}
 //#endregion 🔖️FixtureRegeneration
 

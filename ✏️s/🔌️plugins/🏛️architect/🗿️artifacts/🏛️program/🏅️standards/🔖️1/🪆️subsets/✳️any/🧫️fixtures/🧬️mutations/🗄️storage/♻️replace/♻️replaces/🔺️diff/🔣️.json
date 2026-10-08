@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -18,53 +17,50 @@
   "equipment": null,
   "resources": null,
   "storage": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "added": [
       {
         "id": "storage-requirement-a",
-        "patch": {
-          "name": "Storage Requirement A",
-          "description": null,
-          "status": "draft",
-          "priority": "preferred",
-          "ownership": {
-            "ownerId": null,
-            "authorityId": null,
-            "consultantIds": [],
-            "participantIds": []
-          },
-          "tags": [],
-          "notes": [],
-          "timestamps": {
-            "created": "1970-01-01T00:00:00Z",
-            "updated": "1970-01-01T00:00:00Z"
-          },
-          "storedItem": "Replaced Storage Requirement A",
-          "storageClass": "general",
-          "quantity": {
-            "unit": ""
-          },
-          "volumeM3": null,
-          "weightKg": null,
-          "temperatureRange": null,
-          "humidityRange": null,
-          "securityLevel": "public",
-          "hazardClass": null,
-          "retentionPeriod": null,
-          "accessFrequency": null,
-          "elementIds": [],
-          "equipmentIds": [],
-          "handlingEquipment": [],
-          "fireProtection": [],
-          "ventilation": null,
-          "organizationSystem": null,
-          "growthAllowance": null,
-          "regulatoryRefs": [],
-          "ownerId": null
-        }
+        "name": "Storage Requirement A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "storedItem": "Replaced Storage Requirement A",
+        "storageClass": "general",
+        "quantity": {
+          "unit": ""
+        },
+        "volumeM3": null,
+        "weightKg": null,
+        "temperatureRange": null,
+        "humidityRange": null,
+        "securityLevel": "public",
+        "hazardClass": null,
+        "retentionPeriod": null,
+        "accessFrequency": null,
+        "elementIds": [],
+        "equipmentIds": [],
+        "handlingEquipment": [],
+        "fireProtection": [],
+        "ventilation": null,
+        "organizationSystem": null,
+        "growthAllowance": null,
+        "regulatoryRefs": [],
+        "ownerId": null
       }
     ],
+    "removed": [
+      "storage-requirement-a"
+    ],
+    "patched": [],
     "reordered": null
   },
   "environmental": null,
@@ -115,9 +111,7 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

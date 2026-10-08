@@ -38,7 +38,7 @@ pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: Opt
 
 /// 🪪️ Assigns a fresh layer identity within the document and retained operation scope.
 pub(crate) fn identify_created_layer(document: &DrawingSnapshot, layer: &mut crate::DrawingLayerNode, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) {
-    let mut material = document.id.as_bytes().to_vec();
+    let mut material = document.id.bytes().collect::<Vec<_>>();
     material.extend_from_slice(kind.as_bytes());
     if let Some(operation) = operation {
         material.extend_from_slice(&operation.app_instance_id.to_be_bytes());

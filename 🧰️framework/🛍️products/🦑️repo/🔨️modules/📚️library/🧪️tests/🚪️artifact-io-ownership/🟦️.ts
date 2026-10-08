@@ -3,7 +3,6 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { dirname, join, resolve } from "node:path";
 import picomatch from "picomatch";
 import ts from "typescript";
-import { parse } from "jsonc-parser";
 import { artifactFacetPathIsDeclared, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { newScaffoldIoTree, newScaffoldSubsetTree } from "../../🏗️authoring/🗿️artifact-tree/🟦️.ts";
 import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes, semanticArtifactIoItems, schemaTypeScriptWireSymbols, schemaRustWireDependencies } from "../../🚪️io/🏛️architecture/🟦️.ts";
@@ -271,17 +270,13 @@ test("artifact IO contracts and command registration parse independently", () =>
     expect(source).toBeDefined();
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
   }
-  const repository = resolve(library, "../../../../.."), packageRoot = join(library, "📦️packages/🟦️typescript");
+  const packageRoot = join(library, "📦️packages/🟦️typescript");
   const targets = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8")).targets;
   const scripts = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).scripts;
   for (const verb of ["test", "lint"]) {
     const id = `${verb}-artifact-io-ownership`;
     expect(targets[id].options.command).toBe(`bun ./📜️script.ts ${verb} artifact-io-ownership`);
     expect(scripts[id]).toBe(`nx run @semio-tech/repo-lib:${id}`);
-    for (const filename of ["launch.json", "🧩️launch.seed.jsonc"]) {
-      const launch = parse(readFileSync(join(repository, ".vscode", filename), "utf8"));
-      expect(launch.configurations.filter((entry: { command?: string }) => entry.command === `bun nx run @semio-tech/repo-lib:${id} --skip-nx-cache`)).toHaveLength(1);
-    }
   }
 },{timeout:60000});
 

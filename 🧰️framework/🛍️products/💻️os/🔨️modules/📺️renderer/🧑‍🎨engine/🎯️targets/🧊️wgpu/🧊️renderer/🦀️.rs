@@ -1219,6 +1219,12 @@ struct GlbViewSchema {
     byte_stride: u16,
 }
 
+/// 🎯️ The custom glTF attribute that carries one face id per vertex; a triangle's face id is its first corner's. Pinned by
+/// `🧫️fixtures/📏️world3d-modelling/🔣️.json` (`glbSubElementIds`).
+const GLB_FACE_ID_ATTRIBUTE: &str = "_FACE_ID";
+/// 🎯️ The custom glTF attribute that carries one vertex id per vertex.
+const GLB_VERTEX_ID_ATTRIBUTE: &str = "_VERTEX_ID";
+
 #[derive(Clone, Copy)]
 struct GlbPrimitiveSchema {
     position: u16,
@@ -1230,6 +1236,8 @@ struct GlbPrimitiveSchema {
     material: Option<u16>,
     mode: u8,
     position_set: bool,
+    face_id: Option<u16>,
+    vertex_id: Option<u16>,
 }
 
 #[derive(Clone, Copy)]
@@ -1347,7 +1355,7 @@ impl GlbNumericArray {
 
 impl Default for GlbPrimitiveSchema {
     fn default() -> Self {
-        Self { position: 0, normal: None, uv_sets: [None;64],tangent:None, color: None, indices: None, material: None, mode: 4, position_set: false }
+        Self { position: 0, normal: None, uv_sets: [None;64],tangent:None, color: None, indices: None, material: None, mode: 4, position_set: false, face_id: None, vertex_id: None }
     }
 }
 
@@ -1499,6 +1507,14 @@ impl GlbSchemaOutput {
                 }
                 self.validate_accessor_span(color)?;
             }
+            for (id, detail) in [(primitive.face_id, "GLB _FACE_ID accessor must be SCALAR UNSIGNED_INT aligned with POSITION"), (primitive.vertex_id, "GLB _VERTEX_ID accessor must be SCALAR UNSIGNED_INT aligned with POSITION")] {
+                let Some(id) = id else { continue };
+                let id = self.accessor(id)?;
+                if id.component != 5125 || id.kind != 1 || id.normalized || id.count != position.count {
+                    return Err(detail);
+                }
+                self.validate_accessor_span(id)?;
+            }
             let source_indices = match primitive.indices {
                 Some(indices) => {
                     let indices = self.accessor(indices)?;
@@ -1520,6 +1536,8 @@ impl GlbSchemaOutput {
             }
             let index_bytes = usize::try_from(triangle_indices).ok().and_then(|count| count.checked_mul(size_of::<u32>())).ok_or("GLB index output bytes overflowed")?;
             output_bytes = output_bytes.checked_add(index_bytes).ok_or("GLB index output bytes overflowed")?;
+            let id_bytes = (if primitive.face_id.is_some() { usize::try_from(triangle_indices / 3).ok() } else { Some(0) }).and_then(|triangles| if primitive.vertex_id.is_some() { usize::try_from(position.count).ok().and_then(|vertices| vertices.checked_add(triangles)) } else { Some(triangles) }).and_then(|count| count.checked_mul(size_of::<u32>())).ok_or("GLB sub-element id output bytes overflowed")?;
+            output_bytes = output_bytes.checked_add(id_bytes).ok_or("GLB sub-element id output bytes overflowed")?;
             if output_bytes > GLB_SCHEMA_OUTPUT_BYTES {
                 return Err("GLB semantic output exceeded fixed byte credits");
             }
@@ -1928,6 +1946,10 @@ impl GlbSchemaCursor {
                 } else if key.equals("TANGENT") { primitive.tangent=Some(index);
                 } else if key.equals("COLOR_0") {
                     primitive.color = Some(index);
+                } else if key.equals(GLB_FACE_ID_ATTRIBUTE) {
+                    primitive.face_id = Some(index);
+                } else if key.equals(GLB_VERTEX_ID_ATTRIBUTE) {
+                    primitive.vertex_id = Some(index);
                 }
             } else if self.depth == 5 {
                 if key.equals("indices") {
@@ -2259,6 +2281,8 @@ struct GlbInstancePlanCursor {
     has_uvs: bool,
     has_tangents:bool,
     has_colors: bool,
+    face_id_instances: u16,
+    vertex_id_instances: u16,
     output_bytes: usize,
 }
 
@@ -2266,7 +2290,17 @@ impl GlbInstancePlanCursor {
     fn new(schema: &GlbSchemaOutput) -> Self {
         let scene = schema.default_scene.or((schema.scene_len != 0).then_some(0));
         let mode = if schema.node_len == 0 { GlbPlanMode::Fallback { primitive: 0 } } else { GlbPlanMode::Roots { scene, index: 0 } };
-        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false,has_tangents:false, has_colors: false, output_bytes: 0 }
+        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false,has_tangents:false, has_colors: false, face_id_instances: 0, vertex_id_instances: 0, output_bytes: 0 }
+    }
+
+    /// 🎯️ Whether EVERY instantiated primitive carries `_FACE_ID`; a table with gaps would mix producer ids with anonymous ones, so a mixed bank publishes none.
+    fn has_face_ids(&self) -> bool {
+        self.instance_len != 0 && self.face_id_instances == self.instance_len
+    }
+
+    /// 🎯️ Whether EVERY instantiated primitive carries `_VERTEX_ID`.
+    fn has_vertex_ids(&self) -> bool {
+        self.instance_len != 0 && self.vertex_id_instances == self.instance_len
     }
 
     fn step(&mut self, schema: &GlbSchemaOutput) -> Result<bool, &'static str> {
@@ -2376,9 +2410,11 @@ impl GlbInstancePlanCursor {
         let has_uvs = self.has_uvs || primitive_schema.uv_sets.iter().any(Option::is_some);
         let has_tangents=self.has_tangents || primitive_schema.tangent.is_some();
         let has_colors = self.has_colors || primitive_schema.color.is_some();
-        let vertex_stride = 24usize.checked_add(if has_uvs { 40 } else { 0 }).and_then(|stride|stride.checked_add(if has_tangents{16}else{0})).and_then(|stride| stride.checked_add(if has_colors { 16 } else { 0 })).ok_or("GLB instantiated vertex stride overflowed")?;
+        let has_face_ids = self.face_id_instances != 0 || primitive_schema.face_id.is_some();
+        let has_vertex_ids = self.vertex_id_instances != 0 || primitive_schema.vertex_id.is_some();
+        let vertex_stride = 24usize.checked_add(if has_uvs { 40 } else { 0 }).and_then(|stride|stride.checked_add(if has_tangents{16}else{0})).and_then(|stride| stride.checked_add(if has_colors { 16 } else { 0 })).and_then(|stride| stride.checked_add(if has_vertex_ids { 4 } else { 0 })).ok_or("GLB instantiated vertex stride overflowed")?;
         let vertex_bytes = usize::try_from(vertex_count).ok().and_then(|count| count.checked_mul(vertex_stride)).ok_or("GLB instantiated vertex bytes overflowed")?;
-        let index_bytes = usize::try_from(output_index_count).ok().and_then(|count| count.checked_mul(4)).ok_or("GLB instantiated index bytes overflowed")?;
+        let index_bytes = usize::try_from(output_index_count).ok().and_then(|count| count.checked_mul(4).and_then(|bytes| bytes.checked_add(if has_face_ids { count / 3 * 4 } else { 0 }))).ok_or("GLB instantiated index bytes overflowed")?;
         let output_bytes = vertex_bytes.checked_add(index_bytes).ok_or("GLB instantiated output bytes overflowed")?;
         if output_bytes > GLB_SCHEMA_OUTPUT_BYTES {
             return Err("GLB instantiated output exceeded fixed byte credits");
@@ -2389,6 +2425,8 @@ impl GlbInstancePlanCursor {
         }
         self.instances[slot] = Some(GlbInstanceOutput { primitive, matrix, vertex_base, index_base, vertex_count: position.count, index_count, explicit_normals: primitive_schema.normal.is_some() });
         self.instance_len += 1;
+        self.face_id_instances += u16::from(primitive_schema.face_id.is_some());
+        self.vertex_id_instances += u16::from(primitive_schema.vertex_id.is_some());
         self.vertex_count = vertex_count;
         self.index_count = output_index_count;
         self.has_uvs = has_uvs;self.has_tangents=has_tangents;
@@ -2596,6 +2634,8 @@ enum GlbMaterializePhase {
     Uvs,
     Colors,
     Indices,
+    FaceIds,
+    VertexIds,
     GenerateNormals,
     NormalizeNormals,
     OutlineEdges,
@@ -2771,7 +2811,7 @@ impl GlbMaterializeCursor {
                     let outline = self.outline.as_mut().ok_or("GLB materializer lost its outline owner")?;
                     if outline.flush_step()? {
                         let edges = u32::try_from(outline.segments.len()).map_err(|_| "GLB outline output count overflowed")?;
-                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: 0, vertex_ids: 0, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } ,surface_uvs:if self.plan.has_uvs {[self.plan.vertex_count;4]}else{[0;4]},tangents:if self.plan.has_tangents {self.plan.vertex_count}else{0},};
+                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: if self.plan.has_face_ids() { self.plan.index_count / 3 } else { 0 }, vertex_ids: if self.plan.has_vertex_ids() { self.plan.vertex_count } else { 0 }, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } ,surface_uvs:if self.plan.has_uvs {[self.plan.vertex_count;4]}else{[0;4]},tangents:if self.plan.has_tangents {self.plan.vertex_count}else{0},};
                         self.write = Some(mesh3d_begin(owner.generation(), owner.revision(), schema).map_err(glb_mesh_fault)?);
                         self.phase = GlbMaterializePhase::Allocate;
                     }
@@ -2900,7 +2940,7 @@ impl GlbMaterializeCursor {
             }
             GlbMaterializePhase::Indices => {
                 if self.instance == self.plan.instance_len {
-                    self.advance_phase(GlbMaterializePhase::GenerateNormals);
+                    self.advance_phase(GlbMaterializePhase::FaceIds);
                     return Ok(false);
                 }
                 let instance = self.instance()?;
@@ -2912,6 +2952,41 @@ impl GlbMaterializeCursor {
                 let index = self.read_output_index(owner, pages, primitive, self.item, instance.vertex_count)?;
                 let index = instance.vertex_base.checked_add(index).ok_or("GLB instantiated index overflowed")?;
                 mesh3d_write_u32(self.write_token()?, Mesh3dField::Indices, index).map_err(glb_mesh_fault)?;
+                self.item += 1;
+                Ok(false)
+            }
+            GlbMaterializePhase::FaceIds => {
+                if self.instance == self.plan.instance_len || !self.plan.has_face_ids() {
+                    self.advance_phase(GlbMaterializePhase::VertexIds);
+                    return Ok(false);
+                }
+                let instance = self.instance()?;
+                if self.item == instance.index_count / 3 {
+                    self.next_instance();
+                    return Ok(false);
+                }
+                let primitive = self.primitive(instance)?;
+                let accessor = primitive.face_id.ok_or("GLB face id plan lost its accessor")?;
+                let corner = self.read_output_index(owner, pages, primitive, self.item * 3, instance.vertex_count)?;
+                let id = self.read_unsigned_id(owner, pages, accessor, corner)?;
+                mesh3d_write_u32(self.write_token()?, Mesh3dField::FaceIds, id).map_err(glb_mesh_fault)?;
+                self.item += 1;
+                Ok(false)
+            }
+            GlbMaterializePhase::VertexIds => {
+                if self.instance == self.plan.instance_len || !self.plan.has_vertex_ids() {
+                    self.advance_phase(GlbMaterializePhase::GenerateNormals);
+                    return Ok(false);
+                }
+                let instance = self.instance()?;
+                if self.item == instance.vertex_count {
+                    self.next_instance();
+                    return Ok(false);
+                }
+                let primitive = self.primitive(instance)?;
+                let accessor = primitive.vertex_id.ok_or("GLB vertex id plan lost its accessor")?;
+                let id = self.read_unsigned_id(owner, pages, accessor, self.item)?;
+                mesh3d_write_u32(self.write_token()?, Mesh3dField::VertexIds, id).map_err(glb_mesh_fault)?;
                 self.item += 1;
                 Ok(false)
             }
@@ -3118,6 +3193,22 @@ impl GlbMaterializeCursor {
             .ok_or("GLB accessor semantic address overflowed")?;
         let absolute = self.bin_start.checked_add(relative).ok_or("GLB accessor absolute address overflowed")?;
         glb_read_component(owner, pages, absolute, accessor.component, accessor.normalized)
+    }
+
+    /// 🎯️ One exact `u32` sub-element id; `read_component` widens through `f32` and would corrupt ids past 2^24.
+    fn read_unsigned_id(&self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex, accessor: u16, item: u32) -> Result<u32, &'static str> {
+        let schema = self.schema.accessor(accessor)?;
+        if schema.component != 5125 || schema.kind != 1 || item >= schema.count {
+            return Err("GLB sub-element id read exceeded its shape");
+        }
+        let view = self.schema.views.get(usize::from(schema.view)).and_then(Option::as_ref).ok_or("GLB sub-element id read lost its bufferView")?;
+        let stride = if view.byte_stride == 0 { size_of::<u32>() } else { usize::from(view.byte_stride) };
+        let relative = (view.byte_offset as usize)
+            .checked_add(schema.byte_offset as usize)
+            .and_then(|offset| usize::try_from(item).ok().and_then(|item| item.checked_mul(stride)).and_then(|item| offset.checked_add(item)))
+            .ok_or("GLB sub-element id address overflowed")?;
+        let absolute = self.bin_start.checked_add(relative).ok_or("GLB sub-element id absolute address overflowed")?;
+        Ok(u32::from_le_bytes(pages.read::<4>(owner, absolute)?))
     }
 
     fn read_output_index(&self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex, primitive: &GlbPrimitiveSchema, output: u32, vertex_count: u32) -> Result<u32, &'static str> {
@@ -19092,8 +19183,23 @@ impl semio_framework_value::FromValue for NativeSocketProbeSnapshot {
 struct NativeSocketProbeDiff(String);
 
 #[cfg(not(target_arch = "wasm32"))]
+impl store::os_spr::command::DiffAlgebra<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
+    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Self {
+        NativeSocketProbeDiff(base.0.clone())
+    }
+
+    fn between(_base: &NativeSocketProbeSnapshot, other: &NativeSocketProbeSnapshot) -> Self {
+        NativeSocketProbeDiff(other.0.clone())
+    }
+
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 impl store::os_spr::command::MutationDiff<NativeSocketProbeSnapshot> for NativeSocketProbeDiff {
-    fn apply(&self, _base: &NativeSocketProbeSnapshot) -> store::os_spr::command::MutationApplyResult<NativeSocketProbeSnapshot> {
+    fn apply(&self, _base: &NativeSocketProbeSnapshot, _capability: store::os_spr::command::ApplyCapability) -> store::os_spr::command::MutationApplyResult<NativeSocketProbeSnapshot> {
         Ok(NativeSocketProbeSnapshot(self.0.clone()))
     }
 

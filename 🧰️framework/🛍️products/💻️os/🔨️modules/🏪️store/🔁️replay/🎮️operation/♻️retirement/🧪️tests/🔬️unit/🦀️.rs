@@ -2,6 +2,7 @@
 
 use super::*;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ByteFactory;
 
 impl ArtifactOwnedValueRetirementFactory<u8> for ByteFactory {

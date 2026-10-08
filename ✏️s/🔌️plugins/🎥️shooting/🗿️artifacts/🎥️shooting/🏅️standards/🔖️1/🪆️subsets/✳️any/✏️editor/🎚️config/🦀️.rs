@@ -103,9 +103,12 @@ impl Default for ShootingConfig {
     }
 }
 
-store::impl_whole_record_config!(ShootingConfig);
+impl store::ConfigRecord for ShootingConfig {}
 //#endregion 🔖️Config
 
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod diff;
+pub use diff::ShootingConfigDiff;
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreatePvSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,7 @@ pub fn diff(payload: &super::CreatePvSystem, base: &EnergyModelSnapshot) -> prot
     if payload.index as usize > base.model.pv_systems.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} pv_systems.", payload.index, base.model.pv_systems.len()), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.pv_systems.insert(
-        payload.index as usize,
-        crate::model::PvSystemAssignment {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { pv_systems: Rows::inserting(payload.index as usize, crate::model::PvSystemAssignment {
             id: payload.id,
             dc_capacity_w: payload.dc_capacity_w,
             area_m2: payload.area_m2,
@@ -23,8 +20,6 @@ pub fn diff(payload: &super::CreatePvSystem, base: &EnergyModelSnapshot) -> prot
             azimuth_deg: payload.azimuth_deg,
             module_efficiency: payload.module_efficiency,
             inverter_efficiency: payload.inverter_efficiency,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

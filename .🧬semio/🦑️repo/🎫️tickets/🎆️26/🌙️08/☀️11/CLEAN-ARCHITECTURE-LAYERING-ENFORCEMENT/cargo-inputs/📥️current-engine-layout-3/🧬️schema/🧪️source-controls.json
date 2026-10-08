@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "measurements",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 3
+    },
+    "measurements": {
+      "const": [
+        {
+          "owner": "engine_canvas::EngineSurfaceRegistry",
+          "beforeBytes": 86544,
+          "afterBytes": 90264,
+          "capacity": 256,
+          "ownerBytes": 32
+        },
+        {
+          "owner": "scenes::AdmittedSurfaceMap<World3dState>",
+          "beforeBytes": 28400,
+          "afterBytes": 28440,
+          "capacity": 256,
+          "ownerBytes": 3136
+        }
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "stack",
+              "worker",
+              "threshold",
+              "capacity",
+              "owner-bytes",
+              "owner-name",
+              "other-row",
+              "element",
+              "scene-element",
+              "scene-capacity",
+              "scene-owner-bytes",
+              "scene-owner-name",
+              "missing-scene-correction",
+              "missing-engine-correction",
+              "extra-field",
+              "missing-row",
+              "before-hash",
+              "after-hash",
+              "inverse",
+              "path",
+              "binding",
+              "missing-binding",
+              "assertion",
+              "scene-assertion",
+              "kernel-assertion",
+              "world-model",
+              "world-recipe",
+              "store-transition",
+              "store-layout-acceptance"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

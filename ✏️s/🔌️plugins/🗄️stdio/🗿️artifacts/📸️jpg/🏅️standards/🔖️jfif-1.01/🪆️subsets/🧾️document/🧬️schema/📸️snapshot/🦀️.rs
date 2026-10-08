@@ -1,11 +1,4 @@
-//! 🧬️ JpgSnapshot schema — complete JFIF 1.01 semantic model, real codecs. Ticket
-//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: replaces the old
-//! `RasterImage`-shaped stub (`image: RasterImage{width,height,rgba}` only, no JFIF/SOF/DQT/DHT
-//! typing at all) with a typed JFIF APP0 header, typed SOF (frame) + id-keyed DQT/DHT tables,
-//! `DRI` restart interval, verbatim-retained other APPn/COM segments, and decoded pixels —
-//! `## Snapshot completeness spec`'s jpg row. `RasterImage` itself dies per the ticket's explicit
-//! kill directive (W0: "shared verbatim across jpg/png/tiff, png already killed its own copy") —
-//! `width`/`height`/`pixels` are first-class fields here, no shared wrapper type.
+//! 🧬️ Owned JPEG image content, density, thumbnail, and opaque metadata.
 
 use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
@@ -54,94 +47,6 @@ pub struct JfifThumbnail {
     pub rgb_data: Vec<u8>,
 }
 //#endregion Jfif
-
-//#region FrameScanModel
-/// 🧩 One SOF0 frame component descriptor: id, H/V sampling factors, and which of the (up to 4)
-/// DQT tables it dequantizes against. Id-keyed within `JpgFrameHeader.components`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct JpgFrameComponent {
-    pub id: u8,
-    pub h_sampling: u8,
-    pub v_sampling: u8,
-    pub quant_table_id: u8,
-}
-
-/// 🖼️ Baseline (SOF0) frame header — sample precision, dimensions, and the per-component
-/// sampling/quant-table layout the entropy-coded scan follows.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct JpgFrameHeader {
-    pub precision: u8,
-    pub width: u16,
-    pub height: u16,
-    pub components: Vec<JpgFrameComponent>,
-}
-
-/// 🎯 One SOS scan component: which DC/AC Huffman table (of up to 4 each) it decodes with.
-/// Transient decode/encode state — not persisted on `JpgSnapshot` (the persisted per-component
-/// table binding is `JpgFrameComponent.quant_table_id` plus `JpgSnapshot.huffman_tables`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct JpgScanComponent {
-    pub id: u8,
-    pub dc_table_id: u8,
-    pub ac_table_id: u8,
-}
-//#endregion FrameScanModel
-
-//#region QuantHuffmanTables
-/// 📊️ One `DQT` table (id-keyed within `JpgSnapshot.quant_tables`). `values` is retained in the
-/// EXACT zigzag scan order the DQT segment stores on disk (T.81 Annex B §B.2.4.1) — never
-/// reindexed to natural/row-major order, so a decoded table round-trips byte-for-byte.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct JpgQuantTable {
-    pub id: u8,
-    /// 🔢️ DQT `Pq` nibble: `0` = 8-bit values, `1` = 16-bit values.
-    pub precision: u8,
-    pub values: [u16; 64],
-}
-
-/// 🌳️ `DHT` table class — DC (differential prediction) or AC (run-length coefficients).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, Default)]
-#[value(rename_all = "camelCase")]
-pub enum JpgHuffmanClass {
-    #[default]
-    Dc,
-    Ac,
-}
-
-impl JpgHuffmanClass {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_u8(v: u8) -> Result<Self, String> {
-        match v {
-            0 => Ok(JpgHuffmanClass::Dc),
-            1 => Ok(JpgHuffmanClass::Ac),
-            _ => Err(format!("jpg: unsupported huffman class {v}")),
-        }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn to_u8(self) -> u8 {
-        match self {
-            JpgHuffmanClass::Dc => 0,
-            JpgHuffmanClass::Ac => 1,
-        }
-    }
-}
-
-/// 🌳️ One `DHT` table, keyed by `(class, id)` within `JpgSnapshot.huffman_tables` (DC id=0 and
-/// AC id=0 are DIFFERENT tables — the compound key is load-bearing). `bits`/`values` are the raw
-/// canonical-code counts-per-length and symbol-value bytes exactly as the DHT segment stores them.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct JpgHuffmanTable {
-    pub id: u8,
-    pub class: JpgHuffmanClass,
-    pub bits: [u8; 16],
-    #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
-    pub values: Vec<u8>,
-}
-//#endregion QuantHuffmanTables
 
 //#region OtherSegments
 /// 🗃️ An APPn (other than a recognized JFIF APP0)/COM segment the codec doesn't specifically
@@ -209,28 +114,10 @@ pub struct JpgSnapshot {
 
     // SOF (T.81 §B.2.2) — see the struct doc for why `frame`/`sof_marker`/`arithmetic` keep
     // their pre-existing shapes/names.
-    #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub frame: Option<JpgFrameHeader>,
-    #[state(artifact)]
-    #[value(default)]
-    pub sof_marker: u8,
-    #[state(artifact)]
-    #[value(default)]
-    pub arithmetic: bool,
 
     // DQT (T.81 §B.2.4.1) / DHT (T.81 §B.2.4.2) — id-keyed (DHT compound-keyed by class+id).
-    #[state(artifact)]
-    #[value(default)]
-    pub quant_tables: Vec<JpgQuantTable>,
-    #[state(artifact)]
-    #[value(default)]
-    pub huffman_tables: Vec<JpgHuffmanTable>,
 
     // DRI (T.81 §B.2.4.4) — `None` = no restart interval segment was present.
-    #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub restart_interval: Option<u16>,
 
     // Verbatim-retained other APPn/COM segments, in encounter order (§`JpgSegment` doc).
     #[state(artifact)]
@@ -250,12 +137,6 @@ impl Default for JpgSnapshot {
             jfif_x_density: 1,
             jfif_y_density: 1,
             jfif_thumbnail: None,
-            frame: None,
-            sof_marker: 0,
-            arithmetic: false,
-            quant_tables: Vec::new(),
-            huffman_tables: Vec::new(),
-            restart_interval: None,
             other_segments: Vec::new(),
         }
     }

@@ -1,19 +1,20 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfIndirectObject, PdfObject};
-use protocol::MutationDiff;
-
-/// 📕️ The smallest document an `/AcroForm` can hang off: one `/Type /Catalog` root.
-fn catalog_only() -> PdfSnapshot {
-    PdfSnapshot { objects: vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: support::dict(vec![("Type", PdfObject::Name("Catalog".into()))]) }], ..PdfSnapshot::default() }
-}
+use crate::standards::v1_7::subsets::base::schema::conformance_support::applied;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn removes_and_can_restore_the_named_signature_field() {
-    let mut base = catalog_only();
-    support::insert_signature_field(&mut base, "Signature1");
+    let catalog = support::document_of(vec![support::catalog_object()]);
+    let base = applied(&catalog, &PdfHMutation::InsertSignatureField(InsertSignatureField { name: "Signature1".to_string() }));
     let mutation = RemoveSignatureField { name: "Signature1".to_string() };
-    let outcome = <RemoveSignatureField as MutationKind<PdfSnapshot, PdfHMutation>>::diff(&mutation, &base);
-    let next = outcome.diff().apply(&base).unwrap();
+    let next = applied(&base, &PdfHMutation::RemoveSignatureField(mutation.clone()));
     assert!(support::signature_field_named(&next, &mutation.name).is_none());
+    assert_eq!(next, catalog, "the last field takes the whole form with it");
     assert_eq!(<RemoveSignatureField as MutationKind<PdfSnapshot, PdfHMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = applied(&support::document(), &PdfHMutation::InsertSignatureField(InsertSignatureField { name: "Signature1".to_string() }));
+    assert_mutation_inverse_sum_law(&PdfHMutation::RemoveSignatureField(RemoveSignatureField { name: "Signature1".to_string() }), &base).await;
 }

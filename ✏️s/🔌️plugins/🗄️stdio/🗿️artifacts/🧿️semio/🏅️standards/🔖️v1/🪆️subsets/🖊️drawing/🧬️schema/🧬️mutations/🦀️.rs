@@ -38,13 +38,10 @@ use super::ungroup_node;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-use super::set_snapshot::SetSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing")]
 pub enum SemioDrawingMutation {
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),
     CreateNode(create_node::CreateNode),
@@ -68,8 +65,7 @@ pub enum SemioDrawingMutation {
 /// vocabulary the `semio-v1-drawing` mutation catalog (`../../🔣️oracle.json`) declares
 /// and `🖊️mutate-semio-drawing`'s exhaustive test case measures itself against. The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
-    "create-layer",
+pub const KINDS: &[&str] = &["create-layer",
     "delete-layer",
     "create-node",
     "delete-node",
@@ -89,21 +85,19 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot",
 ];
 //#endregion 🔖️Mutations
 
-//#region 🔖️Apply
-/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
-/// (consumed by `../🦀️.rs`'s `SemioDrawingBuilderConstruction::mutate`).
+/// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
+/// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    use protocol::Mutation;
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+pub fn diff_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    <SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::diff(mutation, base)
 }
+
 
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🖊️mutate-semio-drawing` test adapter, whose `inverse-<kind>`
 /// scenarios need a mutation's own computed inverse) can still reach the inverse law that
-/// [`apply_semio_drawing_mutation`] alone cannot. Same shape as `🧰️kit`'s
+/// `diff_semio_*_mutation` alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
@@ -131,7 +125,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
     let root_path = NodePath { layer: 0, path: vec![] };
     let path_node_path = NodePath { layer: 0, path: vec![1] };
     vec![
-        SemioDrawingMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioDrawingMutation::CreateLayer(create_layer::CreateLayer { index: 1, layer: DrawLayer { id: "l1".into(), name: "new".into(), visible: true, root: DrawNode::default() } }),
         SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "l0".into() }),
         SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: root_path.clone(), index: 0, node: DrawNode::Text { value: "new".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None } }),

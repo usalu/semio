@@ -16,15 +16,15 @@ pub struct SetDrag {
 
 impl protocol::MutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> for SetDrag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drag", kind: "set-drag", record: "SetDrag" };
-    fn diff(&self, base: &WiresCanvasTransient) -> protocol::MutationOutcome<WiresCanvasTransient> {
-        let mut next = base.clone();
-        next.drag_node_id = self.node_id.clone();
-        next.drag_start_x = self.start_x;
-        next.drag_start_y = self.start_y;
-        next.drag_last_x = self.last_x;
-        next.drag_last_y = self.last_y;
-        next.drag_zoom = self.zoom;
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &WiresCanvasTransient) -> protocol::MutationOutcome<WiresCanvasTransientDiff> {
+        protocol::MutationOutcome::new(WiresCanvasTransientDiff {
+            drag_node_id: (base.drag_node_id != self.node_id).then(|| WiresCanvasOptionalNode { value: self.node_id.clone() }),
+            drag_start_x: (base.drag_start_x != self.start_x).then_some(self.start_x),
+            drag_start_y: (base.drag_start_y != self.start_y).then_some(self.start_y),
+            drag_last_x: (base.drag_last_x != self.last_x).then_some(self.last_x),
+            drag_last_y: (base.drag_last_y != self.last_y).then_some(self.last_y),
+            drag_zoom: (base.drag_zoom != self.zoom).then_some(self.zoom),
+        })
     }
     fn inverse(&self, base: &WiresCanvasTransient) -> Result<Vec<WiresCanvasTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {

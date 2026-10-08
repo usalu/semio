@@ -1,0 +1,5 @@
+# Current Native Fifteen Source Method Controls
+
+Actual supplied GUI900.226001, registered in both canonical launch files immediately before invocation, ran registered Bun/Nx exit0 PID55377. It sealed laws.json SHA256 831d948ff09632e6486e7ce0dc1b1cc62cc7e5bf797feac1306520fd64a91cf6. Sixteen original route controls, two own/JSON5 exact receipt-writer controls and seventeen same modelAuthoritiesV1 controls agree with independent AJV/JSON5 outcomes. All declared bindings rehashed exact after execution. Current source15 model input file is sealed with DAG4/World8/Renderer6green1/smoke1/UI5 current receipts, 28 unique model paths. The immediate full input observation recorded zero current binding and before-body drift for all five. Portable ticket-relative receipt paths and workspaceFolder GUI environments are used.
+
+No source capture, metadata/runtime capture, compiler or whole route has been invoked for15. Current independent source/Renderer6 method and input admission remain before actual capture. Physical layout values remain unaccepted for current providers until fresh original owning wholes run.

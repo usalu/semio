@@ -1,0 +1,9 @@
+# PDF Native Number Inputs
+
+Actual strict Stdio scope-m refuses PDF1.7 base/E/H/UA/VT/X mutation inputs and history: local semioPrimitive binary64 is unsupported by native validation, vector fields do not match the canonical numeric transport, and the reader falls into unlabelled internal bits. Current Value Binary64 and Binary64Transport exports are the authored authority. Native PDF Binary64 owners remain unchanged. New language-neutral media/crop/user-unit cases prove exact words independently with DataView and actual Ajv schemas, then require the real mutationInputDefs numeric/vector control. No generic parser/schema-validator relaxation or invented primitive annotation is planned. Native proof remains pending.
+
+Actual source32559 featureRED0/1,3expect231ms09:41:09.473Z passed independent exact IEEE754 words and actual native word validation, then rejected the plain numeric draft. Seven authored PDF1.7 schema files now use the actual public Value Binary64Transport export for202 native scalar fields (snapshot/diff/resource plus four leaf schemas); existing labels/units/optional unions are retained. No native owner, codec, parser or validator behavior changed. GREEN source recapture pending.
+
+Post-change33822 capture passed independent words and both actual native-word/plain-number Ajv assertions, then the isolated test resolver incorrectly returned undefined for the referenced framework schema. The test now supplies the imported genuine Value schema by its exact $id, mirroring native framework document registration. This was harness isolation failure, not new product RED or GREEN. Corrected capture pending.
+
+Corrected source35315 actually GREEN1/1,14expects537ms09:46:10.692Z. Independent DataView word and both Ajv carrier forms plus actual mutationInputDefs vector4/user-unit number emitted all3 DEBUG receipts. Fresh strict PDF native owner scope now captures all declared registrations; no native count yet.

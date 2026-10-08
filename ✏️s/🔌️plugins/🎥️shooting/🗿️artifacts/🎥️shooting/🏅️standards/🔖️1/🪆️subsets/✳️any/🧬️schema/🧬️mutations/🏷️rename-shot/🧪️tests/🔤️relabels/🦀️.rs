@@ -7,7 +7,7 @@
 
 use crate::mutations::ShootingMutation;
 use crate::{ShootingDiff, ShootingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-shot/🔤️relabels/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-shot/🔤️relabels/📸️snapshot/➡️after/🔣️.json");
@@ -25,7 +25,7 @@ fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
 fn apply(base: &ShootingSnapshot, step: &ShootingMutation) -> ShootingSnapshot {
-    step.diff(base).into_parts().0.apply(base).expect("rename-shot diff applies")
+    protocol::apply_diff(&step.diff(base).into_parts().0, base).expect("rename-shot diff applies")
 }
 
 /// ▶️ `rename-shot` patches the shot's `label` — the human caption — and leaves the `id` that every
@@ -78,13 +78,12 @@ async fn declared_outcome_holds_and_relabelling_to_the_same_label_is_a_no_op() {
     let again = mutation().diff(&expected_after());
     assert_eq!(again.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "rename-shot/relabels-shot-close-to-detail: relabelling to the current label is a Warning, never a rejection");
     assert_eq!(again.messages()[0].code.0, "mutation.no-op", "rename-shot/relabels-shot-close-to-detail: the equality guard's frozen code");
-    let unchanged = again.into_parts().0.apply(&expected_after()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&again.into_parts().0, &expected_after()).expect("a no-op outcome still applies");
     assert_eq!(unchanged, expected_after(), "rename-shot/relabels-shot-close-to-detail: a no-op relabel applies an empty diff");
 }
 
-/// 🔺️ The sparse delta this mutation produces is exactly the committed diff — it proves the `ShootingShotPatch` has `label` filled and its four sibling slots null — and note
-/// the patch type has no `background`/`cameraId` slot at all, so a relabel structurally cannot
-/// disturb either.
+/// 🔺️ The sparse delta this mutation produces is exactly the committed diff — it proves the `ShootingShotPatch` has `label` filled and every sibling slot null, `background` and
+/// `cameraId` included, so a relabel cannot disturb either.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
@@ -93,7 +92,7 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "rename-shot/relabels-shot-close-to-detail: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["patched"][0]["patch"]["label"], "Detail", "rename-shot/relabels-shot-close-to-detail: `label` is the one filled patch slot");
     assert!(committed["shots"]["patched"][0]["patch"]["width"].is_null() && committed["shots"]["patched"][0]["patch"]["height"].is_null(), "rename-shot/relabels-shot-close-to-detail: the pixel-dimension slots stay null");
-    assert!(committed["shots"]["patched"][0]["patch"].get("cameraId").is_none(), "rename-shot/relabels-shot-close-to-detail: `ShootingShotPatch` carries no camera slot, so a relabel cannot rebind a shot");
+    assert!(committed["shots"]["patched"][0]["patch"]["cameraId"].is_null(), "rename-shot/relabels-shot-close-to-detail: the `cameraId` slot stays null, so a relabel cannot rebind a shot");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed rename-shot patch round-trips through `ShootingDiff` unchanged.
@@ -109,6 +108,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: ShootingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-shot/relabels-shot-close-to-detail: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

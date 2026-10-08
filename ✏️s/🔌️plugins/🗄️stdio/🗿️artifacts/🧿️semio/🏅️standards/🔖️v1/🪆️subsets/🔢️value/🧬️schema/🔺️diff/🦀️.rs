@@ -118,7 +118,7 @@ pub struct SemioValueTreeDiff {
 }
 
 impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
-    fn apply(&self, base: &SemioValueSnapshot) -> protocol::MutationApplyResult<SemioValueSnapshot> {
+    fn apply(&self, base: &SemioValueSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioValueSnapshot> {
         let mut next = base.clone();
         if let Some(diff) = &self.root {
             validate_value_diff(diff, &base.root, vec!["root".to_string()])?;

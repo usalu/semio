@@ -1,6 +1,9 @@
-/** 🧬️ CAD document composed from four model slots and a drawing collection. */
+/** 🧬️ CAD document composed from four model slots and ordered drawing/topology children. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
+export type CadChild<S extends "model" | "drawing" | "brep"> = ArtifactChild & { target: ArtifactChild["target"] & { dialect: { artifactKind: "s.stdio.semio"; standard: "v1"; subset: S } } };
+export type CadBrepChild = CadChild<"brep">;
 
 export interface CadReference {
   id: string;
@@ -26,6 +29,7 @@ export interface CadArtifact {
   /** @state artifact @child kind=s.stdio.semio */ energyModel?: ArtifactChild;
   /** @state artifact @child kind=s.stdio.semio */ structureClassicModel?: ArtifactChild;
   /** @state artifact @child kind=s.stdio.semio many */ drawings: ArtifactChild[];
+  /** @state artifact @child kind=s.stdio.semio many */ breps: CadBrepChild[];
   /** @state artifact */ referencesByModelDefinitionId: Record<string, CadReferenceList>;
   /** @state artifact */ nodes: CadNode[];
 }
@@ -69,12 +73,12 @@ function fixedNumbers<T extends number>(value: unknown, size: T, at: string): nu
   return values;
 }
 
-/** 🪪️ Parses one exact model or drawing identity, including CAD's identity and subtype laws. */
-export function parseCadChild(value: unknown, subset: "model" | "drawing", at = "$"): ArtifactChild {
+/** 🪪️ Parses one exact model, drawing or topology identity, including CAD's identity and subtype laws. */
+export function parseCadChild<S extends "model" | "drawing" | "brep">(value: unknown, subset: S, at = "$"): CadChild<S> {
   const child = parseArtifactChild(value);
   const dialect = child.target.dialect;
   if (dialect.artifactKind !== "s.stdio.semio" || dialect.standard !== "v1" || dialect.subset !== subset) throw new Error(`${at}: expected s.stdio.semio@v1/${subset}`);
-  return child;
+  return { childId: child.childId, target: { artifactId: child.target.artifactId, dialect: { artifactKind: "s.stdio.semio", standard: "v1", subset } } };
 }
 
 export function parseCadNode(value: unknown, at = "$"): CadNode {
@@ -110,12 +114,13 @@ export function parseCadReferences(value: unknown, at = "$"): Record<string, Cad
 /** 🪪️ Parses only persisted CAD fields and rejects former flat geometry and UI selection state. */
 export function parseCadArtifact(value: unknown, at = "$"): CadArtifact {
   const row = object(value, at);
-  const allowed = ["schema", "id", "shapeModel", "buildingModel", "energyModel", "structureClassicModel", "drawings", "referencesByModelDefinitionId", "nodes"];
-  exact(row, allowed, ["schema", "id", "drawings", "referencesByModelDefinitionId", "nodes"], at);
+  const allowed = ["schema", "id", "shapeModel", "buildingModel", "energyModel", "structureClassicModel", "drawings", "breps", "referencesByModelDefinitionId", "nodes"];
+  exact(row, allowed, ["schema", "id", "drawings", "breps", "referencesByModelDefinitionId", "nodes"], at);
   const result: CadArtifact = {
     schema: string(row.schema, `${at}.schema`),
     id: string(row.id, `${at}.id`),
     drawings: array(row.drawings, `${at}.drawings`).map((item, index) => parseCadChild(item, "drawing", `${at}.drawings[${index}]`)),
+    breps: array(row.breps, `${at}.breps`).map((item, index) => parseCadChild(item, "brep", `${at}.breps[${index}]`)),
     referencesByModelDefinitionId: parseCadReferences(row.referencesByModelDefinitionId, `${at}.referencesByModelDefinitionId`),
     nodes: array(row.nodes, `${at}.nodes`).map((item, index) => parseCadNode(item, `${at}.nodes[${index}]`)),
   };

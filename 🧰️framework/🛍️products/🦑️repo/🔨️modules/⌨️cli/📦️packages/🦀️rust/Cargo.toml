@@ -4,7 +4,7 @@ name = "semio-framework-repo-cli"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "semio monorepo orchestrator CLI + TUI dashboard (binary: semio)"
+description = "semio repo command line and repo MCP stdio server (binaries: semio-repo, repo)"
 
 [package.metadata.semio]
 role = "tool"
@@ -16,10 +16,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [[bin]]
-name = "semio"
-path = "../../🚪️entrypoint/🦀️.rs"
-
-[[bin]]
 name = "repo"
 path = "📦️mcp-main.rs"
 
@@ -28,7 +24,6 @@ name = "semio-repo"
 path = "📦️cli-main.rs"
 
 [dependencies]
-semio-framework-repo-dashboard = { path = "../../../🎛️dashboard/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }

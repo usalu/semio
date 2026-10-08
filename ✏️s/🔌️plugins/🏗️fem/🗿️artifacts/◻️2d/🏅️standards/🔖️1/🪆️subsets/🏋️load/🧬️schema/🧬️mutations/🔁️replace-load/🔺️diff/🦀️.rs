@@ -1,12 +1,11 @@
-//! 🔺️ Sparse diff builder for `ReplaceLoad` — clones the target case, swaps the load in place,
-//! patches it.
+//! 🔺️ Sparse diff builder for `ReplaceLoad` — one patched load row inside the target case's keyed `loads` delta.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on `case_id`, the same code on
 //! `load_id`, `mutation.target-mismatch` (Error) when the replacement renames the load,
 //! the SAME per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the
 //! finite-magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry, Fem2dLoadsDelta, Fem2dLoadsPatchEntry};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::{load_id, Fem2dSnapshot};
 
@@ -30,12 +29,10 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem2dSnapshot) -> protocol::MutationOu
     if *held == *payload.new_load {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Load \"{}\" in case \"{}\" is already equal to the replacement value.", payload.load_id, payload.case_id));
     }
-    let mut item = existing.clone();
-    for slot in &mut item.loads {
-        if load_id(slot) == payload.load_id {
-            *slot = (*payload.new_load).clone();
-        }
-    }
-    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), item }], ..Default::default() }), ..Default::default() })
+    let loads = Fem2dLoadsDelta { patched: vec![Fem2dLoadsPatchEntry { id: payload.load_id.clone(), item: payload.new_load.clone() }], ..Default::default() };
+    protocol::MutationOutcome::new(Fem2dDiff {
+        load_cases: Some(Fem2dLoadCasesDelta { patched: vec![Fem2dLoadCasesPatchEntry { id: payload.case_id.clone(), patch: Fem2dLoadCasePatch { loads: Some(loads), ..Default::default() } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

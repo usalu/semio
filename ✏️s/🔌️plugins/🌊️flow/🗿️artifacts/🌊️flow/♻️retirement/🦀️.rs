@@ -112,9 +112,12 @@ impl<T> Drop for RootRetirement<T> {
 }
 
 /// 🧬️ A mutation is retained intact until a granted domain-retirement step.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct MutationRetirementFactory;
 
 impl store::SnapshotRetirementFactory<FlowMutation> for MutationRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<FlowMutation>) -> usize { std::mem::size_of::<RootRetirement<FlowMutation>>() }
+
     fn retire(&self, mutation: Arc<FlowMutation>) -> Box<dyn ErasedSnapshotRetirement> {
         Box::new(RootRetirement::new(Some(mutation), None, retire_mutation))
     }

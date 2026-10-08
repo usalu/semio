@@ -624,9 +624,18 @@ fn sqlite_snapshot_native_physical_pack_record_preserves_literal_table_and_numer
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::List(texts.iter().map(|text| semio_framework_dsl_record::FieldValue::Text(text.clone())).collect()));
     record.fields.insert(2, semio_framework_dsl_record::FieldValue::List(vec![FieldValue::UInt(u64::MAX), FieldValue::UInt(0)]));
     record.fields.insert(3, semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(texts.iter().enumerate().map(|(index, key)| (key.clone(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(index as u64)))).collect())));
+    let Some(FieldValue::Value(DslValue::Object(entries))) = record.fields.get_mut(&3) else { panic!("literal map owner") };
+    entries.sort_by(|a,b| a.0.as_bytes().cmp(b.0.as_bytes()));
     let options = PackEncodeOptions::default();
     let output = crate::os_pack::encode_record_body_controlled(&spec, &record, &options, &mut control).unwrap();
     assert_eq!(output, crate::os_pack::encode_record_body(&spec, &record, &options).unwrap());
+    let mut permuted = record.clone();
+    let Some(FieldValue::Value(DslValue::Object(entries))) = permuted.fields.get_mut(&3) else { panic!("literal object") };
+    entries.reverse();
+    let ordered = crate::os_pack::encode_record_body(&spec, &permuted, &options).unwrap();
+    assert_ne!(output, ordered, "intrinsic objects retain their explicit member sequence");
+    assert_eq!(ordered, crate::os_pack::encode_record_body_controlled(&spec, &permuted, &options, &mut control).unwrap());
+    assert_eq!(crate::os_pack::decode_record_body_exact(&ordered, &spec, &PackDecodeOptions::default()).unwrap().get(3), permuted.get(3));
     let decoded = crate::os_pack::decode_record_body_exact(&output, &spec, &PackDecodeOptions::default()).unwrap();
     let semio_framework_dsl_record::FieldValue::List(actual) = decoded.get(0).unwrap() else { panic!("table") };
     for (row, expected) in actual.iter().zip(&rows) {

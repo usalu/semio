@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "meta": null,
   "project": null,
@@ -66,55 +65,48 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
-  "knowledgePayload": null,
   "knowledge": null,
-  "benchmarksPayload": [
-    {
-      "id": "benchmark-record-a",
-      "name": "Benchmark Record A",
-      "status": "draft",
-      "priority": "preferred",
-      "ownership": {
-        "ownerId": null,
-        "authorityId": null,
-        "consultantIds": [],
-        "participantIds": []
-      },
-      "timestamps": {
-        "created": "1970-01-01T00:00:00Z",
-        "updated": "1970-01-01T00:00:00Z"
-      },
-      "benchmarkName": "",
-      "sector": "",
-      "metric": "",
-      "value": 0.0,
-      "unit": "",
-      "sampleSize": null,
-      "source": null,
-      "collectionYear": null,
-      "geography": null,
-      "buildingType": null,
-      "confidence": null,
-      "methodology": null,
-      "applicableElementKinds": [],
-      "relatedRequirementIds": [],
-      "comparisonNotes": [],
-      "limitations": [],
-      "license": null,
-      "knowledgeId": null,
-      "lastVerified": null
-    }
-  ],
   "benchmarks": {
-    "childId": "architect-benchmarks-d495e45cb640f017",
-    "target": {
-      "artifactId": "architect-benchmarks-d495e45cb640f017",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "table"
+    "added": [
+      {
+        "id": "benchmark-record-a",
+        "name": "Benchmark Record A",
+        "status": "draft",
+        "priority": "preferred",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "1970-01-01T00:00:00Z",
+          "updated": "1970-01-01T00:00:00Z"
+        },
+        "benchmarkName": "",
+        "sector": "",
+        "metric": "",
+        "value": 0.0,
+        "unit": "",
+        "sampleSize": null,
+        "source": null,
+        "collectionYear": null,
+        "geography": null,
+        "buildingType": null,
+        "confidence": null,
+        "methodology": null,
+        "applicableElementKinds": [],
+        "relatedRequirementIds": [],
+        "comparisonNotes": [],
+        "limitations": [],
+        "license": null,
+        "knowledgeId": null,
+        "lastVerified": null
       }
-    }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
   },
   "traces": null,
   "governance": null

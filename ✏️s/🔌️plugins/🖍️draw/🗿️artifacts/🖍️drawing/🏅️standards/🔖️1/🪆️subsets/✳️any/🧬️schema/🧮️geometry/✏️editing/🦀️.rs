@@ -1,6 +1,35 @@
 //! ✏️ Pure path-local edits shared by numeric controls and canvas gestures.
 use crate::PathSegment;
 
+/// 📐️ Borrows ordinal path geometry from persisted pages or computed geometry buffers.
+pub trait PathGeometrySource {
+    fn path_len(&self) -> usize;
+    fn path_segment(&self, index: usize) -> Option<&PathSegment>;
+    fn path_segments(&self) -> impl Iterator<Item = &PathSegment> {
+        (0..self.path_len()).map(|index| self.path_segment(index).expect("path ordinal remains present"))
+    }
+}
+
+impl PathGeometrySource for [PathSegment] {
+    fn path_len(&self) -> usize { self.len() }
+    fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
+}
+
+impl PathGeometrySource for Vec<PathSegment> {
+    fn path_len(&self) -> usize { self.len() }
+    fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
+}
+
+impl<const N: usize> PathGeometrySource for semio_framework_value::list::PagedList<PathSegment, N> {
+    fn path_len(&self) -> usize { self.len() }
+    fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
+}
+
+impl PathGeometrySource for std::borrow::Cow<'_, [PathSegment]> {
+    fn path_len(&self) -> usize { self.len() }
+    fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
+}
+
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
@@ -52,10 +81,10 @@ fn endpoint(segment: &PathSegment) -> Option<[f64; 2]> {
     }
 }
 
-fn contours(segments: &[PathSegment]) -> Result<Vec<(usize, usize)>, &'static str> {
+fn contours(segments: &(impl PathGeometrySource + ?Sized)) -> Result<Vec<(usize, usize)>, &'static str> {
     let mut ranges = Vec::new();
     let mut start = None;
-    for (index, segment) in segments.iter().enumerate() {
+    for (index, segment) in segments.path_segments().enumerate() {
         match segment {
             PathSegment::Move { .. } => { if let Some(start) = start { ranges.push((start, index)); } start = Some(index); }
             _ => {
@@ -64,27 +93,48 @@ fn contours(segments: &[PathSegment]) -> Result<Vec<(usize, usize)>, &'static st
             }
         }
     }
-    if let Some(start) = start { ranges.push((start, segments.len())); }
+    if let Some(start) = start { ranges.push((start, segments.path_len())); }
     Ok(ranges)
 }
 
-pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<PathSegment>, &'static str> {
-    if !source.iter().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
+fn reverse_path_ranges(source: &(impl PathGeometrySource + ?Sized), ranges: &[(usize,usize)]) -> Result<Vec<PathSegment>, &'static str> {
+        let mut output = Vec::with_capacity(ranges.iter().map(|(start,end)| end-start).sum());
+        for &(start, end) in ranges {
+            let closed = matches!(*source.path_segment(end - 1).expect("validated path ordinal"), PathSegment::Close);
+            let last = end - if closed { 2 } else { 1 };
+            output.push(PathSegment::Move { to: endpoint(&*source.path_segment(last).expect("validated path ordinal")).ok_or("Missing endpoint")? });
+            for index in (start + 1..=last).rev() {
+                let to = endpoint(&*source.path_segment(index - 1).expect("validated path ordinal")).ok_or("Invalid contour")?;
+                output.push(match *source.path_segment(index).expect("validated path ordinal") {
+                    PathSegment::Line { .. } => PathSegment::Line { to },
+                    PathSegment::Quad { ctrl, .. } => PathSegment::Quad { ctrl, to },
+                    PathSegment::Cubic { ctrl1, ctrl2, .. } => PathSegment::Cubic { ctrl1: ctrl2, ctrl2: ctrl1, to },
+                    PathSegment::Arc { rx, ry, rotation, large_arc, sweep, .. } => PathSegment::Arc { rx, ry, rotation, large_arc, sweep: !sweep, to },
+                    _ => return Err("Invalid contour"),
+                });
+            }
+            if closed { output.push(PathSegment::Close); }
+        }
+    Ok(output)
+}
+
+pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEdit) -> Result<Vec<PathSegment>, &'static str> {
+    if !source.path_segments().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
     let ranges = contours(source)?;
     if let PathEdit::Translate {points,delta}=operation {return translate_path_points(source,points,*delta);}
     if let PathEdit::DeletePoints {points}=operation {
-        if points.is_empty() {return Ok(source.to_vec());}
+        if points.is_empty() {return Ok(source.path_segments().cloned().collect());}
         if points.len()>4096 {return Err("Point selection exceeds editing capacity");}
-        let mut output=source.to_vec();
+        let mut output: Vec<PathSegment> = source.path_segments().cloned().collect();
         let mut removed=std::collections::BTreeSet::new();
         for point in points {
-            let segment=source.get(point.index).ok_or("Missing path node")?;
+            let segment=source.path_segment(point.index).ok_or("Missing path node")?;
             if matches!(segment,PathSegment::Close) {return Err("Missing path node");}
             if point.point==PathPoint::Anchor {removed.insert(point.index);continue;}
             match (segment,point.point) {
                 (PathSegment::Quad {to,..},PathPoint::Control1)=>output[point.index]=PathSegment::Line {to:*to},
                 (PathSegment::Cubic {..},PathPoint::Control1|PathPoint::Control2)=>{
-                    let previous=point.index.checked_sub(1).and_then(|index|source.get(index)).and_then(endpoint).ok_or("Missing previous anchor")?;
+                    let previous=point.index.checked_sub(1).and_then(|index|source.path_segment(index)).and_then(endpoint).ok_or("Missing previous anchor")?;
                     let PathSegment::Cubic {ctrl1,ctrl2,to}=&mut output[point.index] else {unreachable!()};
                     if point.point==PathPoint::Control1 {*ctrl1=previous;}else {*ctrl2=*to;}
                 }
@@ -93,7 +143,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
         }
         let mut result=Vec::new();
         for &(start,end) in &ranges {
-            let closed=matches!(source[end-1],PathSegment::Close);
+            let closed=matches!(*source.path_segment(end-1).expect("validated path ordinal"),PathSegment::Close);
             let mut kept=0;
             for (index,segment) in output.iter().enumerate().take(end-usize::from(closed)).skip(start) {
                 if removed.contains(&index) {continue;}
@@ -107,50 +157,31 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
 
     if let PathEdit::Join { index,other } = *operation {
         if index == other { return Err("Choose two different endpoints"); }
-        let range = |index| ranges.iter().copied().find(|(start,end)| (index == *start || index == end-1) && !matches!(source[end-1],PathSegment::Close)).ok_or("Choose endpoints of open contours");
+        let range = |index| ranges.iter().copied().find(|(start,end)| (index == *start || index == end-1) && !matches!(*source.path_segment(end-1).expect("validated path ordinal"),PathSegment::Close)).ok_or("Choose endpoints of open contours");
         let a = range(index)?;
         let b = range(other)?;
         if a == b { return edit_path(source,&PathEdit::Close { index }); }
-        let mut joined = if index == a.0 { edit_path(&source[a.0..a.1],&PathEdit::Reverse)? } else { source[a.0..a.1].to_vec() };
-        let target = if other == b.0 { source[b.0..b.1].to_vec() } else { edit_path(&source[b.0..b.1],&PathEdit::Reverse)? };
+        let mut joined = if index == a.0 { reverse_path_ranges(source, &[a])? } else { source.path_segments().take(a.1).skip(a.0).cloned().collect::<Vec<_>>() };
+        let target = if other == b.0 { source.path_segments().take(b.1).skip(b.0).cloned().collect::<Vec<_>>() } else { reverse_path_ranges(source, &[b])? };
         let to = endpoint(&target[0]).ok_or("Missing target endpoint")?;
         if joined.last().and_then(endpoint) != Some(to) { joined.push(PathSegment::Line { to }); }
         joined.extend_from_slice(&target[1..]);
-        let mut output = Vec::with_capacity(source.len()+1);
+        let mut output = Vec::with_capacity(source.path_len()+1);
         for (start,end) in ranges {
             if start == a.0.min(b.0) { output.append(&mut joined); }
-            if start != a.0 && start != b.0 { output.extend_from_slice(&source[start..end]); }
+            if start != a.0 && start != b.0 { output.extend(source.path_segments().take(end).skip(start).cloned()); }
         }
         return Ok(output);
     }
-    if matches!(operation, PathEdit::Reverse) {
-        let mut output = Vec::with_capacity(source.len());
-        for (start, end) in ranges {
-            let closed = matches!(source[end - 1], PathSegment::Close);
-            let last = end - if closed { 2 } else { 1 };
-            output.push(PathSegment::Move { to: endpoint(&source[last]).ok_or("Missing endpoint")? });
-            for index in (start + 1..=last).rev() {
-                let to = endpoint(&source[index - 1]).ok_or("Invalid contour")?;
-                output.push(match source[index] {
-                    PathSegment::Line { .. } => PathSegment::Line { to },
-                    PathSegment::Quad { ctrl, .. } => PathSegment::Quad { ctrl, to },
-                    PathSegment::Cubic { ctrl1, ctrl2, .. } => PathSegment::Cubic { ctrl1: ctrl2, ctrl2: ctrl1, to },
-                    PathSegment::Arc { rx, ry, rotation, large_arc, sweep, .. } => PathSegment::Arc { rx, ry, rotation, large_arc, sweep: !sweep, to },
-                    _ => return Err("Invalid contour"),
-                });
-            }
-            if closed { output.push(PathSegment::Close); }
-        }
-        return Ok(output);
-    }
+    if matches!(operation, PathEdit::Reverse) { return reverse_path_ranges(source, &ranges); }
     let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!() };
-    let item = source.get(index).ok_or("Missing path node")?;
+    let item = source.path_segment(index).ok_or("Missing path node")?;
     let (start, end) = ranges.into_iter().find(|(start, end)| index >= *start && index < *end).ok_or("Missing contour")?;
-    let mut output = source.to_vec();
+    let mut output: Vec<PathSegment> = source.path_segments().cloned().collect();
     match *operation {
         PathEdit::Convert { target, .. } => {
             if matches!(item, PathSegment::Move { .. } | PathSegment::Close) { return Err("Select a segment to convert"); }
-            let from = index.checked_sub(1).and_then(|index| endpoint(&source[index])).ok_or("Missing segment start")?;
+            let from = index.checked_sub(1).and_then(|index| endpoint(&*source.path_segment(index).expect("validated path ordinal"))).ok_or("Missing segment start")?;
             let to = endpoint(item).ok_or("Missing segment end")?;
             let mix = |a: [f64;2], b: [f64;2], t: f64| [a[0]*(1.0-t)+b[0]*t,a[1]*(1.0-t)+b[1]*t];
             let line = || PathSegment::Cubic { ctrl1: mix(from,to,1.0/3.0), ctrl2: mix(from,to,2.0/3.0), to };
@@ -171,7 +202,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
             output.splice(index..index+1,replacements);
         }
         PathEdit::Close { .. } | PathEdit::Open { .. } => {
-            let closed = matches!(source[end - 1], PathSegment::Close);
+            let closed = matches!(*source.path_segment(end - 1).expect("validated path ordinal"), PathSegment::Close);
             if matches!(operation, PathEdit::Open { .. }) && closed { output.remove(end - 1); }
             if matches!(operation, PathEdit::Close { .. }) && !closed {
                 if end - start < 2 { return Err("A contour needs at least two anchors"); }
@@ -181,7 +212,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
         PathEdit::Delete { .. } => match item {
             PathSegment::Close => return Err("Select an anchor to delete"),
             PathSegment::Move { .. } => {
-                if let Some(next) = source.get(index + 1).filter(|next| !matches!(next, PathSegment::Move { .. } | PathSegment::Close)) {
+                if let Some(next) = source.path_segment(index + 1).filter(|next| !matches!(next, PathSegment::Move { .. } | PathSegment::Close)) {
                     output[index + 1] = PathSegment::Move { to: endpoint(next).ok_or("Missing next endpoint")? };
                     output.remove(index);
                 } else { output.drain(start..end); }
@@ -196,13 +227,13 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
                 PathEdit::Coordinate {value,..}=>to[1]=value,
                 _=>unreachable!(),
             }
-            let (segment,next)=patch_path_point(item,source.get(index+1),point,to)?;
+            let (segment,next)=patch_path_point(item,source.path_segment(index+1),point,to)?;
             output[index]=segment;
             if let Some(next)=next {output[index+1]=next;}
         }
         PathEdit::Split { t, .. } => {
             if !(t > 0.0 && t < 1.0) { return Err("Split position must be between zero and one"); }
-            let previous = index.checked_sub(1).and_then(|index| source.get(index)).and_then(endpoint).ok_or("Select a segment to split")?;
+            let previous = index.checked_sub(1).and_then(|index| source.path_segment(index)).and_then(endpoint).ok_or("Select a segment to split")?;
             let mix = |a: [f64;2], b: [f64;2]| [a[0]*(1.0-t)+b[0]*t, a[1]*(1.0-t)+b[1]*t];
             let replacements = match *item {
                 PathSegment::Line { to } => vec![PathSegment::Line { to: mix(previous, to) }, item.clone()],
@@ -296,7 +327,11 @@ pub fn path_point_hit(segment:&PathSegment,matrix:[f64;6],world:[f64;2],toleranc
 }
 
 /// ↔️ Moves the union of selected coordinates and attached tangents exactly once.
-fn translate_path_points(source:&[PathSegment],points:&[PathPointRef],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
+fn translate_path_points(source:&(impl PathGeometrySource + ?Sized),points:&[PathPointRef],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
+    translate_owned_path_points(source.path_segments().cloned().collect(), points, delta)
+}
+
+fn translate_owned_path_points(mut source: Vec<PathSegment>,points:&[PathPointRef],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
     if points.is_empty() {return Err("Select at least one path point");}
     if !delta.iter().all(|value|value.is_finite()) {return Err("Invalid translation");}
     let mut masks=vec![0_u8;source.len()];
@@ -315,8 +350,7 @@ fn translate_path_points(source:&[PathSegment],points:&[PathPointRef],delta:[f64
             if matches!(source.get(target.index+1),Some(PathSegment::Quad {..}|PathSegment::Cubic {..})) {masks[target.index+1]|=2;}
         }
     }
-    let mut output=source.to_vec();
-    for (segment,mask) in output.iter_mut().zip(masks) {
+    for (segment,mask) in source.iter_mut().zip(masks) {
         let shift=|point:&mut [f64;2],bit:u8| {if mask&bit!=0 {point[0]+=delta[0];point[1]+=delta[1];}};
         match segment {
             PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Arc {to,..}=>shift(to,1),
@@ -326,12 +360,15 @@ fn translate_path_points(source:&[PathSegment],points:&[PathPointRef],delta:[f64
         }
         if !crate::schema::valid_path_segment(segment) {return Err("The edit exceeds finite coordinates");}
     }
-    Ok(output)
+    Ok(source)
 }
 
 /// 🌍️ Translate selected coordinates in document axes without applying the affine origin.
-pub fn translate_world_path_points(source:&[PathSegment],points:&[PathPointRef],matrix:[f64;6],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
+pub fn translate_world_path_points<'a>(source:impl IntoIterator<Item = &'a PathSegment>,points:&[PathPointRef],matrix:[f64;6],delta:[f64;2])->Result<Vec<PathSegment>,&'static str> {
     let basis=super::inverse([matrix[0],matrix[1],matrix[2],matrix[3],0.0,0.0]).ok_or("Cannot move points through a singular transform")?;
     if !matrix.iter().chain(delta.iter()).all(|value|value.is_finite()) {return Err("Cannot move points by a nonfinite displacement");}
-    edit_path(source,&PathEdit::Translate {points:points.to_vec(),delta:[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]]})
+    let source: Vec<PathSegment> = source.into_iter().cloned().collect();
+    if !source.iter().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
+    contours(&source)?;
+    translate_owned_path_points(source,points,[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]])
 }

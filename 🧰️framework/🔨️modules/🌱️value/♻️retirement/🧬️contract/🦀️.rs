@@ -29,10 +29,12 @@ pub trait ErasedSnapshotRetirement: Send {
     }
 }
 
-pub trait SnapshotRetirementFactory<P>: Send + Sync {
+pub trait SnapshotRetirementFactory<P>: crate::FactoryRetirement + Send + Sync {
+    /// 📦️ Publishes the retained cursor birth allocation before snapshot ownership transfers.
+    fn retirement_birth_bytes(&self, snapshot: &Arc<P>) -> usize;
     fn retire(&self, snapshot: Arc<P>) -> Box<dyn ErasedSnapshotRetirement>;
 }
 
-pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync {
+pub trait ArtifactOwnedValueRetirementFactory<T>: crate::FactoryRetirement + Send + Sync {
     fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement>;
 }

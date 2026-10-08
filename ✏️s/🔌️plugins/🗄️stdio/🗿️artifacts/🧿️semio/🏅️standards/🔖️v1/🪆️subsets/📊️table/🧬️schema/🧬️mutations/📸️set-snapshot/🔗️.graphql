@@ -1,2 +1,0 @@
-# 📸️ Whole SemioTableSnapshot replacement.
-input SetSnapshot { snapshot: SemioTableSnapshot! }

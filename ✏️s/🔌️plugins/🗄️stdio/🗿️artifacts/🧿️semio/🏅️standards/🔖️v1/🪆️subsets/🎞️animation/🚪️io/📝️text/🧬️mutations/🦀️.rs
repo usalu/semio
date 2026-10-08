@@ -84,8 +84,6 @@ impl OpText for SemioAnimationMutation {
         use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_str};
         use SemioAnimationMutation::*;
         match self {
-            PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-            SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("S:{}", enc_animation_snapshot(snapshot)),
             InsertTimeline(insert_timeline::InsertTimeline { index, timeline }) => format!("IT:{index},{}", enc_timeline(timeline)),
             RemoveTimeline(remove_timeline::RemoveTimeline { index }) => format!("RT:{index}"),
             SetTimelineName(set_timeline_name::SetTimelineName { index, name }) => format!(
@@ -118,7 +116,6 @@ impl OpText for SemioAnimationMutation {
         use SemioAnimationMutation::*;
         let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
         if line.starts_with("patch-snapshot patch=") {
-            return semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })).map_err(fail);
         }
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());
         let parse_f64 = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
@@ -126,7 +123,6 @@ impl OpText for SemioAnimationMutation {
         let (tag, rest) = line.split_once(':').ok_or_else(|| fail(format!("op: bad shape {line:?}")))?;
         (|| -> Result<Self, String> {
             match tag {
-                "S" => Ok(SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_animation_snapshot(rest)? })),
                 "IT" => {
                     let (index, timeline) = rest.split_once(',').ok_or_else(|| "IT: missing comma".to_string())?;
                     Ok(InsertTimeline(insert_timeline::InsertTimeline { index: parse_usize(index)?, timeline: dec_timeline(timeline)? }))

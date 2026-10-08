@@ -130,7 +130,7 @@
       "pack_schema_hash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
       "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1",
       "descriptor_codec_id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
-      "protocol_source_sha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22",
+      "protocol_source_sha256": "0d32030c224fda4733dc23733130d50931413bba28c83168817f294c8d1943c8",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json"
     },
@@ -325,7 +325,7 @@
       "pack_schema_hash": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
       "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1",
       "descriptor_codec_id": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
-      "protocol_source_sha256": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
+      "protocol_source_sha256": "a03332233369d8b4fe73673352f9eed2c828468b800bec3ab54a47f0d29f5327",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json"
     },

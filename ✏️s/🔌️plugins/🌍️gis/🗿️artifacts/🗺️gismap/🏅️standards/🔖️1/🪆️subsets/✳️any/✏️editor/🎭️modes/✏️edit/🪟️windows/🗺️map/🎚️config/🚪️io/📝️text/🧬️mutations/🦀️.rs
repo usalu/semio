@@ -6,12 +6,12 @@ use super::*;
 use crate::editor::gis2d::modes::edit::windows::map::config::component::mutations::*;
 use crate::editor::gis2d::modes::edit::windows::map::config::component::{MapWindowConfig, MapWindowConfigDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
-use set_camera::SetCamera;
-use set_layer_stroke_scale::SetLayerStrokeScale;
-use set_layer_visibility::SetLayerVisibility;
-use set_lod_mode::SetLodMode;
-use set_render_mode::SetRenderMode;
-use set_vector_style::SetVectorStyle;
+
+
+
+
+
+
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `MapWindowConfig`.

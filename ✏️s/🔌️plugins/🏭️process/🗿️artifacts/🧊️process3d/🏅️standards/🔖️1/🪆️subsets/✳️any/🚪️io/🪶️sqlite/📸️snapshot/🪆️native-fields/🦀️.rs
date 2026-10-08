@@ -1,6 +1,9 @@
 /// 🪆️ replacement for actual tagged domain fields, preserving controlled value errors.
 macro_rules! controlled_tagged_variant_field{
  ($($name:ty),+)=>{$(
+  impl semio_framework_dsl_record::BorrowedDslField for $name{
+   const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);
+  }
   impl semio_framework_dsl_record::DslField for $name{
    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{Ok(semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control)?))}
    fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants())}

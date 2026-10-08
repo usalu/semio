@@ -7,14 +7,14 @@
 //! round-trip tested and unreachable from any command, menu or button
 //! (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
 //!
-//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set` does: as
-//! an ordered batch of real `Generation3dMutation`s built by `generation3d_host_snapshot_operations`, never
+//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set-active-example` does: as
+//! the ordered unload/load batch of real `Generation3dMutation`s `generation3d_document_replacement` spells, never
 //! an `Effect::LoadDocument`. That keeps the import event-sourced and point-invertible — one `mod+z`
 //! puts the previous graph back — where a whole-document replace effect would be a CRUD write with
 //! no inverse.
 //!
 //! 📷️ The camera rides the CONFIG lane (`config_after_document_load`), exactly as an example switch
-//! does, because `generation3d_host_snapshot_operations` deliberately ignores it
+//! does, because `generation3d_document_replacement` deliberately does not author it
 //! (`mutations::tests::fixture_ops_ignore_camera`).
 //!
 //! ⏳️ Progress and cancellation belong to the transfer: the shell reports chunk progress and cancels
@@ -27,14 +27,9 @@
 use crate::editor::generation3d::commands::set_active_example::config_after_document_load;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::io::document_io;
-use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
-
-use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation3d};
-
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_host_snapshot_operations};
+use crate::standards::v1::subsets::any::schema::mutations::{generation3d_document_replacement, Generation3dMutation};
 
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -106,9 +101,8 @@ pub fn apply_complete_payload(
     cfg: &ConfigView<'_, Generation3dConfig>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
-    let mut operations: Vec<Generation3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
-    operations.extend(generation3d_host_snapshot_operations(&doc.snapshot.host_snapshot, &imported.host_snapshot));
-    let config = config_after_document_load(cfg.snapshot, &imported.host_snapshot.camera);
+    let operations = generation3d_document_replacement(doc.snapshot, &imported);
+    let config = config_after_document_load(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
     Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation3dConfigMutation::SetSnapshot(crate::editor::generation3d::config::SetSnapshot { config })], ..Default::default() })
 }

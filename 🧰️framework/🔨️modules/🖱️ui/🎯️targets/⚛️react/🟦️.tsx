@@ -8710,6 +8710,16 @@ export {
   NoColorSpace,
   TorusGeometry,
   Vector3,
+  Vector2,
+  Matrix4,
+  Plane as ThreePlane,
+  BackSide,
+  MeshBasicMaterial,
+  AlwaysStencilFunc,
+  NotEqualStencilFunc,
+  IncrementWrapStencilOp,
+  DecrementWrapStencilOp,
+  ReplaceStencilOp,
 } from "three";
 export { GLTFLoader };
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";

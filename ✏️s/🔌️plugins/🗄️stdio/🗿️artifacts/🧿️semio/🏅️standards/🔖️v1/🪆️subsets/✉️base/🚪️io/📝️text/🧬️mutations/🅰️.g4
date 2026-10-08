@@ -4,6 +4,6 @@ grammar Semio_any_mutations;
 
 op: taggedOp;
 taggedOp: tag ':' REST;
-tag: 'setSnapshot' | 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow';
+tag: 'brep' | 'mesh' | 'model' | 'value' | 'document' | 'cad' | 'drawing' | 'image' | 'video' | 'audio' | 'animation' | 'presentation' | 'flow';
 
 REST: .*? ;

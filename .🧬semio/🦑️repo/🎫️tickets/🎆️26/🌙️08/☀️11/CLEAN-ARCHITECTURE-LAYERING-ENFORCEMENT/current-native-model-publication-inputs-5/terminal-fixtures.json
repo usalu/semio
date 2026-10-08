@@ -1,0 +1,740 @@
+[
+  {
+    "id": "valid-ui",
+    "owner": "ui",
+    "plan": {
+      "route": {
+        "id": "ui",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "ui",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "ui",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": true
+  },
+  {
+    "id": "valid-board",
+    "owner": "board",
+    "plan": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": true
+  },
+  {
+    "id": "valid-product",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": true
+  },
+  {
+    "id": "owning-owningExitCode",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 1,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "owning-refusal",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": "failure",
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "owning-sourcePostUnavailable",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": true,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "owning-postRefusal",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": "advanced",
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "owning-cancelled",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": true
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-exitCode",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 1,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-refusal",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": "failure",
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-postRefusal",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": "advanced",
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-cancelled",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": true
+    },
+    "accepted": false
+  },
+  {
+    "id": "plan-wrong-owner",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "terminal-wrong-owner",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-wrong-owner",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "board",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "terminal-route-drift",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "short"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "dispatcher-route-drift",
+    "owner": "product",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "short"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  },
+  {
+    "id": "unknown-owner",
+    "owner": "removed",
+    "plan": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      }
+    },
+    "terminal": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "owningExitCode": 0,
+      "refusal": null,
+      "sourcePostUnavailable": false,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "dispatcher": {
+      "route": {
+        "id": "product",
+        "command": [
+          "test",
+          "long"
+        ]
+      },
+      "exitCode": 0,
+      "refusal": null,
+      "postRefusal": null,
+      "cancelled": false
+    },
+    "accepted": false
+  }
+]

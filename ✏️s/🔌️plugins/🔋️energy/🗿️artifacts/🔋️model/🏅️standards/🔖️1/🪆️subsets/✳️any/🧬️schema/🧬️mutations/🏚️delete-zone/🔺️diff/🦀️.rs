@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZonePatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -30,8 +30,6 @@ pub fn diff(payload: &super::DeleteZone, base: &EnergyModelSnapshot) -> protocol
     {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Zone {} is still referenced by another entity; delete or reassign those first.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.zones.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zones: Rows::removing(&base.model.zones, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

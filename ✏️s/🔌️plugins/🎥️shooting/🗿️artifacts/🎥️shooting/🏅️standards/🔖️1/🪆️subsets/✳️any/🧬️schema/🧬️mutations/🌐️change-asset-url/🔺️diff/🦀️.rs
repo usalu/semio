@@ -2,7 +2,7 @@
 //! when already at that url.
 
 use super::ChangeAssetUrl;
-use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::diff::ShootingDiff;
 use crate::ShootingAssetPatch;
 use crate::ShootingSnapshot;
 
@@ -13,8 +13,5 @@ pub fn diff(payload: &ChangeAssetUrl, base: &ShootingSnapshot) -> protocol::Muta
     if existing.url == payload.new_url {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" already has that url.", payload.id));
     }
-    protocol::MutationOutcome::new(ShootingDiff {
-        assets: Some(ShootingAssetsDelta { patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { url: Some(payload.new_url.clone()), ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(ShootingDiff::asset_patches([(payload.id.clone(), ShootingAssetPatch { url: Some(payload.new_url.clone()), ..Default::default() })]))
 }

@@ -1,0 +1,87 @@
+{
+  "schema": "member-genesis-envelope.v1",
+  "maximumCopyBytes": 64,
+  "cases": [
+    {
+      "id": "plain",
+      "schema": "demo/v1",
+      "expected": {
+        "artifact_id": "child",
+        "dialect": {
+          "artifact_kind": "test",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "owner": {
+        "parent": {
+          "artifact_id": "parent",
+          "dialect": {
+            "artifact_kind": "parent.test",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
+        "slot": "geometry",
+        "child_id": "child"
+      },
+      "initialPackHex": "7b226e223a357d",
+      "packRepeats": 1,
+      "expectedSha256": "1c3f168c6d349b3a2c3883d9a65a0921ab73ad4f91c765f7a1b892fe553b50af"
+    },
+    {
+      "id": "uuid",
+      "schema": "demo/v1",
+      "expected": {
+        "artifact_id": "child-00000000-0000-0000-0000-000000000001",
+        "dialect": {
+          "artifact_kind": "test",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "owner": {
+        "parent": {
+          "artifact_id": "parent",
+          "dialect": {
+            "artifact_kind": "parent.test",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
+        "slot": "geometry",
+        "child_id": "child-00000000-0000-0000-0000-000000000001"
+      },
+      "initialPackHex": "7b226e223a357d",
+      "packRepeats": 4097,
+      "expectedSha256": "72d4721a9eecc29e932b61fb5a6742b86aebdcab1eeb6a3dbecd761f9a586cd0"
+    },
+    {
+      "id": "alias-unicode",
+      "schema": "demo/v1",
+      "expected": {
+        "artifact_id": "demo/v1",
+        "dialect": {
+          "artifact_kind": "kind-δ",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "owner": {
+        "parent": {
+          "artifact_id": "parent-α",
+          "dialect": {
+            "artifact_kind": "parent.test",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
+        "slot": "slot-β",
+        "child_id": "demo/v1"
+      },
+      "initialPackHex": "7b226e223a357d",
+      "packRepeats": 16385,
+      "expectedSha256": "2da97e89a1c2af833bb6ae9eb4b19a64a63e38dd00a9704a5d56c9178417180b"
+    }
+  ]
+}

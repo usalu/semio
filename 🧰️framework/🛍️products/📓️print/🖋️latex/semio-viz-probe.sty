@@ -10,6 +10,7 @@
 %region 🔖️State
 \iow_new:N \g_semio_viz_probe_iow
 \bool_new:N \g_semio_viz_probe_open_bool
+\bool_new:N \g_semio_viz_probe_begun_bool
 \bool_new:N \g_semio_viz_probe_geometry_bool
 \str_new:N \g_semio_viz_probe_case_str
 \str_new:N \g_semio_viz_probe_scenario_str
@@ -53,6 +54,7 @@
     \iow_open:Nn \g_semio_viz_probe_iow { \jobname .probe.jsonl }
     \bool_gset_true:N \g_semio_viz_probe_open_bool
   }
+  \bool_gset_true:N \g_semio_viz_probe_begun_bool
   \semio_viz_probe_escape:nN {#1} \l_semio_viz_probe_item_str
   \str_gset_eq:NN \g_semio_viz_probe_case_str \l_semio_viz_probe_item_str
   \semio_viz_probe_escape:nN {#2} \l_semio_viz_probe_item_str
@@ -122,7 +124,11 @@
 
 % 📄 A TeX run that ships no page writes no files at all, and the probe stream goes with them. A
 % probe that renders nothing gets its identifying line here rather than having to remember one.
-\AtEndDocument{ \bool_if:NF \g_semio_viz_probe_page_bool { \semio_viz_probe_page: } }
+% A document that never began a probe is not a probe and gets no line.
+\AtEndDocument{
+  \bool_if:NT \g_semio_viz_probe_begun_bool
+    { \bool_if:NF \g_semio_viz_probe_page_bool { \semio_viz_probe_page: } }
+}
 
 % 🧭 Geometry hook: marks and families call this with a primitive kind and its numeric payload; active only after \SemioVizProbeOn.
 \cs_new_protected:Npn \semio_viz_probe_geometry:nn #1#2 {

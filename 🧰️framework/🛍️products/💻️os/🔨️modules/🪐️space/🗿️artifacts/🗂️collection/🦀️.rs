@@ -418,8 +418,66 @@ pub struct CollectionDiff {
     pub replaced_entry_body: Option<ReplacedEntryBody>,
 }
 
+impl protocol::DiffAlgebra<CollectionSnapshot> for CollectionDiff {
+    fn inverse(&self, base: &CollectionSnapshot) -> Self {
+        let mut inverse = Self::default();
+        inverse.renamed_collection = self.renamed_collection.as_ref().map(|_| base.name.clone());
+        if let Some(folder) = &self.created_folder {
+            inverse.deleted_folder_ids = Some(vec![folder.id.clone()]);
+        }
+        if let Some(ids) = &self.deleted_folder_ids {
+            if let Some((index, folder)) = base.folders.iter().enumerate().find(|(_, folder)| ids.contains(&folder.id)) {
+                inverse.created_folder = Some(folder.clone());
+                inverse.created_folder_at = Some(index as u32);
+            }
+        }
+        inverse.moved_folder = self.moved_folder.as_ref().and_then(|moved| base.folders.iter().find(|folder| folder.id == moved.id).map(|folder| MovedToContainer { id: moved.id.clone(), new_parent: folder.parent_id.clone() }));
+        inverse.renamed_folder = self.renamed_folder.as_ref().and_then(|renamed| base.folders.iter().find(|folder| folder.id == renamed.id).map(|folder| RenamedItem { id: renamed.id.clone(), new_name: folder.name.clone() }));
+        if let Some(entry) = &self.created_entry {
+            inverse.deleted_entry_ids = Some(vec![entry.id.clone()]);
+        }
+        if let Some(ids) = &self.deleted_entry_ids {
+            if let Some((index, entry)) = base.entries.iter().enumerate().find(|(_, entry)| ids.contains(&entry.id)) {
+                inverse.created_entry = Some(entry.clone());
+                inverse.created_entry_at = Some(index as u32);
+            }
+        }
+        inverse.moved_entry = self.moved_entry.as_ref().and_then(|moved| base.entries.iter().find(|entry| entry.id == moved.id).map(|entry| MovedToContainer { id: moved.id.clone(), new_parent: entry.folder_id.clone() }));
+        inverse.renamed_entry = self.renamed_entry.as_ref().and_then(|renamed| base.entries.iter().find(|entry| entry.id == renamed.id).map(|entry| RenamedItem { id: renamed.id.clone(), new_name: entry.name.clone() }));
+        inverse.replaced_entry_body = self.replaced_entry_body.as_ref().and_then(|replaced| base.entries.iter().find(|entry| entry.id == replaced.entry_id).map(|entry| ReplacedEntryBody { entry_id: replaced.entry_id.clone(), new_body: entry.body.clone() }));
+        inverse
+    }
+
+    fn between(base: &CollectionSnapshot, other: &CollectionSnapshot) -> Self {
+        let mut diff = Self::default();
+        diff.renamed_collection = (base.name != other.name).then(|| other.name.clone());
+        if let Some((index, folder)) = other.folders.iter().enumerate().find(|(_, folder)| !base.folders.iter().any(|existing| existing.id == folder.id)) {
+            diff.created_folder = Some(folder.clone());
+            diff.created_folder_at = Some(index as u32);
+        }
+        let deleted_folders: Vec<String> = base.folders.iter().filter(|folder| !other.folders.iter().any(|existing| existing.id == folder.id)).map(|folder| folder.id.clone()).collect();
+        diff.deleted_folder_ids = (!deleted_folders.is_empty()).then_some(deleted_folders);
+        diff.moved_folder = other.folders.iter().find(|folder| base.folders.iter().any(|existing| existing.id == folder.id && existing.parent_id != folder.parent_id)).map(|folder| MovedToContainer { id: folder.id.clone(), new_parent: folder.parent_id.clone() });
+        diff.renamed_folder = other.folders.iter().find(|folder| base.folders.iter().any(|existing| existing.id == folder.id && existing.name != folder.name)).map(|folder| RenamedItem { id: folder.id.clone(), new_name: folder.name.clone() });
+        if let Some((index, entry)) = other.entries.iter().enumerate().find(|(_, entry)| !base.entries.iter().any(|existing| existing.id == entry.id)) {
+            diff.created_entry = Some(entry.clone());
+            diff.created_entry_at = Some(index as u32);
+        }
+        let deleted_entries: Vec<String> = base.entries.iter().filter(|entry| !other.entries.iter().any(|existing| existing.id == entry.id)).map(|entry| entry.id.clone()).collect();
+        diff.deleted_entry_ids = (!deleted_entries.is_empty()).then_some(deleted_entries);
+        diff.moved_entry = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.folder_id != entry.folder_id)).map(|entry| MovedToContainer { id: entry.id.clone(), new_parent: entry.folder_id.clone() });
+        diff.renamed_entry = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.name != entry.name)).map(|entry| RenamedItem { id: entry.id.clone(), new_name: entry.name.clone() });
+        diff.replaced_entry_body = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.body != entry.body)).map(|entry| ReplacedEntryBody { entry_id: entry.id.clone(), new_body: entry.body.clone() });
+        diff
+    }
+
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
 impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
-    fn apply(&self, base: &CollectionSnapshot) -> protocol::MutationApplyResult<CollectionSnapshot> {
+    fn apply(&self, base: &CollectionSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CollectionSnapshot> {
         let mut next = base.clone();
         if self.created_folder.is_some() != self.created_folder_at.is_some() {
             return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created folder requires an exact final index").at(["folders"]));

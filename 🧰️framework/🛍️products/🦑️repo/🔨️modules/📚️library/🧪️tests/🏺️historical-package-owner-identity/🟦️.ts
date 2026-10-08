@@ -100,20 +100,12 @@ test("genuine historical purity authority is registered with no broader span own
   expect(live!.coordinates).toHaveLength(vector.historicalCoordinates.length + 1);
 });
 
-test("historical owner identity gate is registered in Nx and both launch catalogs", () => {
+test("historical owner identity gate is registered in Nx", () => {
   const target = vector.execution;
   const projectBytes = readFileSync(join(libraryRoot, target.projectLibraryRelativePath), "utf8");
   const project = JSON.parse(projectBytes);
   expect(project).toEqual(getNodeValue(parseTree(projectBytes)!));
   expect(project.targets[target.target]?.options.command).toBe(target.command);
-  const launches = target.launchCatalogs.map((path: string) => {
-    const catalog = getNodeValue(parseTree(readFileSync(join(repoRoot, path), "utf8"))!);
-    const entries = catalog.configurations.filter((entry: { name: string }) => entry.name === target.launchName);
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toEqual({ name: target.launchName, type: "node-terminal", request: "launch", command: target.launchCommand, cwd: "${workspaceFolder}", presentation: { group: target.group, order: target.order } });
-    return entries[0];
-  });
-  expect(launches[0]).toEqual(launches[1]);
 });
 
 test("current isolated census follows moved added and retired files without reopening historical source paths", async () => {

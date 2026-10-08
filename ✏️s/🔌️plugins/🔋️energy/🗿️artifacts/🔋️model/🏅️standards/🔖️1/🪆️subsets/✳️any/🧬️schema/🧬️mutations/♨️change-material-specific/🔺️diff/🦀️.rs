@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeMaterialSpecificHeat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeMaterialSpecificHeat, base: &EnergyModelSnaps
     if existing.specific_heat_j_kg_k == payload.new_specific_heat_j_kg_k {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this specific heat (J/kg·K): {}.", payload.id.0, payload.new_specific_heat_j_kg_k));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {
-        item.specific_heat_j_kg_k = payload.new_specific_heat_j_kg_k;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { materials: Rows::modifying(MaterialPatch { specific_heat_j_kg_k: Some(payload.new_specific_heat_j_kg_k), ..MaterialPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

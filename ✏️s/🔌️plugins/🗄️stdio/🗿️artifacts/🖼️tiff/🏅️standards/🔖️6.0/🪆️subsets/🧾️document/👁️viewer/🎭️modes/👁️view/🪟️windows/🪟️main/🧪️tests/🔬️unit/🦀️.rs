@@ -21,15 +21,14 @@ async fn render_projects_the_primary_ifd_to_browser_png() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_projects_an_uncompressed_tiled_primary_ifd() {
-    use crate::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
+    use crate::schema::snapshot::{TiffIfd,TiffSampleBlock,TiffWord64,TiffTag,TiffValues,TAG_BITS_PER_SAMPLE,TAG_IMAGE_LENGTH,TAG_IMAGE_WIDTH,TAG_PHOTOMETRIC,TAG_SAMPLES_PER_PIXEL};
     let short = |tag, values| TiffTag { tag, values: TiffValues::Short(values) };
     let long = |tag, value| TiffTag { tag, values: TiffValues::Long(vec![value]) };
     let document = TiffSnapshot {
         schema: crate::STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-        byte_order: TiffByteOrder::LittleEndian,
         ifds: vec![TiffIfd {
-            entries: vec![long(TAG_IMAGE_WIDTH, 16), long(TAG_IMAGE_LENGTH, 16), short(TAG_BITS_PER_SAMPLE, vec![8, 8, 8]), short(TAG_COMPRESSION, vec![1]), short(TAG_PHOTOMETRIC, vec![2]), short(TAG_SAMPLES_PER_PIXEL, vec![3]), long(TAG_TILE_WIDTH, 16), long(TAG_TILE_LENGTH, 16)],
-            storage: TiffStorage { kind: TiffStorageKind::Tiles, offsets_kind: TiffFieldType::Long, byte_counts_kind: TiffFieldType::Long, chunks: vec![[12, 34, 56].repeat(16 * 16)] },
+            entries: vec![long(TAG_IMAGE_WIDTH, 16), long(TAG_IMAGE_LENGTH, 16), short(TAG_BITS_PER_SAMPLE, vec![8, 8, 8]), short(TAG_PHOTOMETRIC, vec![2]), short(TAG_SAMPLES_PER_PIXEL, vec![3])],
+            blocks:vec![TiffSampleBlock{x:0,y:0,width:16,height:16,channels:3,samples:[12,34,56].repeat(16*16).into_iter().map(TiffWord64::from_word).collect()}],
         }],
     };
     let view = image_view(&document).expect("tiled preview");
@@ -41,8 +40,8 @@ async fn render_projects_an_uncompressed_tiled_primary_ifd() {
 #[semio_framework_async_macros::async_test]
 async fn unsupported_projection_keeps_the_artifact_mounted_with_a_localized_state() {
     let mut document = crate::standards::v6_0::subsets::document::schema::demo_tiff_snapshot();
-    document.ifds[0].storage.kind = crate::standards::v6_0::subsets::document::schema::snapshot::TiffStorageKind::Tiles;
-    assert!(image_view(&document).is_err(), "the malformed tiled fixture has no tile geometry");
+    document.ifds[0].entries.iter_mut().find(|tag|tag.tag==262).unwrap().values=crate::schema::snapshot::TiffValues::Short(vec![5]);
+    assert!(image_view(&document).is_err(), "the owned CMYK interpretation requires its display projector");
 
     let node = render(&document, Locale::De).expect("unsupported display capability does not reject the artifact window");
     assert_eq!(node.key.as_str(), ImageWindowKit::KIND_ID);

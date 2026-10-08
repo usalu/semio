@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemovePlantLoopEquipment` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ListEdit, ModelPatch, PlantLoopConfigPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,6 @@ pub fn diff(payload: &super::RemovePlantLoopEquipment, base: &EnergyModelSnapsho
     if !existing.equipment_ids.contains(&payload.equipment_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Plant loop {} does not list plant equipment {}.", payload.id.0, payload.equipment_id.0), [payload.equipment_id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.plant_loops.iter_mut().find(|item| item.id == payload.id) {
-        item.equipment_ids.retain(|entry| *entry != payload.equipment_id);
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::modifying(PlantLoopConfigPatch { equipment_ids: ListEdit::removing_where(&existing.equipment_ids, |entry| *entry == payload.equipment_id), ..PlantLoopConfigPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

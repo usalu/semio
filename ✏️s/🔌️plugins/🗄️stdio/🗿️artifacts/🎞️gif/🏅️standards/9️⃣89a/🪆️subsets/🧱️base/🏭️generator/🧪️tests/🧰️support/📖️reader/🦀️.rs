@@ -286,30 +286,12 @@ fn base_doc() -> GifDoc {
 /// 🧪️ One recipe: BEFORE always, AFTER only when the kind is legal (every kind here always is —
 /// `gif@89a`'s real dispatch (`../../../🧬️schema/🧬️mutations/🦀️.rs:288`,
 /// `MutationOutcome::new(match self {...})`) wraps every one of the 21 kinds uniformly; there is no
-/// per-kind rejection branch, only `set-snapshot`'s own documented no-op path — see
-/// `set-snapshot-no-op` below, the one recipe whose "after" is BYTE-IDENTICAL to its "before" by
-/// design, exactly like `no-mutation-no-op`).
+/// per-kind rejection branch; the one recipe whose "after" is BYTE-IDENTICAL to its "before" by
+/// design is `no-mutation-no-op`).
 fn recipe(id: &str) -> Option<(GifDoc, GifDoc)> {
     let base = base_doc();
     match id {
         "no-mutation-no-op" => Some((base.clone(), base)),
-
-        "set-snapshot-applied" => {
-            let after = GifDoc {
-                width: 10,
-                height: 8,
-                global_palette: vec![20, 20, 20, 200, 200, 200, 40, 40, 200],
-                bg_color_index: 1,
-                loop_count: Some(0),
-                frames: vec![FrameDoc { left: 0, top: 0, width: 5, height: 4, interlaced: false, palette: None, indices: vec![0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1], delay: 5, dispose: gif::DisposalMethod::Any, transparent: None, needs_user_input: false }],
-            };
-            Some((base, after))
-        }
-        // 🧭️ The one recipe exercising `set-snapshot`'s documented no-op branch
-        // (`../../../🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs:19` — `base == snapshot` warns
-        // `mutation.no-op` and returns `GifDiff::default()`): the replacement is byte-for-byte the
-        // same document, so before and after are identical, same convention as `no-mutation-no-op`.
-        "set-snapshot-no-op" => Some((base.clone(), base)),
 
         "set-screen-size-applied" => {
             let mut after = base.clone();
@@ -404,8 +386,6 @@ fn recipe(id: &str) -> Option<(GifDoc, GifDoc)> {
 
 const RECIPE_IDS: &[&str] = &[
     "no-mutation-no-op",
-    "set-snapshot-applied",
-    "set-snapshot-no-op",
     "set-screen-size-applied",
     "set-global-color-table-applied",
     "set-background-color-index-applied",

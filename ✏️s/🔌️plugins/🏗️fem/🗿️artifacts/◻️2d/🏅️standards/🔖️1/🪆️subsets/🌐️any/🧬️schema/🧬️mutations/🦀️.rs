@@ -474,7 +474,7 @@ pub const KINDS: &[&str] = &[
 /// 🔢️ The three planar degrees of freedom this artifact's 2D elements can carry, as the wire spells
 /// them. A `Beam` contributes all three at each end, a `Bar` only the two translations, and a node no
 /// element touches carries no equation at all — which is why a support on such a node is inert.
-const PLANAR_DOFS: [&str; 3] = ["Tx", "Ty", "Rz"];
+pub(crate) const PLANAR_DOFS: [&str; 3] = ["Tx", "Ty", "Rz"];
 
 
 

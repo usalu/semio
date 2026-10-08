@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 /// an optional slot needs — is the sparse-vs-unchanged signal here). `animation` never changes (see
 /// `crate::animation_child_handle`'s doc comment), so this diff carries no field
 /// for it at all — nothing in this plugin yet produces a delta for that slot.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationDiff {
@@ -34,7 +34,7 @@ pub struct PresentationDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationStringList {
     pub values: Vec<String>,

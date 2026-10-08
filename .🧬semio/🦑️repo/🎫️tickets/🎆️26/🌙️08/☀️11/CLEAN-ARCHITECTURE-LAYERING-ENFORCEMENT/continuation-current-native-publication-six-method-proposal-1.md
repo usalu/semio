@@ -1,0 +1,7 @@
+# Current Native Publication Six Method Proposal
+
+Fresh publication6 retains full current pair and all-three terminal lifecycle guards and adds an exact join to the selected live applicability proof:26 unique full pairs, actual Root/ticket identities, and each fresh owner plan hash/path/snapshot. The original three scope routes remain required with actual terminal/dispatcher exit0, null refusals/postrefusals and no cancellation. Pair/hash/splice/assertion evidence remains independent of selected live source applicability.
+
+The pure applicability2 guard runs with cancellation/progress before any source write and after all26 writes. Selected nonmodel inputs, watched directory memberships and immutable compiled/runtime inputs must remain exact. Each source write immediately rechecks its current full before body and verifies its full after body. Failures preserve explicit partial publication and are never rolled back over peers. No atomic live whole claim is made.
+
+Immutable publication proof bindings exclude mutable Root sources; phase-specific Root model and selected nonmodel checks remain owned by applicability2. The Low proof must bind exact applicability proof/helper/finite-laws hashes and current all-three owning evidence. Future exact GUI inputs are `current-native-model-publication-inputs-6/gui-rows.json`, orders900.204001 laws and900.204002 apply. No command has been invoked yet. Applicability2 is still under construction and its finite controls, actual fresh compiled capture and independent review precede any publication admission.

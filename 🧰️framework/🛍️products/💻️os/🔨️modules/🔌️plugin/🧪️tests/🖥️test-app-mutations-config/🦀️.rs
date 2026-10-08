@@ -57,8 +57,27 @@ impl Default for TestConfigDiff {
         Self::Identity
     }
 }
+impl protocol::DiffAlgebra<TestConfig> for TestConfigDiff {
+    fn inverse(&self, base: &TestConfig) -> Self {
+        match (self, &base.selected) {
+            (Self::Identity, _) => Self::Identity,
+            (_, None) => Self::Clear,
+            (_, Some(value)) => Self::Set(value.clone()),
+        }
+    }
+    fn between(base: &TestConfig, other: &TestConfig) -> Self {
+        match (&base.selected == &other.selected, &other.selected) {
+            (true, _) => Self::Identity,
+            (false, None) => Self::Clear,
+            (false, Some(value)) => Self::Set(value.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Identity)
+    }
+}
 impl MutationDiff<TestConfig> for TestConfigDiff {
-    fn apply(&self, base: &TestConfig) -> protocol::MutationApplyResult<TestConfig> {
+    fn apply(&self, base: &TestConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<TestConfig> {
         Ok(match self {
             Self::Identity => base.clone(),
             Self::Clear => TestConfig { selected: None },

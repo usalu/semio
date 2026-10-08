@@ -1,0 +1,28 @@
+{
+  "storeTarget": "store",
+  "wrongTarget": "envelope",
+  "pack": [
+    42,
+    99,
+    0,
+    255
+  ],
+  "expected": {
+    "artifactId": "store-entry",
+    "dialect": {
+      "artifactKind": "demo",
+      "standard": "v1",
+      "subset": "any"
+    }
+  },
+  "expectedRefusal": "initialization",
+  "retainedFields": [
+    "catalog",
+    "pack",
+    "snapshot",
+    "history"
+  ],
+  "allocatedBytes": 0,
+  "releasedBytes": 0,
+  "maximumCloseTurns": 1024
+}

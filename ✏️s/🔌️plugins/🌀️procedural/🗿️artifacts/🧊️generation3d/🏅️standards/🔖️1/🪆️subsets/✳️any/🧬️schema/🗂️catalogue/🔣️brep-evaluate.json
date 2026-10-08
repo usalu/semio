@@ -1,0 +1,710 @@
+{
+  "category": {
+    "id": "brep.evaluate",
+    "emoji": "🎯️",
+    "order": 90,
+    "label": {
+      "en": "Evaluate curves and surfaces",
+      "de": "Kurven und Flächen auswerten"
+    },
+    "description": {
+      "en": "Read points, tangents, normals, curvature and closest positions from curves and surfaces.",
+      "de": "Punkte, Tangenten, Normalen, Krümmung und nächste Positionen von Kurven und Flächen auslesen."
+    }
+  },
+  "kinds": [
+    {
+      "id": "brep.evaluate.curvePoint",
+      "category": "brep.evaluate",
+      "emoji": "📍️",
+      "label": {
+        "en": "Point on curve",
+        "de": "Punkt auf Kurve"
+      },
+      "description": {
+        "en": "Evaluates the position on a curve at a parameter.",
+        "de": "Berechnet die Position auf einer Kurve an einem Parameter."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "parameter",
+          "label": {
+            "en": "Parameter",
+            "de": "Parameter"
+          },
+          "description": {
+            "en": "Position along the curve in its own parameter domain.",
+            "de": "Position entlang der Kurve in ihrem eigenen Parameterbereich."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The position on the curve.",
+            "de": "Die Position auf der Kurve."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.curveTangent",
+      "category": "brep.evaluate",
+      "emoji": "➡️",
+      "label": {
+        "en": "Curve tangent",
+        "de": "Kurventangente"
+      },
+      "description": {
+        "en": "Evaluates the tangent direction of a curve at a parameter.",
+        "de": "Berechnet die Tangentenrichtung einer Kurve an einem Parameter."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "parameter",
+          "label": {
+            "en": "Parameter",
+            "de": "Parameter"
+          },
+          "description": {
+            "en": "Position along the curve in its own parameter domain.",
+            "de": "Position entlang der Kurve in ihrem eigenen Parameterbereich."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tangent",
+          "label": {
+            "en": "Tangent",
+            "de": "Tangente"
+          },
+          "description": {
+            "en": "The direction of the curve at the parameter.",
+            "de": "Die Richtung der Kurve am Parameter."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.curveDomain",
+      "category": "brep.evaluate",
+      "emoji": "↔️",
+      "label": {
+        "en": "Curve domain",
+        "de": "Kurvenbereich"
+      },
+      "description": {
+        "en": "Reads the parameter range over which a curve is defined.",
+        "de": "Liest den Parameterbereich aus, über dem eine Kurve definiert ist."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "start",
+          "label": {
+            "en": "Start",
+            "de": "Anfang"
+          },
+          "description": {
+            "en": "Parameter at the start of the curve.",
+            "de": "Parameter am Anfang der Kurve."
+          },
+          "type": "number"
+        },
+        {
+          "name": "end",
+          "label": {
+            "en": "End",
+            "de": "Ende"
+          },
+          "description": {
+            "en": "Parameter at the end of the curve.",
+            "de": "Parameter am Ende der Kurve."
+          },
+          "type": "number"
+        },
+        {
+          "name": "span",
+          "label": {
+            "en": "Span",
+            "de": "Spannweite"
+          },
+          "description": {
+            "en": "Length of the parameter range.",
+            "de": "Länge des Parameterbereichs."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.curveCurvature",
+      "category": "brep.evaluate",
+      "emoji": "🌊️",
+      "label": {
+        "en": "Curve curvature",
+        "de": "Kurvenkrümmung"
+      },
+      "description": {
+        "en": "Evaluates how sharply a curve bends at a parameter.",
+        "de": "Berechnet, wie stark sich eine Kurve an einem Parameter krümmt."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "parameter",
+          "label": {
+            "en": "Parameter",
+            "de": "Parameter"
+          },
+          "description": {
+            "en": "Position along the curve in its own parameter domain.",
+            "de": "Position entlang der Kurve in ihrem eigenen Parameterbereich."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "curvature",
+          "label": {
+            "en": "Curvature",
+            "de": "Krümmung"
+          },
+          "description": {
+            "en": "Reciprocal of the bending radius; zero on straight pieces.",
+            "de": "Kehrwert des Krümmungsradius; null auf geraden Stücken."
+          },
+          "type": "number"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.surfacePoint",
+      "category": "brep.evaluate",
+      "emoji": "📌️",
+      "label": {
+        "en": "Point on surface",
+        "de": "Punkt auf Fläche"
+      },
+      "description": {
+        "en": "Evaluates the position on a surface at a pair of parameters.",
+        "de": "Berechnet die Position auf einer Fläche an einem Parameterpaar."
+      },
+      "inputs": [
+        {
+          "name": "surface",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The surface to evaluate.",
+            "de": "Die auszuwertende Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "u",
+          "label": {
+            "en": "U",
+            "de": "U"
+          },
+          "description": {
+            "en": "First parameter of the surface.",
+            "de": "Erster Parameter der Fläche."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "v",
+          "label": {
+            "en": "V",
+            "de": "V"
+          },
+          "description": {
+            "en": "Second parameter of the surface.",
+            "de": "Zweiter Parameter der Fläche."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The position on the surface.",
+            "de": "Die Position auf der Fläche."
+          },
+          "type": "point"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "surface"
+          },
+          {
+            "component": "shape",
+            "port": "surface"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.surfaceNormal",
+      "category": "brep.evaluate",
+      "emoji": "🧭️",
+      "label": {
+        "en": "Surface normal",
+        "de": "Flächennormale"
+      },
+      "description": {
+        "en": "Evaluates the unit normal of a surface at a pair of parameters.",
+        "de": "Berechnet die Einheitsnormale einer Fläche an einem Parameterpaar."
+      },
+      "inputs": [
+        {
+          "name": "surface",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The surface to evaluate.",
+            "de": "Die auszuwertende Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "u",
+          "label": {
+            "en": "U",
+            "de": "U"
+          },
+          "description": {
+            "en": "First parameter of the surface.",
+            "de": "Erster Parameter der Fläche."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        },
+        {
+          "name": "v",
+          "label": {
+            "en": "V",
+            "de": "V"
+          },
+          "description": {
+            "en": "Second parameter of the surface.",
+            "de": "Zweiter Parameter der Fläche."
+          },
+          "type": "number",
+          "default": 0,
+          "step": 0.1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "normal",
+          "label": {
+            "en": "Normal",
+            "de": "Normale"
+          },
+          "description": {
+            "en": "The unit vector perpendicular to the surface.",
+            "de": "Der Einheitsvektor senkrecht zur Fläche."
+          },
+          "type": "vector"
+        }
+      ],
+      "quality": "exact-analytic",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "surface"
+          },
+          {
+            "component": "shape",
+            "port": "surface"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.curveClosestParameter",
+      "category": "brep.evaluate",
+      "emoji": "🎯️",
+      "label": {
+        "en": "Closest parameter on curve",
+        "de": "Nächster Kurvenparameter"
+      },
+      "description": {
+        "en": "Finds the parameter on a curve that is closest to a point.",
+        "de": "Findet den Parameter auf einer Kurve, der einem Punkt am nächsten liegt."
+      },
+      "inputs": [
+        {
+          "name": "curve",
+          "label": {
+            "en": "Curve",
+            "de": "Kurve"
+          },
+          "description": {
+            "en": "The curve to evaluate.",
+            "de": "Die auszuwertende Kurve."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "curve",
+            "wire",
+            "edge"
+          ]
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point to measure from.",
+            "de": "Der Punkt, von dem aus gemessen wird."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "parameter",
+          "label": {
+            "en": "Parameter",
+            "de": "Parameter"
+          },
+          "description": {
+            "en": "The curve parameter of the closest position.",
+            "de": "Der Kurvenparameter der nächsten Position."
+          },
+          "type": "number"
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Closest point",
+            "de": "Nächster Punkt"
+          },
+          "description": {
+            "en": "The closest position on the curve.",
+            "de": "Die nächste Position auf der Kurve."
+          },
+          "type": "point"
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "The achieved distance between the input point and the closest point.",
+            "de": "Der erreichte Abstand zwischen dem Eingabepunkt und dem nächsten Punkt."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "edge",
+            "port": "curve"
+          },
+          {
+            "component": "shape",
+            "port": "curve"
+          }
+        ]
+      },
+      "preview": false
+    },
+    {
+      "id": "brep.evaluate.surfaceClosestUv",
+      "category": "brep.evaluate",
+      "emoji": "🧲️",
+      "label": {
+        "en": "Closest parameters on surface",
+        "de": "Nächste Flächenparameter"
+      },
+      "description": {
+        "en": "Finds the surface parameters (u, v) that are closest to a point.",
+        "de": "Findet die Flächenparameter (u, v), die einem Punkt am nächsten liegen."
+      },
+      "inputs": [
+        {
+          "name": "surface",
+          "label": {
+            "en": "Surface",
+            "de": "Fläche"
+          },
+          "description": {
+            "en": "The surface to evaluate.",
+            "de": "Die auszuwertende Fläche."
+          },
+          "type": "shape",
+          "shapeKinds": [
+            "surface",
+            "face"
+          ]
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Point",
+            "de": "Punkt"
+          },
+          "description": {
+            "en": "The point to measure from.",
+            "de": "Der Punkt, von dem aus gemessen wird."
+          },
+          "type": "point",
+          "default": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "u",
+          "label": {
+            "en": "U",
+            "de": "U"
+          },
+          "description": {
+            "en": "First parameter of the closest position.",
+            "de": "Erster Parameter der nächsten Position."
+          },
+          "type": "number"
+        },
+        {
+          "name": "v",
+          "label": {
+            "en": "V",
+            "de": "V"
+          },
+          "description": {
+            "en": "Second parameter of the closest position.",
+            "de": "Zweiter Parameter der nächsten Position."
+          },
+          "type": "number"
+        },
+        {
+          "name": "point",
+          "label": {
+            "en": "Closest point",
+            "de": "Nächster Punkt"
+          },
+          "description": {
+            "en": "The closest position on the surface.",
+            "de": "Die nächste Position auf der Fläche."
+          },
+          "type": "point"
+        },
+        {
+          "name": "distance",
+          "label": {
+            "en": "Distance",
+            "de": "Abstand"
+          },
+          "description": {
+            "en": "The achieved distance between the input point and the closest point.",
+            "de": "Der erreichte Abstand zwischen dem Eingabepunkt und dem nächsten Punkt."
+          },
+          "type": "length"
+        }
+      ],
+      "quality": "exact-numerical",
+      "interaction": {
+        "pick": [
+          {
+            "component": "face",
+            "port": "surface"
+          },
+          {
+            "component": "shape",
+            "port": "surface"
+          }
+        ]
+      },
+      "preview": false
+    }
+  ]
+}

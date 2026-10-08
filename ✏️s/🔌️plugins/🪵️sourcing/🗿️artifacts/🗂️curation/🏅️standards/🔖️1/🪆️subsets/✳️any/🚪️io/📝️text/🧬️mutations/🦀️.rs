@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::schema::mutations::SourcingMutation;
-use crate::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
+use crate::schema::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem};
 use crate::CuratedItem;
 use protocol::OpText;
 
@@ -55,9 +55,9 @@ pub(crate) fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingM
 
 pub(crate) fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
-        SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item }),
-        SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id }),
-        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::ChangeCuratedItemCount { object_id, new_count }),
+        SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(CreateCuratedItem { item }),
+        SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id }),
+        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id, new_count }),
     }
 }
 

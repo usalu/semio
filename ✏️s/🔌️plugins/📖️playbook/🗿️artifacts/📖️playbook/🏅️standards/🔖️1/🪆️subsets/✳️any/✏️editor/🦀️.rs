@@ -321,6 +321,7 @@ impl ArtifactOwnedToolJobFactory for PlaybookRetainedCommandJobFactory {
 //#region 📬️OneItemPreparation
 const PLAYBOOK_STORE_MAXIMUM_BYTES: usize = 32_768;
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct PlaybookOneItemPreparationFactory<P, M>(std::marker::PhantomData<fn() -> (P, M)>);
 
 impl<P, M> Default for PlaybookOneItemPreparationFactory<P, M> {

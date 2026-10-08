@@ -76,7 +76,7 @@ pub(crate) mod context {
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
-        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::print_document_pack(&envelope).await.expect("print document pack");

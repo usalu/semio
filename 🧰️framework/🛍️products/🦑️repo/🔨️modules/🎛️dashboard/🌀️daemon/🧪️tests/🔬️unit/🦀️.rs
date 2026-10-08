@@ -35,6 +35,55 @@ fn actual_cli_view_auto_starts_daemon_and_detaches_without_stopping_tasks() {
 
 #[test]
 #[ignore = "Requires the installed native CLI executable"]
+fn actual_cli_launcher_receives_keys_and_runs_a_launch_configuration() {
+    use ui_tui::tui::pty::{Pty, PtySize};
+    use std::time::{Duration, Instant};
+    let root = control_root("native-launcher");
+    let executable = std::env::var("SEMIO_TEST_CLI").expect("installed native CLI executable");
+    std::fs::create_dir_all(root.join(".vscode")).unwrap();
+    std::fs::write(root.join(".vscode/launch.json"), r#"{ // registered commands
+  "configurations": [
+    { "name": "📦️build-report", "type": "node-terminal", "request": "launch", "command": "echo launched-$DASHBOARD_TEST_VALUE", "cwd": "${workspaceFolder}", "env": { "DASHBOARD_TEST_VALUE": "build-report" }, "presentation": { "group": "4_build" } },
+    { "name": "🚀️publish-report", "type": "node-terminal", "request": "launch", "command": "echo unrelated", "cwd": "${workspaceFolder}" },
+  ],
+}"#).unwrap();
+    let root_text = root.display().to_string();
+    let config = root.join("preferences.jsonl").display().to_string();
+    let bindings = [("SEMIO_LOCALE", ""), ("SEMIO_APPEARANCE", ""), ("SEMIO_LOCKED_TERMINOLOGY", "")];
+    let mut view = Pty::spawn(&executable, &["--root", &root_text, "--config", &config], &bindings, &[], Some(&root), PtySize { cols: 160, rows: 40 }).unwrap();
+    let mut screen = ui_tui::tui::vt::VtScreen::new(ui_tui::tui::geometry::Size { width: 160, height: 40 }, 0);
+    let mut page = [0u8; 16384];
+    let await_text = |view: &mut Pty, screen: &mut ui_tui::tui::vt::VtScreen, expected: &str| {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        let mut page = [0u8; 16384];
+        while Instant::now() < deadline && !terminal_text(screen).contains(expected) { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
+        assert!(terminal_text(screen).contains(expected), "missing {expected}: {}", terminal_text(screen));
+    };
+    await_text(&mut view, &mut screen, "New task");
+    view.write_all(b"\r").unwrap();
+    await_text(&mut view, &mut screen, "publish / launch /");
+    view.write_all(b"build report").unwrap();
+    await_text(&mut view, &mut screen, "/ build report");
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while Instant::now() < deadline && terminal_text(&screen).contains("publish / launch /") { let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]); std::thread::sleep(Duration::from_millis(5)); }
+    assert!(!terminal_text(&screen).contains("publish / launch /"), "search must narrow the launcher: {}", terminal_text(&screen));
+    view.write_all(b"\r").unwrap();
+    await_text(&mut view, &mut screen, "launched-build-report");
+    await_text(&mut view, &mut screen, "exit 0");
+    println!("[DEBUG] actual launcher received keys, searched and ran a launch configuration to exit 0");
+    view.write_all(b"\x02Q").unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while view.try_wait().unwrap().is_none() && Instant::now() < deadline { let _ = view.try_read(&mut page); std::thread::sleep(Duration::from_millis(5)); }
+    assert_eq!(view.try_wait().unwrap(), Some(0));
+    drop(view);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while client::Connection::connect(&root).is_ok() && Instant::now() < deadline { std::thread::sleep(Duration::from_millis(20)); }
+    assert!(client::Connection::connect(&root).is_err(), "Ctrl+B Q must shut the workspace daemon down");
+    remove_control_root(&root);
+}
+
+#[test]
+#[ignore = "Requires the installed native CLI executable"]
 fn actual_cli_first_frame_is_fast_and_settings_survive_reopening() {
     use ui_tui::tui::pty::{Pty, PtySize};
     use std::time::{Duration, Instant};
@@ -174,7 +223,7 @@ fn run_native_view(via_nx: bool) {
     while Instant::now() < deadline && !completed {
         let count = view.try_read(&mut page).unwrap_or(0); screen.feed(&page[..count]);
         connection.send(&ipc::ClientMsg::List {}).unwrap();
-        completed = connection.receive(Duration::from_millis(20)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions }) if sessions.iter().any(|session| session.command.args.iter().any(|argument| argument == "dashboard-fixture:build") && session.code == Some(0))));
+        completed = connection.receive(Duration::from_millis(20)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) if sessions.iter().any(|session| session.command.args.iter().any(|argument| argument == "dashboard-fixture:build") && session.code == Some(0))));
         std::thread::sleep(Duration::from_millis(5));
     }
     assert!(completed, "the native searchable launcher must run the selected Nx build: {}", terminal_text(&screen));
@@ -200,7 +249,7 @@ fn run_native_view(via_nx: bool) {
     let deadline = Instant::now() + Duration::from_secs(5);
     let mut persistent = false;
     while !persistent && Instant::now() < deadline {
-        persistent = reattached.receive(Duration::from_millis(100)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions }) if sessions.iter().any(|session| session.session_id == "persistent" && session.status == ipc::SessionStatus::Running)));
+        persistent = reattached.receive(Duration::from_millis(100)).unwrap().iter().any(|message| matches!(message, client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) if sessions.iter().any(|session| session.session_id == "persistent" && session.status == ipc::SessionStatus::Running)));
     }
     assert!(persistent, "task must survive destroying the view's process job");
     let stopped = std::process::Command::new(&executable).args(["daemon", "stop", "--root", &root_text]).output().unwrap();
@@ -237,7 +286,7 @@ fn remove_control_root(root: &Path) {
 
 #[cfg(any(unix, windows))]
 fn bun_command(root: &Path, script: &str) -> ipc::SessionCommand {
-    ipc::SessionCommand { cmd: std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into()), args: vec!["-e".into(), script.into()], cwd: root.display().to_string(), env: vec![("DASHBOARD_TEST_VALUE".into(), "control-plane".into()), ("PATH".into(), std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo"))], cols: 80, rows: 24 }
+    ipc::SessionCommand { cmd: std::env::var("SEMIO_TEST_BUN").unwrap_or_else(|_| "bun".into()), args: vec!["-e".into(), script.into()], cwd: root.display().to_string(), env: vec![("DASHBOARD_TEST_VALUE".into(), "control-plane".into()), ("PATH".into(), std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo"))], cols: 80, rows: 24, ..Default::default() }
 }
 
 fn nx_fixture(root: &Path, commands: &[&str]) {
@@ -283,7 +332,7 @@ fn one_daemon_runs_discovered_nx_servers_builds_and_tests_concurrently() {
         let mut env = spec.env;
         env.extend([("DASHBOARD_TEST_VALUE".into(), "control-plane".into()), ("DASHBOARD_TEST_PORT".into(), port.to_string()), ("PATH".into(), std::env::var("SEMIO_TEST_PATH").expect("task-launch environment before Cargo")), ("NX_DAEMON".into(), "false".into()), ("NX_SKIP_PROJECT_GRAPH_CACHE".into(), "true".into())]);
         env.extend(nx_fixture_environment(&root)); env.push(("NX_ISOLATE_PLUGINS".into(), "false".into()));
-        let command = ipc::SessionCommand { cmd: spec.cmd, args: spec.args, cwd: spec.cwd.display().to_string(), env, cols: 512, rows: 40 };
+        let command = ipc::SessionCommand { cmd: spec.cmd, args: spec.args, cwd: spec.cwd.display().to_string(), env, cols: 512, rows: 40, ..Default::default() };
         supervisor.handle_client_msg(ipc::ClientMsg::Spawn { session_id: target.into(), command }).unwrap();
     }
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
@@ -356,7 +405,7 @@ fn supervisor_keeps_sessions_across_views_and_matches_bun_output() {
             let (session, data) = ipc::decode_output(&payload).unwrap();
             assert_eq!(session, "oracle");
             output.extend(data);
-        } else if let ipc::ServerMsg::Sessions { sessions } = ipc::decode_control(&payload).unwrap() {
+        } else if let ipc::ServerMsg::Sessions { sessions, .. } = ipc::decode_control(&payload).unwrap() {
             restored = sessions.len() == 1 && sessions[0].code == Some(0);
         }
     }
@@ -475,7 +524,7 @@ fn one_workspace_instance_survives_views_and_rejects_a_second_daemon() {
     let mut restored = false;
     while !restored && std::time::Instant::now() < deadline {
         for message in reattached.receive(Duration::from_millis(100)).unwrap() {
-            if let client::Message::Control(ipc::ServerMsg::Sessions { sessions }) = message { restored = sessions.len() == 1 && sessions[0].pid == pid; }
+            if let client::Message::Control(ipc::ServerMsg::Sessions { sessions, .. }) = message { restored = sessions.len() == 1 && sessions[0].pid == pid; }
         }
     }
     assert!(restored, "reattachment must restore the same running process");
@@ -504,7 +553,7 @@ fn a_named_pipe_round_trips_one_frame_each_way() {
         assert_eq!(kind, ipc::KIND_CONTROL);
         let message: ClientMsg = ipc::decode_control(&payload).expect("client message");
         assert_eq!(message, ClientMsg::Attach { client_id: "frame".into() });
-        ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: 7 }).expect("server answer");
+        ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).expect("server answer");
     });
     let mut client = None;
     for _ in 0..100 {
@@ -520,7 +569,7 @@ fn a_named_pipe_round_trips_one_frame_each_way() {
     ipc::write_control(&mut client, &ClientMsg::Attach { client_id: "frame".into() }).expect("client frame");
     let (kind, payload) = ipc::read_frame(&mut client).expect("client answer");
     assert_eq!(kind, ipc::KIND_CONTROL);
-    assert_eq!(ipc::decode_control::<ServerMsg>(&payload).expect("server message"), ServerMsg::Attached { daemon_pid: 7 });
+    assert_eq!(ipc::decode_control::<ServerMsg>(&payload).expect("server message"), ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() });
     server.join().expect("server thread");
 }
 
@@ -559,12 +608,12 @@ fn connection_retries_a_temporary_gap_between_named_pipe_instances() {
     let (continue_server, continue_client) = std::sync::mpsc::channel();
     let server = std::thread::spawn(move || {
         let mut first = ipc::accept(&name).unwrap();
-        ipc::write_control(&mut first, &ipc::ServerMsg::Attached { daemon_pid: 7 }).unwrap();
+        ipc::write_control(&mut first, &ipc::ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).unwrap();
         continue_client.recv().unwrap();
         drop(first);
         std::thread::sleep(Duration::from_millis(200));
         let mut second = ipc::accept(&name).unwrap();
-        ipc::write_control(&mut second, &ipc::ServerMsg::Attached { daemon_pid: 7 }).unwrap();
+        ipc::write_control(&mut second, &ipc::ServerMsg::Attached { daemon_pid: 7, protocol: ipc::PROTOCOL, build_id: String::new() }).unwrap();
         std::thread::sleep(Duration::from_millis(100));
     });
     let mut first = ipc::connect(&root).unwrap();

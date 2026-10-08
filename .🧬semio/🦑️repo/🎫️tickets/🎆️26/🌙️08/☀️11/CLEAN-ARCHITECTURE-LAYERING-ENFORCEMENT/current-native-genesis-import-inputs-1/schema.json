@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": {
+    "version": 1,
+    "cases": [
+      {
+        "id": "canonical-three-reference-correction",
+        "mutation": "none",
+        "accepted": true
+      },
+      {
+        "id": "lib-name",
+        "mutation": "lib-name",
+        "accepted": false
+      },
+      {
+        "id": "package-name",
+        "mutation": "package-name",
+        "accepted": false
+      },
+      {
+        "id": "missing-dependency",
+        "mutation": "missing-dependency",
+        "accepted": false
+      },
+      {
+        "id": "private-codec",
+        "mutation": "private-codec",
+        "accepted": false
+      },
+      {
+        "id": "private-cursor",
+        "mutation": "private-cursor",
+        "accepted": false
+      },
+      {
+        "id": "before",
+        "mutation": "before",
+        "accepted": false
+      },
+      {
+        "id": "before-hash",
+        "mutation": "before-hash",
+        "accepted": false
+      },
+      {
+        "id": "after-hash",
+        "mutation": "after-hash",
+        "accepted": false
+      },
+      {
+        "id": "inverse",
+        "mutation": "inverse",
+        "accepted": false
+      },
+      {
+        "id": "algorithm",
+        "mutation": "algorithm",
+        "accepted": false
+      },
+      {
+        "id": "remaining-old-ref",
+        "mutation": "remaining-old-ref",
+        "accepted": false
+      },
+      {
+        "id": "extra-pair-field",
+        "mutation": "extra-pair-field",
+        "accepted": false
+      }
+    ]
+  }
+}

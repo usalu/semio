@@ -3230,6 +3230,7 @@ pub mod ui {
         world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dFraming, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage,
         Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain,
         NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, LocatedTextSplice, AppliedTextSplice, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, TEXT_SPLICE_CONTEXT_SCALARS, TiledMapScene, VirtualFileSystemScene,
+        scene_lane_hash, world3d_modelling_lane_text, World3dAnnotationLayer, World3dModellingOptions, World3dPickGranularity, World3dScalarDomain, World3dScalarField, World3dSection,
         World3dPresentation, World3dPresentationClear, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage,
         World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
     };

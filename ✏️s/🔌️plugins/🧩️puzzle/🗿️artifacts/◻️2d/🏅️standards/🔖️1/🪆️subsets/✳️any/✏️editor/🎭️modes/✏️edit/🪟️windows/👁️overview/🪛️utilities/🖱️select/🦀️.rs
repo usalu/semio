@@ -377,8 +377,10 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
                 break;
             }
             let id = puzzle2d_minted_edge_id(&state, &source, &target);
+            let source = semio_framework_value::paged::PagedUtf8::from(source);
+            let target = semio_framework_value::paged::PagedUtf8::from(target);
             let tolerance = puzzle2d_handle_distance(&state, &source, &target).map_or(radius.max(0.0), |distance| distance.max(radius));
-            let connect = connect_handles_in_proximity(id.clone(), source, target, tolerance);
+            let connect = connect_handles_in_proximity(id.as_str().into(), source, target, tolerance);
             if apply_puzzle2d_mutation(&mut state, &connect).is_ok() {
                 yields.push((format!("connect:{id}"), connect));
                 connects += 1;

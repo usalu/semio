@@ -13,12 +13,9 @@
     ],
     "workspacePublicationSources": [
       "workspaceMembershipSources",
-      "{workspaceRoot}/.vscode/launch.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
@@ -51,9 +48,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
-      "{workspaceRoot}/.vscode/🧩️launch.seed.jsonc",
-      "{workspaceRoot}/.vscode/launch.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
     ],
     "cargoTransactionCommandSources": [
       "sharedGlobals",
@@ -70,7 +65,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
@@ -752,6 +747,7 @@
     },
     "test-rust-physical-reference-context": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-physical-reference-context long"
@@ -773,6 +769,7 @@
     },
     "test-taxonomy-cli-cancellation": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test taxonomy-cli-cancellation"
@@ -823,6 +820,7 @@
     },
     "test-preflight-reference-basis": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test preflight-reference-basis"
@@ -830,6 +828,7 @@
     },
     "test-typescript-path-collection": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test typescript-path-collection"
@@ -858,6 +857,7 @@
     },
     "test-registry-catalog-gitlink-boundary": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary"
@@ -893,6 +893,7 @@
     },
     "test-rust-finite-target-consumption": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-finite-target-consumption"
@@ -935,6 +936,7 @@
     },
     "test-artifact-empty-facet-authority": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-empty-facet-authority"
@@ -963,6 +965,7 @@
     },
     "test-readme-current-source-activation": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test readme-current-source-activation"
@@ -984,6 +987,7 @@
     },
     "test-artifact-empty-facet-authoring": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-empty-facet-authoring"
@@ -1140,7 +1144,6 @@
       "cache": true,
       "inputs": [
         "sharedGlobals",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧑‍💻os-dev-composition-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
@@ -1148,7 +1151,6 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
-        "{workspaceRoot}/.vscode/launch.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",

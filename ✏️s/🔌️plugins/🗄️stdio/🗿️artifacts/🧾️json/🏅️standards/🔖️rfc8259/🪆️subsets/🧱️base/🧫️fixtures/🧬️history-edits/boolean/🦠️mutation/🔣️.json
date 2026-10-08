@@ -1,0 +1,64 @@
+{
+  "mutation": {
+    "mutation": "setScalar",
+    "payload": {
+      "phase": "apply",
+      "value": {
+        "path": [
+          {
+            "kind": "key",
+            "value": "enabled"
+          }
+        ],
+        "value": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    }
+  },
+  "before": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "string",
+            "value": "Old"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.json",
+    "value": {
+      "kind": "object",
+      "members": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "string",
+            "value": "Old"
+          }
+        },
+        {
+          "key": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": true
+          }
+        }
+      ]
+    }
+  }
+}

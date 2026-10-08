@@ -4,7 +4,6 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::EquationSnapshot;
 use store::PackError;
 use crate::standards::v1::subsets::any::schema::snapshot::{EquationNode,EquationNodeLabel,EquationNodeKind,EquationExprSnapshot};
-use crate::standards::v1::subsets::any::io::binary::snapshot::{EquationSnapshot};
 pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;
 
 /// 🔐️ Opens a Equation store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

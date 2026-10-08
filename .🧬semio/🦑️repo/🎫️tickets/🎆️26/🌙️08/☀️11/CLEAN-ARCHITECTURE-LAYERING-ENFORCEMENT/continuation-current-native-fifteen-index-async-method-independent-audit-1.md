@@ -1,0 +1,3 @@
+# Fifteen Lazy Index and Async Guard Method
+
+Reviewed modelAuthoritiesV1 delta builds a lazy path-to-array index once on first captured-source authority. Duplicate endpoints remain arrays and length!==1 still refuses, unlike a lossyMap. Source15 and dispatcher17 matching implementations retain original fullmapping semantics. Actual dispatcher41same sourceGuard controls and currentlaws/runtime19 bindings agree. Full endpoint hashes now awaited through cancellable chunked hashFileV1 with64row progress; callers including actual runtimeGuard and finitecontrols await sourceGuard. Synchronous directory membership traversal scope remains qualified. Method-only admission; Source15 unsealed/currentinput controls and fullphysical custody remain required before diagnostics.

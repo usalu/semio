@@ -1,4 +1,11 @@
-# 🧬️ Din4108 diff schema — sparse field delta over the envelope subject.
+# 🧬️ Din4108 diff schema — sparse scalar fields and ordered per-collection row edits.
+
+enum Din4108RowOp {
+  INSERT
+  REMOVE
+  REPLACE
+  PATCH
+}
 
 type Din4108Diff {
   climateZone: String @state(class: ARTIFACT)
@@ -8,7 +15,89 @@ type Din4108Diff {
   hasMechanicalVentilation: Boolean @state(class: ARTIFACT)
   airtightnessN50: Float @state(class: ARTIFACT)
   bb2DetailsConform: Boolean @state(class: ARTIFACT)
-  zones: [Din4108ThermalZone!] @state(class: ARTIFACT)
-  elements: [Din4108EnvelopeElement!] @state(class: ARTIFACT)
-  thermalBridges: [Din4108ThermalBridge!] @state(class: ARTIFACT)
+  zones: [Din4108ZoneEdit!]! @state(class: ARTIFACT)
+  elements: [Din4108ElementEdit!]! @state(class: ARTIFACT)
+  thermalBridges: [Din4108ThermalBridgeEdit!]! @state(class: ARTIFACT)
+}
+
+type Din4108ZoneEdit {
+  op: Din4108RowOp!
+  index: Int!
+  id: String!
+  value: Din4108ThermalZone
+  patch: Din4108ZonePatch
+}
+
+type Din4108ElementEdit {
+  op: Din4108RowOp!
+  index: Int!
+  id: String!
+  value: Din4108EnvelopeElement
+  patch: Din4108ElementPatch
+}
+
+type Din4108ThermalBridgeEdit {
+  op: Din4108RowOp!
+  index: Int!
+  id: String!
+  value: Din4108ThermalBridge
+  patch: Din4108ThermalBridgePatch
+}
+
+type Din4108WindowEdit {
+  op: Din4108RowOp!
+  index: Int!
+  id: String!
+  value: Din4108ZoneWindow
+  patch: Din4108WindowPatch
+}
+
+type Din4108LayerEdit {
+  op: Din4108RowOp!
+  index: Int!
+  id: String!
+  value: Din4108LayerDocument
+  patch: Din4108LayerPatch
+}
+
+type Din4108ZonePatch {
+  floorAreaM2: Float
+  heaviness: String
+  nightVentilation: String
+  windows: [Din4108WindowEdit!]!
+}
+
+type Din4108ElementPatch {
+  kind: String
+  orientationDeg: Float
+  inclinationDeg: Float
+  adjacent: String
+  areaM2: Float
+  deltaUG: Float
+  deltaUF: Float
+  deltaUR: Float
+  layers: [Din4108LayerEdit!]!
+}
+
+type Din4108ThermalBridgePatch {
+  psi: Float
+  lengthM: Float
+  bb2Type: String
+}
+
+type Din4108WindowPatch {
+  orientation: String
+  inclinationDeg: Float
+  areaM2: Float
+  gValue: Float
+  shadingFc: Float
+}
+
+type Din4108LayerPatch {
+  materialId: String
+  thicknessM: Float
+  lambda: Float
+  mu: Float
+  applicationType: String
+  compressiveClass: String
 }

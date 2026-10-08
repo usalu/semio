@@ -2330,11 +2330,11 @@ mod framework_notices_tests;
 /// `HISTORY_REPROJECTION_LABELS`.
 pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 12] = [
     ("remote.title", "Remote history change", "Entfernte Verlaufsänderung"),
-    ("remote.progress", "Replaying a remote history change: {done} of {total} mutations", "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Mutationen"),
+    ("remote.progress", "Replaying a remote history change: {done} of {total} steps", "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Schritten"),
     ("remote.paused", "Remote history change paused: this replica still shows the history before it", "Entfernte Verlaufsänderung pausiert: dieses Replikat zeigt noch den Verlauf davor"),
     ("remote.refused", "Remote history change refused: {reason}", "Entfernte Verlaufsänderung abgelehnt: {reason}"),
     ("step.title", "History step", "Verlaufsschritt"),
-    ("step.progress", "Replaying history: {done} of {total} mutations", "Verlauf wird neu angewendet: {done} von {total} Mutationen"),
+    ("step.progress", "Replaying history: {done} of {total} steps", "Verlauf wird neu angewendet: {done} von {total} Schritten"),
     ("step.refused", "History step refused: {reason}", "Verlaufsschritt abgelehnt: {reason}"),
     ("load.title", "Document load", "Dokument laden"),
     ("load.progress", "Loading document: {done} of {total}", "Dokument wird geladen: {done} von {total}"),

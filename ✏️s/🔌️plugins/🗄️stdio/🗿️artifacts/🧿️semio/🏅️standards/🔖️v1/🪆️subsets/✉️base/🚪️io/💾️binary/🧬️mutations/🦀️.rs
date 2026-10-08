@@ -37,8 +37,6 @@ use protocol::OpText;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
-        SemioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioMutation::ApplyBrep(_) => TAG_APPLY_BREP,
         SemioMutation::ApplyMesh(_) => TAG_APPLY_MESH,
         SemioMutation::ApplyModel(_) => TAG_APPLY_MODEL,
@@ -70,8 +68,6 @@ impl OpBinary for SemioMutation {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
         let payload: Vec<u8> = match self {
-            SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot),
-            SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => patch.encode_op()?,
             SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => mutation.encode_op()?,
             SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => mutation.encode_op()?,
             SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => mutation.encode_op()?,
@@ -107,8 +103,6 @@ impl OpBinary for SemioMutation {
         let tag = bytes[1];
         let payload = &bytes[2..];
         Ok(match tag {
-            TAG_SET_SNAPSHOT => SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? }),
-            TAG_PATCH_SNAPSHOT => SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as OpBinary>::decode_op(payload)? }),
             TAG_APPLY_BREP => SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::decode_op(payload)? }),
             TAG_APPLY_MESH => SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::decode_op(payload)? }),
             TAG_APPLY_MODEL => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::decode_op(payload)? }),
@@ -137,8 +131,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_APPLY_BREP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-brep");
 const TAG_APPLY_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-mesh");
 const TAG_APPLY_MODEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-model");

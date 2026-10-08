@@ -1,0 +1,31 @@
+{
+  "schema": "semio.history.fold-physical-retirement/v1",
+  "extents": [
+    0,
+    1,
+    8194,
+    65536,
+    262144
+  ],
+  "logicalCopy": [
+    1,
+    7,
+    4096
+  ],
+  "maximumItems": 1,
+  "maximumAdmission": 262144,
+  "queueSlots": 128,
+  "expected": {
+    "undergrantRelease": 0,
+    "fundedRelease": "whole-current-allocation",
+    "cancelWork": 0,
+    "terminalFree": 0
+  },
+  "logicalItems": 1,
+  "cold": {
+    "bytes": 2097152,
+    "logicalPageBytes": 65536,
+    "maximumTurns": 36,
+    "terminalPhases": 4
+  }
+}

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeZoneEquipmentCoolingCapacity` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ZoneEquipmentAssignmentPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::ChangeZoneEquipmentCoolingCapacity, base: &EnergyMo
     if existing.cooling_capacity_w == payload.new_cooling_capacity_w {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone equipment {} already has that cooling capacity.", payload.id.0));
     }
-    let mut model = base.model.clone();
-    if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {
-        item.cooling_capacity_w = payload.new_cooling_capacity_w;
-    }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::modifying(ZoneEquipmentAssignmentPatch { cooling_capacity_w: Some(payload.new_cooling_capacity_w), ..ZoneEquipmentAssignmentPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

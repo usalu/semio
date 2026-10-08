@@ -1,316 +1,242 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Dashboard Workspace Control Plane",
-  "description": "Local-only process commands, session projections and lifecycle events. A workspace daemon owns the processes independently of attached views.",
-  "anyOf": [
-    {
-      "$ref": "#/definitions/ClientMessage"
-    },
-    {
-      "$ref": "#/definitions/ServerMessage"
-    }
-  ],
+  "description": "Local-only process commands, session projections and lifecycle events of protocol revision 2. A workspace daemon owns the processes independently of attached views. Every message travels in a frame (`#/definitions/Frame`): control frames carry one JSON message of this schema, output and input frames carry raw terminal bytes.",
+  "anyOf": [{ "$ref": "#/definitions/ClientMessage" }, { "$ref": "#/definitions/ServerMessage" }],
   "definitions": {
+    "Frame": {
+      "description": "The byte envelope of every message: `u32 little-endian length | u8 kind | payload`, where length counts the kind byte and the payload and never exceeds `maxBytes`. Kind `control` carries one UTF-8 JSON message. Kinds `output` (daemon to client) and `input` (client to daemon) carry `u16 little-endian session identifier length | session identifier (UTF-8) | terminal bytes`, at most `maxChunkBytes` terminal bytes per frame.",
+      "type": "object",
+      "required": ["protocol", "maxBytes", "maxChunkBytes", "kinds"],
+      "properties": {
+        "protocol": { "const": 2 },
+        "maxBytes": { "const": 16777216 },
+        "maxChunkBytes": { "const": 65536 },
+        "kinds": {
+          "type": "object",
+          "required": ["control", "output", "input"],
+          "properties": { "control": { "const": 1 }, "output": { "const": 2 }, "input": { "const": 3 } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Identifier": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "Pair": {
+      "type": "array",
+      "items": [{ "type": "string", "pattern": "^[^=\\u0000]+$" }, { "type": "string", "pattern": "^[^\\u0000]*$" }],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "TaskLabel": {
+      "type": "object",
+      "description": "What a running task is called. The registry computes it at launch; tab text and window title are pure functions of it.",
+      "required": ["verb", "owner", "subject", "qualifier", "parameters", "members"],
+      "properties": {
+        "verb": { "type": "string" },
+        "owner": { "type": "array", "items": { "type": "string" } },
+        "subject": { "type": "string" },
+        "qualifier": { "type": "string" },
+        "parameters": { "type": "array", "items": { "type": "array", "items": [{ "type": "string" }, { "type": "string" }], "minItems": 2, "maxItems": 2 } },
+        "members": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "Ready": {
+      "type": "object",
+      "description": "The task is ready when its output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match plus `path`.",
+      "required": ["port", "path"],
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "path": { "type": "string", "pattern": "^[^\\s\\u0000]*$" }
+      },
+      "additionalProperties": false
+    },
     "Command": {
       "type": "object",
-      "required": [
-        "cmd",
-        "args",
-        "cwd",
-        "env",
-        "cols",
-        "rows"
-      ],
+      "description": "The exact task invocation retained for restart and restored views. `env` is what the command declares; the process also receives the environment of the client that requested it.",
+      "required": ["cmd", "args", "cwd", "env", "cols", "rows"],
       "properties": {
-        "cmd": {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "^[^\\u0000]*$"
-        },
-        "args": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^[^\\u0000]*$"
-          }
-        },
-        "cwd": {
-          "type": "string",
-          "pattern": "^[^\\u0000]*$"
-        },
-        "env": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": [
-              {
-                "pattern": "^[^=\\u0000]+$",
-                "type": "string"
-              },
-              {
-                "pattern": "^[^\\u0000]*$",
-                "type": "string"
-              }
-            ],
-            "minItems": 2,
-            "maxItems": 2
-          }
-        },
-        "cols": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 32767
-        },
-        "rows": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 32767
-        }
+        "cmd": { "type": "string", "minLength": 1, "pattern": "^[^\\u0000]*$" },
+        "args": { "type": "array", "items": { "type": "string", "pattern": "^[^\\u0000]*$" } },
+        "cwd": { "type": "string", "pattern": "^[^\\u0000]*$" },
+        "env": { "type": "array", "items": { "$ref": "#/definitions/Pair" } },
+        "cols": { "type": "integer", "minimum": 1, "maximum": 32767 },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 32767 },
+        "command_id": { "type": "string", "maxLength": 512, "description": "The registry identity of the command; empty for an ad-hoc process." },
+        "label": { "$ref": "#/definitions/TaskLabel" },
+        "group": { "$ref": "#/definitions/Identifier", "description": "The group the process was started in." },
+        "ready": { "$ref": "#/definitions/Ready" }
       },
       "additionalProperties": false
     },
     "Session": {
       "type": "object",
-      "required": [
-        "session_id",
-        "command",
-        "status",
-        "pid",
-        "code"
-      ],
+      "description": "A process projection shared by every client of the workspace. `code` is the exit code, `128 + signal` for a signal death, and null while unknown. `pending` waits for an earlier group member, `interrupted` lost its daemon while running.",
+      "required": ["session_id", "command", "status", "pid", "code"],
       "properties": {
-        "session_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
-        "command": {
-          "$ref": "#/definitions/Command"
-        },
-        "status": {
-          "enum": [
-            "running",
-            "stopping",
-            "exited",
-            "failed"
-          ]
-        },
-        "pid": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 1,
-          "maximum": 4294967295
-        },
-        "code": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": -2147483648,
-          "maximum": 2147483647
-        }
+        "session_id": { "$ref": "#/definitions/Identifier" },
+        "command": { "$ref": "#/definitions/Command" },
+        "status": { "enum": ["pending", "running", "stopping", "exited", "failed", "interrupted"] },
+        "pid": { "type": ["integer", "null"], "minimum": 1, "maximum": 4294967295 },
+        "code": { "type": ["integer", "null"], "minimum": -2147483648, "maximum": 2147483647 },
+        "started_ms": { "type": "integer", "minimum": 0, "description": "Unix milliseconds of the latest start; 0 while the process never started." },
+        "ended_ms": { "type": "integer", "minimum": 0 },
+        "ready_url": { "type": "string" },
+        "title": { "type": "string", "description": "The title the process set through OSC 0 or OSC 2." },
+        "group": { "$ref": "#/definitions/Identifier" }
       },
+      "additionalProperties": false
+    },
+    "GroupMember": {
+      "type": "object",
+      "required": ["session_id", "command"],
+      "properties": { "session_id": { "$ref": "#/definitions/Identifier" }, "command": { "$ref": "#/definitions/Command" } },
       "additionalProperties": false
     },
     "ClientMessage": {
       "oneOf": [
         {
-          "required": [
-            "type",
-            "client_id"
-          ],
-          "properties": {
-            "client_id": {
-              "type": "string"
-            },
-            "type": {
-              "const": "attach"
-            }
-          },
+          "description": "States the client's protocol revision and build, and hands over the environment its tasks start in.",
           "type": "object",
+          "required": ["type", "client_id", "protocol", "build_id"],
+          "properties": {
+            "type": { "const": "hello" },
+            "client_id": { "type": "string" },
+            "protocol": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "build_id": { "type": "string" },
+            "env": { "type": "array", "maxItems": 8192, "items": { "$ref": "#/definitions/Pair" } }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "detach"
-            }
-          },
+          "description": "Session events plus the output of every session, replayed first.",
           "type": "object",
+          "required": ["type", "client_id"],
+          "properties": { "type": { "const": "attach" }, "client_id": { "type": "string" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id",
-            "command"
-          ],
-          "properties": {
-            "command": {
-              "$ref": "#/definitions/Command"
-            },
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "spawn"
-            }
-          },
+          "description": "Session events only.",
           "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "watch" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id",
-            "data"
-          ],
-          "properties": {
-            "data": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 255
-              }
-            },
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "input"
-            }
-          },
+          "description": "The output of one session, replayed first.",
           "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "subscribe" }, "session_id": { "$ref": "#/definitions/Identifier" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id",
-            "cols",
-            "rows"
-          ],
-          "properties": {
-            "rows": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "cols": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "resize"
-            }
-          },
           "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "unsubscribe" }, "session_id": { "$ref": "#/definitions/Identifier" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id"
-          ],
-          "properties": {
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "stop"
-            }
-          },
           "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "detach" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id"
-          ],
-          "properties": {
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "kill"
-            }
-          },
           "type": "object",
+          "required": ["type", "session_id", "command"],
+          "properties": { "type": { "const": "spawn" }, "session_id": { "$ref": "#/definitions/Identifier" }, "command": { "$ref": "#/definitions/Command" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session_id"
-          ],
-          "properties": {
-            "session_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "type": {
-              "const": "restart"
-            }
-          },
+          "description": "Starts `requires` (or reuses the running ones) and then `members` in order, each after the previous one is ready when it declares `ready`.",
           "type": "object",
+          "required": ["type", "group_id", "stop", "members"],
+          "properties": {
+            "type": { "const": "spawn_group" },
+            "group_id": { "$ref": "#/definitions/Identifier" },
+            "stop": { "enum": ["together", "independent"] },
+            "members": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/definitions/GroupMember" } },
+            "requires": { "type": "array", "maxItems": 63, "items": { "$ref": "#/definitions/GroupMember" } }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "list"
-            }
-          },
+          "description": "Terminal input as a control message; clients send input frames instead for anything larger than a key.",
           "type": "object",
+          "required": ["type", "session_id", "data"],
+          "properties": {
+            "type": { "const": "input" },
+            "session_id": { "$ref": "#/definitions/Identifier" },
+            "data": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "shutdown"
-            }
-          },
           "type": "object",
+          "required": ["type", "session_id", "cols", "rows"],
+          "properties": {
+            "type": { "const": "resize" },
+            "session_id": { "$ref": "#/definitions/Identifier" },
+            "cols": { "type": "integer", "minimum": 1, "maximum": 32767 },
+            "rows": { "type": "integer", "minimum": 1, "maximum": 32767 }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "ping"
-            }
-          },
+          "description": "Interrupts the task, then terminates and finally kills its process tree after bounded grace periods.",
           "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "stop" }, "session_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "kill" }, "session_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "restart" }, "session_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "group_id"],
+          "properties": { "type": { "const": "stop_group" }, "group_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "group_id"],
+          "properties": { "type": { "const": "kill_group" }, "group_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "description": "Drops an ended session together with its retained output.",
+          "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "forget" }, "session_id": { "$ref": "#/definitions/Identifier" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "list" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "shutdown" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "ping" } },
           "additionalProperties": false
         }
       ]
@@ -318,107 +244,75 @@
     "ServerMessage": {
       "oneOf": [
         {
-          "required": [
-            "type",
-            "daemon_pid"
-          ],
-          "properties": {
-            "daemon_pid": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "type": {
-              "const": "attached"
-            }
-          },
+          "description": "The greeting of every connection. A client whose `protocol` differs reports the mismatch instead of continuing.",
           "type": "object",
+          "required": ["type", "daemon_pid"],
+          "properties": {
+            "type": { "const": "attached" },
+            "daemon_pid": { "type": "integer", "minimum": 1 },
+            "protocol": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "build_id": { "type": "string" }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "session"
-          ],
-          "properties": {
-            "session": {
-              "$ref": "#/definitions/Session"
-            },
-            "type": {
-              "const": "session_changed"
-            }
-          },
           "type": "object",
+          "required": ["type", "session"],
+          "properties": { "type": { "const": "session_changed" }, "session": { "$ref": "#/definitions/Session" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "sessions"
-          ],
-          "properties": {
-            "sessions": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Session"
-              }
-            },
-            "type": {
-              "const": "sessions"
-            }
-          },
           "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "session_removed" }, "session_id": { "$ref": "#/definitions/Identifier" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "replay_complete"
-            }
-          },
+          "description": "One page of the session listing; `more` announces a further page.",
           "type": "object",
+          "required": ["type", "sessions"],
+          "properties": {
+            "type": { "const": "sessions" },
+            "sessions": { "type": "array", "items": { "$ref": "#/definitions/Session" } },
+            "more": { "type": "boolean" }
+          },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type",
-            "message"
-          ],
-          "properties": {
-            "message": {
-              "type": "string"
-            },
-            "type": {
-              "const": "error"
-            }
-          },
+          "description": "The client resets its terminal for the session; the output frames that follow rebuild it. `truncated` states that older output exists only in the session log.",
           "type": "object",
+          "required": ["type", "session_id"],
+          "properties": { "type": { "const": "replay_start" }, "session_id": { "$ref": "#/definitions/Identifier" }, "truncated": { "type": "boolean" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "pong"
-            }
-          },
+          "description": "The replay of one session, or without `session_id` of every session of an attach, has reached live output.",
           "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "replay_complete" }, "session_id": { "$ref": "#/definitions/Identifier" } },
           "additionalProperties": false
         },
         {
-          "required": [
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "const": "shutdown"
-            }
-          },
           "type": "object",
+          "required": ["type", "message"],
+          "properties": {
+            "type": { "const": "error" },
+            "message": { "type": "string" },
+            "code": { "enum": ["protocol", "decode", "invalid", "unknown_session", "unknown_group", "already_running", "limit", "spawn", "not_running", "input_backlog"] },
+            "session_id": { "$ref": "#/definitions/Identifier" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "pong" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": { "type": { "const": "shutdown" } },
           "additionalProperties": false
         }
       ]

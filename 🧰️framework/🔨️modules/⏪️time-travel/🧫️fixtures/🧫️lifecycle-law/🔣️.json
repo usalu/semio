@@ -13185,8 +13185,8 @@
     },
     {
       "key": "replayProgressValueText",
-      "en": "Replaying {done} of {total} mutations",
-      "de": "{done} von {total} Mutationen werden neu angewendet"
+      "en": "Replaying history: {done} of {total} steps",
+      "de": "Verlauf wird neu angewendet: {done} von {total} Schritten"
     },
     {
       "key": "processed",

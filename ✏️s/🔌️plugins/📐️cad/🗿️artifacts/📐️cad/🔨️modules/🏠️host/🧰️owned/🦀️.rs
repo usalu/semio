@@ -13,7 +13,7 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 /// `CadPlayApp::build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_cad_store(envelope: CadEnvelope, actor: protocol::ActorId) -> Result<OwnedCadStore, store::VcsError> {
     let mut store = CadStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CadSnapshot, CadMutation>());
+    store.install_document_store_owners_exact(crate::editor::cad::cad_document_store_owners());
     Ok(OwnedCadStore(store))
 }
 

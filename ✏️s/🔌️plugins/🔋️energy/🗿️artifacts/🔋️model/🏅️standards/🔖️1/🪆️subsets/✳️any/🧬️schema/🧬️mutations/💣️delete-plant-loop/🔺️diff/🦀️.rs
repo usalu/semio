@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeletePlantLoop` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, ModelPatch, PlantLoopConfigPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::DeletePlantLoop, base: &EnergyModelSnapshot) -> pro
     };
     let _ = existing;
 
-    let mut model = base.model.clone();
-    model.plant_loops.retain(|item| item.id != payload.id);
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::removing(&base.model.plant_loops, &payload.id), ..Default::default() }))
 }
 //#endregion 🔖️Diff

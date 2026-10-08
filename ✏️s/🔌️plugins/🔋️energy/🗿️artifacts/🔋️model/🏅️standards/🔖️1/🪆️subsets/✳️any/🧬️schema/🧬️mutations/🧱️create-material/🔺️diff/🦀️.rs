@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateMaterial` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::EnergyModelDiff;
+use crate::diff::{EnergyModelDiff, MaterialPatch, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff
@@ -12,10 +12,7 @@ pub fn diff(payload: &super::CreateMaterial, base: &EnergyModelSnapshot) -> prot
     if payload.index as usize > base.model.materials.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} materials.", payload.index, base.model.materials.len()), [payload.id.0.to_string()]);
     }
-    let mut model = base.model.clone();
-    model.materials.insert(
-        payload.index as usize,
-        crate::model::Material {
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { materials: Rows::inserting(payload.index as usize, crate::model::Material {
             id: payload.id,
             name: payload.name.clone(),
             roughness: payload.roughness,
@@ -26,8 +23,6 @@ pub fn diff(payload: &super::CreateMaterial, base: &EnergyModelSnapshot) -> prot
             thermal_absorptance: payload.thermal_absorptance,
             solar_absorptance: payload.solar_absorptance,
             visible_absorptance: payload.visible_absorptance,
-        },
-    );
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
+        }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

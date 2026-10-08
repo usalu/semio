@@ -1,0 +1,58 @@
+{
+  "maximumCopyBytes": 64,
+  "maximumPhysicalBytes": 262144,
+  "maximumTurns": 100000,
+  "maximumMillis": 90000,
+  "cases": [
+    {
+      "parentTouched": false,
+      "children": 1,
+      "parentLabel": "parent 雪\u0000",
+      "childLabel": "child 雪\u0000",
+      "childCounts": [
+        5
+      ],
+      "expectedOperations": 2,
+      "expectedMemberEdits": 1
+    },
+    {
+      "parentTouched": false,
+      "children": 2,
+      "parentLabel": "parent 雪\u0000",
+      "childLabel": "child 雪\u0000",
+      "childCounts": [
+        5,
+        6
+      ],
+      "expectedOperations": 4,
+      "expectedMemberEdits": 2
+    },
+    {
+      "parentTouched": true,
+      "children": 1,
+      "parentLabel": "parent 雪\u0000",
+      "childLabel": "child 雪\u0000",
+      "childCounts": [
+        5
+      ],
+      "expectedOperations": 3,
+      "expectedMemberEdits": 2
+    },
+    {
+      "parentTouched": true,
+      "children": 2,
+      "parentLabel": "parent 雪\u0000",
+      "childLabel": "child 雪\u0000",
+      "childCounts": [
+        5,
+        6
+      ],
+      "expectedOperations": 5,
+      "expectedMemberEdits": 3
+    }
+  ],
+  "expectedSchemas": [
+    "count.set-count",
+    "label.set-label"
+  ]
+}

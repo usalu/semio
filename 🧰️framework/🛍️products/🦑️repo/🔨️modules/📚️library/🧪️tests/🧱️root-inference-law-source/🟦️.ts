@@ -28,12 +28,10 @@ interface SourceConsumer {
   readonly owners: readonly string[];
 }
 
-/** 🚀️ One Nx target and the launch row generated from it. */
+/** 🛣️ One Nx target and the package script mirroring it. */
 interface SourceRoute {
   readonly target: string;
   readonly command: string;
-  readonly launchName: string;
-  readonly launchCommand: string;
   readonly inputs?: readonly string[];
 }
 
@@ -277,7 +275,7 @@ test("reports invalid and unreadable inference source instead of false clean", a
   expect(policyInferenceFamilyBreaches("/repo", virtualOperations({ "✏️s/🔌️plugins": { kind: "directory", unreadable: true } }))).toEqual([expect.objectContaining({ kind: "inference-migration/source-unreadable", scope: "✏️s/🔌️plugins" })]);
 }, { timeout: 30_000 });
 
-test("retains native source data and registers one Bun Nx launch route", () => {
+test("retains native source data and registers one Bun and Nx route", () => {
   const sources = fixture.sourceData.map((path: string) => readFileSync(resolve(repoRoot, path), "utf8"));
   expect(sources[0]).toContain("pub fn compute_flat_position");
   expect(sources[1]).toContain("flat_position_bfs_walks_from_root");
@@ -285,9 +283,4 @@ test("retains native source data and registers one Bun Nx launch route", () => {
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
-  for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-    const source = readFileSync(resolve(repoRoot, path), "utf8");
-    expect(source.split(fixture.route.launchName).length - 1).toBe(1);
-    expect(source).toContain(fixture.route.launchCommand);
-  }
 });

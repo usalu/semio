@@ -86,7 +86,67 @@ impl Default for DagConfig {
     }
 }
 
-store::impl_whole_record_config!(DagConfig);
+impl store::ConfigRecord for DagConfig {}
+
+/// 🔺️ Sparse field delta over [`DagConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct DagConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_x: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_y: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_zoom: Option<f64>,
+}
+
+impl protocol::MutationDiff<DagConfig> for DagConfigDiff {
+    fn apply(&self, base: &DagConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<DagConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x = value.clone();
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y = value.clone();
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera_x.is_some() {
+            self.camera_x = other.camera_x;
+        }
+        if other.camera_y.is_some() {
+            self.camera_y = other.camera_y;
+        }
+        if other.camera_zoom.is_some() {
+            self.camera_zoom = other.camera_zoom;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<DagConfig> for DagConfigDiff {
+    fn inverse(&self, base: &DagConfig) -> Self {
+        Self {
+            camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
+            camera_y: self.camera_y.as_ref().map(|_| base.camera_y.clone()),
+            camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom.clone()),
+        }
+    }
+    fn between(base: &DagConfig, other: &DagConfig) -> Self {
+        Self {
+            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
+            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
+            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none()
+    }
+}
+
 
 /// 🎥️ Reassembles the kernel's `DagCamera` from `DagConfig`'s flattened scalar fields — the seam
 /// `crate::editor::dag` uses wherever the old `DagPlayRuntime::camera` field was read.

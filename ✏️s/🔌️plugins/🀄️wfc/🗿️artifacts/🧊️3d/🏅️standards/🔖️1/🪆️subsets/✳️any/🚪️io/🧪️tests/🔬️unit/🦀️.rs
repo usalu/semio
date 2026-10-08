@@ -4,9 +4,9 @@ use super::{export_stdio_kinds, import_stdio_kinds, io};
 use crate::examples::{tower_stack, two_room_corridor, wall_roof_facade_strip};
 use crate::mutations::{self as mutation_builders, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::{binary as mutation_binary,text as mutation_text};
+use crate::standards::v1::subsets::any::io::{binary::mutations as mutation_binary,text::mutations as mutation_text};
 
-use crate::standards::v1::subsets::any::schema::snapshot::{binary as snapshot_binary, text as snapshot_text};
+use crate::standards::v1::subsets::any::io::{binary::snapshot as snapshot_binary, text::snapshot as snapshot_text};
 use protocol::{OpBinary, OpText};
 use store::ArtifactDsl;
 

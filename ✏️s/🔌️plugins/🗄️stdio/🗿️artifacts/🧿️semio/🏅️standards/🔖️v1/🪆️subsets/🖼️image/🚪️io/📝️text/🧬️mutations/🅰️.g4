@@ -3,10 +3,9 @@
 // `parse_op` (../../🦀️.rs's `print_image_mutation`/`parse_image_mutation`).
 grammar Stdio_semio_image_mutations;
 
-op : noOp | setSnapshot | setDimensions | setColorspace | setBitDepth | setIcc | insertFrame | removeFrame | moveFrame | setFrameDelay | setFramePixels | setMetadataEntry | removeMetadataEntry ;
+op : noOp |  setDimensions | setColorspace | setBitDepth | setIcc | insertFrame | removeFrame | moveFrame | setFrameDelay | setFramePixels | setMetadataEntry | removeMetadataEntry ;
 
 noOp                 : 'no' ;
-setSnapshot          : 'setSnapshot' ':' snapshot ;
 setDimensions        : 'setDimensions' ':' INT ',' INT ;
 setColorspace        : 'setColorspace' ':' colorspace ;
 setBitDepth          : 'setBitDepth' ':' INT ;

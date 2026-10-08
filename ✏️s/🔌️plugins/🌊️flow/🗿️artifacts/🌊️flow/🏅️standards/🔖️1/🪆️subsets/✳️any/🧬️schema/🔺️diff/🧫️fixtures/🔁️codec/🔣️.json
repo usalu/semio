@@ -1,0 +1,32 @@
+{
+  "contract": "flow-diff-codec",
+  "cases": [
+    { "artifact": null, "schema": null, "content": null },
+    { "artifact": null, "schema": "s.flow.flow.日本", "content": null },
+    {
+      "artifact": null,
+      "schema": null,
+      "content": {
+        "childId": "flow-child 日本",
+        "target": {
+          "artifactId": "flow-content-fixture",
+          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" }
+        }
+      }
+    },
+    {
+      "artifact": {
+        "schema": "s.flow.flow",
+        "content": {
+          "childId": "replacement",
+          "target": {
+            "artifactId": "replacement-fixture",
+            "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow" }
+          }
+        }
+      },
+      "schema": null,
+      "content": null
+    }
+  ]
+}

@@ -1756,8 +1756,9 @@ fn minimap_widget_panel_uses_square_corners() {
         if shape[0].as_str() != Some("r") {
             return false;
         }
-        let coords = shape[1].as_array().expect("rect coords");
-        let nums = coords.iter().map(|v| v.as_f64().expect("coord")).collect::<Vec<_>>();
+        let coords = shape.as_array().expect("rect coords");
+        assert_eq!(coords.len(), 5, "flat rect tuple");
+        let nums = coords[1..].iter().map(|v| v.as_f64().expect("coord")).collect::<Vec<_>>();
         (nums[0] - px0).abs() < epsilon && (nums[1] - py0).abs() < epsilon && (nums[2] - px1).abs() < epsilon && (nums[3] - py1).abs() < epsilon
     };
     let panel_commands = encoded["commands"]
