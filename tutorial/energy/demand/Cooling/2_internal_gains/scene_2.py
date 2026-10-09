@@ -18,8 +18,9 @@ from manim_fonts import (
 )
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE,
-    convection_stream, radiation_waves, respiration_parts, symbol_token, watt_anchor,
-    equation_row, formula_panel, highlight_param,
+    watt_anchor, highlight_param,
+    house_section, room_section, person_glyph, seated_person_glyph, lamp_glyph, droplets,
+    ripples, smooth_path, flow_guides, flow_animation, pulse_flashes,
     math_label, math_readout, math_panel, de_num,
     caption_bar, swap_caption, hold_for, subtitle_text,
     SAFE_BOTTOM, set_vo_language, load_vo_timing,
@@ -53,92 +54,73 @@ def _din_ref(text: str):
 
 #region Shared helpers
 
-def _rising_heat_waves(origin, n=3, color=P_ORANGE, height=1.35, x_spread=0.32, stroke_width=2.0):
-    """〰️ Sine-wavy radiation plumes rising from a heat source."""
-    ox, oy = float(origin[0]), float(origin[1])
-    waves = VGroup()
-    for i in range(n):
-        x0 = ox + (i - (n - 1) / 2) * x_spread
-        phase = i * 0.85
-
-        def _path(t, x0=x0, oy=oy, phase=phase, height=height):
-            return np.array([
-                x0 + np.sin(t * 5.0 + phase) * 0.08,
-                oy + t * height,
-                0.0,
-            ])
-
-        waves.add(
-            ParametricFunction(_path, t_range=[0, 1.0], color=color, stroke_width=stroke_width).set_opacity(0.8)
-        )
-    return waves
-
-
-def _device_glow(center, color=P_ORANGE):
-    """🌟 Soft layered glow under a heat-emitting device."""
-    return VGroup(
-        Circle(radius=1.05, color=color, stroke_width=0, fill_opacity=0.05).move_to(center),
-        Circle(radius=0.65, color=color, stroke_width=0, fill_opacity=0.10).move_to(center),
-        Circle(radius=0.32, color=color, stroke_width=0, fill_opacity=0.18).move_to(center),
-    )
-
-
-def _occupant_icon(color=P_CYAN, scale=1.0):
-    """👤 Compact ISO-style occupant pictogram for hall density grids."""
-    head = Circle(
-        radius=0.07 * scale, color=color, fill_color=color, fill_opacity=0.25, stroke_width=1.5 * scale,
-    )
-    shoulders = Arc(radius=0.13 * scale, start_angle=0, angle=PI, color=color, stroke_width=1.5 * scale)
-    shoulders.next_to(head, DOWN, buff=0.02 * scale)
-    return VGroup(head, shoulders)
-
-
-def _activity_figure(kind: str, color=P_CYAN, s: float = 1.0):
-    """🏃 Stick figure in one activity pose — ``sleep``, ``sit``, ``walk`` or ``sprint``.
+def _activity_figure(kind: str, color=P_ORANGE, s: float = 1.0):
+    """🏃 Figure in one activity pose — ``sleep``, ``sit``, ``walk`` or ``sprint`` — in the ``person_glyph`` line style.
 
     Feet sit on ``y = 0`` so a row of poses shares one ground line; metabolic
-    rates per pose follow ISO 7730 / VDI 2078 orders of magnitude.
+    rates per pose follow ISO 7730 / VDI 2078 orders of magnitude. Returns the
+    figure and the point its body heat leaves from.
     """
-    def L(a, b, w=2.6):
-        return Line(np.array([*a, 0.0]) * s, np.array([*b, 0.0]) * s, color=color, stroke_width=w)
+    sw = 1.55
 
-    def H(cx, cy, r=0.1):
-        return Circle(radius=r * s, color=color, stroke_width=2.4).move_to(np.array([cx, cy, 0.0]) * s)
+    def L(a, b, c=color, w=sw):
+        return Line(np.array([*a, 0.0]) * s, np.array([*b, 0.0]) * s, color=c, stroke_width=w)
+
+    def H(cx, cy, r=0.085):
+        return Circle(radius=r * s, color=color, stroke_width=sw).move_to(np.array([cx, cy, 0.0]) * s)
 
     if kind == "sleep":
-        bed = Line(np.array([-0.6, 0.0, 0.0]) * s, np.array([0.6, 0.0, 0.0]) * s, color=P_TEAL, stroke_width=2.2)
-        return VGroup(bed, H(-0.38, 0.12, 0.09), L([-0.27, 0.1], [0.3, 0.1]), L([0.3, 0.1], [0.52, 0.06]))
+        bed = VGroup(L([-0.62, 0.0], [0.62, 0.0], P_WHITE, 1.3), L([-0.62, 0.0], [-0.62, 0.22], P_WHITE, 1.3),
+                     L([-0.58, -0.0], [-0.58, -0.12], P_WHITE, 1.3), L([0.58, 0.0], [0.58, -0.12], P_WHITE, 1.3))
+        body = VGroup(H(-0.4, 0.13), L([-0.31, 0.1], [0.28, 0.1]), L([-0.31, 0.16], [0.24, 0.16]),
+                      L([0.28, 0.1], [0.52, 0.08]))
+        return VGroup(bed, body), np.array([-0.05, 0.16, 0.0]) * s
     if kind == "sit":
-        seat = VGroup(L([-0.2, 0.45], [0.2, 0.45], 2.2), L([-0.2, 0.45], [-0.2, 0.0], 2.2))
-        seat.set_color(P_TEAL)
-        return VGroup(
-            seat, H(0.03, 1.02), L([0.03, 0.92], [0.03, 0.5]),
-            L([0.03, 0.5], [0.33, 0.5]), L([0.33, 0.5], [0.33, 0.02]),
-            L([0.03, 0.78], [0.3, 0.62]),
-        )
+        seated = seated_person_glyph(ORIGIN, color=color, scale=2.2 * s)
+        return seated["group"], seated["chest"]
     if kind == "walk":
         return VGroup(
-            H(0.0, 1.12), L([0.0, 1.02], [0.0, 0.45]),
-            L([0.0, 0.45], [-0.24, 0.02]), L([0.0, 0.45], [0.24, 0.02]),
-            L([0.0, 0.85], [-0.22, 0.6]), L([0.0, 0.85], [0.22, 0.6]),
-        )
+            H(0.0, 1.12), L([-0.06, 1.0], [-0.05, 0.48]), L([0.06, 1.0], [0.05, 0.48]),
+            L([0.0, 0.48], [-0.24, 0.02]), L([0.0, 0.48], [0.24, 0.02]),
+            L([0.0, 0.92], [-0.22, 0.62]), L([0.0, 0.92], [0.22, 0.62]),
+        ), np.array([0.0, 0.8, 0.0]) * s
     if kind == "sprint":
-        back_leg = VMobject(color=color, stroke_width=2.6).set_points_as_corners(
-            [np.array([0.0, 0.5, 0.0]) * s, np.array([-0.26, 0.3, 0.0]) * s, np.array([-0.46, 0.1, 0.0]) * s]
-        )
-        front_leg = VMobject(color=color, stroke_width=2.6).set_points_as_corners(
-            [np.array([0.0, 0.5, 0.0]) * s, np.array([0.22, 0.26, 0.0]) * s, np.array([0.14, 0.02, 0.0]) * s]
-        )
-        dashes = VGroup(
-            Line(np.array([-0.75, 0.75, 0.0]) * s, np.array([-0.5, 0.75, 0.0]) * s, color=color, stroke_width=1.6, stroke_opacity=0.5),
-            Line(np.array([-0.8, 0.5, 0.0]) * s, np.array([-0.55, 0.5, 0.0]) * s, color=color, stroke_width=1.6, stroke_opacity=0.5),
-        )
+        back_leg = VMobject(color=color, stroke_width=sw).set_points_as_corners(
+            [np.array([0.0, 0.5, 0.0]) * s, np.array([-0.26, 0.3, 0.0]) * s, np.array([-0.46, 0.1, 0.0]) * s])
+        front_leg = VMobject(color=color, stroke_width=sw).set_points_as_corners(
+            [np.array([0.0, 0.5, 0.0]) * s, np.array([0.22, 0.26, 0.0]) * s, np.array([0.14, 0.02, 0.0]) * s])
+        dashes = VGroup(*[L([-0.8 + 0.05 * k, y], [-0.55 + 0.05 * k, y], P_WHITE, 1.1).set_stroke(opacity=0.5)
+                          for k, y in enumerate((0.78, 0.55, 0.32))])
         return VGroup(
-            dashes, H(0.4, 1.12), L([0.0, 0.5], [0.3, 1.0]),
-            back_leg, front_leg,
-            L([0.3, 1.0], [0.06, 0.78]), L([0.3, 1.0], [0.54, 0.8]),
-        )
+            dashes, H(0.4, 1.12), L([-0.04, 0.5], [0.26, 1.0]), L([0.06, 0.5], [0.34, 0.98]),
+            back_leg, front_leg, L([0.3, 0.98], [0.06, 0.78]), L([0.3, 0.98], [0.54, 0.8]),
+        ), np.array([0.15, 0.75, 0.0]) * s
     raise ValueError(f"unknown activity pose {kind!r}")
+
+
+def _office_furniture(room):
+    """🖥️ Two workstations — desk, monitor, chair — standing on the room floor in the Physical Fundamentals line style."""
+    y_f = room["y_f"]
+    group, warm = VGroup(), []
+    for x in (room["x_l"] + 0.9, room["center"][0] + 0.4):
+        top = y_f + 0.75
+        desk = VGroup(
+            Line(np.array([x, top, 0.0]), np.array([x + 1.2, top, 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([x + 0.1, top, 0.0]), np.array([x + 0.1, y_f, 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([x + 1.1, top, 0.0]), np.array([x + 1.1, y_f, 0.0]), color=P_WHITE, stroke_width=1.5),
+        )
+        screen = Rectangle(width=0.5, height=0.32, color=P_CYAN, stroke_width=1.6).move_to(
+            np.array([x + 0.7, top + 0.26, 0.0]))
+        stand = Line(screen.get_bottom(), np.array([x + 0.7, top, 0.0]), color=P_CYAN, stroke_width=1.6)
+        chair = VGroup(
+            Line(np.array([x - 0.55, y_f + 0.45, 0.0]), np.array([x - 0.15, y_f + 0.45, 0.0]), color=P_WHITE, stroke_width=1.3),
+            Line(np.array([x - 0.55, y_f + 0.45, 0.0]), np.array([x - 0.58, y_f + 0.95, 0.0]), color=P_WHITE, stroke_width=1.3),
+            Line(np.array([x - 0.35, y_f + 0.45, 0.0]), np.array([x - 0.35, y_f, 0.0]), color=P_WHITE, stroke_width=1.3),
+            Line(np.array([x - 0.5, y_f, 0.0]), np.array([x - 0.2, y_f, 0.0]), color=P_WHITE, stroke_width=1.3),
+        )
+        group.add(VGroup(desk, screen, stand, chair))
+        warm.append(screen.get_center())
+    return {"group": group, "warm": warm}
 
 #endregion
 
@@ -174,58 +156,34 @@ class Beat1_OfficeRoom(Scene):
         self.play(FadeIn(caption), run_time=0.3)
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
 
-        ground = Line(LEFT * 4, RIGHT * 4, color=P_CYAN, stroke_width=3).move_to(DOWN * 0.85)
-        roof = Polygon([-2.0, 1.15, 0], [2.0, 1.15, 0], [0, 2.15, 0], color=P_WHITE, stroke_width=3)
-        body = Polygon([-1.8, -0.85, 0], [1.8, -0.85, 0], [1.8, 1.15, 0], [-1.8, 1.15, 0], color=P_WHITE, stroke_width=3)
-        window1 = Square(side_length=0.5, color=P_CYAN, stroke_width=2).move_to(LEFT * 0.8 + UP * 0.35)
-        window2 = Square(side_length=0.5, color=P_CYAN, stroke_width=2).move_to(RIGHT * 0.8 + UP * 0.35)
-        door = Rectangle(width=0.6, height=0.9, color=P_WHITE, stroke_width=2).move_to(DOWN * 0.4)
-        facade = VGroup(ground, roof, body, window1, window2, door)
+        facade = house_section(np.array([0.0, -0.55, 0.0]))["group"]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "facade"))
-        self.play(Create(facade), run_time=1.8)
-        # 1.6x / slightly low keeps the roof peak clear of the beat subtitle and
-        # the base clear of the caption bar; 1.85x filled the band exactly and
-        # drove the apex through the subtitle text.
-        self.play(facade.animate.scale(1.6).move_to(DOWN * 0.1), run_time=2.0)
-        hold_for(self, self.NARRATION, "facade", used=3.8 + 0.35)
+        self.play(FadeIn(facade), run_time=1.4)
+        self.play(facade.animate.scale(1.35).move_to(DOWN * 0.15), run_time=2.0)
+        hold_for(self, self.NARRATION, "facade", used=3.4 + 0.35)
 
-        floor = Line(LEFT * 3.6 + DOWN * 1.5, RIGHT * 3.6 + DOWN * 1.5, color=P_CYAN, stroke_width=4)
-        ceiling = Line(LEFT * 3.6 + UP * 1.5, RIGHT * 3.6 + UP * 1.5, color=P_WHITE, stroke_width=3)
-        left_wall = Line(LEFT * 3.6 + DOWN * 1.5, LEFT * 3.6 + UP * 1.5, color=P_WHITE, stroke_width=3)
-        right_wall = Line(RIGHT * 3.6 + DOWN * 1.5, RIGHT * 3.6 + UP * 1.5, color=P_WHITE, stroke_width=3)
-        room_box = VGroup(floor, ceiling, left_wall, right_wall)
-        insulation_box = RoundedRectangle(
-            width=7.5, height=3.4, corner_radius=0.15, color=P_ORANGE, stroke_width=2.5,
-        ).move_to(ORIGIN + DOWN * 0.0)
-
-        desk_top = Line(LEFT * 1.2 + DOWN * 0.55, RIGHT * 1.2 + DOWN * 0.55, color=P_CYAN, stroke_width=3)
-        leg_left = Line(LEFT * 1.1 + DOWN * 0.55, LEFT * 1.1 + DOWN * 1.5, color=P_CYAN, stroke_width=3)
-        leg_right = Line(RIGHT * 1.1 + DOWN * 0.55, RIGHT * 1.1 + DOWN * 1.5, color=P_CYAN, stroke_width=3)
-        monitor_screen = Rectangle(width=0.9, height=0.55, color=P_WHITE, stroke_width=2.5).move_to(LEFT * 0.3 + DOWN * 0.2)
-        monitor_base = Line(LEFT * 0.4 + DOWN * 0.52, LEFT * 0.2 + DOWN * 0.52, color=P_WHITE, stroke_width=2.5)
-        monitor_stand = Line(LEFT * 0.3 + DOWN * 0.45, LEFT * 0.3 + DOWN * 0.52, color=P_WHITE, stroke_width=2.5)
-        chair_seat = Line(RIGHT * 0.3 + DOWN * 1.1, RIGHT * 1.0 + DOWN * 1.1, color=P_WHITE, stroke_width=2.5)
-        chair_back = Line(RIGHT * 1.0 + DOWN * 0.55, RIGHT * 1.0 + DOWN * 1.1, color=P_WHITE, stroke_width=2.5)
-        chair_stem = Line(RIGHT * 0.65 + DOWN * 1.1, RIGHT * 0.65 + DOWN * 1.5, color=P_WHITE, stroke_width=2.5)
-        chair_base = Line(RIGHT * 0.4 + DOWN * 1.5, RIGHT * 0.9 + DOWN * 1.5, color=P_WHITE, stroke_width=2.5)
-        furniture = VGroup(
-            desk_top, leg_left, leg_right,
-            monitor_screen, monitor_base, monitor_stand,
-            chair_seat, chair_back, chair_stem, chair_base,
-        )
+        room = room_section(np.array([0.0, -0.2, 0.0]), w=6.6, h=2.5)
+        insulation_box = SurroundingRectangle(room["shell"], buff=0.12, corner_radius=0.12, color=P_ORANGE,
+                                              stroke_width=2.2)
+        office = _office_furniture(room)
         interior_label = Text("Gewerblicher Arbeitsbereich", font_size=BODY_FONT_SIZE, color=P_CYAN)
-        interior_label.move_to(UP * 0.55)
+        interior_label.move_to(np.array([1.3, room["y_c"] - 0.45, 0.0]))
         office_env_label = Text("Bürohülle", font_size=SUBTITLE_FONT_SIZE, color=P_WHITE)
-        office_env_label.move_to(UP * 1.15)
+        office_env_label.next_to(insulation_box, UP, buff=0.12)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "interior"))
-        self.play(ReplacementTransform(facade, room_box), Create(insulation_box), run_time=1.8)
-        self.play(Create(furniture), FadeIn(interior_label), FadeIn(office_env_label), run_time=1.6)
+        self.play(ReplacementTransform(facade, room["shell"]), FadeIn(room["glass"]), Create(insulation_box),
+                  run_time=1.8)
+        self.add(room["air"])
+        self.play(LaggedStart(*[FadeIn(m) for m in office["group"]], lag_ratio=0.15), FadeIn(interior_label),
+                  FadeIn(office_env_label), run_time=1.6)
         hold_for(self, self.NARRATION, "interior", used=3.4 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        self.play(room["air"].animate.set_fill(P_RED, opacity=0.1), run_time=0.8)
+        hold_for(self, self.NARRATION, "outro", during=lambda rt: [
+            ripples(office["warm"], r_max=0.5, color=P_ORANGE, cycles=max(1.0, rt / 1.3))])
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -279,90 +237,71 @@ class Beat2_HumanFactor(Scene):
         self.play(FadeIn(caption), run_time=0.3)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        ceiling_line = Line(LEFT * 5.0 + UP * 2.0, RIGHT * 5.0 + UP * 2.0, color="#2C3545", stroke_width=2)
-        floor_line = Line(LEFT * 5.0 + DOWN * 1.7, RIGHT * 5.0 + DOWN * 1.7, color="#2C3545", stroke_width=2)
-        torso_center = LEFT * 1.2 + DOWN * 0.15
+        room = room_section(np.array([-0.9, 0.0, 0.0]), w=6.6, h=3.4)
+        seated = seated_person_glyph(np.array([-1.55, room["y_f"], 0.0]), color=P_ORANGE, scale=3.6)
+        desk_top_y = seated["figure"][7].get_end()[1] - 0.12
+        dx0 = seated["figure"][7].get_end()[0] + 0.1
+        desk = VGroup(
+            Line(np.array([dx0, desk_top_y, 0.0]), np.array([dx0 + 2.1, desk_top_y, 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([dx0 + 2.0, desk_top_y, 0.0]), np.array([dx0 + 2.0, room["y_f"], 0.0]), color=P_WHITE,
+                 stroke_width=1.5),
+            Line(np.array([dx0 + 0.95, desk_top_y + 0.02, 0.0]), np.array([dx0 + 1.45, desk_top_y + 0.02, 0.0]),
+                 color=P_CYAN, stroke_width=1.8),
+            Line(np.array([dx0 + 1.45, desk_top_y + 0.02, 0.0]), np.array([dx0 + 1.52, desk_top_y + 0.42, 0.0]),
+                 color=P_CYAN, stroke_width=1.8),
+        )
+        office_setup = VGroup(seated["group"], desk)
+        self.add(room["air"])
+        self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), FadeIn(office_setup), run_time=1.6)
 
-        chair_back = Line(torso_center + DOWN * 0.4 + LEFT * 0.35, torso_center + UP * 0.6 + LEFT * 0.35, color=P_CYAN, stroke_width=3)
-        chair_seat = Line(torso_center + DOWN * 0.45 + LEFT * 0.4, torso_center + DOWN * 0.45 + RIGHT * 0.4, color=P_CYAN, stroke_width=3)
-        chair_stem = Line(torso_center + DOWN * 0.45, torso_center + DOWN * 1.15, color=P_CYAN, stroke_width=2.5)
-        chair_base = Line(torso_center + DOWN * 1.15 + LEFT * 0.4, torso_center + DOWN * 1.15 + RIGHT * 0.4, color=P_CYAN, stroke_width=2.5)
-        chair = VGroup(chair_back, chair_seat, chair_stem, chair_base)
-
-        head = Circle(radius=0.28, stroke_color=P_WHITE, stroke_width=3).move_to(torso_center + UP * 0.9)
-        torso = RoundedRectangle(width=0.55, height=0.9, corner_radius=0.15, stroke_color=P_WHITE, stroke_width=3).move_to(torso_center)
-        arm = Line(torso_center + UP * 0.2 + RIGHT * 0.1, torso_center + DOWN * 0.2 + RIGHT * 0.6, stroke_color=P_WHITE, stroke_width=3)
-        person = VGroup(head, torso, arm)
-
-        desk_top = Line(torso_center + RIGHT * 0.3 + DOWN * 0.2, torso_center + RIGHT * 1.9 + DOWN * 0.2, color=P_CYAN, stroke_width=3)
-        desk_leg = Line(torso_center + RIGHT * 1.8 + DOWN * 0.2, torso_center + RIGHT * 1.8 + DOWN * 1.15, color=P_CYAN, stroke_width=2.5)
-        laptop_base = Line(torso_center + RIGHT * 0.8 + DOWN * 0.2, torso_center + RIGHT * 1.4 + DOWN * 0.2, color=P_WHITE, stroke_width=2)
-        laptop_screen = Line(torso_center + RIGHT * 1.4 + DOWN * 0.2, torso_center + RIGHT * 1.5 + UP * 0.3, color=P_WHITE, stroke_width=2)
-        desk = VGroup(desk_top, desk_leg, laptop_base, laptop_screen)
-        office_setup = VGroup(chair, person, desk)
-
-        self.play(Create(ceiling_line), Create(floor_line), Create(office_setup), run_time=1.8)
-
-        # 🌡️ Three heat-loss lanes fan out from the body so none crosses another:
-        # Strahlung leans up-left off the torso, Konvektion rises straight up
-        # off the head, Atmung breathes out to the right from the mouth. Each
-        # lane also carries reduced stroke opacity so a near lane never reads
-        # as tangled with whatever sits behind it.
-        rad_origin = torso.get_left() + LEFT * 0.35 + UP * 0.2
-        rad_waves = radiation_waves(rad_origin, n=4, color=P_ORANGE, height=0.8, x_spread=0.24, stroke_width=2.2)
-        rad_waves.set_stroke(opacity=0.85)
-        rad_waves.rotate(28 * DEGREES, about_point=rad_origin)
+        # 🌡️ Three heat paths leave the body without crossing: Strahlung spreads
+        # from the chest, Konvektion rises off the head to the ceiling, Atmung
+        # leaves the mouth to the right — warm air above, moisture below.
+        chest = seated["chest"]
+        head = seated["head"]
+        mouth = seated["mouth"]
         lbl_rad = Text("Strahlung", font_size=BODY_FONT_SIZE, color=P_ORANGE)
-        lbl_rad.next_to(rad_waves, LEFT, buff=0.25)
-
-        conv_start = head.get_top() + UP * 0.12
-        conv_end = conv_start + UP * 0.75
-        conv_stream = convection_stream(conv_start, conv_end, color=P_CYAN, bend=0.12, n_ribbons=3, spread=0.14)
-        conv_stream.set_stroke(opacity=0.8)
-        lbl_conv = Text("Konvektion", font_size=BODY_FONT_SIZE, color=P_CYAN)
-        lbl_conv.next_to(conv_stream, LEFT, buff=0.25)
-
-        mouth = head.get_center() + RIGHT * 0.55 + DOWN * 0.04
-        breath = respiration_parts(mouth, scale=0.85)
-        breath["sensible"].set_stroke(opacity=0.85)
-        breath["latent"].shift(RIGHT * 0.35 + UP * 0.05)
-        breath["latent_label"].next_to(breath["latent"], RIGHT, buff=0.12)
+        lbl_rad.next_to(np.array([chest[0] - 0.85, chest[1] + 0.05, 0.0]), LEFT, buff=0.0)
+        plume = [smooth_path([head.get_top() + UP * 0.08 + RIGHT * dx, head.get_top() + UP * 0.45 + RIGHT * (0.12 + dx),
+                              head.get_top() + UP * 0.85 + LEFT * (0.05 - dx),
+                              np.array([head.get_center()[0] + 0.1 + dx, room["y_c"] - 0.08, 0.0])])
+                 for dx in (-0.08, 0.08)]
+        lbl_conv = Text("Konvektion", font_size=BODY_FONT_SIZE, color=P_ORANGE)
+        lbl_conv.next_to(np.array([head.get_center()[0] - 0.3, head.get_top()[1] + 0.65, 0.0]), LEFT, buff=0.0)
+        breath_warm = [smooth_path([mouth + RIGHT * 0.06, mouth + RIGHT * 0.6 + UP * 0.12, mouth + RIGHT * 1.25 + UP * 0.32])]
+        breath_wet = [smooth_path([mouth + RIGHT * 0.06 + DOWN * 0.04, mouth + RIGHT * 0.65 + DOWN * 0.1,
+                                   mouth + RIGHT * 1.25 + DOWN * 0.18])]
+        lbl_sens = Text("fühlbar", font_size=LABEL_FONT_SIZE, color=P_RED)
+        lbl_sens.next_to(breath_warm[0].get_end(), RIGHT, buff=0.15)
+        lbl_lat = Text("latent", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        lbl_lat.next_to(breath_wet[0].get_end(), RIGHT, buff=0.15)
         lbl_resp = Text("Atmung", font_size=BODY_FONT_SIZE, color=P_RED)
-        lbl_resp.next_to(breath["group"], UP, buff=0.15)
+        lbl_resp.next_to(lbl_sens, UP, buff=0.18).align_to(lbl_sens, LEFT)
+        drops = droplets(breath_wet[0].get_end() + LEFT * 0.35 + DOWN * 0.04, n=5, spread=(0.25, 0.05), seed=5)
+
+        def body_heat(rt):
+            cyc = max(1.0, rt / 1.4)
+            return [ripples([chest], r_max=0.7, color=P_ORANGE, cycles=cyc),
+                    flow_animation([(plume, P_ORANGE, P_RED)], waves=4, radius=0.055, cycles=cyc),
+                    flow_animation([(breath_warm, P_RED, P_ORANGE)], waves=3, radius=0.05, cycles=cyc, streak=False),
+                    flow_animation([(breath_wet, P_BLUE)], waves=3, radius=0.045, cycles=cyc, streak=False)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "modes"))
-        self.play(
-            LaggedStart(*[Create(w) for w in rad_waves], lag_ratio=0.12),
-            FadeIn(lbl_rad),
-            run_time=1.6,
-        )
-        self.play(
-            LaggedStart(*[Create(r) for r in conv_stream], lag_ratio=0.15),
-            FadeIn(lbl_conv),
-            run_time=1.4,
-        )
-        self.play(
-            LaggedStart(*[Create(w) for w in breath["sensible"]], lag_ratio=0.1),
-            FadeIn(breath["sensible_label"]), FadeIn(lbl_resp),
-            run_time=1.2,
-        )
-        self.play(
-            LaggedStart(*[FadeIn(d, scale=0.6) for d in breath["latent"]], lag_ratio=0.12),
-            FadeIn(breath["latent_label"]),
-            run_time=1.0,
-        )
-        hold_for(self, self.NARRATION, "modes", used=5.2 + 0.35)
+        self.play(ripples([chest], r_max=0.7, color=P_ORANGE, cycles=1.2), FadeIn(lbl_rad), run_time=1.4)
+        self.play(flow_animation([(plume, P_ORANGE, P_RED)], waves=4, radius=0.055, cycles=1.0), FadeIn(lbl_conv),
+                  run_time=1.4)
+        self.play(*body_heat(1.4)[2:], FadeIn(lbl_sens), FadeIn(lbl_resp), FadeIn(lbl_lat),
+                  FadeIn(drops, lag_ratio=0.2), run_time=1.4)
+        hold_for(self, self.NARRATION, "modes", during=body_heat)
 
         badge = watt_anchor(100, compare="bulb", title="Körperwärme")
-        badge.move_to(RIGHT * 3.2 + DOWN * 0.05)
+        badge.scale(0.85).next_to(room["wall_r"], RIGHT, buff=0.4)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "anchor"))
-        self.play(FadeIn(badge, shift=LEFT * 0.25), run_time=1.0)
-        hold_for(self, self.NARRATION, "anchor", used=1.0 + 0.35)
+        self.play(FadeIn(badge, shift=LEFT * 0.25), room["air"].animate.set_fill(P_RED, opacity=0.08), *body_heat(1.0),
+                  run_time=1.0)
+        hold_for(self, self.NARRATION, "anchor", during=body_heat)
 
-        desk_group = VGroup(
-            ceiling_line, floor_line, office_setup, rad_waves, lbl_rad, conv_stream, lbl_conv,
-            breath["sensible"], breath["sensible_label"], breath["latent"], breath["latent_label"], lbl_resp, badge,
-        )
+        desk_group = VGroup(room["group"], office_setup, lbl_rad, lbl_conv, lbl_sens, lbl_lat, lbl_resp, drops, badge)
         self.play(FadeOut(desk_group), run_time=0.7)
 
         # 🏃 Activity ladder — every pose animated, its watt output counted from
@@ -375,15 +314,12 @@ class Beat2_HumanFactor(Scene):
         ]
         base_y = -0.75
         xs = [-4.8, -1.7, 1.3, 4.3]
-        figures, trackers, readouts, names, wave_sets = [], [], [], [], []
+        figures, trackers, readouts, names, heat_spots = [], [], [], [], []
         for (name, watts, pose, color), x in zip(acts, xs):
-            fig = _activity_figure(pose, color=color, s=1.0).shift(RIGHT * x + UP * base_y)
+            fig, heat_at = _activity_figure(pose, color=P_ORANGE, s=1.0)
+            fig.shift(RIGHT * x + UP * base_y)
             head_y = base_y + (0.25 if pose == "sleep" else 1.25)
-            waves = _rising_heat_waves(
-                np.array([x, head_y, 0.0]),
-                n=2 + int(watts / 250), color=color,
-                height=0.45 + watts / 1600, x_spread=0.2, stroke_width=1.8,
-            )
+            heat_spots.append((np.array([x, base_y, 0.0]) + heat_at, 0.3 + watts / 1300))
             tr = ValueTracker(0.0)
             read = math_readout(
                 lambda tr=tr: rf"{de_num(tr.get_value())}\,\mathrm{{W}}",
@@ -393,20 +329,20 @@ class Beat2_HumanFactor(Scene):
             label = Text(name, font_size=LABEL_FONT_SIZE, color=color)
             label.move_to([x, base_y - 0.42, 0.0])
             figures.append(fig); trackers.append(tr); readouts.append(read)
-            names.append(label); wave_sets.append(waves)
+            names.append(label)
+
+        def activity_heat(rt, upto=4):
+            cyc = max(1.0, rt / 1.2)
+            return [ripples([spot], r_max=r, color=P_ORANGE, cycles=cyc) for spot, r in heat_spots[:upto]]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "activities"))
-        for fig, tr, read, label, waves, (name, watts, pose, color) in zip(
-            figures, trackers, readouts, names, wave_sets, acts,
+        for k, (fig, tr, read, label, (name, watts, pose, color)) in enumerate(
+            zip(figures, trackers, readouts, names, acts),
         ):
             self.add(read)
-            self.play(
-                FadeIn(fig), FadeIn(label),
-                LaggedStart(*[Create(w) for w in waves], lag_ratio=0.1),
-                tr.animate.set_value(watts),
-                run_time=1.1,
-            )
-        hold_for(self, self.NARRATION, "activities", used=4 * 1.1 + 0.35)
+            self.play(FadeIn(fig), FadeIn(label), tr.animate.set_value(watts), *activity_heat(1.1, k + 1),
+                      run_time=1.1)
+        hold_for(self, self.NARRATION, "activities", during=activity_heat)
 
         # Freeze the live counters so the morph below transforms plain labels.
         static_reads = VGroup(*[
@@ -453,7 +389,6 @@ class Beat2_HumanFactor(Scene):
         self.play(
             Create(scale_line), Create(ticks), FadeIn(tick_labels), FadeIn(unit_label),
             *[ReplacementTransform(fig, dot) for fig, dot in zip(figures, dots)],
-            *[FadeOut(waves) for waves in wave_sets],
             *[label.animate.move_to(t) for label, t in zip(names, name_targets)],
             *[read.animate.move_to(t) for read, t in zip(static_reads, read_targets)],
             run_time=2.2,
@@ -495,8 +430,8 @@ class Beat2_HumanFactor(Scene):
 
         self.play(FadeOut(scale_assembly), FadeOut(row), FadeOut(box), run_time=0.7)
 
-        single = _occupant_icon(color=P_CYAN, scale=1.8).move_to(DOWN * 0.05)
-        single_label = Text("Einzelperson (100 W)", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        single = person_glyph(DOWN * 0.05, color=P_ORANGE, scale=1.8)
+        single_label = Text("Einzelperson (100 W)", font_size=BODY_FONT_SIZE, color=P_ORANGE)
         single_label.next_to(single, DOWN, buff=0.28)
         self.play(FadeIn(single), FadeIn(single_label), run_time=0.9)
 
@@ -517,35 +452,32 @@ class Beat2_HumanFactor(Scene):
         for y_pos in tier_y:
             for c in range(10):
                 x_pos = -4.05 + c * 0.9
-                grid_icons.add(_occupant_icon(color=P_CYAN, scale=0.8).move_to([x_pos, y_pos + 0.06, 0]))
+                icon = person_glyph(ORIGIN, color=P_ORANGE, scale=0.5)
+                grid_icons.add(icon.move_to([x_pos, y_pos + 0.03 + icon.height / 2, 0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "scale"))
+        self.play(FadeOut(single_label), Create(hall_outline), Create(tier_lines), run_time=0.8)
         self.play(
-            ReplacementTransform(single, grid_icons),
-            FadeOut(single_label),
-            Create(hall_outline), Create(tier_lines),
-            run_time=2.6,
+            ReplacementTransform(single, grid_icons[0]),
+            LaggedStart(*[TransformFromCopy(grid_icons[0], icon) for icon in grid_icons[1:]], lag_ratio=0.03),
+            run_time=2.0,
         )
-        hall_anchor = watt_anchor(5000, compare="toaster", title="Gesamtwärme")
-        hall_anchor.scale(0.5)
-        hall_anchor.next_to(hall_outline, DOWN, buff=0.35)
+        hall_anchor = watt_anchor(5000, compare="toaster", title="Gesamtwärme", row=True)
+        hall_anchor.next_to(hall_outline, DOWN, buff=0.3)
         # Clamp above the caption band explicitly — measured against the
         # actual rendered badge, never a hand-tuned shift that silently goes
         # stale (that gap is exactly what let this badge overlap the caption).
         clearance = (SAFE_BOTTOM + 0.15) - hall_anchor.get_bottom()[1]
         if clearance > 0:
             hall_anchor.shift(UP * clearance)
-        thermal_waves = VGroup(*[
-            Circle(radius=0.18, stroke_color=P_ORANGE, stroke_width=1.1, stroke_opacity=0.75).move_to(icon.get_center())
-            for icon in grid_icons
-        ])
-        self.play(
-            *[icon.animate.set_color(P_ORANGE) for icon in grid_icons],
-            LaggedStart(*[GrowFromCenter(w) for w in thermal_waves], lag_ratio=0.01),
-            FadeIn(hall_anchor),
-            run_time=2.4,
-        )
-        hold_for(self, self.NARRATION, "scale", used=5.0 + 0.35)
+        hall_heat_at = [icon.get_center() + UP * 0.05 for icon in grid_icons]
+
+        def hall_heat(rt):
+            return [ripples(hall_heat_at, r_max=0.32, rings=2, color=P_ORANGE, cycles=max(1.0, rt / 1.3))]
+
+        self.play(*hall_heat(2.4), hall_outline.animate.set_fill(P_RED, opacity=0.18), FadeIn(hall_anchor),
+                  run_time=2.4)
+        hold_for(self, self.NARRATION, "scale", during=hall_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -599,62 +531,55 @@ class Beat3_DevicesLighting(Scene):
         self.play(FadeIn(caption), run_time=0.3)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        floor = Line(LEFT * 5.5 + DOWN * 1.85, RIGHT * 5.5 + DOWN * 1.85, color="#2C3545", stroke_width=2)
-        desk_surface = Line(LEFT * 4.2 + DOWN * 0.55, LEFT * 0.4 + DOWN * 0.55, color=P_CYAN, stroke_width=3)
-        leg_left = Line(LEFT * 4.0 + DOWN * 0.55, LEFT * 4.0 + DOWN * 1.85, color=P_CYAN, stroke_width=2)
-        leg_right = Line(LEFT * 0.7 + DOWN * 0.55, LEFT * 0.7 + DOWN * 1.85, color=P_CYAN, stroke_width=2)
-        desk = VGroup(desk_surface, leg_left, leg_right)
-
-        laptop_base = Rectangle(width=1.3, height=0.12, color=P_CYAN, fill_color="#1F2833", fill_opacity=0.9, stroke_width=2)
-        laptop_screen = Rectangle(width=1.2, height=0.8, color=P_CYAN, fill_color=P_DEEP_DARK, fill_opacity=0.9, stroke_width=2)
-        laptop_screen.next_to(laptop_base, UP, buff=0)
-        laptop = VGroup(laptop_base, laptop_screen)
-        target_laptop = LEFT * 2.3 + DOWN * 0.1
-        laptop.move_to(target_laptop + UP * 0.9).set_opacity(0.0)
-
-        rack_frame = Rectangle(width=1.6, height=2.6, color=P_CYAN, fill_color="#1F2833", fill_opacity=0.9, stroke_width=2)
-        slots = VGroup()
-        for i in range(5):
-            slot_y = 0.85 - i * 0.42
-            slot_rect = Rectangle(width=1.25, height=0.3, color="#2C3545", fill_color=P_DEEP_DARK, fill_opacity=0.8, stroke_width=1.5)
-            slot_rect.move_to(UP * slot_y)
-            slots.add(VGroup(slot_rect, Dot(slot_rect.get_left() + RIGHT * 0.18, radius=0.035, color=P_CYAN)))
+        room = room_section(np.array([0.0, 0.25, 0.0]), w=8.6, h=2.6)
+        desk_y = room["y_f"] + 0.8
+        desk = VGroup(
+            Line(np.array([-3.6, desk_y, 0.0]), np.array([-1.2, desk_y, 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([-3.5, desk_y, 0.0]), np.array([-3.5, room["y_f"], 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([-1.3, desk_y, 0.0]), np.array([-1.3, room["y_f"], 0.0]), color=P_WHITE, stroke_width=1.5),
+        )
+        laptop = VGroup(
+            Line(np.array([-2.75, desk_y + 0.02, 0.0]), np.array([-2.15, desk_y + 0.02, 0.0]), color=P_CYAN, stroke_width=1.8),
+            Line(np.array([-2.15, desk_y + 0.02, 0.0]), np.array([-2.05, desk_y + 0.5, 0.0]), color=P_CYAN, stroke_width=1.8),
+        )
+        rack_frame = Rectangle(width=1.0, height=1.9, color=P_CYAN, stroke_width=1.6)
+        rack_frame.move_to(np.array([2.6, room["y_f"] + 0.95, 0.0]))
+        slots = VGroup(*[
+            VGroup(Rectangle(width=0.78, height=0.2, color=P_WHITE, stroke_width=1.1),
+                   Dot(radius=0.03, color=P_CYAN)).move_to(rack_frame.get_top() + DOWN * (0.25 + 0.34 * i))
+            for i in range(5)
+        ])
+        for slot in slots:
+            slot[1].move_to(slot[0].get_left() + RIGHT * 0.12)
         server_rack = VGroup(rack_frame, slots)
-        target_rack = RIGHT * 2.8 + DOWN * 0.45
-        server_rack.move_to(target_rack + UP * 0.6).set_opacity(0.0)
-        laptop_full = laptop.copy().move_to(target_laptop)
-        laptop_full[0].set_fill(opacity=0.9).set_stroke(opacity=1.0)
-        laptop_full[1].set_fill(opacity=0.9).set_stroke(opacity=1.0)
-        rack_full = server_rack.copy().move_to(target_rack)
-        rack_full[0].set_fill(opacity=0.9).set_stroke(opacity=1.0)
-        for slot in rack_full[1]:
-            slot[0].set_fill(opacity=0.8).set_stroke(opacity=1.0)
-            slot[1].set_fill(opacity=1.0).set_stroke(opacity=1.0)
+        devices = VGroup(desk, laptop, server_rack)
+        self.add(room["air"])
+        self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), run_time=0.8)
+        self.play(LaggedStart(FadeIn(desk), FadeIn(laptop, shift=DOWN * 0.15), FadeIn(server_rack, shift=DOWN * 0.15),
+                              lag_ratio=0.35), run_time=1.4)
 
-        self.play(Create(floor), Create(desk), run_time=1.0)
-        self.play(Transform(laptop, laptop_full), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
-        self.play(Transform(server_rack, rack_full), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
+        # ⚡ Electricity flows into each device along its cable and leaves as heat.
+        plug_y = room["y_f"] + 0.12
+        cables = [smooth_path([np.array([room["x_r"] - 0.05, plug_y, 0.0]), np.array([0.0, plug_y, 0.0]),
+                               np.array([-1.9, plug_y, 0.0]), np.array([-2.15, desk_y + 0.02, 0.0])]),
+                  smooth_path([np.array([room["x_r"] - 0.05, plug_y, 0.0]), np.array([3.4, plug_y, 0.0]),
+                               rack_frame.get_bottom() + RIGHT * 0.3])]
+        cable_lines = VGroup(*[c.copy().set_stroke(P_CYAN, width=1.3, opacity=0.4) for c in cables])
+        warm = [laptop.get_center() + UP * 0.1, rack_frame.get_center() + UP * 0.3]
 
-        laptop_origin = target_laptop + UP * 0.15
-        laptop_glow = _device_glow(laptop_origin)
-        laptop_waves = _rising_heat_waves(laptop_origin + DOWN * 0.05, n=4, color=P_ORANGE, height=1.15, x_spread=0.26)
-        server_origin = target_rack + UP * 0.35
-        server_glow = _device_glow(server_origin)
-        server_waves = _rising_heat_waves(server_origin + UP * 0.55, n=3, color=P_ORANGE, height=0.95, x_spread=0.32)
+        def device_heat(rt):
+            cyc = max(1.0, rt / 1.3)
+            return [flow_animation([(cables, P_CYAN, P_ORANGE)], waves=4, radius=0.045, cycles=cyc, streak=False),
+                    ripples(warm, r_max=0.75, color=P_ORANGE, cycles=cyc)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "devices"))
-        self.play(
-            FadeIn(laptop_glow), laptop.animate.set_color(P_ORANGE),
-            FadeIn(server_glow), rack_frame.animate.set_color(P_ORANGE),
-            run_time=0.8,
-        )
-        self.play(
-            LaggedStart(*[Create(w) for w in laptop_waves], *[Create(w) for w in server_waves], lag_ratio=0.06),
-            run_time=1.6,
-        )
-
-        devices_group = VGroup(floor, desk, laptop, server_rack, laptop_glow, laptop_waves, server_glow, server_waves)
-        self.play(devices_group.animate.scale(0.78).shift(UP * 0.95), run_time=0.8)
+        self.play(Create(cable_lines), run_time=0.6)
+        self.play(*device_heat(2.0), laptop.animate.set_color(P_ORANGE), rack_frame.animate.set_color(P_ORANGE),
+                  room["air"].animate.set_fill(P_RED, opacity=0.08), run_time=2.0)
+        devices_group = VGroup(room["group"], devices, cable_lines)
+        self.play(devices_group.animate.scale(0.78).shift(UP * 0.45), run_time=0.8)
+        warm[:] = [laptop.get_center() + UP * 0.08, rack_frame.get_center() + UP * 0.25]
+        cables[:] = [cl.copy() for cl in cable_lines]
 
         row_d, box_d, items_d = math_panel([
             ("qg", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "=", P_WHITE),
@@ -662,14 +587,14 @@ class Beat3_DevicesLighting(Scene):
             ("pel", r"P_{el}", P_CYAN), (None, r"\cdot", P_WHITE),
             ("fn", r"f_{N}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        self.play(FadeIn(row_d), Create(box_d), run_time=1.1)
-        hold_for(self, self.NARRATION, "devices", used=4.3 + 0.35)
+        self.play(FadeIn(row_d), Create(box_d), *device_heat(1.1), run_time=1.1)
+        hold_for(self, self.NARRATION, "devices", during=device_heat)
 
         for key, color in (("pel", P_CYAN), ("fn", P_YELLOW)):
             ring = highlight_param(items_d, key, color=color)
             self.play(Create(ring), run_time=0.45)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
+            hold_for(self, self.NARRATION, key, during=device_heat)
             self.play(FadeOut(ring), run_time=0.25)
 
         # 📊 f_N aus der Nutzung — in each usage a share of ten devices lights
@@ -723,61 +648,38 @@ class Beat3_DevicesLighting(Scene):
             run_time=0.7,
         )
 
-        # Lighting section — keep clear of formula/caption zones
-        room_w, room_h = 7.6, 3.4
-        bl = LEFT * (room_w / 2) + DOWN * 1.15
-        br = RIGHT * (room_w / 2) + DOWN * 1.15
-        tl = LEFT * (room_w / 2) + UP * 1.55
-        tr = RIGHT * (room_w / 2) + UP * 1.55
-        room = VGroup(
-            Line(bl, br, color=P_TEAL, stroke_width=5),
-            Line(bl, tl, color=P_WHITE, stroke_width=3),
-            Line(br, tr, color=P_WHITE, stroke_width=3),
-            Line(tl, tr, color=P_WHITE, stroke_width=3),
-        )
-        drop_y = 0.75
-        drop_ceiling = DashedLine(
-            LEFT * (room_w / 2 - 0.08) + UP * drop_y,
-            RIGHT * (room_w / 2 - 0.08) + UP * drop_y,
-            color=P_CYAN, stroke_width=2, dash_length=0.18,
-        )
-        fixture_l = RoundedRectangle(
-            width=1.1, height=0.22, corner_radius=0.05,
-            color=P_YELLOW, stroke_width=2, fill_color=P_YELLOW, fill_opacity=0.15,
-        ).move_to(LEFT * 1.8 + UP * drop_y)
-        fixture_r = fixture_l.copy().move_to(RIGHT * 1.8 + UP * drop_y)
-        fixtures = VGroup(fixture_l, fixture_r)
-        heat_up = VGroup(
-            *_rising_heat_waves(fixture_l.get_center() + UP * 0.05, n=2, color=P_RED, height=0.45, x_spread=0.18, stroke_width=1.8),
-            *_rising_heat_waves(fixture_r.get_center() + UP * 0.05, n=2, color=P_RED, height=0.45, x_spread=0.18, stroke_width=1.8),
-        )
-        heat_dn = VGroup(
-            *_rising_heat_waves(fixture_l.get_center() + DOWN * 0.9, n=2, color=P_ORANGE, height=-0.7, x_spread=0.2, stroke_width=1.8),
-            *_rising_heat_waves(fixture_r.get_center() + DOWN * 0.9, n=2, color=P_ORANGE, height=-0.7, x_spread=0.2, stroke_width=1.8),
-        )
-        # Fix downward waves: ParametricFunction with negative height still goes up via t*height — rebuild as downward
-        heat_dn = VGroup()
-        for origin in (fixture_l.get_center(), fixture_r.get_center()):
-            ox, oy = float(origin[0]), float(origin[1]) - 0.12
-            for i, dx in enumerate([-0.12, 0.12]):
-                phase = i * 0.7
+        # 💡 Lighting: two Physical Fundamentals pendant lamps — light rays to the
+        # floor, heat ripples spreading down from each bulb.
+        lroom = room_section(np.array([0.0, 0.3, 0.0]), w=7.4, h=2.7)
+        lamps = [lamp_glyph(np.array([x, lroom["y_c"], 0.0]), drop=0.5) for x in (-1.8, 1.8)]
+        bulbs = [lp["bulb"].get_center() for lp in lamps]
+        fixture_l, fixture_r = lamps[0]["bulb"], lamps[1]["bulb"]
+        fixtures = VGroup(*[lp["group"] for lp in lamps])
 
-                def _down(t, x0=ox + dx, oy=oy, phase=phase):
-                    return np.array([x0 + np.sin(t * 5 + phase) * 0.05, oy - t * 0.85, 0.0])
+        def light_rays(bulb):
+            return VGroup(*[Line(bulb, np.array([bulb[0] + dx, lroom["y_f"] + 0.02, 0.0]), color=P_YELLOW,
+                                 stroke_width=1.8, stroke_opacity=0.6) for dx in (-1.1, -0.4, 0.4, 1.1)])
 
-                heat_dn.add(ParametricFunction(_down, t_range=[0, 1], color=P_ORANGE, stroke_width=1.8).set_opacity(0.8))
+        rays_l, rays_r = light_rays(bulbs[0]), light_rays(bulbs[1])
+        lit = {"l": True, "r": True}
+
+        def light_heat(rt):
+            on = [b for b, k in zip(bulbs, ("l", "r")) if lit[k]]
+            paths = [[b, r.get_end()] for b, r_set, k in zip(bulbs, (rays_l, rays_r), ("l", "r")) if lit[k]
+                     for r in r_set]
+            return [ripples(on, r_max=0.8, color=P_RED, down=True, cycles=max(1.0, rt / 1.3)),
+                    pulse_flashes(paths, P_YELLOW, repeats=max(1, int(rt / 1.6)), width=3.5)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lights"))
-        self.play(Create(room), Create(drop_ceiling), FadeIn(fixtures), run_time=1.4)
-        self.play(
-            fixture_l.animate.set_fill(P_YELLOW, opacity=0.55),
-            fixture_r.animate.set_fill(P_YELLOW, opacity=0.55),
-            LaggedStart(*[Create(w) for w in heat_up], *[Create(w) for w in heat_dn], lag_ratio=0.05),
-            run_time=1.8,
-        )
+        self.add(lroom["air"])
+        self.play(FadeIn(lroom["shell"]), FadeIn(lroom["glass"]), FadeIn(fixtures), run_time=1.2)
+        self.play(*[b.animate.set_fill(P_YELLOW, opacity=0.8) for b in (fixture_l, fixture_r)],
+                  LaggedStart(*[Create(r) for r in (*rays_l, *rays_r)], lag_ratio=0.08), run_time=1.2)
+        self.play(*light_heat(1.4), lroom["air"].animate.set_fill(P_RED, opacity=0.08), run_time=1.4)
 
-        lighting_group = VGroup(room, drop_ceiling, fixtures, heat_up, heat_dn)
-        self.play(lighting_group.animate.scale(0.82).shift(UP * 0.55), run_time=0.7)
+        lighting_group = VGroup(lroom["group"], fixtures, rays_l, rays_r)
+        self.play(lighting_group.animate.scale(0.82).shift(UP * 0.4), run_time=0.7)
+        bulbs[:] = [fixture_l.get_center(), fixture_r.get_center()]
 
         row_l, box_l, items_l = math_panel([
             ("ql", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, "=", P_WHITE),
@@ -785,8 +687,8 @@ class Beat3_DevicesLighting(Scene):
             ("pl", r"P_{\text{Licht}}", P_CYAN), (None, r"\cdot", P_WHITE),
             ("fg", r"f_{g}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        self.play(FadeIn(row_l), Create(box_l), run_time=1.1)
-        hold_for(self, self.NARRATION, "lights", used=5.0 + 1.1 + 0.35)
+        self.play(FadeIn(row_l), Create(box_l), *light_heat(1.1), run_time=1.1)
+        hold_for(self, self.NARRATION, "lights", during=light_heat)
 
         for key, color in (("pl", P_CYAN), ("fg", P_YELLOW)):
             ring = highlight_param(items_l, key, color=color)
@@ -798,25 +700,26 @@ class Beat3_DevicesLighting(Scene):
                 fg_tr = ValueTracker(1.0)
                 fg_read = math_readout(
                     lambda: rf"f_{{g}} = {de_num(fg_tr.get_value(), 1)}",
-                    lambda: fixtures.get_center() + DOWN * 0.85,
+                    lambda: fixtures.get_center() + DOWN * 0.95,
                     size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
                 )
                 self.add(fg_read)
+                lit["r"] = False
                 self.play(
-                    fixture_r.animate.set_fill(P_YELLOW, opacity=0.05).set_stroke(opacity=0.35),
-                    *[w.animate.set_opacity(0.08) for w in (*heat_up[2:], *heat_dn[2:])],
-                    fg_tr.animate.set_value(0.5),
+                    fixture_r.animate.set_fill(P_YELLOW, opacity=0.0).set_stroke(opacity=0.4),
+                    rays_r.animate.set_stroke(opacity=0.0),
+                    fg_tr.animate.set_value(0.5), *light_heat(1.4),
                     run_time=1.4,
                 )
-                hold_for(self, self.NARRATION, key, used=0.45 + 1.4 + 0.35)
+                hold_for(self, self.NARRATION, key, during=light_heat)
                 self.remove(fg_read)
                 self.play(FadeOut(ring), run_time=0.25)
             else:
-                hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
+                hold_for(self, self.NARRATION, key, during=light_heat)
                 self.play(FadeOut(ring), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        hold_for(self, self.NARRATION, "outro", during=light_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -859,20 +762,19 @@ class Beat4_CumulativeLoad(Scene):
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         def mini_person(center=ORIGIN):
-            head = Circle(radius=0.13, color=P_ORANGE, stroke_width=2.3, fill_color=P_ORANGE, fill_opacity=0.18).move_to(center + UP * 0.26)
-            shoulders = Arc(radius=0.24, start_angle=0, angle=PI, color=P_ORANGE, stroke_width=2.5)
-            shoulders.next_to(head, DOWN, buff=0.03)
-            return VGroup(head, shoulders)
+            return person_glyph(center, color=P_ORANGE, scale=1.0)
 
         def mini_laptop(center=ORIGIN):
-            base = Rectangle(width=0.62, height=0.07, color=P_CYAN, stroke_width=2).move_to(center + DOWN * 0.04)
-            screen = Rectangle(width=0.48, height=0.3, color=P_CYAN, stroke_width=2).move_to(center + UP * 0.18)
-            return VGroup(base, screen)
+            c = np.array(center, dtype=float)
+            return VGroup(
+                Line(c + np.array([-0.32, -0.14, 0.0]), c + np.array([0.24, -0.14, 0.0]), color=P_CYAN, stroke_width=1.8),
+                Line(c + np.array([0.24, -0.14, 0.0]), c + np.array([0.34, 0.22, 0.0]), color=P_CYAN, stroke_width=1.8),
+            )
 
         def mini_lamp(center=ORIGIN):
-            cord = Line(center + UP * 0.38, center + UP * 0.12, color=P_WHITE, stroke_width=1.5)
-            bulb = Circle(radius=0.14, color=P_YELLOW, stroke_width=2, fill_opacity=0.35).move_to(center)
-            return VGroup(cord, bulb)
+            lamp = lamp_glyph(np.array(center, dtype=float) + UP * 0.45, drop=0.3)
+            lamp["bulb"].set_fill(P_YELLOW, opacity=0.6)
+            return lamp["group"]
 
         def source_card(icon, title_de, term, color, center):
             frame = RoundedRectangle(
@@ -901,7 +803,14 @@ class Beat4_CumulativeLoad(Scene):
             run_time=1.3,
         )
         self.play(FadeIn(plus_1), FadeIn(plus_2), run_time=0.5)
-        hold_for(self, self.NARRATION, "sources", used=1.8 + 0.35)
+
+        def card_heat(rt):
+            spots = [card_p[2].get_center() + UP * 0.08, card_e[2].get_center() + UP * 0.05]
+            cyc = max(1.0, rt / 1.3)
+            return [ripples(spots, r_max=0.38, color=P_ORANGE, cycles=cyc),
+                    ripples([card_l[2][2].get_center()], r_max=0.38, color=P_RED, down=True, cycles=cyc)]
+
+        hold_for(self, self.NARRATION, "sources", during=card_heat)
 
         self.play(
             VGroup(card_p, card_e, card_l, plus_1, plus_2).animate.shift(UP * 0.35).scale(0.92),
@@ -916,20 +825,23 @@ class Beat4_CumulativeLoad(Scene):
         ])
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.2)
-        hold_for(self, self.NARRATION, "formula", used=1.2 + 0.35)
+        hold_for(self, self.NARRATION, "formula", during=card_heat)
 
+        card_of = {"pers": card_p, "ger": card_e, "licht": card_l}
         for key, color in (("pers", P_ORANGE), ("ger", P_CYAN), ("licht", P_YELLOW), ("qi", P_CYAN)):
             ring = highlight_param(items, key, color=color)
-            self.play(Create(ring), run_time=0.4)
+            pulse = ([card_of[key][0].animate(rate_func=there_and_back).set_stroke(width=5.5)]
+                     if key in card_of else [])
+            self.play(Create(ring), *pulse, run_time=0.5)
             if key == "qi":
                 caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "qi"))
-                hold_for(self, self.NARRATION, "qi", used=0.4 + 0.35)
+                hold_for(self, self.NARRATION, "qi", during=card_heat)
             else:
-                self.wait(0.35)
+                self.play(*card_heat(0.45), run_time=0.45)
             self.play(FadeOut(ring), run_time=0.22)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        hold_for(self, self.NARRATION, "outro", during=card_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1670,110 +1582,36 @@ class Beat8_Mitigation(Scene):
         C_YELLOW = P_YELLOW
         C_WALL = "#1A1E28"
 
-        # Room + control strip as one mid-screen group (combined center ~ ORIGIN).
-        room_c = UP * 0.2
-        room_w, room_h = 7.2, 2.35
-        room_fill = Rectangle(
-            width=room_w, height=room_h,
-            stroke_width=0, fill_color=C_WALL, fill_opacity=0.55,
-        ).move_to(room_c)
-        room = Rectangle(
-            width=room_w, height=room_h,
-            color=P_WHITE, stroke_width=3, fill_opacity=0,
-        ).move_to(room_c)
-        floor_edge = Line(
-            room.get_corner(DL), room.get_corner(DR),
-            color=P_WHITE, stroke_width=3.5,
+        # Room + control strip as one mid-screen group — Physical Fundamentals room,
+        # seated person at a desk, laptop and pendant lamp.
+        room_w, room_h = 7.0, 2.25
+        rs = room_section(np.array([0.0, 0.35, 0.0]), w=room_w, h=room_h, slab=0.2)
+        room = rs["shell"]
+        warm_fill = rs["air"]
+        y_f = rs["y_f"]
+        seated = seated_person_glyph(np.array([-0.95, y_f, 0.0]), color=P_ORANGE, scale=2.6)
+        knee = seated["figure"][7].get_end()
+        desk_y = knee[1] - 0.06
+        desk = VGroup(
+            Line(np.array([knee[0] + 0.05, desk_y, 0.0]), np.array([knee[0] + 2.3, desk_y, 0.0]), color=P_WHITE, stroke_width=1.5),
+            Line(np.array([knee[0] + 2.2, desk_y, 0.0]), np.array([knee[0] + 2.2, y_f, 0.0]), color=P_WHITE, stroke_width=1.5),
         )
-
-        warm_fill = Rectangle(
-            width=room_w - 0.1, height=room_h - 0.1,
-            stroke_width=0, fill_color=C_HEAT_HOT, fill_opacity=0.0,
-        ).move_to(room_c)
-
-        window = RoundedRectangle(
-            width=1.35, height=1.35, corner_radius=0.06,
-            color=P_WHITE, stroke_width=2,
-            fill_color="#243040", fill_opacity=0.9,
-        ).move_to(room_c + LEFT * 2.7 + UP * 0.15)
-        pane_v = Line(window.get_top(), window.get_bottom(), color=P_WHITE, stroke_width=1.5)
-        pane_h = Line(window.get_left(), window.get_right(), color=P_WHITE, stroke_width=1.5)
-        window_group = VGroup(window, pane_v, pane_h)
-
-        desk_top = RoundedRectangle(
-            width=2.9, height=0.12, corner_radius=0.03,
-            color=P_WHITE, stroke_width=2.5, fill_opacity=0,
-        ).move_to(room_c + DOWN * 0.35 + RIGHT * 0.35)
-        leg_l = Line(
-            desk_top.get_corner(DL) + RIGHT * 0.18,
-            desk_top.get_corner(DL) + RIGHT * 0.18 + DOWN * 0.7,
-            color=P_WHITE, stroke_width=2.5,
-        )
-        leg_r = Line(
-            desk_top.get_corner(DR) + LEFT * 0.18,
-            desk_top.get_corner(DR) + LEFT * 0.18 + DOWN * 0.7,
-            color=P_WHITE, stroke_width=2.5,
-        )
-        desk = VGroup(desk_top, leg_l, leg_r)
-
-        seat = RoundedRectangle(
-            width=0.65, height=0.09, corner_radius=0.03,
-            color=P_WHITE, stroke_width=1.5,
-            fill_color="#3A4050", fill_opacity=1,
-        ).move_to(desk_top.get_center() + DOWN * 0.42 + LEFT * 0.15)
-        backrest = RoundedRectangle(
-            width=0.11, height=0.55, corner_radius=0.03,
-            color=P_WHITE, stroke_width=1.5,
-            fill_color="#3A4050", fill_opacity=1,
-        ).move_to(seat.get_center() + LEFT * 0.32 + UP * 0.28)
-        chair_leg = Line(
-            seat.get_bottom(), seat.get_bottom() + DOWN * 0.35,
-            color=P_WHITE, stroke_width=2,
-        )
-        chair = VGroup(backrest, seat, chair_leg)
-
-        laptop_base = RoundedRectangle(
-            width=0.85, height=0.07, corner_radius=0.02,
-            color="#9AA3B2", stroke_width=1,
-            fill_color="#1C1F27", fill_opacity=1,
-        ).move_to(desk_top.get_top() + UP * 0.03 + RIGHT * 0.12)
-        laptop_screen = RoundedRectangle(
-            width=0.78, height=0.45, corner_radius=0.04,
-            color="#9AA3B2", stroke_width=1.5,
-            fill_color=C_HEAT_HOT, fill_opacity=0.65,
-        ).move_to(laptop_base.get_top() + UP * 0.24)
-        screen_glow = Rectangle(
-            width=0.6, height=0.3,
-            stroke_width=0, fill_color=C_YELLOW, fill_opacity=0.2,
-        ).move_to(laptop_screen.get_center())
-        laptop = VGroup(laptop_base, laptop_screen, screen_glow)
+        laptop_screen = Line(np.array([knee[0] + 1.35, desk_y + 0.02, 0.0]), np.array([knee[0] + 1.45, desk_y + 0.45, 0.0]),
+                             color=C_HEAT_HOT, stroke_width=2.0)
+        laptop = VGroup(Line(np.array([knee[0] + 0.8, desk_y + 0.02, 0.0]), np.array([knee[0] + 1.35, desk_y + 0.02, 0.0]),
+                             color=C_HEAT_HOT, stroke_width=2.0), laptop_screen)
         laptop_lbl = Text("Gerät", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT)
-        laptop_lbl.next_to(laptop_screen, LEFT, buff=0.18)
-
-        lamp_c = room.get_top() + DOWN * 0.42 + RIGHT * 1.2
-        cord = Line(
-            room.get_top() + RIGHT * 1.2 + DOWN * 0.02,
-            lamp_c + UP * 0.18,
-            color=P_WHITE, stroke_width=2,
-        )
-        fixture = Circle(
-            radius=0.18,
-            color=C_YELLOW,
-            stroke_width=2.5,
-            fill_color=C_YELLOW,
-            fill_opacity=0.55,
-        ).move_to(lamp_c)
-        beam = Polygon(
-            fixture.get_bottom() + LEFT * 0.07,
-            fixture.get_bottom() + RIGHT * 0.07,
-            fixture.get_bottom() + DOWN * 1.15 + RIGHT * 0.9,
-            fixture.get_bottom() + DOWN * 1.15 + LEFT * 0.9,
-            stroke_width=0,
-            fill_color=C_YELLOW,
-            fill_opacity=0.22,
-        )
+        laptop_lbl.next_to(laptop_screen, UP, buff=0.2)
+        lamp = lamp_glyph(np.array([2.55, rs["y_c"], 0.0]), drop=0.42)
+        fixture = lamp["bulb"].set_fill(C_YELLOW, opacity=0.8)
+        bulb_c = fixture.get_center()
+        beam = VGroup(*[Line(bulb_c, np.array([bulb_c[0] + dx, y_f + 0.02, 0.0]), color=C_YELLOW, stroke_width=1.8,
+                             stroke_opacity=0.6) for dx in (-0.65, -0.22, 0.22, 0.65)])
         light_lbl = Text("Beleuchtung", font_size=LABEL_FONT_SIZE, color=C_YELLOW)
-        light_lbl.next_to(fixture, LEFT, buff=0.18)
+        light_lbl.next_to(lamp["group"], LEFT, buff=0.3).shift(UP * 0.12)
+        window_group = rs["glass"]
+        chair = seated["group"]
+        cord = lamp["group"]
 
         _slider_half = 0.52
         light_label = Text("Licht", font_size=LABEL_FONT_SIZE, color=C_YELLOW)
@@ -1810,13 +1648,8 @@ class Beat8_Mitigation(Scene):
         plug_label.next_to(plug_track, LEFT, buff=0.2)
         plug_pct.next_to(plug_track, RIGHT, buff=0.26)
 
-        self.add(room_fill, warm_fill)
-        self.play(
-            FadeIn(room_fill),
-            Create(room),
-            Create(floor_edge),
-            run_time=1.0,
-        )
+        self.add(warm_fill)
+        self.play(FadeIn(room), run_time=1.0)
         self.play(
             FadeIn(window_group),
             FadeIn(chair),
@@ -1833,12 +1666,23 @@ class Beat8_Mitigation(Scene):
             run_time=0.9,
         )
 
+        light_on = ValueTracker(1.0)
+        plug_on = ValueTracker(1.0)
+        heat_spots = {"laptop": laptop_screen.get_center(), "person": seated["chest"]}
+
+        def room_heat(rt):
+            cyc = max(1.0, rt / 1.3)
+            anims = [ripples([heat_spots["person"]], r_max=0.55, color=P_ORANGE, cycles=cyc),
+                     ripples([heat_spots["laptop"]], r_max=0.3 + 0.5 * plug_on.get_value(), color=C_HEAT_HOT, cycles=cyc),
+                     ripples([bulb_c], r_max=0.25 + 0.6 * light_on.get_value(), color=C_HEAT_HOT, down=True, cycles=cyc)]
+            if light_on.get_value() > 0.5:
+                anims.append(pulse_flashes([[bulb_c, r.get_end()] for r in beam], C_YELLOW,
+                                           repeats=max(1, int(rt / 1.6)), width=3.5))
+            return anims
+
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "high"))
-        self.play(
-            warm_fill.animate.set_fill(C_HEAT_HOT, opacity=0.22),
-            run_time=0.9,
-        )
-        hold_for(self, self.NARRATION, "high", used=1.0 + 1.0 + 0.9 + 0.9 + 0.35)
+        self.play(warm_fill.animate.set_fill(C_HEAT_HOT, opacity=0.2), *room_heat(1.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "high", during=room_heat)
 
         self.play(
             FadeIn(ctrl_panel),
@@ -1886,17 +1730,17 @@ class Beat8_Mitigation(Scene):
             ),
             light_share.animate.set_value(light_t * 100),
             plug_share.animate.set_value(plug_t * 100),
-            beam.animate.set_fill(opacity=0.05),
-            fixture.animate.set_fill(opacity=0.18),
-            laptop_screen.animate.set_fill(C_COOL_DIM, opacity=0.35),
-            screen_glow.animate.set_opacity(0.05),
-            warm_fill.animate.set_fill(C_COOL, opacity=0.12),
+            beam.animate.set_stroke(opacity=0.18),
+            fixture.animate.set_fill(opacity=0.24),
+            laptop.animate.set_color(C_COOL_DIM),
+            warm_fill.animate.set_fill(C_COOL, opacity=0.08),
+            light_on.animate.set_value(light_t), plug_on.animate.set_value(plug_t),
             run_time=2.6,
         )
-        hold_for(self, self.NARRATION, "dim", used=1.1 + 2.6 + 0.35)
+        hold_for(self, self.NARRATION, "dim", during=room_heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        hold_for(self, self.NARRATION, "outro", during=room_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

@@ -1,0 +1,25 @@
+{
+  "id": "2026/10/09/RESTYLE-COOLING-WITH-FUNDAMENTALS-GLYPHS",
+  "title": "Restyle Cooling Video with Physical Fundamentals Glyphs",
+  "slug": "RESTYLE-COOLING-WITH-FUNDAMENTALS-GLYPHS",
+  "emoji": "🧊",
+  "status": "closed",
+  "description": "Replace the object drawings and animated effects of the Cooling video (house, person, lamp, sun, sun radiation, heat/energy flow, room, thermometer, clock) with the Physical Fundamentals vocabulary, shared through tutorial/manim_visuals.py. Content (narration, formulas, numbers) stays unchanged. Every scene verified: no overlaps (layout guard + screenshot sheets), animations synced with their subtitle clause. Deliver the full video at 1080p60.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {"due": "2026-10-09", "started": "2026-10-09", "completed": "2026-10-09"},
+  "client": "claude-code",
+  "llm": "opus-4-7",
+  "summary": "All six Cooling parts now draw with the Physical Fundamentals glyphs (house_section, room_section, person_glyph, seated_person_glyph, lamp_glyph, sun_glyph, moon_glyph, straight parallel sun rays with pulses, ripples for long-wave heat, particle flow_animation for air, thermometer_glyph, clock_glyph, droplets). hold_for(during=…) keeps heat, light and air moving while each subtitle is read. Every beat passes LAYOUT_CHECK=1 and was reviewed on contact sheets. Full video rendered at 1080p60 (28:41) to tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_1080p60.mp4 and spot-checked.",
+  "files": {
+    "created": [],
+    "updated": [
+      "tutorial/manim_visuals.py",
+      "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py",
+      "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+      "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+      "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+      "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py"
+    ]
+  }
+}

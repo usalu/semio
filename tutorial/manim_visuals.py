@@ -276,9 +276,10 @@ def _device_glyph(kind: str, color: str):
     return VGroup(body, fins)
 
 
-def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None, color: str | None = None):
-    """🔌 Badge that grounds a power number against a familiar device."""
-    from manim import DOWN, RoundedRectangle, VGroup
+def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None, color: str | None = None,
+                row: bool = False):
+    """🔌 Badge that grounds a power number against a familiar device — stacked, or in one ``row`` for wide gaps."""
+    from manim import DOWN, RIGHT, RoundedRectangle, VGroup
     from manim_fonts import FORMULA_FONT_SIZE, LABEL_FONT_SIZE, body_text
 
     name, device_w, device_color = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
@@ -300,7 +301,7 @@ def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = No
     hint = body_text(compare_line, font_size=LABEL_FONT_SIZE, color=P_WHITE)
     head = body_text(title, font_size=LABEL_FONT_SIZE, color=P_TEAL) if title else None
     body_parts = [p for p in (head, value, glyph, hint) if p is not None]
-    body = VGroup(*body_parts).arrange(DOWN, buff=0.12)
+    body = VGroup(*body_parts).arrange(RIGHT, buff=0.32) if row else VGroup(*body_parts).arrange(DOWN, buff=0.12)
     frame = RoundedRectangle(
         width=max(2.8, body.width + 0.45),
         height=body.height + 0.35,
@@ -466,6 +467,47 @@ def animate_flows(
     scene.remove(dots, *dots)
 
 
+def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: float = 2.4, streak: bool = True):
+    """💨 The particle stream of ``animate_flows`` as one animation — for ``hold_for(during=…)`` and mixed plays.
+
+    ``streams`` are ``(paths, colour)`` or ``(paths, colour, colour_end)``; particles are added when the
+    animation starts and removed when it ends.
+    """
+    from manim import Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
+
+    dots, meta = VGroup(), []
+    for entry in streams:
+        paths, color = entry[0], entry[1]
+        start_c = ManimColor(color)
+        end_c = ManimColor(entry[2]) if len(entry) > 2 and entry[2] else start_c
+        for path in paths:
+            for w in range(waves):
+                particle = Ellipse(width=radius * 2.8, height=radius * 1.15, color=color, stroke_width=0,
+                                   fill_opacity=0.0) if streak else None
+                if particle is None:
+                    from manim import Dot
+                    particle = Dot(radius=radius, color=color, stroke_width=0).set_fill(color, opacity=0.0)
+                particle.move_to(path.point_from_proportion(0.0))
+                dots.add(particle)
+                meta.append((path, w / waves, start_c, end_c))
+
+    def update(group, alpha):
+        for particle, (path, offset, start_c, end_c) in zip(group, meta):
+            t = (alpha * cycles + offset) % 1.0
+            particle.move_to(path.point_from_proportion(t))
+            fade = min(1.0, t / 0.08, (1.0 - t) / 0.10)
+            fill = interpolate_color(start_c, end_c, t)
+            if streak:
+                t0, t1 = max(0.0, t - 0.02), min(1.0, t + 0.02)
+                tangent = path.point_from_proportion(t1) - path.point_from_proportion(t0)
+                particle.set_angle(float(np.arctan2(tangent[1], tangent[0])))
+                particle.set_fill(fill, opacity=max(0.0, fade * 0.92))
+            else:
+                particle.set_fill(fill, opacity=max(0.0, fade))
+
+    return UpdateFromAlphaFunc(dots, update, remover=True, rate_func=linear)
+
+
 def animate_haze(
     scene,
     *,
@@ -624,6 +666,492 @@ def dim_arrow(start, end, color: str = P_YELLOW):
         for p in (start, end)
     ])
     return VGroup(shaft, ticks)
+#endregion
+
+
+#region Scene glyphs
+# The object vocabulary of the Physical Fundamentals video — house, room,
+# person, lamp, sun, rays, heat ripples, particle flow — shared so every series
+# draws the same things the same way.
+
+#region Particle flow with variable speed
+def color_ramp(stops):
+    """🎨 Piecewise colour ramp over ``u`` in [0, 1] — ``stops`` are ``(u, colour)``."""
+    from manim import ManimColor, interpolate_color
+
+    us = [s[0] for s in stops]
+    cols = [ManimColor(s[1]) for s in stops]
+
+    def color_at(u: float):
+        u = float(np.clip(u, 0.0, 1.0))
+        for i in range(len(us) - 1):
+            if us[i] <= u <= us[i + 1]:
+                f = (u - us[i]) / max(1e-9, us[i + 1] - us[i])
+                return interpolate_color(cols[i], cols[i + 1], f)
+        return cols[-1]
+
+    return color_at
+
+
+def paced_flow(scene, streams, *, run_time: float = 3.0, waves: int = 6, cycles: float = 2.0,
+               radius: float = 0.055, extra=None):
+    """🌀 Particles whose speed follows ``speed(i, u)`` along each path — continuity made visible.
+
+    ``streams`` holds ``(paths, colour, speed, colour_fn, closed)``, optionally followed by a per-stream particle
+    count; ``speed``, ``colour_fn`` and ``closed`` may be ``None``/``False``.
+    """
+    from manim import Dot, UpdateFromAlphaFunc, VGroup, linear
+
+    us = np.linspace(0.0, 1.0, 241)
+    dots, meta = VGroup(), []
+    for paths, color, speed, color_fn, closed, *count in streams:
+        n = count[0] if count else waves
+        for i, path in enumerate(paths):
+            g = np.array([max(1e-3, speed(i, u)) if speed else 1.0 for u in us])
+            tau = np.concatenate([[0.0], np.cumsum(0.5 * (1.0 / g[1:] + 1.0 / g[:-1]) * np.diff(us))])
+            tau /= tau[-1]
+            for w in range(n):
+                dot = Dot(radius=radius, color=color, stroke_width=0)
+                dot.set_fill(color, opacity=0.0)
+                dot.move_to(path.point_from_proportion(0.0))
+                dots.add(dot)
+                meta.append((path, tau, (w / n + 0.37 * i / n) % 1.0, color, color_fn, closed))
+
+    def update(group, alpha):
+        for dot, (path, tau, offset, color, color_fn, closed) in zip(group, meta):
+            t = (alpha * cycles + offset) % 1.0
+            u = float(np.interp(t, tau, us))
+            dot.move_to(path.point_from_proportion(u))
+            fade = 1.0 if closed else min(1.0, t / 0.06, (1.0 - t) / 0.08)
+            dot.set_fill(color_fn(u) if color_fn else color, opacity=max(0.0, fade))
+
+    scene.add(dots)
+    scene.play(UpdateFromAlphaFunc(dots, update), *(extra or []), run_time=run_time, rate_func=linear)
+    scene.remove(dots)
+#endregion
+
+
+#region Light beams and wave packets
+def beam(start, end, color=P_YELLOW, opacity: float = 0.85, width: float = 2.4):
+    """━ Straight light beam — sunlight arrives as parallel rays."""
+    from manim import Line
+
+    return Line(np.array(start, dtype=float), np.array(end, dtype=float), color=color, stroke_width=width,
+                stroke_opacity=opacity)
+
+
+def mirror(direction, surface_angle: float):
+    """🪞 Reflect a ray direction off a flat surface tilted by ``surface_angle`` radians."""
+    u = np.array([np.cos(surface_angle), np.sin(surface_angle), 0.0])
+    n = np.array([-u[1], u[0], 0.0])
+    return direction - 2.0 * float(np.dot(direction, n)) * n
+
+
+def sun_rays(sun_c, glass_x: float, ys, land_y: float, *, gap: float = 0.5):
+    """☀️ Parallel straight sun rays aimed through a glazing at ``glass_x`` — bright outside, dimmer past the glass.
+
+    Every ray shares the direction from the sun to the middle hit, starts ``gap`` clear of the sun's centre and
+    lands on the surface at ``land_y``.
+    """
+    from manim import VGroup
+
+    sun_c = np.array(sun_c, dtype=float)
+    hits = [np.array([glass_x, y, 0.0]) for y in ys]
+    aim = np.mean(hits, axis=0) - sun_c
+    aim /= np.linalg.norm(aim)
+    starts = [h - aim * (float(np.dot(h - sun_c, aim)) - gap) for h in hits]
+    lands = [h + aim * (land_y - h[1]) / aim[1] for h in hits]
+    out = VGroup(*[radiation_ray(s, h) for s, h in zip(starts, hits)])
+    inside = VGroup(*[radiation_ray(h, p, stroke_width=2.0).set_stroke(opacity=0.5) for h, p in zip(hits, lands)])
+    return {"out": out, "in": inside, "group": VGroup(out, inside), "starts": starts, "hits": hits, "lands": lands}
+
+
+def shine(rays, *, lag: float = 0.2):
+    """🔦 Draw each ray from the sun to the glass, then on through it."""
+    from manim import Create, LaggedStart, Succession, linear
+
+    return LaggedStart(*[Succession(Create(o, rate_func=linear), Create(i, rate_func=linear))
+                         for o, i in zip(rays["out"], rays["in"])], lag_ratio=lag)
+
+
+def ripples(centers, *, r_max: float = 0.8, rings: int = 3, cycles: float = 2.0, color=P_RED, down: bool = False,
+            facing: float | None = None):
+    """🌡️ Diffuse long-wave emission — half-rings spread from warm surface points in every direction and fade.
+
+    ``down`` emits from a ceiling into the room below instead of from a floor into the room above;
+    ``facing`` (radians, 0 = right) points the half-rings off any wall or roof slope.
+    """
+    from manim import PI, Arc, UpdateFromAlphaFunc, VGroup, linear
+
+    centers = [np.array(c, dtype=float) for c in centers]
+    start = (facing - PI / 2) if facing is not None else (PI if down else 0.0)
+    arcs = VGroup(*[Arc(radius=0.05, start_angle=start, angle=PI, arc_center=c, color=color, stroke_width=2)
+                    for c in centers for _ in range(rings)])
+
+    def update(group, alpha):
+        ramp = min(1.0, alpha * 8, (1.0 - alpha) * 8)
+        for i, arc in enumerate(group):
+            u = (alpha * cycles + (i % rings) / rings) % 1.0
+            arc.become(Arc(radius=0.05 + r_max * u, start_angle=start, angle=PI, arc_center=centers[i // rings],
+                           color=color, stroke_width=2, stroke_opacity=0.65 * (1.0 - u) * ramp))
+
+    return UpdateFromAlphaFunc(arcs, update, remover=True, rate_func=linear)
+
+
+def pulse_flashes(paths, color, *, repeats: int = 2, width: float = 5.0):
+    """⚡ The light-pulse animation of ``beam_pulses`` without playing it — for ``hold_for(during=…)``."""
+    from manim import LaggedStart, ShowPassingFlash, VMobject
+
+    lines = []
+    for corners in paths:
+        line = VMobject(color=color, stroke_width=width)
+        line.set_points_as_corners([np.array(c, dtype=float) for c in corners])
+        lines.append(line)
+    flashes = [ShowPassingFlash(line.copy(), time_width=0.35) for _ in range(repeats) for line in lines]
+    return LaggedStart(*flashes, lag_ratio=0.6 / len(lines))
+
+
+def beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4, width: float = 5.0, extra=None):
+    """⚡ Bright pulses running along beam lines — the light itself travels, no extra glyphs."""
+    scene.play(pulse_flashes(paths, color, repeats=repeats, width=width), *(extra or []), run_time=run_time)
+#endregion
+
+
+#region Buildings
+def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN):
+    """🪟 Window set into a line wall — reveal ticks at sill and lintel, a glazed sash seen edge-on in the wall line.
+
+    The sash is built face-on and turned 90° about its vertical hinge, so ``open_window`` swings it into the
+    room in true projection instead of sliding a rectangle around.
+    """
+    from manim import PI, UP, Line, Rectangle, VGroup
+
+    reveal = VGroup(*[Line(np.array([x - 0.1, y, 0.0]), np.array([x + 0.1, y, 0.0]), color=P_WHITE, stroke_width=1.6)
+                      for y in (sill, lintel)])
+    mid = (sill + lintel) / 2
+    frame = Rectangle(width=depth, height=lintel - sill - 0.04, color=color, stroke_width=1.6)
+    frame.set_fill(color, opacity=0.14)
+    bars = VGroup(Line(frame.get_left(), frame.get_right(), color=color, stroke_width=1.1),
+                  Line(frame.get_top(), frame.get_bottom(), color=color, stroke_width=1.1))
+    sash = VGroup(frame, bars).move_to(np.array([x + depth / 2, mid, 0.0]))
+    hinge = np.array([x, mid, 0.0])
+    sash.rotate(PI / 2, axis=UP, about_point=hinge)
+    return {"x": x, "sill": sill, "lintel": lintel, "center": hinge, "hinge": hinge, "sash": sash,
+            "reveal": reveal, "group": VGroup(reveal, sash)}
+
+
+def open_window(window, *, run_time: float = 0.9):
+    """🚪 Turn the sash open into the room about its hinge."""
+    from manim import PI, UP, Rotate
+
+    return Rotate(window["sash"], angle=-PI / 2, axis=UP, about_point=window["hinge"], run_time=run_time)
+
+
+def house_section(center=None, scale: float = 1.0):
+    """🏠 Two-storey section — wall thickness, eaves, and glazed openings in the left wall."""
+    from manim import DOWN, LEFT, ORIGIN, RIGHT, UP, Line, VGroup, VMobject
+
+    center = ORIGIN if center is None else np.array(center, dtype=float)
+    s = scale
+    w_width, w_height, t, sw = 3.6 * s, 2.4 * s, 0.08 * s, 1.7
+    bottom_left = center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
+    bottom_right = center + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
+    top_left = center + LEFT * (w_width / 2) + UP * (w_height / 2)
+    top_right = center + RIGHT * (w_width / 2) + UP * (w_height / 2)
+    roof_peak = center + UP * (w_height / 2 + 1.1 * s)
+    floor_line = Line(bottom_left + LEFT * 0.55 * s, bottom_right + RIGHT * 0.55 * s, color=P_TEAL, stroke_width=2.2)
+    hatches = VGroup(*[
+        Line(p, p + (DOWN * 0.1 + LEFT * 0.07) * s, color=P_TEAL, stroke_width=1.1)
+        for p in [floor_line.point_from_proportion(u) for u in np.linspace(0.08, 0.92, 9)]
+    ])
+    level_1 = Line(bottom_left + UP * (w_height / 2), bottom_right + UP * (w_height / 2), color=P_WHITE, stroke_width=1.5)
+    w_h = 0.5 * s
+    cuts = (
+        (0.0, w_height / 4 - w_h / 2),
+        (w_height / 4 + w_h / 2, 3 * w_height / 4 - w_h / 2),
+        (3 * w_height / 4 + w_h / 2, w_height),
+    )
+    wall_left_1 = Line(bottom_left, bottom_left + UP * cuts[0][1], color=P_WHITE, stroke_width=sw)
+    wall_left_2 = Line(bottom_left + UP * cuts[1][0], bottom_left + UP * cuts[1][1], color=P_WHITE, stroke_width=sw)
+    wall_left_3 = Line(bottom_left + UP * cuts[2][0], top_left, color=P_WHITE, stroke_width=sw)
+    wall_right = Line(bottom_right, top_right, color=P_WHITE, stroke_width=sw)
+    inner = VGroup(*[
+        Line(bottom_left + RIGHT * t + UP * a, bottom_left + RIGHT * t + UP * b, color=P_WHITE, stroke_width=1.3)
+        for a, b in cuts
+    ], Line(bottom_right + LEFT * t, top_right + LEFT * t, color=P_WHITE, stroke_width=1.3))
+    eave_l, eave_r = top_left + LEFT * 0.26 * s, top_right + RIGHT * 0.26 * s
+    roof = VGroup(
+        VMobject(color=P_WHITE, stroke_width=sw).set_points_as_corners([eave_l, roof_peak, eave_r]),
+        VMobject(color=P_WHITE, stroke_width=1.3).set_points_as_corners([
+            top_left + RIGHT * t + DOWN * 0.05 * s, roof_peak + DOWN * 0.12 * s, top_right + LEFT * t + DOWN * 0.05 * s,
+        ]),
+    )
+    walls = VGroup(wall_left_1, wall_left_2, wall_left_3, wall_right, level_1, inner)
+    windows = [window_glyph(bottom_left[0], bottom_left[1] + f * w_height - w_h / 2,
+                            bottom_left[1] + f * w_height + w_h / 2, depth=0.42 * s)
+               for f in (0.25, 0.75)]
+    window_group = VGroup(*[w["group"] for w in windows])
+    return {
+        "center": center, "floor": floor_line, "walls": walls, "roof": roof, "windows": windows,
+        "window_group": window_group, "level_1": level_1, "wall_right": wall_right,
+        "bottom_left": bottom_left, "bottom_right": bottom_right, "top_left": top_left, "top_right": top_right,
+        "roof_peak": roof_peak, "w_width": w_width, "w_height": w_height,
+        "group": VGroup(floor_line, hatches, walls, roof, window_group),
+    }
+
+
+def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, slab: float = 0.26,
+                 window=(0.30, 0.88)):
+    """🏛️ One-room section — floor and ceiling slabs, a glazed left wall, a solid right wall."""
+    from manim import Rectangle, VGroup
+
+    cx, cy = float(center[0]), float(center[1])
+    x_l, x_r = cx - w / 2, cx + w / 2
+    y_f, y_c = cy - h / 2, cy + h / 2
+    style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.14)
+    floor = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_f - slab / 2, 0.0]))
+    ceiling = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_c + slab / 2, 0.0]))
+    lo, hi = y_f + window[0] * h, y_f + window[1] * h
+    gx = x_l - wall / 2
+    wall_lo = Rectangle(width=wall, height=lo - y_f, **style).move_to(np.array([gx, (y_f + lo) / 2, 0.0]))
+    wall_hi = Rectangle(width=wall, height=y_c - hi, **style).move_to(np.array([gx, (hi + y_c) / 2, 0.0]))
+    glass = Rectangle(width=0.1, height=hi - lo, color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN,
+                      fill_opacity=0.15).move_to(np.array([gx, (lo + hi) / 2, 0.0]))
+    wall_r = Rectangle(width=wall, height=h, **style).move_to(np.array([x_r + wall / 2, cy, 0.0]))
+    air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0.0)
+    air.move_to(np.array([cx, cy, 0.0]))
+    shell = VGroup(floor, ceiling, wall_lo, wall_hi, wall_r)
+    return {
+        "floor": floor, "ceiling": ceiling, "wall_lo": wall_lo, "wall_hi": wall_hi, "wall_r": wall_r,
+        "glass": glass, "air": air, "shell": shell, "group": VGroup(air, shell, glass),
+        "x_l": x_l, "x_r": x_r, "y_f": y_f, "y_c": y_c, "win_lo": lo, "win_hi": hi, "glass_x": gx,
+        "center": np.array([cx, cy, 0.0]), "w": w, "h": h, "slab": slab,
+    }
+
+
+def radiator(center, color=P_RED):
+    """♨️ Panel radiator in elevation — casing, fins, feet."""
+    from manim import DOWN, LEFT, RIGHT, UP, Line, Rectangle, VGroup
+
+    sw = 1.5
+    body = Rectangle(width=0.92, height=0.5, color=color, stroke_width=sw)
+    grille = Line(body.get_corner(np.array([-1, 1, 0])) + DOWN * 0.08 + RIGHT * 0.06,
+                  body.get_corner(np.array([1, 1, 0])) + DOWN * 0.08 + LEFT * 0.06, color=color, stroke_width=1.1)
+    fins = VGroup(*[
+        Line(body.get_top() + DOWN * 0.14, body.get_bottom() + UP * 0.08, color=color, stroke_width=1.1).shift(RIGHT * dx)
+        for dx in np.linspace(-0.34, 0.34, 7)
+    ])
+    feet = VGroup(*[
+        Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=sw)
+        for dx in (-0.32, 0.32)
+    ])
+    return VGroup(body, grille, fins, feet).move_to(center)
+#endregion
+
+
+#region Everyday objects
+def sun_glyph(pos, color=P_YELLOW):
+    """☀️ Compact sun — core, glow, ring and twelve burst lines."""
+    from manim import TAU, Circle, Dot, Line, VGroup
+
+    pos = np.array(pos, dtype=float)
+    core = Dot(pos, radius=0.45, color=color)
+    glow = Dot(pos, radius=0.7, color=color, fill_opacity=0.35)
+    ring = Circle(radius=0.85, color=color, stroke_width=2, stroke_opacity=0.6).move_to(pos)
+    burst = VGroup(*[
+        Line(pos + 0.55 * np.array([np.cos(a), np.sin(a), 0.0]), pos + 0.9 * np.array([np.cos(a), np.sin(a), 0.0]),
+             color=color, stroke_width=2)
+        for a in np.linspace(0, TAU, 12, endpoint=False)
+    ])
+    return VGroup(glow, core, ring, burst)
+
+
+def moon_glyph(pos, color=P_WHITE):
+    """🌙 Crescent for night-time beats."""
+    from manim import Circle, VGroup
+
+    disc = Circle(radius=0.24, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0).move_to(pos)
+    bite = Circle(radius=0.22, color=P_DEEP_DARK, fill_color=P_DEEP_DARK, fill_opacity=1.0, stroke_width=0)
+    bite.move_to(np.array(pos) + np.array([0.12, 0.08, 0.0]))
+    return VGroup(disc, bite)
+
+
+def person_glyph(pos, color=P_ORANGE, scale=1.0):
+    """🧍 Standing figure in elevation — head, torso and limbs, no face."""
+    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+
+    sw = 1.55
+    head = Circle(radius=0.05, color=color, stroke_width=sw).shift(UP * 0.29)
+    neck = Line(head.get_bottom(), head.get_bottom() + DOWN * 0.025, color=color, stroke_width=sw)
+    sy, hy = head.get_bottom()[1] - 0.04, head.get_bottom()[1] - 0.2
+    shoulder = Line(LEFT * 0.1 + UP * sy, RIGHT * 0.1 + UP * sy, color=color, stroke_width=sw)
+    torso = VGroup(
+        Line(LEFT * 0.1 + UP * sy, LEFT * 0.065 + UP * hy, color=color, stroke_width=sw),
+        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.065 + UP * hy, color=color, stroke_width=sw),
+    )
+    arms = VGroup(
+        Line(LEFT * 0.1 + UP * sy, LEFT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
+        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
+    )
+    foot = hy - 0.3
+    legs = VGroup(
+        Line(LEFT * 0.035 + UP * hy, LEFT * 0.05 + UP * foot, color=color, stroke_width=sw),
+        Line(RIGHT * 0.035 + UP * hy, RIGHT * 0.05 + UP * foot, color=color, stroke_width=sw),
+    )
+    feet = VGroup(
+        Line(LEFT * 0.05 + UP * foot, LEFT * 0.015 + UP * foot, color=color, stroke_width=sw),
+        Line(RIGHT * 0.05 + UP * foot, RIGHT * 0.09 + UP * foot, color=color, stroke_width=sw),
+    )
+    fig = VGroup(head, neck, shoulder, torso, arms, legs, feet)
+    fig.scale(0.66 / fig.height)
+    return fig.scale(scale).move_to(pos)
+
+
+def seated_person_glyph(pos, color=P_ORANGE, scale=1.0, chair_color=P_WHITE):
+    """🪑 Seated figure in side elevation, facing right — the ``person_glyph`` line style on a thin chair.
+
+    ``pos`` is where the seat meets the floor; ``head``, ``mouth`` and ``lap`` are returned for heat and breath.
+    """
+    from manim import Circle, Line, VGroup
+
+    sw = 1.55
+
+    def L(a, b, c=color, w=sw):
+        return Line(np.array([a[0], a[1], 0.0]), np.array([b[0], b[1], 0.0]), color=c, stroke_width=w)
+
+    head = Circle(radius=0.05, color=color, stroke_width=sw).move_to(np.array([0.0, 0.305, 0.0]))
+    body = VGroup(
+        head, L((0.0, 0.255), (0.0, 0.23)),
+        L((-0.035, 0.215), (-0.045, 0.035)), L((0.035, 0.215), (0.03, 0.035)),
+        L((0.0, 0.035), (0.2, 0.035)), L((0.2, 0.035), (0.21, -0.195)), L((0.21, -0.195), (0.26, -0.195)),
+        L((0.02, 0.195), (0.1, 0.085)), L((0.1, 0.085), (0.22, 0.105)),
+    )
+    chair = VGroup(
+        L((-0.09, 0.0), (0.17, 0.0), chair_color, 1.3), L((-0.09, 0.0), (-0.11, 0.24), chair_color, 1.3),
+        L((0.04, 0.0), (0.04, -0.195), chair_color, 1.3), L((-0.06, -0.195), (0.14, -0.195), chair_color, 1.3),
+    )
+    group = VGroup(chair, body)
+    group.scale(scale, about_point=np.array([0.04, -0.195, 0.0]))
+    group.shift(np.array(pos, dtype=float) - np.array([0.04, -0.195, 0.0]))
+    return {"group": group, "figure": body, "chair": chair, "head": head,
+            "mouth": head.get_center() + np.array([head.width / 2, -head.height * 0.15, 0.0]),
+            "chest": (body[2].get_center() + body[3].get_center()) / 2}
+
+
+def cloud_glyph(content, *, pad=(0.42, 0.36), bump: float = 0.5, color=P_WHITE):
+    """☁️ Puffy speech cloud around ``content`` — one closed outline of outward arcs laid on an ellipse."""
+    from manim import PI, TAU, ArcBetweenPoints, VMobject
+
+    a, b = content.width / 2 + pad[0], content.height / 2 + pad[1]
+    c = content.get_center()
+    n = max(8, int(round(np.pi * (3 * (a + b) - np.sqrt((3 * a + b) * (a + 3 * b))) / bump)))
+    pts = [c + np.array([a * np.cos(t), b * np.sin(t), 0.0]) for t in np.linspace(0, TAU, n, endpoint=False) + PI / n]
+    outline = VMobject(color=color, stroke_width=2.2)
+    for p, q in zip(pts, pts[1:] + pts[:1]):
+        outline.append_points(ArcBetweenPoints(p, q, angle=0.8 * PI).points)
+    return outline.set_fill(P_DEEP_DARK, opacity=0.9)
+
+
+def cloud_trail(cloud, target, *, n: int = 3, color=P_WHITE):
+    """💭 Shrinking puffs that lead from the cloud's rim down to a speaker."""
+    from manim import LEFT, UP, Circle, VGroup, interpolate
+
+    start = cloud.get_bottom() + LEFT * cloud.width * 0.22 + UP * 0.04
+    end = np.array(target, dtype=float)
+    return VGroup(*[
+        Circle(radius=0.15 - 0.04 * k, color=color, stroke_width=2.0).set_fill(P_DEEP_DARK, opacity=0.9)
+        .move_to(interpolate(start, end, (k + 1) / (n + 1)))
+        for k in range(n)
+    ])
+
+
+def clock_glyph(center, r: float = 0.42, color=P_CYAN):
+    """🕐 Analogue dial — a full turn of the hand is one hour."""
+    from manim import TAU, UP, Circle, Line, VGroup
+
+    c = np.array(center, dtype=float)
+    face = Circle(radius=r, color=P_WHITE, stroke_width=2.5).move_to(c)
+    ticks = VGroup(*[
+        Line(c + (r - 0.08) * np.array([np.cos(a), np.sin(a), 0.0]), c + r * np.array([np.cos(a), np.sin(a), 0.0]),
+             color=P_WHITE, stroke_width=1.6)
+        for a in np.linspace(0, TAU, 12, endpoint=False)
+    ])
+    hand = Line(c, c + UP * r * 0.78, color=color, stroke_width=3)
+    return {"face": face, "hand": hand, "center": c, "group": VGroup(face, ticks, hand)}
+
+
+def thermometer_glyph(bottom, *, height: float = 1.6, color=P_RED, level: float = 0.0):
+    """🌡️ Bulb thermometer whose column follows a 0–1 ``level`` tracker."""
+    from manim import UP, Circle, Rectangle, RoundedRectangle, ValueTracker, VGroup, always_redraw
+
+    b = np.array(bottom, dtype=float)
+    tube = RoundedRectangle(width=0.2, height=height, corner_radius=0.1, color=P_WHITE, stroke_width=2)
+    tube.move_to(b + UP * height / 2)
+    bulb = Circle(radius=0.15, color=P_WHITE, stroke_width=2, fill_color=color, fill_opacity=0.9).move_to(b)
+    tracker = ValueTracker(level)
+
+    def column():
+        h = max(0.02, (height - 0.12) * float(np.clip(tracker.get_value(), 0.0, 1.0)))
+        return Rectangle(width=0.1, height=h, stroke_width=0, fill_color=color, fill_opacity=0.9).move_to(
+            b + UP * (h / 2 + 0.05))
+
+    return {"group": VGroup(tube, bulb), "column": always_redraw(column), "level": tracker,
+            "top": b + UP * height}
+
+
+def energy_tank(center, *, height: float = 2.2, width: float = 0.9, color=P_YELLOW, level: float = 1.0):
+    """🔋 Energy as a tank — the fill is the energy still in it."""
+    from manim import UP, Rectangle, RoundedRectangle, ValueTracker, VGroup, always_redraw
+
+    c = np.array(center, dtype=float)
+    frame = RoundedRectangle(width=width, height=height, corner_radius=0.1, color=P_WHITE, stroke_width=2.5)
+    frame.move_to(c)
+    cap = RoundedRectangle(width=width * 0.4, height=0.12, corner_radius=0.04, color=P_WHITE, stroke_width=2.5,
+                           fill_color=P_WHITE, fill_opacity=0.6)
+    cap.next_to(frame, UP, buff=0)
+    tracker = ValueTracker(level)
+    inner = height - 0.12
+    base = frame.get_bottom() + UP * 0.06
+
+    def fill():
+        h = max(0.002, inner * float(np.clip(tracker.get_value(), 0.0, 1.0)))
+        return Rectangle(width=width - 0.12, height=h, stroke_width=0, fill_color=color, fill_opacity=0.7).move_to(
+            base + UP * h / 2)
+
+    return {"frame": frame, "cap": cap, "level": tracker, "fill": always_redraw(fill),
+            "group": VGroup(frame, cap), "center": c, "height": height, "width": width}
+
+
+def lamp_glyph(anchor, drop: float = 0.55):
+    """💡 Pendant lamp — cable, conical shade, bulb."""
+    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+
+    a = np.array(anchor, dtype=float)
+    cable = Line(a, a + DOWN * drop, color=P_WHITE, stroke_width=1.4)
+    top = a + DOWN * drop
+    shade = VGroup(
+        Line(top + LEFT * 0.05, top + DOWN * 0.2 + LEFT * 0.22, color=P_WHITE, stroke_width=1.5),
+        Line(top + RIGHT * 0.05, top + DOWN * 0.2 + RIGHT * 0.22, color=P_WHITE, stroke_width=1.5),
+        Line(top + DOWN * 0.2 + LEFT * 0.22, top + DOWN * 0.2 + RIGHT * 0.22, color=P_WHITE, stroke_width=1.5),
+    )
+    bulb = Circle(radius=0.09, color=P_YELLOW, stroke_width=1.5).move_to(a + DOWN * (drop + 0.32))
+    filament = Line(bulb.get_center() + UP * 0.03 + LEFT * 0.025, bulb.get_center() + DOWN * 0.03 + RIGHT * 0.025,
+                    color=P_YELLOW, stroke_width=1.1)
+    return {"cable": cable, "bulb": bulb, "group": VGroup(cable, shade, bulb, filament)}
+
+
+def droplets(center, n: int = 6, spread=(0.5, 0.6), seed: int = 3, color=P_BLUE):
+    """💧 Scattered condensate droplets."""
+    from manim import Ellipse, VGroup
+
+    rng = np.random.default_rng(seed)
+    c = np.array(center, dtype=float)
+    return VGroup(*[
+        Ellipse(width=0.07, height=0.1, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0).move_to(
+            c + np.array([rng.uniform(-spread[0], spread[0]), rng.uniform(-spread[1], spread[1]), 0.0]))
+        for _ in range(n)
+    ])
+#endregion
 #endregion
 
 
@@ -1481,8 +2009,13 @@ def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> fl
     return round(max(words / SUBTITLE_READING_WPS, SUBTITLE_MIN_SECONDS), 2)
 
 
-def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min_wait: float = 0.3) -> float:
+def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min_wait: float = 0.3,
+             during=None) -> float:
     """⏸️ Wait as long as this clause needs on screen, minus time already visible.
+
+    ``during(run_time)`` may return animations that fill the remaining time instead
+    of a frozen wait — heat keeps rippling, light keeps pulsing while the subtitle
+    is read.
 
     Prefers ``scene._vo_caption_t0`` (set by ``swap_caption``) so speech lines up
     with the subtitle that is actually on screen. The ``used`` argument remains
@@ -1509,7 +2042,11 @@ def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min
     scene._vo_spent = spent
     _trace_clause(scene, key, start=t0, used=visible, remaining=remaining)
     check_layout(scene, key)
-    scene.wait(remaining)
+    anims = during(remaining) if during is not None else None
+    if anims:
+        scene.play(*anims, run_time=remaining)
+    else:
+        scene.wait(remaining)
     return remaining
 #endregion
 

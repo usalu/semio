@@ -18,9 +18,11 @@ from manim_fonts import (
 )
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_GREEN, P_BLUE,
-    solar_wave_ray, watt_anchor,
-    smooth_path, flow_guides, animate_flows,
-    math_label,
+    watt_anchor,
+    smooth_path, flow_guides, flow_animation,
+    house_section, sun_glyph, sun_rays, shine, pulse_flashes, ripples,
+    person_glyph, lamp_glyph, thermometer_glyph,
+    math_label, math_readout, de_num,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
 )
@@ -34,10 +36,11 @@ if _VO_TIMING.is_file():
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Heizwärmebedarf vs. Kühllast"
 
-# Shared layout anchors — one house height + thermometer slot for every beat so
-# winter / summer / cooling stay visually continuous when the scaffold moves.
+# Shared layout anchors — one house and one thermometer slot for every beat so
+# winter / summer / cooling stay visually continuous.
 HOUSE_CENTER = ORIGIN + DOWN * 0.75
-THERM_OFFSET = RIGHT * 3.55 + UP * 0.1
+SUN_C = np.array([-4.2, 1.35, 0.0])
+THERM_BOTTOM = np.array([3.3, -1.55, 0.0])
 
 
 #region DIN citation
@@ -58,228 +61,146 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _build_cross_section_house(center=HOUSE_CENTER):
-    """🏠 Two-storey line-art house — mid-screen anchor for winter/summer beats.
-
-    Dropped to ``HOUSE_CENTER`` so Beat 3's upward exhaust plumes clear the
-    topic title / beat subtitle, while sun labels still fit above the roof.
-    """
-    w_width, w_height = 3.6, 2.4
-    bottom_left = center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
-    bottom_right = center + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
-    top_left = center + LEFT * (w_width / 2) + UP * (w_height / 2)
-    top_right = center + RIGHT * (w_width / 2) + UP * (w_height / 2)
-    roof_peak = center + UP * (w_height / 2 + 1.1)
-
-    floor_line = Line(bottom_left + LEFT * 0.6, bottom_right + RIGHT * 0.6, color=P_TEAL, stroke_width=4)
-    level_1 = Line(bottom_left + UP * (w_height / 2), bottom_right + UP * (w_height / 2), color=P_WHITE, stroke_width=2)
-
-    w_h = 0.5
-    wall_left_1 = Line(bottom_left, bottom_left + UP * (w_height / 4 - w_h / 2), color=P_WHITE, stroke_width=3)
-    wall_left_2 = Line(
-        bottom_left + UP * (w_height / 4 + w_h / 2),
-        bottom_left + UP * (3 * w_height / 4 - w_h / 2),
-        color=P_WHITE, stroke_width=3,
+def _house():
+    """🏠 The Physical Fundamentals section house at the shared anchor, plus its interior air for heat tinting."""
+    house = house_section(HOUSE_CENTER)
+    t = 0.1
+    inner_peak = house["roof_peak"] + DOWN * 0.14
+    air = Polygon(
+        house["bottom_left"] + RIGHT * t + UP * 0.02, house["bottom_right"] + LEFT * t + UP * 0.02,
+        house["top_right"] + LEFT * t + DOWN * 0.06, inner_peak, house["top_left"] + RIGHT * t + DOWN * 0.06,
+        stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
     )
-    wall_left_3 = Line(bottom_left + UP * (3 * w_height / 4 + w_h / 2), top_left, color=P_WHITE, stroke_width=3)
-    wall_right = Line(bottom_right, top_right, color=P_WHITE, stroke_width=3)
-    walls = VGroup(wall_left_1, wall_left_2, wall_left_3, wall_right, level_1)
-    roof = Polygon(top_left, roof_peak, top_right, color=P_WHITE, stroke_width=3)
-
-    win1 = Rectangle(width=0.05, height=w_h, color=P_CYAN).move_to(bottom_left + UP * (w_height / 4) + RIGHT * 0.075)
-    win2 = Rectangle(width=0.05, height=w_h, color=P_CYAN).move_to(bottom_left + UP * (3 * w_height / 4) + RIGHT * 0.075)
-    window_group = VGroup(win1, win2)
-
-    return {
-        "center": center,
-        "bottom_left": bottom_left, "bottom_right": bottom_right,
-        "top_left": top_left, "top_right": top_right, "roof_peak": roof_peak,
-        "floor": floor_line, "walls": walls, "roof": roof,
-        "win1": win1, "win2": win2, "window_group": window_group,
-        "group": VGroup(floor_line, walls, roof, window_group),
-        "w_width": w_width, "w_height": w_height,
-    }
+    air.set_z_index(-1)
+    house["air"] = air
+    return house
 
 
-def _build_sun(pos, color=P_YELLOW, glow_opacity=0.35, burst_width=2):
-    """☀️ Compact sun with glow rings and radial burst lines."""
-    sun_core = Dot(pos, radius=0.45, color=color)
-    sun_glow = Dot(pos, radius=0.7, color=color, fill_opacity=glow_opacity)
-    sun_ring1 = Circle(radius=0.85, color=color, stroke_width=2, stroke_opacity=0.6).move_to(pos)
-    sun_ring2 = Circle(radius=1.1, color=color, stroke_width=1.2, stroke_opacity=0.3).move_to(pos)
-    sun_burst = VGroup()
-    for angle in np.linspace(0, TAU, 12, endpoint=False):
-        s = pos + np.array([np.cos(angle) * 0.55, np.sin(angle) * 0.55, 0])
-        e = pos + np.array([np.cos(angle) * 0.9, np.sin(angle) * 0.9, 0])
-        sun_burst.add(Line(s, e, color=color, stroke_width=burst_width))
-    return VGroup(sun_glow, sun_core, sun_ring1, sun_ring2, sun_burst)
+def _solar(house, *, per_window: int = 2):
+    """☀️ Sun plus parallel straight rays through both windows, landing on the floor of each storey."""
+    sun = sun_glyph(SUN_C).scale(0.42)
+    floors = (house["bottom_left"][1], house["level_1"].get_center()[1])
+    spread = np.linspace(0.14, -0.14, per_window)
+    sets = [sun_rays(SUN_C, w["x"], [w["center"][1] + dy for dy in spread], floor_y, gap=0.5)
+            for w, floor_y in zip(house["windows"], floors)]
+    paths = [[s, h, p] for r in sets for s, h, p in zip(r["starts"], r["hits"], r["lands"])]
+    return {"sun": sun, "rays": sets, "paths": paths, "group": VGroup(sun, *[r["group"] for r in sets])}
 
 
-def _create_wave(x_offset, color, start_pos):
-    """〰️ Short rising heat plume above an internal source."""
-    pts = [
-        start_pos + np.array([x_offset + 0.04 * np.sin(y * 8), y, 0])
-        for y in np.linspace(0.08, 0.4, 12)
-    ]
-    wave = VMobject(color=color, stroke_width=1.8, stroke_opacity=0.7)
-    wave.set_points_smoothly(pts)
-    return wave
-
-
-def _build_internal_gains(house: dict, color_device=P_CYAN, color_person=P_ORANGE):
-    """💡 Occupant, kitchen, desk laptop and ceiling lights inside the house."""
+def _internal_gains(house):
+    """💡 Occupant, kitchen, desk laptop and two pendant lamps — the Physical Fundamentals glyphs inside the house."""
     bl = house["bottom_left"]
-    w_height = house["w_height"]
+    floor_y = bl[1]
+    mid_y = house["level_1"].get_center()[1]
 
-    desk_surface = Line(
-        bl + RIGHT * 1.8 + UP * (w_height / 2 + 0.3),
-        bl + RIGHT * 2.4 + UP * (w_height / 2 + 0.3),
-        color=P_WHITE, stroke_width=2,
+    person = person_glyph(ORIGIN, scale=1.1)
+    person.move_to(np.array([-0.75, floor_y + 0.02 + person.height / 2, 0.0]))
+
+    counter = Rectangle(width=0.8, height=0.34, color=P_WHITE, stroke_width=1.5)
+    counter.move_to(np.array([1.1, floor_y + 0.17, 0.0]))
+    pot = Rectangle(width=0.26, height=0.13, color=P_CYAN, stroke_width=1.5).next_to(counter, UP, buff=0.0)
+    handle = Line(pot.get_corner(UR) + DOWN * 0.04, pot.get_corner(UR) + DOWN * 0.04 + RIGHT * 0.1,
+                  color=P_CYAN, stroke_width=1.5)
+    kitchen = VGroup(counter, pot, handle)
+
+    desk_y = mid_y + 0.42
+    desk = VGroup(
+        Line(np.array([0.2, desk_y, 0.0]), np.array([1.1, desk_y, 0.0]), color=P_WHITE, stroke_width=1.5),
+        Line(np.array([0.3, desk_y, 0.0]), np.array([0.3, mid_y, 0.0]), color=P_WHITE, stroke_width=1.5),
+        Line(np.array([1.0, desk_y, 0.0]), np.array([1.0, mid_y, 0.0]), color=P_WHITE, stroke_width=1.5),
     )
-    desk_leg1 = Line(desk_surface.get_start() + RIGHT * 0.1, desk_surface.get_start() + RIGHT * 0.1 + DOWN * 0.3, color=P_WHITE, stroke_width=2)
-    desk_leg2 = Line(desk_surface.get_end() + LEFT * 0.1, desk_surface.get_end() + LEFT * 0.1 + DOWN * 0.3, color=P_WHITE, stroke_width=2)
-    laptop_base = Line(desk_surface.get_center() + LEFT * 0.1, desk_surface.get_center() + RIGHT * 0.1, color=color_device, stroke_width=2.5)
-    laptop_screen = Line(laptop_base.get_right(), laptop_base.get_right() + LEFT * 0.05 + UP * 0.15, color=color_device, stroke_width=2.5)
-    device = VGroup(desk_surface, desk_leg1, desk_leg2, laptop_base, laptop_screen)
-
-    counter_top = Line(bl + RIGHT * 1.5 + UP * 0.3, bl + RIGHT * 2.3 + UP * 0.3, color=P_WHITE, stroke_width=2)
-    counter_body = Rectangle(width=0.8, height=0.3, color=P_WHITE, stroke_width=1.5, fill_opacity=0.1).move_to(counter_top.get_center() + DOWN * 0.15)
-    stove_pot = VGroup(
-        Line(counter_top.get_center() + LEFT * 0.1 + UP * 0.02, counter_top.get_center() + RIGHT * 0.1 + UP * 0.02, color=P_WHITE, stroke_width=3),
-        RoundedRectangle(
-            corner_radius=0.03, width=0.16, height=0.12, color=color_device, stroke_width=2, fill_opacity=0.3,
-        ).move_to(counter_top.get_center() + RIGHT * 0.1 + UP * 0.08),
+    laptop = VGroup(
+        Line(np.array([0.45, desk_y + 0.02, 0.0]), np.array([0.75, desk_y + 0.02, 0.0]), color=P_CYAN, stroke_width=1.8),
+        Line(np.array([0.75, desk_y + 0.02, 0.0]), np.array([0.69, desk_y + 0.26, 0.0]), color=P_CYAN, stroke_width=1.8),
     )
-    kitchen = VGroup(counter_top, counter_body, stove_pot)
+    device = VGroup(desk, laptop)
 
-    p2_head = Circle(radius=0.08, color=color_person, fill_color=color_person, fill_opacity=0.3, stroke_width=2)
-    p2_head.move_to(bl + RIGHT * 1.1 + UP * 0.62)
-    p2_torso = Line(p2_head.get_bottom(), p2_head.get_bottom() + DOWN * 0.22, color=color_person, stroke_width=3)
-    p2_legs = VGroup(
-        Line(p2_torso.get_end(), p2_torso.get_end() + DOWN * 0.28 + LEFT * 0.05, color=color_person, stroke_width=3),
-        Line(p2_torso.get_end(), p2_torso.get_end() + DOWN * 0.28 + RIGHT * 0.05, color=color_person, stroke_width=3),
-    )
-    p2_arms = Line(p2_torso.get_center() + UP * 0.03, p2_torso.get_center() + RIGHT * 0.2, color=color_person, stroke_width=2)
-    person2 = VGroup(p2_head, p2_torso, p2_legs, p2_arms)
+    lamp_low = lamp_glyph(np.array([0.15, mid_y, 0.0]), drop=0.18)
+    roof_x = -0.75
+    roof_y = house["top_left"][1] - 0.05 + (house["roof_peak"][1] - 0.12 - house["top_left"][1] + 0.05) * (
+        (roof_x - house["top_left"][0]) / (house["roof_peak"][0] - house["top_left"][0]))
+    lamp_up = lamp_glyph(np.array([roof_x, roof_y, 0.0]), drop=0.5)
 
-    light1_cord = Line(bl + UP * 2.4 + RIGHT * 1.2, bl + UP * 2.15 + RIGHT * 1.2, color=P_WHITE, stroke_width=1.5)
-    light1_bulb = Dot(light1_cord.get_end(), radius=0.07, color=P_YELLOW)
-    light1_glow = Circle(radius=0.18, color=P_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light1_bulb.get_center())
-    light1 = VGroup(light1_cord, light1_bulb, light1_glow)
-
-    light2_cord = Line(bl + UP * 1.2 + RIGHT * 2.7, bl + UP * 0.95 + RIGHT * 2.7, color=P_WHITE, stroke_width=1.5)
-    light2_bulb = Dot(light2_cord.get_end(), radius=0.07, color=P_YELLOW)
-    light2_glow = Circle(radius=0.18, color=P_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light2_bulb.get_center())
-    light2 = VGroup(light2_cord, light2_bulb, light2_glow)
-
-    sources = VGroup(device, person2, kitchen, light1, light2)
-    waves = VGroup(
-        _create_wave(-0.06, color_device, laptop_screen.get_center()),
-        _create_wave(0.06, color_device, laptop_screen.get_center()),
-        _create_wave(-0.06, P_YELLOW, light1_bulb.get_center()),
-        _create_wave(0.06, P_YELLOW, light1_bulb.get_center()),
-        _create_wave(-0.06, color_person, p2_head.get_top()),
-        _create_wave(0.06, color_person, p2_head.get_top()),
-        _create_wave(-0.06, color_device, stove_pot.get_top()),
-        _create_wave(0.06, color_device, stove_pot.get_top()),
-        _create_wave(-0.06, P_YELLOW, light2_bulb.get_center()),
-        _create_wave(0.06, P_YELLOW, light2_bulb.get_center()),
-    )
+    warm = [person.get_center() + UP * 0.12, laptop[1].get_center(), pot.get_top()]
+    bulbs = [lamp_low["bulb"].get_center(), lamp_up["bulb"].get_center()]
     return {
-        "sources": sources, "waves": waves, "device": device, "person": person2,
-        "laptop_screen": laptop_screen, "p2_head": p2_head,
+        "person": person, "device": device, "kitchen": kitchen, "lamps": VGroup(lamp_low["group"], lamp_up["group"]),
+        "sources": VGroup(device, person, kitchen, lamp_low["group"], lamp_up["group"]),
+        "warm": warm, "bulbs": bulbs,
     }
+
+
+def _gain_heat(gains, run_time: float, *, color=P_ORANGE):
+    """🌡️ Long-wave heat from every internal source — ripples from people and devices, down from the lamps."""
+    cycles = max(1.0, run_time / 1.3)
+    return [ripples(gains["warm"], r_max=0.42, color=color, cycles=cycles),
+            ripples(gains["bulbs"], r_max=0.4, color=P_RED, down=True, cycles=cycles)]
+
+
+def _room_thermometer(temp: ValueTracker):
+    """🌡️ Physical Fundamentals thermometer whose column and reading follow the room temperature."""
+    th = thermometer_glyph(THERM_BOTTOM, height=1.9, level=(temp.get_value() - 15) / 25)
+    th["column"].add_updater(lambda m: th["level"].set_value((temp.get_value() - 15) / 25))
+    title = Text("Raumtemperatur", font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(th["group"], UP, buff=0.18)
+
+    def reading():
+        t = temp.get_value()
+        color = P_RED if t > 25 else (P_CYAN if t <= 21.5 else P_WHITE)
+        return math_label(rf"{de_num(t)}\,\mathrm{{°C}}", size=SUBTITLE_FONT_SIZE, color=color)
+
+    read = always_redraw(lambda: reading().next_to(th["group"][0], RIGHT, buff=0.22))
+    return {"static": VGroup(th["group"], title), "column": th["column"], "read": read}
 
 
 def _build_ahu(house: dict):
-    """🌀 Lüftungsgerät an der linken Fassade — Ventilator, Kühlregister und vier Luftwege.
+    """🌀 Lüftungsgerät standing beside the house — fan, cooling coil and the four air paths of DIN EN 16798-3.
 
-    Schematic air-handling unit after the duct diagrams in VDI 2078 /
-    DIN EN 16798-3 terminology: Außenluft → Kühlregister → Zuluft into the
-    room, Abluft out of the room → Fortluft above the roof. Paths are built
-    for ``flow_guides`` + ``animate_flows`` so air visibly moves and changes
-    temperature colour at the register.
+    Außenluft → Kühlregister → Zuluft through the lower window, Abluft through
+    the upper window → fan → Fortluft above. Paths feed ``flow_guides`` +
+    ``animate_flows`` so the air visibly moves and changes colour at the coil.
     """
-    unit = RoundedRectangle(
-        corner_radius=0.08, width=0.78, height=1.5,
-        color=P_WHITE, stroke_width=2.5, fill_color=P_DEEP_DARK, fill_opacity=1.0,
-    ).move_to(np.array([-2.75, -0.3, 0.0]))
-
-    fan_center = np.array([-2.75, 0.05, 0.0])
-    fan_ring = Circle(radius=0.2, color=P_CYAN, stroke_width=2.2).move_to(fan_center)
+    floor_y = house["bottom_left"][1]
+    win_lo, win_hi = house["windows"]
+    wx = win_lo["x"]
+    unit = RoundedRectangle(corner_radius=0.08, width=0.78, height=1.5, color=P_WHITE, stroke_width=1.8,
+                            fill_color=P_DEEP_DARK, fill_opacity=1.0)
+    unit.move_to(np.array([-3.15, floor_y + 0.75, 0.0]))
+    fan_center = unit.get_top() + DOWN * 0.38
+    fan_ring = Circle(radius=0.2, color=P_CYAN, stroke_width=1.6).move_to(fan_center)
     fan_blades = VGroup(*[
-        Line(fan_center, fan_center + 0.17 * np.array([np.cos(a), np.sin(a), 0.0]),
-             color=P_CYAN, stroke_width=2.6)
+        Line(fan_center, fan_center + 0.17 * np.array([np.cos(a), np.sin(a), 0.0]), color=P_CYAN, stroke_width=2.0)
         for a in np.linspace(0, TAU, 3, endpoint=False)
     ])
+    coil_c = unit.get_bottom() + UP * 0.42
+    coil = VMobject(color=P_BLUE, stroke_width=1.6).set_points_as_corners(
+        [coil_c + np.array([-0.27 + i * 0.09, 0.08 if i % 2 else -0.08, 0.0]) for i in range(7)])
 
-    coil_pts = [
-        np.array([-3.02 + i * 0.09, -0.75 + (0.09 if i % 2 else -0.09), 0.0])
-        for i in range(7)
-    ]
-    coil = VMobject(color=P_BLUE, stroke_width=2.4).set_points_as_corners(coil_pts)
-
-    supply_pts = [
-        [-3.6, -2.0], [-3.15, -1.55], [-2.8, -1.0], [-2.72, -0.72],
-        [-2.45, -1.0], [-1.8, -1.25], [-1.0, -1.38], [-0.25, -1.45],
-    ]
-    extract_pts = [
-        [-0.6, 0.05], [-1.3, 0.25], [-1.95, 0.3], [-2.55, 0.18],
-        [-2.8, 0.45], [-2.9, 1.1], [-2.55, 1.95],
-    ]
-    supply_paths = VGroup(
-        smooth_path([np.array([x, y, 0.0]) for x, y in supply_pts]),
-        smooth_path([np.array([x, y - 0.12, 0.0]) for x, y in supply_pts]),
-    )
-    extract_paths = VGroup(
-        smooth_path([np.array([x, y, 0.0]) for x, y in extract_pts]),
-        smooth_path([np.array([x + 0.1, y - 0.12, 0.0]) for x, y in extract_pts]),
-    )
-
-    def _grille(at, angle):
-        ticks = VGroup(*[
-            Line(ORIGIN, UP * 0.16, color=P_WHITE, stroke_width=2)
-            for _ in range(3)
-        ]).arrange(RIGHT, buff=0.08)
-        return ticks.rotate(angle).move_to(np.array(at, dtype=float))
-    grille_in = _grille([-0.25, -1.5, 0.0], 0.0)
-    grille_out = _grille([-0.6, 0.1, 0.0], 0.0)
+    lo_y, hi_y = win_lo["center"][1], win_hi["center"][1]
+    supply_pts = [(-4.75, floor_y + 0.32), (-3.75, floor_y + 0.36), (coil_c[0], coil_c[1]),
+                  (-2.85, lo_y - 0.05), (wx - 0.4, lo_y), (wx + 0.5, lo_y - 0.05), (wx + 1.3, floor_y + 0.25)]
+    extract_pts = [(wx + 1.4, hi_y - 0.3), (wx + 0.5, hi_y), (wx - 0.45, hi_y), (fan_center[0] + 0.25, fan_center[1] - 0.05),
+                   (fan_center[0], fan_center[1] + 0.3), (fan_center[0] - 0.05, fan_center[1] + 1.2),
+                   (fan_center[0] + 0.35, fan_center[1] + 1.95)]
+    supply_paths = VGroup(*[smooth_path([np.array([x, y + dy, 0.0]) for x, y in supply_pts]) for dy in (0.0, -0.1)])
+    extract_paths = VGroup(*[smooth_path([np.array([x + dx, y, 0.0]) for x, y in extract_pts]) for dx in (0.0, 0.1)])
 
     labels = VGroup(
-        Text("Außenluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-4.5, -1.85, 0.0]),
-        Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to([-0.9, -1.75, 0.0]),
-        Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_RED).move_to([-2.3, 0.62, 0.0]),
-        Text("Fortluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-1.95, 1.72, 0.0]),
+        Text("Außenluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(
+            np.array([supply_pts[0][0], supply_pts[0][1], 0.0]), DOWN, buff=0.22),
+        Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([wx + 0.75, lo_y + 0.32, 0.0])),
+        Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_RED).move_to(np.array([wx + 0.85, hi_y + 0.3, 0.0])),
+        Text("Fortluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(
+            np.array([extract_pts[-1][0], extract_pts[-1][1], 0.0]), LEFT, buff=0.2),
     )
-    unit_label = Text(
-        "Lüftungsgerät\nmit Kühlregister", font_size=LABEL_FONT_SIZE, color=P_TEAL,
-        line_spacing=0.8,
-    ).move_to([-4.85, 0.35, 0.0])
-    unit_leader = Line(
-        unit_label.get_right() + RIGHT * 0.12, unit.get_corner(UL) + DOWN * 0.1,
-        color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7,
-    )
-
+    unit_label = Text("Lüftungsgerät\nmit Kühlregister", font_size=LABEL_FONT_SIZE, color=P_TEAL, line_spacing=0.8)
+    unit_label.move_to(np.array([-5.3, unit.get_top()[1] + 0.35, 0.0]))
+    unit_leader = Line(unit_label.get_right() + RIGHT * 0.1, unit.get_corner(UL) + DOWN * 0.12,
+                       color=P_TEAL, stroke_width=1.4, stroke_opacity=0.7)
     return {
-        "unit": VGroup(unit, fan_ring, fan_blades, coil),
-        "fan_blades": fan_blades, "fan_center": fan_center,
+        "unit": VGroup(unit, fan_ring, fan_blades, coil), "fan_blades": fan_blades, "fan_center": fan_center,
         "supply_paths": supply_paths, "extract_paths": extract_paths,
-        "grilles": VGroup(grille_in, grille_out),
-        "labels": labels, "unit_label": VGroup(unit_label, unit_leader),
+        "labels": labels, "unit_label": VGroup(unit_label, unit_leader), "top": extract_pts[-1],
     }
-
-
-def _create_thermometer(pos):
-    """🌡️ Thermometer frame + fluid stem for room-temperature tracking."""
-    bulb_outer = Circle(radius=0.18, color=P_WHITE, stroke_width=2).move_to(pos + DOWN * 0.3)
-    tube_outer = RoundedRectangle(corner_radius=0.06, width=0.14, height=1.0, color=P_WHITE, stroke_width=2)
-    tube_outer.move_to(pos + UP * 0.25)
-    bulb_inner = Circle(radius=0.12, color=P_CYAN, fill_opacity=1, stroke_width=0).move_to(bulb_outer.get_center())
-    baseline_y = bulb_outer.get_center()[1] + 0.1
-    fluid_stem = Rectangle(width=0.06, height=0.2, color=P_CYAN, fill_opacity=1, stroke_width=0)
-    fluid_stem.move_to([pos[0], baseline_y + 0.1, 0])
-    frame = VGroup(bulb_outer, tube_outer)
-    return frame, bulb_inner, fluid_stem, baseline_y
 
 #endregion
 
@@ -313,47 +234,40 @@ class Beat1_WinterGains(Scene):
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
+        house = _house()
+        self.add(house["air"])
+        self.play(FadeIn(house["group"]), run_time=1.4)
+        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4)
 
-        house = _build_cross_section_house()
-        self.play(Create(house["group"]), run_time=2.0)
-
-        sun_pos = house["center"] + LEFT * 3.6 + UP * 1.35
-        sun_group = _build_sun(sun_pos, color=P_YELLOW)
+        solar = _solar(house)
         solar_label = Text("Solare Gewinne", font_size=BODY_FONT_SIZE, color=P_YELLOW)
-        solar_label.next_to(sun_group, DOWN, buff=0.55)
-        solar_rays = VGroup(
-            solar_wave_ray(sun_pos, house["win1"].get_center(), color=P_YELLOW, stroke_width=2.0, amp=0.06),
-            solar_wave_ray(sun_pos, house["win2"].get_center(), color=P_YELLOW, stroke_width=2.0, amp=0.06),
-        )
+        solar_label.move_to(SUN_C + np.array([-0.8, -0.85, 0.0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "solar"))
-        self.play(
-            FadeIn(sun_group), FadeIn(solar_label),
-            LaggedStart(*[Create(r) for r in solar_rays], lag_ratio=0.15),
-            run_time=1.6,
-        )
-        hold_for(self, self.NARRATION, "solar", used=1.6 + 0.35)
+        self.play(FadeIn(solar["sun"], scale=0.7), FadeIn(solar_label), run_time=0.7)
+        self.play(*[shine(r, lag=0.25) for r in solar["rays"]], run_time=1.6)
+        self.play(house["air"].animate.set_fill(P_ORANGE, opacity=0.08), run_time=0.6)
+        hold_for(self, self.NARRATION, "solar",
+                 during=lambda rt: [pulse_flashes(solar["paths"], P_YELLOW, repeats=max(1, int(rt / 1.6)))])
 
-        gains = _build_internal_gains(house)
+        gains = _internal_gains(house)
         internal_label = Text("Interne Gewinne", font_size=BODY_FONT_SIZE, color=P_ORANGE)
         internal_label.next_to(house["floor"], DOWN, buff=0.2)
         laptop_anchor = watt_anchor(60, compare="laptop", title="Gerät").scale(0.55)
         person_anchor = watt_anchor(100, compare="bulb", title="Person").scale(0.55)
         anchor_row = VGroup(person_anchor, laptop_anchor).arrange(DOWN, buff=0.4)
-        anchor_row.next_to(house["walls"], RIGHT, buff=0.4)
+        anchor_row.next_to(house["walls"], RIGHT, buff=0.55)
         anchor_row.set_y(house["center"][1])
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "internal"))
-        self.play(
-            FadeIn(gains["sources"]), Create(gains["waves"]), FadeIn(internal_label),
-            run_time=1.4,
-        )
-        self.play(FadeIn(laptop_anchor), FadeIn(person_anchor), run_time=0.8)
-        hold_for(self, self.NARRATION, "internal", used=2.2 + 0.35)
+        self.play(LaggedStart(*[FadeIn(s) for s in gains["sources"]], lag_ratio=0.2), FadeIn(internal_label),
+                  run_time=1.2)
+        self.play(*_gain_heat(gains, 1.4), FadeIn(person_anchor), FadeIn(laptop_anchor), run_time=1.4)
+        hold_for(self, self.NARRATION, "internal", during=lambda rt: _gain_heat(gains, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        hold_for(self, self.NARRATION, "outro", during=lambda rt: [
+            *_gain_heat(gains, rt), pulse_flashes(solar["paths"], P_YELLOW, repeats=max(1, int(rt / 1.6)))])
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -390,76 +304,40 @@ class Beat2_SummerOverheat(Scene):
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
+        house = _house()
+        self.add(house["air"], house["group"])
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        house = _build_cross_section_house()
-        self.add(house["group"])
-
-        sun_pos = house["center"] + LEFT * 3.6 + UP * 1.35
-        sun_group = _build_sun(sun_pos, color=P_RED, glow_opacity=0.45, burst_width=3)
+        solar = _solar(house, per_window=3)
         solar_label = Text("Übermäßige\nsolare Gewinne", font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
-        solar_label.next_to(sun_group, DOWN, buff=0.45)
-        gains = _build_internal_gains(house, color_device=P_RED, color_person=P_RED)
-        gains["sources"].set_color(P_RED)
-        gains["waves"].set_color(P_RED)
+        solar_label.move_to(SUN_C + np.array([-0.8, -0.95, 0.0]))
+        gains = _internal_gains(house)
         internal_label = Text("Interne Gewinne", font_size=BODY_FONT_SIZE, color=P_RED)
         internal_label.next_to(house["floor"], DOWN, buff=0.2)
 
-        heat_block = Polygon(
-            house["bottom_left"] + RIGHT * 0.05 + UP * 0.05,
-            house["bottom_right"] + LEFT * 0.05 + UP * 0.05,
-            house["top_right"] + LEFT * 0.05 + DOWN * 0.05,
-            house["roof_peak"] + DOWN * 0.1,
-            house["top_left"] + RIGHT * 0.05 + DOWN * 0.05,
-            fill_color=P_RED, fill_opacity=0.45, stroke_width=0,
-        )
-
-        therm_pos = house["center"] + THERM_OFFSET
-        therm_frame, therm_bulb, therm_fluid, therm_base_y = _create_thermometer(therm_pos)
-        temp_title = Text("Raumtemperatur", font_size=LABEL_FONT_SIZE, color=P_WHITE)
-        temp_title.next_to(therm_frame, UP, buff=0.15)
-        temp_text = Text("20°C", font_size=SUBTITLE_FONT_SIZE, color=P_WHITE)
-        temp_text.next_to(therm_frame, RIGHT, buff=0.2)
-        therm_group = VGroup(therm_frame, therm_bulb, therm_fluid, temp_text)
-        temp_val = ValueTracker(20)
-
-        def update_therm(group):
-            val = temp_val.get_value()
-            color = P_RED if val > 25 else (P_CYAN if val <= 21 else P_WHITE)
-            new_text = Text(f"{int(val)}°C", font_size=SUBTITLE_FONT_SIZE, color=color).next_to(therm_frame, RIGHT, buff=0.2)
-            h = 0.2 + ((val - 20) / 15) * 0.5
-            new_fluid = Rectangle(width=0.06, height=h, color=color, fill_opacity=1, stroke_width=0)
-            new_fluid.move_to([therm_pos[0], therm_base_y + h / 2, 0])
-            new_bulb = Circle(radius=0.12, color=color, fill_opacity=1, stroke_width=0).move_to(therm_frame[0].get_center())
-            group[1].become(new_bulb)
-            group[2].become(new_fluid)
-            group[3].become(new_text)
-
-        therm_group.add_updater(update_therm)
-        temp_tracker_group = VGroup(therm_group, temp_title)
+        def summer_heat(rt):
+            return [*_gain_heat(gains, rt, color=P_RED),
+                    pulse_flashes(solar["paths"], P_YELLOW, repeats=max(1, int(rt / 1.4)))]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "excess"))
-        self.play(
-            FadeIn(sun_group), FadeIn(solar_label),
-            FadeIn(gains["sources"]), Create(gains["waves"]), FadeIn(internal_label),
-            run_time=1.6,
-        )
-        hold_for(self, self.NARRATION, "excess", used=1.6 + 0.35)
+        self.play(FadeIn(solar["sun"], scale=0.7), FadeIn(solar_label), run_time=0.6)
+        self.play(*[shine(r, lag=0.2) for r in solar["rays"]],
+                  LaggedStart(*[FadeIn(s) for s in gains["sources"]], lag_ratio=0.2), FadeIn(internal_label),
+                  run_time=1.6)
+        hold_for(self, self.NARRATION, "excess", during=summer_heat)
 
+        temp = ValueTracker(20)
+        therm = _room_thermometer(temp)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "trap"))
-        self.play(FadeIn(heat_block), FadeIn(temp_tracker_group), run_time=1.0)
-        self.play(
-            heat_block.animate.set_fill(opacity=0.55),
-            temp_val.animate.set_value(35),
-            run_time=3.2,
-            rate_func=linear,
-        )
-        hold_for(self, self.NARRATION, "trap", used=4.2 + 0.35)
+        self.play(FadeIn(therm["static"]), FadeIn(therm["column"]), FadeIn(therm["read"]), run_time=0.8)
+        self.play(temp.animate.set_value(35), house["air"].animate.set_fill(P_RED, opacity=0.3), *summer_heat(3.4),
+                  run_time=3.4, rate_func=linear)
+        hold_for(self, self.NARRATION, "trap", during=summer_heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        hold_for(self, self.NARRATION, "outro", during=summer_heat)
 
-        therm_group.clear_updaters()
+        therm["column"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 
@@ -495,107 +373,46 @@ class Beat3_CoolingSystem(Scene):
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
+        house = _house()
+        house["air"].set_fill(P_RED, opacity=0.3)
+        temp = ValueTracker(35)
+        therm = _room_thermometer(temp)
+        self.add(house["air"], house["group"], therm["static"], therm["column"], therm["read"])
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
-
-        house = _build_cross_section_house()
-        self.add(house["group"])
-
-        heat_block = Polygon(
-            house["bottom_left"] + RIGHT * 0.05 + UP * 0.05,
-            house["bottom_right"] + LEFT * 0.05 + UP * 0.05,
-            house["top_right"] + LEFT * 0.05 + DOWN * 0.05,
-            house["roof_peak"] + DOWN * 0.1,
-            house["top_left"] + RIGHT * 0.05 + DOWN * 0.05,
-            fill_color=P_RED, fill_opacity=0.55, stroke_width=0,
-        )
-        self.add(heat_block)
-
-        therm_pos = house["center"] + THERM_OFFSET
-        therm_frame, therm_bulb, therm_fluid, therm_base_y = _create_thermometer(therm_pos)
-        temp_title = Text("Raumtemperatur", font_size=LABEL_FONT_SIZE, color=P_WHITE)
-        temp_title.next_to(therm_frame, UP, buff=0.15)
-        temp_text = Text("35°C", font_size=SUBTITLE_FONT_SIZE, color=P_RED)
-        temp_text.next_to(therm_frame, RIGHT, buff=0.2)
-        therm_group = VGroup(therm_frame, therm_bulb, therm_fluid, temp_text)
-        # Start already hot
-        therm_bulb.set_color(P_RED)
-        therm_fluid.become(
-            Rectangle(width=0.06, height=0.7, color=P_RED, fill_opacity=1, stroke_width=0).move_to(
-                [therm_pos[0], therm_base_y + 0.35, 0]
-            )
-        )
-        temp_val = ValueTracker(35)
-
-        def update_therm(group):
-            val = temp_val.get_value()
-            color = P_RED if val > 25 else (P_CYAN if val <= 21 else P_WHITE)
-            new_text = Text(f"{int(val)}°C", font_size=SUBTITLE_FONT_SIZE, color=color).next_to(therm_frame, RIGHT, buff=0.2)
-            h = 0.2 + ((val - 20) / 15) * 0.5
-            new_fluid = Rectangle(width=0.06, height=h, color=color, fill_opacity=1, stroke_width=0)
-            new_fluid.move_to([therm_pos[0], therm_base_y + h / 2, 0])
-            new_bulb = Circle(radius=0.12, color=color, fill_opacity=1, stroke_width=0).move_to(therm_frame[0].get_center())
-            group[1].become(new_bulb)
-            group[2].become(new_fluid)
-            group[3].become(new_text)
-
-        therm_group.add_updater(update_therm)
-        self.add(therm_group, temp_title)
 
         ahu = _build_ahu(house)
         supply_guides = flow_guides(ahu["supply_paths"], P_CYAN, opacity=0.22)
         extract_guides = flow_guides(ahu["extract_paths"], P_RED, opacity=0.22)
+        streams = [(ahu["extract_paths"], P_RED, P_ORANGE), (ahu["supply_paths"], P_ORANGE, P_CYAN)]
 
-        def _fan_spin(turns: float, run_time: float):
-            return Rotate(
-                ahu["fan_blades"], angle=turns * TAU,
-                about_point=ahu["fan_center"], run_time=run_time, rate_func=linear,
-            )
+        def fan_spin(turns: float, run_time: float):
+            return Rotate(ahu["fan_blades"], angle=turns * TAU, about_point=ahu["fan_center"],
+                          run_time=run_time, rate_func=linear)
+
+        def running(rt):
+            return [fan_spin(rt / 1.3, rt), flow_animation(streams, waves=5, cycles=rt / 1.6)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
-        self.play(
-            FadeIn(ahu["unit"]), FadeIn(ahu["grilles"]),
-            Create(supply_guides), Create(extract_guides),
-            FadeIn(ahu["labels"]), FadeIn(ahu["unit_label"]),
-            run_time=2.0,
-        )
-        animate_flows(
-            self,
-            [
-                (ahu["extract_paths"], P_RED, P_ORANGE),
-                (ahu["supply_paths"], P_ORANGE, P_CYAN),
-            ],
-            run_time=3.2, waves=5,
-            extra=[_fan_spin(2.5, 3.2)],
-        )
-        hold_for(self, self.NARRATION, "vent", used=5.2 + 0.35)
+        self.play(FadeIn(ahu["unit"]), Create(supply_guides), Create(extract_guides),
+                  FadeIn(ahu["labels"]), FadeIn(ahu["unit_label"]), run_time=1.6)
+        self.play(*running(3.2), run_time=3.2)
+        hold_for(self, self.NARRATION, "vent", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cool_down"))
-        animate_flows(
-            self,
-            [
-                (ahu["extract_paths"], P_RED, P_ORANGE),
-                (ahu["supply_paths"], P_ORANGE, P_CYAN),
-            ],
-            run_time=4.0, waves=5,
-            extra=[
-                _fan_spin(3.0, 4.0),
-                heat_block.animate.set_fill(opacity=0.0),
-                temp_val.animate.set_value(21),
-            ],
-        )
-        hold_for(self, self.NARRATION, "cool_down", used=4.0 + 0.35)
+        self.play(*running(4.0), house["air"].animate.set_fill(P_CYAN, opacity=0.06), temp.animate.set_value(21),
+                  run_time=4.0)
+        hold_for(self, self.NARRATION, "cool_down", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        qk_symbol = math_label(
-            r"\dot{Q}_{K}", at=np.array([-3.35, 1.78, 0.0]),
-            size=SUBTITLE_FONT_SIZE, color=P_CYAN, edge="right",
-        )
+        top = np.array([ahu["top"][0], ahu["top"][1], 0.0])
+        qk_symbol = math_label(r"\dot{Q}_{K}", at=top + np.array([-0.15, 0.42, 0.0]), size=SUBTITLE_FONT_SIZE,
+                               color=P_CYAN, edge="left")
         qk_word = Text("Kühllast", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        qk_word.next_to(qk_symbol, DOWN, buff=0.14, aligned_edge=RIGHT)
-        self.play(FadeIn(qk_symbol), FadeIn(qk_word), run_time=0.8)
-        hold_for(self, self.NARRATION, "outro", used=0.8 + 0.35)
+        qk_word.next_to(qk_symbol, RIGHT, buff=0.18).align_to(qk_symbol, DOWN)
+        self.play(FadeIn(qk_symbol), FadeIn(qk_word), *running(0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "outro", during=running)
 
-        therm_group.clear_updaters()
+        therm["column"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 

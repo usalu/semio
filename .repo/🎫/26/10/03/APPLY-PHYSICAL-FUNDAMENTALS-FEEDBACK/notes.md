@@ -93,6 +93,6 @@ Dev report (screenshot at 14:33 of the full video): the `1 W = 1 J / 1 s` box sa
   - Beat1: the flying `h` paused on the thought-cloud outline → now pauses above the cloud; `kW`→`h` gap widened.
   - Beat5: `DIN EN 410` ran into `A = …` → tucked under `g = 0,50`; `kurzwellig` sat on the sun rays → moved below the ray fan.
   - Beat8: `Sog −` sat on the lowest wind streamline → leeward of the eave below it; `Zuluft` sat on the inflow particles → left of where the stream starts (stream now starts at x = −5,6).
-- Full video re-rendered at 1080p60 (`full_physical_fundamentals_video.py -q h`, log `checks/full_render_qh.log`); all other Physical Fundamentals video files deleted on the dev's request — only `rendered/Full_Physical_Fundamentals_1080p60.mp4` kept.
+- Full video re-rendered at 1080p60 (`full_physical_fundamentals_video.py -q h`, isolated media dir `checks/hq_media`, log `checks/full_render_qh_v2.log`; 1920×1080 @ 60 fps, 14:58, silent; end section checked in `checks/hq_final_*.png`); all other Physical Fundamentals video files deleted on the dev's request — only `rendered/Full_Physical_Fundamentals_1080p60.mp4` kept.
 
 Status: closed 2026-10-09 (manually — repo MCP unavailable).

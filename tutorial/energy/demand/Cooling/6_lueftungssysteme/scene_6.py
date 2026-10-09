@@ -19,13 +19,14 @@ from manim_fonts import (
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     SAFE_TOP, SAFE_BOTTOM, SAFE_BOTTOM_FORMULA, fit_band,
-    radiation_waves, symbol_token,
-    smooth_path, flow_guides, animate_flow, animate_flows,
+    symbol_token,
+    smooth_path, flow_guides,
     meter, bind_meter, chip, cross_mark, dim_chip, dim_arrow,
     equation_row, formula_panel, highlight_param,
     math_label, math_panel,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
+    house_section, person_glyph, sun_glyph, moon_glyph, ripples, flow_animation, droplets,
 )
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -56,14 +57,17 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _room(center, width, height, color=P_WHITE):
-    """🏠 Line-art room shell with a teal floor slab."""
-    shell = Rectangle(
-        width=width, height=height,
-        color=color, stroke_width=3.0, fill_opacity=0,
-    ).move_to(center)
-    floor = Line(shell.get_corner(DL), shell.get_corner(DR), color=P_TEAL, stroke_width=4)
-    return VGroup(shell, floor)
+def _room(center, width, height, color=P_WHITE, t: float = 0.16):
+    """🏠 Physical Fundamentals room section — ceiling slab and side walls, then the floor slab, centred on the outline."""
+    cx, cy = float(center[0]), float(center[1])
+    style = dict(color=color, stroke_width=2, fill_color=color, fill_opacity=0.14)
+    ceiling = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy + height / 2, 0.0]))
+    walls = VGroup(*[
+        Rectangle(width=t, height=height - t, **style).move_to(np.array([cx + s * width / 2, cy, 0.0]))
+        for s in (-1, 1)
+    ])
+    floor = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy - height / 2, 0.0]))
+    return VGroup(VGroup(ceiling, walls), floor)
 
 
 def _window(pos, height=1.15, width=0.26):
@@ -75,13 +79,8 @@ def _window(pos, height=1.15, width=0.26):
 
 
 def _person(pos, color=P_ORANGE, scale=1.0):
-    """🧍 Occupant glyph — the comfort target of the strategy."""
-    head = Circle(radius=0.12, color=color, stroke_width=2.2)
-    body = RoundedRectangle(
-        width=0.32, height=0.44, corner_radius=0.1,
-        color=color, stroke_width=2.2,
-    ).next_to(head, DOWN, buff=0.04)
-    return VGroup(head, body).scale(scale).move_to(pos)
+    """🧍 Physical Fundamentals occupant — the comfort target of the strategy."""
+    return person_glyph(pos, color=color, scale=1.09 * scale)
 
 
 def _badge(title, value, color=P_TEAL):
@@ -102,6 +101,16 @@ def _fan(pos, color, radius=0.24):
         for a in (0.0, TAU / 3, 2 * TAU / 3)
     ])
     return VGroup(ring, blades).move_to(pos)
+
+
+def _spin(fans, rt: float, period: float = 0.9):
+    """🔄 Turn the blades of every ``_fan`` for ``rt`` seconds."""
+    return [Rotate(f[1], angle=-TAU * rt / period, about_point=f[0].get_center(), rate_func=linear) for f in fans]
+
+
+def _streams(streams, rt: float, *, speed: float = 0.85, waves: int = 3):
+    """💨 Continuous particle streams for ``rt`` seconds at a steady ``speed`` in passes per second."""
+    return flow_animation([(list(p), *c) for p, *c in streams], waves=waves, cycles=speed * rt)
 
 
 def _port(pos, color=P_WHITE):
@@ -149,28 +158,26 @@ class Beat1_PassivhausIdee(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        house_c = np.array([-4.05, 0.30, 0.0])
-        facade = Rectangle(width=3.0, height=2.1, color=P_WHITE, stroke_width=3).move_to(house_c)
-        roof = Polygon(
-            facade.get_corner(UL) + LEFT * 0.16,
-            facade.get_top() + UP * 0.68,
-            facade.get_corner(UR) + RIGHT * 0.16,
-            color=P_WHITE, stroke_width=3,
-        )
-        win = _window(house_c + UP * 0.30, height=0.80, width=1.05)
-        ground = Line(house_c + LEFT * 2.05 + DOWN * 1.38, house_c + RIGHT * 2.05 + DOWN * 1.38,
-                      color=P_TEAL, stroke_width=4)
-        person = _person(house_c + DOWN * 0.66 + RIGHT * 0.05, color=P_ORANGE, scale=0.9)
-        house = VGroup(ground, facade, roof, win, person)
-        fit_band(house)
+        hs = house_section(np.array([-3.85, -0.05, 0.0]), scale=0.8)
+        bl, br, tl, tr, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
+        lo_win, up_win = hs["windows"]
+        person = _person(np.array([-3.25, bl[1] + 0.02 + 0.66 * 1.09 * 0.8 / 2, 0.0]), color=P_ORANGE, scale=0.8)
+        house = VGroup(hs["group"], person)
 
-        envelope = SurroundingRectangle(
-            VGroup(facade, roof), color=P_TEAL, buff=0.20, corner_radius=0.08, stroke_width=3,
-        )
+        off = 0.09
+        envelope = VMobject(color=P_TEAL, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
+            bl + LEFT * off, tl + LEFT * off, tl + LEFT * (0.26 * 0.8 + off) + UP * 0.02, peak + UP * off,
+            tr + RIGHT * (0.26 * 0.8 + off) + UP * 0.02, tr + RIGHT * off, br + RIGHT * off,
+        ])
         louvre = VGroup(*[
-            Line(win.get_left() + UP * dy, win.get_right() + UP * dy, color=P_TEAL, stroke_width=3)
-            for dy in (-0.22, -0.04, 0.14, 0.32)
-        ]).move_to(win.get_center())
+            Line(np.array([up_win["x"] - 0.42, y + 0.09, 0.0]), np.array([up_win["x"] - 0.24, y - 0.09, 0.0]),
+                 color=P_TEAL, stroke_width=3)
+            for y in np.linspace(up_win["sill"] + 0.02, up_win["lintel"] - 0.02, 4)
+        ])
+        warm_spots = [person.get_top() + UP * 0.05, np.array([-2.75, hs["level_1"].get_center()[1] + 0.02, 0.0])]
+
+        def heat(rt, r_max=0.45):
+            return [ripples(warm_spots, r_max=r_max, cycles=rt / 1.4)]
 
         load_bar = meter("Kühllast", length=4.5, thickness=0.5, color=P_RED, vertical=False)
         load_bar["group"].move_to(np.array([2.35, 1.62, 0.0]))
@@ -198,48 +205,53 @@ class Beat1_PassivhausIdee(Scene):
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.34)
         steps.move_to(np.array([2.55, -0.30, 0.0]))
 
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
-
-        self.play(Create(ground), Create(facade), Create(roof), run_time=1.5)
-        self.play(FadeIn(win), FadeIn(person), run_time=0.8)
-        self.play(FadeIn(load_bar["group"]), FadeIn(share_full), run_time=1.0)
+        self.play(Create(hs["group"]), run_time=1.5)
+        self.play(FadeIn(person), *heat(0.8), run_time=0.8)
+        self.play(FadeIn(load_bar["group"]), FadeIn(share_full), *heat(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.8 + 1.0,
+                 during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "envelope"))
-        self.play(Create(envelope), Create(louvre), run_time=1.2)
+        self.play(Create(envelope), Create(louvre), *heat(1.2), run_time=1.2)
         self.play(
             load.animate.set_value(0.55),
             ReplacementTransform(share_full, share_mid),
             load_bar["fill"].animate.set_fill(P_YELLOW),
-            FadeIn(steps[0], shift=RIGHT * 0.2),
+            FadeIn(steps[0], shift=RIGHT * 0.2), *heat(1.7, 0.32),
             run_time=1.7,
         )
-        hold_for(self, self.NARRATION, "envelope", used=1.2 + 1.7 + 0.35)
+        hold_for(self, self.NARRATION, "envelope", during=lambda rt: heat(rt, 0.3))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "natural"))
-        breeze = VGroup(
-            smooth_path([
-                win.get_left() + LEFT * 1.0 + DOWN * 0.10,
-                win.get_center() + DOWN * 0.05,
-                facade.get_right() + RIGHT * 0.55 + UP * 0.30,
-            ]),
+
+        def _through(w, inward):
+            x, y = w["x"], w["center"][1]
+            band = 0.06 if inward else -0.06
+            pts = [(x - 0.95, y - band - 0.1), (x - 0.2, y - band), (x + 0.5, y - band), (x + 1.25, y - band * 2.5)]
+            return smooth_path([np.array([px, py, 0.0]) for px, py in (pts if inward else pts[::-1])])
+
+        breeze_in = VGroup(*[_through(w, True) for w in (lo_win, up_win)])
+        breeze_out = VGroup(*[_through(w, False) for w in (lo_win, up_win)])
+
+        def breeze(rt):
+            return [_streams([(breeze_in, P_CYAN), (breeze_out, P_ORANGE)], rt), *heat(rt, 0.22)]
+
+        self.play(FadeIn(steps[1], shift=RIGHT * 0.2),
+                  Create(flow_guides(breeze_in, P_CYAN)), Create(flow_guides(breeze_out, P_ORANGE)), run_time=0.9)
+        self.play(
+            load.animate.set_value(0.20),
+            ReplacementTransform(share_mid, share_low),
+            load_bar["fill"].animate.set_fill(P_ORANGE), *breeze(2.4),
+            run_time=2.4,
         )
-        self.play(FadeIn(steps[1], shift=RIGHT * 0.2), Create(flow_guides(breeze, P_CYAN)), run_time=0.9)
-        animate_flow(
-            self, breeze, P_CYAN, run_time=2.4, waves=4, cycles=2.2,
-            extra=[
-                load.animate.set_value(0.20),
-                ReplacementTransform(share_mid, share_low),
-                load_bar["fill"].animate.set_fill(P_ORANGE),
-            ],
-        )
-        hold_for(self, self.NARRATION, "natural", used=0.9 + 2.4 + 0.35)
+        hold_for(self, self.NARRATION, "natural", during=breeze)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reserve"))
         load_bar["fill"].clear_updaters()
         rest_ring = SurroundingRectangle(load_bar["fill"], color=P_ORANGE, buff=0.06, stroke_width=3, corner_radius=0.05)
-        self.play(FadeIn(steps[2], shift=RIGHT * 0.2), Create(rest_ring), run_time=1.0)
-        self.play(Indicate(steps[2], color=P_ORANGE), run_time=1.0)
-        hold_for(self, self.NARRATION, "reserve", used=1.0 + 1.0 + 0.35)
+        self.play(FadeIn(steps[2], shift=RIGHT * 0.2), Create(rest_ring), *breeze(1.0), run_time=1.0)
+        self.play(Indicate(steps[2], color=P_ORANGE), *breeze(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "reserve", during=breeze)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -328,9 +340,10 @@ class Beat2_Fensterregeln(Scene):
         scaffold = VGroup(room, floor, wash, person, frame, sash, gap, open_pct, outdoor_cool)
         fit_band(scaffold)
 
-        stuffy = radiation_waves(
-            person.get_top() + UP * 0.05, n=3, color=P_RED, height=0.95, x_spread=0.34,
-        )
+        stuffy_spots = [person.get_top() + UP * 0.05, person.get_top() + RIGHT * 1.3 + DOWN * 0.3]
+
+        def stuffy(rt, r_max=0.6, color=P_RED):
+            return [ripples(stuffy_spots, r_max=r_max, color=color, cycles=rt / 1.4)]
 
         air = meter("Luftwechsel n", length=2.5, thickness=0.55, color=P_CYAN)
         air["group"].move_to(np.array([3.45, 0.15, 0.0]))
@@ -372,20 +385,18 @@ class Beat2_Fensterregeln(Scene):
         rule = Text("Fenster = Regler, kein Schalter", font_size=BODY_FONT_SIZE, color=P_YELLOW)
         rule.move_to(np.array([room_c[0], -1.78, 0.0]))
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        def draft(rt, speed=0.8, color=P_CYAN, color_end=None, waves=3):
+            return [_streams([(gentle, color, color_end)], rt, speed=speed, waves=waves)]
 
         self.add(wash)
         self.play(Create(room), Create(floor), FadeIn(person), run_time=1.3)
         self.play(FadeIn(frame), FadeIn(sash), FadeIn(gap), FadeIn(open_pct), run_time=0.8)
         self.play(FadeIn(air["group"]), FadeIn(comfort), FadeIn(comfort_lbl), FadeIn(n_low), run_time=1.0)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.8 + 1.0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "closed"))
-        self.play(
-            wash.animate.set_fill(P_RED, opacity=0.24),
-            Create(stuffy),
-            run_time=1.4,
-        )
-        hold_for(self, self.NARRATION, "closed", used=1.4 + 0.35)
+        self.play(wash.animate.set_fill(P_RED, opacity=0.24), *stuffy(1.4), run_time=1.4)
+        hold_for(self, self.NARRATION, "closed", during=stuffy)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "partial"))
         self.play(
@@ -395,15 +406,15 @@ class Beat2_Fensterregeln(Scene):
             ReplacementTransform(n_low, n_mid),
             air["fill"].animate.set_fill(P_GREEN),
             wash.animate.set_fill(P_CYAN, opacity=0.07),
-            FadeOut(stuffy),
+            *stuffy(1.6, 0.35),
             run_time=1.6,
         )
         self.play(Create(flow_guides(gentle, P_CYAN)), run_time=0.6)
-        animate_flow(self, gentle, P_CYAN, run_time=2.4, waves=3, cycles=1.9)
-        hold_for(self, self.NARRATION, "partial", used=1.6 + 0.6 + 2.4 + 0.35)
+        self.play(*draft(2.4), run_time=2.4)
+        hold_for(self, self.NARRATION, "partial", during=draft)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cooler"))
-        self.play(FadeIn(outdoor_cool), run_time=0.6)
+        self.play(FadeIn(outdoor_cool), *draft(0.6), run_time=0.6)
         self.play(
             opening.animate.set_value(0.85),
             rate.animate.set_value(0.85),
@@ -411,11 +422,11 @@ class Beat2_Fensterregeln(Scene):
             ReplacementTransform(n_mid, n_high),
             air["fill"].animate.set_fill(P_BLUE),
             wash.animate.set_fill(P_BLUE, opacity=0.14),
-            FadeIn(tag_flush),
+            FadeIn(tag_flush), *draft(1.5, 1.2, P_BLUE, P_ORANGE, 4),
             run_time=1.5,
         )
-        animate_flow(self, gentle, P_BLUE, run_time=2.2, waves=4, cycles=2.6, color_end=P_ORANGE)
-        hold_for(self, self.NARRATION, "cooler", used=0.6 + 1.5 + 2.2 + 0.35)
+        self.play(*draft(2.2, 1.2, P_BLUE, P_ORANGE, 4), run_time=2.2)
+        hold_for(self, self.NARRATION, "cooler", during=lambda rt: draft(rt, 1.2, P_BLUE, P_ORANGE, 4))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "hotter"))
         self.play(
@@ -427,14 +438,15 @@ class Beat2_Fensterregeln(Scene):
             air["fill"].animate.set_fill(P_ORANGE),
             wash.animate.set_fill(P_RED, opacity=0.12),
             ReplacementTransform(tag_flush, tag_throttle),
+            *draft(1.6, 0.45, P_ORANGE, None, 2),
             run_time=1.6,
         )
-        hold_for(self, self.NARRATION, "hotter", used=1.6 + 0.35)
+        hold_for(self, self.NARRATION, "hotter", during=lambda rt: draft(rt, 0.45, P_ORANGE, None, 2))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rule"))
         band_ring = SurroundingRectangle(comfort, color=P_GREEN, buff=0.06, stroke_width=3, corner_radius=0.05)
-        self.play(FadeIn(rule), Create(band_ring), run_time=1.0)
-        hold_for(self, self.NARRATION, "rule", used=1.0 + 0.35)
+        self.play(FadeIn(rule), Create(band_ring), *draft(1.0, 0.45, P_ORANGE, None, 2), run_time=1.0)
+        hold_for(self, self.NARRATION, "rule", during=lambda rt: draft(rt, 0.45, P_ORANGE, None, 2))
         sash.clear_updaters()
         air["fill"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
@@ -549,10 +561,9 @@ class Beat3_Querlueftung(Scene):
         _inner = items["root"][0][2][0][1]
         items["a1"], items["a2"] = _inner[0], _inner[2]
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
-
         self.play(Create(room), Create(floor), FadeIn(person), run_time=1.3)
         self.play(FadeIn(left_win), FadeIn(right_win), FadeIn(a1_lbl), FadeIn(a2_lbl), run_time=0.9)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.9)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "pressure"))
         self.play(
@@ -560,30 +571,34 @@ class Beat3_Querlueftung(Scene):
             FadeIn(wind_lbl), FadeIn(luv), FadeIn(lee),
             run_time=1.5,
         )
+        def through(rt, paths=cross, color=P_GREEN, speed=0.85, waves=4):
+            return [_streams([(paths, color)], rt, speed=speed, waves=waves)]
+
         guides = flow_guides(cross, P_GREEN)
         self.play(Create(guides), run_time=0.7)
-        animate_flow(self, cross, P_GREEN, run_time=2.8, waves=4, cycles=2.4)
-        hold_for(self, self.NARRATION, "pressure", used=1.5 + 0.7 + 2.8 + 0.35)
+        self.play(*through(2.8), run_time=2.8)
+        hold_for(self, self.NARRATION, "pressure", during=through)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         rest = VGroup(*[
             m for m in eq.submobjects
             if m is not items["a1"] and m is not items["a2"]
         ])
-        self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide), run_time=0.9)
+        self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide), *through(0.9), run_time=0.9)
         self.play(
             ReplacementTransform(a1_lbl.copy(), items["a1"]),
             ReplacementTransform(a2_lbl.copy(), items["a2"]),
+            *through(1.2),
             run_time=1.2,
         )
-        hold_for(self, self.NARRATION, "formula", used=0.9 + 1.2 + 0.35)
+        hold_for(self, self.NARRATION, "formula", during=through)
 
         for key, win, color in (("a1", left_win, P_GREEN), ("a2", right_win, P_ORANGE)):
             ring = highlight_param(items, key, color=color)
-            self.play(Create(ring), Indicate(win, color=color, scale_factor=1.2), run_time=0.55)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.55 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            self.play(Create(ring), Indicate(win, color=color, scale_factor=1.2), *through(0.55), run_time=0.55)
+            hold_for(self, self.NARRATION, key, during=through)
+            self.play(FadeOut(ring), *through(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "limit"))
         a2_ring = highlight_param(items, "a2", color=P_RED)
@@ -595,7 +610,7 @@ class Beat3_Querlueftung(Scene):
             Create(a2_ring),
             run_time=1.3,
         )
-        animate_flow(self, cross_thin, P_RED, run_time=2.6, waves=2, cycles=0.8)
+        self.play(*through(2.6, cross_thin, P_RED, 0.3, 2), run_time=2.6)
         guides = flow_guides(cross, P_GREEN)
         self.play(
             right_win.animate.stretch_to_fit_height(1.15),
@@ -604,12 +619,12 @@ class Beat3_Querlueftung(Scene):
             FadeOut(a2_ring),
             run_time=1.1,
         )
-        animate_flow(self, cross, P_GREEN, run_time=2.0, waves=4, cycles=2.4)
-        hold_for(self, self.NARRATION, "limit", used=1.3 + 2.6 + 1.1 + 2.0 + 0.35)
+        self.play(*through(2.0), run_time=2.0)
+        hold_for(self, self.NARRATION, "limit", during=through)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "passive"))
-        self.play(ReplacementTransform(aeff_wide, tip), run_time=0.9)
-        hold_for(self, self.NARRATION, "passive", used=0.9 + 0.35)
+        self.play(ReplacementTransform(aeff_wide, tip), *through(0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "passive", during=through)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -720,13 +735,18 @@ class Beat4_Auftrieb(Scene):
         )
         legend.move_to(np.array([1.55, 1.55, 0.0]))
 
-        warm = radiation_waves(
-            np.array([-2.30, -1.18, 0.0]), n=3, color=P_ORANGE, height=1.35, x_spread=0.55,
-        )
-
         scaffold = VGroup(room, floor, inlet, inlet_lbl, person,
                           shaft_walls, outlet, outlet_lbl, legend)
         fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
+
+        warm_spots = [person.get_top() + UP * 0.05, np.array([-2.30, floor.get_top()[1] + 0.02, 0.0])]
+        stack = {"paths": None, "speed": 0.65}
+
+        def warmth(rt, r_max=0.55):
+            return [ripples(warm_spots, r_max=r_max, color=P_ORANGE, cycles=rt / 1.4)]
+
+        def rising(rt):
+            return [_streams([(stack["paths"], P_CYAN, P_ORANGE)], rt, speed=stack["speed"]), *warmth(rt, 0.4)]
 
         dp = meter("Δp", length=2.2, thickness=0.52, color=P_YELLOW)
         dp["group"].move_to(np.array([4.65, 0.35, 0.0]))
@@ -744,24 +764,23 @@ class Beat4_Auftrieb(Scene):
             (None, r"\;[\mathrm{Pa}]", P_TEAL),
         ], color=P_YELLOW)
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
-
         self.play(Create(room), Create(floor), FadeIn(inlet), FadeIn(inlet_lbl), FadeIn(person), run_time=1.4)
-        self.play(Create(warm), run_time=1.1)
+        self.play(*warmth(1.1), run_time=1.1)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.1, during=warmth)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "shaft"))
-        self.play(Create(shaft_walls), Create(outlet), FadeIn(outlet_lbl), run_time=1.2)
-        self.play(FadeIn(legend), FadeOut(warm), run_time=0.8)
-        stack_low = self._stack_paths(inlet.get_center(), room_top, self.TOP_LOW)
+        self.play(Create(shaft_walls), Create(outlet), FadeIn(outlet_lbl), *warmth(1.2), run_time=1.2)
+        self.play(FadeIn(legend), *warmth(0.8), run_time=0.8)
+        stack["paths"] = stack_low = self._stack_paths(inlet.get_center(), room_top, self.TOP_LOW)
         guides_low = flow_guides(stack_low, P_ORANGE)
-        self.play(Create(guides_low), run_time=0.6)
-        animate_flow(self, stack_low, P_ORANGE, run_time=2.6, waves=3, cycles=1.6)
-        hold_for(self, self.NARRATION, "shaft", used=1.2 + 0.8 + 0.6 + 2.6 + 0.35)
+        self.play(Create(guides_low), *warmth(0.6), run_time=0.6)
+        self.play(*rising(2.6), run_time=2.6)
+        hold_for(self, self.NARRATION, "shaft", during=rising)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeIn(eq), Create(eq_box), run_time=1.0)
-        self.play(FadeIn(dp["group"]), press.animate.set_value(0.40), FadeIn(dp_lo), run_time=1.0)
-        hold_for(self, self.NARRATION, "formula", used=1.0 + 1.0 + 0.35)
+        self.play(FadeIn(eq), Create(eq_box), *rising(1.0), run_time=1.0)
+        self.play(FadeIn(dp["group"]), press.animate.set_value(0.40), FadeIn(dp_lo), *rising(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "formula", during=rising)
 
         h_dim = dim_arrow(
             np.array([-0.30, inlet.get_center()[1], 0.0]),
@@ -772,9 +791,9 @@ class Beat4_Auftrieb(Scene):
         h_tok.next_to(h_dim, LEFT, buff=0.14).shift(RIGHT * 0.16)
         ring_h = highlight_param(items, "h", color=P_CYAN)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "h"))
-        self.play(Create(h_dim), FadeIn(h_tok), Create(ring_h), run_time=1.0)
-        hold_for(self, self.NARRATION, "h", used=1.0 + 0.35)
-        self.play(FadeOut(ring_h), run_time=0.25)
+        self.play(Create(h_dim), FadeIn(h_tok), Create(ring_h), *rising(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "h", during=rising)
+        self.play(FadeOut(ring_h), *rising(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rho"))
         ring_rho = highlight_param(items, "rho", color=P_BLUE)
@@ -782,10 +801,11 @@ class Beat4_Auftrieb(Scene):
             Create(ring_rho),
             Indicate(legend_rows[0], color=P_BLUE),
             Indicate(legend_rows[1], color=P_ORANGE),
+            *rising(1.0),
             run_time=1.0,
         )
-        hold_for(self, self.NARRATION, "rho", used=1.0 + 0.35)
-        self.play(FadeOut(ring_rho), run_time=0.25)
+        hold_for(self, self.NARRATION, "rho", during=rising)
+        self.play(FadeOut(ring_rho), *rising(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "taller"))
         rise = self.TOP_HIGH - self.TOP_LOW
@@ -810,19 +830,20 @@ class Beat4_Auftrieb(Scene):
             ReplacementTransform(dp_lo, dp_hi),
             run_time=1.6,
         )
-        stack_high = self._stack_paths(inlet.get_center(), room_top, self.TOP_HIGH)
+        stack["paths"] = stack_high = self._stack_paths(inlet.get_center(), room_top, self.TOP_HIGH)
+        stack["speed"] = 1.1
         self.play(Create(flow_guides(stack_high, P_ORANGE)), run_time=0.5)
-        animate_flow(self, stack_high, P_ORANGE, run_time=2.4, waves=4, cycles=3.2)
-        hold_for(self, self.NARRATION, "taller", used=1.6 + 0.5 + 2.4 + 0.35)
+        self.play(*rising(2.4), run_time=2.4)
+        hold_for(self, self.NARRATION, "taller", during=rising)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "comfort"))
         low_ring = SurroundingRectangle(VGroup(inlet, person), color=P_CYAN, buff=0.12,
                                         corner_radius=0.08, stroke_width=2.5)
         high_ring = SurroundingRectangle(outlet[0], color=P_ORANGE, buff=0.14,
                                          corner_radius=0.08, stroke_width=2.5)
-        self.play(Create(low_ring), Create(high_ring), run_time=1.0)
-        self.play(Indicate(person, color=P_ORANGE), run_time=0.9)
-        hold_for(self, self.NARRATION, "comfort", used=1.0 + 0.9 + 0.35)
+        self.play(Create(low_ring), Create(high_ring), *rising(1.0), run_time=1.0)
+        self.play(Indicate(person, color=P_ORANGE), *rising(0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "comfort", during=rising)
         dp["fill"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -929,7 +950,8 @@ class Beat5_Nachtlueftung(Scene):
         keys.move_to(np.array([4.85, -0.55, 0.0]))
 
         room_c = np.array([4.85, 1.55, 0.0])
-        icon = Rectangle(width=2.1, height=1.25, color=P_WHITE, stroke_width=2.5).move_to(room_c)
+        icon = Rectangle(width=2.1, height=1.25, stroke_width=0).move_to(room_c)
+        icon_room = _room(room_c, 2.1, 1.25, t=0.12)
         mass = Rectangle(
             width=1.85, height=0.42, stroke_width=0,
             fill_color=P_RED, fill_opacity=0.0,
@@ -944,26 +966,14 @@ class Beat5_Nachtlueftung(Scene):
         )
         # Sky object sits outside the room icon, above its top-left corner.
         sky_pos = icon.get_corner(UL) + LEFT * 0.42 + UP * 0.44
-        sun = VGroup(
-            Circle(radius=0.16, color=P_YELLOW, stroke_width=2.5,
-                   fill_color=P_YELLOW, fill_opacity=0.35),
-            *[
-                Line(ORIGIN, RIGHT * 0.12, color=P_YELLOW, stroke_width=2)
-                .rotate(a, about_point=ORIGIN).shift(RIGHT * 0.22 * np.cos(a) + UP * 0.22 * np.sin(a))
-                for a in np.linspace(0, 2 * np.pi, 8, endpoint=False)
-            ],
-        ).move_to(sky_pos)
+        sun = sun_glyph(sky_pos).scale(0.32)
         moon = VGroup(
-            Difference(
-                Circle(radius=0.20),
-                Circle(radius=0.20).shift(RIGHT * 0.12 + UP * 0.04),
-                color=P_WHITE, fill_color=P_WHITE, fill_opacity=0.9, stroke_width=1.4,
-            ),
+            moon_glyph(sky_pos).scale(0.85),
             *[
-                Dot(radius=0.03, color=P_WHITE, fill_opacity=0.85).shift(RIGHT * dx + UP * dy)
+                Dot(sky_pos + RIGHT * dx + UP * dy, radius=0.03, color=P_WHITE, fill_opacity=0.85)
                 for dx, dy in ((0.52, 0.16), (-0.34, 0.42), (0.28, -0.40))
             ],
-        ).move_to(sky_pos)
+        )
 
         schedule = VGroup(
             _badge("Nacht", "weit öffnen", P_BLUE),
@@ -972,25 +982,30 @@ class Beat5_Nachtlueftung(Scene):
         schedule.move_to(np.array([-1.35, -2.05, 0.0]))
 
         chart = VGroup(axes, x_ticks, x_unit, y_ticks, y_unit, comfort, comfort_lbl,
-                       keys, icon, mass, mass_lbl, icon_win, schedule)
+                       keys, icon, icon_room, mass, mass_lbl, icon_win, schedule)
         fit_band(chart)
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        mass_spots = [mass.get_top() + LEFT * 0.6, mass.get_top() + RIGHT * 0.6]
+
+        def stored(rt, color=P_RED):
+            return [ripples(mass_spots, r_max=0.32, color=color, cycles=rt / 1.3)]
 
         self.play(Create(axes), FadeIn(x_ticks), FadeIn(y_ticks), FadeIn(x_unit), FadeIn(y_unit), run_time=1.6)
         self.play(FadeIn(comfort), FadeIn(comfort_lbl), run_time=0.7)
         self.play(Create(outdoor), FadeIn(keys[0]), run_time=2.2)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6 + 0.7 + 2.2)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "day"))
-        self.play(Create(icon), FadeIn(icon_win), FadeIn(mass_lbl), FadeIn(sun), run_time=1.1)
+        self.play(Create(icon_room), FadeIn(icon_win), FadeIn(mass_lbl), FadeIn(sun), run_time=1.1)
         self.add(mass)
-        self.play(mass.animate.set_fill(P_RED, opacity=0.55), FadeIn(mass_hot), run_time=1.3)
-        hold_for(self, self.NARRATION, "day", used=1.1 + 1.3 + 0.35)
+        self.play(mass.animate.set_fill(P_RED, opacity=0.55), FadeIn(mass_hot), *stored(1.3), run_time=1.3)
+        hold_for(self, self.NARRATION, "day", during=stored)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "without"))
-        self.play(Create(sealed), FadeIn(keys[1]), run_time=2.2)
-        self.play(FadeIn(warn, shift=DOWN * 0.1), Indicate(sealed, color=P_RED, scale_factor=1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "without", used=2.2 + 1.0 + 0.35)
+        self.play(Create(sealed), FadeIn(keys[1]), *stored(2.2), run_time=2.2)
+        self.play(FadeIn(warn, shift=DOWN * 0.1), Indicate(sealed, color=P_RED, scale_factor=1.0), *stored(1.0),
+                  run_time=1.0)
+        hold_for(self, self.NARRATION, "without", during=stored)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "night"))
         self.play(
@@ -1001,19 +1016,23 @@ class Beat5_Nachtlueftung(Scene):
         sweep = VGroup(
             smooth_path([
                 icon.get_left() + UP * 0.28,
-                icon.get_center() + DOWN * 0.18,
+                icon.get_center() + DOWN * 0.02,
                 icon.get_right() + UP * 0.28,
             ]),
         )
+        def purge(rt):
+            return [_streams([(sweep, P_BLUE, P_ORANGE)], rt, speed=1.0, waves=4), *stored(rt, P_ORANGE)]
+
         self.play(Create(flow_guides(sweep, P_BLUE)), run_time=0.5)
-        animate_flow(self, sweep, P_BLUE, run_time=2.2, waves=4, cycles=2.4, color_end=P_ORANGE)
-        hold_for(self, self.NARRATION, "night", used=1.0 + 0.5 + 2.2 + 0.35)
+        self.play(*purge(2.2), run_time=2.2)
+        hold_for(self, self.NARRATION, "night", during=purge)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "result"))
         self.play(
             Create(purged), FadeIn(keys[2]),
             mass.animate.set_fill(P_BLUE, opacity=0.45),
             ReplacementTransform(mass_hot, mass_cool),
+            _streams([(sweep, P_BLUE, P_ORANGE)], 2.2, speed=1.0, waves=4),
             run_time=2.2,
         )
         peak = 42.0
@@ -1115,7 +1134,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
             buff=0, color=P_ORANGE, stroke_width=4, max_tip_length_to_length_ratio=0.24,
         )
         lost_tag = Text("ungenutzt", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        lost_tag.next_to(lost, UP, buff=0.14).shift(LEFT * 0.15)
+        lost_tag.next_to(lost, UP, buff=0.12).set_x(room.get_left()[0] - 0.12 - lost_tag.width / 2)
 
         gaps = VGroup(*[
             VGroup(cross_mark(), Text(t, font_size=BODY_FONT_SIZE, color=P_WHITE)).arrange(RIGHT, buff=0.22)
@@ -1139,44 +1158,51 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         rate = ValueTracker(0.50)
         bind_meter(vol, rate)
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        air = {"in": (P_CYAN,), "out": (P_CYAN,), "speed": 0.9}
+
+        def exchange(rt):
+            return [_streams([(inflow, *air["in"]), (outflow, *air["out"])], rt, speed=air["speed"])]
 
         self.add(wash)
         self.play(Create(room), Create(floor), FadeIn(win), FadeIn(person), run_time=1.3)
         self.play(Create(flow_guides(inflow, P_CYAN)), Create(flow_guides(outflow, P_CYAN)), run_time=0.7)
-        animate_flow(self, VGroup(*inflow, *outflow), P_CYAN, run_time=1.8, waves=3, cycles=1.8)
+        self.play(*exchange(1.8), run_time=1.8)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.7 + 1.8, during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "hot"))
-        self.play(FadeIn(outdoor), wash.animate.set_fill(P_RED, opacity=0.22), run_time=1.1)
-        animate_flow(self, inflow, P_RED, run_time=2.0, waves=3, cycles=1.8)
-        self.play(FadeIn(gaps[0], shift=RIGHT * 0.2), run_time=0.7)
-        hold_for(self, self.NARRATION, "hot", used=1.1 + 2.0 + 0.7 + 0.35)
+        air["in"] = (P_RED, P_ORANGE)
+        self.play(FadeIn(outdoor), wash.animate.set_fill(P_RED, opacity=0.22), *exchange(1.1), run_time=1.1)
+        self.play(*exchange(2.0), run_time=2.0)
+        self.play(FadeIn(gaps[0], shift=RIGHT * 0.2), *exchange(0.7), run_time=0.7)
+        hold_for(self, self.NARRATION, "hot", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "filter"))
         self.play(
             LaggedStart(*[FadeIn(d, scale=0.4) for d in grime], lag_ratio=0.06),
-            FadeIn(grime_tag), FadeIn(gaps[1], shift=RIGHT * 0.2),
+            FadeIn(grime_tag), FadeIn(gaps[1], shift=RIGHT * 0.2), *exchange(1.8),
             run_time=1.8,
         )
-        hold_for(self, self.NARRATION, "filter", used=1.8 + 0.35)
+        hold_for(self, self.NARRATION, "filter", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "control"))
-        self.play(FadeIn(vol["group"]), run_time=0.7)
+        self.play(FadeIn(vol["group"]), *exchange(0.7), run_time=0.7)
         for level in (0.82, 0.22, 0.95, 0.38):
-            self.play(rate.animate.set_value(level), run_time=0.5)
-        self.play(FadeIn(gaps[2], shift=RIGHT * 0.2), run_time=0.7)
-        hold_for(self, self.NARRATION, "control", used=0.7 + 2.0 + 0.7 + 0.35)
+            air["speed"] = 0.4 + 1.2 * level
+            self.play(rate.animate.set_value(level), *exchange(0.5), run_time=0.5)
+        self.play(FadeIn(gaps[2], shift=RIGHT * 0.2), *exchange(0.7), run_time=0.7)
+        hold_for(self, self.NARRATION, "control", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "recovery"))
-        self.play(GrowArrow(lost), FadeIn(lost_tag), run_time=0.9)
-        animate_flow(self, outflow, P_ORANGE, run_time=1.8, waves=3, cycles=1.8)
-        self.play(FadeIn(gaps[3], shift=RIGHT * 0.2), run_time=0.7)
-        hold_for(self, self.NARRATION, "recovery", used=0.9 + 1.8 + 0.7 + 0.35)
+        air["out"] = (P_ORANGE,)
+        self.play(GrowArrow(lost), FadeIn(lost_tag), *exchange(0.9), run_time=0.9)
+        self.play(*exchange(1.8), run_time=1.8)
+        self.play(FadeIn(gaps[3], shift=RIGHT * 0.2), *exchange(0.7), run_time=0.7)
+        hold_for(self, self.NARRATION, "recovery", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "handover"))
-        self.play(Indicate(gaps, color=P_RED, scale_factor=1.04), run_time=1.0)
-        self.play(FadeIn(handover, shift=UP * 0.14), run_time=0.9)
-        hold_for(self, self.NARRATION, "handover", used=1.0 + 0.9 + 0.35)
+        self.play(Indicate(gaps, color=P_RED, scale_factor=1.04), *exchange(1.0), run_time=1.0)
+        self.play(FadeIn(handover, shift=UP * 0.14), *exchange(0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "handover", during=exchange)
         vol["fill"].clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1318,7 +1344,12 @@ class Beat7_MechanischeGrundtypen(Scene):
                           bal_sup, bal_exh, bal_in, bal_out, signs, sign_tags, port_tags, verdict)
         fit_band(scaffold)
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        running = {"streams": [], "fans": []}
+
+        def machines(rt):
+            if not running["streams"]:
+                return []
+            return [_streams(running["streams"], rt, speed=0.8), *_spin(running["fans"], rt)]
 
         self.play(
             LaggedStart(*[Create(r) for r in rooms], lag_ratio=0.22),
@@ -1326,35 +1357,32 @@ class Beat7_MechanischeGrundtypen(Scene):
             LaggedStart(*[FadeIn(h, shift=DOWN * 0.1) for h in headers], lag_ratio=0.22),
             run_time=2.0,
         )
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "exhaust"))
-        self.play(FadeIn(exh_fan), GrowArrow(exh_out), FadeIn(ald), FadeIn(port_tags[0]),
-                  Create(flow_guides(exh_paths, P_ORANGE)), run_time=1.4)
-        animate_flow(self, exh_paths, P_WHITE, run_time=2.4, waves=3, cycles=2.0, color_end=P_ORANGE)
-        self.play(FadeIn(signs[0], scale=1.2), FadeIn(sign_tags[0]), run_time=0.8)
-        hold_for(self, self.NARRATION, "exhaust", used=1.4 + 2.4 + 0.8 + 0.35)
-
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "supply"))
-        self.play(FadeIn(sup_fan), GrowArrow(sup_in), FadeIn(leak), FadeIn(port_tags[1]),
-                  Create(flow_guides(sup_paths, P_CYAN)), run_time=1.4)
-        animate_flow(self, sup_paths, P_CYAN, run_time=2.4, waves=3, cycles=2.0, color_end=P_WHITE)
-        self.play(FadeIn(signs[1], scale=1.2), FadeIn(sign_tags[1]), run_time=0.8)
-        hold_for(self, self.NARRATION, "supply", used=1.4 + 2.4 + 0.8 + 0.35)
-
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "balanced"))
-        self.play(FadeIn(bal_sup), FadeIn(bal_exh), GrowArrow(bal_in), GrowArrow(bal_out),
-                  FadeIn(port_tags[2]), Create(flow_guides(bal_paths, P_GREEN)), run_time=1.4)
-        animate_flow(self, bal_paths, P_CYAN, run_time=2.4, waves=3, cycles=2.0, color_end=P_ORANGE)
-        self.play(FadeIn(signs[2], scale=1.2), FadeIn(sign_tags[2]), run_time=0.8)
-        hold_for(self, self.NARRATION, "balanced", used=1.4 + 2.4 + 0.8 + 0.35)
+        for key, new_fans, extras, guide, stream, sign in (
+            ("exhaust", [exh_fan], [GrowArrow(exh_out), FadeIn(ald), FadeIn(port_tags[0])],
+             (exh_paths, P_ORANGE), (exh_paths, P_WHITE, P_ORANGE), 0),
+            ("supply", [sup_fan], [GrowArrow(sup_in), FadeIn(leak), FadeIn(port_tags[1])],
+             (sup_paths, P_CYAN), (sup_paths, P_CYAN, P_WHITE), 1),
+            ("balanced", [bal_sup, bal_exh], [GrowArrow(bal_in), GrowArrow(bal_out), FadeIn(port_tags[2])],
+             (bal_paths, P_GREEN), (bal_paths, P_CYAN, P_ORANGE), 2),
+        ):
+            caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
+            self.play(*[FadeIn(f) for f in new_fans], *extras, Create(flow_guides(*guide)), *machines(1.4),
+                      run_time=1.4)
+            running["streams"].append(stream)
+            running["fans"].extend(new_fans)
+            self.play(*machines(2.4), run_time=2.4)
+            self.play(FadeIn(signs[sign], scale=1.2), FadeIn(sign_tags[sign]), *machines(0.8), run_time=0.8)
+            hold_for(self, self.NARRATION, key, during=machines)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verdict"))
         pick = SurroundingRectangle(
             VGroup(rooms[2], headers[2], signs[2], sign_tags[2], port_tags[2], bal_in, bal_out),
             color=P_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5,
         )
-        self.play(Create(pick), FadeIn(verdict, shift=UP * 0.12), run_time=1.3)
-        hold_for(self, self.NARRATION, "verdict", used=1.3 + 0.35)
+        self.play(Create(pick), FadeIn(verdict, shift=UP * 0.12), *machines(1.3), run_time=1.3)
+        hold_for(self, self.NARRATION, "verdict", during=machines)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -1455,50 +1483,55 @@ class Beat8_Waermerueckgewinnung(Scene):
         ], color=P_YELLOW)
         items["num"] = items["frac"][0]
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        running = []
+
+        def exchanger(rt):
+            return [_streams(running, rt, speed=0.9, waves=4)] if running else []
 
         self.play(Create(core), Create(plates), FadeIn(core_tag), FadeIn(core_note), run_time=1.8)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.8)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "supply"))
         self.play(Create(flow_guides(supply, P_RED, opacity=0.28)), FadeIn(aul), run_time=1.0)
-        animate_flow(self, supply, P_RED, run_time=2.2, waves=4, cycles=2.0, color_end=P_CYAN)
-        self.play(FadeIn(zul), run_time=0.6)
-        hold_for(self, self.NARRATION, "supply", used=1.0 + 2.2 + 0.6 + 0.35)
+        running.append((supply, P_RED, P_CYAN))
+        self.play(*exchanger(2.2), run_time=2.2)
+        self.play(FadeIn(zul), *exchanger(0.6), run_time=0.6)
+        hold_for(self, self.NARRATION, "supply", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "exhaust"))
-        self.play(Create(flow_guides(exhaust, P_TEAL, opacity=0.28)), FadeIn(abl), run_time=1.0)
-        animate_flow(self, exhaust, P_TEAL, run_time=2.2, waves=4, cycles=2.0, color_end=P_ORANGE)
-        self.play(FadeIn(fol), run_time=0.6)
-        hold_for(self, self.NARRATION, "exhaust", used=1.0 + 2.2 + 0.6 + 0.35)
+        self.play(Create(flow_guides(exhaust, P_TEAL, opacity=0.28)), FadeIn(abl), *exchanger(1.0), run_time=1.0)
+        running.append((exhaust, P_TEAL, P_ORANGE))
+        self.play(*exchanger(2.2), run_time=2.2)
+        self.play(FadeIn(fol), *exchanger(0.6), run_time=0.6)
+        hold_for(self, self.NARRATION, "exhaust", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "transfer"))
         self.play(
             LaggedStart(*[GrowArrow(a) for a in transfer], lag_ratio=0.25),
-            FadeIn(transfer_tag), run_time=1.2,
+            FadeIn(transfer_tag), *exchanger(1.2), run_time=1.2,
         )
-        animate_flow(
-            self, VGroup(*supply, *exhaust), P_RED, run_time=2.2, waves=4, cycles=2.2,
-            color_end=P_ORANGE,
-            extra=[LaggedStart(*[Indicate(a, color=P_YELLOW, scale_factor=1.15) for a in transfer],
-                               lag_ratio=0.3, run_time=2.2)],
+        self.play(
+            LaggedStart(*[Indicate(a, color=P_YELLOW, scale_factor=1.15) for a in transfer], lag_ratio=0.3),
+            *exchanger(2.2), run_time=2.2,
         )
-        hold_for(self, self.NARRATION, "transfer", used=1.2 + 2.2 + 0.35)
+        hold_for(self, self.NARRATION, "transfer", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeOut(core_note), FadeIn(eq), Create(eq_box), run_time=1.2)
+        self.play(FadeOut(core_note), FadeIn(eq), Create(eq_box), *exchanger(1.2), run_time=1.2)
         ring_num = highlight_param(items, "num", color=P_CYAN)
-        self.play(Create(ring_num), Indicate(zul, color=P_CYAN), run_time=0.8)
-        hold_for(self, self.NARRATION, "formula", used=1.2 + 0.8 + 0.35)
-        self.play(FadeOut(ring_num), run_time=0.25)
+        self.play(Create(ring_num), Indicate(zul, color=P_CYAN), *exchanger(0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "formula", during=exchanger)
+        self.play(FadeOut(ring_num), *exchanger(0.25), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "value"))
         ring_val = highlight_param(items, "val", color=P_YELLOW)
-        self.play(Create(ring_val), Indicate(items["val"], color=P_YELLOW, scale_factor=1.15), run_time=1.0)
-        hold_for(self, self.NARRATION, "value", used=1.0 + 0.35)
+        self.play(Create(ring_val), Indicate(items["val"], color=P_YELLOW, scale_factor=1.15), *exchanger(1.0),
+                  run_time=1.0)
+        hold_for(self, self.NARRATION, "value", during=exchanger)
 
         # 🪟 Der Widerspruch: ein offenes Fenster hat η = 0 — wer WRG braucht,
         # kann die freie Lüftung nicht als Hauptluftweg behalten.
-        self.play(FadeOut(ring_val), FadeOut(eq), FadeOut(eq_box), run_time=0.5)
+        self.play(FadeOut(ring_val), FadeOut(eq), FadeOut(eq_box), *exchanger(0.5), run_time=0.5)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "passivhaus"))
         open_win = _window(np.array([-3.3, -1.52, 0.0]), height=0.52, width=0.82)
         win_cross = cross_mark(size=0.2).move_to(open_win.get_center())
@@ -1508,9 +1541,9 @@ class Beat8_Waermerueckgewinnung(Scene):
             "Passivhaus ⇒ Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg",
             font_size=BODY_FONT_SIZE, color=P_ORANGE,
         ).move_to(np.array([0.3, -2.12, 0.0]))
-        self.play(FadeIn(open_win), Create(win_cross), FadeIn(win_eta), run_time=0.9)
-        self.play(FadeIn(ph_line, shift=UP * 0.1), run_time=0.8)
-        hold_for(self, self.NARRATION, "passivhaus", used=0.4 + 0.9 + 0.8 + 0.35)
+        self.play(FadeIn(open_win), Create(win_cross), FadeIn(win_eta), *exchanger(0.9), run_time=0.9)
+        self.play(FadeIn(ph_line, shift=UP * 0.1), *exchanger(0.8), run_time=0.8)
+        hold_for(self, self.NARRATION, "passivhaus", during=exchanger)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -1579,12 +1612,7 @@ class Beat9_SorptionsKuehlung(Scene):
 
         def _humidifier(pos, color=P_BLUE):
             box = Rectangle(width=0.72, height=0.72, color=color, stroke_width=2.4).move_to(pos)
-            drops = VGroup(*[
-                Circle(radius=0.05, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0)
-                .move_to(pos + np.array([dx, dy, 0.0]))
-                for dx, dy in ((-0.16, 0.14), (0.05, -0.05), (0.18, 0.16), (-0.04, -0.2))
-            ])
-            return VGroup(box, drops)
+            return VGroup(box, droplets(pos, n=5, spread=(0.2, 0.2), seed=5, color=color))
 
         hum_sup = _humidifier(np.array([2.0, y_sup, 0.0]))
         hum_exh = _humidifier(np.array([2.0, y_exh, 0.0]))
@@ -1599,15 +1627,9 @@ class Beat9_SorptionsKuehlung(Scene):
         # Below the regeneration heater: the solar duct stays on the exhaust
         # side and never crosses the supply-air state readouts above.
         sun_c = np.array([-1.5, -1.5, 0.0])
-        sun = VGroup(
-            Dot(sun_c, radius=0.15, color=P_YELLOW),
-            Circle(radius=0.23, color=P_YELLOW, stroke_width=1.6, stroke_opacity=0.6).move_to(sun_c),
-            *[Line(sun_c + 0.28 * d, sun_c + 0.38 * d, color=P_YELLOW, stroke_width=1.8)
-              for a in np.linspace(0, TAU, 8, endpoint=False)
-              for d in [np.array([np.cos(a), np.sin(a), 0.0])]],
-        )
+        sun = sun_glyph(sun_c).scale(0.34)
         solar_duct = DashedLine(
-            sun_c + UP * 0.42, heater.get_bottom() + DOWN * 0.04,
+            sun_c + UP * 0.36, heater.get_bottom() + DOWN * 0.04,
             color=P_YELLOW, stroke_width=2.4, dash_length=0.08,
         )
         solar_tag = Text("Solarwärme", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
@@ -1647,7 +1669,6 @@ class Beat9_SorptionsKuehlung(Scene):
             hum_sup, hum_exh, hum_tag, heater, coil,
         )
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
         self.play(
             Create(wheel), Create(wheel_spokes), FadeIn(wheel_tag),
             Create(hx), Create(hx_diag), FadeIn(hx_tag),
@@ -1658,19 +1679,23 @@ class Beat9_SorptionsKuehlung(Scene):
             FadeIn(end_tags[0]), FadeIn(end_tags[2]),
             run_time=2.6,
         )
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 2.6)
 
         def _spin(run_time):
-            return Rotate(wheel_spokes, angle=-TAU / 2, about_point=wheel_c,
+            return Rotate(wheel_spokes, angle=-TAU * run_time / 5.2, about_point=wheel_c,
                           run_time=run_time, rate_func=linear)
+
+        running = []
+
+        def dec(rt):
+            return [_streams(running, rt, speed=0.75, waves=5), _spin(rt)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "entfeuchten"))
         self.play(FadeIn(t_reads[0]), run_time=0.4)
-        animate_flows(
-            self, [([*sup_seg1], P_ORANGE, P_RED)],
-            run_time=2.6, waves=5, extra=[_spin(2.6)],
-        )
-        self.play(FadeIn(t_reads[1]), run_time=0.5)
-        hold_for(self, self.NARRATION, "entfeuchten", used=0.4 + 2.6 + 0.5 + 0.35)
+        running.append((sup_seg1, P_ORANGE, P_RED))
+        self.play(*dec(2.6), run_time=2.6)
+        self.play(FadeIn(t_reads[1]), *dec(0.5), run_time=0.5)
+        hold_for(self, self.NARRATION, "entfeuchten", during=dec)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "tauscher"))
         heat_down = VGroup(*[
@@ -1678,41 +1703,27 @@ class Beat9_SorptionsKuehlung(Scene):
                   buff=0, color=P_YELLOW, stroke_width=3, max_tip_length_to_length_ratio=0.3)
             for x in (-0.8, -0.3, 0.2)
         ])
-        animate_flows(
-            self, [([*sup_seg2], P_RED, P_YELLOW)],
-            run_time=2.4, waves=5,
-            extra=[LaggedStart(*[GrowArrow(a) for a in heat_down], lag_ratio=0.3, run_time=2.0)],
-        )
-        self.play(FadeIn(t_reads[2]), run_time=0.5)
-        hold_for(self, self.NARRATION, "tauscher", used=2.4 + 0.5 + 0.35)
+        running.append((sup_seg2, P_RED, P_YELLOW))
+        self.play(LaggedStart(*[GrowArrow(a) for a in heat_down], lag_ratio=0.3), *dec(2.4), run_time=2.4)
+        self.play(FadeIn(t_reads[2]), *dec(0.5), run_time=0.5)
+        hold_for(self, self.NARRATION, "tauscher", during=dec)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verdunsten"))
-        animate_flows(
-            self, [([*sup_seg3], P_YELLOW, P_CYAN)],
-            run_time=2.4, waves=5,
-            extra=[Indicate(hum_sup, color=P_BLUE, scale_factor=1.12)],
-        )
-        self.play(FadeIn(t_reads[3]), FadeIn(end_tags[1]), run_time=0.5)
-        hold_for(self, self.NARRATION, "verdunsten", used=2.4 + 0.5 + 0.35)
+        running.append((sup_seg3, P_YELLOW, P_CYAN))
+        self.play(Indicate(hum_sup, color=P_BLUE, scale_factor=1.12), *dec(2.4), run_time=2.4)
+        self.play(FadeIn(t_reads[3]), FadeIn(end_tags[1]), *dec(0.5), run_time=0.5)
+        hold_for(self, self.NARRATION, "verdunsten", during=dec)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "regeneration"))
-        self.play(FadeIn(sun, scale=0.7), FadeIn(solar_tag), Create(solar_duct), run_time=1.0)
-        animate_flows(
-            self,
-            [
-                ([*exh_seg1], P_TEAL, P_BLUE),
-                ([*exh_seg2], P_BLUE, P_ORANGE),
-                ([*exh_seg3], P_ORANGE, P_RED),
-            ],
-            run_time=3.0, waves=4,
-            extra=[
-                _spin(3.0),
-                heater.animate.set_fill(P_RED, opacity=0.25),
-                Indicate(sun, color=P_YELLOW, scale_factor=1.1),
-            ],
+        self.play(FadeIn(sun, scale=0.7), FadeIn(solar_tag), Create(solar_duct), *dec(1.0), run_time=1.0)
+        running.extend([(exh_seg1, P_TEAL, P_BLUE), (exh_seg2, P_BLUE, P_ORANGE), (exh_seg3, P_ORANGE, P_RED)])
+        self.play(
+            heater.animate.set_fill(P_RED, opacity=0.25),
+            Indicate(sun, color=P_YELLOW, scale_factor=1.1), *dec(3.0),
+            run_time=3.0,
         )
-        self.play(FadeIn(end_tags[3]), run_time=0.5)
-        hold_for(self, self.NARRATION, "regeneration", used=1.0 + 3.0 + 0.5 + 0.35)
+        self.play(FadeIn(end_tags[3]), *dec(0.5), run_time=0.5)
+        hold_for(self, self.NARRATION, "regeneration", during=dec)
 
         # 🦠 Mikrobieller Preis: Hitze-/Feuchtezyklen selektieren resistente Keime.
         def _microbe(pos, color):
@@ -1743,18 +1754,18 @@ class Beat9_SorptionsKuehlung(Scene):
         verdict = Text("Selektionsdruck:\nresistente Keime überleben",
                        font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
         verdict.move_to(np.array([2.9, strip_y, 0.0]))
-        self.play(FadeOut(VGroup(sun, solar_tag, solar_duct)), run_time=0.4)
-        self.play(FadeIn(panel), FadeIn(normal), FadeIn(tough), FadeIn(cycle_tag), run_time=0.9)
+        self.play(FadeOut(VGroup(sun, solar_tag, solar_duct)), *dec(0.4), run_time=0.4)
+        self.play(FadeIn(panel), FadeIn(normal), FadeIn(tough), FadeIn(cycle_tag), *dec(0.9), run_time=0.9)
         for flash in (P_RED, P_CYAN):
-            self.play(panel.animate.set_stroke(color=flash), run_time=0.35)
+            self.play(panel.animate.set_stroke(color=flash), *dec(0.35), run_time=0.35)
         self.play(
             LaggedStart(*[FadeOut(m, scale=0.4) for m in normal], lag_ratio=0.15),
-            *[m[0].animate.set_fill(opacity=0.6) for m in tough],
+            *[m[0].animate.set_fill(opacity=0.6) for m in tough], *dec(1.3),
             run_time=1.3,
         )
         clones = VGroup(_microbe([0.1, strip_y - 0.08], P_RED), _microbe([0.65, strip_y - 0.08], P_RED))
-        self.play(FadeIn(clones, scale=0.5), FadeIn(verdict), run_time=1.0)
-        hold_for(self, self.NARRATION, "nachteil", used=0.4 + 0.9 + 0.7 + 1.3 + 1.0 + 0.35)
+        self.play(FadeIn(clones, scale=0.5), FadeIn(verdict), *dec(1.0), run_time=1.0)
+        hold_for(self, self.NARRATION, "nachteil", during=dec)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1843,8 +1854,6 @@ class Beat10_KomfortStrategie(Scene):
 
         token = Dot(radius=0.11, color=P_YELLOW, fill_opacity=1.0).move_to(_park(start))
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
-
         self.play(FadeIn(start), Create(question), run_time=1.2)
         self.play(
             LaggedStart(
@@ -1855,6 +1864,7 @@ class Beat10_KomfortStrategie(Scene):
             ),
             run_time=2.6,
         )
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2 + 2.6)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "question"))
         self.play(FadeIn(token), run_time=0.4)

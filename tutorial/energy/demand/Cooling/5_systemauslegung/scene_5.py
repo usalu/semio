@@ -23,6 +23,7 @@ from manim_visuals import (
     math_label, math_row, math_panel,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
+    room_section, smooth_path, flow_guides, flow_animation, ripples,
 )
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -57,65 +58,38 @@ def _din_ref(text: str):
 #region Shared visual motifs
 
 def _build_room(center=CONTENT_CENTER, width=7.4, height=3.55):
-    """🏠 Line-art interior room with teal floor — matches Cooling HVAC scenes."""
-    room = Rectangle(
-        width=width, height=height,
-        color=P_WHITE, stroke_width=3.5, fill_opacity=0,
-    ).move_to(center)
-    floor = Line(
-        room.get_corner(DL), room.get_corner(DR),
-        color=P_TEAL, stroke_width=4,
-    )
-    return {"room": room, "floor": floor, "center": np.array(center), "w": width, "h": height}
+    """🏠 Physical Fundamentals room section — slabs, glazed left wall, solid right wall."""
+    r = room_section(np.array(center, dtype=float), w=width, h=height)
+    r["room"] = r["group"]
+    return r
 
 
-def _heat_cloud(center, scale=1.0):
-    """🌡️ Layered pastel-red heat cloud filling a saturated room."""
-    return VGroup(*[
-        Ellipse(
-            width=w * scale, height=h * scale,
-            color=P_RED, stroke_width=0,
-            fill_color=P_RED, fill_opacity=op,
-        ).move_to(center + UP * (h * scale * 0.04))
-        for w, h, op in ((5.9, 2.5, 0.14), (4.5, 1.8, 0.20), (3.1, 1.15, 0.30))
+def _vent_unit(pos, color=P_TEAL, width=1.55, height=0.3):
+    """🔧 Ceiling grille seen in section — a slotted strip hanging from the slab."""
+    body = Rectangle(width=width, height=height, color=color, stroke_width=1.8,
+                     fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(pos)
+    slots = VGroup(*[
+        Line(body.get_bottom() + RIGHT * dx + UP * 0.05, body.get_top() + RIGHT * dx + DOWN * 0.05,
+             color=color, stroke_width=1.3)
+        for dx in np.linspace(-width / 2 + 0.16, width / 2 - 0.16, 6)
     ])
+    return VGroup(body, slots)
 
 
-def _vent_unit(pos, color=P_TEAL, width=1.55, height=0.34):
-    """🔧 Ceiling RLT grille block with hatch lines."""
-    body = RoundedRectangle(
-        width=width, height=height, corner_radius=0.06,
-        color=color, stroke_width=2.5,
-        fill_color=color, fill_opacity=0.3,
-    ).move_to(pos)
-    grille = VGroup()
-    for t in (-0.38, -0.12, 0.12, 0.38):
-        grille.add(Line(
-            body.get_left() + RIGHT * 0.18 + UP * t * 0.07,
-            body.get_right() + LEFT * 0.18 + UP * t * 0.07,
-            color=color, stroke_width=1.5, stroke_opacity=0.95,
-        ))
-    return VGroup(body, grille)
+def _fan(center, r: float = 0.17, color=P_WHITE):
+    """🌀 Fan ring with three blades — the blades turn while air moves."""
+    center = np.array(center, dtype=float)
+    ring = Circle(radius=r, color=color, stroke_width=1.5).move_to(center)
+    blades = VGroup(*[
+        Line(center, center + 0.85 * r * np.array([np.cos(a), np.sin(a), 0.0]), color=color, stroke_width=2.0)
+        for a in np.linspace(0, TAU, 3, endpoint=False)
+    ])
+    return {"group": VGroup(ring, blades), "blades": blades, "center": center}
 
 
-def _air_particles(paths, color, radius_range=(0.055, 0.09), seed=7):
-    """💨 Opaque airflow dots that travel along precomputed paths."""
-    rng = np.random.default_rng(seed)
-    dots = VGroup()
-    for path in paths:
-        dots.add(Dot(
-            point=path.get_start(),
-            radius=float(rng.uniform(*radius_range)),
-            color=color, fill_opacity=1.0, stroke_width=0,
-        ))
-    return dots
-
-
-def _smooth_path(points):
-    """〰️ Smooth polyline path for airflow particles."""
-    path = VMobject()
-    path.set_points_smoothly([np.array(p, dtype=float) for p in points])
-    return path
+def _spin(fans, rt: float, period: float = 0.9):
+    """🔄 Turn every fan's blades for ``rt`` seconds."""
+    return [Rotate(f["blades"], angle=-TAU * rt / period, about_point=f["center"], rate_func=linear) for f in fans]
 
 
 def _supply_paths(supply_bottom, room_c, n=16, seed=3, half_w=2.2, half_h=0.9, margin=0.22):
@@ -146,7 +120,7 @@ def _supply_paths(supply_bottom, room_c, n=16, seed=3, half_w=2.2, half_h=0.9, m
             float(rng.uniform(y_lo * 0.85, y_hi * 0.05)),
             0.0,
         ]))
-        path = _smooth_path([start, mid, end])
+        path = smooth_path([start, mid, end])
         # Smooth beziers can bulge past control points — clamp every sample.
         for i in range(len(path.points)):
             path.points[i, 0] = np.clip(path.points[i, 0], room_c[0] + x_lo, room_c[0] + x_hi)
@@ -171,13 +145,8 @@ def _exhaust_paths(room_c, exhaust_bottom, n=16, seed=11):
             0.0,
         ])
         end = exhaust_bottom + np.array([float(rng.uniform(-0.35, 0.35)), 0.02, 0.0])
-        paths.add(_smooth_path([start, mid, end]))
+        paths.add(smooth_path([start, mid, end]))
     return paths
-
-
-def _step_label(text, color=P_WHITE):
-    """📌 Mid-lower instructional callout — kept clear of caption_bar / formula_panel."""
-    return Text(text, font_size=BODY_FONT_SIZE, color=color).move_to(DOWN * 1.5)
 
 
 #endregion
@@ -209,86 +178,91 @@ class Beat1_MechanicalVentilation(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        built = _build_room(center=DOWN * 0.1, width=7.4, height=2.9)
-        room, floor, room_c = built["room"], built["floor"], built["center"]
-        warm_wash = Rectangle(
-            width=built["w"] - 0.1, height=built["h"] - 0.1,
-            stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
-        ).move_to(room_c)
+        built = _build_room(center=np.array([0.3, -0.45, 0.0]), width=6.6, height=2.2)
+        y_f, y_c = built["y_f"], built["y_c"]
+        air = built["air"]
 
-        supply = _vent_unit(room.get_top() + DOWN * 0.3 + LEFT * 2.25, color=P_CYAN)
-        exhaust = _vent_unit(room.get_top() + DOWN * 0.3 + RIGHT * 2.25, color=P_ORANGE)
+        sup_x, exh_x = -1.6, 2.4
+        supply = _vent_unit(np.array([sup_x, y_c - 0.15, 0.0]), color=P_CYAN, width=1.1)
+        exhaust = _vent_unit(np.array([exh_x, y_c - 0.15, 0.0]), color=P_ORANGE, width=1.1)
 
-        unit = RoundedRectangle(
-            width=2.1, height=0.52, corner_radius=0.08,
-            color=P_TEAL, stroke_width=2.5,
-            fill_color=P_TEAL, fill_opacity=0.4,
-        ).move_to(room.get_top() + UP * 0.42)
-        fans = VGroup(*[
-            Circle(radius=0.11, color=P_WHITE, stroke_width=1.5).move_to(unit.get_center() + RIGHT * dx)
-            for dx in (-0.45, 0.0, 0.45)
-        ])
-        unit_tag = Text("RLT-Anlage", font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(unit, UP, buff=0.08)
-        rlt = VGroup(unit, fans)
+        unit = RoundedRectangle(width=2.4, height=0.6, corner_radius=0.08, color=P_WHITE, stroke_width=1.8,
+                                fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([0.3, 1.5, 0.0]))
+        duct_y = unit.get_center()[1]
+        fans = [_fan(unit.get_center() + LEFT * 0.75), _fan(unit.get_center() + RIGHT * 0.75)]
+        coil_c = unit.get_center()
+        coil = VMobject(color=P_BLUE, stroke_width=1.8).set_points_as_corners(
+            [coil_c + np.array([-0.3 + i * 0.1, 0.1 if i % 2 else -0.1, 0.0]) for i in range(7)])
+        unit_tag = Text("RLT-Anlage", font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(unit, UP, buff=0.1)
+        rlt = VGroup(unit, coil, *[f["group"] for f in fans])
 
-        duct_sup = Line(unit.get_bottom() + LEFT * 0.4, supply.get_top(), color=P_CYAN, stroke_width=7)
-        duct_exh = Line(unit.get_bottom() + RIGHT * 0.4, exhaust.get_top(), color=P_ORANGE, stroke_width=7)
+        def _duct(points, color):
+            return VMobject(color=color, stroke_width=11, stroke_opacity=0.3).set_points_as_corners(
+                [np.array([x, y, 0.0]) for x, y in points])
+
+        ux_l, ux_r = unit.get_left()[0], unit.get_right()[0]
+        duct_sup = _duct([(ux_l, duct_y), (sup_x, duct_y), (sup_x, y_c)], P_CYAN)
+        duct_exh = _duct([(exh_x, y_c), (exh_x, duct_y), (ux_r, duct_y)], P_ORANGE)
         sys_lbl = Text("Zu-/Abluftsystem", font_size=BODY_FONT_SIZE, color=P_TEAL)
-        sys_lbl.next_to(rlt, RIGHT, buff=0.3)
+        sys_lbl.next_to(unit, RIGHT, buff=1.4).shift(UP * 0.1)
 
         zuluft = VGroup(
             Text("Zuluft", font_size=BODY_FONT_SIZE, color=P_CYAN),
             Text("kühl · aufbereitet", font_size=LABEL_FONT_SIZE, color=P_TEAL),
         ).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
-        zuluft.next_to(room, LEFT, buff=0.42).shift(UP * 1.05)
+        zuluft.next_to(built["room"], LEFT, buff=0.35).set_y(0.25)
 
         abluft = VGroup(
             Text("Abluft", font_size=BODY_FONT_SIZE, color=P_ORANGE),
             Text("warm · abgeführt", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
         ).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
-        abluft.next_to(room, RIGHT, buff=0.42).shift(UP * 1.05)
+        abluft.next_to(built["room"], RIGHT, buff=0.35).set_y(0.25)
 
-        supply_flow = VGroup(
-            CurvedArrow(supply.get_bottom() + DOWN * 0.05, room_c + LEFT * 1.8 + DOWN * 0.15,
-                        angle=0.35 * PI, color=P_CYAN, stroke_width=5),
-            CurvedArrow(supply.get_bottom() + DOWN * 0.08 + RIGHT * 0.1, room_c + LEFT * 0.15,
-                        angle=0.22 * PI, color=P_CYAN, stroke_width=5),
-            CurvedArrow(supply.get_bottom() + DOWN * 0.05 + RIGHT * 0.18, room_c + RIGHT * 1.25 + UP * 0.18,
-                        angle=0.08 * PI, color=P_CYAN, stroke_width=5),
-        )
-        exhaust_flow = VGroup(
-            CurvedArrow(room_c + RIGHT * 0.8 + DOWN * 0.3, exhaust.get_bottom() + DOWN * 0.04 + LEFT * 0.1,
-                        angle=-0.14 * PI, color=P_ORANGE, stroke_width=5),
-            CurvedArrow(room_c + RIGHT * 1.75 + UP * 0.05, exhaust.get_bottom() + DOWN * 0.02,
-                        angle=-0.24 * PI, color=P_ORANGE, stroke_width=5),
-        )
+        def _p(*pts):
+            return smooth_path([np.array([x, y, 0.0]) for x, y in pts])
 
-        self.add(warm_wash)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
+        supply_paths = [
+            _p((ux_l, duct_y + dy), (sup_x + dy, duct_y + dy), (sup_x + dy, y_c - 0.35), (sup_x + 0.3 + sx * 0.5, y_c - 0.95),
+               (sup_x + 1.4 + sx, y_f + 0.55), (sup_x + 2.6 + sx, y_f + 0.3))
+            for dy, sx in ((-0.05, -0.6), (0.0, 0.2), (0.05, 1.0))
+        ]
+        exhaust_paths = [
+            _p((exh_x - 1.9 + sx, y_f + 0.3), (exh_x - 0.9 + sx * 0.5, y_f + 0.65), (exh_x + dy, y_c - 0.7),
+               (exh_x + dy, duct_y - dy), (ux_r, duct_y - dy))
+            for dy, sx in ((-0.05, -0.5), (0.05, 0.3))
+        ]
+        guides = VGroup(flow_guides(supply_paths[1:2], P_CYAN, opacity=0.22),
+                        flow_guides(exhaust_paths[:1], P_ORANGE, opacity=0.22))
+        warm_spots = [np.array([x, y_f + 0.02, 0.0]) for x in (-2.3, -0.7, 0.9, 2.5)]
 
-        self.play(Create(room), Create(floor), run_time=1.6)
-        self.play(warm_wash.animate.set_fill(opacity=0.18), run_time=1.2)
+        def heat(rt, r_max=0.55, color=P_RED):
+            return [ripples(warm_spots, r_max=r_max, color=color, cycles=rt / 1.4)]
 
-        self.play(FadeIn(rlt), FadeIn(unit_tag), FadeIn(sys_lbl), run_time=1.4)
+        def air_flow(rt, r_max=0.55, color=P_RED):
+            cyc = rt / 2.4
+            return [flow_animation([(supply_paths, P_BLUE, P_CYAN), (exhaust_paths, P_RED, P_ORANGE)],
+                                   waves=4, cycles=cyc),
+                    *_spin(fans, rt), *heat(rt, r_max, color)]
+
+        self.play(Create(built["group"]), run_time=1.6)
+        self.play(air.animate.set_fill(P_RED, opacity=0.18), *heat(1.2), run_time=1.2)
+        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.6 + 1.2,
+                 during=heat)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
+        self.play(FadeIn(rlt), FadeIn(unit_tag), FadeIn(sys_lbl), *heat(1.2), run_time=1.2)
         self.play(
             Create(duct_sup), Create(duct_exh),
             FadeIn(supply), FadeIn(exhaust),
-            FadeIn(zuluft), FadeIn(abluft),
-            run_time=2.0,
+            FadeIn(zuluft), FadeIn(abluft), *heat(1.4),
+            run_time=1.4,
         )
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
-        hold_for(self, self.NARRATION, "flow", used=6.2 + 0.35)
+        self.play(Create(guides), *air_flow(2.4), run_time=2.4)
+        hold_for(self, self.NARRATION, "flow", during=air_flow)
 
-        self.play(
-            LaggedStart(*[Create(a) for a in supply_flow], lag_ratio=0.18),
-            warm_wash.animate.set_fill(P_CYAN, opacity=0.10),
-            room.animate.set_stroke(color=P_CYAN),
-            floor.animate.set_color(P_CYAN),
-            run_time=2.8,
-        )
-        self.play(LaggedStart(*[Create(a) for a in exhaust_flow], lag_ratio=0.2), run_time=1.8)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "question"))
-        hold_for(self, self.NARRATION, "question", used=4.6 + 0.35)
+        self.play(air.animate.set_fill(P_CYAN, opacity=0.12), *air_flow(2.8, 0.35, P_ORANGE), run_time=2.8)
+        hold_for(self, self.NARRATION, "question", during=lambda rt: air_flow(rt, 0.3, P_ORANGE))
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
@@ -329,9 +303,9 @@ class Beat2_VolumeFlowEquation(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        built = _build_room(center=LEFT * 2.6 + UP * 0.72, width=4.8, height=1.7)
-        room, floor, room_c = built["room"], built["floor"], built["center"]
-        supply = _vent_unit(room.get_top() + DOWN * 0.22 + LEFT * 1.25, color=P_CYAN, width=1.25)
+        built = _build_room(center=LEFT * 2.6 + UP * 0.5, width=4.6, height=1.35)
+        room, room_c = built["room"], built["center"]
+        supply = _vent_unit(np.array([room_c[0] - 1.2, built["y_c"] - 0.13, 0.0]), color=P_CYAN, width=1.1, height=0.26)
 
         t_supply = VGroup(
             math_label(r"θ_{Zu}", size=LABEL_FONT_SIZE, color=P_CYAN),
@@ -374,7 +348,9 @@ class Beat2_VolumeFlowEquation(Scene):
             half_h=built["h"] / 2,
             margin=0.25,
         )
-        cool_dots = _air_particles(cool_paths, P_CYAN, seed=21, radius_range=(0.045, 0.07))
+
+        def cool_air(rt):
+            return [flow_animation([(cool_paths, P_CYAN, P_BLUE)], waves=3, radius=0.055, cycles=rt / 2.6)]
 
         eq, eq_box, items = math_panel([
             ("qv", r"\dot{Q}_{V}", P_CYAN), (None, "=", P_WHITE),
@@ -419,33 +395,24 @@ class Beat2_VolumeFlowEquation(Scene):
         # Right of the room, vertically centred on it (room right edge ≈ -0.2).
         cards.move_to(np.array([3.4, room_c[1], 0.0]))
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        self.play(Create(room), FadeIn(supply), run_time=1.5)
+        self.play(FadeIn(t_supply), FadeIn(t_room), *cool_air(1.0), run_time=1.0)
+        self.play(FadeIn(temp_arrow), FadeIn(delta_card), *cool_air(1.6), run_time=1.6)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 1.0 + 1.6, during=cool_air)
 
-        self.play(Create(room), Create(floor), FadeIn(supply), run_time=1.5)
-        self.play(FadeIn(t_supply), FadeIn(t_room), run_time=1.0)
-        self.add(cool_dots)
-        self.play(
-            AnimationGroup(*[
-                MoveAlongPath(d, path, rate_func=linear)
-                for d, path in zip(cool_dots, cool_paths)
-            ], lag_ratio=0.05),
-            FadeIn(temp_arrow), FadeIn(delta_card),
-            run_time=3.5,
-        )
-
-        self.play(FadeIn(eq), Create(eq_box), run_time=1.2)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        hold_for(self, self.NARRATION, "formula", used=7.2 + 0.35)
+        self.play(FadeIn(eq), Create(eq_box), *cool_air(1.2), run_time=1.2)
+        hold_for(self, self.NARRATION, "formula", during=cool_air)
 
         for key, card, color in (
             ("rho", cards[0], P_GREEN), ("cp", cards[1], P_GREEN),
             ("dth", cards[2], P_BLUE), ("qvr", cards[3], P_YELLOW),
         ):
             ring = highlight_param(items, key, color=color)
-            self.play(Create(ring), FadeIn(card), run_time=0.7)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.7 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            self.play(Create(ring), FadeIn(card), *cool_air(0.7), run_time=0.7)
+            hold_for(self, self.NARRATION, key, during=cool_air)
+            self.play(FadeOut(ring), *cool_air(0.25), run_time=0.25)
 
         air_blob = RoundedRectangle(
             width=1.4, height=0.9, corner_radius=0.2,
@@ -651,13 +618,15 @@ class Beat4_DuctCrossSection(Scene):
 
         rng = np.random.default_rng(42)
         flow_paths = VGroup()
-        for i in range(12):
-            y = float(rng.uniform(-0.6, 0.6))
-            start = duct_c + LEFT * 0.9 + UP * y * 0.85
-            end = duct_c + RIGHT * 3.1 + UP * y * 0.35
-            mid = duct_c + RIGHT * 1.1 + UP * y * 0.55
-            flow_paths.add(_smooth_path([start, mid, end]))
-        flow_dots = _air_particles(flow_paths, P_CYAN, radius_range=(0.05, 0.08), seed=42)
+        for y in (-0.72, -0.56, -0.4, 0.4, 0.56, 0.72):
+            x0 = -np.sqrt(1.0 - y * y) * float(rng.uniform(0.35, 0.85))
+            start = duct_c + RIGHT * x0 + UP * y
+            mid = duct_c + RIGHT * 1.3 + UP * y * 0.62
+            end = duct_c + RIGHT * 3.1 + UP * y * 0.4
+            flow_paths.add(smooth_path([start, mid, end]))
+
+        def duct_air(rt, speed=1.0, color=P_CYAN):
+            return [flow_animation([(flow_paths, color)], waves=3, radius=0.06, cycles=speed * rt / 2.2)]
 
         vm_tag = math_label(
             r"v_{m} \approx 2{,}5\,\mathrm{m/s}\;\text{(lärmarm)}",
@@ -686,23 +655,14 @@ class Beat4_DuctCrossSection(Scene):
         tip_fast.move_to(RIGHT * 3.2 + DOWN * 0.15)
         tip_slow.move_to(RIGHT * 3.2 + DOWN * 0.15)
 
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
-
         self.play(Create(outer), FadeIn(wall), Create(pipe), run_time=1.8)
         self.play(FadeIn(area_fill), FadeIn(area_lbl), run_time=1.0)
-        self.add(flow_dots)
-        self.play(
-            AnimationGroup(*[
-                MoveAlongPath(d, path, rate_func=linear)
-                for d, path in zip(flow_dots, flow_paths)
-            ], lag_ratio=0.06),
-            FadeIn(vm_tag),
-            run_time=3.5,
-        )
+        self.play(FadeIn(vm_tag), *duct_air(1.6), run_time=1.6)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.8 + 1.0 + 1.6, during=duct_air)
 
-        self.play(FadeIn(cont), run_time=1.1)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "continuity"))
-        hold_for(self, self.NARRATION, "continuity", used=1.1 + 0.35)
+        self.play(FadeIn(cont), *duct_air(1.1), run_time=1.1)
+        hold_for(self, self.NARRATION, "continuity", during=duct_air)
 
         for key, item_key, color in (
             ("qvr", "qvr", P_YELLOW),
@@ -710,31 +670,31 @@ class Beat4_DuctCrossSection(Scene):
             ("A_cont", "A", P_BLUE),
         ):
             ring = highlight_param(cont_items, item_key, color=color)
-            self.play(Create(ring), run_time=0.45)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            self.play(Create(ring), *duct_air(0.45), run_time=0.45)
+            hold_for(self, self.NARRATION, key, during=duct_air)
+            self.play(FadeOut(ring), *duct_air(0.25), run_time=0.25)
 
-        self.play(FadeOut(cont), run_time=0.4)
         area_eq, area_box, area_items = math_panel(area_parts)
         area_frac = area_items["frac"][0]
         area_items["qvr"] = area_frac[0]
         area_items["vm"] = area_frac[2]
-        self.play(FadeIn(area_eq), Create(area_box), run_time=1.2)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "area"))
-        hold_for(self, self.NARRATION, "area", used=1.2 + 0.35)
-
-        self.play(FadeIn(tip_fast), run_time=0.5)
+        self.play(FadeOut(cont), *duct_air(0.4), run_time=0.4)
+        self.play(FadeIn(area_eq), Create(area_box), *duct_air(1.2), run_time=1.2)
+        self.play(FadeIn(tip_fast), *duct_air(0.5), run_time=0.5)
         self.play(
             area_fill.animate.scale(0.62), area_lbl.animate.scale(0.62),
-            flow_dots.animate.set_color(P_ORANGE), run_time=1.8,
+            *duct_air(1.8, speed=2.4, color=P_ORANGE), run_time=1.8,
         )
-        self.play(FadeOut(tip_fast), FadeIn(tip_slow), run_time=0.5)
+        self.play(FadeOut(tip_fast), FadeIn(tip_slow), *duct_air(0.5, speed=2.4, color=P_ORANGE), run_time=0.5)
         self.play(
             area_fill.animate.scale(1 / 0.62 * 1.15), area_lbl.animate.scale(1 / 0.62 * 1.15),
-            flow_dots.animate.set_color(P_CYAN), run_time=1.8,
+            *duct_air(1.8, speed=0.6), run_time=1.8,
         )
-        self.play(area_fill.animate.scale(1 / 1.15), area_lbl.animate.scale(1 / 1.15), FadeOut(tip_slow), run_time=0.9)
+        self.play(area_fill.animate.scale(1 / 1.15), area_lbl.animate.scale(1 / 1.15), FadeOut(tip_slow),
+                  *duct_air(0.9), run_time=0.9)
+        hold_for(self, self.NARRATION, "area", during=duct_air)
 
         for key, item_key, color in (
             ("A", "A", P_BLUE),
@@ -742,10 +702,10 @@ class Beat4_DuctCrossSection(Scene):
             ("vm_den", "vm", P_CYAN),
         ):
             ring = highlight_param(area_items, item_key, color=color)
-            self.play(Create(ring), run_time=0.45)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            self.play(Create(ring), *duct_air(0.45), run_time=0.45)
+            hold_for(self, self.NARRATION, key, during=duct_air)
+            self.play(FadeOut(ring), *duct_air(0.25), run_time=0.25)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
